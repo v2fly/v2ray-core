@@ -2,6 +2,7 @@ package serial
 
 import (
 	"bytes"
+	"io/ioutil"
 	"encoding/json"
 	"io"
 
@@ -41,20 +42,22 @@ func findOffset(b []byte, o int) *offset {
 func LoadJSONConfig(reader io.Reader) (*core.Config, error) {
 	jsonConfig := &conf.Config{}
 
-	jsonContent := bytes.NewBuffer(make([]byte, 0, 10240))
-	jsonReader := io.TeeReader(&json_reader.Reader{
-		Reader: reader,
-	}, jsonContent)
-	decoder := json.NewDecoder(jsonReader)
+	jsonContent, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, newError("failed to read config file").Base(err)
+	}
+	decoder := json.NewDecoder(&json_reader.Reader{
+		Reader: bytes.NewBuffer(jsonContent),
+	})
 
 	if err := decoder.Decode(jsonConfig); err != nil {
 		var pos *offset
 		cause := errors.Cause(err)
 		switch tErr := cause.(type) {
 		case *json.SyntaxError:
-			pos = findOffset(jsonContent.Bytes(), int(tErr.Offset))
+			pos = findOffset(jsonContent, int(tErr.Offset))
 		case *json.UnmarshalTypeError:
-			pos = findOffset(jsonContent.Bytes(), int(tErr.Offset))
+			pos = findOffset(jsonContent, int(tErr.Offset))
 		}
 		if pos != nil {
 			return nil, newError("failed to read config file at line ", pos.line, " char ", pos.char).Base(err)
