@@ -3,7 +3,7 @@ package handshake
 import (
 	"crypto/tls"
 
-	"v2ray.com/core/external/github.com/marten-seemann/qtls"
+	"v2ray.com/core/v4/external/github.com/marten-seemann/qtls"
 )
 
 func tlsConfigToQtlsConfig(c *tls.Config) *qtls.Config {

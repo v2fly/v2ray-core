@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"v2ray.com/core/common/net"
-	. "v2ray.com/core/common/protocol"
+	"v2ray.com/core/v4/common/net"
+	. "v2ray.com/core/v4/common/protocol"
 )
 
 func TestServerList(t *testing.T) {

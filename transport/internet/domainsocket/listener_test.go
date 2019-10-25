@@ -7,11 +7,11 @@ import (
 	"runtime"
 	"testing"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/transport/internet"
-	. "v2ray.com/core/transport/internet/domainsocket"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/buf"
+	"v2ray.com/core/v4/common/net"
+	"v2ray.com/core/v4/transport/internet"
+	. "v2ray.com/core/v4/transport/internet/domainsocket"
 )
 
 func TestListen(t *testing.T) {

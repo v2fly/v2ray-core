@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"v2ray.com/core/common"
-	. "v2ray.com/core/common/task"
+	"v2ray.com/core/v4/common"
+	. "v2ray.com/core/v4/common/task"
 )
 
 func TestPeriodicTaskStop(t *testing.T) {

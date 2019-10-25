@@ -9,10 +9,10 @@ import (
 	"encoding/binary"
 	"io"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/bytespool"
-	"v2ray.com/core/common/serial"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/buf"
+	"v2ray.com/core/v4/common/bytespool"
+	"v2ray.com/core/v4/common/serial"
 )
 
 const (

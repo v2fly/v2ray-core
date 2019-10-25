@@ -6,8 +6,8 @@ import (
 	"net"
 	"time"
 
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/handshake"
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/protocol"
+	"v2ray.com/core/v4/external/github.com/lucas-clemente/quic-go/internal/handshake"
+	"v2ray.com/core/v4/external/github.com/lucas-clemente/quic-go/internal/protocol"
 )
 
 // The StreamID is the ID of a QUIC stream.

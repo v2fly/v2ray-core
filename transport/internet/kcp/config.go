@@ -5,8 +5,8 @@ package kcp
 import (
 	"crypto/cipher"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/transport/internet"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/transport/internet"
 )
 
 const protocolName = "mkcp"

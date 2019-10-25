@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"v2ray.com/core/common"
-	. "v2ray.com/core/common/buf"
-	"v2ray.com/core/transport/pipe"
+	"v2ray.com/core/v4/common"
+	. "v2ray.com/core/v4/common/buf"
+	"v2ray.com/core/v4/transport/pipe"
 )
 
 func TestBytesReaderWriteTo(t *testing.T) {

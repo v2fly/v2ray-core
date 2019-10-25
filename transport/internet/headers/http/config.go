@@ -3,7 +3,7 @@ package http
 import (
 	"strings"
 
-	"v2ray.com/core/common/dice"
+	"v2ray.com/core/v4/common/dice"
 )
 
 func pickString(arr []string) string {

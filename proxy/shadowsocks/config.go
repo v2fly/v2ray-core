@@ -11,10 +11,10 @@ import (
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/hkdf"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/crypto"
-	"v2ray.com/core/common/protocol"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/buf"
+	"v2ray.com/core/v4/common/crypto"
+	"v2ray.com/core/v4/common/protocol"
 )
 
 // MemoryAccount is an account type converted from Account.

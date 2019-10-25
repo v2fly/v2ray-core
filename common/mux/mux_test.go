@@ -6,12 +6,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	. "v2ray.com/core/common/mux"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/transport/pipe"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/buf"
+	. "v2ray.com/core/v4/common/mux"
+	"v2ray.com/core/v4/common/net"
+	"v2ray.com/core/v4/common/protocol"
+	"v2ray.com/core/v4/transport/pipe"
 )
 
 func readAll(reader buf.Reader) (buf.MultiBuffer, error) {

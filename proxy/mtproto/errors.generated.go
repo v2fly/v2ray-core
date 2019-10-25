@@ -1,6 +1,6 @@
 package mtproto
 
-import "v2ray.com/core/common/errors"
+import "v2ray.com/core/v4/common/errors"
 
 type errPathObjHolder struct{}
 

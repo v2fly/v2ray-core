@@ -3,7 +3,7 @@ package pipe
 import (
 	"time"
 
-	"v2ray.com/core/common/buf"
+	"v2ray.com/core/v4/common/buf"
 )
 
 // Reader is a buf.Reader that reads content from a pipe.

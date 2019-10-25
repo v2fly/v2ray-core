@@ -7,16 +7,16 @@ import (
 	"reflect"
 	"sync"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/features"
-	"v2ray.com/core/features/dns"
-	"v2ray.com/core/features/dns/localdns"
-	"v2ray.com/core/features/inbound"
-	"v2ray.com/core/features/outbound"
-	"v2ray.com/core/features/policy"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/features/stats"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/serial"
+	"v2ray.com/core/v4/features"
+	"v2ray.com/core/v4/features/dns"
+	"v2ray.com/core/v4/features/dns/localdns"
+	"v2ray.com/core/v4/features/inbound"
+	"v2ray.com/core/v4/features/outbound"
+	"v2ray.com/core/v4/features/policy"
+	"v2ray.com/core/v4/features/routing"
+	"v2ray.com/core/v4/features/stats"
 )
 
 // Server is an instance of V2Ray. At any time, there must be at most one Server instance running.

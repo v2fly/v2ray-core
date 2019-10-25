@@ -9,17 +9,17 @@ import (
 	"sync/atomic"
 	"time"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/common/signal"
-	"v2ray.com/core/common/task"
-	"v2ray.com/core/features/policy"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/transport/internet"
+	"v2ray.com/core/v4"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/buf"
+	"v2ray.com/core/v4/common/net"
+	"v2ray.com/core/v4/common/protocol"
+	"v2ray.com/core/v4/common/session"
+	"v2ray.com/core/v4/common/signal"
+	"v2ray.com/core/v4/common/task"
+	"v2ray.com/core/v4/features/policy"
+	"v2ray.com/core/v4/features/routing"
+	"v2ray.com/core/v4/transport/internet"
 )
 
 func init() {

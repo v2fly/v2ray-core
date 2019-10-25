@@ -5,8 +5,8 @@ import (
 	"crypto/md5"
 	"hash"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/uuid"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/uuid"
 )
 
 const (

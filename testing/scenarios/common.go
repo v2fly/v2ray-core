@@ -14,15 +14,15 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
-	"v2ray.com/core"
-	"v2ray.com/core/app/dispatcher"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/log"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/retry"
-	"v2ray.com/core/common/serial"
+	"v2ray.com/core/v4"
+	"v2ray.com/core/v4/app/dispatcher"
+	"v2ray.com/core/v4/app/proxyman"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/errors"
+	"v2ray.com/core/v4/common/log"
+	"v2ray.com/core/v4/common/net"
+	"v2ray.com/core/v4/common/retry"
+	"v2ray.com/core/v4/common/serial"
 )
 
 func xor(b []byte) []byte {

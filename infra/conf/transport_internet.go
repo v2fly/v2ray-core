@@ -5,17 +5,17 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/proto"
-	"v2ray.com/core/common/platform/filesystem"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/domainsocket"
-	"v2ray.com/core/transport/internet/http"
-	"v2ray.com/core/transport/internet/kcp"
-	"v2ray.com/core/transport/internet/quic"
-	"v2ray.com/core/transport/internet/tcp"
-	"v2ray.com/core/transport/internet/tls"
-	"v2ray.com/core/transport/internet/websocket"
+	"v2ray.com/core/v4/common/platform/filesystem"
+	"v2ray.com/core/v4/common/protocol"
+	"v2ray.com/core/v4/common/serial"
+	"v2ray.com/core/v4/transport/internet"
+	"v2ray.com/core/v4/transport/internet/domainsocket"
+	"v2ray.com/core/v4/transport/internet/http"
+	"v2ray.com/core/v4/transport/internet/kcp"
+	"v2ray.com/core/v4/transport/internet/quic"
+	"v2ray.com/core/v4/transport/internet/tcp"
+	"v2ray.com/core/v4/transport/internet/tls"
+	"v2ray.com/core/v4/transport/internet/websocket"
 )
 
 var (

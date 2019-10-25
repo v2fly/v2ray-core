@@ -8,7 +8,7 @@ import (
 
 	"golang.org/x/crypto/openpgp"
 
-	"v2ray.com/core/common"
+	"v2ray.com/core/v4/common"
 )
 
 var pubkey = []string{`-----BEGIN PGP PUBLIC KEY BLOCK-----

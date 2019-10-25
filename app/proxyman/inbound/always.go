@@ -3,17 +3,17 @@ package inbound
 import (
 	"context"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/dice"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/mux"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/features/policy"
-	"v2ray.com/core/features/stats"
-	"v2ray.com/core/proxy"
-	"v2ray.com/core/transport/internet"
+	"v2ray.com/core/v4"
+	"v2ray.com/core/v4/app/proxyman"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/dice"
+	"v2ray.com/core/v4/common/errors"
+	"v2ray.com/core/v4/common/mux"
+	"v2ray.com/core/v4/common/net"
+	"v2ray.com/core/v4/features/policy"
+	"v2ray.com/core/v4/features/stats"
+	"v2ray.com/core/v4/proxy"
+	"v2ray.com/core/v4/transport/internet"
 )
 
 func getStatCounter(v *core.Instance, tag string) (stats.Counter, stats.Counter) {

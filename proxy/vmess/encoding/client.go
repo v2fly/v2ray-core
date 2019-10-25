@@ -10,14 +10,14 @@ import (
 
 	"golang.org/x/crypto/chacha20poly1305"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/bitmask"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/crypto"
-	"v2ray.com/core/common/dice"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/proxy/vmess"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/bitmask"
+	"v2ray.com/core/v4/common/buf"
+	"v2ray.com/core/v4/common/crypto"
+	"v2ray.com/core/v4/common/dice"
+	"v2ray.com/core/v4/common/protocol"
+	"v2ray.com/core/v4/common/serial"
+	"v2ray.com/core/v4/proxy/vmess"
 )
 
 func hashTimestamp(h hash.Hash, t protocol.Timestamp) []byte {

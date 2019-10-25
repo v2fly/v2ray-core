@@ -5,8 +5,8 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/errors"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/errors"
 )
 
 var (

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"v2ray.com/core/features/stats"
+	"v2ray.com/core/v4/features/stats"
 )
 
 // Counter is an implementation of stats.Counter.

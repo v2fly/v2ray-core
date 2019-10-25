@@ -5,8 +5,8 @@ import (
 	"net"
 	"testing"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/transport/internet"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/transport/internet"
 )
 
 func TestRegisterListenerController(t *testing.T) {

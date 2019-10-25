@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	http_proto "v2ray.com/core/common/protocol/http"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/transport/internet"
-	v2tls "v2ray.com/core/transport/internet/tls"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/net"
+	http_proto "v2ray.com/core/v4/common/protocol/http"
+	"v2ray.com/core/v4/common/session"
+	"v2ray.com/core/v4/transport/internet"
+	v2tls "v2ray.com/core/v4/transport/internet/tls"
 )
 
 type requestHandler struct {

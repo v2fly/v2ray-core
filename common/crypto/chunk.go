@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"io"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/buf"
 )
 
 // ChunkSizeDecoder is a utility class to decode size value from bytes.

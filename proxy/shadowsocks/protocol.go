@@ -7,11 +7,11 @@ import (
 	"crypto/rand"
 	"io"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/bitmask"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/bitmask"
+	"v2ray.com/core/v4/common/buf"
+	"v2ray.com/core/v4/common/net"
+	"v2ray.com/core/v4/common/protocol"
 )
 
 const (

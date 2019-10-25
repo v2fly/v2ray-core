@@ -1,7 +1,7 @@
 package sidh
 
 import (
-	. "v2ray.com/core/external/github.com/cloudflare/sidh/internal/isogeny"
+	. "v2ray.com/core/v4/external/github.com/cloudflare/sidh/internal/isogeny"
 )
 
 // -----------------------------------------------------------------------------

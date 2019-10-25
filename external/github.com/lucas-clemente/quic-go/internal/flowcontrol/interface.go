@@ -1,6 +1,6 @@
 package flowcontrol
 
-import "v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/protocol"
+import "v2ray.com/core/v4/external/github.com/lucas-clemente/quic-go/internal/protocol"
 
 type flowController interface {
 	// for sending

@@ -6,9 +6,9 @@ import (
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
 	math "math"
-	core "v2ray.com/core"
-	protocol "v2ray.com/core/common/protocol"
-	serial "v2ray.com/core/common/serial"
+	core "v2ray.com/core/v4"
+	protocol "v2ray.com/core/v4/common/protocol"
+	serial "v2ray.com/core/v4/common/serial"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

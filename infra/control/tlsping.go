@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net"
 
-	"v2ray.com/core/common"
+	"v2ray.com/core/v4/common"
 )
 
 type TlsPingCommand struct{}

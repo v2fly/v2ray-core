@@ -6,9 +6,9 @@ import (
 	"io"
 	"sync"
 
-	"v2ray.com/core/common/retry"
+	"v2ray.com/core/v4/common/retry"
 
-	"v2ray.com/core/common/buf"
+	"v2ray.com/core/v4/common/buf"
 )
 
 type SegmentWriter interface {

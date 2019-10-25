@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	. "v2ray.com/core/transport/internet/headers/wechat"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/buf"
+	. "v2ray.com/core/v4/transport/internet/headers/wechat"
 )
 
 func TestUTPWrite(t *testing.T) {

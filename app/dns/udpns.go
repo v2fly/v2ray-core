@@ -10,17 +10,17 @@ import (
 	"time"
 
 	"golang.org/x/net/dns/dnsmessage"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol/dns"
-	udp_proto "v2ray.com/core/common/protocol/udp"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/common/signal/pubsub"
-	"v2ray.com/core/common/task"
-	dns_feature "v2ray.com/core/features/dns"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/transport/internet/udp"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/errors"
+	"v2ray.com/core/v4/common/net"
+	"v2ray.com/core/v4/common/protocol/dns"
+	udp_proto "v2ray.com/core/v4/common/protocol/udp"
+	"v2ray.com/core/v4/common/session"
+	"v2ray.com/core/v4/common/signal/pubsub"
+	"v2ray.com/core/v4/common/task"
+	dns_feature "v2ray.com/core/v4/features/dns"
+	"v2ray.com/core/v4/features/routing"
+	"v2ray.com/core/v4/transport/internet/udp"
 )
 
 type record struct {

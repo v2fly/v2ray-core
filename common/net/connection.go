@@ -7,9 +7,9 @@ import (
 	"net"
 	"time"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/signal/done"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/buf"
+	"v2ray.com/core/v4/common/signal/done"
 )
 
 type ConnectionOption func(*connection)

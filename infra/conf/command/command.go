@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/golang/protobuf/proto"
-	"v2ray.com/core/common"
-	"v2ray.com/core/infra/conf/serial"
-	"v2ray.com/core/infra/control"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/infra/conf/serial"
+	"v2ray.com/core/v4/infra/control"
 )
 
 type ConfigCommand struct{}

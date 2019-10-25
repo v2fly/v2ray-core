@@ -1,10 +1,10 @@
 package ackhandler
 
 import (
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/protocol"
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/qerr"
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/utils"
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/wire"
+	"v2ray.com/core/v4/external/github.com/lucas-clemente/quic-go/internal/protocol"
+	"v2ray.com/core/v4/external/github.com/lucas-clemente/quic-go/internal/qerr"
+	"v2ray.com/core/v4/external/github.com/lucas-clemente/quic-go/internal/utils"
+	"v2ray.com/core/v4/external/github.com/lucas-clemente/quic-go/internal/wire"
 )
 
 // The receivedPacketHistory stores if a packet number has already been received.

@@ -1,8 +1,8 @@
 package udp
 
 import (
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
+	"v2ray.com/core/v4/common/buf"
+	"v2ray.com/core/v4/common/net"
 )
 
 // Packet is a UDP packet together with its source and destination address.

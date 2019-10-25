@@ -5,10 +5,10 @@ package json
 import (
 	"io"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/platform/ctlcmd"
+	"v2ray.com/core/v4"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/buf"
+	"v2ray.com/core/v4/common/platform/ctlcmd"
 )
 
 func init() {

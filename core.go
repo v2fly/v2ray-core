@@ -13,7 +13,7 @@ package core
 //go:generate errorgen
 
 import (
-	"v2ray.com/core/common/serial"
+	"v2ray.com/core/v4/common/serial"
 )
 
 const (

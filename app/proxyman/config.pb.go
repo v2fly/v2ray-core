@@ -4,9 +4,9 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	math "math"
-	net "v2ray.com/core/common/net"
-	serial "v2ray.com/core/common/serial"
-	internet "v2ray.com/core/transport/internet"
+	net "v2ray.com/core/v4/common/net"
+	serial "v2ray.com/core/v4/common/serial"
+	internet "v2ray.com/core/v4/transport/internet"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

@@ -11,7 +11,7 @@ import (
 	"runtime"
 	"strings"
 
-	"v2ray.com/core/common"
+	"v2ray.com/core/v4/common"
 )
 
 var protocMap = map[string]string{

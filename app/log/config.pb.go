@@ -4,7 +4,7 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	math "math"
-	log "v2ray.com/core/common/log"
+	log "v2ray.com/core/v4/common/log"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

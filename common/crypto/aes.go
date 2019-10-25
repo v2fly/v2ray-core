@@ -4,7 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 
-	"v2ray.com/core/common"
+	"v2ray.com/core/v4/common"
 )
 
 // NewAesDecryptionStream creates a new AES encryption stream based on given key and IV.

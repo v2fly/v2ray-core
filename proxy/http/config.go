@@ -1,7 +1,7 @@
 package http
 
 import (
-	"v2ray.com/core/common/protocol"
+	"v2ray.com/core/v4/common/protocol"
 )
 
 func (a *Account) Equals(another protocol.Account) bool {

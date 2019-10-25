@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"strings"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/dispatcher"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/app/stats"
-	"v2ray.com/core/common/serial"
+	"v2ray.com/core/v4"
+	"v2ray.com/core/v4/app/dispatcher"
+	"v2ray.com/core/v4/app/proxyman"
+	"v2ray.com/core/v4/app/stats"
+	"v2ray.com/core/v4/common/serial"
 )
 
 var (

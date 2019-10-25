@@ -8,8 +8,8 @@ import (
 	"context"
 	"sync"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/log"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/log"
 )
 
 // Instance is a log.Handler that handles logs.

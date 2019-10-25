@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/common/task"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/protocol"
+	"v2ray.com/core/v4/common/serial"
+	"v2ray.com/core/v4/common/task"
 )
 
 const (

@@ -4,8 +4,8 @@ import (
 	"context"
 	"syscall"
 
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/session"
+	"v2ray.com/core/v4/common/net"
+	"v2ray.com/core/v4/common/session"
 )
 
 var (

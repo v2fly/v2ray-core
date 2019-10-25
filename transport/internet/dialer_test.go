@@ -6,10 +6,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/testing/servers/tcp"
-	. "v2ray.com/core/transport/internet"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/net"
+	"v2ray.com/core/v4/testing/servers/tcp"
+	. "v2ray.com/core/v4/transport/internet"
 )
 
 func TestDialWithLocalAddr(t *testing.T) {

@@ -3,8 +3,8 @@
 package log
 
 import (
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/log"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/log"
 )
 
 type HandlerCreatorOptions struct {

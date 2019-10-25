@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"io"
 
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/protocol"
+	"v2ray.com/core/v4/external/github.com/lucas-clemente/quic-go/internal/protocol"
 )
 
 // A PathResponseFrame is a PATH_RESPONSE frame

@@ -3,8 +3,8 @@ package tls
 import (
 	"context"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/dice"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/dice"
 )
 
 // DTLS writes header as DTLS. See https://tools.ietf.org/html/rfc6347

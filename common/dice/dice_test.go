@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
-	. "v2ray.com/core/common/dice"
+	. "v2ray.com/core/v4/common/dice"
 )
 
 func BenchmarkRoll1(b *testing.B) {

@@ -5,9 +5,9 @@ import (
 	"context"
 	"math/rand"
 
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
+	"v2ray.com/core/v4/common/errors"
+	"v2ray.com/core/v4/common/net"
+	"v2ray.com/core/v4/common/protocol"
 )
 
 // ID of a session.

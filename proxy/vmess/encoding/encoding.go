@@ -1,8 +1,8 @@
 package encoding
 
 import (
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
+	"v2ray.com/core/v4/common/net"
+	"v2ray.com/core/v4/common/protocol"
 )
 
 //go:generate errorgen

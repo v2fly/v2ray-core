@@ -3,7 +3,7 @@ package signal_test
 import (
 	"testing"
 
-	. "v2ray.com/core/common/signal"
+	. "v2ray.com/core/v4/common/signal"
 )
 
 func TestNotifierSignal(t *testing.T) {

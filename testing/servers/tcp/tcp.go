@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io"
 
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/task"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/pipe"
+	"v2ray.com/core/v4/common/buf"
+	"v2ray.com/core/v4/common/net"
+	"v2ray.com/core/v4/common/task"
+	"v2ray.com/core/v4/transport/internet"
+	"v2ray.com/core/v4/transport/pipe"
 )
 
 type Server struct {

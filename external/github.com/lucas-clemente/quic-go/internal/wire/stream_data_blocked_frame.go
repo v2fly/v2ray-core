@@ -3,8 +3,8 @@ package wire
 import (
 	"bytes"
 
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/protocol"
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/utils"
+	"v2ray.com/core/v4/external/github.com/lucas-clemente/quic-go/internal/protocol"
+	"v2ray.com/core/v4/external/github.com/lucas-clemente/quic-go/internal/utils"
 )
 
 // A StreamDataBlockedFrame is a STREAM_DATA_BLOCKED frame

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	. "v2ray.com/core"
+	. "v2ray.com/core/v4"
 )
 
 func TestContextPanic(t *testing.T) {

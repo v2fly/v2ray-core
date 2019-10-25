@@ -3,9 +3,9 @@
 package vmess
 
 import (
-	"v2ray.com/core/common/dice"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/uuid"
+	"v2ray.com/core/v4/common/dice"
+	"v2ray.com/core/v4/common/protocol"
+	"v2ray.com/core/v4/common/uuid"
 )
 
 // MemoryAccount is an in-memory from of VMess account.

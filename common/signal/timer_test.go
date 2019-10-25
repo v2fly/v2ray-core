@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	. "v2ray.com/core/common/signal"
+	. "v2ray.com/core/v4/common/signal"
 )
 
 func TestActivityTimer(t *testing.T) {

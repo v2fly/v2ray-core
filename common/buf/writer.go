@@ -5,8 +5,8 @@ import (
 	"net"
 	"sync"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/errors"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/errors"
 )
 
 // BufferToBytesWriter is a Writer that writes alloc.Buffer into underlying writer.

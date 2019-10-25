@@ -8,12 +8,12 @@ import (
 	"io"
 	"sync/atomic"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/dice"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/transport/internet"
-	v2tls "v2ray.com/core/transport/internet/tls"
+	"v2ray.com/core/v4/common"
+	"v2ray.com/core/v4/common/buf"
+	"v2ray.com/core/v4/common/dice"
+	"v2ray.com/core/v4/common/net"
+	"v2ray.com/core/v4/transport/internet"
+	v2tls "v2ray.com/core/v4/transport/internet/tls"
 )
 
 var (

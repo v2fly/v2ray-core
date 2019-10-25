@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"testing"
 
-	"v2ray.com/core/common"
-	. "v2ray.com/core/common/strmatcher"
+	"v2ray.com/core/v4/common"
+	. "v2ray.com/core/v4/common/strmatcher"
 )
 
 func BenchmarkDomainMatcherGroup(b *testing.B) {

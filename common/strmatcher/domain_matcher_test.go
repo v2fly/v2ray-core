@@ -3,7 +3,7 @@ package strmatcher_test
 import (
 	"testing"
 
-	. "v2ray.com/core/common/strmatcher"
+	. "v2ray.com/core/v4/common/strmatcher"
 )
 
 func TestDomainMatcherGroup(t *testing.T) {

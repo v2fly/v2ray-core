@@ -3,7 +3,7 @@ package congestion
 import (
 	"time"
 
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/protocol"
+	"v2ray.com/core/v4/external/github.com/lucas-clemente/quic-go/internal/protocol"
 )
 
 // A SendAlgorithm performs congestion control and calculates the congestion window
