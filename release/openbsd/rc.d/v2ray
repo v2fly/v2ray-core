@@ -1,0 +1,19 @@
+#!/bin/ksh
+#
+# $OpenBSD: v2ray,v 1.4 2018/01/11 19:52:12 rpe Exp $
+
+daemon="/usr/local/bin/v2ray"
+daemon_flags="-config /etc/v2ray/config.json"
+daemon_user=www
+
+. /etc/rc.d/rc.subr
+
+env="V2RAY_LOCATION_ASSET=/usr/local/lib/v2ray"
+rc_start() {
+    ${rcexec} "${env} ${daemon} ${daemon_flags}"
+}
+
+rc_bg=YES
+rc_reload=NO
+
+rc_cmd $1

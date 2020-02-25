@@ -13,6 +13,13 @@ filegroup(
 )
 
 filegroup(
+    name = "openbsd_rc.d",
+    srcs = [
+        "openbsd/rc.d/v2ray",
+    ],
+)
+
+filegroup(
     name = "systemd",
     srcs = [
         "config/systemd/v2ray.service",
@@ -118,6 +125,7 @@ pkg_zip(
         ":config_json",
         ":doc",
         ":geodata",
+        ":openbsd_rc.d",
         "//infra/control/main:v2ctl_openbsd_amd64",
         "//infra/control/main:v2ctl_openbsd_amd64_sig",
         "//main:v2ray_openbsd_amd64",
@@ -133,6 +141,7 @@ pkg_zip(
         ":config_json",
         ":doc",
         ":geodata",
+        ":openbsd_rc.d",
         "//infra/control/main:v2ctl_openbsd_386",
         "//infra/control/main:v2ctl_openbsd_386_sig",
         "//main:v2ray_openbsd_386",
