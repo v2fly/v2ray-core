@@ -57,7 +57,7 @@ func copyConfig(c *tls.Config) *utls.Config {
 
 func UClient(c net.Conn, config *tls.Config) net.Conn {
 	uConfig := copyConfig(config)
-	return utls.Client(c, uConfig)
+	return utls.Client(c, uConfig, utls.HelloRandomized)
 }
 
 // Server initiates a TLS server handshake on the given connection.
