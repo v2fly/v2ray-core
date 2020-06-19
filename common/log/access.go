@@ -53,6 +53,9 @@ func (m *AccessMessage) String() string {
 }
 
 func ContextWithAccessMessage(ctx context.Context, accessMessage *AccessMessage) context.Context {
+	if ctx.Value(accessMessageKey) != nil {
+		return ctx
+	}
 	return context.WithValue(ctx, accessMessageKey, accessMessage)
 }
 

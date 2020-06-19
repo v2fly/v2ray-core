@@ -11,6 +11,9 @@ const (
 )
 
 func ContextWithRequestHeader(ctx context.Context, request *RequestHeader) context.Context {
+	if ctx.Value(requestKey) != nil {
+		return ctx
+	}
 	return context.WithValue(ctx, requestKey, request)
 }
 
