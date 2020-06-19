@@ -132,10 +132,9 @@ func (s *Server) handlerUDPPayload(ctx context.Context, conn internet.Connection
 				continue
 			}
 
-			currentPacketCtx := ctx
 			dest := request.Destination()
 			if inbound.Source.IsValid() {
-				currentPacketCtx = log.ContextWithAccessMessage(ctx, &log.AccessMessage{
+				ctx = log.ContextWithAccessMessage(ctx, &log.AccessMessage{
 					From:   inbound.Source,
 					To:     dest,
 					Status: log.AccessAccepted,
@@ -143,10 +142,10 @@ func (s *Server) handlerUDPPayload(ctx context.Context, conn internet.Connection
 					Email:  request.User.Email,
 				})
 			}
-			newError("tunnelling request to ", dest).WriteToLog(session.ExportIDToError(currentPacketCtx))
+			newError("tunnelling request to ", dest).WriteToLog(session.ExportIDToError(ctx))
 
-			currentPacketCtx = protocol.ContextWithRequestHeader(currentPacketCtx, request)
-			udpServer.Dispatch(currentPacketCtx, dest, data)
+			ctx = protocol.ContextWithRequestHeader(ctx, request)
+			udpServer.Dispatch(ctx, dest, data)
 		}
 	}
 
