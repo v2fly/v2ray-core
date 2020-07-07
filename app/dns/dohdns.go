@@ -236,8 +236,7 @@ func (s *DoHNameServer) sendQuery(ctx context.Context, domain string, option IPO
 			}
 
 			dnsCtx = session.ContextWithContent(dnsCtx, &session.Content{
-				Protocol:      "https",
-				SkipRoutePick: true,
+				Protocol: "https",
 			})
 
 			// forced to use mux for DOH
