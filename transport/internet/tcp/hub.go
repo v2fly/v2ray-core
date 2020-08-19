@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pires/go-proxyproto"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/session"
@@ -17,7 +18,7 @@ import (
 
 // Listener is an internet.Listener that listens for TCP connections.
 type Listener struct {
-	listener   net.Listener
+	listener   proxyproto.Listener
 	tlsConfig  *gotls.Config
 	authConfig internet.ConnectionAuthenticator
 	config     *Config
@@ -37,7 +38,7 @@ func ListenTCP(ctx context.Context, address net.Address, port net.Port, streamSe
 
 	tcpSettings := streamSettings.ProtocolSettings.(*Config)
 	l := &Listener{
-		listener: listener,
+		listener: proxyproto.Listener{Listener: listener},
 		config:   tcpSettings,
 		addConn:  handler,
 	}
