@@ -18,7 +18,7 @@ import (
 
 // Listener is an internet.Listener that listens for TCP connections.
 type Listener struct {
-	listener   proxyproto.Listener
+	listener   net.Listener
 	tlsConfig  *gotls.Config
 	authConfig internet.ConnectionAuthenticator
 	config     *Config
@@ -37,12 +37,22 @@ func ListenTCP(ctx context.Context, address net.Address, port net.Port, streamSe
 	newError("listening TCP on ", address, ":", port).WriteToLog(session.ExportIDToError(ctx))
 
 	tcpSettings := streamSettings.ProtocolSettings.(*Config)
-	l := &Listener{
-		listener: proxyproto.Listener{Listener: listener},
-		config:   tcpSettings,
-		addConn:  handler,
+	policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
+	var l *Listener
+	if tcpSettings.AcceptProxyProtocol {
+		l = &Listener{
+			listener: &proxyproto.Listener{Listener: listener, Policy: policyFunc},
+			config:   tcpSettings,
+			addConn:  handler,
+		}
+		newError("Accepting PROXY protocol").AtWarning().WriteToLog(session.ExportIDToError(ctx))
+	} else {
+		l = &Listener{
+			listener: listener,
+			config:   tcpSettings,
+			addConn:  handler,
+		}
 	}
-
 	if config := tls.ConfigFromStreamSettings(streamSettings); config != nil {
 		l.tlsConfig = config.GetTLSConfig(tls.WithNextProto("h2"))
 	}
