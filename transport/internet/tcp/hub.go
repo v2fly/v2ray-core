@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/pires/go-proxyproto"
+
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/session"
@@ -37,9 +38,10 @@ func ListenTCP(ctx context.Context, address net.Address, port net.Port, streamSe
 	newError("listening TCP on ", address, ":", port).WriteToLog(session.ExportIDToError(ctx))
 
 	tcpSettings := streamSettings.ProtocolSettings.(*Config)
-	policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
 	var l *Listener
+
 	if tcpSettings.AcceptProxyProtocol {
+		policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
 		l = &Listener{
 			listener: &proxyproto.Listener{Listener: listener, Policy: policyFunc},
 			config:   tcpSettings,
@@ -53,6 +55,7 @@ func ListenTCP(ctx context.Context, address net.Address, port net.Port, streamSe
 			addConn:  handler,
 		}
 	}
+
 	if config := tls.ConfigFromStreamSettings(streamSettings); config != nil {
 		l.tlsConfig = config.GetTLSConfig(tls.WithNextProto("h2"))
 	}
@@ -68,6 +71,7 @@ func ListenTCP(ctx context.Context, address net.Address, port net.Port, streamSe
 		}
 		l.authConfig = auth
 	}
+
 	go l.keepAccepting()
 	return l, nil
 }
