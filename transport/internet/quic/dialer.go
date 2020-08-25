@@ -63,9 +63,9 @@ func removeInactiveSessions(sessions []*sessionContext) []*sessionContext {
 			activeSessions = append(activeSessions, s)
 			continue
 		}
-		if err := s.session.Close(); err != nil {
-			newError("failed to close session").Base(err).WriteToLog()
-		}
+		// if err := s.session.CloseWithError(); err != nil {
+		// 	newError("failed to close session").Base(err).WriteToLog()
+		// }
 		if err := s.rawConn.Close(); err != nil {
 			newError("failed to close raw connection").Base(err).WriteToLog()
 		}
@@ -151,7 +151,7 @@ func (s *clientSessions) openConnection(destAddr net.Addr, config *Config, tlsCo
 	quicConfig := &quic.Config{
 		ConnectionIDLength: 12,
 		HandshakeTimeout:   time.Second * 8,
-		IdleTimeout:        time.Second * 30,
+		MaxIdleTimeout:     time.Second * 30,
 	}
 
 	conn, err := wrapSysConn(rawConn, config)
