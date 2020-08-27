@@ -13,7 +13,7 @@ import (
 	"github.com/v2fly/v2ray-core/common/errors"
 )
 
-//go:generate errorgen
+//go:generate go run github.com/v2fly/v2ray-core/common/errors/errorgen
 
 var (
 	// ErrNoClue is for the situation that existing information is not enough to make a decision. For example, Router may return this error when there is no suitable route.

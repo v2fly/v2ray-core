@@ -9,7 +9,7 @@ import (
 	"github.com/v2fly/v2ray-core/proxy/vless"
 )
 
-//go:generate errorgen
+//go:generate go run github.com/v2fly/v2ray-core/common/errors/errorgen
 
 const (
 	Version = byte(0)
