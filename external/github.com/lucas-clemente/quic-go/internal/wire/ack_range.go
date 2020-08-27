@@ -1,6 +1,6 @@
 package wire
 
-import "v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/protocol"
+import "github.com/v2fly/v2ray-core/external/github.com/lucas-clemente/quic-go/internal/protocol"
 
 // AckRange is an ACK range
 type AckRange struct {

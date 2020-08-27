@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/miekg/dns"
+	"github.com/v2fly/v2ray-core/common"
+	"github.com/v2fly/v2ray-core/common/net"
 	"golang.org/x/net/dns/dnsmessage"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
 )
 
 func Test_parseResponse(t *testing.T) {
@@ -148,8 +148,8 @@ func TestFqdn(t *testing.T) {
 		args args
 		want string
 	}{
-		{"with fqdn", args{"www.v2ray.com."}, "www.v2ray.com."},
-		{"without fqdn", args{"www.v2ray.com"}, "www.v2ray.com."},
+		{"with fqdn", args{"www.v2fly.org."}, "www.v2fly.org."},
+		{"without fqdn", args{"www.v2fly.org"}, "www.v2fly.org."},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

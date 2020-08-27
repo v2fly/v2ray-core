@@ -6,9 +6,9 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/proxy/mtproto"
+	"github.com/v2fly/v2ray-core/common/protocol"
+	"github.com/v2fly/v2ray-core/common/serial"
+	"github.com/v2fly/v2ray-core/proxy/mtproto"
 )
 
 type MTProtoAccount struct {

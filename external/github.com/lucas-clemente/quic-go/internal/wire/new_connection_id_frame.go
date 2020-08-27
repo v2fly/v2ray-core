@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/utils"
+	"github.com/v2fly/v2ray-core/external/github.com/lucas-clemente/quic-go/internal/utils"
 
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/protocol"
+	"github.com/v2fly/v2ray-core/external/github.com/lucas-clemente/quic-go/internal/protocol"
 )
 
 // A NewConnectionIDFrame is a NEW_CONNECTION_ID frame

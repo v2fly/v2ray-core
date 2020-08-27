@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	proto "github.com/golang/protobuf/proto"
-	"v2ray.com/core/app/router"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/platform"
-	"v2ray.com/core/common/platform/filesystem"
+	"github.com/v2fly/v2ray-core/app/router"
+	"github.com/v2fly/v2ray-core/common"
+	"github.com/v2fly/v2ray-core/common/net"
+	"github.com/v2fly/v2ray-core/common/platform"
+	"github.com/v2fly/v2ray-core/common/platform/filesystem"
 )
 
 func init() {

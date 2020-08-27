@@ -6,8 +6,8 @@ import (
 	"strings"
 	"sync"
 
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/uuid"
+	"github.com/v2fly/v2ray-core/common/protocol"
+	"github.com/v2fly/v2ray-core/common/uuid"
 )
 
 type Validator struct {

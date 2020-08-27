@@ -1,7 +1,7 @@
 package congestion
 
 import (
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/protocol"
+	"github.com/v2fly/v2ray-core/external/github.com/lucas-clemente/quic-go/internal/protocol"
 )
 
 // PrrSender implements the Proportional Rate Reduction (PRR) per RFC 6937

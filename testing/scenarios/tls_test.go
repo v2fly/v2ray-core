@@ -8,25 +8,25 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/protocol/tls/cert"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/common/uuid"
-	"v2ray.com/core/proxy/dokodemo"
-	"v2ray.com/core/proxy/freedom"
-	"v2ray.com/core/proxy/vmess"
-	"v2ray.com/core/proxy/vmess/inbound"
-	"v2ray.com/core/proxy/vmess/outbound"
-	"v2ray.com/core/testing/servers/tcp"
-	"v2ray.com/core/testing/servers/udp"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/http"
-	"v2ray.com/core/transport/internet/tls"
-	"v2ray.com/core/transport/internet/websocket"
+	core "github.com/v2fly/v2ray-core"
+	"github.com/v2fly/v2ray-core/app/proxyman"
+	"github.com/v2fly/v2ray-core/common"
+	"github.com/v2fly/v2ray-core/common/net"
+	"github.com/v2fly/v2ray-core/common/protocol"
+	"github.com/v2fly/v2ray-core/common/protocol/tls/cert"
+	"github.com/v2fly/v2ray-core/common/serial"
+	"github.com/v2fly/v2ray-core/common/uuid"
+	"github.com/v2fly/v2ray-core/proxy/dokodemo"
+	"github.com/v2fly/v2ray-core/proxy/freedom"
+	"github.com/v2fly/v2ray-core/proxy/vmess"
+	"github.com/v2fly/v2ray-core/proxy/vmess/inbound"
+	"github.com/v2fly/v2ray-core/proxy/vmess/outbound"
+	"github.com/v2fly/v2ray-core/testing/servers/tcp"
+	"github.com/v2fly/v2ray-core/testing/servers/udp"
+	"github.com/v2fly/v2ray-core/transport/internet"
+	"github.com/v2fly/v2ray-core/transport/internet/http"
+	"github.com/v2fly/v2ray-core/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/transport/internet/websocket"
 )
 
 func TestSimpleTLSConnection(t *testing.T) {
@@ -228,7 +228,7 @@ func TestAutoIssuingCertificate(t *testing.T) {
 						SecurityType: serial.GetMessageType(&tls.Config{}),
 						SecuritySettings: []*serial.TypedMessage{
 							serial.ToTypedMessage(&tls.Config{
-								ServerName: "v2ray.com",
+								ServerName: "v2fly.org",
 								Certificate: []*tls.Certificate{{
 									Certificate: certPEM,
 									Usage:       tls.Certificate_AUTHORITY_VERIFY,
@@ -488,7 +488,7 @@ func TestHTTP2(t *testing.T) {
 							{
 								Protocol: internet.TransportProtocol_HTTP,
 								Settings: serial.ToTypedMessage(&http.Config{
-									Host: []string{"v2ray.com"},
+									Host: []string{"v2fly.org"},
 									Path: "/testpath",
 								}),
 							},
@@ -560,7 +560,7 @@ func TestHTTP2(t *testing.T) {
 							{
 								Protocol: internet.TransportProtocol_HTTP,
 								Settings: serial.ToTypedMessage(&http.Config{
-									Host: []string{"v2ray.com"},
+									Host: []string{"v2fly.org"},
 									Path: "/testpath",
 								}),
 							},

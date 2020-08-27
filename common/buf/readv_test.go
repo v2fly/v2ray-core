@@ -9,10 +9,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
+	"github.com/v2fly/v2ray-core/common"
+	. "github.com/v2fly/v2ray-core/common/buf"
+	"github.com/v2fly/v2ray-core/testing/servers/tcp"
 	"golang.org/x/sync/errgroup"
-	"v2ray.com/core/common"
-	. "v2ray.com/core/common/buf"
-	"v2ray.com/core/testing/servers/tcp"
 )
 
 func TestReadvReader(t *testing.T) {

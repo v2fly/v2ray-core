@@ -5,7 +5,7 @@ import (
 	"net"
 	"sync"
 
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/utils"
+	"github.com/v2fly/v2ray-core/external/github.com/lucas-clemente/quic-go/internal/utils"
 )
 
 var (

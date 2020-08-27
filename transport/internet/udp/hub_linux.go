@@ -5,8 +5,8 @@ package udp
 import (
 	"syscall"
 
+	"github.com/v2fly/v2ray-core/common/net"
 	"golang.org/x/sys/unix"
-	"v2ray.com/core/common/net"
 )
 
 func RetrieveOriginalDest(oob []byte) net.Destination {

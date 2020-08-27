@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	. "v2ray.com/core/common/log"
+	"github.com/v2fly/v2ray-core/common"
+	"github.com/v2fly/v2ray-core/common/buf"
+	. "github.com/v2fly/v2ray-core/common/log"
 )
 
 func TestFileLogger(t *testing.T) {

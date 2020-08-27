@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"strings"
 
-	"v2ray.com/core/common"
+	"github.com/v2fly/v2ray-core/common"
 )
 
 var protoFilesUsingProtocGenGoFast = map[string]bool{"proxy/vless/encoding/addons.proto": true}

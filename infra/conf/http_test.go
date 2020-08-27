@@ -3,8 +3,8 @@ package conf_test
 import (
 	"testing"
 
-	. "v2ray.com/core/infra/conf"
-	"v2ray.com/core/proxy/http"
+	. "github.com/v2fly/v2ray-core/infra/conf"
+	"github.com/v2fly/v2ray-core/proxy/http"
 )
 
 func TestHttpServerConfig(t *testing.T) {

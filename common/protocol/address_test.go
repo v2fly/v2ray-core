@@ -6,10 +6,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	. "v2ray.com/core/common/protocol"
+	"github.com/v2fly/v2ray-core/common"
+	"github.com/v2fly/v2ray-core/common/buf"
+	"github.com/v2fly/v2ray-core/common/net"
+	. "github.com/v2fly/v2ray-core/common/protocol"
 )
 
 func TestAddressReading(t *testing.T) {
@@ -236,7 +236,7 @@ func BenchmarkAddressWritingDomain(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		common.Must(parser.WriteAddressPort(writer, net.DomainAddress("www.v2ray.com"), net.Port(80)))
+		common.Must(parser.WriteAddressPort(writer, net.DomainAddress("www.v2fly.org"), net.Port(80)))
 		writer.Clear()
 	}
 }

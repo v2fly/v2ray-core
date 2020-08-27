@@ -22,8 +22,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/v2fly/v2ray-core/external/github.com/cloudflare/sidh/sidh"
 	"golang.org/x/crypto/curve25519"
-	"v2ray.com/core/external/github.com/cloudflare/sidh/sidh"
 )
 
 // numSessionTickets is the number of different session tickets the
