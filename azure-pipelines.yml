@@ -34,10 +34,9 @@ steps:
   - script: |
       go version
       unset GOPATH
-      mkdir ./src
-      mkdir ./src/v2ray.com
-      ln -s $(pwd)/../triggersrc ./src/v2ray.com/core
-      go get -v -t -d ./src/v2ray.com/core/...
+      mkdir -p ./src/github.com/v2fly
+      ln -s $(pwd)/../triggersrc ./src/github.com/v2fly/v2ray-core
+      go get -v -t -d ./src/github.com/v2fly/v2ray-core/...
       tree
     workingDirectory: '$(GOPATH)'
     displayName: 'Fetch sources'
@@ -54,16 +53,16 @@ steps:
     workingDirectory: '$(GOPATH)'
     displayName: 'Install Bazel'
   - script: |
-      cd ./src/v2ray.com/core
+      cd ./src/github.com/v2fly/v2ray-core
       $HOME/bin/bazel build --action_env=GOPATH=$GOPATH --action_env=PATH=$PATH --action_env=GPG_PASS=${SIGN_KEY_PASS} --action_env=SPWD=$PWD --action_env=GOCACHE=$(go env GOCACHE) --spawn_strategy local //release:all
     workingDirectory: '$(GOPATH)'
     displayName: 'Build Binaries'
   - script: |
-      cp ./src/v2ray.com/core/bazel-bin/release/*.zip ./release/
+      cp ./src/github.com/v2fly/v2ray-core/bazel-bin/release/*.zip ./release/
     workingDirectory: '$(GOPATH)'
     displayName: 'Dump Binaries'
   - script: |
-      cd ./src/v2ray.com/core
+      cd ./src/github.com/v2fly/v2ray-core
       echo $RELEASE_TAG
       ./release/bleedingrelease.sh
     workingDirectory: '$(GOPATH)'
@@ -77,7 +76,7 @@ steps:
       GITHUB_REPO_OWNER: v2fly
       GITHUB_REPO_NAME: v2ray-core
   - script: |
-      cd ./src/v2ray.com/core
+      cd ./src/github.com/v2fly/v2ray-core
       echo $RELEASE_TAG
       ./release/tagrelease.sh
     workingDirectory: '$(GOPATH)'

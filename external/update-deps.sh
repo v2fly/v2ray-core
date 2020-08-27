@@ -1,6 +1,6 @@
 #!/bin/bash
 
-pushd $GOPATH/src/v2ray.com/core/external
+pushd $GOPATH/src/github.com/v2fly/v2ray-core/external
 
 rsync -rv "$GOPATH/src/github.com/lucas-clemente/quic-go/" "./github.com/lucas-clemente/quic-go/"
 rm -rf ./github.com/lucas-clemente/quic-go/\.*

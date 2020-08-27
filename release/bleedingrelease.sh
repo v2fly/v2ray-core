@@ -1,6 +1,6 @@
 #!/bin/bash
 
-RELBODY="https://www.v2ray.com/chapter_00/01_versions.html"
+RELBODY="https://www.v2fly.org/"
 JSON_DATA=$(echo "{}" | jq -c ".tag_name=\"${RELEASE_TAG}\"")
 JSON_DATA=$(echo ${JSON_DATA} | jq -c ".prerelease=${PRERELEASE}")
 JSON_DATA=$(echo ${JSON_DATA} | jq -c ".body=\"${RELBODY}\"")
@@ -28,7 +28,7 @@ function upload() {
   uploadfile $DGST
 }
 
-ART_ROOT=$GOPATH/src/v2ray.com/core/bazel-bin/release
+ART_ROOT=$GOPATH/src/github.com/v2fly/v2ray-core/bazel-bin/release
 
 pushd ${ART_ROOT}
 {
