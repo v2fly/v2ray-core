@@ -7,8 +7,8 @@ package mocks
 import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 	outbound "github.com/v2fly/v2ray-core/features/outbound"
+	reflect "reflect"
 )
 
 // OutboundManager is a mock of Manager interface

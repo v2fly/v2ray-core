@@ -7,11 +7,11 @@ package mocks
 import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 	net "github.com/v2fly/v2ray-core/common/net"
 	routing "github.com/v2fly/v2ray-core/features/routing"
 	transport "github.com/v2fly/v2ray-core/transport"
 	internet "github.com/v2fly/v2ray-core/transport/internet"
+	reflect "reflect"
 )
 
 // ProxyInbound is a mock of Inbound interface
