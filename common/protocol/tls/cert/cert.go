@@ -15,7 +15,7 @@ import (
 	"github.com/v2fly/v2ray-core/common"
 )
 
-//go:generate errorgen
+//go:generate go run github.com/v2fly/v2ray-core/common/errors/errorgen
 
 type Certificate struct {
 	// Cerificate in ASN.1 DER format

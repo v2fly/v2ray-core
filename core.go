@@ -9,8 +9,7 @@
 // connections.
 package core
 
-//go:generate go install "github.com/v2fly/v2ray-core/common/errors/errorgen"
-//go:generate errorgen
+//go:generate go run github.com/v2fly/v2ray-core/common/errors/errorgen
 
 import (
 	"runtime"
