@@ -10,12 +10,12 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
+	vmessaead "github.com/v2fly/v2ray-core/proxy/vmess/aead"
 	"hash"
 	"hash/fnv"
 	"io"
 	"os"
 	"strings"
-	vmessaead "github.com/v2fly/v2ray-core/proxy/vmess/aead"
 
 	"golang.org/x/crypto/chacha20poly1305"
 

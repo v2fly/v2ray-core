@@ -5,14 +5,14 @@ package vmess
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+	"github.com/v2fly/v2ray-core/common/dice"
+	"github.com/v2fly/v2ray-core/proxy/vmess/aead"
 	"hash"
 	"hash/crc64"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
-	"github.com/v2fly/v2ray-core/common/dice"
-	"github.com/v2fly/v2ray-core/proxy/vmess/aead"
 
 	"github.com/v2fly/v2ray-core/common"
 	"github.com/v2fly/v2ray-core/common/protocol"
@@ -142,7 +142,7 @@ func (v *TimedUserValidator) Add(u *protocol.MemoryUser) error {
 
 	account := uu.user.Account.(*MemoryAccount)
 	if v.behaviorFused == false {
-		hashkdf := hmac.New(func()hash.Hash{return sha256.New()}, []byte("VMESSBSKDF"))
+		hashkdf := hmac.New(func() hash.Hash { return sha256.New() }, []byte("VMESSBSKDF"))
 		hashkdf.Write(account.ID.Bytes())
 		v.behaviorSeed = crc64.Update(v.behaviorSeed, crc64.MakeTable(crc64.ECMA), hashkdf.Sum(nil))
 	}

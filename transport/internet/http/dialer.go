@@ -9,13 +9,13 @@ import (
 	"net/url"
 	"sync"
 
-	"golang.org/x/net/http2"
 	"github.com/v2fly/v2ray-core/common"
 	"github.com/v2fly/v2ray-core/common/buf"
 	"github.com/v2fly/v2ray-core/common/net"
 	"github.com/v2fly/v2ray-core/transport/internet"
 	"github.com/v2fly/v2ray-core/transport/internet/tls"
 	"github.com/v2fly/v2ray-core/transport/pipe"
+	"golang.org/x/net/http2"
 )
 
 var (

@@ -9,10 +9,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/miekg/dns"
-	"golang.org/x/net/dns/dnsmessage"
 	"github.com/v2fly/v2ray-core/common"
 	"github.com/v2fly/v2ray-core/common/net"
 	v2net "github.com/v2fly/v2ray-core/common/net"
+	"golang.org/x/net/dns/dnsmessage"
 )
 
 func Test_parseResponse(t *testing.T) {

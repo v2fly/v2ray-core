@@ -6,9 +6,9 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/binary"
+	"github.com/v2fly/v2ray-core/common"
 	"io"
 	"time"
-	"github.com/v2fly/v2ray-core/common"
 )
 
 func SealVMessAEADHeader(key [16]byte, data []byte) []byte {

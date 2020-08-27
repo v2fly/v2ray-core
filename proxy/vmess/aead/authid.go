@@ -7,12 +7,12 @@ import (
 	rand3 "crypto/rand"
 	"encoding/binary"
 	"errors"
+	"github.com/v2fly/v2ray-core/common"
+	antiReplayWindow "github.com/v2fly/v2ray-core/common/antireplay"
 	"hash/crc32"
 	"io"
 	"math"
 	"time"
-	"github.com/v2fly/v2ray-core/common"
-	antiReplayWindow "github.com/v2fly/v2ray-core/common/antireplay"
 )
 
 func CreateAuthID(cmdKey []byte, time int64) [16]byte {

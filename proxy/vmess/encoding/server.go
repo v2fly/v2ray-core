@@ -7,13 +7,13 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/binary"
+	"github.com/v2fly/v2ray-core/common/dice"
+	vmessaead "github.com/v2fly/v2ray-core/proxy/vmess/aead"
 	"hash/fnv"
 	"io"
 	"io/ioutil"
 	"sync"
 	"time"
-	"github.com/v2fly/v2ray-core/common/dice"
-	vmessaead "github.com/v2fly/v2ray-core/proxy/vmess/aead"
 
 	"golang.org/x/crypto/chacha20poly1305"
 

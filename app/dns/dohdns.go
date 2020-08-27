@@ -16,7 +16,6 @@ import (
 
 	dns_feature "github.com/v2fly/v2ray-core/features/dns"
 
-	"golang.org/x/net/dns/dnsmessage"
 	"github.com/v2fly/v2ray-core/common"
 	"github.com/v2fly/v2ray-core/common/net"
 	"github.com/v2fly/v2ray-core/common/protocol/dns"
@@ -25,6 +24,7 @@ import (
 	"github.com/v2fly/v2ray-core/common/task"
 	"github.com/v2fly/v2ray-core/features/routing"
 	"github.com/v2fly/v2ray-core/transport/internet"
+	"golang.org/x/net/dns/dnsmessage"
 )
 
 // DoHNameServer implemented DNS over HTTPS (RFC8484) Wire Format,

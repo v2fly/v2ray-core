@@ -9,7 +9,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"golang.org/x/net/dns/dnsmessage"
 	"github.com/v2fly/v2ray-core/common"
 	"github.com/v2fly/v2ray-core/common/net"
 	"github.com/v2fly/v2ray-core/common/protocol/dns"
@@ -20,6 +19,7 @@ import (
 	dns_feature "github.com/v2fly/v2ray-core/features/dns"
 	"github.com/v2fly/v2ray-core/features/routing"
 	"github.com/v2fly/v2ray-core/transport/internet/udp"
+	"golang.org/x/net/dns/dnsmessage"
 )
 
 type ClassicNameServer struct {

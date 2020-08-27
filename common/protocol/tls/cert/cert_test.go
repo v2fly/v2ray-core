@@ -4,12 +4,12 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/common"
+	"github.com/v2fly/v2ray-core/common/task"
 	"os"
 	"strings"
 	"testing"
 	"time"
-	"github.com/v2fly/v2ray-core/common"
-	"github.com/v2fly/v2ray-core/common/task"
 )
 
 func TestGenerate(t *testing.T) {

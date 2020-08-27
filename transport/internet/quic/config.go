@@ -7,10 +7,10 @@ import (
 	"crypto/cipher"
 	"crypto/sha256"
 
-	"golang.org/x/crypto/chacha20poly1305"
 	"github.com/v2fly/v2ray-core/common"
 	"github.com/v2fly/v2ray-core/common/protocol"
 	"github.com/v2fly/v2ray-core/transport/internet"
+	"golang.org/x/crypto/chacha20poly1305"
 )
 
 func getAuth(config *Config) (cipher.AEAD, error) {

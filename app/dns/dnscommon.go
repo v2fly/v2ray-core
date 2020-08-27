@@ -6,11 +6,11 @@ import (
 	"encoding/binary"
 	"time"
 
-	"golang.org/x/net/dns/dnsmessage"
 	"github.com/v2fly/v2ray-core/common"
 	"github.com/v2fly/v2ray-core/common/errors"
 	"github.com/v2fly/v2ray-core/common/net"
 	dns_feature "github.com/v2fly/v2ray-core/features/dns"
+	"golang.org/x/net/dns/dnsmessage"
 )
 
 // Fqdn normalize domain make sure it ends with '.'

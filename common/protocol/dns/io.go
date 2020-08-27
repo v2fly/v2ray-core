@@ -4,10 +4,10 @@ import (
 	"encoding/binary"
 	"sync"
 
-	"golang.org/x/net/dns/dnsmessage"
 	"github.com/v2fly/v2ray-core/common"
 	"github.com/v2fly/v2ray-core/common/buf"
 	"github.com/v2fly/v2ray-core/common/serial"
+	"golang.org/x/net/dns/dnsmessage"
 )
 
 func PackMessage(msg *dnsmessage.Message) (*buf.Buffer, error) {
