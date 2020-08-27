@@ -52,7 +52,7 @@ function upload() {
   uploadfile $DGST
 }
 
-ART_ROOT=$GOPATH/src/v2ray.com/core/bazel-bin/release
+ART_ROOT=$GOPATH/src/github.com/v2fly/v2ray-core/bazel-bin/release
 
 
 pushd ${ART_ROOT}

@@ -29,13 +29,13 @@ trap cleanup INT TERM ERR
 
 get_source() {
 	echo ">>> Getting v2ray sources ..."
-	go get -insecure -v -t v2ray.com/core/...
-	SRCDIR="$GOPATH/src/v2ray.com/core"
+	go get -v -t github.com/v2fly/v2ray-core/...
+	SRCDIR="$GOPATH/src/github.com/v2fly/v2ray-core"
 }
 
 build_v2() {
 	pushd "$SRCDIR"
-	LDFLAGS="-s -w -X v2ray.com/core.codename=${CODENAME} -X v2ray.com/core.build=${BUILDNAME}  -X v2ray.com/core.version=${VERSIONTAG}"
+	LDFLAGS="-s -w -X github.com/v2fly/v2ray-core.codename=${CODENAME} -X github.com/v2fly/v2ray-core.build=${BUILDNAME}  -X github.com/v2fly/v2ray-core.version=${VERSIONTAG}"
 
 	echo ">>> Compile v2ray ..."
 	env CGO_ENABLED=0 go build -o "$TMP"/v2ray"${EXESUFFIX}" -ldflags "$LDFLAGS" ./main
@@ -166,4 +166,3 @@ fi
 
 
 cleanup
-
