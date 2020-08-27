@@ -1,4 +1,4 @@
-module v2ray.com/core
+module github.com/v2fly/v2ray-core
 
 go 1.15
 
