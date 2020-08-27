@@ -30,7 +30,7 @@ func main() {
 
 	fmt.Fprintln(file, "package", pkg)
 	fmt.Fprintln(file, "")
-	fmt.Fprintln(file, "import \"v2ray.com/core/common/errors\"")
+	fmt.Fprintln(file, "import \"github.com/v2fly/v2ray-core/common/errors\"")
 	fmt.Fprintln(file, "")
 	fmt.Fprintln(file, "type errPathObjHolder struct {}")
 	fmt.Fprintln(file, "func newError(values ...interface{}) *errors.Error { return errors.New(values...).WithPathObj(errPathObjHolder{}) }")

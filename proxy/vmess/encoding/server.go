@@ -12,19 +12,19 @@ import (
 	"io/ioutil"
 	"sync"
 	"time"
-	"v2ray.com/core/common/dice"
-	vmessaead "v2ray.com/core/proxy/vmess/aead"
+	"github.com/v2fly/v2ray-core/common/dice"
+	vmessaead "github.com/v2fly/v2ray-core/proxy/vmess/aead"
 
 	"golang.org/x/crypto/chacha20poly1305"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/bitmask"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/crypto"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/task"
-	"v2ray.com/core/proxy/vmess"
+	"github.com/v2fly/v2ray-core/common"
+	"github.com/v2fly/v2ray-core/common/bitmask"
+	"github.com/v2fly/v2ray-core/common/buf"
+	"github.com/v2fly/v2ray-core/common/crypto"
+	"github.com/v2fly/v2ray-core/common/net"
+	"github.com/v2fly/v2ray-core/common/protocol"
+	"github.com/v2fly/v2ray-core/common/task"
+	"github.com/v2fly/v2ray-core/proxy/vmess"
 )
 
 type sessionId struct {

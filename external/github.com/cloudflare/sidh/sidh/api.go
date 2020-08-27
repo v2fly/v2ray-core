@@ -2,7 +2,7 @@ package sidh
 
 import (
 	"errors"
-	. "v2ray.com/core/external/github.com/cloudflare/sidh/internal/isogeny"
+	. "github.com/v2fly/v2ray-core/external/github.com/cloudflare/sidh/internal/isogeny"
 	"io"
 )
 

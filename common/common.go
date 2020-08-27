@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"v2ray.com/core/common/errors"
+	"github.com/v2fly/v2ray-core/common/errors"
 )
 
 //go:generate errorgen

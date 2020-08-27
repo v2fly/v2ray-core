@@ -5,9 +5,9 @@ import (
 	"io"
 	"testing"
 
-	. "v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/testing/servers/tcp"
+	. "github.com/v2fly/v2ray-core/common/buf"
+	"github.com/v2fly/v2ray-core/common/net"
+	"github.com/v2fly/v2ray-core/testing/servers/tcp"
 )
 
 func TestWriterCreation(t *testing.T) {

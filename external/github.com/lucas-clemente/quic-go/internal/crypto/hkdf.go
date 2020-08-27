@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 )
 
-// copied from https://v2ray.com/core/external/github.com/cloudflare/tls-tris/blob/master/hkdf.go
+// copied from https://github.com/v2fly/v2ray-core/external/github.com/cloudflare/tls-tris/blob/master/hkdf.go
 func hkdfExtract(hash crypto.Hash, secret, salt []byte) []byte {
 	if salt == nil {
 		salt = make([]byte, hash.Size())
@@ -19,7 +19,7 @@ func hkdfExtract(hash crypto.Hash, secret, salt []byte) []byte {
 	return extractor.Sum(nil)
 }
 
-// copied from https://v2ray.com/core/external/github.com/cloudflare/tls-tris/blob/master/hkdf.go
+// copied from https://github.com/v2fly/v2ray-core/external/github.com/cloudflare/tls-tris/blob/master/hkdf.go
 func hkdfExpand(hash crypto.Hash, prk, info []byte, l int) []byte {
 	var (
 		expander = hmac.New(hash.New, prk)

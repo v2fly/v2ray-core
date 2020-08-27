@@ -4,8 +4,8 @@ import (
 	"crypto/rand"
 	"math"
 
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/protocol"
-	"v2ray.com/core/external/github.com/lucas-clemente/quic-go/internal/wire"
+	"github.com/v2fly/v2ray-core/external/github.com/lucas-clemente/quic-go/internal/protocol"
+	"github.com/v2fly/v2ray-core/external/github.com/lucas-clemente/quic-go/internal/wire"
 )
 
 // The packetNumberGenerator generates the packet number for the next packet

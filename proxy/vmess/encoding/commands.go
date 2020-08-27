@@ -4,12 +4,12 @@ import (
 	"encoding/binary"
 	"io"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/common/uuid"
+	"github.com/v2fly/v2ray-core/common"
+	"github.com/v2fly/v2ray-core/common/buf"
+	"github.com/v2fly/v2ray-core/common/net"
+	"github.com/v2fly/v2ray-core/common/protocol"
+	"github.com/v2fly/v2ray-core/common/serial"
+	"github.com/v2fly/v2ray-core/common/uuid"
 )
 
 var (

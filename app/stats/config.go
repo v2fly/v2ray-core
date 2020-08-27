@@ -5,7 +5,7 @@ package stats
 import (
 	"context"
 
-	"v2ray.com/core/common"
+	"github.com/v2fly/v2ray-core/common"
 )
 
 func init() {

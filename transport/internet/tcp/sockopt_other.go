@@ -4,8 +4,8 @@
 package tcp
 
 import (
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/transport/internet"
+	"github.com/v2fly/v2ray-core/common/net"
+	"github.com/v2fly/v2ray-core/transport/internet"
 )
 
 func GetOriginalDestination(conn internet.Connection) (net.Destination, error) {

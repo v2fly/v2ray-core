@@ -8,7 +8,7 @@ import (
 	"encoding/binary"
 	"io"
 	"time"
-	"v2ray.com/core/common"
+	"github.com/v2fly/v2ray-core/common"
 )
 
 func SealVMessAEADHeader(key [16]byte, data []byte) []byte {

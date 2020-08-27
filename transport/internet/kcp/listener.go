@@ -8,12 +8,12 @@ import (
 	"crypto/tls"
 	"sync"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/transport/internet"
-	v2tls "v2ray.com/core/transport/internet/tls"
-	"v2ray.com/core/transport/internet/udp"
+	"github.com/v2fly/v2ray-core/common"
+	"github.com/v2fly/v2ray-core/common/buf"
+	"github.com/v2fly/v2ray-core/common/net"
+	"github.com/v2fly/v2ray-core/transport/internet"
+	v2tls "github.com/v2fly/v2ray-core/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/transport/internet/udp"
 )
 
 type ConnectionID struct {

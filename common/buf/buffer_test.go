@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"v2ray.com/core/common"
-	. "v2ray.com/core/common/buf"
+	"github.com/v2fly/v2ray-core/common"
+	. "github.com/v2fly/v2ray-core/common/buf"
 )
 
 func TestBufferClear(t *testing.T) {

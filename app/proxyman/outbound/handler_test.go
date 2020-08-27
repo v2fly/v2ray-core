@@ -4,15 +4,15 @@ import (
 	"context"
 	"testing"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/policy"
-	. "v2ray.com/core/app/proxyman/outbound"
-	"v2ray.com/core/app/stats"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/features/outbound"
-	"v2ray.com/core/proxy/freedom"
-	"v2ray.com/core/transport/internet"
+	core "github.com/v2fly/v2ray-core"
+	"github.com/v2fly/v2ray-core/app/policy"
+	. "github.com/v2fly/v2ray-core/app/proxyman/outbound"
+	"github.com/v2fly/v2ray-core/app/stats"
+	"github.com/v2fly/v2ray-core/common/net"
+	"github.com/v2fly/v2ray-core/common/serial"
+	"github.com/v2fly/v2ray-core/features/outbound"
+	"github.com/v2fly/v2ray-core/proxy/freedom"
+	"github.com/v2fly/v2ray-core/transport/internet"
 )
 
 func TestInterfaces(t *testing.T) {

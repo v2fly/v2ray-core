@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	. "v2ray.com/core/transport/internet/headers/http"
+	"github.com/v2fly/v2ray-core/common"
+	"github.com/v2fly/v2ray-core/common/buf"
+	"github.com/v2fly/v2ray-core/common/net"
+	. "github.com/v2fly/v2ray-core/transport/internet/headers/http"
 )
 
 func TestReaderWriter(t *testing.T) {
@@ -92,7 +92,7 @@ func TestConnection(t *testing.T) {
 			Header: []*Header{
 				{
 					Name:  "Host",
-					Value: []string{"www.v2ray.com", "www.google.com"},
+					Value: []string{"www.v2fly.org", "www.google.com"},
 				},
 				{
 					Name:  "User-Agent",
@@ -165,7 +165,7 @@ func TestConnectionInvPath(t *testing.T) {
 			Header: []*Header{
 				{
 					Name:  "Host",
-					Value: []string{"www.v2ray.com", "www.google.com"},
+					Value: []string{"www.v2fly.org", "www.google.com"},
 				},
 				{
 					Name:  "User-Agent",
@@ -192,7 +192,7 @@ func TestConnectionInvPath(t *testing.T) {
 			Header: []*Header{
 				{
 					Name:  "Host",
-					Value: []string{"www.v2ray.com", "www.google.com"},
+					Value: []string{"www.v2fly.org", "www.google.com"},
 				},
 				{
 					Name:  "User-Agent",
@@ -267,7 +267,7 @@ func TestConnectionInvReq(t *testing.T) {
 			Header: []*Header{
 				{
 					Name:  "Host",
-					Value: []string{"www.v2ray.com", "www.google.com"},
+					Value: []string{"www.v2fly.org", "www.google.com"},
 				},
 				{
 					Name:  "User-Agent",

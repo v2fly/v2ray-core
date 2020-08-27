@@ -10,11 +10,11 @@ import (
 
 	"github.com/pires/go-proxyproto"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/common"
+	"github.com/v2fly/v2ray-core/common/net"
+	"github.com/v2fly/v2ray-core/common/session"
+	"github.com/v2fly/v2ray-core/transport/internet"
+	"github.com/v2fly/v2ray-core/transport/internet/tls"
 )
 
 // Listener is an internet.Listener that listens for TCP connections.
