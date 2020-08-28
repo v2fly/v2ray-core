@@ -8,10 +8,9 @@ import (
 	"runtime"
 	"strings"
 
+	core "github.com/v2fly/v2ray-core"
 	"github.com/v2fly/v2ray-core/common"
 )
-
-var protoFilesUsingProtocGenGoFast = map[string]bool{"proxy/vless/encoding/addons.proto": true}
 
 var protocMap = map[string]string{
 	"windows": filepath.Join(".dev", "protoc", "windows", "protoc.exe"),
@@ -56,7 +55,7 @@ func main() {
 	for _, files := range protoFilesMap {
 		for _, relProtoFile := range files {
 			var args []string
-			if protoFilesUsingProtocGenGoFast[relProtoFile] {
+			if core.ProtoFilesUsingProtocGenGoFast[relProtoFile] {
 				args = []string{"--gofast_out", pwd, "--plugin", "protoc-gen-gofast=" + GOBIN + "/protoc-gen-gofast"}
 			} else {
 				args = []string{"--go_out", pwd, "--go-grpc_out", pwd, "--plugin", "protoc-gen-go=" + GOBIN + "/protoc-gen-go", "--plugin", "protoc-gen-go-grpc=" + GOBIN + "/protoc-gen-go-grpc"}
