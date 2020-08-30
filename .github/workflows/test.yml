@@ -1,4 +1,4 @@
-name: Test
+name: Lint & Test
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
       - "**/*.go"
   pull_request:
     branches: [master]
+    types: [opened, synchronize, reopened]
     paths:
       - "**/*.go"
 
@@ -25,9 +26,16 @@ jobs:
       - name: Checkout default branch
         uses: actions/checkout@v2
 
-      - name: Get dependencies
-        run: |
-          go get -v -t -d ./...
+      - name: Cache go module
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-
 
-      - name: Test
-        run: go test -parallel 1 -timeout 6h -v ./...
+      - name: Lint & Test
+        run: |
+          go vet ./... $(go list ./... | grep -v /external/)
+          go get -u honnef.co/go/tools/cmd/staticcheck
+          staticcheck -- $(go list ./... | grep -v /external/)
+          go test -v ./...
