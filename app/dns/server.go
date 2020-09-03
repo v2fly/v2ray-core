@@ -295,7 +295,7 @@ func (s *Server) queryIPTimeout(idx int, client Client, domain string, option IP
 	if ips, err := s.Match(idx, client, domain, ips); err != nil {
 		return ips, err
 	}
-	
+
 	return ips, err
 }
 
