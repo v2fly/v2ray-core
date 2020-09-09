@@ -1,0 +1,119 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+      - "dev**"
+    tags:
+      - v*
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        buildname:
+          [
+            v2ray-dragonfly-64.zip,
+            v2ray-freebsd-32.zip,
+            v2ray-freebsd-64.zip,
+            v2ray-linux-32.zip,
+            v2ray-linux-64.zip,
+            v2ray-linux-arm32-v5.zip,
+            v2ray-linux-arm32-v6.zip,
+            v2ray-linux-arm32-v7a.zip,
+            v2ray-linux-arm64-v8a.zip,
+            v2ray-linux-mips32.zip,
+            v2ray-linux-mips32le.zip,
+            v2ray-linux-mips64.zip,
+            v2ray-linux-mips64le.zip,
+            v2ray-linux-ppc64.zip,
+            v2ray-linux-ppc64le.zip,
+            v2ray-linux-riscv64.zip,
+            v2ray-linux-s390x.zip,
+            v2ray-macos-64.zip,
+            v2ray-openbsd-32.zip,
+            v2ray-openbsd-64.zip,
+            v2ray-windows-32.zip,
+            v2ray-windows-64.zip,
+            v2ray-windows-arm32-v7a.zip,
+          ]
+    steps:
+      - name: Set variables
+        run: |
+          echo "::set-env name=BAZEL_VER::3.5.0"
+          echo "::set-env name=PRERELEASE::true"
+          echo "::set-env name=RELEASE_SHA::${{ github.sha }}"
+          echo "::set-env name=TRIGGER_REASON::${{ github.ref }}"
+          echo "::set-env name=GITHUB_REPO_OWNER::v2fly"
+          echo "::set-env name=GITHUB_REPO_NAME::v2ray-core"
+          echo "::set-env name=GITHUB_TOKEN::${{ secrets.GITHUB_TOKEN }}"
+          echo "::set-env name=SIGN_UTILS::github.com/xiaokangwang/V2BuildAssist/v2buildutil"
+          if ${{ startsWith( ${{ github.ref }}, "refs/tags/" ) }}; then
+            echo "::set-env name=RELEASE_TAG::${${{ github.ref }}:10:25}"
+            echo "::set-env name=PROJECT_NAME::v2fly"
+            echo "::set-env name=PROJECT::v2fly/v2ray-core"
+          else
+            echo "::set-env name=RELEASE_TAG::unstable-$(date +%Y%m%d%H%M%S)-${{ github.sha }}"
+            echo "::set-env name=PROJECT_NAME::v2flyunstable"
+            echo "::set-env name=PROJECT::v2fly/V2FlyBleedingEdgeBinary"
+          fi
+        shell: bash
+
+      - name: Set up Go 1.x.y
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.15.1
+
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+
+      - name: Get project dependencies
+        run: go mod download
+
+      - name: Install Bazel
+        run: |
+          curl -L -o /tmp/bazel-installer.sh https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VER}/bazel-${BAZEL_VER}-installer-linux-x86_64.sh
+          chmod +x /tmp/bazel-installer.sh
+          /tmp/bazel-installer.sh --user
+
+      - name: Build binaries
+        run: $HOME/bin/bazel build --action_env=GOPATH=$(go env GOPATH) --action_env=PATH=$PATH --action_env=GPG_PASS=${SIGN_KEY_PASS} --action_env=SPWD=$(pwd) --action_env=GOCACHE=$(go env GOCACHE) --spawn_strategy local //release:all
+
+      - name: Sign release binaries and post comment on commit
+        run: |
+          echo "RELEASE_TAG: ${RELEASE_TAG}"
+          cd bazel-bin/release
+          go run ${SIGN_UTILS} gen version ${RELEASE_TAG} >> Release.unsigned.unsorted
+          go run ${SIGN_UTILS} gen project ${PROJECT_NAME} >> Release.unsigned.unsorted
+          go run ${SIGN_UTILS} gen file ${{ matrix.buildname }} >> Release.unsigned.unsorted
+          go run ${SIGN_UTILS} gen sort < Release.unsigned.unsorted >> Release.unsigned
+          openssl dgst -md5 Release.unsigned | sed 's/([^)]*)//g' >> Release.unsigned.dgst
+          openssl dgst -sha1 Release.unsigned | sed 's/([^)]*)//g' >> Release.unsigned.dgst
+          openssl dgst -sha256 Release.unsigned | sed 's/([^)]*)//g' >> Release.unsigned.dgst
+          openssl dgst -sha512 Release.unsigned | sed 's/([^)]*)//g' >> Release.unsigned.dgst
+          openssl dgst -md5 ${{ matrix.buildname }} | sed 's/([^)]*)//g' >> ${{ matrix.buildname }}.dgst
+          openssl dgst -sha1 ${{ matrix.buildname }} | sed 's/([^)]*)//g' >> ${{ matrix.buildname }}.dgst
+          openssl dgst -sha256 ${{ matrix.buildname }} | sed 's/([^)]*)//g' >> ${{ matrix.buildname }}.dgst
+          openssl dgst -sha512 ${{ matrix.buildname }} | sed 's/([^)]*)//g' >> ${{ matrix.buildname }}.dgst
+          echo "Build Finished\nhttps://github.com/${PROJECT}/releases/tag/${RELEASE_TAG}" >> buildcomment
+          go run ${SIGN_UTILS} post commit "${RELEASE_SHA}" < buildcomment
+          rm -rf Release.unsigned.unsorted buildcomment
+
+      - name: Release and upload assets
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ env.RELEASE_TAG }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          draft: false
+          prerelease: ${{ env.PRERELEASE }}
+          fail_on_unmatched_files: true
+          files: |
+            ./bazel-bin/release/*
+        env:
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ env.PROJECT }}
