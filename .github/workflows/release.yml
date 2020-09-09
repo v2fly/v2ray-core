@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+      - "dev**"
+    tags:
+      - v*
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set variables
+        run: |
+          echo "::set-env name=RELEASE_SHA::${{ github.sha }}"
+          echo "::set-env name=GITHUB_REPO_OWNER::v2fly"
+          echo "::set-env name=GITHUB_REPO_NAME::v2ray-core"
+          echo "::set-env name=GITHUB_TOKEN::${{ secrets.GITHUB_TOKEN }}"
+          echo "::set-env name=BUILD_UTILS::github.com/xiaokangwang/V2BuildAssist/v2buildutil"
+          if [[ ${{ github.ref }} =~ "refs/tags/".* ]]; then
+            echo "::set-env name=RELEASE_TAG::${${{ github.ref }}##*/}"
+            echo "::set-env name=PROJECT_NAME::v2fly"
+            echo "::set-env name=PROJECT::v2fly/v2ray-core"
+          else
+            echo "::set-env name=RELEASE_TAG::unstable-$(date +%Y%m%d%H%M%S)-${{ github.sha }}"
+            echo "::set-env name=PROJECT_NAME::v2flyunstable"
+            echo "::set-env name=PROJECT::v2fly/V2FlyBleedingEdgeBinary"
+          fi
+        shell: bash
+
+      - name: Set up Go 1.x.y
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.15.1
+
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+
+      - name: Get project dependencies
+        run: go mod download
+
+      - name: Build binaries
+        run: bazel build --action_env=GOPATH=$(go env GOPATH) --action_env=PATH=${PATH} --action_env=GPG_PASS=${SIGN_KEY_PASS} --action_env=SPWD=$(pwd) --action_env=GOCACHE=$(go env GOCACHE) --spawn_strategy local //release:all
+
+      - name: Sign release binaries and post comment
+        run: |
+          cd bazel-bin/release
+          go run ${BUILD_UTILS} gen version ${RELEASE_TAG} > /tmp/Release.unsigned.unsorted
+          go run ${BUILD_UTILS} gen project ${PROJECT_NAME} >> /tmp/Release.unsigned.unsorted
+          for binary in $(ls | grep -E "\.zip$"); do
+            go run ${BUILD_UTILS} gen file ${binary} >> /tmp/Release.unsigned.unsorted
+            openssl dgst -md5 ${binary} | sed 's/([^)]*)//g' >> ${binary}.dgst
+            openssl dgst -sha1 ${binary} | sed 's/([^)]*)//g' >> ${binary}.dgst
+            openssl dgst -sha256 ${binary} | sed 's/([^)]*)//g' >> ${binary}.dgst
+            openssl dgst -sha512 ${binary} | sed 's/([^)]*)//g' >> ${binary}.dgst
+          done
+          go run ${BUILD_UTILS} gen sort < /tmp/Release.unsigned.unsorted > Release.unsigned
+          openssl dgst -md5 Release.unsigned | sed 's/([^)]*)//g' >> Release.unsigned.dgst
+          openssl dgst -sha1 Release.unsigned | sed 's/([^)]*)//g' >> Release.unsigned.dgst
+          openssl dgst -sha256 Release.unsigned | sed 's/([^)]*)//g' >> Release.unsigned.dgst
+          openssl dgst -sha512 Release.unsigned | sed 's/([^)]*)//g' >> Release.unsigned.dgst
+          echo "Build Finished\nhttps://github.com/${PROJECT}/releases/tag/${RELEASE_TAG}" >> /tmp/buildcomment
+          go run ${BUILD_UTILS} post commit "${RELEASE_SHA}" < /tmp/buildcomment
+
+      - name: Create a release and upload assets
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ env.RELEASE_TAG }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          draft: false
+          prerelease: true
+          fail_on_unmatched_files: true
+          files: ./bazel-bin/release/*
+        env:
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ env.PROJECT }}
