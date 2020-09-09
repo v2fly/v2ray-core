@@ -71,7 +71,7 @@ steps:
     env:
       GITHUB_TOKEN: $(GITHUB_TOKEN)
       PRERELEASE: true
-      RELEASE_TAG: unstable-$(Build.SourceVersion)
+      RELEASE_TAG: unstable-$(date +%Y%m%d%H%M%S)-$(Build.SourceVersion)
       RELEASE_SHA: $(Build.SourceVersion)
       TRIGGER_REASON: $(Build.SourceBranch)
       GITHUB_REPO_OWNER: v2fly
@@ -85,5 +85,5 @@ steps:
     env:
       GITHUB_TOKEN: $(GITHUB_TOKEN)
       PRERELEASE: true
-      RELEASE_TAG: unstable-$(Build.SourceVersion)
+      RELEASE_TAG: unstable-$(date +%Y%m%d%H%M%S)-$(Build.SourceVersion)
       TRIGGER_REASON: $(Build.SourceBranch)
