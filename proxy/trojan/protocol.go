@@ -11,6 +11,12 @@ import (
 
 var (
 	crlf = []byte{'\r', '\n'}
+
+	addrParser = protocol.NewAddressParser(
+		protocol.AddressFamilyByte(0x01, net.AddressFamilyIPv4),
+		protocol.AddressFamilyByte(0x04, net.AddressFamilyIPv6),
+		protocol.AddressFamilyByte(0x03, net.AddressFamilyDomain),
+	)
 )
 
 const (
@@ -18,12 +24,6 @@ const (
 
 	CommandTCP byte = 1
 	CommandUDP byte = 3
-)
-
-var addrParser = protocol.NewAddressParser(
-	protocol.AddressFamilyByte(0x01, net.AddressFamilyIPv4),
-	protocol.AddressFamilyByte(0x04, net.AddressFamilyIPv6),
-	protocol.AddressFamilyByte(0x03, net.AddressFamilyDomain),
 )
 
 type PacketReader struct {
@@ -44,30 +44,30 @@ func (pr *PacketReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
 		return nil, newError("failed to read payload length").Base(err)
 	}
 
-	total := int(binary.BigEndian.Uint16(buffer.BytesTo(2)))
-	if total > maxLength {
-		return nil, newError("invalid payload length")
+	remain := int(binary.BigEndian.Uint16(buffer.BytesTo(2)))
+	if remain > maxLength {
+		return nil, newError("oversize payload")
 	}
 
 	if _, err := buffer.ReadFullFrom(pr.Reader, 2); err != nil {
 		return nil, newError("failed to read crlf").Base(err)
 	}
 
-	length := buf.Size
-	if total < length {
-		length = total
-	}
-
-	remain := int64(length)
 	var mb buf.MultiBuffer
-	for remain != 0 {
+	for remain > 0 {
+		length := buf.Size
+		if remain < length {
+			length = remain
+		}
 
 		b := buf.New()
-		n, err := b.ReadFrom(pr.Reader)
+		n, err := b.ReadFullFrom(pr.Reader, int32(length))
 		if err != nil {
+			b.Release()
+			buf.ReleaseMulti(mb)
 			return nil, newError("failed to read payload").Base(err)
 		}
-		remain -= n
+		remain -= int(n)
 		mb = append(mb, b)
 	}
 
@@ -80,18 +80,16 @@ type PacketWriter struct {
 }
 
 func (pw *PacketWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
-	length := mb.Len()
-
-	if length > maxLength {
-		buf.ReleaseMulti(mb)
-		return newError("oversize payload")
+	b := make([]byte, maxLength)
+	for !mb.IsEmpty() {
+		var length int
+		mb, length = buf.SplitBytes(mb, b)
+		if _, err := WritePacket(pw.Writer, pw.Target, b[:length]); err != nil {
+			buf.ReleaseMulti(mb)
+			return newError("failed to write packet").Base(err)
+		}
 	}
 
-	b := make([]byte, length)
-	mb, _ = buf.SplitBytes(mb, b)
-	buf.ReleaseMulti(mb)
-
-	WritePacket(pw.Writer, pw.Target, b)
 	return nil
 }
 
@@ -153,8 +151,9 @@ func WritePacket(w io.Writer, target net.Destination, payload []byte) (int, erro
 	buffer := buf.StackNew()
 	defer buffer.Release()
 
+	length := len(payload)
 	lengthBuf := [2]byte{}
-	binary.BigEndian.PutUint16(lengthBuf[:], uint16(len(payload)))
+	binary.BigEndian.PutUint16(lengthBuf[:], uint16(length))
 	addrParser.WriteAddressPort(&buffer, target.Address, target.Port)
 	buffer.Write(lengthBuf[:])
 	buffer.Write(crlf)
@@ -164,5 +163,5 @@ func WritePacket(w io.Writer, target net.Destination, payload []byte) (int, erro
 		return 0, err
 	}
 
-	return len(payload), nil
+	return length, nil
 }
