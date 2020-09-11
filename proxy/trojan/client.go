@@ -89,9 +89,9 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	postRequest := func() error {
 		defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
 
-		writer := buf.NewWriter(conn)
-		bufferWriter := buf.NewBufferedWriter(writer)
-		if err := WriteHeader(conn, destination, account); err != nil {
+		bufferWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
+		bodyWriter, err := WriteHeader(bufferWriter, destination, account)
+		if err != nil {
 			return newError("failed to write request header").Base(err).AtWarning()
 		}
 
@@ -100,15 +100,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 			return newError("failed to write A request payload").Base(err).AtWarning()
 		}
 
-		// transfer request payload
-		if network == net.Network_UDP {
-			writer = &PacketWriter{
-				Writer: conn,
-				Target: destination,
-			}
-		}
-
-		if err := buf.Copy(link.Reader, writer, buf.UpdateActivity(timer)); err != nil {
+		if err := buf.Copy(link.Reader, bodyWriter, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer request payload").Base(err).AtInfo()
 		}
 		return nil

@@ -133,7 +133,7 @@ func ReadHeader(r io.Reader) (*net.Destination, buf.Reader, error) {
 	return &net.Destination{Address: addr, Port: port, Network: network}, reader, nil
 }
 
-func WriteHeader(w io.Writer, target net.Destination, account *MemoryAccount) error {
+func WriteHeader(w io.Writer, target net.Destination, account *MemoryAccount) (buf.Writer, error) {
 	buffer := buf.StackNew()
 	defer buffer.Release()
 
@@ -149,7 +149,21 @@ func WriteHeader(w io.Writer, target net.Destination, account *MemoryAccount) er
 	buffer.Write(crlf)
 
 	_, err := w.Write(buffer.Bytes())
-	return err
+	if err != nil {
+		return nil, err
+	}
+
+	var writer buf.Writer
+	if target.Network == net.Network_UDP {
+		writer = &PacketWriter{
+			Writer: w,
+			Target: target,
+		}
+	} else {
+		writer = buf.NewWriter(w)
+	}
+
+	return writer, err
 }
 
 func WritePacket(w io.Writer, target net.Destination, payload []byte) (int, error) {
