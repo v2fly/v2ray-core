@@ -1,8 +1,7 @@
 # Publish Docker image
-# 1. DOCKER_IMAGE: the name of the docker hub project
-# 2. Set the secrets DOCKERHUB_USERNAME
-# 3. Set the secrets DOCKERHUB_TOKEN
-# 4. Set the secrets ACTIONS_STEP_DEBUG value to true, if you need to debug
+# 1. Set the secrets DOCKERHUB_USERNAME
+# 2. Set the secrets DOCKERHUB_TOKEN
+# 3. Set the secrets ACTIONS_STEP_DEBUG value to true, if you need to debug
 name: Publish Docker image
 on:
   push:
@@ -22,7 +21,7 @@ jobs:
         name: Set up env
         id: set_env
         run: |
-          DOCKER_IMAGE=azhi/v2fly-core-test
+          DOCKER_IMAGE=v2fly/v2fly-core
           VERSION=edge
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}
