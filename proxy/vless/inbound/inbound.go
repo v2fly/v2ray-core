@@ -166,7 +166,9 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 		err = newError("fallback directly")
 	} else {
 		request, requestAddons, err, pre = encoding.DecodeRequestHeader(reader, h.validator)
-		if pre == nil {
+		if pre != nil {
+			defer pre.Release()
+		} else {
 			isfb = false
 		}
 	}
@@ -286,6 +288,7 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 						}
 					}
 					pro := buf.New()
+					defer pro.Release()
 					switch fb.Xver {
 					case 1:
 						if ipv4 {
