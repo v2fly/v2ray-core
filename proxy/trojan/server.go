@@ -65,13 +65,12 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 		return newError("unable to set read deadline").Base(err).AtWarning()
 	}
 
-	buffer := buf.StackNew()
+	buffer := buf.New()
 	defer buffer.Release()
 
-	bufferedReader := buf.BufferedReader{Reader: buf.NewReader(conn)}
-	n, err := buffer.ReadFullFrom(&bufferedReader, 56)
+	n, err := buffer.ReadFrom(conn)
 	if err != nil {
-		return newError("unable to read user hash").Base(err)
+		return newError("failed to read first request").Base(err)
 	}
 
 	var user *protocol.MemoryUser
@@ -102,13 +101,18 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 		}
 	}
 
+	bufferedReader := &buf.BufferedReader{
+		Reader: buf.NewReader(conn),
+		Buffer: buf.MultiBuffer{buffer},
+	}
+
 	if fallbackEnabled && shouldFallback {
-		return s.fallback(ctx, &buffer, buf.NewReader(conn), buf.NewWriter(conn))
+		return s.fallback(ctx, bufferedReader, buf.NewWriter(conn))
 	} else if shouldFallback {
 		return newError("invalid protocol or invalid user")
 	}
 
-	dest, bodyReader, err := ReadHeader(&bufferedReader)
+	dest, bodyReader, err := ReadHeader(bufferedReader)
 	if err != nil {
 		log.Record(&log.AccessMessage{
 			From:   conn.RemoteAddr(),
@@ -181,7 +185,7 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 	return nil
 }
 
-func (s *Server) fallback(ctx context.Context, pre *buf.Buffer, requestReader buf.Reader, responseWriter buf.Writer) error {
+func (s *Server) fallback(ctx context.Context, requestReader buf.Reader, responseWriter buf.Writer) error {
 	sessionPolicy := s.policyManager.ForLevel(0)
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
@@ -207,10 +211,6 @@ func (s *Server) fallback(ctx context.Context, pre *buf.Buffer, requestReader bu
 
 	requestDone := func() error {
 		defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
-
-		if err := serverWriter.WriteMultiBuffer(buf.MultiBuffer{pre}); err != nil {
-			return newError("failed to fallback request payload").Base(err).AtInfo()
-		}
 
 		if err := buf.Copy(requestReader, serverWriter, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to fallback request payload").Base(err).AtInfo()

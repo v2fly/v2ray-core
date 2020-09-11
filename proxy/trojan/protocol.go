@@ -96,6 +96,11 @@ func (pw *PacketWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 func ReadHeader(r io.Reader) (*net.Destination, buf.Reader, error) {
 	var crlf [2]byte
 	var command [1]byte
+	var hash [56]byte
+	if _, err := io.ReadFull(r, hash[:]); err != nil {
+		return nil, nil, newError("failed to read user hash").Base(err)
+	}
+
 	if _, err := io.ReadFull(r, crlf[:]); err != nil {
 		return nil, nil, newError("failed to read crlf").Base(err)
 	}
