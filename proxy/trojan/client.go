@@ -4,6 +4,7 @@ package trojan
 
 import (
 	"context"
+	"time"
 
 	"v2ray.com/core"
 	"v2ray.com/core/common"
@@ -95,14 +96,20 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 			return newError("failed to write request header").Base(err).AtWarning()
 		}
 
-		// Flush; bufferWriter.WriteMultiBufer now is bufferWriter.writer.WriteMultiBuffer
-		if err := bufferWriter.SetBuffered(false); err != nil {
-			return newError("failed to write A request payload").Base(err).AtWarning()
+		// write some request payload to buffer
+		if err = buf.CopyOnceTimeout(link.Reader, bodyWriter, time.Millisecond*100); err != nil && err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
+			return newError("failed to write A reqeust payload").Base(err).AtWarning()
 		}
 
-		if err := buf.Copy(link.Reader, bodyWriter, buf.UpdateActivity(timer)); err != nil {
+		// Flush; bufferWriter.WriteMultiBufer now is bufferWriter.writer.WriteMultiBuffer
+		if err = bufferWriter.SetBuffered(false); err != nil {
+			return newError("failed to flush payload").Base(err).AtWarning()
+		}
+
+		if err = buf.Copy(link.Reader, bodyWriter, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer request payload").Base(err).AtInfo()
 		}
+
 		return nil
 	}
 
