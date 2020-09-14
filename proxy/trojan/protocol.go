@@ -31,28 +31,32 @@ type PacketReader struct {
 }
 
 func (pr *PacketReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
-	buffer := buf.StackNew()
-	defer buffer.Release()
+	_, mb, err := ReadPacket(pr.Reader)
+	return mb, err
+}
 
-	_, _, err := addrParser.ReadAddressPort(&buffer, pr.Reader)
+func ReadPacket(r io.Reader) (*net.Destination, buf.MultiBuffer, error) {
+	addr, port, err := addrParser.ReadAddressPort(nil, r)
 	if err != nil {
-		return nil, newError("failed to read address and port").Base(err)
+		return nil, nil, newError("failed to read address and port").Base(err)
 	}
 
-	buffer.Clear()
-	if _, err := buffer.ReadFullFrom(pr.Reader, 2); err != nil {
-		return nil, newError("failed to read payload length").Base(err)
+	var lengthBuf [2]byte
+	if _, err := io.ReadFull(r, lengthBuf[:]); err != nil {
+		return nil, nil, newError("failed to read payload length").Base(err)
 	}
 
-	remain := int(binary.BigEndian.Uint16(buffer.BytesTo(2)))
+	remain := int(binary.BigEndian.Uint16(lengthBuf[:]))
 	if remain > maxLength {
-		return nil, newError("oversize payload")
+		return nil, nil, newError("oversize payload")
 	}
 
-	if _, err := buffer.ReadFullFrom(pr.Reader, 2); err != nil {
-		return nil, newError("failed to read crlf").Base(err)
+	var crlf [2]byte
+	if _, err := io.ReadFull(r, crlf[:]); err != nil {
+		return nil, nil, newError("failed to read crlf").Base(err)
 	}
 
+	dest := net.UDPDestination(addr, port)
 	var mb buf.MultiBuffer
 	for remain > 0 {
 		length := buf.Size
@@ -61,17 +65,16 @@ func (pr *PacketReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
 		}
 
 		b := buf.New()
-		n, err := b.ReadFullFrom(pr.Reader, int32(length))
-		if err != nil {
-			b.Release()
-			buf.ReleaseMulti(mb)
-			return nil, newError("failed to read payload").Base(err)
-		}
-		remain -= int(n)
 		mb = append(mb, b)
+		n, err := b.ReadFullFrom(r, int32(length))
+		if err != nil {
+			return &dest, mb, newError("failed to read payload").Base(err)
+		}
+
+		remain -= int(n)
 	}
 
-	return mb, nil
+	return &dest, mb, nil
 }
 
 type PacketWriter struct {
@@ -93,20 +96,20 @@ func (pw *PacketWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	return nil
 }
 
-func ReadHeader(r io.Reader) (*net.Destination, buf.Reader, error) {
+func ReadHeader(r io.Reader) (*net.Destination, error) {
 	var crlf [2]byte
 	var command [1]byte
 	var hash [56]byte
 	if _, err := io.ReadFull(r, hash[:]); err != nil {
-		return nil, nil, newError("failed to read user hash").Base(err)
+		return nil, newError("failed to read user hash").Base(err)
 	}
 
 	if _, err := io.ReadFull(r, crlf[:]); err != nil {
-		return nil, nil, newError("failed to read crlf").Base(err)
+		return nil, newError("failed to read crlf").Base(err)
 	}
 
 	if _, err := io.ReadFull(r, command[:]); err != nil {
-		return nil, nil, newError("failed to read command").Base(err)
+		return nil, newError("failed to read command").Base(err)
 	}
 
 	network := net.Network_TCP
@@ -116,21 +119,14 @@ func ReadHeader(r io.Reader) (*net.Destination, buf.Reader, error) {
 
 	addr, port, err := addrParser.ReadAddressPort(nil, r)
 	if err != nil {
-		return nil, nil, newError("failed to read address and port").Base(err)
+		return nil, newError("failed to read address and port").Base(err)
 	}
 
 	if _, err := io.ReadFull(r, crlf[:]); err != nil {
-		return nil, nil, newError("failed to read crlf").Base(err)
+		return nil, newError("failed to read crlf").Base(err)
 	}
 
-	var reader buf.Reader
-	if network == net.Network_UDP {
-		reader = &PacketReader{r}
-	} else {
-		reader = buf.NewReader(r)
-	}
-
-	return &net.Destination{Address: addr, Port: port, Network: network}, reader, nil
+	return &net.Destination{Address: addr, Port: port, Network: network}, nil
 }
 
 func WriteHeader(w io.Writer, target net.Destination, account *MemoryAccount) (buf.Writer, error) {

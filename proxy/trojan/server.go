@@ -2,11 +2,13 @@ package trojan
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"v2ray.com/core"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
+	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/log"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/protocol"
@@ -107,12 +109,12 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 	}
 
 	if fallbackEnabled && shouldFallback {
-		return s.fallback(ctx, bufferedReader, buf.NewWriter(conn))
+		return s.fallback(ctx, sessionPolicy, bufferedReader, buf.NewWriter(conn))
 	} else if shouldFallback {
 		return newError("invalid protocol or invalid user")
 	}
 
-	dest, bodyReader, err := ReadHeader(bufferedReader)
+	dest, err := ReadHeader(bufferedReader)
 	if err != nil {
 		log.Record(&log.AccessMessage{
 			From:   conn.RemoteAddr(),
@@ -130,22 +132,62 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 		panic("no inbound metadata")
 	}
 	inbound.User = user
-
-	log.ContextWithAccessMessage(ctx, &log.AccessMessage{
-		From:   conn.RemoteAddr(),
-		To:     destination,
-		Status: log.AccessAccepted,
-		Reason: "",
-		Email:  user.Email,
-	})
-	newError("received request for ", destination).WriteToLog(session.ExportIDToError(ctx))
-
 	sessionPolicy = s.policyManager.ForLevel(user.Level)
+
+	if destination.Network == net.Network_UDP { // handle udp request
+		for {
+			dest, mb, err := ReadPacket(bufferedReader)
+			if dest != nil && !mb.IsEmpty() {
+				destination := *dest
+				log.ContextWithAccessMessage(ctx, &log.AccessMessage{
+					From:   conn.RemoteAddr(),
+					To:     destination,
+					Status: log.AccessAccepted,
+					Reason: "",
+					Email:  user.Email,
+				})
+				newError("received request for ", destination).WriteToLog(session.ExportIDToError(ctx))
+
+				// send every udp packet seperately
+				werr := s.transferRequest(ctx, sessionPolicy, dispatcher, destination, &buf.MultiBufferContainer{MultiBuffer: mb}, &PacketWriter{Writer: conn, Target: destination})
+				if werr != nil {
+					return werr
+				}
+			}
+
+			if err != nil {
+				if errors.Cause(err) != io.EOF {
+					return err
+				}
+
+				return nil
+			}
+		}
+	} else { // handle tcp request
+
+		log.ContextWithAccessMessage(ctx, &log.AccessMessage{
+			From:   conn.RemoteAddr(),
+			To:     destination,
+			Status: log.AccessAccepted,
+			Reason: "",
+			Email:  user.Email,
+		})
+
+		newError("received request for ", destination).WriteToLog(session.ExportIDToError(ctx))
+		return s.transferRequest(ctx, sessionPolicy, dispatcher, destination, bufferedReader, buf.NewWriter(conn))
+	}
+}
+
+func (s *Server) transferRequest(ctx context.Context, sessionPolicy policy.Session,
+	dispatcher routing.Dispatcher,
+	destination net.Destination,
+	clientReader buf.Reader,
+	clientWriter buf.Writer) error {
 
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
-
 	ctx = policy.ContextWithBufferPolicy(ctx, sessionPolicy.Buffer)
+
 	link, err := dispatcher.Dispatch(ctx, destination)
 	if err != nil {
 		return newError("failed to dispatch request to ", destination).Base(err)
@@ -154,7 +196,7 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 	requestDone := func() error {
 		defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
 
-		if err := buf.Copy(bodyReader, link.Writer, buf.UpdateActivity(timer)); err != nil {
+		if err := buf.Copy(clientReader, link.Writer, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer request").Base(err)
 		}
 		return nil
@@ -163,14 +205,7 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 	responseDone := func() error {
 		defer timer.SetTimeout(sessionPolicy.Timeouts.UplinkOnly)
 
-		var writer buf.Writer
-		if destination.Network == net.Network_UDP {
-			writer = &PacketWriter{Writer: conn, Target: destination}
-		} else {
-			writer = buf.NewWriter(conn)
-		}
-
-		if err := buf.Copy(link.Reader, writer, buf.UpdateActivity(timer)); err != nil {
+		if err := buf.Copy(link.Reader, clientWriter, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to write response").Base(err)
 		}
 		return nil
@@ -182,11 +217,11 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 		common.Interrupt(link.Writer)
 		return newError("connection ends").Base(err)
 	}
+
 	return nil
 }
 
-func (s *Server) fallback(ctx context.Context, requestReader buf.Reader, responseWriter buf.Writer) error {
-	sessionPolicy := s.policyManager.ForLevel(0)
+func (s *Server) fallback(ctx context.Context, sessionPolicy policy.Session, requestReader buf.Reader, responseWriter buf.Writer) error {
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
 	ctx = policy.ContextWithBufferPolicy(ctx, sessionPolicy.Buffer)
