@@ -148,28 +148,32 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 			errChan := make(chan error, 2)
 			for {
 				select {
-				case p := <-packetChan:
-					wg.Add(1)
-					go func() {
-						defer wg.Done()
+				case p, more := <-packetChan:
+					if more {
+						wg.Add(1)
+						go func() {
+							defer wg.Done()
 
-						destination := p.Target
-						log.ContextWithAccessMessage(ctx, &log.AccessMessage{
-							From:   conn.RemoteAddr(),
-							To:     destination,
-							Status: log.AccessAccepted,
-							Reason: "",
-							Email:  user.Email,
-						})
-						newError("received request for ", destination).WriteToLog(session.ExportIDToError(ctx))
+							destination := p.Target
+							log.ContextWithAccessMessage(ctx, &log.AccessMessage{
+								From:   conn.RemoteAddr(),
+								To:     destination,
+								Status: log.AccessAccepted,
+								Reason: "",
+								Email:  user.Email,
+							})
+							newError("received request for ", destination).WriteToLog(session.ExportIDToError(ctx))
 
-						// send every udp packet seperately
-						packetWriter := &PacketWriter{Writer: conn, Target: destination}
-						werr := s.transferRequest(ctx, sessionPolicy, dispatcher, destination, &MultiBufferContainer{MultiBuffer: p.Buffer}, packetWriter)
-						if werr != nil {
-							errChan <- werr
-						}
-					}()
+							// send every udp packet seperately
+							packetWriter := &PacketWriter{Writer: conn, Target: destination}
+							werr := s.transferRequest(ctx, sessionPolicy, dispatcher, destination, &MultiBufferContainer{MultiBuffer: p.Buffer}, packetWriter)
+							if werr != nil {
+								errChan <- werr
+							}
+						}()
+					} else { // no more packet
+						return
+					}
 				case err := <-rerrChan: // when read error occurs
 					werrChan <- err
 					return
@@ -188,6 +192,8 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 				}
 
 				if err != nil {
+					close(packetChan)
+
 					if errors.Cause(err) != io.EOF {
 						rerrChan <- err // read error occurs
 					}
