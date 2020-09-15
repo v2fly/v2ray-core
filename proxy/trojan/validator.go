@@ -12,7 +12,7 @@ type Validator struct {
 
 func (v *Validator) Add(u *protocol.MemoryUser) error {
 	user := u.Account.(*MemoryAccount)
-	v.users.Store(user.Hash, u)
+	v.users.Store(hexString(user.Key), u)
 	return nil
 }
 

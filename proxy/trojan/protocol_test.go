@@ -32,18 +32,16 @@ func TestTCPRequest(t *testing.T) {
 	defer buffer.Release()
 
 	destination := net.Destination{Network: net.Network_TCP, Address: net.LocalHostIP, Port: 1234}
-	writer, err := WriteHeader(buffer, destination, user.Account.(*MemoryAccount))
-	common.Must(err)
+	writer := &ConnWriter{Writer: buffer, Target: destination, Account: user.Account.(*MemoryAccount)}
 	common.Must(writer.WriteMultiBuffer(buf.MultiBuffer{data}))
 
-	dest, err := ReadHeader(buffer)
-	common.Must(err)
+	reader := &ConnReader{Reader: buffer}
+	common.Must(reader.ParseHeader())
 
-	if r := cmp.Diff(*dest, destination); r != "" {
+	if r := cmp.Diff(reader.Target, destination); r != "" {
 		t.Error("destination: ", r)
 	}
 
-	reader := buf.NewReader(buffer)
 	decodedData, err := reader.ReadMultiBuffer()
 	common.Must(err)
 	if r := cmp.Diff(decodedData[0].Bytes(), payload); r != "" {
@@ -67,29 +65,25 @@ func TestUDPRequest(t *testing.T) {
 	defer buffer.Release()
 
 	destination := net.Destination{Network: net.Network_UDP, Address: net.LocalHostIP, Port: 1234}
-	writer, err := WriteHeader(buffer, destination, user.Account.(*MemoryAccount))
-	common.Must(err)
+	writer := &PacketWriter{Writer: &ConnWriter{Writer: buffer, Target: destination, Account: user.Account.(*MemoryAccount)}, Target: destination}
 	common.Must(writer.WriteMultiBuffer(buf.MultiBuffer{data}))
 
-	_, err = ReadHeader(buffer)
+	connReader := &ConnReader{Reader: buffer}
+	common.Must(connReader.ParseHeader())
+
+	packetReader := &PacketReader{Reader: connReader}
+	p, err := packetReader.ReadPacket()
 	common.Must(err)
 
-	dest, mb, err := ReadPacket(buffer)
-	common.Must(err)
-
-	if dest == nil {
-		t.Error("destination is empty")
-	}
-
-	if mb.IsEmpty() {
+	if p.Buffer.IsEmpty() {
 		t.Error("no request data")
 	}
 
-	if r := cmp.Diff(*dest, destination); r != "" {
+	if r := cmp.Diff(p.Target, destination); r != "" {
 		t.Error("destination: ", r)
 	}
 
-	mb, decoded := buf.SplitFirst(mb)
+	mb, decoded := buf.SplitFirst(p.Buffer)
 	buf.ReleaseMulti(mb)
 
 	if r := cmp.Diff(decoded.Bytes(), payload); r != "" {

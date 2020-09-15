@@ -90,10 +90,14 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	postRequest := func() error {
 		defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
 
+		var bodyWriter buf.Writer
 		bufferWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
-		bodyWriter, err := WriteHeader(bufferWriter, destination, account)
-		if err != nil {
-			return newError("failed to write request header").Base(err).AtWarning()
+		connWriter := &ConnWriter{Writer: bufferWriter, Target: destination, Account: account}
+
+		if destination.Network == net.Network_UDP {
+			bodyWriter = &PacketWriter{Writer: connWriter, Target: destination}
+		} else {
+			bodyWriter = connWriter
 		}
 
 		// write some request payload to buffer

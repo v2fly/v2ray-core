@@ -3,6 +3,7 @@ package trojan
 import (
 	"context"
 	"io"
+	"sync"
 	"time"
 
 	"v2ray.com/core"
@@ -75,6 +76,11 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 		return newError("failed to read first request").Base(err)
 	}
 
+	bufferedReader := &buf.BufferedReader{
+		Reader: buf.NewReader(conn),
+		Buffer: buf.MultiBuffer{buffer},
+	}
+
 	var user *protocol.MemoryUser
 	fallbackEnabled := s.config.Fallback != nil
 	shouldFallback := false
@@ -103,19 +109,14 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 		}
 	}
 
-	bufferedReader := &buf.BufferedReader{
-		Reader: buf.NewReader(conn),
-		Buffer: buf.MultiBuffer{buffer},
-	}
-
 	if fallbackEnabled && shouldFallback {
 		return s.fallback(ctx, sessionPolicy, bufferedReader, buf.NewWriter(conn))
 	} else if shouldFallback {
 		return newError("invalid protocol or invalid user")
 	}
 
-	dest, err := ReadHeader(bufferedReader)
-	if err != nil {
+	clientReader := &ConnReader{Reader: bufferedReader}
+	if err := clientReader.ParseHeader(); err != nil {
 		log.Record(&log.AccessMessage{
 			From:   conn.RemoteAddr(),
 			To:     "",
@@ -124,7 +125,8 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 		})
 		return newError("failed to create request from: ", conn.RemoteAddr()).Base(err)
 	}
-	destination := *dest
+
+	destination := clientReader.Target
 	conn.SetReadDeadline(time.Time{})
 
 	inbound := session.InboundFromContext(ctx)
@@ -135,34 +137,79 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 	sessionPolicy = s.policyManager.ForLevel(user.Level)
 
 	if destination.Network == net.Network_UDP { // handle udp request
-		for {
-			dest, mb, err := ReadPacket(bufferedReader)
-			if dest != nil && !mb.IsEmpty() {
-				destination := *dest
-				log.ContextWithAccessMessage(ctx, &log.AccessMessage{
-					From:   conn.RemoteAddr(),
-					To:     destination,
-					Status: log.AccessAccepted,
-					Reason: "",
-					Email:  user.Email,
-				})
-				newError("received request for ", destination).WriteToLog(session.ExportIDToError(ctx))
+		packetReader := &PacketReader{Reader: clientReader}
+		wg := new(sync.WaitGroup)
+		packetChan := make(chan *PacketPayload, 32)
+		werrChan := make(chan error, 1)
+		rerrChan := make(chan error, 1)
+		done := make(chan bool)
 
-				// send every udp packet seperately
-				werr := s.transferRequest(ctx, sessionPolicy, dispatcher, destination, &buf.MultiBufferContainer{MultiBuffer: mb}, &PacketWriter{Writer: conn, Target: destination})
-				if werr != nil {
-					return werr
+		go func() {
+			errChan := make(chan error, 2)
+			for {
+				select {
+				case p := <-packetChan:
+					wg.Add(1)
+					go func() {
+						defer wg.Done()
+
+						destination := p.Target
+						log.ContextWithAccessMessage(ctx, &log.AccessMessage{
+							From:   conn.RemoteAddr(),
+							To:     destination,
+							Status: log.AccessAccepted,
+							Reason: "",
+							Email:  user.Email,
+						})
+						newError("received request for ", destination).WriteToLog(session.ExportIDToError(ctx))
+
+						// send every udp packet seperately
+						packetWriter := &PacketWriter{Writer: conn, Target: destination}
+						werr := s.transferRequest(ctx, sessionPolicy, dispatcher, destination, &MultiBufferContainer{MultiBuffer: p.Buffer}, packetWriter)
+						if werr != nil {
+							errChan <- werr
+						}
+					}()
+				case err := <-rerrChan: // when read error occurs
+					werrChan <- err
+					return
+				case err := <-errChan: // when write error occurs
+					werrChan <- err
+					return
 				}
 			}
+		}()
 
-			if err != nil {
-				if errors.Cause(err) != io.EOF {
-					return err
+		go func() {
+			for {
+				packet, err := packetReader.ReadPacket()
+				if packet != nil {
+					packetChan <- packet
 				}
 
-				return nil
+				if err != nil {
+					if errors.Cause(err) != io.EOF {
+						rerrChan <- err // read error occurs
+					}
+
+					go func() {
+						wg.Wait()
+						done <- true // all goroutines done
+					}()
+
+					return
+				}
+
 			}
+		}()
+
+		select {
+		case err := <-werrChan:
+			return err
+		case <-done:
+			return nil
 		}
+
 	} else { // handle tcp request
 
 		log.ContextWithAccessMessage(ctx, &log.AccessMessage{
@@ -174,7 +221,7 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 		})
 
 		newError("received request for ", destination).WriteToLog(session.ExportIDToError(ctx))
-		return s.transferRequest(ctx, sessionPolicy, dispatcher, destination, bufferedReader, buf.NewWriter(conn))
+		return s.transferRequest(ctx, sessionPolicy, dispatcher, destination, clientReader, buf.NewWriter(conn))
 	}
 }
 
