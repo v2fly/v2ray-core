@@ -239,7 +239,7 @@ func (r *PacketReader) ReadPacket() (*PacketPayload, error) {
 	return &PacketPayload{Target: dest, Buffer: mb}, nil
 }
 
-// MultiBufferContainer is a ReadWriteCloser wrapper over MultiBuffer.
+// MultiBufferContainer is a Read wrapper over MultiBuffer.
 type MultiBufferContainer struct {
 	buf.MultiBuffer
 }

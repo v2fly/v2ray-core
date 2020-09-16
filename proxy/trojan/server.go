@@ -139,81 +139,63 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 	if destination.Network == net.Network_UDP { // handle udp request
 		packetReader := &PacketReader{Reader: clientReader}
 		wg := new(sync.WaitGroup)
-		packetChan := make(chan *PacketPayload, 32)
-		werrChan := make(chan error, 1)
-		rerrChan := make(chan error, 1)
-		done := make(chan bool)
+		errChan := make(chan error, 1)
 
-		go func() {
-			errChan := make(chan error, 2)
-			for {
-				select {
-				case p, more := <-packetChan:
-					if more {
-						wg.Add(1)
-						go func() {
-							defer wg.Done()
+		ctx2, cancel := context.WithCancel(ctx)
+		timer := signal.CancelAfterInactivity(ctx2, cancel, sessionPolicy.Timeouts.UplinkOnly)
+		ctx2 = policy.ContextWithBufferPolicy(ctx2, sessionPolicy.Buffer)
 
-							destination := p.Target
-							log.ContextWithAccessMessage(ctx, &log.AccessMessage{
-								From:   conn.RemoteAddr(),
-								To:     destination,
-								Status: log.AccessAccepted,
-								Reason: "",
-								Email:  user.Email,
-							})
-							newError("received request for ", destination).WriteToLog(session.ExportIDToError(ctx))
-
-							// send every udp packet seperately
-							packetWriter := &PacketWriter{Writer: conn, Target: destination}
-							werr := s.transferRequest(ctx, sessionPolicy, dispatcher, destination, &MultiBufferContainer{MultiBuffer: p.Buffer}, packetWriter)
-							if werr != nil {
-								errChan <- werr
-							}
-						}()
-					} else { // no more packet
-						return
-					}
-				case err := <-rerrChan: // when read error occurs
-					werrChan <- err
-					return
-				case err := <-errChan: // when write error occurs
-					werrChan <- err
-					return
-				}
-			}
-		}()
-
-		go func() {
-			for {
+		for {
+			go func() {
 				packet, err := packetReader.ReadPacket()
+				timer.Update()
+
 				if packet != nil {
-					packetChan <- packet
-				}
-
-				if err != nil {
-					close(packetChan)
-
-					if errors.Cause(err) != io.EOF {
-						rerrChan <- err // read error occurs
-					}
+					wg.Add(1)
 
 					go func() {
-						wg.Wait()
-						done <- true // all goroutines done
-					}()
+						defer wg.Done()
 
-					return
+						destination := packet.Target
+						log.ContextWithAccessMessage(ctx, &log.AccessMessage{
+							From:   conn.RemoteAddr(),
+							To:     destination,
+							Status: log.AccessAccepted,
+							Reason: "",
+							Email:  user.Email,
+						})
+						newError("received request for ", destination).WriteToLog(session.ExportIDToError(ctx))
+
+						// send every udp packet seperately
+						packetWriter := &PacketWriter{Writer: conn, Target: destination}
+						err := s.transferRequest(ctx, sessionPolicy, dispatcher, destination, &MultiBufferContainer{MultiBuffer: packet.Buffer}, packetWriter)
+						if err != nil {
+							newError("failed to transfer request to ", destination).WriteToLog(session.ExportIDToError(ctx))
+						}
+					}()
 				}
 
-			}
-		}()
+				errChan <- err
+			}()
 
-		select {
-		case err := <-werrChan:
-			return err
-		case <-done:
-			return nil
+			var err error
+			var canceled bool
+			select {
+			case err = <-errChan:
+			case <-ctx2.Done(): // timer timeout
+				canceled = true
+			}
+
+			if canceled || err != nil {
+				wg.Wait()
+
+				if err != nil && errors.Cause(err) != io.EOF {
+					return err
+				}
+
+				return nil
+			}
+
 		}
 
 	} else { // handle tcp request
