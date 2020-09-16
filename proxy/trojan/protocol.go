@@ -253,7 +253,8 @@ func (r *PacketReader) ReadMultiBufferWithMetadata() (*PacketPayload, error) {
 		mb = append(mb, b)
 		n, err := b.ReadFullFrom(r, int32(length))
 		if err != nil {
-			return &PacketPayload{Target: dest, Buffer: mb}, newError("failed to read payload").Base(err)
+			buf.ReleaseMulti(mb)
+			return nil, newError("failed to read payload").Base(err)
 		}
 
 		remain -= int(n)

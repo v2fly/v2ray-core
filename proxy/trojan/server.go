@@ -169,19 +169,17 @@ func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReade
 			break
 		}
 
-		if p != nil {
-			log.ContextWithAccessMessage(ctx, &log.AccessMessage{
-				From:   inbound.Source,
-				To:     p.Target,
-				Status: log.AccessAccepted,
-				Reason: "",
-				Email:  user.Email,
-			})
-			newError("tunnelling request to ", p.Target).WriteToLog(session.ExportIDToError(ctx))
+		log.ContextWithAccessMessage(ctx, &log.AccessMessage{
+			From:   inbound.Source,
+			To:     p.Target,
+			Status: log.AccessAccepted,
+			Reason: "",
+			Email:  user.Email,
+		})
+		newError("tunnelling request to ", p.Target).WriteToLog(session.ExportIDToError(ctx))
 
-			for _, b := range p.Buffer {
-				udpServer.Dispatch(ctx, p.Target, b)
-			}
+		for _, b := range p.Buffer {
+			udpServer.Dispatch(ctx, p.Target, b)
 		}
 
 	}
