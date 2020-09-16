@@ -2,17 +2,15 @@ package trojan
 
 import (
 	"context"
-	"io"
-	"sync"
 	"time"
 
 	"v2ray.com/core"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/log"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/protocol"
+	udp_proto "v2ray.com/core/common/protocol/udp"
 	"v2ray.com/core/common/retry"
 	"v2ray.com/core/common/session"
 	"v2ray.com/core/common/signal"
@@ -20,6 +18,7 @@ import (
 	"v2ray.com/core/features/policy"
 	"v2ray.com/core/features/routing"
 	"v2ray.com/core/transport/internet"
+	"v2ray.com/core/transport/internet/udp"
 )
 
 func init() {
@@ -137,67 +136,7 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 	sessionPolicy = s.policyManager.ForLevel(user.Level)
 
 	if destination.Network == net.Network_UDP { // handle udp request
-		packetReader := &PacketReader{Reader: clientReader}
-		wg := new(sync.WaitGroup)
-		errChan := make(chan error, 1)
-
-		ctx2, cancel := context.WithCancel(ctx)
-		timer := signal.CancelAfterInactivity(ctx2, cancel, sessionPolicy.Timeouts.UplinkOnly)
-		ctx2 = policy.ContextWithBufferPolicy(ctx2, sessionPolicy.Buffer)
-
-		for {
-			go func() {
-				packet, err := packetReader.ReadPacket()
-				timer.Update()
-
-				if packet != nil {
-					wg.Add(1)
-
-					go func() {
-						defer wg.Done()
-
-						destination := packet.Target
-						log.ContextWithAccessMessage(ctx, &log.AccessMessage{
-							From:   conn.RemoteAddr(),
-							To:     destination,
-							Status: log.AccessAccepted,
-							Reason: "",
-							Email:  user.Email,
-						})
-						newError("received request for ", destination).WriteToLog(session.ExportIDToError(ctx))
-
-						// send every udp packet seperately
-						packetWriter := &PacketWriter{Writer: conn, Target: destination}
-						err := s.transferRequest(ctx, sessionPolicy, dispatcher, destination, &MultiBufferContainer{MultiBuffer: packet.Buffer}, packetWriter)
-						if err != nil {
-							newError("failed to transfer request to ", destination).WriteToLog(session.ExportIDToError(ctx))
-						}
-					}()
-				}
-
-				errChan <- err
-			}()
-
-			var err error
-			var canceled bool
-			select {
-			case err = <-errChan:
-			case <-ctx2.Done(): // timer timeout
-				canceled = true
-			}
-
-			if canceled || err != nil {
-				wg.Wait()
-
-				if err != nil && errors.Cause(err) != io.EOF {
-					return err
-				}
-
-				return nil
-			}
-
-		}
-
+		return s.handleUDPPayload(ctx, &PacketReader{Reader: clientReader}, &PacketWriter{Writer: conn}, dispatcher)
 	} else { // handle tcp request
 
 		log.ContextWithAccessMessage(ctx, &log.AccessMessage{
@@ -209,15 +148,48 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 		})
 
 		newError("received request for ", destination).WriteToLog(session.ExportIDToError(ctx))
-		return s.transferRequest(ctx, sessionPolicy, dispatcher, destination, clientReader, buf.NewWriter(conn))
+		return s.handleConnection(ctx, sessionPolicy, destination, clientReader, buf.NewWriter(conn), dispatcher)
 	}
 }
 
-func (s *Server) transferRequest(ctx context.Context, sessionPolicy policy.Session,
-	dispatcher routing.Dispatcher,
+func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReader, clientWriter *PacketWriter, dispatcher routing.Dispatcher) error {
+	udpServer := udp.NewDispatcher(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
+		clientWriter.WriteMultiBufferWithMetadata(buf.MultiBuffer{packet.Payload}, packet.Source)
+	})
+
+	inbound := session.InboundFromContext(ctx)
+	user := inbound.User
+
+	for {
+		p, err := clientReader.ReadMultiBufferWithMetadata()
+		if err != nil {
+			break
+		}
+
+		if p != nil {
+			log.ContextWithAccessMessage(ctx, &log.AccessMessage{
+				From:   inbound.Source,
+				To:     p.Target,
+				Status: log.AccessAccepted,
+				Reason: "",
+				Email:  user.Email,
+			})
+			newError("tunnelling request to ", p.Target).WriteToLog(session.ExportIDToError(ctx))
+
+			for _, b := range p.Buffer {
+				udpServer.Dispatch(ctx, p.Target, b)
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (s *Server) handleConnection(ctx context.Context, sessionPolicy policy.Session,
 	destination net.Destination,
 	clientReader buf.Reader,
-	clientWriter buf.Writer) error {
+	clientWriter buf.Writer, dispatcher routing.Dispatcher) error {
 
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)

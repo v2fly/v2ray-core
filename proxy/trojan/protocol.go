@@ -3,7 +3,6 @@ package trojan
 import (
 	"encoding/binary"
 	"io"
-	"sync"
 
 	"v2ray.com/core/common/buf"
 	"v2ray.com/core/common/net"
@@ -82,20 +81,16 @@ func (c *ConnWriter) writeHeader() error {
 }
 
 type PacketWriter struct {
-	sync.Mutex
 	io.Writer
 	Target net.Destination
 }
 
 func (w *PacketWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
-	w.Lock()
-	defer w.Unlock()
-
 	b := make([]byte, maxLength)
 	for !mb.IsEmpty() {
 		var length int
 		mb, length = buf.SplitBytes(mb, b)
-		if _, err := w.writePacket(b[:length]); err != nil {
+		if _, err := w.writePacket(b[:length], w.Target); err != nil {
 			buf.ReleaseMulti(mb)
 			return err
 		}
@@ -104,14 +99,28 @@ func (w *PacketWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	return nil
 }
 
-func (w *PacketWriter) writePacket(payload []byte) (int, error) {
+func (w *PacketWriter) WriteMultiBufferWithMetadata(mb buf.MultiBuffer, dest net.Destination) error {
+	b := make([]byte, maxLength)
+	for !mb.IsEmpty() {
+		var length int
+		mb, length = buf.SplitBytes(mb, b)
+		if _, err := w.writePacket(b[:length], dest); err != nil {
+			buf.ReleaseMulti(mb)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (w *PacketWriter) writePacket(payload []byte, dest net.Destination) (int, error) {
 	buffer := buf.StackNew()
 	defer buffer.Release()
 
 	length := len(payload)
 	lengthBuf := [2]byte{}
 	binary.BigEndian.PutUint16(lengthBuf[:], uint16(length))
-	addrParser.WriteAddressPort(&buffer, w.Target.Address, w.Target.Port)
+	addrParser.WriteAddressPort(&buffer, dest.Address, dest.Port)
 	buffer.Write(lengthBuf[:])
 	buffer.Write(crlf)
 	buffer.Write(payload)
@@ -190,14 +199,14 @@ type PacketReader struct {
 }
 
 func (r *PacketReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
-	p, err := r.ReadPacket()
+	p, err := r.ReadMultiBufferWithMetadata()
 	if p != nil {
 		return p.Buffer, err
 	}
 	return nil, err
 }
 
-func (r *PacketReader) ReadPacket() (*PacketPayload, error) {
+func (r *PacketReader) ReadMultiBufferWithMetadata() (*PacketPayload, error) {
 	addr, port, err := addrParser.ReadAddressPort(nil, r)
 	if err != nil {
 		return nil, newError("failed to read address and port").Base(err)
@@ -237,20 +246,4 @@ func (r *PacketReader) ReadPacket() (*PacketPayload, error) {
 	}
 
 	return &PacketPayload{Target: dest, Buffer: mb}, nil
-}
-
-// MultiBufferContainer is a Read wrapper over MultiBuffer.
-type MultiBufferContainer struct {
-	buf.MultiBuffer
-}
-
-// ReadMultiBuffer implements Reader.
-func (c *MultiBufferContainer) ReadMultiBuffer() (buf.MultiBuffer, error) {
-	if c.MultiBuffer.IsEmpty() {
-		return nil, io.EOF
-	}
-
-	mb := c.MultiBuffer
-	c.MultiBuffer = nil
-	return mb, nil
 }

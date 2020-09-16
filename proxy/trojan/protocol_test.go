@@ -72,7 +72,7 @@ func TestUDPRequest(t *testing.T) {
 	common.Must(connReader.ParseHeader())
 
 	packetReader := &PacketReader{Reader: connReader}
-	p, err := packetReader.ReadPacket()
+	p, err := packetReader.ReadMultiBufferWithMetadata()
 	common.Must(err)
 
 	if p.Buffer.IsEmpty() {
