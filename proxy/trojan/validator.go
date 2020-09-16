@@ -6,16 +6,19 @@ import (
 	"v2ray.com/core/common/protocol"
 )
 
+// Trojan User Validator
 type Validator struct {
 	users sync.Map
 }
 
+// Add a trojan user
 func (v *Validator) Add(u *protocol.MemoryUser) error {
 	user := u.Account.(*MemoryAccount)
 	v.users.Store(hexString(user.Key), u)
 	return nil
 }
 
+// Get user with hashed key, nil if user doesn't exist.
 func (v *Validator) Get(hash string) *protocol.MemoryUser {
 	u, _ := v.users.Load(hash)
 	if u != nil {

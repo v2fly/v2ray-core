@@ -57,10 +57,12 @@ func NewServer(ctx context.Context, config *ServerConfig) (*Server, error) {
 	return server, nil
 }
 
+// Network implements proxy.Inbound.Network().
 func (s *Server) Network() []net.Network {
 	return []net.Network{net.Network_TCP}
 }
 
+// Process implements proxy.Inbound.Process().
 func (s *Server) Process(ctx context.Context, network net.Network, conn internet.Connection, dispatcher routing.Dispatcher) error {
 	sessionPolicy := s.policyManager.ForLevel(0)
 	if err := conn.SetReadDeadline(time.Now().Add(sessionPolicy.Timeouts.Handshake)); err != nil {

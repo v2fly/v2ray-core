@@ -22,10 +22,11 @@ var (
 const (
 	maxLength = 8192
 
-	CommandTCP byte = 1
-	CommandUDP byte = 3
+	commandTCP byte = 1
+	commandUDP byte = 3
 )
 
+// TCP Connection wrapper for trojan protocol
 type ConnWriter struct {
 	io.Writer
 	Target     net.Destination
@@ -33,6 +34,7 @@ type ConnWriter struct {
 	headerSent bool
 }
 
+// implements io.Writer
 func (c *ConnWriter) Write(p []byte) (n int, err error) {
 	if !c.headerSent {
 		if err := c.writeHeader(); err != nil {
@@ -43,6 +45,7 @@ func (c *ConnWriter) Write(p []byte) (n int, err error) {
 	return c.Writer.Write(p)
 }
 
+// implements buf.Writer
 func (c *ConnWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	defer buf.ReleaseMulti(mb)
 
@@ -61,9 +64,9 @@ func (c *ConnWriter) writeHeader() error {
 	buffer := buf.StackNew()
 	defer buffer.Release()
 
-	command := CommandTCP
+	command := commandTCP
 	if c.Target.Network == net.Network_UDP {
-		command = CommandUDP
+		command = commandUDP
 	}
 
 	buffer.Write(c.Account.Key)
@@ -80,11 +83,13 @@ func (c *ConnWriter) writeHeader() error {
 	return err
 }
 
+// UDP Connection wrapper for trojan protocol
 type PacketWriter struct {
 	io.Writer
 	Target net.Destination
 }
 
+// implements buf.Writer
 func (w *PacketWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	b := make([]byte, maxLength)
 	for !mb.IsEmpty() {
@@ -99,6 +104,7 @@ func (w *PacketWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	return nil
 }
 
+// write udp packet with destination specified
 func (w *PacketWriter) WriteMultiBufferWithMetadata(mb buf.MultiBuffer, dest net.Destination) error {
 	b := make([]byte, maxLength)
 	for !mb.IsEmpty() {
@@ -132,12 +138,14 @@ func (w *PacketWriter) writePacket(payload []byte, dest net.Destination) (int, e
 	return length, nil
 }
 
+// TCP Connection wrapper for trojan protocol
 type ConnReader struct {
 	io.Reader
 	Target       net.Destination
 	headerParsed bool
 }
 
+// parse the trojan protocol header
 func (c *ConnReader) ParseHeader() error {
 	var crlf [2]byte
 	var command [1]byte
@@ -155,7 +163,7 @@ func (c *ConnReader) ParseHeader() error {
 	}
 
 	network := net.Network_TCP
-	if command[0] == CommandUDP {
+	if command[0] == commandUDP {
 		network = net.Network_UDP
 	}
 
@@ -173,6 +181,7 @@ func (c *ConnReader) ParseHeader() error {
 	return nil
 }
 
+// implements io.Reader
 func (c *ConnReader) Read(p []byte) (int, error) {
 	if !c.headerParsed {
 		if err := c.ParseHeader(); err != nil {
@@ -183,21 +192,24 @@ func (c *ConnReader) Read(p []byte) (int, error) {
 	return c.Reader.Read(p)
 }
 
+// implements buf.Reader
 func (c *ConnReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	b := buf.New()
 	_, err := b.ReadFrom(c)
 	return buf.MultiBuffer{b}, err
 }
 
-type PacketPayload struct {
+type packetPayload struct {
 	Target net.Destination
 	Buffer buf.MultiBuffer
 }
 
+// UDP Connection wrapper for trojan protocol
 type PacketReader struct {
 	io.Reader
 }
 
+// implements buf.Reader
 func (r *PacketReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	p, err := r.ReadMultiBufferWithMetadata()
 	if p != nil {
@@ -206,7 +218,8 @@ func (r *PacketReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	return nil, err
 }
 
-func (r *PacketReader) ReadMultiBufferWithMetadata() (*PacketPayload, error) {
+// read udp packet with destination
+func (r *PacketReader) ReadMultiBufferWithMetadata() (*packetPayload, error) {
 	addr, port, err := addrParser.ReadAddressPort(nil, r)
 	if err != nil {
 		return nil, newError("failed to read address and port").Base(err)
@@ -239,11 +252,11 @@ func (r *PacketReader) ReadMultiBufferWithMetadata() (*PacketPayload, error) {
 		mb = append(mb, b)
 		n, err := b.ReadFullFrom(r, int32(length))
 		if err != nil {
-			return &PacketPayload{Target: dest, Buffer: mb}, newError("failed to read payload").Base(err)
+			return &packetPayload{Target: dest, Buffer: mb}, newError("failed to read payload").Base(err)
 		}
 
 		remain -= int(n)
 	}
 
-	return &PacketPayload{Target: dest, Buffer: mb}, nil
+	return &packetPayload{Target: dest, Buffer: mb}, nil
 }
