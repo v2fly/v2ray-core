@@ -26,7 +26,7 @@ const (
 	commandUDP byte = 3
 )
 
-// TCP Connection wrapper for trojan protocol
+// ConnWriter is TCP Connection Writer Wrapper for trojan protocol
 type ConnWriter struct {
 	io.Writer
 	Target     net.Destination
@@ -34,7 +34,7 @@ type ConnWriter struct {
 	headerSent bool
 }
 
-// implements io.Writer
+// Write implements io.Writer
 func (c *ConnWriter) Write(p []byte) (n int, err error) {
 	if !c.headerSent {
 		if err := c.writeHeader(); err != nil {
@@ -45,7 +45,7 @@ func (c *ConnWriter) Write(p []byte) (n int, err error) {
 	return c.Writer.Write(p)
 }
 
-// implements buf.Writer
+// WriteMultiBuffer implements buf.Writer
 func (c *ConnWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	defer buf.ReleaseMulti(mb)
 
@@ -83,13 +83,13 @@ func (c *ConnWriter) writeHeader() error {
 	return err
 }
 
-// UDP Connection wrapper for trojan protocol
+// PacketWriter UDP Connection Writer Wrapper for trojan protocol
 type PacketWriter struct {
 	io.Writer
 	Target net.Destination
 }
 
-// implements buf.Writer
+// WriteMultiBuffer implements buf.Writer
 func (w *PacketWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	b := make([]byte, maxLength)
 	for !mb.IsEmpty() {
@@ -104,7 +104,7 @@ func (w *PacketWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	return nil
 }
 
-// write udp packet with destination specified
+// WriteMultiBufferWithMetadata writes udp packet with destination specified
 func (w *PacketWriter) WriteMultiBufferWithMetadata(mb buf.MultiBuffer, dest net.Destination) error {
 	b := make([]byte, maxLength)
 	for !mb.IsEmpty() {
@@ -138,14 +138,14 @@ func (w *PacketWriter) writePacket(payload []byte, dest net.Destination) (int, e
 	return length, nil
 }
 
-// TCP Connection wrapper for trojan protocol
+// ConnReader is TCP Connection Reader Wrapper for trojan protocol
 type ConnReader struct {
 	io.Reader
 	Target       net.Destination
 	headerParsed bool
 }
 
-// parse the trojan protocol header
+// ParseHeader parses the trojan protocol header
 func (c *ConnReader) ParseHeader() error {
 	var crlf [2]byte
 	var command [1]byte
@@ -181,7 +181,7 @@ func (c *ConnReader) ParseHeader() error {
 	return nil
 }
 
-// implements io.Reader
+// Read implements io.Reader
 func (c *ConnReader) Read(p []byte) (int, error) {
 	if !c.headerParsed {
 		if err := c.ParseHeader(); err != nil {
@@ -192,24 +192,25 @@ func (c *ConnReader) Read(p []byte) (int, error) {
 	return c.Reader.Read(p)
 }
 
-// implements buf.Reader
+// ReadMultiBuffer implements buf.Reader
 func (c *ConnReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	b := buf.New()
 	_, err := b.ReadFrom(c)
 	return buf.MultiBuffer{b}, err
 }
 
-type packetPayload struct {
+// PacketPayload combines udp payload and destination
+type PacketPayload struct {
 	Target net.Destination
 	Buffer buf.MultiBuffer
 }
 
-// UDP Connection wrapper for trojan protocol
+// PacketReader is UDP Connection Reader Wrapper for trojan protocol
 type PacketReader struct {
 	io.Reader
 }
 
-// implements buf.Reader
+// ReadMultiBuffer implements buf.Reader
 func (r *PacketReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	p, err := r.ReadMultiBufferWithMetadata()
 	if p != nil {
@@ -218,8 +219,8 @@ func (r *PacketReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	return nil, err
 }
 
-// read udp packet with destination
-func (r *PacketReader) ReadMultiBufferWithMetadata() (*packetPayload, error) {
+// ReadMultiBufferWithMetadata reads udp packet with destination
+func (r *PacketReader) ReadMultiBufferWithMetadata() (*PacketPayload, error) {
 	addr, port, err := addrParser.ReadAddressPort(nil, r)
 	if err != nil {
 		return nil, newError("failed to read address and port").Base(err)
@@ -252,11 +253,11 @@ func (r *PacketReader) ReadMultiBufferWithMetadata() (*packetPayload, error) {
 		mb = append(mb, b)
 		n, err := b.ReadFullFrom(r, int32(length))
 		if err != nil {
-			return &packetPayload{Target: dest, Buffer: mb}, newError("failed to read payload").Base(err)
+			return &PacketPayload{Target: dest, Buffer: mb}, newError("failed to read payload").Base(err)
 		}
 
 		remain -= int(n)
 	}
 
-	return &packetPayload{Target: dest, Buffer: mb}, nil
+	return &PacketPayload{Target: dest, Buffer: mb}, nil
 }

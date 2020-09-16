@@ -6,7 +6,7 @@ import (
 	"v2ray.com/core/common/protocol"
 )
 
-// Trojan User Validator
+// Validator stores valid trojan users
 type Validator struct {
 	users sync.Map
 }

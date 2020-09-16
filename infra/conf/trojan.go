@@ -10,7 +10,7 @@ import (
 	"v2ray.com/core/proxy/trojan"
 )
 
-// Trojan outbound configuration
+// TrojanServerTarget is configuration of a single trojan server
 type TrojanServerTarget struct {
 	Address  *Address `json:"address"`
 	Port     uint16   `json:"port"`
@@ -19,7 +19,7 @@ type TrojanServerTarget struct {
 	Level    byte     `json:"level"`
 }
 
-// Trojan outbound configurations
+// TrojanClientConfig is configuration of trojan servers
 type TrojanClientConfig struct {
 	Servers []*TrojanServerTarget `json:"servers"`
 }
@@ -67,20 +67,20 @@ func (c *TrojanClientConfig) Build() (proto.Message, error) {
 	return config, nil
 }
 
-// Trojan fallback configuration
+// TrojanInboundFallback is fallback configuration
 type TrojanInboundFallback struct {
 	Type string `json:"type"`
 	Dest string `json:"dest"`
 }
 
-// Trojan user configuration
+// TrojanUserConfig is user configuration
 type TrojanUserConfig struct {
 	Password string `json:"password"`
 	Level    byte   `json:"level"`
 	Email    string `json:"email"`
 }
 
-// Trojan Inbound configuration
+// TrojanServerConfig is Inbound configuration
 type TrojanServerConfig struct {
 	Users    []*TrojanUserConfig    `json:"users"`
 	Fallback *TrojanInboundFallback `json:"fallback"`

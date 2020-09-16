@@ -34,7 +34,7 @@ type Server struct {
 	config        *ServerConfig
 }
 
-// New creates a new trojan inbound handler.
+// NewServer creates a new trojan inbound handler.
 func NewServer(ctx context.Context, config *ServerConfig) (*Server, error) {
 
 	validator := new(Validator)
@@ -139,19 +139,20 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 
 	if destination.Network == net.Network_UDP { // handle udp request
 		return s.handleUDPPayload(ctx, &PacketReader{Reader: clientReader}, &PacketWriter{Writer: conn}, dispatcher)
-	} else { // handle tcp request
-
-		log.ContextWithAccessMessage(ctx, &log.AccessMessage{
-			From:   conn.RemoteAddr(),
-			To:     destination,
-			Status: log.AccessAccepted,
-			Reason: "",
-			Email:  user.Email,
-		})
-
-		newError("received request for ", destination).WriteToLog(session.ExportIDToError(ctx))
-		return s.handleConnection(ctx, sessionPolicy, destination, clientReader, buf.NewWriter(conn), dispatcher)
 	}
+
+	// handle tcp request
+
+	log.ContextWithAccessMessage(ctx, &log.AccessMessage{
+		From:   conn.RemoteAddr(),
+		To:     destination,
+		Status: log.AccessAccepted,
+		Reason: "",
+		Email:  user.Email,
+	})
+
+	newError("received request for ", destination).WriteToLog(session.ExportIDToError(ctx))
+	return s.handleConnection(ctx, sessionPolicy, destination, clientReader, buf.NewWriter(conn), dispatcher)
 }
 
 func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReader, clientWriter *PacketWriter, dispatcher routing.Dispatcher) error {
