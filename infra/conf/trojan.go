@@ -82,7 +82,7 @@ type TrojanUserConfig struct {
 
 // TrojanServerConfig is Inbound configuration
 type TrojanServerConfig struct {
-	Users    []*TrojanUserConfig    `json:"users"`
+	Clients  []*TrojanUserConfig    `json:"clients"`
 	Fallback *TrojanInboundFallback `json:"fallback"`
 }
 
@@ -91,12 +91,12 @@ func (c *TrojanServerConfig) Build() (proto.Message, error) {
 
 	config := new(trojan.ServerConfig)
 
-	if len(c.Users) == 0 {
+	if len(c.Clients) == 0 {
 		return nil, newError("No trojan user settings.")
 	}
 
-	config.Users = make([]*protocol.User, len(c.Users))
-	for idx, rawUser := range c.Users {
+	config.Users = make([]*protocol.User, len(c.Clients))
+	for idx, rawUser := range c.Clients {
 		user := new(protocol.User)
 		account := &trojan.Account{
 			Password: rawUser.Password,
