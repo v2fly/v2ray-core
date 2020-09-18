@@ -4,6 +4,9 @@ run:
   skip-files:
     - generated.*
 
+issues:
+  new: true
+
 linters:
   enable:
     - bodyclose
@@ -14,7 +17,6 @@ linters:
     - errcheck
     - exhaustive
     - funlen
-    - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
@@ -44,6 +46,3 @@ linters:
     - unused
     - varcheck
     - whitespace
-
-issues:
-  new: true
