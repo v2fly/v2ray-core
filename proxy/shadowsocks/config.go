@@ -279,10 +279,10 @@ func (rm *RC4MD5) IVSize() int32 {
 }
 
 func (rm *RC4MD5) newCipherStream(key []byte, iv []byte) cipher.Stream {
-	h := md5.New()
-	h.Write(key)
-	h.Write(iv)
-	rc4key := h.Sum(nil)
+	md5Hash := md5.New()
+	common.Must2(md5Hash.Write(key))
+	common.Must2(md5Hash.Write(iv))
+	rc4key := md5Hash.Sum(nil)
 	c, _ := rc4.NewCipher(rc4key)
 	return c
 }
