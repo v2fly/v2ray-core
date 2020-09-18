@@ -6,6 +6,16 @@ run:
 
 issues:
   new: true
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - goconst
+        - funlen
+        - lll
 
 linters:
   enable:
