@@ -2,11 +2,13 @@ package trojan
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"v2ray.com/core"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
+	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/log"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/protocol"
@@ -164,27 +166,32 @@ func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReade
 	user := inbound.User
 
 	for {
-		p, err := clientReader.ReadMultiBufferWithMetadata()
-		if err != nil {
-			break
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			p, err := clientReader.ReadMultiBufferWithMetadata()
+			if err != nil {
+				if errors.Cause(err) != io.EOF {
+					return newError("unexpected EOF").Base(err)
+				}
+				return nil
+			}
+
+			log.ContextWithAccessMessage(ctx, &log.AccessMessage{
+				From:   inbound.Source,
+				To:     p.Target,
+				Status: log.AccessAccepted,
+				Reason: "",
+				Email:  user.Email,
+			})
+			newError("tunnelling request to ", p.Target).WriteToLog(session.ExportIDToError(ctx))
+
+			for _, b := range p.Buffer {
+				udpServer.Dispatch(ctx, p.Target, b)
+			}
 		}
-
-		log.ContextWithAccessMessage(ctx, &log.AccessMessage{
-			From:   inbound.Source,
-			To:     p.Target,
-			Status: log.AccessAccepted,
-			Reason: "",
-			Email:  user.Email,
-		})
-		newError("tunnelling request to ", p.Target).WriteToLog(session.ExportIDToError(ctx))
-
-		for _, b := range p.Buffer {
-			udpServer.Dispatch(ctx, p.Target, b)
-		}
-
 	}
-
-	return nil
 }
 
 func (s *Server) handleConnection(ctx context.Context, sessionPolicy policy.Session,
