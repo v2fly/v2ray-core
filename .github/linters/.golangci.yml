@@ -1,4 +1,5 @@
 run:
+  timeout: 5m
   skip-dirs:
     - external
   skip-files:
@@ -14,8 +15,6 @@ issues:
         - dupl
         - gosec
         - goconst
-        - funlen
-        - lll
 
 linters:
   enable:
@@ -26,21 +25,18 @@ linters:
     - dupl
     - errcheck
     - exhaustive
-    - funlen
     - goconst
     - gocritic
     - gocyclo
     - gofmt
     - goimports
     - golint
-    - gomnd
     - goprintffuncname
     - gosec
     - gosimple
     - govet
     - ineffassign
     - interfacer
-    - lll
     - misspell
     - nakedret
     - noctx
