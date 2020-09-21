@@ -47,7 +47,6 @@ func TestTCPRequest(t *testing.T) {
 	if r := cmp.Diff(decodedData[0].Bytes(), payload); r != "" {
 		t.Error("data: ", r)
 	}
-
 }
 
 func TestUDPRequest(t *testing.T) {
@@ -89,5 +88,4 @@ func TestUDPRequest(t *testing.T) {
 	if r := cmp.Diff(decoded.Bytes(), payload); r != "" {
 		t.Error("data: ", r)
 	}
-
 }

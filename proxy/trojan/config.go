@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	fmt "fmt"
 
+	"v2ray.com/core/common"
 	"v2ray.com/core/common/protocol"
 )
 
@@ -35,7 +36,7 @@ func (a *MemoryAccount) Equals(another protocol.Account) bool {
 func hexSha224(password string) []byte {
 	buf := make([]byte, 56)
 	hash := sha256.New224()
-	hash.Write([]byte(password))
+	common.Must2(hash.Write([]byte(password)))
 	hex.Encode(buf, hash.Sum(nil))
 	return buf
 }

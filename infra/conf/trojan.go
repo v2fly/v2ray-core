@@ -3,7 +3,7 @@ package conf
 import (
 	"strconv"
 
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto" // nolint: staticcheck
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/protocol"
 	"v2ray.com/core/common/serial"
@@ -26,7 +26,6 @@ type TrojanClientConfig struct {
 
 // Build implements Buildable
 func (c *TrojanClientConfig) Build() (proto.Message, error) {
-
 	config := new(trojan.ClientConfig)
 
 	if len(c.Servers) == 0 {
@@ -88,7 +87,6 @@ type TrojanServerConfig struct {
 
 // Build implements Buildable
 func (c *TrojanServerConfig) Build() (proto.Message, error) {
-
 	config := new(trojan.ServerConfig)
 
 	if len(c.Clients) == 0 {

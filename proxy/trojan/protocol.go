@@ -13,9 +13,9 @@ var (
 	crlf = []byte{'\r', '\n'}
 
 	addrParser = protocol.NewAddressParser(
-		protocol.AddressFamilyByte(0x01, net.AddressFamilyIPv4),
-		protocol.AddressFamilyByte(0x04, net.AddressFamilyIPv6),
-		protocol.AddressFamilyByte(0x03, net.AddressFamilyDomain),
+		protocol.AddressFamilyByte(0x01, net.AddressFamilyIPv4),   // nolint: gomnd
+		protocol.AddressFamilyByte(0x04, net.AddressFamilyIPv6),   // nolint: gomnd
+		protocol.AddressFamilyByte(0x03, net.AddressFamilyDomain), // nolint: gomnd
 	)
 )
 
@@ -69,11 +69,21 @@ func (c *ConnWriter) writeHeader() error {
 		command = commandUDP
 	}
 
-	buffer.Write(c.Account.Key)
-	buffer.Write(crlf)
-	buffer.WriteByte(command)
-	addrParser.WriteAddressPort(&buffer, c.Target.Address, c.Target.Port)
-	buffer.Write(crlf)
+	if _, err := buffer.Write(c.Account.Key); err != nil {
+		return err
+	}
+	if _, err := buffer.Write(crlf); err != nil {
+		return err
+	}
+	if err := buffer.WriteByte(command); err != nil {
+		return err
+	}
+	if err := addrParser.WriteAddressPort(&buffer, c.Target.Address, c.Target.Port); err != nil {
+		return err
+	}
+	if _, err := buffer.Write(crlf); err != nil {
+		return err
+	}
 
 	_, err := c.Writer.Write(buffer.Bytes())
 	if err == nil {
@@ -119,17 +129,25 @@ func (w *PacketWriter) WriteMultiBufferWithMetadata(mb buf.MultiBuffer, dest net
 	return nil
 }
 
-func (w *PacketWriter) writePacket(payload []byte, dest net.Destination) (int, error) {
+func (w *PacketWriter) writePacket(payload []byte, dest net.Destination) (int, error) { // nolint: unparam
 	buffer := buf.StackNew()
 	defer buffer.Release()
 
 	length := len(payload)
 	lengthBuf := [2]byte{}
 	binary.BigEndian.PutUint16(lengthBuf[:], uint16(length))
-	addrParser.WriteAddressPort(&buffer, dest.Address, dest.Port)
-	buffer.Write(lengthBuf[:])
-	buffer.Write(crlf)
-	buffer.Write(payload)
+	if err := addrParser.WriteAddressPort(&buffer, dest.Address, dest.Port); err != nil {
+		return 0, err
+	}
+	if _, err := buffer.Write(lengthBuf[:]); err != nil {
+		return 0, err
+	}
+	if _, err := buffer.Write(crlf); err != nil {
+		return 0, err
+	}
+	if _, err := buffer.Write(payload); err != nil {
+		return 0, err
+	}
 	_, err := w.Write(buffer.Bytes())
 	if err != nil {
 		return 0, err
