@@ -4,11 +4,13 @@ package trojan
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"v2ray.com/core"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
+	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/log"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/protocol"
@@ -175,7 +177,10 @@ func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReade
 		default:
 			p, err := clientReader.ReadMultiBufferWithMetadata()
 			if err != nil {
-				break
+				if errors.Cause(err) != io.EOF {
+					return newError("unexpected EOF").Base(err)
+				}
+				return nil
 			}
 
 			log.ContextWithAccessMessage(ctx, &log.AccessMessage{
