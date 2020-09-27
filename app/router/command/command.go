@@ -77,8 +77,8 @@ type service struct {
 }
 
 func (s *service) Register(server *grpc.Server) {
-	common.Must(s.v.RequireFeatures(func(router routing.Router, stats stats.Manager) {
-		RegisterRoutingServiceServer(server, NewRoutingServer(router, nil))
+	common.Must(s.v.RequireFeatures(func(router routing.Router, manager stats.Manager) {
+		RegisterRoutingServiceServer(server, NewRoutingServer(router, manager.GetChannel(stats.RoutingStatsKey)))
 	}))
 }
 

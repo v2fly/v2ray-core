@@ -94,7 +94,9 @@ type DefaultDispatcher struct {
 	ohm    outbound.Manager
 	router routing.Router
 	policy policy.Manager
-	stats  stats.Manager
+
+	stats        stats.Manager
+	routingStats stats.Channel
 }
 
 func init() {
@@ -115,6 +117,7 @@ func (d *DefaultDispatcher) Init(config *Config, om outbound.Manager, router rou
 	d.router = router
 	d.policy = pm
 	d.stats = sm
+	d.routingStats = sm.GetChannel(stats.RoutingStatsKey)
 	return nil
 }
 
@@ -273,6 +276,9 @@ func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.
 				handler = h
 			} else {
 				newError("non existing tag: ", tag).AtWarning().WriteToLog(session.ExportIDToError(ctx))
+			}
+			if d.routingStats != nil {
+				d.routingStats.Publish(route)
 			}
 		} else {
 			newError("default route for ", destination).WriteToLog(session.ExportIDToError(ctx))

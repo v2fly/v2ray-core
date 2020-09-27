@@ -27,7 +27,12 @@ func NewManager(ctx context.Context, config *Config) (*Manager, error) {
 		counters: make(map[string]*Counter),
 		channels: make(map[string]*Channel),
 	}
-
+	if config.Routing != nil {
+		err := m.registerChannelInternal(stats.RoutingStatsKey, NewChannel(config.Routing))
+		if err != nil {
+			return nil, err
+		}
+	}
 	return m, nil
 }
 
@@ -38,16 +43,23 @@ func (*Manager) Type() interface{} {
 
 // RegisterCounter implements stats.Manager.
 func (m *Manager) RegisterCounter(name string) (stats.Counter, error) {
+	c := new(Counter)
+	if err := m.registerCounterInternal(name, c); err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+func (m *Manager) registerCounterInternal(name string, counter *Counter) error {
 	m.access.Lock()
 	defer m.access.Unlock()
 
 	if _, found := m.counters[name]; found {
-		return nil, newError("Counter ", name, " already registered.")
+		return newError("Counter ", name, " already registered.")
 	}
 	newError("create new counter ", name).AtDebug().WriteToLog()
-	c := new(Counter)
-	m.counters[name] = c
-	return c, nil
+	m.counters[name] = counter
+	return nil
 }
 
 // UnregisterCounter implements stats.Manager.
@@ -87,19 +99,26 @@ func (m *Manager) VisitCounters(visitor func(string, stats.Counter) bool) {
 
 // RegisterChannel implements stats.Manager.
 func (m *Manager) RegisterChannel(name string) (stats.Channel, error) {
+	c := NewChannel(&ChannelConfig{BufferSize: 16, BroadcastTimeout: 100})
+	if err := m.registerChannelInternal(name, c); err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+func (m *Manager) registerChannelInternal(name string, channel *Channel) error {
 	m.access.Lock()
 	defer m.access.Unlock()
 
 	if _, found := m.channels[name]; found {
-		return nil, newError("Channel ", name, " already registered.")
+		return newError("Channel ", name, " already registered.")
 	}
 	newError("create new channel ", name).AtDebug().WriteToLog()
-	c := NewChannel(&ChannelConfig{BufferSize: 16, BroadcastTimeout: 100})
-	m.channels[name] = c
+	m.channels[name] = channel
 	if m.running {
-		return c, c.Start()
+		return channel.Start()
 	}
-	return c, nil
+	return nil
 }
 
 // UnregisterChannel implements stats.Manager.

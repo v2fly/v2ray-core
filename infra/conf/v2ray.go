@@ -9,7 +9,6 @@ import (
 	"v2ray.com/core"
 	"v2ray.com/core/app/dispatcher"
 	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/app/stats"
 	"v2ray.com/core/common/serial"
 	"v2ray.com/core/transport/internet/xtls"
 )
@@ -300,13 +299,6 @@ func (c *OutboundDetourConfig) Build() (*core.OutboundHandlerConfig, error) {
 		Tag:            c.Tag,
 		ProxySettings:  serial.ToTypedMessage(ts),
 	}, nil
-}
-
-type StatsConfig struct{}
-
-// Build implements Buildable.
-func (c *StatsConfig) Build() (*stats.Config, error) {
-	return &stats.Config{}, nil
 }
 
 type Config struct {
