@@ -39,7 +39,7 @@ func TestStaticHosts(t *testing.T) {
 	common.Must(err)
 
 	{
-		ips := hosts.LookupIP("v2ray.com", IPOption{
+		ips := hosts.Lookup("v2ray.com", IPOption{
 			IPv4Enable: true,
 			IPv6Enable: true,
 		})
@@ -52,7 +52,7 @@ func TestStaticHosts(t *testing.T) {
 	}
 
 	{
-		ips := hosts.LookupIP("www.v2ray.cn", IPOption{
+		ips := hosts.Lookup("www.v2ray.cn", IPOption{
 			IPv4Enable: true,
 			IPv6Enable: true,
 		})
@@ -65,7 +65,7 @@ func TestStaticHosts(t *testing.T) {
 	}
 
 	{
-		ips := hosts.LookupIP("baidu.com", IPOption{
+		ips := hosts.Lookup("baidu.com", IPOption{
 			IPv4Enable: false,
 			IPv6Enable: true,
 		})

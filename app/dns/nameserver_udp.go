@@ -22,6 +22,7 @@ import (
 	"v2ray.com/core/transport/internet/udp"
 )
 
+// ClassicNameServer implemented traditional UDP DNS.
 type ClassicNameServer struct {
 	sync.RWMutex
 	name      string
@@ -32,11 +33,10 @@ type ClassicNameServer struct {
 	udpServer *udp.Dispatcher
 	cleanup   *task.Periodic
 	reqID     uint32
-	clientIP  net.IP
 }
 
-func NewClassicNameServer(address net.Destination, dispatcher routing.Dispatcher, clientIP net.IP) *ClassicNameServer {
-
+// NewClassicNameServer creates udp server object for remote resolving.
+func NewClassicNameServer(address net.Destination, dispatcher routing.Dispatcher) *ClassicNameServer {
 	// default to 53 if unspecific
 	if address.Port == 0 {
 		address.Port = net.Port(53)
@@ -46,7 +46,6 @@ func NewClassicNameServer(address net.Destination, dispatcher routing.Dispatcher
 		address:  address,
 		ips:      make(map[string]record),
 		requests: make(map[uint16]dnsRequest),
-		clientIP: clientIP,
 		pub:      pubsub.NewService(),
 		name:     strings.ToUpper(address.String()),
 	}
@@ -59,10 +58,12 @@ func NewClassicNameServer(address net.Destination, dispatcher routing.Dispatcher
 	return s
 }
 
+// Name implements Server.
 func (s *ClassicNameServer) Name() string {
 	return s.name
 }
 
+// Cleanup clears expired items from cache
 func (s *ClassicNameServer) Cleanup() error {
 	now := time.Now()
 	s.Lock()
@@ -104,6 +105,7 @@ func (s *ClassicNameServer) Cleanup() error {
 	return nil
 }
 
+// HandleResponse handles udp response packet from remote DNS server.
 func (s *ClassicNameServer) HandleResponse(ctx context.Context, packet *udp_proto.Packet) {
 
 	ipRec, err := parseResponse(packet.Payload.Bytes())
@@ -182,10 +184,10 @@ func (s *ClassicNameServer) addPendingRequest(req *dnsRequest) {
 	s.requests[id] = *req
 }
 
-func (s *ClassicNameServer) sendQuery(ctx context.Context, domain string, option IPOption) {
+func (s *ClassicNameServer) sendQuery(ctx context.Context, domain string, clientIP net.IP, option IPOption) {
 	newError(s.name, " querying DNS for: ", domain).AtDebug().WriteToLog(session.ExportIDToError(ctx))
 
-	reqs := buildReqMsgs(domain, option, s.newReqID, genEDNS0Options(s.clientIP))
+	reqs := buildReqMsgs(domain, option, s.newReqID, genEDNS0Options(clientIP))
 
 	for _, req := range reqs {
 		s.addPendingRequest(req)
@@ -229,7 +231,7 @@ func (s *ClassicNameServer) findIPsForDomain(domain string, option IPOption) ([]
 	}
 
 	if len(ips) > 0 {
-		return toNetIP(ips), nil
+		return toNetIP(ips)
 	}
 
 	if lastErr != nil {
@@ -239,8 +241,8 @@ func (s *ClassicNameServer) findIPsForDomain(domain string, option IPOption) ([]
 	return nil, dns_feature.ErrEmptyResponse
 }
 
-func (s *ClassicNameServer) QueryIP(ctx context.Context, domain string, option IPOption) ([]net.IP, error) {
-
+// QueryIP implements Server.
+func (s *ClassicNameServer) QueryIP(ctx context.Context, domain string, clientIP net.IP, option IPOption) ([]net.IP, error) { // nolint: dupl
 	fqdn := Fqdn(domain)
 
 	ips, err := s.findIPsForDomain(fqdn, option)
@@ -275,7 +277,7 @@ func (s *ClassicNameServer) QueryIP(ctx context.Context, domain string, option I
 		}
 		close(done)
 	}()
-	s.sendQuery(ctx, fqdn, option)
+	s.sendQuery(ctx, fqdn, clientIP, option)
 
 	for {
 		ips, err := s.findIPsForDomain(fqdn, option)
