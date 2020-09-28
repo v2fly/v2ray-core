@@ -12,14 +12,6 @@ import (
 
 func cipherFromString(c string) shadowsocks.CipherType {
 	switch strings.ToLower(c) {
-	case "aes-256-cfb":
-		return shadowsocks.CipherType_AES_256_CFB
-	case "aes-128-cfb":
-		return shadowsocks.CipherType_AES_128_CFB
-	case "chacha20":
-		return shadowsocks.CipherType_CHACHA20
-	case "chacha20-ietf":
-		return shadowsocks.CipherType_CHACHA20_IETF
 	case "aes-128-gcm", "aead_aes_128_gcm":
 		return shadowsocks.CipherType_AES_128_GCM
 	case "aes-256-gcm", "aead_aes_256_gcm":
@@ -53,14 +45,6 @@ func (v *ShadowsocksServerConfig) Build() (proto.Message, error) {
 	}
 	account := &shadowsocks.Account{
 		Password: v.Password,
-		Ota:      shadowsocks.Account_Auto,
-	}
-	if v.OTA != nil {
-		if *v.OTA {
-			account.Ota = shadowsocks.Account_Enabled
-		} else {
-			account.Ota = shadowsocks.Account_Disabled
-		}
 	}
 	account.CipherType = cipherFromString(v.Cipher)
 	if account.CipherType == shadowsocks.CipherType_UNKNOWN {
@@ -110,10 +94,6 @@ func (v *ShadowsocksClientConfig) Build() (proto.Message, error) {
 		}
 		account := &shadowsocks.Account{
 			Password: server.Password,
-			Ota:      shadowsocks.Account_Enabled,
-		}
-		if !server.Ota {
-			account.Ota = shadowsocks.Account_Disabled
 		}
 		account.CipherType = cipherFromString(server.Cipher)
 		if account.CipherType == shadowsocks.CipherType_UNKNOWN {
