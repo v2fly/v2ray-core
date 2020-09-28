@@ -45,7 +45,7 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 	var err error
 	lc.Control = getControlFunc(ctx, sockopt, dl.controllers)
 	l, err = lc.Listen(ctx, addr.Network(), addr.String())
-	if sockopt.AcceptProxyProtocol {
+	if sockopt != nil && sockopt.AcceptProxyProtocol {
 		policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
 		l = &proxyproto.Listener{Listener: l, Policy: policyFunc}
 	}
