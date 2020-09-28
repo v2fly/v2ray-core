@@ -4,6 +4,7 @@ import (
 	"context"
 	"syscall"
 
+	"github.com/pires/go-proxyproto"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/session"
 )
@@ -40,10 +41,15 @@ func getControlFunc(ctx context.Context, sockopt *SocketConfig, controllers []co
 
 func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *SocketConfig) (net.Listener, error) {
 	var lc net.ListenConfig
-
+	var l net.Listener
+	var err error
 	lc.Control = getControlFunc(ctx, sockopt, dl.controllers)
-
-	return lc.Listen(ctx, addr.Network(), addr.String())
+	l, err = lc.Listen(ctx, addr.Network(), addr.String())
+	if sockopt.AcceptProxyProtocol {
+		policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
+		l = &proxyproto.Listener{Listener: l, Policy: policyFunc}
+	}
+	return l, err
 }
 
 func (dl *DefaultListener) ListenPacket(ctx context.Context, addr net.Addr, sockopt *SocketConfig) (net.PacketConn, error) {

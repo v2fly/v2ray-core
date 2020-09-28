@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/pires/go-proxyproto"
 
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/net"
@@ -74,11 +73,11 @@ func ListenWS(ctx context.Context, address net.Address, port net.Port, streamSet
 
 	wsSettings := streamSettings.ProtocolSettings.(*Config)
 
-	if wsSettings.AcceptProxyProtocol {
-		policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
-		listener = &proxyproto.Listener{Listener: listener, Policy: policyFunc}
-		newError("accepting PROXY protocol").AtWarning().WriteToLog(session.ExportIDToError(ctx))
-	}
+	// if wsSettings.AcceptProxyProtocol {
+	// 	policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
+	// 	listener = &proxyproto.Listener{Listener: listener, Policy: policyFunc}
+	// 	newError("accepting PROXY protocol").AtWarning().WriteToLog(session.ExportIDToError(ctx))
+	// }
 
 	if config := v2tls.ConfigFromStreamSettings(streamSettings); config != nil {
 		if tlsConfig := config.GetTLSConfig(); tlsConfig != nil {

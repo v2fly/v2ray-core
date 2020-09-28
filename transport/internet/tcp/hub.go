@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pires/go-proxyproto"
 	goxtls "github.com/xtls/go"
 
 	"v2ray.com/core/common"
@@ -43,21 +42,21 @@ func ListenTCP(ctx context.Context, address net.Address, port net.Port, streamSe
 	tcpSettings := streamSettings.ProtocolSettings.(*Config)
 	var l *Listener
 
-	if tcpSettings.AcceptProxyProtocol {
-		policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
-		l = &Listener{
-			listener: &proxyproto.Listener{Listener: listener, Policy: policyFunc},
-			config:   tcpSettings,
-			addConn:  handler,
-		}
-		newError("accepting PROXY protocol").AtWarning().WriteToLog(session.ExportIDToError(ctx))
-	} else {
-		l = &Listener{
-			listener: listener,
-			config:   tcpSettings,
-			addConn:  handler,
-		}
+	// if tcpSettings.AcceptProxyProtocol {
+	// 	policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
+	// 	l = &Listener{
+	// 		listener: &proxyproto.Listener{Listener: listener, Policy: policyFunc},
+	// 		config:   tcpSettings,
+	// 		addConn:  handler,
+	// 	}
+	// 	newError("accepting PROXY protocol").AtWarning().WriteToLog(session.ExportIDToError(ctx))
+	// } else {
+	l = &Listener{
+		listener: listener,
+		config:   tcpSettings,
+		addConn:  handler,
 	}
+	// }
 
 	if config := tls.ConfigFromStreamSettings(streamSettings); config != nil {
 		l.tlsConfig = config.GetTLSConfig(tls.WithNextProto("h2"))
