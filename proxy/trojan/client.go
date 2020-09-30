@@ -18,6 +18,7 @@ import (
 	"v2ray.com/core/features/policy"
 	"v2ray.com/core/transport"
 	"v2ray.com/core/transport/internet"
+	"v2ray.com/core/transport/internet/xtls"
 )
 
 // Client is a inbound handler for trojan protocol
@@ -83,6 +84,21 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		return newError("user account is not valid")
 	}
 
+	iConn := conn
+	if statConn, ok := iConn.(*internet.StatCouterConnection); ok {
+		iConn = statConn.Connection
+	}
+
+	connWriter := &ConnWriter{}
+	if destination.Network == net.Network_TCP && (!destination.Address.Family().IsDomain() || destination.Address.Domain() != muxCoolAddress) { // enable xtls only if mux is disabled
+		if xtlsConn, ok := iConn.(*xtls.Conn); ok {
+			connWriter.XTLS = true
+			xtlsConn.RPRX = true
+		} else {
+			return newError("failed to enable xtls").AtWarning()
+		}
+	}
+
 	sessionPolicy := c.policyManager.ForLevel(user.Level)
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
@@ -92,7 +108,9 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 
 		var bodyWriter buf.Writer
 		bufferWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
-		connWriter := &ConnWriter{Writer: bufferWriter, Target: destination, Account: account}
+		connWriter.Writer = bufferWriter
+		connWriter.Target = destination
+		connWriter.Account = account
 
 		if destination.Network == net.Network_UDP {
 			bodyWriter = &PacketWriter{Writer: connWriter, Target: destination}

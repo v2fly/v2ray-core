@@ -22,8 +22,9 @@ var (
 const (
 	maxLength = 8192
 
-	commandTCP byte = 1
-	commandUDP byte = 3
+	commandTCP  byte = 1
+	commandUDP  byte = 3
+	commandXTLS byte = 0xf1
 )
 
 // ConnWriter is TCP Connection Writer Wrapper for trojan protocol
@@ -31,6 +32,7 @@ type ConnWriter struct {
 	io.Writer
 	Target     net.Destination
 	Account    *MemoryAccount
+	XTLS       bool
 	headerSent bool
 }
 
@@ -67,6 +69,8 @@ func (c *ConnWriter) writeHeader() error {
 	command := commandTCP
 	if c.Target.Network == net.Network_UDP {
 		command = commandUDP
+	} else if c.XTLS {
+		command = commandXTLS
 	}
 
 	if _, err := buffer.Write(c.Account.Key); err != nil {
@@ -160,6 +164,7 @@ func (w *PacketWriter) writePacket(payload []byte, dest net.Destination) (int, e
 type ConnReader struct {
 	io.Reader
 	Target       net.Destination
+	XTLS         bool
 	headerParsed bool
 }
 
@@ -183,6 +188,8 @@ func (c *ConnReader) ParseHeader() error {
 	network := net.Network_TCP
 	if command[0] == commandUDP {
 		network = net.Network_UDP
+	} else if command[0] == commandXTLS {
+		c.XTLS = true
 	}
 
 	addr, port, err := addrParser.ReadAddressPort(nil, c.Reader)

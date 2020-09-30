@@ -23,6 +23,7 @@ import (
 	"v2ray.com/core/features/routing"
 	"v2ray.com/core/transport/internet"
 	"v2ray.com/core/transport/internet/udp"
+	"v2ray.com/core/transport/internet/xtls"
 )
 
 func init() {
@@ -69,6 +70,11 @@ func (s *Server) Network() []net.Network {
 
 // Process implements proxy.Inbound.Process().
 func (s *Server) Process(ctx context.Context, network net.Network, conn internet.Connection, dispatcher routing.Dispatcher) error { // nolint: funlen,lll
+	iConn := conn
+	if statConn, ok := iConn.(*internet.StatCouterConnection); ok {
+		iConn = statConn.Connection
+	}
+
 	sessionPolicy := s.policyManager.ForLevel(0)
 	if err := conn.SetReadDeadline(time.Now().Add(sessionPolicy.Timeouts.Handshake)); err != nil {
 		return newError("unable to set read deadline").Base(err).AtWarning()
@@ -149,6 +155,17 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 	}
 
 	// handle tcp request
+	if clientReader.XTLS {
+		if destination.Address.Family().IsDomain() && destination.Address.Domain() == muxCoolAddress {
+			return newError("XTLS doesn't support Mux").AtWarning()
+		}
+
+		if xtlsConn, ok := iConn.(*xtls.Conn); ok {
+			xtlsConn.RPRX = true
+		} else {
+			return newError("failed to enable XTLS").AtWarning()
+		}
+	}
 
 	log.ContextWithAccessMessage(ctx, &log.AccessMessage{
 		From:   conn.RemoteAddr(),

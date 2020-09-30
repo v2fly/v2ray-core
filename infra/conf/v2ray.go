@@ -188,8 +188,8 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 		if err != nil {
 			return nil, err
 		}
-		if ss.SecurityType == serial.GetMessageType(&xtls.Config{}) && !strings.EqualFold(c.Protocol, "vless") {
-			return nil, newError("XTLS only supports VLESS for now.")
+		if ss.SecurityType == serial.GetMessageType(&xtls.Config{}) && !strings.EqualFold(c.Protocol, "vless") && !strings.EqualFold(c.Protocol, "trojan") {
+			return nil, newError("XTLS doesn't supports " + c.Protocol + " for now.")
 		}
 		receiverSettings.StreamSettings = ss
 	}
@@ -258,8 +258,8 @@ func (c *OutboundDetourConfig) Build() (*core.OutboundHandlerConfig, error) {
 		if err != nil {
 			return nil, err
 		}
-		if ss.SecurityType == serial.GetMessageType(&xtls.Config{}) && !strings.EqualFold(c.Protocol, "vless") {
-			return nil, newError("XTLS only supports VLESS for now.")
+		if ss.SecurityType == serial.GetMessageType(&xtls.Config{}) && !strings.EqualFold(c.Protocol, "vless") && !strings.EqualFold(c.Protocol, "trojan") {
+			return nil, newError("XTLS doesn't supports " + c.Protocol + " for now.")
 		}
 		senderSettings.StreamSettings = ss
 	}
