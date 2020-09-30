@@ -94,8 +94,6 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		if xtlsConn, ok := iConn.(*xtls.Conn); ok {
 			connWriter.XTLS = true
 			xtlsConn.RPRX = true
-		} else {
-			return newError("failed to enable xtls").AtWarning()
 		}
 	}
 
