@@ -95,10 +95,7 @@ func ReadTCPSession(user *protocol.MemoryUser, reader io.Reader) (*protocol.Requ
 		return nil, nil, newError("invalid remote address.")
 	}
 
-	var chunkReader buf.Reader
-	chunkReader = buf.NewReader(br)
-
-	return request, chunkReader, nil
+	return request, br, nil
 }
 
 func DrainConnN(reader io.Reader, n int) error {
