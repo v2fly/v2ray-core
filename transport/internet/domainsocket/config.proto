@@ -17,5 +17,4 @@ message Config {
   // Some apps, eg. haproxy, use the full length of sockaddr_un.sun_path to
   // connect(2) or bind(2) when using abstract UDS.
   bool padding = 3;
-  bool acceptProxyProtocol = 4;
 }

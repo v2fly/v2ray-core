@@ -62,6 +62,8 @@ func (v Network) Build() net.Network {
 		return net.Network_TCP
 	case "udp":
 		return net.Network_UDP
+	case "unix":
+		return net.Network_UNIX
 	default:
 		return net.Network_Unknown
 	}
