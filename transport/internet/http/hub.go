@@ -113,7 +113,7 @@ func (l *Listener) ServeHTTP(writer http.ResponseWriter, request *http.Request) 
 func Listen(ctx context.Context, address net.Address, port net.Port, streamSettings *internet.MemoryStreamConfig, handler internet.ConnHandler) (internet.Listener, error) {
 	httpSettings := streamSettings.ProtocolSettings.(*Config)
 	var listener *Listener
-	if port == net.Port(0) { //unix
+	if port == net.Port(0) { // unix
 		listener = &Listener{
 			handler: handler,
 			local: &net.UnixAddr{
@@ -156,7 +156,7 @@ func Listen(ctx context.Context, address net.Address, port net.Port, streamSetti
 	go func() {
 		var streamListener net.Listener
 		var err error
-		if port == net.Port(0) { //unix
+		if port == net.Port(0) { // unix
 			streamListener, err = internet.ListenSystem(ctx, &net.UnixAddr{
 				Name: address.Domain(),
 				Net:  "unix",
@@ -169,7 +169,7 @@ func Listen(ctx context.Context, address net.Address, port net.Port, streamSetti
 			if locker != nil {
 				listener.locker = locker.(*internet.FileLocker)
 			}
-		} else { //tcp
+		} else { // tcp
 			streamListener, err = internet.ListenSystem(ctx, &net.TCPAddr{
 				IP:   address.IP(),
 				Port: int(port),

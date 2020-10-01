@@ -170,10 +170,8 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 			}
 			// Listen on IP:Port
 			receiverSettings.PortRange = c.PortRange.Build()
-		} else { // Listen on Unix Domain Socket, so PortRange must be nil
-			if c.PortRange != nil {
-				receiverSettings.PortRange = nil
-			}
+		} else if c.PortRange != nil { // Listen on Unix Domain Socket, so PortRange must be nil
+			receiverSettings.PortRange = nil
 		}
 	}
 
