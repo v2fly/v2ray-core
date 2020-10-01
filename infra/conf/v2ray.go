@@ -156,17 +156,27 @@ type InboundDetourConfig struct {
 func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 	receiverSettings := &proxyman.ReceiverConfig{}
 
-	if c.PortRange == nil {
-		return nil, newError("port range not specified in InboundDetour.")
-	}
-	receiverSettings.PortRange = c.PortRange.Build()
-
-	if c.ListenOn != nil {
-		if c.ListenOn.Family().IsDomain() {
-			return nil, newError("unable to listen on domain address: ", c.ListenOn.Domain())
+	if c.ListenOn == nil { // Listen on anyip, must set PortRange
+		if c.PortRange == nil {
+			return nil, newError("Listen on AnyIP but no Port(s) set in InboundDetour.")
 		}
+		receiverSettings.PortRange = c.PortRange.Build()
+	} else { // Listen on specific IP or Unix Domain Socket
 		receiverSettings.Listen = c.ListenOn.Build()
+		listenIP := c.ListenOn.Family().IsIP() || (c.ListenOn.Family().IsDomain() && c.ListenOn.Address.Domain() == "localhost")
+		if listenIP {
+			if c.PortRange == nil {
+				return nil, newError("Listen on specific ip without port in InboundDetour.")
+			}
+			// Listen on IP:Port
+			receiverSettings.PortRange = c.PortRange.Build()
+		} else { // Listen on Unix Domain Socket, so PortRange must be nil
+			if c.PortRange != nil {
+				receiverSettings.PortRange = nil
+			}
+		}
 	}
+
 	if c.Allocation != nil {
 		concurrency := -1
 		if c.Allocation.Concurrency != nil && c.Allocation.Strategy == "random" {
@@ -445,9 +455,9 @@ func applyTransportConfig(s *StreamConfig, t *TransportConfig) {
 	if s.HTTPSettings == nil {
 		s.HTTPSettings = t.HTTPConfig
 	}
-	if s.DSSettings == nil {
-		s.DSSettings = t.DSConfig
-	}
+	// if s.DSSettings == nil {
+	// 	s.DSSettings = t.DSConfig
+	// }
 }
 
 // Build implements Buildable.

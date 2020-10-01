@@ -27,6 +27,12 @@ func TestDestinationProperty(t *testing.T) {
 			String:    "udp:[2001:4860:4860::8888]:53",
 			NetString: "[2001:4860:4860::8888]:53",
 		},
+		{
+			Input:     UnixDestination(DomainAddress("/tmp/test.sock")),
+			Network:   Network_UNIX,
+			String:    "unix:/tmp/test.sock",
+			NetString: "/tmp/test.sock",
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -58,6 +64,10 @@ func TestDestinationParse(t *testing.T) {
 			Output: UDPDestination(IPAddress([]byte{8, 8, 8, 8}), Port(53)),
 		},
 		{
+			Input:  "unix:/tmp/test.sock",
+			Output: UnixDestination(DomainAddress("/tmp/test.sock")),
+		},
+		{
 			Input: "8.8.8.8:53",
 			Output: Destination{
 				Address: IPAddress([]byte{8, 8, 8, 8}),
@@ -77,6 +87,10 @@ func TestDestinationParse(t *testing.T) {
 		},
 		{
 			Input: "8.8.8.8:http",
+			Error: true,
+		},
+		{
+			Input: "/tmp/test.sock",
 			Error: true,
 		},
 	}

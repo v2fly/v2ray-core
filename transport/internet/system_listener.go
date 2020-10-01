@@ -2,8 +2,12 @@ package internet
 
 import (
 	"context"
+	"os"
+	"runtime"
 	"syscall"
 
+	"github.com/pires/go-proxyproto"
+	"golang.org/x/sys/unix"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/session"
 )
@@ -38,12 +42,74 @@ func getControlFunc(ctx context.Context, sockopt *SocketConfig, controllers []co
 	}
 }
 
+type FileLocker struct {
+	path string
+	file *os.File
+}
+
+func (fl *FileLocker) Acquire() error {
+	f, err := os.Create(fl.path)
+	if err != nil {
+		return err
+	}
+	if err := unix.Flock(int(f.Fd()), unix.LOCK_EX); err != nil {
+		f.Close()
+		return newError("failed to lock file: ", fl.path).Base(err)
+	}
+	fl.file = f
+	return nil
+}
+
+func (fl *FileLocker) Release() {
+	if err := unix.Flock(int(fl.file.Fd()), unix.LOCK_UN); err != nil {
+		newError("failed to unlock file: ", fl.path).Base(err).WriteToLog()
+	}
+	if err := fl.file.Close(); err != nil {
+		newError("failed to close file: ", fl.path).Base(err).WriteToLog()
+	}
+	if err := os.Remove(fl.path); err != nil {
+		newError("failed to remove file: ", fl.path).Base(err).WriteToLog()
+	}
+}
+
 func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *SocketConfig) (net.Listener, error) {
 	var lc net.ListenConfig
+	var l net.Listener
+	var err error
+	var network, address string
+	switch addr := addr.(type) {
+	case *net.TCPAddr:
+		network = addr.Network()
+		address = addr.String()
+		lc.Control = getControlFunc(ctx, sockopt, dl.controllers)
+	case *net.UnixAddr:
+		lc.Control = nil
+		network = addr.Network()
+		unixPath := syscall.RawSockaddrUnix{}
+		address = addr.Name
+		if runtime.GOOS != "linux" || (runtime.GOOS == "linux" && address[0] != '@') { // normal unix domain socket needs lock
+			locker := &FileLocker{
+				path: address + ".lock",
+			}
+			err := locker.Acquire()
+			if err != nil {
+				return nil, err
+			}
+			ctx = context.WithValue(ctx, address, locker)
+		}
+		if address[0] == '@' && runtime.GOOS == "linux" && sockopt.Padding { // linux abstract unix domain socket is lock-free
+			fullAddr := make([]byte, len(unixPath.Path)) // but may need padding to work behind haproxy
+			copy(fullAddr, []byte(address))
+			address = string(fullAddr)
+		}
+	}
 
-	lc.Control = getControlFunc(ctx, sockopt, dl.controllers)
-
-	return lc.Listen(ctx, addr.Network(), addr.String())
+	l, err = lc.Listen(ctx, network, address)
+	if sockopt != nil && sockopt.AcceptProxyProtocol {
+		policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
+		l = &proxyproto.Listener{Listener: l, Policy: policyFunc}
+	}
+	return l, err
 }
 
 func (dl *DefaultListener) ListenPacket(ctx context.Context, addr net.Addr, sockopt *SocketConfig) (net.PacketConn, error) {

@@ -38,7 +38,7 @@ import (
 	_ "v2ray.com/core/proxy/vmess/outbound"
 
 	// Transports
-	_ "v2ray.com/core/transport/internet/domainsocket"
+	// _ "v2ray.com/core/transport/internet/domainsocket"
 	_ "v2ray.com/core/transport/internet/http"
 	_ "v2ray.com/core/transport/internet/kcp"
 	_ "v2ray.com/core/transport/internet/quic"

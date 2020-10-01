@@ -9,7 +9,6 @@ import (
 	"v2ray.com/core/common/protocol"
 	"v2ray.com/core/common/serial"
 	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/domainsocket"
 	"v2ray.com/core/transport/internet/http"
 	"v2ray.com/core/transport/internet/kcp"
 	"v2ray.com/core/transport/internet/quic"
@@ -110,8 +109,8 @@ func (c *KCPConfig) Build() (proto.Message, error) {
 }
 
 type TCPConfig struct {
-	HeaderConfig        json.RawMessage `json:"header"`
-	AcceptProxyProtocol bool            `json:"acceptProxyProtocol"`
+	HeaderConfig json.RawMessage `json:"header"`
+	// AcceptProxyProtocol bool            `json:"acceptProxyProtocol"`
 }
 
 // Build implements Buildable.
@@ -128,17 +127,17 @@ func (c *TCPConfig) Build() (proto.Message, error) {
 		}
 		config.HeaderSettings = serial.ToTypedMessage(ts)
 	}
-	if c.AcceptProxyProtocol {
-		config.AcceptProxyProtocol = c.AcceptProxyProtocol
-	}
+	// if c.AcceptProxyProtocol {
+	// 	config.AcceptProxyProtocol = c.AcceptProxyProtocol
+	// }
 	return config, nil
 }
 
 type WebSocketConfig struct {
-	Path                string            `json:"path"`
-	Path2               string            `json:"Path"` // The key was misspelled. For backward compatibility, we have to keep track the old key.
-	Headers             map[string]string `json:"headers"`
-	AcceptProxyProtocol bool              `json:"acceptProxyProtocol"`
+	Path    string            `json:"path"`
+	Path2   string            `json:"Path"` // The key was misspelled. For backward compatibility, we have to keep track the old key.
+	Headers map[string]string `json:"headers"`
+	// AcceptProxyProtocol bool              `json:"acceptProxyProtocol"`
 }
 
 // Build implements Buildable.
@@ -158,9 +157,9 @@ func (c *WebSocketConfig) Build() (proto.Message, error) {
 		Path:   path,
 		Header: header,
 	}
-	if c.AcceptProxyProtocol {
-		config.AcceptProxyProtocol = c.AcceptProxyProtocol
-	}
+	// if c.AcceptProxyProtocol {
+	// 	config.AcceptProxyProtocol = c.AcceptProxyProtocol
+	// }
 	return config, nil
 }
 
@@ -221,22 +220,22 @@ func (c *QUICConfig) Build() (proto.Message, error) {
 	return config, nil
 }
 
-type DomainSocketConfig struct {
-	Path                string `json:"path"`
-	Abstract            bool   `json:"abstract"`
-	Padding             bool   `json:"padding"`
-	AcceptProxyProtocol bool   `json:"acceptProxyProtocol"`
-}
+// type DomainSocketConfig struct {
+// 	Path                string `json:"path"`
+// 	Abstract            bool   `json:"abstract"`
+// 	Padding             bool   `json:"padding"`
+// 	AcceptProxyProtocol bool   `json:"acceptProxyProtocol"`
+// }
 
 // Build implements Buildable.
-func (c *DomainSocketConfig) Build() (proto.Message, error) {
-	return &domainsocket.Config{
-		Path:                c.Path,
-		Abstract:            c.Abstract,
-		Padding:             c.Padding,
-		AcceptProxyProtocol: c.AcceptProxyProtocol,
-	}, nil
-}
+// func (c *DomainSocketConfig) Build() (proto.Message, error) {
+// 	return &domainsocket.Config{
+// 		Path:                c.Path,
+// 		Abstract:            c.Abstract,
+// 		Padding:             c.Padding,
+// 		AcceptProxyProtocol: c.AcceptProxyProtocol,
+// 	}, nil
+// }
 
 func readFileOrString(f string, s []string) ([]byte, error) {
 	if len(f) > 0 {
@@ -411,8 +410,8 @@ func (p TransportProtocol) Build() (string, error) {
 		return "websocket", nil
 	case "h2", "http":
 		return "http", nil
-	case "ds", "domainsocket":
-		return "domainsocket", nil
+	// case "ds", "domainsocket":
+	// 	return "domainsocket", nil
 	case "quic":
 		return "quic", nil
 	default:
@@ -421,9 +420,11 @@ func (p TransportProtocol) Build() (string, error) {
 }
 
 type SocketConfig struct {
-	Mark   int32  `json:"mark"`
-	TFO    *bool  `json:"tcpFastOpen"`
-	TProxy string `json:"tproxy"`
+	Mark                int32  `json:"mark"`
+	TFO                 *bool  `json:"tcpFastOpen"`
+	TProxy              string `json:"tproxy"`
+	Padding             bool   `json:"padding"`
+	AcceptProxyProtocol bool   `json:"acceptProxyProtocol"`
 }
 
 // Build implements Buildable.
@@ -447,24 +448,26 @@ func (c *SocketConfig) Build() (*internet.SocketConfig, error) {
 	}
 
 	return &internet.SocketConfig{
-		Mark:   c.Mark,
-		Tfo:    tfoSettings,
-		Tproxy: tproxy,
+		Mark:                c.Mark,
+		Tfo:                 tfoSettings,
+		Tproxy:              tproxy,
+		Padding:             c.Padding,
+		AcceptProxyProtocol: c.AcceptProxyProtocol,
 	}, nil
 }
 
 type StreamConfig struct {
-	Network        *TransportProtocol  `json:"network"`
-	Security       string              `json:"security"`
-	TLSSettings    *TLSConfig          `json:"tlsSettings"`
-	XTLSSettings   *XTLSConfig         `json:"xtlsSettings"`
-	TCPSettings    *TCPConfig          `json:"tcpSettings"`
-	KCPSettings    *KCPConfig          `json:"kcpSettings"`
-	WSSettings     *WebSocketConfig    `json:"wsSettings"`
-	HTTPSettings   *HTTPConfig         `json:"httpSettings"`
-	DSSettings     *DomainSocketConfig `json:"dsSettings"`
-	QUICSettings   *QUICConfig         `json:"quicSettings"`
-	SocketSettings *SocketConfig       `json:"sockopt"`
+	Network      *TransportProtocol `json:"network"`
+	Security     string             `json:"security"`
+	TLSSettings  *TLSConfig         `json:"tlsSettings"`
+	XTLSSettings *XTLSConfig        `json:"xtlsSettings"`
+	TCPSettings  *TCPConfig         `json:"tcpSettings"`
+	KCPSettings  *KCPConfig         `json:"kcpSettings"`
+	WSSettings   *WebSocketConfig   `json:"wsSettings"`
+	HTTPSettings *HTTPConfig        `json:"httpSettings"`
+	// DSSettings     *DomainSocketConfig `json:"dsSettings"`
+	QUICSettings   *QUICConfig   `json:"quicSettings"`
+	SocketSettings *SocketConfig `json:"sockopt"`
 }
 
 // Build implements Buildable.
@@ -554,16 +557,16 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 			Settings:     serial.ToTypedMessage(ts),
 		})
 	}
-	if c.DSSettings != nil {
-		ds, err := c.DSSettings.Build()
-		if err != nil {
-			return nil, newError("Failed to build DomainSocket config.").Base(err)
-		}
-		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
-			ProtocolName: "domainsocket",
-			Settings:     serial.ToTypedMessage(ds),
-		})
-	}
+	// if c.DSSettings != nil {
+	// 	ds, err := c.DSSettings.Build()
+	// 	if err != nil {
+	// 		return nil, newError("Failed to build DomainSocket config.").Base(err)
+	// 	}
+	// 	config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
+	// 		ProtocolName: "domainsocket",
+	// 		Settings:     serial.ToTypedMessage(ds),
+	// 	})
+	// }
 	if c.QUICSettings != nil {
 		qs, err := c.QUICSettings.Build()
 		if err != nil {
