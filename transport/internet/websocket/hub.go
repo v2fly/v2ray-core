@@ -69,6 +69,11 @@ func ListenWS(ctx context.Context, address net.Address, port net.Port, streamSet
 	l := &Listener{
 		addConn: addConn,
 	}
+	wsSettings := streamSettings.ProtocolSettings.(*Config)
+	l.config = wsSettings
+	if l.config != nil && streamSettings.SocketSettings != nil {
+		streamSettings.SocketSettings.AcceptProxyProtocol = l.config.AcceptProxyProtocol
+	}
 	var listener net.Listener
 	var err error
 	if port == net.Port(0) { //unix
@@ -94,8 +99,7 @@ func ListenWS(ctx context.Context, address net.Address, port net.Port, streamSet
 		}
 		newError("listening TCP(for WS) on ", address, ":", port).WriteToLog(session.ExportIDToError(ctx))
 	}
-	wsSettings := streamSettings.ProtocolSettings.(*Config)
-	l.config = wsSettings
+
 	// if wsSettings.AcceptProxyProtocol {
 	// 	policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
 	// 	listener = &proxyproto.Listener{Listener: listener, Policy: policyFunc}

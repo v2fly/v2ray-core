@@ -34,6 +34,11 @@ func ListenTCP(ctx context.Context, address net.Address, port net.Port, streamSe
 	l := &Listener{
 		addConn: handler,
 	}
+	tcpSettings := streamSettings.ProtocolSettings.(*Config)
+	l.config = tcpSettings
+	if l.config != nil && streamSettings.SocketSettings != nil {
+		streamSettings.SocketSettings.AcceptProxyProtocol = l.config.AcceptProxyProtocol
+	}
 	var listener net.Listener
 	var err error
 	if port == net.Port(0) { //unix
@@ -60,8 +65,6 @@ func ListenTCP(ctx context.Context, address net.Address, port net.Port, streamSe
 		newError("listening TCP on ", address, ":", port).WriteToLog(session.ExportIDToError(ctx))
 	}
 
-	tcpSettings := streamSettings.ProtocolSettings.(*Config)
-	l.config = tcpSettings
 	// if tcpSettings.AcceptProxyProtocol {
 	// 	policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
 	// 	l = &Listener{
