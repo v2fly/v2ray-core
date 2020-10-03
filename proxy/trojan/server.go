@@ -350,7 +350,7 @@ func (s *Server) fallback(ctx context.Context, sid errors.ExportOption, err erro
 	}); err != nil {
 		return newError("failed to dial to " + fb.Dest).Base(err).AtWarning()
 	}
-	defer conn.Close() // nolint: errcheck
+	defer conn.Close()
 
 	serverReader := buf.NewReader(conn)
 	serverWriter := buf.NewWriter(conn)
@@ -378,24 +378,24 @@ func (s *Server) fallback(ctx context.Context, sid errors.ExportOption, err erro
 			switch fb.Xver {
 			case 1:
 				if ipv4 {
-					pro.Write([]byte("PROXY TCP4 " + remoteAddr + " " + localAddr + " " + remotePort + " " + localPort + "\r\n"))
+					common.Must(pro.Write([]byte("PROXY TCP4 " + remoteAddr + " " + localAddr + " " + remotePort + " " + localPort + "\r\n")))
 				} else {
-					pro.Write([]byte("PROXY TCP6 " + remoteAddr + " " + localAddr + " " + remotePort + " " + localPort + "\r\n"))
+					common.Must(pro.Write([]byte("PROXY TCP6 " + remoteAddr + " " + localAddr + " " + remotePort + " " + localPort + "\r\n")))
 				}
 			case 2:
-				pro.Write([]byte("\x0D\x0A\x0D\x0A\x00\x0D\x0A\x51\x55\x49\x54\x0A\x21")) // signature + v2 + PROXY
+				common.Must(pro.Write([]byte("\x0D\x0A\x0D\x0A\x00\x0D\x0A\x51\x55\x49\x54\x0A\x21"))) // signature + v2 + PROXY
 				if ipv4 {
-					pro.Write([]byte("\x11\x00\x0C")) // AF_INET + STREAM + 12 bytes
-					pro.Write(net.ParseIP(remoteAddr).To4())
-					pro.Write(net.ParseIP(localAddr).To4())
+					common.Must(pro.Write([]byte("\x11\x00\x0C"))) // AF_INET + STREAM + 12 bytes
+					common.Must(pro.Write(net.ParseIP(remoteAddr).To4()))
+					common.Must(pro.Write(net.ParseIP(localAddr).To4()))
 				} else {
-					pro.Write([]byte("\x21\x00\x24")) // AF_INET6 + STREAM + 36 bytes
-					pro.Write(net.ParseIP(remoteAddr).To16())
-					pro.Write(net.ParseIP(localAddr).To16())
+					common.Must(pro.Write([]byte("\x21\x00\x24"))) // AF_INET6 + STREAM + 36 bytes
+					common.Must(pro.Write(net.ParseIP(remoteAddr).To16()))
+					common.Must(pro.Write(net.ParseIP(localAddr).To16()))
 				}
 				p1, _ := strconv.ParseUint(remotePort, 10, 16)
 				p2, _ := strconv.ParseUint(localPort, 10, 16)
-				pro.Write([]byte{byte(p1 >> 8), byte(p1), byte(p2 >> 8), byte(p2)})
+				common.Must(pro.Write([]byte{byte(p1 >> 8), byte(p1), byte(p2 >> 8), byte(p2)}))
 			}
 			if err := serverWriter.WriteMultiBuffer(buf.MultiBuffer{pro}); err != nil {
 				return newError("failed to set PROXY protocol v", fb.Xver).Base(err).AtWarning()
@@ -418,9 +418,10 @@ func (s *Server) fallback(ctx context.Context, sid errors.ExportOption, err erro
 	}
 
 	if err := task.Run(ctx, task.OnSuccess(postRequest, task.Close(serverWriter)), task.OnSuccess(getResponse, task.Close(writer))); err != nil {
-		common.Interrupt(serverReader)
-		common.Interrupt(serverWriter)
+		common.Must(common.Interrupt(serverReader))
+		common.Must(common.Interrupt(serverWriter))
 		return newError("fallback ends").Base(err).AtInfo()
 	}
+
 	return nil
 }
