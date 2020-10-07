@@ -2,7 +2,9 @@ package conf
 
 import (
 	"encoding/json"
+	"runtime"
 	"strconv"
+	"syscall"
 
 	"github.com/golang/protobuf/proto"
 
@@ -102,6 +104,11 @@ func (c *VLessInboundConfig) Build() (proto.Message, error) {
 				switch fb.Dest[0] {
 				case '@', '/':
 					fb.Type = "unix"
+					if len(fb.Dest) > 1 && fb.Dest[0] == '@' && runtime.GOOS == "linux" && fb.Dest[1] == '@' {
+						fullAddr := make([]byte, len(syscall.RawSockaddrUnix{}.Path)) // may need padding to work behind haproxy
+						copy(fullAddr, fb.Dest[1:])
+						fb.Dest = string(fullAddr)
+					}
 				default:
 					if _, err := strconv.Atoi(fb.Dest); err == nil {
 						fb.Dest = "127.0.0.1:" + fb.Dest
