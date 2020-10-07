@@ -105,7 +105,7 @@ func (c *VLessInboundConfig) Build() (proto.Message, error) {
 				case '@', '/':
 					fb.Type = "unix"
 					if len(fb.Dest) > 1 && fb.Dest[0] == '@' && runtime.GOOS == "linux" && fb.Dest[1] == '@' {
-						fullAddr := make([]byte, len(syscall.RawSockaddrUnix{}.Path)) // may need padding to work behind haproxy
+						fullAddr := make([]byte, len(syscall.RawSockaddrUnix{}.Path)) // may need padding to work in front of haproxy
 						copy(fullAddr, fb.Dest[1:])
 						fb.Dest = string(fullAddr)
 					}
