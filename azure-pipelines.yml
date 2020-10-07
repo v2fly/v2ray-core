@@ -7,7 +7,7 @@ trigger:
       - refs/tags/*
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: "ubuntu-latest"
 
 variables:
   - group: GithubToken
@@ -16,21 +16,21 @@ steps:
   - checkout: self
   - task: GoTool@0
     inputs:
-      version: '1.15.2'
+      version: "1.15.2"
   - script: |
       go version
       go mod download
-    workingDirectory: '$(system.defaultWorkingDirectory)'
-    displayName: 'Fetch sources'
+    workingDirectory: $(system.defaultWorkingDirectory)
+    displayName: "Fetch sources"
   - script: |
       bazel build --action_env=PATH=$PATH --action_env=GOPATH=$(go env GOPATH) --action_env=GOCACHE=$(go env GOCACHE) --action_env=SPWD=$(pwd) --spawn_strategy local //release:all
-    workingDirectory: '$(system.defaultWorkingDirectory)'
-    displayName: 'Build Binaries'
+    workingDirectory: $(system.defaultWorkingDirectory)
+    displayName: "Build Binaries"
   - script: |
       echo $RELEASE_TAG
       ./release/bleedingrelease.sh
-    workingDirectory: '$(system.defaultWorkingDirectory)'
-    displayName: 'Generate Bleeding Edge Release'
+    workingDirectory: $(system.defaultWorkingDirectory)
+    displayName: "Generate Bleeding Edge Release"
     env:
       WORKDIR: $(system.defaultWorkingDirectory)
       GITHUB_TOKEN: $(GITHUB_TOKEN)
@@ -43,8 +43,8 @@ steps:
   - script: |
       echo $RELEASE_TAG
       ./release/tagrelease.sh
-    workingDirectory: '$(system.defaultWorkingDirectory)'
-    displayName: 'Generate Tag Release'
+    workingDirectory: $(system.defaultWorkingDirectory)
+    displayName: "Generate Tag Release"
     env:
       WORKDIR: $(system.defaultWorkingDirectory)
       GITHUB_TOKEN: $(GITHUB_TOKEN)
