@@ -2,7 +2,9 @@ package conf
 
 import (
 	"encoding/json"
+	"runtime"
 	"strconv"
+	"syscall"
 
 	"github.com/golang/protobuf/proto" // nolint: staticcheck
 
@@ -70,11 +72,12 @@ func (c *TrojanClientConfig) Build() (proto.Message, error) {
 
 // TrojanInboundFallback is fallback configuration
 type TrojanInboundFallback struct {
-	Alpn string          `json:"alpn"`
-	Path string          `json:"path"`
-	Type string          `json:"type"`
-	Dest json.RawMessage `json:"dest"`
-	Xver uint64          `json:"xver"`
+	Alpn    string          `json:"alpn"`
+	Path    string          `json:"path"`
+	Type    string          `json:"type"`
+	Dest    json.RawMessage `json:"dest"`
+	Xver    uint64          `json:"xver"`
+	Padding bool            `json:"padding"`
 }
 
 // TrojanUserConfig is user configuration
@@ -124,11 +127,12 @@ func (c *TrojanServerConfig) Build() (proto.Message, error) {
 			_ = json.Unmarshal(fb.Dest, &s)
 		}
 		config.Fallbacks = append(config.Fallbacks, &trojan.Fallback{
-			Alpn: fb.Alpn,
-			Path: fb.Path,
-			Type: fb.Type,
-			Dest: s,
-			Xver: fb.Xver,
+			Alpn:    fb.Alpn,
+			Path:    fb.Path,
+			Type:    fb.Type,
+			Dest:    s,
+			Xver:    fb.Xver,
+			Padding: fb.Padding,
 		})
 	}
 	for _, fb := range config.Fallbacks {
@@ -147,6 +151,11 @@ func (c *TrojanServerConfig) Build() (proto.Message, error) {
 				switch fb.Dest[0] {
 				case '@', '/':
 					fb.Type = "unix"
+					if fb.Dest[0] == '@' && runtime.GOOS == "linux" && fb.Padding { // linux abstract unix domain socket is lock-free
+						fullAddr := make([]byte, len(syscall.RawSockaddrUnix{}.Path)) // but may need padding to work behind haproxy
+						copy(fullAddr, []byte(fb.Dest))
+						fb.Dest = string(fullAddr)
+					}
 				default:
 					if _, err := strconv.Atoi(fb.Dest); err == nil {
 						fb.Dest = "127.0.0.1:" + fb.Dest

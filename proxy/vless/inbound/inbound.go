@@ -6,7 +6,6 @@ package inbound
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"strconv"
 	"time"
@@ -282,12 +281,10 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 				if fb.Xver != 0 {
 					remoteAddr, remotePort, err := net.SplitHostPort(connection.RemoteAddr().String())
 					if err != nil {
-						fmt.Printf("%v\n", err)
 						return err
 					}
 					localAddr, localPort, err := net.SplitHostPort(connection.LocalAddr().String())
 					if err != nil {
-						fmt.Printf("%v\n", err)
 						return err
 					}
 					ipv4 := true

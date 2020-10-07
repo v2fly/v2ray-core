@@ -9,9 +9,7 @@ option java_multiple_files = true;
 import "common/protocol/user.proto";
 import "common/protocol/server_spec.proto";
 
-message Account {
-  string password = 1;
-}
+message Account { string password = 1; }
 
 message Fallback {
   string alpn = 1;
@@ -19,6 +17,7 @@ message Fallback {
   string type = 3;
   string dest = 4;
   uint64 xver = 5;
+  bool padding = 6;
 }
 
 message ClientConfig {
