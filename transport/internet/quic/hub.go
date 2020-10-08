@@ -32,7 +32,9 @@ func (l *Listener) acceptStreams(session quic.Session) {
 			case <-session.Context().Done():
 				return
 			case <-l.done.Wait():
-				session.CloseWithError(0, "")
+				if err := session.CloseWithError(0, ""); err != nil {
+					newError("failed to close session").Base(err).WriteToLog()
+				}
 				return
 			default:
 				time.Sleep(time.Second)
