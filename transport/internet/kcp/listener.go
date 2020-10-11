@@ -138,9 +138,9 @@ func (l *Listener) OnReceive(payload *buf.Buffer, src net.Destination) {
 		}, writer, l.config)
 		var netConn internet.Connection = conn
 		if l.tlsConfig != nil {
-			netConn = gotls.Server(conn, l.tlsConfig)
+			netConn = tls.Server(conn, l.tlsConfig)
 		} else if l.xtlsConfig != nil {
-			netConn = goxtls.Server(conn, l.xtlsConfig)
+			netConn = xtls.Server(conn, l.xtlsConfig)
 		}
 
 		l.addConn(netConn)
