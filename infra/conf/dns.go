@@ -106,8 +106,8 @@ var typeMap = map[router.Domain_Type]dns.DomainMatchingType{
 	router.Domain_Regex:  dns.DomainMatchingType_Regex,
 }
 
-// DnsConfig is a JSON serializable object for dns.Config.
-type DnsConfig struct {
+// DNSConfig is a JSON serializable object for dns.Config.
+type DNSConfig struct {
 	Servers  []*NameServerConfig `json:"servers"`
 	Hosts    map[string]*Address `json:"hosts"`
 	ClientIP *Address            `json:"clientIp"`
@@ -127,7 +127,7 @@ func getHostMapping(addr *Address) *dns.Config_HostMapping {
 }
 
 // Build implements Buildable
-func (c *DnsConfig) Build() (*dns.Config, error) {
+func (c *DNSConfig) Build() (*dns.Config, error) {
 	config := &dns.Config{
 		Tag: c.Tag,
 	}
@@ -153,16 +153,18 @@ func (c *DnsConfig) Build() (*dns.Config, error) {
 			domains = append(domains, domain)
 		}
 		sort.Strings(domains)
+
 		for _, domain := range domains {
 			addr := c.Hosts[domain]
 			var mappings []*dns.Config_HostMapping
-			if strings.HasPrefix(domain, "domain:") {
+			switch {
+			case strings.HasPrefix(domain, "domain:"):
 				mapping := getHostMapping(addr)
 				mapping.Type = dns.DomainMatchingType_Subdomain
 				mapping.Domain = domain[7:]
-
 				mappings = append(mappings, mapping)
-			} else if strings.HasPrefix(domain, "geosite:") {
+
+			case strings.HasPrefix(domain, "geosite:"):
 				domains, err := loadGeositeWithAttr("geosite.dat", strings.ToUpper(domain[8:]))
 				if err != nil {
 					return nil, newError("invalid geosite settings: ", domain).Base(err)
@@ -171,28 +173,28 @@ func (c *DnsConfig) Build() (*dns.Config, error) {
 					mapping := getHostMapping(addr)
 					mapping.Type = typeMap[d.Type]
 					mapping.Domain = d.Value
-
 					mappings = append(mappings, mapping)
 				}
-			} else if strings.HasPrefix(domain, "regexp:") {
+
+			case strings.HasPrefix(domain, "regexp:"):
 				mapping := getHostMapping(addr)
 				mapping.Type = dns.DomainMatchingType_Regex
 				mapping.Domain = domain[7:]
-
 				mappings = append(mappings, mapping)
-			} else if strings.HasPrefix(domain, "keyword:") {
+
+			case strings.HasPrefix(domain, "keyword:"):
 				mapping := getHostMapping(addr)
 				mapping.Type = dns.DomainMatchingType_Keyword
 				mapping.Domain = domain[8:]
-
 				mappings = append(mappings, mapping)
-			} else if strings.HasPrefix(domain, "full:") {
+
+			case strings.HasPrefix(domain, "full:"):
 				mapping := getHostMapping(addr)
 				mapping.Type = dns.DomainMatchingType_Full
 				mapping.Domain = domain[5:]
-
 				mappings = append(mappings, mapping)
-			} else if strings.HasPrefix(domain, "dotless:") {
+
+			case strings.HasPrefix(domain, "dotless:"):
 				mapping := getHostMapping(addr)
 				mapping.Type = dns.DomainMatchingType_Regex
 				switch substr := domain[8:]; {
@@ -203,9 +205,9 @@ func (c *DnsConfig) Build() (*dns.Config, error) {
 				default:
 					return nil, newError("substr in dotless rule should not contain a dot: ", substr)
 				}
-
 				mappings = append(mappings, mapping)
-			} else if strings.HasPrefix(domain, "ext:") {
+
+			case strings.HasPrefix(domain, "ext:"):
 				kv := strings.Split(domain[4:], ":")
 				if len(kv) != 2 {
 					return nil, newError("invalid external resource: ", domain)
@@ -220,14 +222,13 @@ func (c *DnsConfig) Build() (*dns.Config, error) {
 					mapping := getHostMapping(addr)
 					mapping.Type = typeMap[d.Type]
 					mapping.Domain = d.Value
-
 					mappings = append(mappings, mapping)
 				}
-			} else {
+
+			default:
 				mapping := getHostMapping(addr)
 				mapping.Type = dns.DomainMatchingType_Full
 				mapping.Domain = domain
-
 				mappings = append(mappings, mapping)
 			}
 

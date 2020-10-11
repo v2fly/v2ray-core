@@ -52,7 +52,6 @@ type Handler struct {
 
 // New creates a new VLess outbound handler.
 func New(ctx context.Context, config *Config) (*Handler, error) {
-
 	serverList := protocol.NewServerList()
 	for _, rec := range config.Vnext {
 		s, err := protocol.NewServerSpecFromPB(rec)
@@ -74,7 +73,6 @@ func New(ctx context.Context, config *Config) (*Handler, error) {
 
 // Process implements proxy.Outbound.Process().
 func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer internet.Dialer) error {
-
 	var rec *protocol.ServerSpec
 	var conn internet.Connection
 
@@ -89,7 +87,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	}); err != nil {
 		return newError("failed to find an available destination").Base(err).AtWarning()
 	}
-	defer conn.Close() // nolint: errcheck
+	defer conn.Close()
 
 	iConn := conn
 	if statConn, ok := iConn.(*internet.StatCouterConnection); ok {
@@ -193,9 +191,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		// Indicates the end of request payload.
 		switch requestAddons.Flow {
 		default:
-
 		}
-
 		return nil
 	}
 

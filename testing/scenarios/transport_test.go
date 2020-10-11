@@ -31,7 +31,7 @@ import (
 	tcptransport "v2ray.com/core/transport/internet/tcp"
 )
 
-func TestHttpConnectionHeader(t *testing.T) {
+func TestHTTPConnectionHeader(t *testing.T) {
 	tcpServer := tcp.Server{
 		MsgProcessor: xor,
 	}

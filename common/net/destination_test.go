@@ -90,10 +90,8 @@ func TestDestinationParse(t *testing.T) {
 			if d != testcase.Output {
 				t.Error("for test case: ", testcase.Input, " expected output: ", testcase.Output.String(), " but got ", d.String())
 			}
-		} else {
-			if err == nil {
-				t.Error("for test case: ", testcase.Input, " expected error, but got nil")
-			}
+		} else if err == nil {
+			t.Error("for test case: ", testcase.Input, " expected error, but got nil")
 		}
 	}
 }

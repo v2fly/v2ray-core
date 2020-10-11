@@ -34,7 +34,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	if err != nil {
 		return newError("failed to dial to ", dest).Base(err).AtWarning()
 	}
-	defer conn.Close() // nolint: errcheck
+	defer conn.Close()
 
 	sc := SessionContextFromContext(ctx)
 	auth := NewAuthentication(sc)

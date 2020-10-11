@@ -88,7 +88,6 @@ func TestReadBuffer(t *testing.T) {
 		}
 		buf.Release()
 	}
-
 }
 
 func TestReadAtMost(t *testing.T) {

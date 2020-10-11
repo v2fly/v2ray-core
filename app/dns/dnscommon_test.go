@@ -89,7 +89,6 @@ func Test_parseResponse(t *testing.T) {
 }
 
 func Test_buildReqMsgs(t *testing.T) {
-
 	stubID := func() uint16 {
 		return uint16(rand.Uint32())
 	}

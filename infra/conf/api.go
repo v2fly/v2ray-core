@@ -10,14 +10,14 @@ import (
 	"v2ray.com/core/common/serial"
 )
 
-type ApiConfig struct {
+type APIConfig struct {
 	Tag      string   `json:"tag"`
 	Services []string `json:"services"`
 }
 
-func (c *ApiConfig) Build() (*commander.Config, error) {
+func (c *APIConfig) Build() (*commander.Config, error) {
 	if c.Tag == "" {
-		return nil, newError("Api tag can't be empty.")
+		return nil, newError("API tag can't be empty.")
 	}
 
 	services := make([]*serial.TypedMessage, 0, 16)

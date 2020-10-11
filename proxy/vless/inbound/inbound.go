@@ -64,12 +64,11 @@ type Handler struct {
 	validator             *vless.Validator
 	dns                   dns.Client
 	fallbacks             map[string]map[string]*Fallback // or nil
-	//regexps               map[string]*regexp.Regexp       // or nil
+	// regexps               map[string]*regexp.Regexp       // or nil
 }
 
 // New creates a new VLess inbound handler.
 func New(ctx context.Context, config *Config, dc dns.Client) (*Handler, error) {
-
 	v := core.MustFromContext(ctx)
 	handler := &Handler{
 		inboundHandlerManager: v.GetFeature(feature_inbound.ManagerType()).(feature_inbound.Manager),
@@ -90,7 +89,7 @@ func New(ctx context.Context, config *Config, dc dns.Client) (*Handler, error) {
 
 	if config.Fallbacks != nil {
 		handler.fallbacks = make(map[string]map[string]*Fallback)
-		//handler.regexps = make(map[string]*regexp.Regexp)
+		// handler.regexps = make(map[string]*regexp.Regexp)
 		for _, fb := range config.Fallbacks {
 			if handler.fallbacks[fb.Alpn] == nil {
 				handler.fallbacks[fb.Alpn] = make(map[string]*Fallback)
@@ -144,9 +143,7 @@ func (*Handler) Network() []net.Network {
 
 // Process implements proxy.Inbound.Process().
 func (h *Handler) Process(ctx context.Context, network net.Network, connection internet.Connection, dispatcher routing.Dispatcher) error {
-
 	sid := session.ExportIDToError(ctx)
-
 	iConn := connection
 	if statConn, ok := iConn.(*internet.StatCouterConnection); ok {
 		iConn = statConn.Connection
@@ -178,11 +175,10 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 	if isfb && firstLen < 18 {
 		err = newError("fallback directly")
 	} else {
-		request, requestAddons, err, isfb = encoding.DecodeRequestHeader(isfb, first, reader, h.validator)
+		request, requestAddons, isfb, err = encoding.DecodeRequestHeader(isfb, first, reader, h.validator)
 	}
 
 	if err != nil {
-
 		if isfb {
 			if err := connection.SetReadDeadline(time.Time{}); err != nil {
 				newError("unable to set back read deadline").Base(err).AtWarning().WriteToLog(sid)
@@ -271,7 +267,7 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 			}); err != nil {
 				return newError("failed to dial to " + fb.Dest).Base(err).AtWarning()
 			}
-			defer conn.Close() // nolint: errcheck
+			defer conn.Close()
 
 			serverReader := buf.NewReader(conn)
 			serverWriter := buf.NewWriter(conn)
@@ -303,6 +299,7 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 						} else {
 							pro.Write([]byte("PROXY TCP6 " + remoteAddr + " " + localAddr + " " + remotePort + " " + localPort + "\r\n"))
 						}
+
 					case 2:
 						pro.Write([]byte("\x0D\x0A\x0D\x0A\x00\x0D\x0A\x51\x55\x49\x54\x0A\x21")) // signature + v2 + PROXY
 						if ipv4 {
@@ -372,7 +369,7 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 	account := request.User.Account.(*vless.MemoryAccount)
 
 	responseAddons := &encoding.Addons{
-		//Flow: requestAddons.Flow,
+		// Flow: requestAddons.Flow,
 	}
 
 	switch requestAddons.Flow {
@@ -473,7 +470,6 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 		// Indicates the end of response payload.
 		switch responseAddons.Flow {
 		default:
-
 		}
 
 		return nil

@@ -26,7 +26,7 @@ const (
 	socks4RequestRejected = 91
 
 	authNotRequired = 0x00
-	//authGssAPI           = 0x01
+	// authGssAPI           = 0x01
 	authPassword         = 0x02
 	authNoMatchingMethod = 0xFF
 
@@ -47,7 +47,7 @@ type ServerSession struct {
 
 func (s *ServerSession) handshake4(cmd byte, reader io.Reader, writer io.Writer) (*protocol.RequestHeader, error) {
 	if s.config.AuthType == AuthType_PASSWORD {
-		writeSocks4Response(writer, socks4RequestRejected, net.AnyIP, net.Port(0)) // nolint: errcheck
+		writeSocks4Response(writer, socks4RequestRejected, net.AnyIP, net.Port(0))
 		return nil, newError("socks 4 is not allowed when auth is required.")
 	}
 
@@ -89,7 +89,7 @@ func (s *ServerSession) handshake4(cmd byte, reader io.Reader, writer io.Writer)
 		}
 		return request, nil
 	default:
-		writeSocks4Response(writer, socks4RequestRejected, net.AnyIP, net.Port(0)) // nolint: errcheck
+		writeSocks4Response(writer, socks4RequestRejected, net.AnyIP, net.Port(0))
 		return nil, newError("unsupported command: ", cmd)
 	}
 }
@@ -108,7 +108,7 @@ func (s *ServerSession) auth5(nMethod byte, reader io.Reader, writer io.Writer) 
 	}
 
 	if !hasAuthMethod(expectedAuth, buffer.BytesRange(0, int32(nMethod))) {
-		writeSocks5AuthenticationResponse(writer, socks5Version, authNoMatchingMethod) // nolint: errcheck
+		writeSocks5AuthenticationResponse(writer, socks5Version, authNoMatchingMethod)
 		return "", newError("no matching auth method")
 	}
 
@@ -123,7 +123,7 @@ func (s *ServerSession) auth5(nMethod byte, reader io.Reader, writer io.Writer) 
 		}
 
 		if !s.config.HasAccount(username, password) {
-			writeSocks5AuthenticationResponse(writer, 0x01, 0xFF) // nolint: errcheck
+			writeSocks5AuthenticationResponse(writer, 0x01, 0xFF)
 			return "", newError("invalid username or password")
 		}
 
@@ -166,15 +166,15 @@ func (s *ServerSession) handshake5(nMethod byte, reader io.Reader, writer io.Wri
 		request.Command = protocol.RequestCommandTCP
 	case cmdUDPPort:
 		if !s.config.UdpEnabled {
-			writeSocks5Response(writer, statusCmdNotSupport, net.AnyIP, net.Port(0)) // nolint: errcheck
+			writeSocks5Response(writer, statusCmdNotSupport, net.AnyIP, net.Port(0))
 			return nil, newError("UDP is not enabled.")
 		}
 		request.Command = protocol.RequestCommandUDP
 	case cmdTCPBind:
-		writeSocks5Response(writer, statusCmdNotSupport, net.AnyIP, net.Port(0)) // nolint: errcheck
+		writeSocks5Response(writer, statusCmdNotSupport, net.AnyIP, net.Port(0))
 		return nil, newError("TCP bind is not supported.")
 	default:
-		writeSocks5Response(writer, statusCmdNotSupport, net.AnyIP, net.Port(0)) // nolint: errcheck
+		writeSocks5Response(writer, statusCmdNotSupport, net.AnyIP, net.Port(0))
 		return nil, newError("unknown command ", cmd)
 	}
 

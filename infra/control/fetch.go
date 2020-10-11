@@ -39,7 +39,6 @@ func (c *FetchCommand) Execute(args []string) error {
 
 // FetchHTTPContent dials https for remote content
 func FetchHTTPContent(target string) ([]byte, error) {
-
 	parsedTarget, err := url.Parse(target)
 	if err != nil {
 		return nil, newError("invalid URL: ", target).Base(err)

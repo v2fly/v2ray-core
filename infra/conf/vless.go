@@ -33,12 +33,7 @@ type VLessInboundConfig struct {
 
 // Build implements Buildable
 func (c *VLessInboundConfig) Build() (proto.Message, error) {
-
 	config := new(inbound.Config)
-
-	if len(c.Clients) == 0 {
-		//return nil, newError(`VLESS settings: "clients" is empty`)
-	}
 	config.Clients = make([]*protocol.User, len(c.Clients))
 	for idx, rawUser := range c.Clients {
 		user := new(protocol.User)
@@ -142,7 +137,6 @@ type VLessOutboundConfig struct {
 
 // Build implements Buildable
 func (c *VLessOutboundConfig) Build() (proto.Message, error) {
-
 	config := new(outbound.Config)
 
 	if len(c.Vnext) == 0 {

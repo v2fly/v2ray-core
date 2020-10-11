@@ -24,11 +24,11 @@ type Client interface {
 	QueryIP(ctx context.Context, domain string, option IPOption) ([]net.IP, error)
 }
 
-type localNameServer struct {
+type LocalNameServer struct {
 	client *localdns.Client
 }
 
-func (s *localNameServer) QueryIP(ctx context.Context, domain string, option IPOption) ([]net.IP, error) {
+func (s *LocalNameServer) QueryIP(ctx context.Context, domain string, option IPOption) ([]net.IP, error) {
 	if option.IPv4Enable && option.IPv6Enable {
 		return s.client.LookupIP(domain)
 	}
@@ -44,13 +44,13 @@ func (s *localNameServer) QueryIP(ctx context.Context, domain string, option IPO
 	return nil, newError("neither IPv4 nor IPv6 is enabled")
 }
 
-func (s *localNameServer) Name() string {
+func (s *LocalNameServer) Name() string {
 	return "localhost"
 }
 
-func NewLocalNameServer() *localNameServer {
+func NewLocalNameServer() *LocalNameServer {
 	newError("DNS: created localhost client").AtInfo().WriteToLog()
-	return &localNameServer{
+	return &LocalNameServer{
 		client: localdns.New(),
 	}
 }

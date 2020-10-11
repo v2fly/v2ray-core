@@ -38,7 +38,7 @@ func TestV2RayDependency(t *testing.T) {
 func TestV2RayClose(t *testing.T) {
 	port := tcp.PickPort()
 
-	userId := uuid.New()
+	userID := uuid.New()
 	config := &Config{
 		App: []*serial.TypedMessage{
 			serial.ToTypedMessage(&dispatcher.Config{}),
@@ -70,7 +70,7 @@ func TestV2RayClose(t *testing.T) {
 							User: []*protocol.User{
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
-										Id: userId.String(),
+										Id: userID.String(),
 									}),
 								},
 							},

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/golang/protobuf/proto" // nolint: staticcheck
+	"github.com/golang/protobuf/proto"
 
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/protocol"

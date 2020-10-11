@@ -133,7 +133,6 @@ func TestTCPRequest(t *testing.T) {
 	for _, test := range cases {
 		runTest(test.request, test.payload)
 	}
-
 }
 
 func TestUDPReaderWriter(t *testing.T) {

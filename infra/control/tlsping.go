@@ -10,13 +10,13 @@ import (
 	"v2ray.com/core/common"
 )
 
-type TlsPingCommand struct{}
+type TLSPingCommand struct{}
 
-func (c *TlsPingCommand) Name() string {
+func (c *TLSPingCommand) Name() string {
 	return "tlsping"
 }
 
-func (c *TlsPingCommand) Description() Description {
+func (c *TLSPingCommand) Description() Description {
 	return Description{
 		Short: "Ping the domain with TLS handshake",
 		Usage: []string{"v2ctl tlsping <domain> --ip <ip>"},
@@ -32,7 +32,7 @@ func printCertificates(certs []*x509.Certificate) {
 	}
 }
 
-func (c *TlsPingCommand) Execute(args []string) error {
+func (c *TLSPingCommand) Execute(args []string) error {
 	fs := flag.NewFlagSet(c.Name(), flag.ContinueOnError)
 	ipStr := fs.String("ip", "", "IP address of the domain")
 
@@ -115,5 +115,5 @@ func (c *TlsPingCommand) Execute(args []string) error {
 }
 
 func init() {
-	common.Must(RegisterCommand(&TlsPingCommand{}))
+	common.Must(RegisterCommand(&TLSPingCommand{}))
 }

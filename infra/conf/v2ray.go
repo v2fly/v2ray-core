@@ -17,7 +17,7 @@ import (
 var (
 	inboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
 		"dokodemo-door": func() interface{} { return new(DokodemoConfig) },
-		"http":          func() interface{} { return new(HttpServerConfig) },
+		"http":          func() interface{} { return new(HTTPServerConfig) },
 		"shadowsocks":   func() interface{} { return new(ShadowsocksServerConfig) },
 		"socks":         func() interface{} { return new(SocksServerConfig) },
 		"vless":         func() interface{} { return new(VLessInboundConfig) },
@@ -29,14 +29,14 @@ var (
 	outboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
 		"blackhole":   func() interface{} { return new(BlackholeConfig) },
 		"freedom":     func() interface{} { return new(FreedomConfig) },
-		"http":        func() interface{} { return new(HttpClientConfig) },
+		"http":        func() interface{} { return new(HTTPClientConfig) },
 		"shadowsocks": func() interface{} { return new(ShadowsocksClientConfig) },
 		"socks":       func() interface{} { return new(SocksClientConfig) },
 		"vless":       func() interface{} { return new(VLessOutboundConfig) },
 		"vmess":       func() interface{} { return new(VMessOutboundConfig) },
 		"trojan":      func() interface{} { return new(TrojanClientConfig) },
 		"mtproto":     func() interface{} { return new(MTProtoClientConfig) },
-		"dns":         func() interface{} { return new(DnsOutboundConfig) },
+		"dns":         func() interface{} { return new(DNSOutboundConfig) },
 	}, "protocol", "settings")
 
 	ctllog = log.New(os.Stderr, "v2ctl> ", 0)
@@ -315,7 +315,7 @@ type Config struct {
 	Port            uint16                 `json:"port"` // Port of this Point server. Deprecated.
 	LogConfig       *LogConfig             `json:"log"`
 	RouterConfig    *RouterConfig          `json:"routing"`
-	DNSConfig       *DnsConfig             `json:"dns"`
+	DNSConfig       *DNSConfig             `json:"dns"`
 	InboundConfigs  []InboundDetourConfig  `json:"inbounds"`
 	OutboundConfigs []OutboundDetourConfig `json:"outbounds"`
 	InboundConfig   *InboundDetourConfig   `json:"inbound"`        // Deprecated.
@@ -324,7 +324,7 @@ type Config struct {
 	OutboundDetours []OutboundDetourConfig `json:"outboundDetour"` // Deprecated.
 	Transport       *TransportConfig       `json:"transport"`
 	Policy          *PolicyConfig          `json:"policy"`
-	Api             *ApiConfig             `json:"api"`
+	API             *APIConfig             `json:"api"`
 	Stats           *StatsConfig           `json:"stats"`
 	Reverse         *ReverseConfig         `json:"reverse"`
 }
@@ -353,7 +353,6 @@ func (c *Config) findOutboundTag(tag string) int {
 
 // Override method accepts another Config overrides the current attribute
 func (c *Config) Override(o *Config, fn string) {
-
 	// only process the non-deprecated members
 
 	if o.LogConfig != nil {
@@ -371,8 +370,8 @@ func (c *Config) Override(o *Config, fn string) {
 	if o.Policy != nil {
 		c.Policy = o.Policy
 	}
-	if o.Api != nil {
-		c.Api = o.Api
+	if o.API != nil {
+		c.API = o.API
 	}
 	if o.Stats != nil {
 		c.Stats = o.Stats
@@ -460,8 +459,8 @@ func (c *Config) Build() (*core.Config, error) {
 		},
 	}
 
-	if c.Api != nil {
-		apiConf, err := c.Api.Build()
+	if c.API != nil {
+		apiConf, err := c.API.Build()
 		if err != nil {
 			return nil, err
 		}

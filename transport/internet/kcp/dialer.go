@@ -20,7 +20,7 @@ var (
 	globalConv = uint32(dice.RollUint16())
 )
 
-func fetchInput(ctx context.Context, input io.Reader, reader PacketReader, conn *Connection) {
+func fetchInput(_ context.Context, input io.Reader, reader PacketReader, conn *Connection) {
 	cache := make(chan *buf.Buffer, 1024)
 	go func() {
 		for {

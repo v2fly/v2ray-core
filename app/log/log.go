@@ -127,10 +127,10 @@ func (g *Instance) Close() error {
 
 	g.active = false
 
-	common.Close(g.accessLogger) // nolint: errcheck
+	common.Close(g.accessLogger)
 	g.accessLogger = nil
 
-	common.Close(g.errorLogger) // nolint: errcheck
+	common.Close(g.errorLogger)
 	g.errorLogger = nil
 
 	return nil

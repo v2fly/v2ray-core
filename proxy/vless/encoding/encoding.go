@@ -26,7 +26,6 @@ var addrParser = protocol.NewAddressParser(
 
 // EncodeRequestHeader writes encoded request header into the given writer.
 func EncodeRequestHeader(writer io.Writer, request *protocol.RequestHeader, requestAddons *Addons) error {
-
 	buffer := buf.StackNew()
 	defer buffer.Release()
 
@@ -60,8 +59,7 @@ func EncodeRequestHeader(writer io.Writer, request *protocol.RequestHeader, requ
 }
 
 // DecodeRequestHeader decodes and returns (if successful) a RequestHeader from an input stream.
-func DecodeRequestHeader(isfb bool, first *buf.Buffer, reader io.Reader, validator *vless.Validator) (*protocol.RequestHeader, *Addons, error, bool) {
-
+func DecodeRequestHeader(isfb bool, first *buf.Buffer, reader io.Reader, validator *vless.Validator) (*protocol.RequestHeader, *Addons, bool, error) {
 	buffer := buf.StackNew()
 	defer buffer.Release()
 
@@ -71,7 +69,7 @@ func DecodeRequestHeader(isfb bool, first *buf.Buffer, reader io.Reader, validat
 		request.Version = first.Byte(0)
 	} else {
 		if _, err := buffer.ReadFullFrom(reader, 1); err != nil {
-			return nil, nil, newError("failed to read request version").Base(err), false
+			return nil, nil, false, newError("failed to read request version").Base(err)
 		}
 		request.Version = buffer.Byte(0)
 	}
@@ -86,13 +84,13 @@ func DecodeRequestHeader(isfb bool, first *buf.Buffer, reader io.Reader, validat
 		} else {
 			buffer.Clear()
 			if _, err := buffer.ReadFullFrom(reader, 16); err != nil {
-				return nil, nil, newError("failed to read request user id").Base(err), false
+				return nil, nil, false, newError("failed to read request user id").Base(err)
 			}
 			copy(id[:], buffer.Bytes())
 		}
 
 		if request.User = validator.Get(id); request.User == nil {
-			return nil, nil, newError("invalid request user id"), isfb
+			return nil, nil, isfb, newError("invalid request user id")
 		}
 
 		if isfb {
@@ -101,12 +99,12 @@ func DecodeRequestHeader(isfb bool, first *buf.Buffer, reader io.Reader, validat
 
 		requestAddons, err := DecodeHeaderAddons(&buffer, reader)
 		if err != nil {
-			return nil, nil, newError("failed to decode request header addons").Base(err), false
+			return nil, nil, false, newError("failed to decode request header addons").Base(err)
 		}
 
 		buffer.Clear()
 		if _, err := buffer.ReadFullFrom(reader, 1); err != nil {
-			return nil, nil, newError("failed to read request command").Base(err), false
+			return nil, nil, false, newError("failed to read request command").Base(err)
 		}
 
 		request.Command = protocol.RequestCommand(buffer.Byte(0))
@@ -120,24 +118,17 @@ func DecodeRequestHeader(isfb bool, first *buf.Buffer, reader io.Reader, validat
 				request.Port = port
 			}
 		}
-
 		if request.Address == nil {
-			return nil, nil, newError("invalid request address"), false
+			return nil, nil, false, newError("invalid request address")
 		}
-
-		return request, requestAddons, nil, false
-
+		return request, requestAddons, false, nil
 	default:
-
-		return nil, nil, newError("invalid request version"), isfb
-
+		return nil, nil, isfb, newError("invalid request version")
 	}
-
 }
 
 // EncodeResponseHeader writes encoded response header into the given writer.
 func EncodeResponseHeader(writer io.Writer, request *protocol.RequestHeader, responseAddons *Addons) error {
-
 	buffer := buf.StackNew()
 	defer buffer.Release()
 
@@ -158,7 +149,6 @@ func EncodeResponseHeader(writer io.Writer, request *protocol.RequestHeader, res
 
 // DecodeResponseHeader decodes and returns (if successful) a ResponseHeader from an input stream.
 func DecodeResponseHeader(reader io.Reader, request *protocol.RequestHeader) (*Addons, error) {
-
 	buffer := buf.StackNew()
 	defer buffer.Release()
 

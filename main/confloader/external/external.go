@@ -18,13 +18,15 @@ import (
 )
 
 func ConfigLoader(arg string) (out io.Reader, err error) {
-
 	var data []byte
-	if strings.HasPrefix(arg, "http://") || strings.HasPrefix(arg, "https://") {
+	switch {
+	case strings.HasPrefix(arg, "http://"), strings.HasPrefix(arg, "https://"):
 		data, err = FetchHTTPContent(arg)
-	} else if arg == "stdin:" {
+
+	case arg == "stdin:":
 		data, err = ioutil.ReadAll(os.Stdin)
-	} else {
+
+	default:
 		data, err = ioutil.ReadFile(arg)
 	}
 
@@ -36,7 +38,6 @@ func ConfigLoader(arg string) (out io.Reader, err error) {
 }
 
 func FetchHTTPContent(target string) ([]byte, error) {
-
 	parsedTarget, err := url.Parse(target)
 	if err != nil {
 		return nil, newError("invalid URL: ", target).Base(err)

@@ -32,15 +32,15 @@ func RollUint64() uint64 {
 	return rand.Uint64()
 }
 
-func NewDeterministicDice(seed int64) *deterministicDice {
-	return &deterministicDice{rand.New(rand.NewSource(seed))}
+func NewDeterministicDice(seed int64) *DeterministicDice {
+	return &DeterministicDice{rand.New(rand.NewSource(seed))}
 }
 
-type deterministicDice struct {
+type DeterministicDice struct {
 	*rand.Rand
 }
 
-func (dd *deterministicDice) Roll(n int) int {
+func (dd *DeterministicDice) Roll(n int) int {
 	if n == 1 {
 		return 0
 	}

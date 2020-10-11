@@ -71,7 +71,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	if err != nil {
 		return newError("failed to find an available destination").Base(err).AtWarning()
 	}
-	defer conn.Close() //nolint: errcheck
+	defer conn.Close()
 
 	outbound := session.OutboundFromContext(ctx)
 	if outbound == nil || !outbound.Target.IsValid() {
@@ -114,11 +114,11 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	output := link.Writer
 
 	isAEAD := false
-	if !aead_disabled && len(account.AlterIDs) == 0 {
+	if !aeadDisabled && len(account.AlterIDs) == 0 {
 		isAEAD = true
 	}
 
-	session := encoding.NewClientSession(isAEAD, protocol.DefaultIDHash, ctx)
+	session := encoding.NewClientSession(ctx, isAEAD, protocol.DefaultIDHash)
 	sessionPolicy := h.policyManager.ForLevel(request.User.Level)
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -179,7 +179,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 
 var (
 	enablePadding = false
-	aead_disabled = false
+	aeadDisabled  = false
 )
 
 func shouldEnablePadding(s protocol.SecurityType) bool {
@@ -198,8 +198,8 @@ func init() {
 		enablePadding = true
 	}
 
-	aeadDisabled := platform.NewEnvFlag("v2ray.vmess.aead.disabled").GetValue(func() string { return defaultFlagValue })
-	if aeadDisabled == "true" {
-		aead_disabled = true
+	isAeadDisabled := platform.NewEnvFlag("v2ray.vmess.aead.disabled").GetValue(func() string { return defaultFlagValue })
+	if isAeadDisabled == "true" {
+		aeadDisabled = true
 	}
 }

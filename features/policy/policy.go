@@ -117,8 +117,8 @@ func defaultBufferPolicy() Buffer {
 func SessionDefault() Session {
 	return Session{
 		Timeouts: Timeout{
-			//Align Handshake timeout with nginx client_header_timeout
-			//So that this value will not indicate server identity
+			// Align Handshake timeout with nginx client_header_timeout
+			// So that this value will not indicate server identity
 			Handshake:      time.Second * 60,
 			ConnectionIdle: time.Second * 300,
 			UplinkOnly:     time.Second * 1,

@@ -221,7 +221,7 @@ func (list *PortList) UnmarshalJSON(data []byte) error {
 		}
 	}
 	if number != 0 {
-		list.Range = append(list.Range, PortRange{From: uint32(number), To: uint32(number)})
+		list.Range = append(list.Range, PortRange{From: number, To: number})
 	}
 	return nil
 }

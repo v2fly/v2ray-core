@@ -29,7 +29,7 @@ import (
 )
 
 func init() {
-	common.Must(common.RegisterConfig((*ServerConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) { // nolint: lll
+	common.Must(common.RegisterConfig((*ServerConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return NewServer(ctx, config.(*ServerConfig))
 	}))
 }
@@ -91,8 +91,7 @@ func (s *Server) Network() []net.Network {
 }
 
 // Process implements proxy.Inbound.Process().
-func (s *Server) Process(ctx context.Context, network net.Network, conn internet.Connection, dispatcher routing.Dispatcher) error { // nolint: funlen,lll
-
+func (s *Server) Process(ctx context.Context, network net.Network, conn internet.Connection, dispatcher routing.Dispatcher) error {
 	sid := session.ExportIDToError(ctx)
 
 	iConn := conn
@@ -125,7 +124,7 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 	isfb := apfb != nil
 
 	shouldFallback := false
-	if firstLen < 58 || first.Byte(56) != '\r' { // nolint: gomnd
+	if firstLen < 58 || first.Byte(56) != '\r' {
 		// invalid protocol
 		err = newError("not trojan protocol")
 		log.Record(&log.AccessMessage{
@@ -137,7 +136,7 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 
 		shouldFallback = true
 	} else {
-		user = s.validator.Get(hexString(first.BytesTo(56))) // nolint: gomnd
+		user = s.validator.Get(hexString(first.BytesTo(56)))
 		if user == nil {
 			// invalid user, let's fallback
 			err = newError("not a valid user")
@@ -199,7 +198,7 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 	return s.handleConnection(ctx, sessionPolicy, destination, clientReader, buf.NewWriter(conn), dispatcher)
 }
 
-func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReader, clientWriter *PacketWriter, dispatcher routing.Dispatcher) error { // nolint: lll
+func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReader, clientWriter *PacketWriter, dispatcher routing.Dispatcher) error {
 	udpServer := udp.NewDispatcher(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
 		common.Must(clientWriter.WriteMultiBufferWithMetadata(buf.MultiBuffer{packet.Payload}, packet.Source))
 	})
@@ -277,7 +276,7 @@ func (s *Server) handleConnection(ctx context.Context, sessionPolicy policy.Sess
 	return nil
 }
 
-func (s *Server) fallback(ctx context.Context, sid errors.ExportOption, err error, sessionPolicy policy.Session, connection internet.Connection, iConn internet.Connection, apfb map[string]map[string]*Fallback, first *buf.Buffer, firstLen int64, reader buf.Reader) error { // nolint: lll
+func (s *Server) fallback(ctx context.Context, sid errors.ExportOption, err error, sessionPolicy policy.Session, connection internet.Connection, iConn internet.Connection, apfb map[string]map[string]*Fallback, first *buf.Buffer, firstLen int64, reader buf.Reader) error {
 	if err := connection.SetReadDeadline(time.Time{}); err != nil {
 		newError("unable to set back read deadline").Base(err).AtWarning().WriteToLog(sid)
 	}

@@ -280,7 +280,7 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 	conn, existing := w.getConnection(id)
 
 	// payload will be discarded in pipe is full.
-	conn.writer.WriteMultiBuffer(buf.MultiBuffer{b}) // nolint: errcheck
+	conn.writer.WriteMultiBuffer(buf.MultiBuffer{b})
 
 	if !existing {
 		common.Must(w.checker.Start())
@@ -303,7 +303,7 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 			if err := w.proxy.Process(ctx, net.Network_UDP, conn, w.dispatcher); err != nil {
 				newError("connection ends").Base(err).WriteToLog(session.ExportIDToError(ctx))
 			}
-			conn.Close() // nolint: errcheck
+			conn.Close()
 			w.removeConn(id)
 		}()
 	}
@@ -332,9 +332,9 @@ func (w *udpWorker) clean() error {
 	}
 
 	for addr, conn := range w.activeConn {
-		if nowSec-atomic.LoadInt64(&conn.lastActivityTime) > 8 { //TODO Timeout too small
+		if nowSec-atomic.LoadInt64(&conn.lastActivityTime) > 8 { // TODO Timeout too small
 			delete(w.activeConn, addr)
-			conn.Close() // nolint: errcheck
+			conn.Close()
 		}
 	}
 

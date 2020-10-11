@@ -50,7 +50,6 @@ func (l *Listener) acceptStreams(session quic.Session) {
 
 		l.addConn(conn)
 	}
-
 }
 
 func (l *Listener) keepAccepting() {
