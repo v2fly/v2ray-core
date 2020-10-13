@@ -5,25 +5,13 @@ package xtls
 import (
 	xtls "github.com/xtls/go"
 
-	"v2ray.com/core/common/buf"
 	"v2ray.com/core/common/net"
 )
 
 //go:generate go run v2ray.com/core/common/errors/errorgen
 
-var (
-	_ buf.Writer = (*Conn)(nil)
-)
-
 type Conn struct {
 	*xtls.Conn
-}
-
-func (c *Conn) WriteMultiBuffer(mb buf.MultiBuffer) error {
-	mb = buf.Compact(mb)
-	mb, err := buf.WriteMultiBuffer(c, mb)
-	buf.ReleaseMulti(mb)
-	return err
 }
 
 func (c *Conn) HandshakeAddress() net.Address {
