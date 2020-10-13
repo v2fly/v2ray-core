@@ -204,7 +204,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 
 		responseAddons, err := encoding.DecodeResponseHeader(conn, request)
 		if err != nil {
-			return newError("failed to decode response header").Base(err).AtWarning()
+			return newError("failed to decode response header").Base(err).AtInfo()
 		}
 
 		// default: serverReader := buf.NewReader(conn)
