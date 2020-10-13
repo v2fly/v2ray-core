@@ -532,7 +532,7 @@ func (c *Connection) Terminate() {
 	}
 	newError("#", c.meta.Conversation, " terminating connection to ", c.RemoteAddr()).WriteToLog()
 
-	//v.SetState(StateTerminated)
+	// v.SetState(StateTerminated)
 	c.dataInput.Signal()
 	c.dataOutput.Signal()
 

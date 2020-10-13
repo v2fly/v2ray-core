@@ -202,7 +202,7 @@ func (s *Server) handleUDPPayload(ctx context.Context, conn internet.Connection,
 			newError("failed to write UDP response").AtWarning().Base(err).WriteToLog(session.ExportIDToError(ctx))
 		}
 
-		conn.Write(udpMessage.Bytes()) // nolint: errcheck
+		conn.Write(udpMessage.Bytes())
 	})
 
 	if inbound := session.InboundFromContext(ctx); inbound != nil && inbound.Source.IsValid() {

@@ -22,9 +22,9 @@ func (l *OutboundListener) add(conn net.Conn) {
 	select {
 	case l.buffer <- conn:
 	case <-l.done.Wait():
-		conn.Close() // nolint: errcheck
+		conn.Close()
 	default:
-		conn.Close() // nolint: errcheck
+		conn.Close()
 	}
 }
 
@@ -45,7 +45,7 @@ L:
 	for {
 		select {
 		case c := <-l.buffer:
-			c.Close() // nolint: errcheck
+			c.Close()
 		default:
 			break L
 		}

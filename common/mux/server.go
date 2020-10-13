@@ -232,7 +232,7 @@ func (w *ServerWorker) run(ctx context.Context) {
 	input := w.link.Reader
 	reader := &buf.BufferedReader{Reader: input}
 
-	defer w.sessionManager.Close() // nolint: errcheck
+	defer w.sessionManager.Close()
 
 	for {
 		select {

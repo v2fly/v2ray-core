@@ -30,9 +30,9 @@ func SealVMessAEADHeader(key [16]byte, data []byte) []byte {
 	var payloadHeaderLengthAEADEncrypted []byte
 
 	{
-		payloadHeaderLengthAEADKey := KDF16(key[:], KDFSaltConst_VMessHeaderPayloadLengthAEADKey, string(generatedAuthID[:]), string(connectionNonce))
+		payloadHeaderLengthAEADKey := KDF16(key[:], KDFSaltConstVMessHeaderPayloadLengthAEADKey, string(generatedAuthID[:]), string(connectionNonce))
 
-		payloadHeaderLengthAEADNonce := KDF(key[:], KDFSaltConst_VMessHeaderPayloadLengthAEADIV, string(generatedAuthID[:]), string(connectionNonce))[:12]
+		payloadHeaderLengthAEADNonce := KDF(key[:], KDFSaltConstVMessHeaderPayloadLengthAEADIV, string(generatedAuthID[:]), string(connectionNonce))[:12]
 
 		payloadHeaderLengthAEADAESBlock, err := aes.NewCipher(payloadHeaderLengthAEADKey)
 		if err != nil {
@@ -51,9 +51,9 @@ func SealVMessAEADHeader(key [16]byte, data []byte) []byte {
 	var payloadHeaderAEADEncrypted []byte
 
 	{
-		payloadHeaderAEADKey := KDF16(key[:], KDFSaltConst_VMessHeaderPayloadAEADKey, string(generatedAuthID[:]), string(connectionNonce))
+		payloadHeaderAEADKey := KDF16(key[:], KDFSaltConstVMessHeaderPayloadAEADKey, string(generatedAuthID[:]), string(connectionNonce))
 
-		payloadHeaderAEADNonce := KDF(key[:], KDFSaltConst_VMessHeaderPayloadAEADIV, string(generatedAuthID[:]), string(connectionNonce))[:12]
+		payloadHeaderAEADNonce := KDF(key[:], KDFSaltConstVMessHeaderPayloadAEADIV, string(generatedAuthID[:]), string(connectionNonce))[:12]
 
 		payloadHeaderAEADAESBlock, err := aes.NewCipher(payloadHeaderAEADKey)
 		if err != nil {
@@ -71,18 +71,15 @@ func SealVMessAEADHeader(key [16]byte, data []byte) []byte {
 
 	var outputBuffer = bytes.NewBuffer(nil)
 
-	common.Must2(outputBuffer.Write(generatedAuthID[:])) //16
-
-	common.Must2(outputBuffer.Write(payloadHeaderLengthAEADEncrypted)) //2+16
-
-	common.Must2(outputBuffer.Write(connectionNonce)) //8
-
+	common.Must2(outputBuffer.Write(generatedAuthID[:]))               // 16
+	common.Must2(outputBuffer.Write(payloadHeaderLengthAEADEncrypted)) // 2+16
+	common.Must2(outputBuffer.Write(connectionNonce))                  // 8
 	common.Must2(outputBuffer.Write(payloadHeaderAEADEncrypted))
 
 	return outputBuffer.Bytes()
 }
 
-func OpenVMessAEADHeader(key [16]byte, authid [16]byte, data io.Reader) ([]byte, bool, error, int) {
+func OpenVMessAEADHeader(key [16]byte, authid [16]byte, data io.Reader) ([]byte, bool, int, error) {
 	var payloadHeaderLengthAEADEncrypted [18]byte
 	var nonce [8]byte
 
@@ -91,23 +88,23 @@ func OpenVMessAEADHeader(key [16]byte, authid [16]byte, data io.Reader) ([]byte,
 	authidCheckValueReadBytesCounts, err := io.ReadFull(data, payloadHeaderLengthAEADEncrypted[:])
 	bytesRead += authidCheckValueReadBytesCounts
 	if err != nil {
-		return nil, false, err, bytesRead
+		return nil, false, bytesRead, err
 	}
 
 	nonceReadBytesCounts, err := io.ReadFull(data, nonce[:])
 	bytesRead += nonceReadBytesCounts
 	if err != nil {
-		return nil, false, err, bytesRead
+		return nil, false, bytesRead, err
 	}
 
-	//Decrypt Length
+	// Decrypt Length
 
 	var decryptedAEADHeaderLengthPayloadResult []byte
 
 	{
-		payloadHeaderLengthAEADKey := KDF16(key[:], KDFSaltConst_VMessHeaderPayloadLengthAEADKey, string(authid[:]), string(nonce[:]))
+		payloadHeaderLengthAEADKey := KDF16(key[:], KDFSaltConstVMessHeaderPayloadLengthAEADKey, string(authid[:]), string(nonce[:]))
 
-		payloadHeaderLengthAEADNonce := KDF(key[:], KDFSaltConst_VMessHeaderPayloadLengthAEADIV, string(authid[:]), string(nonce[:]))[:12]
+		payloadHeaderLengthAEADNonce := KDF(key[:], KDFSaltConstVMessHeaderPayloadLengthAEADIV, string(authid[:]), string(nonce[:]))[:12]
 
 		payloadHeaderAEADAESBlock, err := aes.NewCipher(payloadHeaderLengthAEADKey)
 		if err != nil {
@@ -123,7 +120,7 @@ func OpenVMessAEADHeader(key [16]byte, authid [16]byte, data io.Reader) ([]byte,
 		decryptedAEADHeaderLengthPayload, erropenAEAD := payloadHeaderLengthAEAD.Open(nil, payloadHeaderLengthAEADNonce, payloadHeaderLengthAEADEncrypted[:], authid[:])
 
 		if erropenAEAD != nil {
-			return nil, true, erropenAEAD, bytesRead
+			return nil, true, bytesRead, erropenAEAD
 		}
 
 		decryptedAEADHeaderLengthPayloadResult = decryptedAEADHeaderLengthPayload
@@ -131,24 +128,24 @@ func OpenVMessAEADHeader(key [16]byte, authid [16]byte, data io.Reader) ([]byte,
 
 	var length uint16
 
-	common.Must(binary.Read(bytes.NewReader(decryptedAEADHeaderLengthPayloadResult[:]), binary.BigEndian, &length))
+	common.Must(binary.Read(bytes.NewReader(decryptedAEADHeaderLengthPayloadResult), binary.BigEndian, &length))
 
 	var decryptedAEADHeaderPayloadR []byte
 
 	var payloadHeaderAEADEncryptedReadedBytesCounts int
 
 	{
-		payloadHeaderAEADKey := KDF16(key[:], KDFSaltConst_VMessHeaderPayloadAEADKey, string(authid[:]), string(nonce[:]))
+		payloadHeaderAEADKey := KDF16(key[:], KDFSaltConstVMessHeaderPayloadAEADKey, string(authid[:]), string(nonce[:]))
 
-		payloadHeaderAEADNonce := KDF(key[:], KDFSaltConst_VMessHeaderPayloadAEADIV, string(authid[:]), string(nonce[:]))[:12]
+		payloadHeaderAEADNonce := KDF(key[:], KDFSaltConstVMessHeaderPayloadAEADIV, string(authid[:]), string(nonce[:]))[:12]
 
-		//16 == AEAD Tag size
+		// 16 == AEAD Tag size
 		payloadHeaderAEADEncrypted := make([]byte, length+16)
 
 		payloadHeaderAEADEncryptedReadedBytesCounts, err = io.ReadFull(data, payloadHeaderAEADEncrypted)
 		bytesRead += payloadHeaderAEADEncryptedReadedBytesCounts
 		if err != nil {
-			return nil, false, err, bytesRead
+			return nil, false, bytesRead, err
 		}
 
 		payloadHeaderAEADAESBlock, err := aes.NewCipher(payloadHeaderAEADKey)
@@ -165,11 +162,11 @@ func OpenVMessAEADHeader(key [16]byte, authid [16]byte, data io.Reader) ([]byte,
 		decryptedAEADHeaderPayload, erropenAEAD := payloadHeaderAEAD.Open(nil, payloadHeaderAEADNonce, payloadHeaderAEADEncrypted, authid[:])
 
 		if erropenAEAD != nil {
-			return nil, true, erropenAEAD, bytesRead
+			return nil, true, bytesRead, erropenAEAD
 		}
 
 		decryptedAEADHeaderPayloadR = decryptedAEADHeaderPayload
 	}
 
-	return decryptedAEADHeaderPayloadR, false, nil, bytesRead
+	return decryptedAEADHeaderPayloadR, false, bytesRead, nil
 }

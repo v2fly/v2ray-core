@@ -33,5 +33,4 @@ func TestKCPPacketReader(t *testing.T) {
 			t.Errorf("Expect some output, but got nil")
 		}
 	}
-
 }

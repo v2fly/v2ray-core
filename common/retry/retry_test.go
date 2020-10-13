@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	errorTestOnly = errors.New("This is a fake error.")
+	errorTestOnly = errors.New("this is a fake error")
 )
 
 func TestNoRetry(t *testing.T) {

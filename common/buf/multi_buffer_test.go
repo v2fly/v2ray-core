@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"crypto/rand"
 	"io"
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"io/ioutil"
-	"os"
-
 	"v2ray.com/core/common"
 	. "v2ray.com/core/common/buf"
 )
@@ -110,7 +109,6 @@ func TestMultiBufferReadAllToByte(t *testing.T) {
 		if l := len(b); l != 8*1024 {
 			t.Error("unexpceted length from ReadAllToBytes", l)
 		}
-
 	}
 	{
 		const dat = "data/test_MultiBufferReadAllToByte.dat"

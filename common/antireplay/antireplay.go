@@ -1,14 +1,15 @@
 package antireplay
 
 import (
-	cuckoo "github.com/seiflotfy/cuckoofilter"
 	"sync"
 	"time"
+
+	cuckoo "github.com/seiflotfy/cuckoofilter"
 )
 
-func NewAntiReplayWindow(AntiReplayTime int64) *AntiReplayWindow {
+func NewAntiReplayWindow(antiReplayTime int64) *AntiReplayWindow {
 	arw := &AntiReplayWindow{}
-	arw.AntiReplayTime = AntiReplayTime
+	arw.AntiReplayTime = antiReplayTime
 	return arw
 }
 

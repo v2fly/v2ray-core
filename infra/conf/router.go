@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/golang/protobuf/proto"
+
 	"v2ray.com/core/app/router"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/platform/filesystem"
-
-	"github.com/golang/protobuf/proto"
 )
 
 type RouterRulesConfig struct {
@@ -67,10 +67,15 @@ func (c *RouterConfig) Build() (*router.Config, error) {
 	config := new(router.Config)
 	config.DomainStrategy = c.getDomainStrategy()
 
-	rawRuleList := c.RuleList
-	if c.Settings != nil {
-		rawRuleList = append(c.RuleList, c.Settings.RuleList...)
+	var rawRuleList []json.RawMessage
+	if c != nil {
+		rawRuleList = c.RuleList
+		if c.Settings != nil {
+			c.RuleList = append(c.RuleList, c.Settings.RuleList...)
+			rawRuleList = c.RuleList
+		}
 	}
+
 	for _, rawRule := range rawRuleList {
 		rule, err := ParseRule(rawRule)
 		if err != nil {
@@ -290,15 +295,19 @@ func parseDomainRule(domain string) ([]*router.Domain, error) {
 	case strings.HasPrefix(domain, "regexp:"):
 		domainRule.Type = router.Domain_Regex
 		domainRule.Value = domain[7:]
+
 	case strings.HasPrefix(domain, "domain:"):
 		domainRule.Type = router.Domain_Domain
 		domainRule.Value = domain[7:]
+
 	case strings.HasPrefix(domain, "full:"):
 		domainRule.Type = router.Domain_Full
 		domainRule.Value = domain[5:]
+
 	case strings.HasPrefix(domain, "keyword:"):
 		domainRule.Type = router.Domain_Plain
 		domainRule.Value = domain[8:]
+
 	case strings.HasPrefix(domain, "dotless:"):
 		domainRule.Type = router.Domain_Regex
 		switch substr := domain[8:]; {
@@ -309,6 +318,7 @@ func parseDomainRule(domain string) ([]*router.Domain, error) {
 		default:
 			return nil, newError("substr in dotless rule should not contain a dot: ", substr)
 		}
+
 	default:
 		domainRule.Type = router.Domain_Plain
 		domainRule.Value = domain
@@ -403,15 +413,16 @@ func parseFieldRule(msg json.RawMessage) (*router.RoutingRule, error) {
 	}
 
 	rule := new(router.RoutingRule)
-	if len(rawFieldRule.OutboundTag) > 0 {
+	switch {
+	case len(rawFieldRule.OutboundTag) > 0:
 		rule.TargetTag = &router.RoutingRule_Tag{
 			Tag: rawFieldRule.OutboundTag,
 		}
-	} else if len(rawFieldRule.BalancerTag) > 0 {
+	case len(rawFieldRule.BalancerTag) > 0:
 		rule.TargetTag = &router.RoutingRule_BalancingTag{
 			BalancingTag: rawFieldRule.BalancerTag,
 		}
-	} else {
+	default:
 		return nil, newError("neither outboundTag nor balancerTag is specified in routing rule")
 	}
 

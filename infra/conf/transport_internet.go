@@ -31,7 +31,7 @@ var (
 
 	tcpHeaderLoader = NewJSONConfigLoader(ConfigCreatorCache{
 		"none": func() interface{} { return new(NoOpConnectionAuthenticator) },
-		"http": func() interface{} { return new(HTTPAuthenticator) },
+		"http": func() interface{} { return new(Authenticator) },
 	}, "type", "")
 )
 
@@ -473,7 +473,7 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 		ProtocolName: "tcp",
 	}
 	if c.Network != nil {
-		protocol, err := (*c.Network).Build()
+		protocol, err := c.Network.Build()
 		if err != nil {
 			return nil, err
 		}

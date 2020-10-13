@@ -39,7 +39,7 @@ func (s *routingServer) TestRoute(ctx context.Context, request *TestRouteRequest
 		return nil, err
 	}
 	if request.PublishResult && s.routingStats != nil {
-		ctx, _ := context.WithTimeout(context.Background(), 4*time.Second) // nolint: govet
+		ctx, _ := context.WithTimeout(context.Background(), 4*time.Second)
 		s.routingStats.Publish(ctx, route)
 	}
 	return AsProtobufMessage(request.FieldSelectors)(route), nil
@@ -54,7 +54,7 @@ func (s *routingServer) SubscribeRoutingStats(request *SubscribeRoutingStatsRequ
 	if err != nil {
 		return err
 	}
-	defer stats.UnsubscribeClosableChannel(s.routingStats, subscriber) // nolint: errcheck
+	defer stats.UnsubscribeClosableChannel(s.routingStats, subscriber)
 	for {
 		select {
 		case value, ok := <-subscriber:

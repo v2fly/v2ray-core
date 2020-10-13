@@ -20,11 +20,14 @@ var (
 
 // ParseCertificate converts a cert.Certificate to Certificate.
 func ParseCertificate(c *cert.Certificate) *Certificate {
-	certPEM, keyPEM := c.ToPEM()
-	return &Certificate{
-		Certificate: certPEM,
-		Key:         keyPEM,
+	if c != nil {
+		certPEM, keyPEM := c.ToPEM()
+		return &Certificate{
+			Certificate: certPEM,
+			Key:         keyPEM,
+		}
 	}
+	return nil
 }
 
 func (c *Config) loadSelfCertPool() (*x509.CertPool, error) {
@@ -163,15 +166,22 @@ func (c *Config) GetXTLSConfig(opts ...Option) *xtls.Config {
 		newError("failed to load system root certificate").AtError().Base(err).WriteToLog()
 	}
 
+	if c == nil {
+		return &xtls.Config{
+			ClientSessionCache:     globalSessionCache,
+			RootCAs:                root,
+			InsecureSkipVerify:     false,
+			NextProtos:             nil,
+			SessionTicketsDisabled: false,
+		}
+	}
+
 	config := &xtls.Config{
 		ClientSessionCache:     globalSessionCache,
 		RootCAs:                root,
 		InsecureSkipVerify:     c.AllowInsecure,
 		NextProtos:             c.NextProtocol,
 		SessionTicketsDisabled: c.DisableSessionResumption,
-	}
-	if c == nil {
-		return config
 	}
 
 	for _, opt := range opts {

@@ -11,8 +11,14 @@ import (
 	"io"
 	"math"
 	"time"
+
 	"v2ray.com/core/common"
 	antiReplayWindow "v2ray.com/core/common/antireplay"
+)
+
+var (
+	ErrNotFound = errors.New("user do not exist")
+	ErrReplay   = errors.New("replayed request")
 )
 
 func CreateAuthID(cmdKey []byte, time int64) [16]byte {
@@ -32,7 +38,7 @@ func CreateAuthID(cmdKey []byte, time int64) [16]byte {
 }
 
 func NewCipherFromKey(cmdKey []byte) cipher.Block {
-	aesBlock, err := aes.NewCipher(KDF16(cmdKey, KDFSaltConst_AuthIDEncryptionKey))
+	aesBlock, err := aes.NewCipher(KDF16(cmdKey, KDFSaltConstAuthIDEncryptionKey))
 	if err != nil {
 		panic(err)
 	}
@@ -88,10 +94,9 @@ func (a *AuthIDDecoderHolder) RemoveUser(key [16]byte) {
 	delete(a.aidhi, string(key[:]))
 }
 
-func (a *AuthIDDecoderHolder) Match(AuthID [16]byte) (interface{}, error) {
+func (a *AuthIDDecoderHolder) Match(authID [16]byte) (interface{}, error) {
 	for _, v := range a.aidhi {
-
-		t, z, r, d := v.dec.Decode(AuthID)
+		t, z, r, d := v.dec.Decode(authID)
 		if z != crc32.ChecksumIEEE(d[:12]) {
 			continue
 		}
@@ -104,18 +109,13 @@ func (a *AuthIDDecoderHolder) Match(AuthID [16]byte) (interface{}, error) {
 			continue
 		}
 
-		if !a.apw.Check(AuthID[:]) {
+		if !a.apw.Check(authID[:]) {
 			return nil, ErrReplay
 		}
 
 		_ = r
 
 		return v.ticket, nil
-
 	}
 	return nil, ErrNotFound
 }
-
-var ErrNotFound = errors.New("user do not exist")
-
-var ErrReplay = errors.New("replayed request")

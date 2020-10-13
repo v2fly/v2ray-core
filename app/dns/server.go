@@ -97,7 +97,9 @@ func New(ctx context.Context, config *Config) (*Server, error) {
 	addNameServer := func(ns *NameServer) int {
 		endpoint := ns.Address
 		address := endpoint.Address.AsAddress()
-		if address.Family().IsDomain() && address.Domain() == "localhost" {
+
+		switch {
+		case address.Family().IsDomain() && address.Domain() == "localhost":
 			server.clients = append(server.clients, NewLocalNameServer())
 			// Priotize local domains with specific TLDs or without any dot to local DNS
 			// References:
@@ -115,7 +117,8 @@ func New(ctx context.Context, config *Config) (*Server, error) {
 				{Type: DomainMatchingType_Subdomain, Domain: "test"},
 			}
 			ns.PrioritizedDomain = append(ns.PrioritizedDomain, localTLDsAndDotlessDomains...)
-		} else if address.Family().IsDomain() && strings.HasPrefix(address.Domain(), "https+local://") {
+
+		case address.Family().IsDomain() && strings.HasPrefix(address.Domain(), "https+local://"):
 			// URI schemed string treated as domain
 			// DOH Local mode
 			u, err := url.Parse(address.Domain())
@@ -123,7 +126,8 @@ func New(ctx context.Context, config *Config) (*Server, error) {
 				log.Fatalln(newError("DNS config error").Base(err))
 			}
 			server.clients = append(server.clients, NewDoHLocalNameServer(u, server.clientIP))
-		} else if address.Family().IsDomain() && strings.HasPrefix(address.Domain(), "https://") {
+
+		case address.Family().IsDomain() && strings.HasPrefix(address.Domain(), "https://"):
 			// DOH Remote mode
 			u, err := url.Parse(address.Domain())
 			if err != nil {
@@ -140,7 +144,8 @@ func New(ctx context.Context, config *Config) (*Server, error) {
 				}
 				server.clients[idx] = c
 			}))
-		} else {
+
+		default:
 			// UDP classic DNS mode
 			dest := endpoint.AsDestination()
 			if dest.Network == net.Network_Unknown {

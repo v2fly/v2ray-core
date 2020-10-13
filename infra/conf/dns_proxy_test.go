@@ -10,7 +10,7 @@ import (
 
 func TestDnsProxyConfig(t *testing.T) {
 	creator := func() Buildable {
-		return new(DnsOutboundConfig)
+		return new(DNSOutboundConfig)
 	}
 
 	runMultiTestCase(t, []TestCase{

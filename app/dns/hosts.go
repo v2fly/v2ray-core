@@ -66,7 +66,8 @@ func NewStaticHosts(hosts []*Config_HostMapping, legacy map[string]*net.IPOrDoma
 		}
 		id := g.Add(matcher)
 		ips := make([]net.Address, 0, len(mapping.Ip)+1)
-		if len(mapping.Ip) > 0 {
+		switch {
+		case len(mapping.Ip) > 0:
 			for _, ip := range mapping.Ip {
 				addr := net.IPAddress(ip)
 				if addr == nil {
@@ -74,9 +75,11 @@ func NewStaticHosts(hosts []*Config_HostMapping, legacy map[string]*net.IPOrDoma
 				}
 				ips = append(ips, addr)
 			}
-		} else if len(mapping.ProxiedDomain) > 0 {
+
+		case len(mapping.ProxiedDomain) > 0:
 			ips = append(ips, net.DomainAddress(mapping.ProxiedDomain))
-		} else {
+
+		default:
 			return nil, newError("neither IP address nor proxied domain specified for domain: ", mapping.Domain).AtWarning()
 		}
 

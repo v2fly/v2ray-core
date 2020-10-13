@@ -6,13 +6,13 @@ import (
 	"v2ray.com/core/proxy/dns"
 )
 
-type DnsOutboundConfig struct {
+type DNSOutboundConfig struct {
 	Network Network  `json:"network"`
 	Address *Address `json:"address"`
 	Port    uint16   `json:"port"`
 }
 
-func (c *DnsOutboundConfig) Build() (proto.Message, error) {
+func (c *DNSOutboundConfig) Build() (proto.Message, error) {
 	config := &dns.Config{
 		Server: &net.Endpoint{
 			Network: c.Network.Build(),

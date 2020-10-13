@@ -2,6 +2,7 @@ package scenarios
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"io"
 	"io/ioutil"
@@ -136,7 +137,7 @@ func TestHttpError(t *testing.T) {
 	}
 }
 
-func TestHttpConnectMethod(t *testing.T) {
+func TestHTTPConnectMethod(t *testing.T) {
 	tcpServer := tcp.Server{
 		MsgProcessor: xor,
 	}
@@ -179,7 +180,9 @@ func TestHttpConnectMethod(t *testing.T) {
 
 		payload := make([]byte, 1024*64)
 		common.Must2(rand.Read(payload))
-		req, err := http.NewRequest("Connect", "http://"+dest.NetAddr()+"/", bytes.NewReader(payload))
+
+		ctx := context.Background()
+		req, err := http.NewRequestWithContext(ctx, "Connect", "http://"+dest.NetAddr()+"/", bytes.NewReader(payload))
 		req.Header.Set("X-a", "b")
 		req.Header.Set("X-b", "d")
 		common.Must(err)
@@ -334,7 +337,8 @@ func TestHttpBasicAuth(t *testing.T) {
 		}
 
 		{
-			req, err := http.NewRequest("GET", "http://127.0.0.1:"+httpServerPort.String(), nil)
+			ctx := context.Background()
+			req, err := http.NewRequestWithContext(ctx, "GET", "http://127.0.0.1:"+httpServerPort.String(), nil)
 			common.Must(err)
 
 			setProxyBasicAuth(req, "a", "c")
@@ -346,7 +350,8 @@ func TestHttpBasicAuth(t *testing.T) {
 		}
 
 		{
-			req, err := http.NewRequest("GET", "http://127.0.0.1:"+httpServerPort.String(), nil)
+			ctx := context.Background()
+			req, err := http.NewRequestWithContext(ctx, "GET", "http://127.0.0.1:"+httpServerPort.String(), nil)
 			common.Must(err)
 
 			setProxyBasicAuth(req, "a", "b")

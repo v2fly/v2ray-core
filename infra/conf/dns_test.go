@@ -45,7 +45,7 @@ func init() {
 	common.Must(err)
 	common.Must2(geositeFile.Write(listBytes))
 }
-func TestDnsConfigParsing(t *testing.T) {
+func TestDNSConfigParsing(t *testing.T) {
 	geositePath := platform.GetAssetLocation("geosite.dat")
 	defer func() {
 		os.Remove(geositePath)
@@ -54,7 +54,7 @@ func TestDnsConfigParsing(t *testing.T) {
 
 	parserCreator := func() func(string) (proto.Message, error) {
 		return func(s string) (proto.Message, error) {
-			config := new(DnsConfig)
+			config := new(DNSConfig)
 			if err := json.Unmarshal([]byte(s), config); err != nil {
 				return nil, err
 			}

@@ -103,7 +103,7 @@ Start:
 	if err != nil {
 		trace := newError("failed to read http request").Base(err)
 		if errors.Cause(err) != io.EOF && !isTimeout(errors.Cause(err)) {
-			trace.AtWarning() // nolint: errcheck
+			trace.AtWarning()
 		}
 		return trace
 	}
@@ -159,7 +159,7 @@ Start:
 	return err
 }
 
-func (s *Server) handleConnect(ctx context.Context, request *http.Request, reader *bufio.Reader, conn internet.Connection, dest net.Destination, dispatcher routing.Dispatcher) error {
+func (s *Server) handleConnect(ctx context.Context, _ *http.Request, reader *bufio.Reader, conn internet.Connection, dest net.Destination, dispatcher routing.Dispatcher) error {
 	_, err := conn.Write([]byte("HTTP/1.1 200 Connection established\r\n\r\n"))
 	if err != nil {
 		return newError("failed to write back OK response").Base(err)
@@ -263,7 +263,7 @@ func (s *Server) handlePlainHTTP(ctx context.Context, request *http.Request, wri
 	}
 
 	// Plain HTTP request is not a stream. The request always finishes before response. Hense request has to be closed later.
-	defer common.Close(link.Writer) // nolint: errcheck
+	defer common.Close(link.Writer)
 	var result error = errWaitAnother
 
 	requestDone := func() error {

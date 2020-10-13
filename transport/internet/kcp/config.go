@@ -4,6 +4,7 @@ package kcp
 
 import (
 	"crypto/cipher"
+
 	"v2ray.com/core/common"
 	"v2ray.com/core/transport/internet"
 )

@@ -6,14 +6,13 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
-	"hash"
 	"hash/crc32"
 	"io"
 	"io/ioutil"
-	"v2ray.com/core/common/dice"
 
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
+	"v2ray.com/core/common/dice"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/protocol"
 )
@@ -35,7 +34,7 @@ var addrParser = protocol.NewAddressParser(
 func ReadTCPSession(user *protocol.MemoryUser, reader io.Reader) (*protocol.RequestHeader, buf.Reader, error) {
 	account := user.Account.(*MemoryAccount)
 
-	hashkdf := hmac.New(func() hash.Hash { return sha256.New() }, []byte("SSBSKDF"))
+	hashkdf := hmac.New(sha256.New, []byte("SSBSKDF"))
 	hashkdf.Write(account.Key)
 
 	behaviorSeed := crc32.ChecksumIEEE(hashkdf.Sum(nil))

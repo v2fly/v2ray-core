@@ -1,21 +1,14 @@
 package aead
 
-const KDFSaltConst_AuthIDEncryptionKey = "AES Auth ID Encryption"
-
-const KDFSaltConst_AEADRespHeaderLenKey = "AEAD Resp Header Len Key"
-
-const KDFSaltConst_AEADRespHeaderLenIV = "AEAD Resp Header Len IV"
-
-const KDFSaltConst_AEADRespHeaderPayloadKey = "AEAD Resp Header Key"
-
-const KDFSaltConst_AEADRespHeaderPayloadIV = "AEAD Resp Header IV"
-
-const KDFSaltConst_VMessAEADKDF = "VMess AEAD KDF"
-
-const KDFSaltConst_VMessHeaderPayloadAEADKey = "VMess Header AEAD Key"
-
-const KDFSaltConst_VMessHeaderPayloadAEADIV = "VMess Header AEAD Nonce"
-
-const KDFSaltConst_VMessHeaderPayloadLengthAEADKey = "VMess Header AEAD Key_Length"
-
-const KDFSaltConst_VMessHeaderPayloadLengthAEADIV = "VMess Header AEAD Nonce_Length"
+const (
+	KDFSaltConstAuthIDEncryptionKey             = "AES Auth ID Encryption"
+	KDFSaltConstAEADRespHeaderLenKey            = "AEAD Resp Header Len Key"
+	KDFSaltConstAEADRespHeaderLenIV             = "AEAD Resp Header Len IV"
+	KDFSaltConstAEADRespHeaderPayloadKey        = "AEAD Resp Header Key"
+	KDFSaltConstAEADRespHeaderPayloadIV         = "AEAD Resp Header IV"
+	KDFSaltConstVMessAEADKDF                    = "VMess AEAD KDF"
+	KDFSaltConstVMessHeaderPayloadAEADKey       = "VMess Header AEAD Key"
+	KDFSaltConstVMessHeaderPayloadAEADIV        = "VMess Header AEAD Nonce"
+	KDFSaltConstVMessHeaderPayloadLengthAEADKey = "VMess Header AEAD Key_Length"
+	KDFSaltConstVMessHeaderPayloadLengthAEADIV  = "VMess Header AEAD Nonce_Length"
+)

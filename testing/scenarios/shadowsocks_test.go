@@ -226,7 +226,7 @@ func TestShadowsocksAES128UDP(t *testing.T) {
 			payload := make([]byte, 1024)
 			common.Must2(rand.Read(payload))
 
-			nBytes, err := conn.Write([]byte(payload))
+			nBytes, err := conn.Write(payload)
 			if err != nil {
 				return err
 			}

@@ -49,7 +49,7 @@ func (f EnvFlag) GetValueAsInt(defaultValue int) int {
 }
 
 func NormalizeEnvName(name string) string {
-	return strings.Replace(strings.ToUpper(strings.TrimSpace(name)), ".", "_", -1)
+	return strings.ReplaceAll(strings.ToUpper(strings.TrimSpace(name)), ".", "_")
 }
 
 func getExecutableDir() string {

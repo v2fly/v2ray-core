@@ -203,6 +203,5 @@ func testTCPConn2(conn net.Conn, payloadSize int, timeout time.Duration) func() 
 		}
 
 		return nil
-
 	}
 }

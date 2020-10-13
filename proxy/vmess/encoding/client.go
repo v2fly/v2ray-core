@@ -47,8 +47,7 @@ type ClientSession struct {
 }
 
 // NewClientSession creates a new ClientSession.
-func NewClientSession(isAEAD bool, idHash protocol.IDHash, ctx context.Context) *ClientSession {
-
+func NewClientSession(ctx context.Context, isAEAD bool, idHash protocol.IDHash) *ClientSession {
 	session := &ClientSession{
 		isAEAD: isAEAD,
 		idHash: idHash,
@@ -114,7 +113,7 @@ func (c *ClientSession) EncodeRequestHeader(header *protocol.RequestHeader, writ
 
 	if !c.isAEAD {
 		iv := hashTimestamp(md5.New(), timestamp)
-		aesStream := crypto.NewAesEncryptionStream(account.ID.CmdKey(), iv[:])
+		aesStream := crypto.NewAesEncryptionStream(account.ID.CmdKey(), iv)
 		aesStream.XORKeyStream(buffer.Bytes(), buffer.Bytes())
 		common.Must2(writer.Write(buffer.Bytes()))
 	} else {
@@ -193,8 +192,8 @@ func (c *ClientSession) DecodeResponseHeader(reader io.Reader) (*protocol.Respon
 		aesStream := crypto.NewAesDecryptionStream(c.responseBodyKey[:], c.responseBodyIV[:])
 		c.responseReader = crypto.NewCryptionReader(aesStream, reader)
 	} else {
-		aeadResponseHeaderLengthEncryptionKey := vmessaead.KDF16(c.responseBodyKey[:], vmessaead.KDFSaltConst_AEADRespHeaderLenKey)
-		aeadResponseHeaderLengthEncryptionIV := vmessaead.KDF(c.responseBodyIV[:], vmessaead.KDFSaltConst_AEADRespHeaderLenIV)[:12]
+		aeadResponseHeaderLengthEncryptionKey := vmessaead.KDF16(c.responseBodyKey[:], vmessaead.KDFSaltConstAEADRespHeaderLenKey)
+		aeadResponseHeaderLengthEncryptionIV := vmessaead.KDF(c.responseBodyIV[:], vmessaead.KDFSaltConstAEADRespHeaderLenIV)[:12]
 
 		aeadResponseHeaderLengthEncryptionKeyAESBlock := common.Must2(aes.NewCipher(aeadResponseHeaderLengthEncryptionKey)).(cipher.Block)
 		aeadResponseHeaderLengthEncryptionAEAD := common.Must2(cipher.NewGCM(aeadResponseHeaderLengthEncryptionKeyAESBlock)).(cipher.AEAD)
@@ -213,8 +212,8 @@ func (c *ClientSession) DecodeResponseHeader(reader io.Reader) (*protocol.Respon
 			decryptedResponseHeaderLength = int(decryptedResponseHeaderLengthBinaryDeserializeBuffer)
 		}
 
-		aeadResponseHeaderPayloadEncryptionKey := vmessaead.KDF16(c.responseBodyKey[:], vmessaead.KDFSaltConst_AEADRespHeaderPayloadKey)
-		aeadResponseHeaderPayloadEncryptionIV := vmessaead.KDF(c.responseBodyIV[:], vmessaead.KDFSaltConst_AEADRespHeaderPayloadIV)[:12]
+		aeadResponseHeaderPayloadEncryptionKey := vmessaead.KDF16(c.responseBodyKey[:], vmessaead.KDFSaltConstAEADRespHeaderPayloadKey)
+		aeadResponseHeaderPayloadEncryptionIV := vmessaead.KDF(c.responseBodyIV[:], vmessaead.KDFSaltConstAEADRespHeaderPayloadIV)[:12]
 
 		aeadResponseHeaderPayloadEncryptionKeyAESBlock := common.Must2(aes.NewCipher(aeadResponseHeaderPayloadEncryptionKey)).(cipher.Block)
 		aeadResponseHeaderPayloadEncryptionAEAD := common.Must2(cipher.NewGCM(aeadResponseHeaderPayloadEncryptionKeyAESBlock)).(cipher.AEAD)
