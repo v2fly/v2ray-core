@@ -16,7 +16,7 @@ steps:
   - checkout: self
   - task: GoTool@0
     inputs:
-      version: "1.15.2"
+      version: "1.15.3"
   - script: |
       go version
       go mod download
