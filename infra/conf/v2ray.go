@@ -327,6 +327,7 @@ type Config struct {
 	API             *APIConfig             `json:"api"`
 	Stats           *StatsConfig           `json:"stats"`
 	Reverse         *ReverseConfig         `json:"reverse"`
+	Admin           *AdminConfig           `json:"admin"`
 }
 
 func (c *Config) findInboundTag(tag string) int {
@@ -372,6 +373,9 @@ func (c *Config) Override(o *Config, fn string) {
 	}
 	if o.API != nil {
 		c.API = o.API
+	}
+	if o.Admin != nil {
+		c.Admin = o.Admin
 	}
 	if o.Stats != nil {
 		c.Stats = o.Stats
@@ -465,6 +469,13 @@ func (c *Config) Build() (*core.Config, error) {
 			return nil, err
 		}
 		config.App = append(config.App, serial.ToTypedMessage(apiConf))
+	}
+	if c.Admin != nil {
+		adminConf, err := c.Admin.Build()
+		if err != nil {
+			return nil, err
+		}
+		config.App = append(config.App, serial.ToTypedMessage(adminConf))
 	}
 
 	if c.Stats != nil {

@@ -100,6 +100,13 @@ func (w *ServerWorker) ActiveConnections() uint32 {
 func (w *ServerWorker) Closed() bool {
 	return w.sessionManager.Closed()
 }
+func (w *ServerWorker) Close() error {
+	var errs []error
+	w.sessionManager.Close()
+	errs = append(errs, common.Interrupt(w.link.Writer))
+	errs = append(errs, common.Interrupt(w.link.Reader))
+	return errors.Combine(errs...)
+}
 
 func (w *ServerWorker) handleStatusKeepAlive(meta *FrameMetadata, reader *buf.BufferedReader) error {
 	if meta.Option.Has(OptionData) {

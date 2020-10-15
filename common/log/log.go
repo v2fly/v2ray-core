@@ -1,6 +1,7 @@
 package log // import "v2ray.com/core/common/log"
 
 import (
+	"fmt"
 	"sync"
 
 	"v2ray.com/core/common/serial"
@@ -30,6 +31,30 @@ func (m *GeneralMessage) String() string {
 // Record writes a message into log stream.
 func Record(msg Message) {
 	logHandler.Handle(msg)
+}
+func Info(format string, v ...interface{}){
+	Record(&GeneralMessage{
+		Severity: Severity_Info,
+		Content: fmt.Sprintf(format, v...),
+	})
+}
+func Debug(format string, v ...interface{}){
+	Record(&GeneralMessage{
+		Severity: Severity_Debug,
+		Content: fmt.Sprintf(format, v...),
+	})
+}
+func Warn(format string, v ...interface{}){
+	Record(&GeneralMessage{
+		Severity: Severity_Warning,
+		Content: fmt.Sprintf(format, v...),
+	})
+}
+func Error(format string, v ...interface{}){
+	Record(&GeneralMessage{
+		Severity: Severity_Error,
+		Content: fmt.Sprintf(format, v...),
+	})
 }
 
 var (

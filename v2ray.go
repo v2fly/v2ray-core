@@ -236,6 +236,7 @@ func initInstanceWithConfig(config *Config, server *Instance) (bool, error) {
 	return false, nil
 }
 
+
 // Type implements common.HasType.
 func (s *Instance) Type() interface{} {
 	return ServerType()
@@ -334,6 +335,63 @@ func (s *Instance) Start() error {
 
 	s.running = true
 	for _, f := range s.features {
+		if err := f.Start(); err != nil {
+			return err
+		}
+	}
+
+	newError("V2Ray ", Version(), " started").AtWarning().WriteToLog()
+
+	return nil
+}
+
+func (s *Instance) Reload(config *Config) error {
+
+	s.access.Lock()
+	defer s.access.Unlock()
+
+	ctx := s.ctx
+	ctx = context.WithValue(ctx, v2rayKey, s)
+
+
+	s.running = false
+	var errors []interface{}
+	for _, f := range s.features {
+		if _, ok := f.(common.Reloadable); ok  {
+			continue
+		}
+		if err := f.Close(); err != nil {
+			errors = append(errors, err)
+		}
+	}
+	if len(errors) > 0 {
+		return newError("failed to close all features").Base(newError(serial.Concat(errors...)))
+	}
+
+	reloadableFeatures := make([]features.Feature, 0, 0)
+	for _, f := range s.features {
+		if _, ok := f.(common.Reloadable); ok {
+			reloadableFeatures = append(reloadableFeatures, f)
+		}
+	}
+
+	// 清空之前的记录
+	s.features = s.features[0:0]
+	s.featureResolutions = s.featureResolutions[0:0]
+
+	if err, done := initInstanceWithConfig(config, s); done {
+		return err
+	}
+	s.running = true
+	for idx, f := range s.features {
+		if r, ok := f.(common.Reloadable); ok {
+			oldFeature := getFeature(reloadableFeatures, reflect.TypeOf(f.Type()))
+			oldFeature.(common.Reloadable).Reload(ctx, r.GetInitConfig())
+			s.features[idx] = oldFeature
+			// todo 需要行的feature需要引用这个旧的feature的问题
+
+			continue
+		}
 		if err := f.Start(); err != nil {
 			return err
 		}

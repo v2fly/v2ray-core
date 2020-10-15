@@ -5,6 +5,7 @@ package reverse
 import (
 	"context"
 	"time"
+	"v2ray.com/core/common/errors"
 
 	"github.com/golang/protobuf/proto"
 	"v2ray.com/core/common/mux"
@@ -90,7 +91,13 @@ func (b *Bridge) Start() error {
 }
 
 func (b *Bridge) Close() error {
-	return b.monitorTask.Close()
+	var errs []error
+
+	errs = append(errs, b.monitorTask.Close())
+	for _, w := range b.workers {
+		errs = append(errs, w.Close())
+	}
+	return errors.Combine(errs...)
 }
 
 type BridgeWorker struct {
@@ -137,7 +144,7 @@ func (w *BridgeWorker) Start() error {
 }
 
 func (w *BridgeWorker) Close() error {
-	return nil
+	return w.worker.Close()
 }
 
 func (w *BridgeWorker) IsActive() bool {

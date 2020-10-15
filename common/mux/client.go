@@ -206,6 +206,10 @@ func (m *ClientWorker) Closed() bool {
 	return m.done.Done()
 }
 
+func (m *ClientWorker) Close() error {
+	return m.done.Close()
+}
+
 func (m *ClientWorker) monitor() {
 	timer := time.NewTicker(time.Second * 16)
 	defer timer.Stop()

@@ -62,6 +62,13 @@ copyconf() {
 		tar c --exclude "*.dat" --exclude "systemd/**" . | tar x -C "$TMP"
 	fi
 }
+copypublic() {
+	echo ">>> Copying public..."
+	mkdir -p "$TMP/public"
+	cp -r  ./public/dist "$TMP/public/"
+	cp ./release/config/pac_template.js "$TMP/"
+	#cp ./release/config/*.dat "$TMP/"
+}
 
 packzip() {
 	echo ">>> Generating zip package"
@@ -149,6 +156,7 @@ fi
 if [[ $noconf != 1 ]]; then
 	copyconf
 fi
+copypublic
 
 if [[ $pkg == "zip" ]]; then
 	packzip

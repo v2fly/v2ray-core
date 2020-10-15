@@ -1,6 +1,9 @@
 package common
 
-import "v2ray.com/core/common/errors"
+import (
+	"context"
+	"v2ray.com/core/common/errors"
+)
 
 // Closable is the interface for objects that can release its resources.
 //
@@ -8,6 +11,11 @@ import "v2ray.com/core/common/errors"
 type Closable interface {
 	// Close release all resources used by this object, including goroutines.
 	Close() error
+}
+
+type Reloadable interface {
+	Reload(ctx context.Context, cfg interface{}) error
+	GetInitConfig() interface{}
 }
 
 // Interruptible is an interface for objects that can be stopped before its completion.

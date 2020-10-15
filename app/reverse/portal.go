@@ -6,6 +6,7 @@ import (
 	"context"
 	"sync"
 	"time"
+	"v2ray.com/core/common/errors"
 
 	"github.com/golang/protobuf/proto"
 	"v2ray.com/core/common"
@@ -60,7 +61,11 @@ func (p *Portal) Start() error {
 }
 
 func (p *Portal) Close() error {
-	return p.ohm.RemoveHandler(context.Background(), p.tag)
+	var errs []error
+
+	errs = append(errs, p.ohm.RemoveHandler(context.Background(), p.tag))
+	errs = append(errs, p.picker.Close())
+	return errors.Combine(errs...)
 }
 
 func (p *Portal) HandleConnection(ctx context.Context, link *transport.Link) error {
@@ -191,6 +196,20 @@ func (p *StaticMuxPicker) AddWorker(worker *PortalWorker) {
 	p.workers = append(p.workers, worker)
 }
 
+func (p *StaticMuxPicker) Close() error {
+	p.access.Lock()
+	defer p.access.Unlock()
+	var errs []error
+
+	errs = append(errs, p.cTask.Close())
+
+	for _, w := range p.workers {
+		errs = append(errs, w.Close())
+	}
+
+	return errors.Combine(errs...)
+}
+
 type PortalWorker struct {
 	client   *mux.ClientWorker
 	control  *task.Periodic
@@ -263,4 +282,8 @@ func (w *PortalWorker) IsFull() bool {
 
 func (w *PortalWorker) Closed() bool {
 	return w.client.Closed()
+}
+func (w *PortalWorker) Close() error {
+	w.control.Close()
+	return w.client.Close()
 }

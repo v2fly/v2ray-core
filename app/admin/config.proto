@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package v2ray.core.app.admin;
+option csharp_namespace = "V2Ray.Core.App.Admin";
+option go_package = "admin";
+option java_package = "com.v2ray.core.app.admin";
+option java_multiple_files = true;
+
+message Account {
+  string userName = 1;
+  string password = 2;
+}
+// Config is the settings for Commander.
+message Config {
+  string addr = 1;
+  string contextPath = 2;
+  string publicPath = 3;
+  repeated Account accounts = 4;
+}

@@ -44,7 +44,9 @@ type tcpWorker struct {
 
 	hub internet.Listener
 
-	ctx context.Context
+	ctx   context.Context
+	connsAccess       sync.RWMutex
+	conns []internet.Connection
 }
 
 func getTProxyType(s *internet.MemoryStreamConfig) internet.SocketConfig_TProxyMode {
@@ -96,12 +98,26 @@ func (w *tcpWorker) callback(conn internet.Connection) {
 			WriteCounter: w.downlinkCounter,
 		}
 	}
+	w.connsAccess.Lock()
+	w.conns = append(w.conns, conn)
+	w.connsAccess.Unlock()
 	if err := w.proxy.Process(ctx, net.Network_TCP, conn, w.dispatcher); err != nil {
 		newError("connection ends").Base(err).WriteToLog(session.ExportIDToError(ctx))
 	}
 	cancel()
 	if err := conn.Close(); err != nil {
 		newError("failed to close connection").Base(err).WriteToLog(session.ExportIDToError(ctx))
+	}
+	w.connsAccess.Lock()
+	defer w.connsAccess.Unlock()
+	for idx, connection := range w.conns {
+		if connection == conn {
+			if idx == len(w.conns)-1 {
+				w.conns = w.conns[0:idx]
+			} else {
+				w.conns = append(w.conns[0:idx], w.conns[idx:]...)
+			}
+		}
 	}
 }
 
@@ -133,6 +149,11 @@ func (w *tcpWorker) Close() error {
 	}
 	if len(errors) > 0 {
 		return newError("failed to close all resources").Base(newError(serial.Concat(errors...)))
+	}
+	w.connsAccess.Lock()
+	defer w.connsAccess.Unlock()
+	for _, conn := range w.conns {
+		conn.Close()
 	}
 
 	return nil

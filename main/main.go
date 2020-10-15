@@ -3,6 +3,7 @@ package main
 //go:generate go run v2ray.com/core/common/errors/errorgen
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -66,6 +67,7 @@ func readConfDir(dirPath string) {
 	}
 }
 
+
 func getConfigFilePath() (cmdarg.Arg, error) {
 	if dirExists(configDir) {
 		log.Println("Using confdir from arg:", configDir)
@@ -115,8 +117,10 @@ func startV2Ray() (core.Server, error) {
 	if err != nil {
 		return nil, newError("failed to read config files: [", configFiles.String(), "]").Base(err)
 	}
-
-	server, err := core.New(config)
+	ctx := context.Background()
+	// 保存配置文件名，给admin模块使用
+	ctx = context.WithValue(ctx, "config_file", configFiles[0])
+	server, err := core.NewWithContext(config, ctx)
 	if err != nil {
 		return nil, newError("failed to create server").Base(err)
 	}
