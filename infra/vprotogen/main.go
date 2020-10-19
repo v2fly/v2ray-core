@@ -20,11 +20,15 @@ func main() {
 	}
 
 	GOBIN := common.GetGOBIN()
-	protoc := core.ProtocMap[runtime.GOOS]
-
 	EXE := ""
 	if runtime.GOOS == "windows" {
 		EXE = ".exe"
+	}
+	protoc := "protoc" + EXE
+
+	if err := exec.Command(protoc).Run(); err != nil {
+		fmt.Println("Make sure that you have `" + protoc + "` in your system or current path, please visit https://github.com/protocolbuffers/protobuf/releases")
+		os.Exit(1)
 	}
 
 	protoFilesMap := make(map[string][]string)
