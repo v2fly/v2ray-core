@@ -8,7 +8,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"v2ray.com/core/common"
 	"v2ray.com/core/infra/conf/serial"
-	"v2ray.com/core/infra/control"
+	"v2ray.com/core/infra/control/command"
 )
 
 type ConfigCommand struct{}
@@ -17,11 +17,11 @@ func (c *ConfigCommand) Name() string {
 	return "config"
 }
 
-func (c *ConfigCommand) Description() control.Description {
-	return control.Description{
+func (c *ConfigCommand) Description() command.Description {
+	return command.Description{
 		Short: "Convert config among different formats.",
 		Usage: []string{
-			"v2ctl config",
+			command.ExecutableName + " config",
 		},
 	}
 }
@@ -44,5 +44,5 @@ func (c *ConfigCommand) Execute(args []string) error {
 }
 
 func init() {
-	common.Must(control.RegisterCommand(&ConfigCommand{}))
+	common.Must(command.RegisterCommand(&ConfigCommand{}))
 }

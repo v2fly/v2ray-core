@@ -1,6 +1,7 @@
-package control
+package commands
 
 import (
+	"flag"
 	"net/http"
 	"net/url"
 	"os"
@@ -9,6 +10,7 @@ import (
 
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
+	"v2ray.com/core/infra/control/command"
 )
 
 type FetchCommand struct{}
@@ -17,14 +19,19 @@ func (c *FetchCommand) Name() string {
 	return "fetch"
 }
 
-func (c *FetchCommand) Description() Description {
-	return Description{
+func (c *FetchCommand) Description() command.Description {
+	return command.Description{
 		Short: "Fetch resources",
-		Usage: []string{"v2ctl fetch <url>"},
+		Usage: []string{command.ExecutableName + " fetch <url>"},
 	}
 }
 
 func (c *FetchCommand) Execute(args []string) error {
+	// still parse flags for flag.ErrHelp
+	fs := flag.NewFlagSet(c.Name(), flag.ContinueOnError)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 	if len(args) < 1 {
 		return newError("empty url")
 	}
@@ -74,5 +81,5 @@ func FetchHTTPContent(target string) ([]byte, error) {
 }
 
 func init() {
-	common.Must(RegisterCommand(&FetchCommand{}))
+	common.Must(command.RegisterCommand(&FetchCommand{}))
 }

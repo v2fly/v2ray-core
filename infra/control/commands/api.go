@@ -1,4 +1,4 @@
-package control
+package commands
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 	logService "v2ray.com/core/app/log/command"
 	statsService "v2ray.com/core/app/stats/command"
 	"v2ray.com/core/common"
+	"v2ray.com/core/infra/control/command"
 )
 
 type APICommand struct{}
@@ -22,11 +23,11 @@ func (c *APICommand) Name() string {
 	return "api"
 }
 
-func (c *APICommand) Description() Description {
-	return Description{
+func (c *APICommand) Description() command.Description {
+	return command.Description{
 		Short: "Call V2Ray API",
 		Usage: []string{
-			"v2ctl api [--server=127.0.0.1:8080] Service.Method Request",
+			command.ExecutableName + " api [--server=127.0.0.1:8080] Service.Method Request",
 			"Call an API in an V2Ray process.",
 			"The following methods are currently supported:",
 			"\tLoggerService.RestartLogger",
@@ -34,10 +35,10 @@ func (c *APICommand) Description() Description {
 			"\tStatsService.QueryStats",
 			"API calls in this command have a timeout to the server of 3 seconds.",
 			"Examples:",
-			"v2ctl api --server=127.0.0.1:8080 LoggerService.RestartLogger '' ",
-			"v2ctl api --server=127.0.0.1:8080 StatsService.QueryStats 'pattern: \"\" reset: false'",
-			"v2ctl api --server=127.0.0.1:8080 StatsService.GetStats 'name: \"inbound>>>statin>>>traffic>>>downlink\" reset: false'",
-			"v2ctl api --server=127.0.0.1:8080 StatsService.GetSysStats ''",
+			command.ExecutableName + " api --server=127.0.0.1:8080 LoggerService.RestartLogger '' ",
+			command.ExecutableName + " api --server=127.0.0.1:8080 StatsService.QueryStats 'pattern: \"\" reset: false'",
+			command.ExecutableName + " api --server=127.0.0.1:8080 StatsService.GetStats 'name: \"inbound>>>statin>>>traffic>>>downlink\" reset: false'",
+			command.ExecutableName + " api --server=127.0.0.1:8080 StatsService.GetSysStats ''",
 		},
 	}
 }
@@ -154,5 +155,5 @@ func callStatsService(ctx context.Context, conn *grpc.ClientConn, method string,
 }
 
 func init() {
-	common.Must(RegisterCommand(&APICommand{}))
+	common.Must(command.RegisterCommand(&APICommand{}))
 }

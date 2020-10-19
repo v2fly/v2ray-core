@@ -18,6 +18,7 @@ import (
 	"v2ray.com/core"
 	"v2ray.com/core/common/cmdarg"
 	"v2ray.com/core/common/platform"
+	"v2ray.com/core/infra/control/command"
 	_ "v2ray.com/core/main/distro/all"
 )
 
@@ -133,7 +134,51 @@ func printVersion() {
 	}
 }
 
+func getCommandName() string {
+	if len(os.Args) > 1 {
+		name := os.Args[1]
+		if !strings.HasPrefix(name, "-") {
+			return name
+		}
+	}
+	return ""
+}
+
+func executeIfControlCommand() {
+	if count := command.CommandsCount(); count == 0 {
+		return
+	}
+	// show commands usage on 'v2ray -h'
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	err := fs.Parse(os.Args[1:])
+	if err == flag.ErrHelp {
+		fmt.Println("")
+		fmt.Println(command.ExecutableName, "<command>")
+		fmt.Println("Available commands:")
+		command.PrintUsage()
+		fmt.Println("")
+		return
+	}
+	if name := getCommandName(); name != "" {
+		cmd := command.GetCommand(name)
+		if cmd != nil {
+			command.ExecuteCommand(cmd)
+			os.Exit(0)
+		} else {
+			fmt.Fprintln(os.Stderr, "Unknown command:", name)
+			fmt.Fprintln(os.Stderr)
+
+			fmt.Println(command.ExecutableName, "<command>")
+			fmt.Println("Available commands:")
+			command.PrintUsage()
+			os.Exit(-1)
+		}
+	}
+}
+
 func main() {
+	executeIfControlCommand()
+
 	flag.Parse()
 
 	printVersion()

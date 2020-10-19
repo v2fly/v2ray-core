@@ -1,4 +1,4 @@
-package control
+package commands
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/protocol/tls/cert"
 	"v2ray.com/core/common/task"
+	"v2ray.com/core/infra/control/command"
 )
 
 type stringList []string
@@ -40,11 +41,11 @@ func (c *CertificateCommand) Name() string {
 	return "cert"
 }
 
-func (c *CertificateCommand) Description() Description {
-	return Description{
+func (c *CertificateCommand) Description() command.Description {
+	return command.Description{
 		Short: "Generate TLS certificates.",
 		Usage: []string{
-			"v2ctl cert [--ca] [--domain=v2ray.com] [--expire=240h]",
+			command.ExecutableName + " cert [--ca] [--domain=v2ray.com] [--expire=240h]",
 			"Generate new TLS certificate",
 			"--ca The new certificate is a CA certificate",
 			"--domain Common name for the certificate",
@@ -135,5 +136,5 @@ func (c *CertificateCommand) Execute(args []string) error {
 }
 
 func init() {
-	common.Must(RegisterCommand(&CertificateCommand{}))
+	common.Must(command.RegisterCommand(&CertificateCommand{}))
 }

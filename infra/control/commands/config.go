@@ -1,9 +1,11 @@
-package control
+package commands
 
 import (
 	"bytes"
+	"flag"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 
@@ -11,7 +13,10 @@ import (
 	"v2ray.com/core/common"
 	"v2ray.com/core/infra/conf"
 	"v2ray.com/core/infra/conf/serial"
+	"v2ray.com/core/infra/control/command"
 )
+
+var ctllog = log.New(os.Stderr, "v2ctl> ", 0)
 
 // ConfigCommand is the json to pb convert struct
 type ConfigCommand struct{}
@@ -22,15 +27,20 @@ func (c *ConfigCommand) Name() string {
 }
 
 // Description for help usage
-func (c *ConfigCommand) Description() Description {
-	return Description{
-		Short: "merge multiple json config",
-		Usage: []string{"v2ctl config config.json c1.json c2.json <url>.json"},
+func (c *ConfigCommand) Description() command.Description {
+	return command.Description{
+		Short: "Merge multiple json config",
+		Usage: []string{command.ExecutableName + " config config.json c1.json c2.json <url>.json"},
 	}
 }
 
 // Execute real work here.
 func (c *ConfigCommand) Execute(args []string) error {
+	// still parse flags for flag.ErrHelp
+	fs := flag.NewFlagSet(c.Name(), flag.ContinueOnError)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 	if len(args) < 1 {
 		return newError("empty config list")
 	}
@@ -86,5 +96,5 @@ func (c *ConfigCommand) LoadArg(arg string) (out io.Reader, err error) {
 }
 
 func init() {
-	common.Must(RegisterCommand(&ConfigCommand{}))
+	common.Must(command.RegisterCommand(&ConfigCommand{}))
 }

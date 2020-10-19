@@ -1,4 +1,4 @@
-package control
+package commands
 
 import (
 	"flag"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/xiaokangwang/VSign/signerVerify"
 	"v2ray.com/core/common"
+	"v2ray.com/core/infra/control/command"
 )
 
 type VerifyCommand struct{}
@@ -14,11 +15,11 @@ func (c *VerifyCommand) Name() string {
 	return "verify"
 }
 
-func (c *VerifyCommand) Description() Description {
-	return Description{
+func (c *VerifyCommand) Description() command.Description {
+	return command.Description{
 		Short: "Verify if a binary is officially signed.",
 		Usage: []string{
-			"v2ctl verify --sig=<sig-file> file...",
+			command.ExecutableName + " verify --sig=<sig-file> file...",
 			"Verify the file officially signed by V2Ray.",
 		},
 	}
@@ -59,5 +60,5 @@ func (c *VerifyCommand) Execute(args []string) error {
 }
 
 func init() {
-	common.Must(RegisterCommand(&VerifyCommand{}))
+	common.Must(command.RegisterCommand(&VerifyCommand{}))
 }

@@ -1,4 +1,4 @@
-package control
+package commands
 
 import (
 	"crypto/tls"
@@ -8,6 +8,7 @@ import (
 	"net"
 
 	"v2ray.com/core/common"
+	"v2ray.com/core/infra/control/command"
 )
 
 type TLSPingCommand struct{}
@@ -16,10 +17,10 @@ func (c *TLSPingCommand) Name() string {
 	return "tlsping"
 }
 
-func (c *TLSPingCommand) Description() Description {
-	return Description{
+func (c *TLSPingCommand) Description() command.Description {
+	return command.Description{
 		Short: "Ping the domain with TLS handshake",
-		Usage: []string{"v2ctl tlsping <domain> --ip <ip>"},
+		Usage: []string{command.ExecutableName + " tlsping <domain> --ip <ip>"},
 	}
 }
 
@@ -37,7 +38,7 @@ func (c *TLSPingCommand) Execute(args []string) error {
 	ipStr := fs.String("ip", "", "IP address of the domain")
 
 	if err := fs.Parse(args); err != nil {
-		return newError("flag parsing").Base(err)
+		return err
 	}
 
 	if fs.NArg() < 1 {
@@ -115,5 +116,5 @@ func (c *TLSPingCommand) Execute(args []string) error {
 }
 
 func init() {
-	common.Must(RegisterCommand(&TLSPingCommand{}))
+	common.Must(command.RegisterCommand(&TLSPingCommand{}))
 }

@@ -1,9 +1,10 @@
-package control
+package command
 
 import (
+	"flag"
 	"fmt"
-	"log"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -19,8 +20,8 @@ type Command interface {
 }
 
 var (
+	ExecutableName  = "v2ctl"
 	commandRegistry = make(map[string]Command)
-	ctllog          = log.New(os.Stderr, "v2ctl> ", 0)
 )
 
 func RegisterCommand(cmd Command) error {
@@ -49,6 +50,38 @@ func PrintUsage() {
 		if _, ok := cmd.(hiddenCommand); ok {
 			continue
 		}
-		fmt.Println("   ", name, "\t\t\t", cmd.Description())
+		fmt.Println("   ", name, "\t\t\t", cmd.Description().Short)
 	}
+	fmt.Printf("\nUse \"%s <command> -h\" for more information.\n", ExecutableName)
+}
+
+func ExecuteCommand(cmd Command) {
+	if err := cmd.Execute(os.Args[2:]); err != nil {
+		hasError := false
+		if err != flag.ErrHelp {
+			fmt.Fprintln(os.Stderr, err.Error())
+			fmt.Fprintln(os.Stderr)
+			hasError = true
+		}
+
+		for _, line := range cmd.Description().Usage {
+			fmt.Println(line)
+		}
+
+		if hasError {
+			os.Exit(-1)
+		}
+	}
+}
+
+func CommandsCount() int {
+	return len(commandRegistry)
+}
+
+func init() {
+	exec, err := os.Executable()
+	if err != nil {
+		return
+	}
+	ExecutableName = path.Base(exec)
 }
