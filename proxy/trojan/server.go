@@ -204,7 +204,7 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 					xtlsConn.DirectMode = true
 				}
 			} else {
-				return newError("failed to enable XTLS").AtWarning()
+				return newError(`failed to enable XTLS, maybe "security" is not "xtls"`).AtWarning()
 			}
 		} else {
 			return newError("unable to use ", clientReader.Flow).AtWarning()

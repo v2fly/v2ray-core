@@ -21,9 +21,9 @@ var (
 
 const (
 	maxLength = 8192
-	// XRO: XTLS origin mode
+	// XRO is constant for XTLS origin mode
 	XRO = "xtls-rprx-origin"
-	// XRD: XTLS direct mode
+	// XRD is constant for XTLS direct mode
 	XRD = "xtls-rprx-direct"
 
 	commandTCP byte = 1
