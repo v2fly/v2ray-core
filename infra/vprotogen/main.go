@@ -26,7 +26,7 @@ func main() {
 	}
 	protoc := "protoc" + EXE
 
-	if err := exec.Command(protoc).Run(); err != nil {
+	if _, err := exec.LookPath(protoc); err != nil {
 		fmt.Println("Make sure that you have `" + protoc + "` in your system or current path, please visit https://github.com/protocolbuffers/protobuf/releases")
 		os.Exit(1)
 	}
