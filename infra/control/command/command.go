@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sort"
 	"strings"
 )
 
@@ -23,8 +24,9 @@ type Command interface {
 
 var (
 	// ExecutableName is the executable name of current binary
-	ExecutableName  = "v2ctl"
-	commandRegistry = make(map[string]Command)
+	ExecutableName    = "v2ctl"
+	commandRegistry   = make(map[string]Command)
+	commandListSorted []string
 )
 
 // RegisterCommand registers a command to registry
@@ -52,38 +54,41 @@ type hiddenCommand interface {
 
 // PrintUsage prints a list of usage for all commands
 func PrintUsage() {
-	for name, cmd := range commandRegistry {
+	if commandListSorted == nil {
+		commandListSorted = make([]string, 0)
+		for name := range commandRegistry {
+			commandListSorted = append(commandListSorted, name)
+			sort.Strings(commandListSorted)
+		}
+	}
+	fmt.Println(ExecutableName, "<command>")
+	fmt.Println("Available commands:")
+	for _, name := range commandListSorted {
+		cmd, _ := commandRegistry[name]
 		if _, ok := cmd.(hiddenCommand); ok {
 			continue
 		}
-		fmt.Println("   ", name, "\t\t\t", cmd.Description().Short)
+		fmt.Println("   ", name, "\t\t", cmd.Description().Short)
 	}
-	fmt.Printf("\nUse \"%s <command> -h\" for more information.\n", ExecutableName)
+	fmt.Printf("\nUse \"%s help <command>\" for more information.\n", ExecutableName)
 }
 
-// ExecuteCommand executes a command
-func ExecuteCommand(cmd Command) {
-	if err := cmd.Execute(os.Args[2:]); err != nil {
+// Execute executes a command with args
+func Execute(cmd Command, args []string) {
+	if err := cmd.Execute(args); err != nil {
 		hasError := false
-		if err != flag.ErrHelp {
+		if err == flag.ErrHelp {
+			for _, line := range cmd.Description().Usage {
+				fmt.Println(line)
+			}
+		} else {
 			fmt.Fprintln(os.Stderr, err.Error())
-			fmt.Fprintln(os.Stderr)
 			hasError = true
 		}
-
-		for _, line := range cmd.Description().Usage {
-			fmt.Println(line)
-		}
-
 		if hasError {
 			os.Exit(-1)
 		}
 	}
-}
-
-// CommandsCount returns commands count in the registry
-func CommandsCount() int {
-	return len(commandRegistry)
 }
 
 func init() {

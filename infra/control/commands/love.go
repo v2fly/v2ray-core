@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
+	"flag"
 	"fmt"
 
 	"v2ray.com/core/common"
@@ -28,7 +29,7 @@ func (*LoveCommand) Hidden() bool {
 }
 
 // Description of the command
-func (c *LoveCommand) Description() command.Description {
+func (*LoveCommand) Description() command.Description {
 	return command.Description{
 		Short: "",
 		Usage: []string{""},
@@ -36,7 +37,12 @@ func (c *LoveCommand) Description() command.Description {
 }
 
 // Execute the command
-func (*LoveCommand) Execute([]string) error {
+func (l *LoveCommand) Execute(args []string) error {
+	// still parse flags for flag.ErrHelp
+	fs := flag.NewFlagSet(l.Name(), flag.ContinueOnError)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 	c, err := base64.StdEncoding.DecodeString(content)
 	common.Must(err)
 	reader, err := gzip.NewReader(bytes.NewBuffer(c))

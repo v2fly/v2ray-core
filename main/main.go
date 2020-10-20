@@ -145,9 +145,6 @@ func getCommandName() string {
 }
 
 func executeIfControlCommand() {
-	if count := command.CommandsCount(); count == 0 {
-		return
-	}
 	// show commands usage on 'v2ray -h'
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	err := fs.Parse(os.Args[1:])
@@ -162,7 +159,7 @@ func executeIfControlCommand() {
 	if name := getCommandName(); name != "" {
 		cmd := command.GetCommand(name)
 		if cmd != nil {
-			command.ExecuteCommand(cmd)
+			command.Execute(cmd, os.Args[2:])
 			os.Exit(0)
 		} else {
 			fmt.Fprintln(os.Stderr, "Unknown command:", name)

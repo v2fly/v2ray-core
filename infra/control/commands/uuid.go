@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"flag"
 	"fmt"
 
 	"v2ray.com/core/common"
@@ -25,7 +26,12 @@ func (c *UUIDCommand) Description() command.Description {
 }
 
 // Execute the command
-func (c *UUIDCommand) Execute([]string) error {
+func (c *UUIDCommand) Execute(args []string) error {
+	// still parse flags for flag.ErrHelp
+	fs := flag.NewFlagSet(c.Name(), flag.ContinueOnError)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 	u := uuid.New()
 	fmt.Println(u.String())
 	return nil

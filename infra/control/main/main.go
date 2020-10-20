@@ -26,11 +26,9 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Unknown command:", name)
 		fmt.Fprintln(os.Stderr)
 
-		fmt.Println(command.ExecutableName, "<command>")
-		fmt.Println("Available commands:")
 		command.PrintUsage()
 		os.Exit(-1)
 		return
 	}
-	command.ExecuteCommand(cmd)
+	command.Execute(cmd, os.Args[2:])
 }
