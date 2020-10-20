@@ -64,7 +64,7 @@ func PrintUsage() {
 	fmt.Println(ExecutableName, "<command>")
 	fmt.Println("Available commands:")
 	for _, name := range commandListSorted {
-		cmd, _ := commandRegistry[name]
+		cmd := commandRegistry[name]
 		if _, ok := cmd.(hiddenCommand); ok {
 			continue
 		}

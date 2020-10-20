@@ -20,7 +20,16 @@ func main() {
 	}
 
 	GOBIN := common.GetGOBIN()
-	protoc := core.ProtocMap[runtime.GOOS]
+	EXE := ""
+	if runtime.GOOS == "windows" {
+		EXE = ".exe"
+	}
+	protoc := "protoc" + EXE
+
+	if _, err := exec.LookPath(protoc); err != nil {
+		fmt.Println("Make sure that you have `" + protoc + "` in your system or current path, please visit https://github.com/protocolbuffers/protobuf/releases")
+		os.Exit(1)
+	}
 
 	protoFilesMap := make(map[string][]string)
 	walkErr := filepath.Walk("./", func(path string, info os.FileInfo, err error) error {
@@ -50,9 +59,9 @@ func main() {
 		for _, relProtoFile := range files {
 			var args []string
 			if core.ProtoFilesUsingProtocGenGoFast[relProtoFile] {
-				args = []string{"--gofast_out", pwd, "--plugin", "protoc-gen-gofast=" + GOBIN + "/protoc-gen-gofast"}
+				args = []string{"--gofast_out", pwd, "--plugin", "protoc-gen-gofast=" + GOBIN + "/protoc-gen-gofast" + EXE}
 			} else {
-				args = []string{"--go_out", pwd, "--go-grpc_out", pwd, "--plugin", "protoc-gen-go=" + GOBIN + "/protoc-gen-go", "--plugin", "protoc-gen-go-grpc=" + GOBIN + "/protoc-gen-go-grpc"}
+				args = []string{"--go_out", pwd, "--go-grpc_out", pwd, "--plugin", "protoc-gen-go=" + GOBIN + "/protoc-gen-go" + EXE, "--plugin", "protoc-gen-go-grpc=" + GOBIN + "/protoc-gen-go-grpc" + EXE}
 			}
 			args = append(args, relProtoFile)
 			cmd := exec.Command(protoc, args...)

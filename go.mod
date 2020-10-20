@@ -4,13 +4,12 @@ go 1.15
 
 require (
 	github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165 // indirect
-	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.3
 	github.com/google/go-cmp v0.5.2
 	github.com/gorilla/websocket v1.4.2
 	github.com/lucas-clemente/quic-go v0.18.1
-	github.com/miekg/dns v1.1.33
+	github.com/miekg/dns v1.1.34
 	github.com/pires/go-proxyproto v0.2.0
 	github.com/seiflotfy/cuckoofilter v0.0.0-20201009151232-afb285a456ab
 	github.com/stretchr/testify v1.6.1
@@ -26,6 +25,3 @@ require (
 	google.golang.org/protobuf v1.25.0
 	h12.io/socks v1.0.1
 )
-
-// override gopkg.in/yaml.v2 version defined in github.com/ghodss/yaml
-replace gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.3.0
