@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165 // indirect
-	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.3
 	github.com/google/go-cmp v0.5.2
@@ -26,6 +25,3 @@ require (
 	google.golang.org/protobuf v1.25.0
 	h12.io/socks v1.0.1
 )
-
-// override gopkg.in/yaml.v2 version defined in github.com/ghodss/yaml
-replace gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.3.0

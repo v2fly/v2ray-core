@@ -63,12 +63,6 @@ import (
 	// The following line loads JSON internally
 	// _ "v2ray.com/core/main/jsonem"
 
-	// YAML config support. Choose only one from the two below.
-	// The following line loads YAML from v2ctl
-	_ "v2ray.com/core/main/yaml"
-	// The following line loads YAML internally
-	// _ "v2ray.com/core/main/yamlem"
-
 	// Load config from file or http(s)
 	_ "v2ray.com/core/main/confloader/external"
 )

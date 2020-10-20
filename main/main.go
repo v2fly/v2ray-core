@@ -100,8 +100,6 @@ func GetConfigFormat() string {
 	switch strings.ToLower(*format) {
 	case "pb", "protobuf":
 		return "protobuf"
-	case "yml", "yaml":
-		return "yaml"
 	default:
 		return "json"
 	}
