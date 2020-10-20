@@ -13,12 +13,15 @@ import (
 	"v2ray.com/core/infra/control/command"
 )
 
+// FetchCommand fetches resources
 type FetchCommand struct{}
 
+// Name of the command
 func (c *FetchCommand) Name() string {
 	return "fetch"
 }
 
+// Description of the command
 func (c *FetchCommand) Description() command.Description {
 	return command.Description{
 		Short: "Fetch resources",
@@ -26,6 +29,7 @@ func (c *FetchCommand) Description() command.Description {
 	}
 }
 
+// Execute the command
 func (c *FetchCommand) Execute(args []string) error {
 	// still parse flags for flag.ErrHelp
 	fs := flag.NewFlagSet(c.Name(), flag.ContinueOnError)

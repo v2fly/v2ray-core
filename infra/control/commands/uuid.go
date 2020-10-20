@@ -8,12 +8,15 @@ import (
 	"v2ray.com/core/infra/control/command"
 )
 
+// UUIDCommand generates new UUIDs
 type UUIDCommand struct{}
 
+// Name of the command
 func (c *UUIDCommand) Name() string {
 	return "uuid"
 }
 
+// Description of the command
 func (c *UUIDCommand) Description() command.Description {
 	return command.Description{
 		Short: "Generate new UUIDs",
@@ -21,6 +24,7 @@ func (c *UUIDCommand) Description() command.Description {
 	}
 }
 
+// Execute the command
 func (c *UUIDCommand) Execute([]string) error {
 	u := uuid.New()
 	fmt.Println(u.String())

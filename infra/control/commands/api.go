@@ -17,12 +17,15 @@ import (
 	"v2ray.com/core/infra/control/command"
 )
 
+// APICommand calls an API in an V2Ray process
 type APICommand struct{}
 
+// Name of the command
 func (c *APICommand) Name() string {
 	return "api"
 }
 
+// Description of the command
 func (c *APICommand) Description() command.Description {
 	return command.Description{
 		Short: "Call V2Ray API",
@@ -43,6 +46,7 @@ func (c *APICommand) Description() command.Description {
 	}
 }
 
+// Execute the command
 func (c *APICommand) Execute(args []string) error {
 	fs := flag.NewFlagSet(c.Name(), flag.ContinueOnError)
 

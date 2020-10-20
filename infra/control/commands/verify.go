@@ -9,12 +9,15 @@ import (
 	"v2ray.com/core/infra/control/command"
 )
 
+// VerifyCommand verify if a binary is officially signed
 type VerifyCommand struct{}
 
+// Name of the command
 func (c *VerifyCommand) Name() string {
 	return "verify"
 }
 
+// Description of the command
 func (c *VerifyCommand) Description() command.Description {
 	return command.Description{
 		Short: "Verify if a binary is officially signed.",
@@ -25,6 +28,7 @@ func (c *VerifyCommand) Description() command.Description {
 	}
 }
 
+// Execute the command
 func (c *VerifyCommand) Execute(args []string) error {
 	fs := flag.NewFlagSet(c.Name(), flag.ContinueOnError)
 

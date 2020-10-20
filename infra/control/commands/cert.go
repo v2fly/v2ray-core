@@ -34,13 +34,16 @@ type jsonCert struct {
 	Key         []string `json:"key"`
 }
 
+// CertificateCommand generate TLS certificates
 type CertificateCommand struct {
 }
 
+// Name of the command
 func (c *CertificateCommand) Name() string {
 	return "cert"
 }
 
+// Description of the command
 func (c *CertificateCommand) Description() command.Description {
 	return command.Description{
 		Short: "Generate TLS certificates.",
@@ -85,6 +88,7 @@ func (c *CertificateCommand) printFile(certificate *cert.Certificate, name strin
 	})
 }
 
+// Execute the command
 func (c *CertificateCommand) Execute(args []string) error {
 	fs := flag.NewFlagSet(c.Name(), flag.ContinueOnError)
 

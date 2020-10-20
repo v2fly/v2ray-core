@@ -11,12 +11,15 @@ import (
 	"v2ray.com/core/infra/control/command"
 )
 
+// TLSPingCommand ping the domain with TLS handshake
 type TLSPingCommand struct{}
 
+// Name of the command
 func (c *TLSPingCommand) Name() string {
 	return "tlsping"
 }
 
+// Description of the command
 func (c *TLSPingCommand) Description() command.Description {
 	return command.Description{
 		Short: "Ping the domain with TLS handshake",
@@ -33,6 +36,7 @@ func printCertificates(certs []*x509.Certificate) {
 	}
 }
 
+// Execute the command
 func (c *TLSPingCommand) Execute(args []string) error {
 	fs := flag.NewFlagSet(c.Name(), flag.ContinueOnError)
 	ipStr := fs.String("ip", "", "IP address of the domain")

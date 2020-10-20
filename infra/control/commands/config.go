@@ -18,15 +18,15 @@ import (
 
 var ctllog = log.New(os.Stderr, "v2ctl> ", 0)
 
-// ConfigCommand is the json to pb convert struct
+// ConfigCommand converts json to pb
 type ConfigCommand struct{}
 
-// Name for cmd usage
+// Name of the command
 func (c *ConfigCommand) Name() string {
 	return "config"
 }
 
-// Description for help usage
+// Description of the command
 func (c *ConfigCommand) Description() command.Description {
 	return command.Description{
 		Short: "Merge multiple json config",
@@ -34,7 +34,7 @@ func (c *ConfigCommand) Description() command.Description {
 	}
 }
 
-// Execute real work here.
+// Execute the command
 func (c *ConfigCommand) Execute(args []string) error {
 	// still parse flags for flag.ErrHelp
 	fs := flag.NewFlagSet(c.Name(), flag.ContinueOnError)
