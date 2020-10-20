@@ -173,8 +173,8 @@ github.com/viant/assertly v0.4.8/go.mod h1:aGifi++jvCrUaklKEKT0BU95igDNaqkvz+49u
 github.com/viant/toolbox v0.24.0/go.mod h1:OxMCG57V0PXuIP2HNQrtJf2CjqdmbrOx5EkMILuUhzM=
 github.com/xiaokangwang/VSign v0.0.0-20200828155424-dc1c86b73fbf h1:d4keT3SwLbrgnEe2zbtijPLgKE15n0ZbvJZzRH/a9GM=
 github.com/xiaokangwang/VSign v0.0.0-20200828155424-dc1c86b73fbf/go.mod h1:jTwBnzBuqZP3VX/Z65ErYb9zd4anQprSC7N38TmAp1E=
-github.com/xtls/go v0.0.0-20201007031018-d42c13c57942 h1:J+h5T5dtgVtszPN0vOFBzTapdVRZ16sXP6o6RPFNs20=
-github.com/xtls/go v0.0.0-20201007031018-d42c13c57942/go.mod h1:5TB2+k58gx4A4g2Nf5miSHNDF6CuAzHKpWBooLAshTs=
+github.com/xtls/go v0.0.0-20201020033950-18b68c051c9b h1:igZdLHXLyp3y2npR8owtuwaZ8m5oFrrXWnsObtG5wAk=
+github.com/xtls/go v0.0.0-20201020033950-18b68c051c9b/go.mod h1:5TB2+k58gx4A4g2Nf5miSHNDF6CuAzHKpWBooLAshTs=
 go.opencensus.io v0.18.0/go.mod h1:vKdFvxhtzZ9onBp9VKHK8z/sRpBMnKAsufL7wlDrCOA=
 go.opencensus.io v0.22.2/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=
 go.starlark.net v0.0.0-20201014215153-dff0ae5b4820 h1:GsJfRMJ3pXl+Pa5CkSQKIA1hNIo1u0M7I2+ff3RCCME=

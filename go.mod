@@ -14,7 +14,7 @@ require (
 	github.com/seiflotfy/cuckoofilter v0.0.0-20201009151232-afb285a456ab
 	github.com/stretchr/testify v1.6.1
 	github.com/xiaokangwang/VSign v0.0.0-20200828155424-dc1c86b73fbf
-	github.com/xtls/go v0.0.0-20201007031018-d42c13c57942
+	github.com/xtls/go v0.0.0-20201020033950-18b68c051c9b
 	go.starlark.net v0.0.0-20201014215153-dff0ae5b4820
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 	golang.org/x/net v0.0.0-20201016165138-7b1cca2348c0
