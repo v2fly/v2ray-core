@@ -100,26 +100,27 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		if destination.Address.Family().IsDomain() && destination.Address.Domain() == muxCoolAddress {
 			return newError(account.Flow + " doesn't support Mux").AtWarning()
 		}
-
 		if destination.Network == net.Network_UDP {
 			if !allowUDP443 && destination.Port == 443 {
 				return newError(account.Flow + " stopped UDP/443").AtInfo()
 			}
 		} else { // enable XTLS only if making TCP request
 			if xtlsConn, ok := iConn.(*xtls.Conn); ok {
-				connWriter.Flow = account.Flow
 				xtlsConn.RPRX = true
-
+				connWriter.Flow = account.Flow
 				if account.Flow == XRD {
 					xtlsConn.DirectMode = true
 				}
 			} else {
-				return newError(`failed to enable XTLS, maybe "security" is not "xtls"`).AtWarning()
+				return newError(`failed to use ` + account.Flow + `, maybe "security" is not "xtls"`).AtWarning()
 			}
 		}
 	case "":
+		if _, ok := iConn.(*xtls.Conn); ok {
+			panic(`To avoid misunderstanding, you must fill in Trojan "flow" when using XTLS.`)
+		}
 	default:
-		return newError("unsupported flow type: ", account.Flow).AtWarning()
+		return newError("unsupported flow " + account.Flow).AtWarning()
 	}
 
 	sessionPolicy := c.policyManager.ForLevel(user.Level)

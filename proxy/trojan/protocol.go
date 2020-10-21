@@ -21,17 +21,17 @@ var (
 
 const (
 	maxLength = 8192
-	// XRO is constant for XTLS origin mode
-	XRO = "xtls-rprx-origin"
 	// XRD is constant for XTLS direct mode
 	XRD = "xtls-rprx-direct"
+	// XRO is constant for XTLS origin mode
+	XRO = "xtls-rprx-origin"
 
 	commandTCP byte = 1
 	commandUDP byte = 3
 
-	// for xtls
+	// for XTLS
+	commandXRD byte = 0xf0 // XTLS direct mode
 	commandXRO byte = 0xf1 // XTLS origin mode
-	commandXRD byte = 0xf2 // XTLS direct mode
 )
 
 // ConnWriter is TCP Connection Writer Wrapper for trojan protocol

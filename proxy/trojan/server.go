@@ -194,24 +194,22 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 	case XRO, XRD:
 		if account.Flow == clientReader.Flow {
 			if destination.Address.Family().IsDomain() && destination.Address.Domain() == muxCoolAddress {
-				return newError("XTLS doesn't support Mux").AtWarning()
+				return newError(clientReader.Flow + " doesn't support Mux").AtWarning()
 			}
-
 			if xtlsConn, ok := iConn.(*xtls.Conn); ok {
 				xtlsConn.RPRX = true
-
 				if clientReader.Flow == XRD {
 					xtlsConn.DirectMode = true
 				}
 			} else {
-				return newError(`failed to enable XTLS, maybe "security" is not "xtls"`).AtWarning()
+				return newError(`failed to use ` + clientReader.Flow + `, maybe "security" is not "xtls"`).AtWarning()
 			}
 		} else {
 			return newError("unable to use ", clientReader.Flow).AtWarning()
 		}
 	case "":
 	default:
-		return newError("unsupported flow type: ", account.Flow).AtWarning()
+		return newError("unsupported flow " + account.Flow).AtWarning()
 	}
 
 	ctx = log.ContextWithAccessMessage(ctx, &log.AccessMessage{
