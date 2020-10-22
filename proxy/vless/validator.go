@@ -10,12 +10,14 @@ import (
 	"v2ray.com/core/common/uuid"
 )
 
+// Validator stores valid VLESS users.
 type Validator struct {
 	// Considering email's usage here, map + sync.Mutex/RWMutex may have better performance.
 	email sync.Map
 	users sync.Map
 }
 
+// Add a VLESS user, Email must be empty or unique.
 func (v *Validator) Add(u *protocol.MemoryUser) error {
 	if u.Email != "" {
 		_, loaded := v.email.LoadOrStore(strings.ToLower(u.Email), u)
@@ -27,6 +29,7 @@ func (v *Validator) Add(u *protocol.MemoryUser) error {
 	return nil
 }
 
+// Del a VLESS user with a non-empty Email.
 func (v *Validator) Del(e string) error {
 	if e == "" {
 		return newError("Email must not be empty.")
@@ -41,6 +44,7 @@ func (v *Validator) Del(e string) error {
 	return nil
 }
 
+// Get a VLESS user with UUID, nil if user doesn't exist.
 func (v *Validator) Get(id uuid.UUID) *protocol.MemoryUser {
 	u, _ := v.users.Load(id)
 	if u != nil {
