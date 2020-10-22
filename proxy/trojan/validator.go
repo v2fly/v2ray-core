@@ -22,9 +22,7 @@ func (v *Validator) Add(u *protocol.MemoryUser) error {
 			return newError("User ", u.Email, " already exists.")
 		}
 	}
-
-	account := u.Account.(*MemoryAccount)
-	v.users.Store(hexString(account.Key), u)
+	v.users.Store(hexString(u.Account.(*MemoryAccount).Key), u)
 	return nil
 }
 
@@ -39,9 +37,7 @@ func (v *Validator) Del(e string) error {
 		return newError("User ", e, " not found.")
 	}
 	v.email.Delete(le)
-
-	account := u.(*protocol.MemoryUser).Account.(*MemoryAccount)
-	v.users.Delete(hexString(account.Key))
+	v.users.Delete(hexString(u.(*protocol.MemoryUser).Account.(*MemoryAccount).Key))
 	return nil
 }
 
