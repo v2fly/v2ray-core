@@ -99,11 +99,6 @@ type TrojanServerConfig struct {
 // Build implements Buildable
 func (c *TrojanServerConfig) Build() (proto.Message, error) {
 	config := new(trojan.ServerConfig)
-
-	if len(c.Clients) == 0 {
-		return nil, newError("No trojan user settings.")
-	}
-
 	config.Users = make([]*protocol.User, len(c.Clients))
 	for idx, rawUser := range c.Clients {
 		user := new(protocol.User)
