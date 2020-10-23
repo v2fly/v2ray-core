@@ -72,8 +72,8 @@ func FetchHTTPContent(target string) ([]byte, error) {
 	return content, nil
 }
 
-func ExtConfigLoader(files []string) (io.Reader, error) {
-	buf, err := ctlcmd.Run(append([]string{"config"}, files...), os.Stdin)
+func ExtConfigLoader(files []string, reader io.Reader) (io.Reader, error) {
+	buf, err := ctlcmd.Run(append([]string{"config"}, files...), reader)
 	if err != nil {
 		return nil, err
 	}
