@@ -17,10 +17,10 @@ require (
 	github.com/xtls/go v0.0.0-20201020033950-18b68c051c9b
 	go.starlark.net v0.0.0-20201014215153-dff0ae5b4820
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
-	golang.org/x/net v0.0.0-20201016165138-7b1cca2348c0
-	golang.org/x/sync v0.0.0-20201008141435-b3e1573b7520
-	golang.org/x/sys v0.0.0-20201017003518-b09fb700fbb7
-	google.golang.org/genproto v0.0.0-20201015140912-32ed001d685c // indirect
+	golang.org/x/net v0.0.0-20201022231255-08b38378de70
+	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+	golang.org/x/sys v0.0.0-20201022201747-fb209a7c41cd
+	google.golang.org/genproto v0.0.0-20201022181438-0ff5f38871d5 // indirect
 	google.golang.org/grpc v1.33.1
 	google.golang.org/protobuf v1.25.0
 	h12.io/socks v1.0.1
