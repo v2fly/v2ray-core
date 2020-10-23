@@ -11,6 +11,7 @@ import "common/protocol/server_spec.proto";
 
 message Account {
   string password = 1;
+  string flow = 2;
 }
 
 message Fallback {

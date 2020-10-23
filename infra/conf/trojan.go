@@ -21,6 +21,7 @@ type TrojanServerTarget struct {
 	Password string   `json:"password"`
 	Email    string   `json:"email"`
 	Level    byte     `json:"level"`
+	Flow     string   `json:"flow"`
 }
 
 // TrojanClientConfig is configuration of trojan servers
@@ -49,6 +50,7 @@ func (c *TrojanClientConfig) Build() (proto.Message, error) {
 		}
 		account := &trojan.Account{
 			Password: rec.Password,
+			Flow:     rec.Flow,
 		}
 		trojan := &protocol.ServerEndpoint{
 			Address: rec.Address.Build(),
@@ -84,6 +86,7 @@ type TrojanUserConfig struct {
 	Password string `json:"password"`
 	Level    byte   `json:"level"`
 	Email    string `json:"email"`
+	Flow     string `json:"flow"`
 }
 
 // TrojanServerConfig is Inbound configuration
@@ -96,16 +99,12 @@ type TrojanServerConfig struct {
 // Build implements Buildable
 func (c *TrojanServerConfig) Build() (proto.Message, error) {
 	config := new(trojan.ServerConfig)
-
-	if len(c.Clients) == 0 {
-		return nil, newError("No trojan user settings.")
-	}
-
 	config.Users = make([]*protocol.User, len(c.Clients))
 	for idx, rawUser := range c.Clients {
 		user := new(protocol.User)
 		account := &trojan.Account{
 			Password: rawUser.Password,
+			Flow:     rawUser.Flow,
 		}
 
 		user.Email = rawUser.Email

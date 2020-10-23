@@ -13,6 +13,7 @@ import (
 type MemoryAccount struct {
 	Password string
 	Key      []byte
+	Flow     string
 }
 
 // AsAccount implements protocol.AsAccount.
@@ -22,6 +23,7 @@ func (a *Account) AsAccount() (protocol.Account, error) {
 	return &MemoryAccount{
 		Password: password,
 		Key:      key,
+		Flow:     a.Flow,
 	}, nil
 }
 
