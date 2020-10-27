@@ -23,7 +23,10 @@ func (c *TLSPingCommand) Name() string {
 func (c *TLSPingCommand) Description() command.Description {
 	return command.Description{
 		Short: "Ping the domain with TLS handshake",
-		Usage: []string{command.ExecutableName + " tlsping <domain> --ip <ip>"},
+		Usage: []string{
+			"Ping the domain with TLS handshake",
+			fmt.Sprintf("  %s %s <domain> --ip <ip>", command.ExecutableName, c.Name()),
+		},
 	}
 }
 

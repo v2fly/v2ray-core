@@ -24,9 +24,10 @@ type Command interface {
 
 var (
 	// ExecutableName is the executable name of current binary
-	ExecutableName    = "v2ctl"
-	commandRegistry   = make(map[string]Command)
-	commandListSorted []string
+	ExecutableName     = "v2ctl"
+	commandRegistry    = make(map[string]Command)
+	commandListSorted  []string
+	commandColumnWidth = 12 // here set the minimal width of command column
 )
 
 // RegisterCommand registers a command to registry
@@ -58,8 +59,12 @@ func PrintUsage() {
 		commandListSorted = make([]string, 0)
 		for name := range commandRegistry {
 			commandListSorted = append(commandListSorted, name)
-			sort.Strings(commandListSorted)
+			len := len(name)
+			if commandColumnWidth < len {
+				commandColumnWidth = len
+			}
 		}
+		sort.Strings(commandListSorted)
 	}
 	fmt.Println(ExecutableName, "<command>")
 	fmt.Println("Available commands:")
@@ -68,7 +73,8 @@ func PrintUsage() {
 		if _, ok := cmd.(hiddenCommand); ok {
 			continue
 		}
-		fmt.Println("   ", name, "\t\t", cmd.Description().Short)
+		nameCol := name + strings.Repeat(" ", commandColumnWidth-len(name))
+		fmt.Println("   ", nameCol, cmd.Description().Short)
 	}
 	fmt.Printf("\nUse \"%s help <command>\" for more information.\n", ExecutableName)
 }

@@ -33,7 +33,7 @@ var (
 	 */
 	_ = func() bool {
 
-		fs.Var(&configFiles, "config", "Config file for V2Ray. Multiple assign is accepted (only json). Latter ones overrides the former ones.")
+		fs.Var(&configFiles, "config", "Config path for V2Ray.")
 		fs.Var(&configFiles, "c", "Short alias of -config")
 		fs.StringVar(&configDir, "confdir", "", "A dir with multiple json config")
 
@@ -44,34 +44,34 @@ var (
 type runCommand struct{}
 
 // Name of the command
-func (r *runCommand) Name() string {
+func (c *runCommand) Name() string {
 	return "run"
 }
 
 // Description of the command
-func (r *runCommand) Description() command.Description {
+func (c *runCommand) Description() command.Description {
 	return command.Description{
 		Short: "run v2ray, the default command",
 		Usage: []string{
 			"",
 			"'run' is the default command, the two command lines below are equivalent:",
 			"",
-			"  " + command.ExecutableName + " run -c config.json",
-			"  " + command.ExecutableName + " -c config.json",
+			fmt.Sprintf("  %s %s -c config.json", command.ExecutableName, c.Name()),
+			fmt.Sprintf("  %s -c config.json", command.ExecutableName),
 			"",
 			"More examples:",
 			"",
-			"  " + command.ExecutableName + " -c config.json -c c1.json -c <url>.json -confdir <dir>",
-			"  " + command.ExecutableName + " -test <config>",
-			"  " + command.ExecutableName + " -version",
+			fmt.Sprintf("  %s -c config.json -c c1.json -c <url>.json -confdir <dir>", command.ExecutableName),
+			fmt.Sprintf("  %s -test -c config.json", command.ExecutableName),
+			fmt.Sprintf("  %s -version", command.ExecutableName),
 			"",
-			"For all available commands, run '" + command.ExecutableName + " help'",
+			fmt.Sprintf("For all available commands, run '%s help'", command.ExecutableName),
 		},
 	}
 }
 
 // Execute the command
-func (r *runCommand) Execute(args []string) error {
+func (c *runCommand) Execute(args []string) error {
 	if err := fs.Parse(args); err != nil {
 		return err
 	}

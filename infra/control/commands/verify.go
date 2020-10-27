@@ -2,6 +2,7 @@ package commands
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/xiaokangwang/VSign/signerVerify"
@@ -22,8 +23,8 @@ func (c *VerifyCommand) Description() command.Description {
 	return command.Description{
 		Short: "Verify if a binary is officially signed.",
 		Usage: []string{
-			command.ExecutableName + " verify --sig=<sig-file> file...",
-			"Verify the file officially signed by V2Ray.",
+			"Verify if a binary is officially signed.",
+			fmt.Sprintf("  %s %s --sig=<sig-file> file...", command.ExecutableName, c.Name()),
 		},
 	}
 }

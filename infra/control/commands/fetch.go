@@ -2,6 +2,7 @@ package commands
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -25,7 +26,9 @@ func (c *FetchCommand) Name() string {
 func (c *FetchCommand) Description() command.Description {
 	return command.Description{
 		Short: "Fetch resources",
-		Usage: []string{command.ExecutableName + " fetch <url>"},
+		Usage: []string{
+			fmt.Sprintf("  %s %s <url>", command.ExecutableName, c.Name()),
+		},
 	}
 }
 

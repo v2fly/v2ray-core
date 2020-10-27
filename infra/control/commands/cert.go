@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -48,11 +49,11 @@ func (c *CertificateCommand) Description() command.Description {
 	return command.Description{
 		Short: "Generate TLS certificates.",
 		Usage: []string{
-			command.ExecutableName + " cert [--ca] [--domain=v2ray.com] [--expire=240h]",
 			"Generate new TLS certificate",
-			"--ca The new certificate is a CA certificate",
-			"--domain Common name for the certificate",
-			"--expire Time until certificate expires. 240h = 10 days.",
+			fmt.Sprintf("  %s %s [--ca] [--domain=v2ray.com] [--expire=240h]", command.ExecutableName, c.Name()),
+			"  --ca The new certificate is a CA certificate",
+			"  --domain Common name for the certificate",
+			"  --expire Time until certificate expires. 240h = 10 days.",
 		},
 	}
 }

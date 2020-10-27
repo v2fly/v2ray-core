@@ -3,6 +3,7 @@ package commands
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -29,8 +30,10 @@ func (c *ConfigCommand) Name() string {
 // Description of the command
 func (c *ConfigCommand) Description() command.Description {
 	return command.Description{
-		Short: "Merge multiple json config",
-		Usage: []string{command.ExecutableName + " config config.json c1.json c2.json <url>.json"},
+		Short: "Convert multiple json config to protobuff",
+		Usage: []string{
+			fmt.Sprintf("  %s %s config.json c1.json c2.json <url>.json", command.ExecutableName, c.Name()),
+		},
 	}
 }
 

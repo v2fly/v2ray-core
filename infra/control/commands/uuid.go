@@ -21,7 +21,9 @@ func (c *UUIDCommand) Name() string {
 func (c *UUIDCommand) Description() command.Description {
 	return command.Description{
 		Short: "Generate new UUIDs",
-		Usage: []string{command.ExecutableName + " uuid"},
+		Usage: []string{
+			fmt.Sprintf("  %s %s", command.ExecutableName, c.Name()),
+		},
 	}
 }
 
