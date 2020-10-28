@@ -7,7 +7,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
 )
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 // Here is some modification needs to be done before update quic vendor.
 // * use bytespool in buffer_pool.go
