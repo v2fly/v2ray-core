@@ -41,7 +41,7 @@ type CertificateCommand struct {
 
 // Name of the command
 func (c *CertificateCommand) Name() string {
-	return "cert"
+	return "tlscert"
 }
 
 // Description of the command

@@ -23,19 +23,18 @@ import (
 var (
 	configFiles cmdarg.Arg // "Config file for V2Ray.", the option is customed type, parse in main
 	configDir   string
-	fs          = flag.NewFlagSet("run", flag.ContinueOnError)
-	version     = fs.Bool("version", false, "Show current version of V2Ray.")
-	test        = fs.Bool("test", false, "Test config file only, without launching V2Ray server.")
-	format      = fs.String("format", "json", "Format of input file.")
+	fsRun       = flag.NewFlagSet("run", flag.ContinueOnError)
+	test        = fsRun.Bool("test", false, "Test config file only, without launching V2Ray server.")
+	format      = fsRun.String("format", "json", "Format of input file.")
 
 	/* We have to do this here because Golang's Test will also need to parse flag, before
 	 * main func in this file is run.
 	 */
 	_ = func() bool {
 
-		fs.Var(&configFiles, "config", "Config path for V2Ray.")
-		fs.Var(&configFiles, "c", "Short alias of -config")
-		fs.StringVar(&configDir, "confdir", "", "A dir with multiple json config")
+		fsRun.Var(&configFiles, "config", "Config path for V2Ray.")
+		fsRun.Var(&configFiles, "c", "Short alias of -config")
+		fsRun.StringVar(&configDir, "confdir", "", "A dir with multiple json config")
 
 		return true
 	}()
@@ -51,7 +50,7 @@ func (c *runCommand) Name() string {
 // Description of the command
 func (c *runCommand) Description() command.Description {
 	return command.Description{
-		Short: "run v2ray, the default command",
+		Short: "Run V2Ray, the default command",
 		Usage: []string{
 			"",
 			"'run' is the default command, the two command lines below are equivalent:",
@@ -63,24 +62,18 @@ func (c *runCommand) Description() command.Description {
 			"",
 			fmt.Sprintf("  %s -c config.json -c c1.json -c <url>.json -confdir <dir>", command.ExecutableName),
 			fmt.Sprintf("  %s -test -c config.json", command.ExecutableName),
-			fmt.Sprintf("  %s -version", command.ExecutableName),
 			"",
-			fmt.Sprintf("For all available commands, run '%s help'", command.ExecutableName),
 		},
 	}
 }
 
 // Execute the command
 func (c *runCommand) Execute(args []string) error {
-	if err := fs.Parse(args); err != nil {
+	if err := fsRun.Parse(args); err != nil {
 		return err
 	}
 
 	printVersion()
-
-	if *version {
-		os.Exit(0)
-	}
 
 	server, err := startV2Ray()
 	if err != nil {
