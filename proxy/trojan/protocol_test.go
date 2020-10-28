@@ -19,7 +19,7 @@ func toAccount(a *Account) protocol.Account {
 
 func TestTCPRequest(t *testing.T) {
 	user := &protocol.MemoryUser{
-		Email: "love@v2ray.com",
+		Email: "love@v2fly.org",
 		Account: toAccount(&Account{
 			Password: "password",
 		}),
@@ -51,7 +51,7 @@ func TestTCPRequest(t *testing.T) {
 
 func TestUDPRequest(t *testing.T) {
 	user := &protocol.MemoryUser{
-		Email: "love@v2ray.com",
+		Email: "love@v2fly.org",
 		Account: toAccount(&Account{
 			Password: "password",
 		}),

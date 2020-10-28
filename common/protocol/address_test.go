@@ -55,8 +55,8 @@ func TestAddressReading(t *testing.T) {
 		},
 		{
 			Options: []AddressOption{AddressFamilyByte(0x03, net.AddressFamilyDomain)},
-			Input:   []byte{3, 9, 118, 50, 114, 97, 121, 46, 99, 111, 109, 0, 80},
-			Address: net.DomainAddress("v2ray.com"),
+			Input:   []byte{3, 9, 118, 50, 102, 108, 121, 46, 111, 114, 103, 0, 80},
+			Address: net.DomainAddress("v2fly.org"),
 			Port:    net.Port(80),
 		},
 		{
@@ -236,7 +236,7 @@ func BenchmarkAddressWritingDomain(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		common.Must(parser.WriteAddressPort(writer, net.DomainAddress("www.v2ray.com"), net.Port(80)))
+		common.Must(parser.WriteAddressPort(writer, net.DomainAddress("www.v2fly.org"), net.Port(80)))
 		writer.Clear()
 	}
 }

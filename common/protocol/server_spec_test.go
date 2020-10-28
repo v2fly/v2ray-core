@@ -51,19 +51,19 @@ func TestUserInServerSpec(t *testing.T) {
 	}
 
 	spec := NewServerSpec(net.Destination{}, AlwaysValid(), &MemoryUser{
-		Email:   "test1@v2ray.com",
+		Email:   "test1@v2fly.org",
 		Account: toAccount(&vmess.Account{Id: uuid1.String()}),
 	})
 	if spec.HasUser(&MemoryUser{
-		Email:   "test1@v2ray.com",
+		Email:   "test1@v2fly.org",
 		Account: toAccount(&vmess.Account{Id: uuid2.String()}),
 	}) {
 		t.Error("has user: ", uuid2)
 	}
 
-	spec.AddUser(&MemoryUser{Email: "test2@v2ray.com"})
+	spec.AddUser(&MemoryUser{Email: "test2@v2fly.org"})
 	if !spec.HasUser(&MemoryUser{
-		Email:   "test1@v2ray.com",
+		Email:   "test1@v2fly.org",
 		Account: toAccount(&vmess.Account{Id: uuid1.String()}),
 	}) {
 		t.Error("not having user: ", uuid1)
@@ -71,9 +71,9 @@ func TestUserInServerSpec(t *testing.T) {
 }
 
 func TestPickUser(t *testing.T) {
-	spec := NewServerSpec(net.Destination{}, AlwaysValid(), &MemoryUser{Email: "test1@v2ray.com"}, &MemoryUser{Email: "test2@v2ray.com"}, &MemoryUser{Email: "test3@v2ray.com"})
+	spec := NewServerSpec(net.Destination{}, AlwaysValid(), &MemoryUser{Email: "test1@v2fly.org"}, &MemoryUser{Email: "test2@v2fly.org"}, &MemoryUser{Email: "test3@v2fly.org"})
 	user := spec.PickUser()
-	if !strings.HasSuffix(user.Email, "@v2ray.com") {
+	if !strings.HasSuffix(user.Email, "@v2fly.org") {
 		t.Error("user: ", user.Email)
 	}
 }

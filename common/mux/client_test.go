@@ -87,7 +87,7 @@ func TestClientWorkerClose(t *testing.T) {
 
 	tr1, tw1 := pipe.New(pipe.WithoutSizeLimit())
 	ctx1 := session.ContextWithOutbound(context.Background(), &session.Outbound{
-		Target: net.TCPDestination(net.DomainAddress("www.v2ray.com"), 80),
+		Target: net.TCPDestination(net.DomainAddress("www.v2fly.org"), 80),
 	})
 	common.Must(manager.Dispatch(ctx1, &transport.Link{
 		Reader: tr1,
@@ -104,7 +104,7 @@ func TestClientWorkerClose(t *testing.T) {
 
 	tr2, tw2 := pipe.New(pipe.WithoutSizeLimit())
 	ctx2 := session.ContextWithOutbound(context.Background(), &session.Outbound{
-		Target: net.TCPDestination(net.DomainAddress("www.v2ray.com"), 80),
+		Target: net.TCPDestination(net.DomainAddress("www.v2fly.org"), 80),
 	})
 	common.Must(manager.Dispatch(ctx2, &transport.Link{
 		Reader: tr2,

@@ -11,7 +11,7 @@ import (
 
 func BenchmarkFrameWrite(b *testing.B) {
 	frame := mux.FrameMetadata{
-		Target:        net.TCPDestination(net.DomainAddress("www.v2ray.com"), net.Port(80)),
+		Target:        net.TCPDestination(net.DomainAddress("www.v2fly.org"), net.Port(80)),
 		SessionID:     1,
 		SessionStatus: mux.SessionStatusNew,
 	}

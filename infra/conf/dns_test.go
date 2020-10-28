@@ -68,10 +68,10 @@ func TestDNSConfigParsing(t *testing.T) {
 				"servers": [{
 					"address": "8.8.8.8",
 					"port": 5353,
-					"domains": ["domain:v2ray.com"]
+					"domains": ["domain:v2fly.org"]
 				}],
 				"hosts": {
-					"v2ray.com": "127.0.0.1",
+					"v2fly.org": "127.0.0.1",
 					"domain:example.com": "google.com",
 					"geosite:test": "10.0.0.1",
 					"keyword:google": "8.8.8.8",
@@ -95,12 +95,12 @@ func TestDNSConfigParsing(t *testing.T) {
 						PrioritizedDomain: []*dns.NameServer_PriorityDomain{
 							{
 								Type:   dns.DomainMatchingType_Subdomain,
-								Domain: "v2ray.com",
+								Domain: "v2fly.org",
 							},
 						},
 						OriginalRules: []*dns.NameServer_OriginalRule{
 							{
-								Rule: "domain:v2ray.com",
+								Rule: "domain:v2fly.org",
 								Size: 1,
 							},
 						},
@@ -129,7 +129,7 @@ func TestDNSConfigParsing(t *testing.T) {
 					},
 					{
 						Type:   dns.DomainMatchingType_Full,
-						Domain: "v2ray.com",
+						Domain: "v2fly.org",
 						Ip:     [][]byte{{127, 0, 0, 1}},
 					},
 				},

@@ -228,7 +228,7 @@ func TestAutoIssuingCertificate(t *testing.T) {
 						SecurityType: serial.GetMessageType(&tls.Config{}),
 						SecuritySettings: []*serial.TypedMessage{
 							serial.ToTypedMessage(&tls.Config{
-								ServerName: "v2ray.com",
+								ServerName: "v2fly.org",
 								Certificate: []*tls.Certificate{{
 									Certificate: certPEM,
 									Usage:       tls.Certificate_AUTHORITY_VERIFY,
@@ -488,7 +488,7 @@ func TestHTTP2(t *testing.T) {
 							{
 								Protocol: internet.TransportProtocol_HTTP,
 								Settings: serial.ToTypedMessage(&http.Config{
-									Host: []string{"v2ray.com"},
+									Host: []string{"v2fly.org"},
 									Path: "/testpath",
 								}),
 							},
@@ -560,7 +560,7 @@ func TestHTTP2(t *testing.T) {
 							{
 								Protocol: internet.TransportProtocol_HTTP,
 								Settings: serial.ToTypedMessage(&http.Config{
-									Host: []string{"v2ray.com"},
+									Host: []string{"v2fly.org"},
 									Path: "/testpath",
 								}),
 							},

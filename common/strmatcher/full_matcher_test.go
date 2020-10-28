@@ -9,7 +9,7 @@ import (
 
 func TestFullMatcherGroup(t *testing.T) {
 	g := new(FullMatcherGroup)
-	g.Add("v2ray.com", 1)
+	g.Add("v2fly.org", 1)
 	g.Add("google.com", 2)
 	g.Add("x.a.com", 3)
 	g.Add("x.y.com", 4)
@@ -20,7 +20,7 @@ func TestFullMatcherGroup(t *testing.T) {
 		Result []uint32
 	}{
 		{
-			Domain: "v2ray.com",
+			Domain: "v2fly.org",
 			Result: []uint32{1},
 		},
 		{
@@ -43,7 +43,7 @@ func TestFullMatcherGroup(t *testing.T) {
 
 func TestEmptyFullMatcherGroup(t *testing.T) {
 	g := new(FullMatcherGroup)
-	r := g.Match("v2ray.com")
+	r := g.Match("v2fly.org")
 	if len(r) != 0 {
 		t.Error("Expect [], but ", r)
 	}

@@ -25,7 +25,7 @@ func TestUDPEncoding(t *testing.T) {
 		Address: net.LocalHostIP,
 		Port:    1234,
 		User: &protocol.MemoryUser{
-			Email: "love@v2ray.com",
+			Email: "love@v2fly.org",
 			Account: toAccount(&Account{
 				Password:   "shadowsocks-password",
 				CipherType: CipherType_AES_128_CFB,
@@ -62,7 +62,7 @@ func TestTCPRequest(t *testing.T) {
 				Address: net.LocalHostIP,
 				Port:    1234,
 				User: &protocol.MemoryUser{
-					Email: "love@v2ray.com",
+					Email: "love@v2fly.org",
 					Account: toAccount(&Account{
 						Password:   "tcp-password",
 						CipherType: CipherType_CHACHA20,
@@ -78,7 +78,7 @@ func TestTCPRequest(t *testing.T) {
 				Address: net.LocalHostIPv6,
 				Port:    1234,
 				User: &protocol.MemoryUser{
-					Email: "love@v2ray.com",
+					Email: "love@v2fly.org",
 					Account: toAccount(&Account{
 						Password:   "password",
 						CipherType: CipherType_AES_256_CFB,
@@ -91,10 +91,10 @@ func TestTCPRequest(t *testing.T) {
 			request: &protocol.RequestHeader{
 				Version: Version,
 				Command: protocol.RequestCommandTCP,
-				Address: net.DomainAddress("v2ray.com"),
+				Address: net.DomainAddress("v2fly.org"),
 				Port:    1234,
 				User: &protocol.MemoryUser{
-					Email: "love@v2ray.com",
+					Email: "love@v2fly.org",
 					Account: toAccount(&Account{
 						Password:   "password",
 						CipherType: CipherType_CHACHA20_IETF,
@@ -149,7 +149,7 @@ func TestUDPReaderWriter(t *testing.T) {
 		Writer: cache,
 		Request: &protocol.RequestHeader{
 			Version: Version,
-			Address: net.DomainAddress("v2ray.com"),
+			Address: net.DomainAddress("v2fly.org"),
 			Port:    123,
 			User:    user,
 		},

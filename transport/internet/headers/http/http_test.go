@@ -91,7 +91,7 @@ func TestConnection(t *testing.T) {
 			Header: []*Header{
 				{
 					Name:  "Host",
-					Value: []string{"www.v2ray.com", "www.google.com"},
+					Value: []string{"www.v2fly.org", "www.google.com"},
 				},
 				{
 					Name:  "User-Agent",
@@ -164,7 +164,7 @@ func TestConnectionInvPath(t *testing.T) {
 			Header: []*Header{
 				{
 					Name:  "Host",
-					Value: []string{"www.v2ray.com", "www.google.com"},
+					Value: []string{"www.v2fly.org", "www.google.com"},
 				},
 				{
 					Name:  "User-Agent",
@@ -191,7 +191,7 @@ func TestConnectionInvPath(t *testing.T) {
 			Header: []*Header{
 				{
 					Name:  "Host",
-					Value: []string{"www.v2ray.com", "www.google.com"},
+					Value: []string{"www.v2fly.org", "www.google.com"},
 				},
 				{
 					Name:  "User-Agent",
@@ -265,7 +265,7 @@ func TestConnectionInvReq(t *testing.T) {
 			Header: []*Header{
 				{
 					Name:  "Host",
-					Value: []string{"www.v2ray.com", "www.google.com"},
+					Value: []string{"www.v2fly.org", "www.google.com"},
 				},
 				{
 					Name:  "User-Agent",

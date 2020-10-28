@@ -147,8 +147,8 @@ func TestFqdn(t *testing.T) {
 		args args
 		want string
 	}{
-		{"with fqdn", args{"www.v2ray.com."}, "www.v2ray.com."},
-		{"without fqdn", args{"www.v2ray.com"}, "www.v2ray.com."},
+		{"with fqdn", args{"www.v2fly.org."}, "www.v2fly.org."},
+		{"without fqdn", args{"www.v2fly.org"}, "www.v2fly.org."},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -14,7 +14,7 @@ func TestStaticHosts(t *testing.T) {
 	pb := []*Config_HostMapping{
 		{
 			Type:   DomainMatchingType_Full,
-			Domain: "v2ray.com",
+			Domain: "v2fly.org",
 			Ip: [][]byte{
 				{1, 1, 1, 1},
 			},
@@ -39,7 +39,7 @@ func TestStaticHosts(t *testing.T) {
 	common.Must(err)
 
 	{
-		ips := hosts.LookupIP("v2ray.com", IPOption{
+		ips := hosts.LookupIP("v2fly.org", IPOption{
 			IPv4Enable: true,
 			IPv6Enable: true,
 		})

@@ -17,13 +17,13 @@ func TestReverseConfig(t *testing.T) {
 			Input: `{
 				"bridges": [{
 					"tag": "test",
-					"domain": "test.v2ray.com"
+					"domain": "test.v2fly.org"
 				}]
 			}`,
 			Parser: loadJSON(creator),
 			Output: &reverse.Config{
 				BridgeConfig: []*reverse.BridgeConfig{
-					{Tag: "test", Domain: "test.v2ray.com"},
+					{Tag: "test", Domain: "test.v2fly.org"},
 				},
 			},
 		},
@@ -31,13 +31,13 @@ func TestReverseConfig(t *testing.T) {
 			Input: `{
 				"portals": [{
 					"tag": "test",
-					"domain": "test.v2ray.com"
+					"domain": "test.v2fly.org"
 				}]
 			}`,
 			Parser: loadJSON(creator),
 			Output: &reverse.Config{
 				PortalConfig: []*reverse.PortalConfig{
-					{Tag: "test", Domain: "test.v2ray.com"},
+					{Tag: "test", Domain: "test.v2fly.org"},
 				},
 			},
 		},

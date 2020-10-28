@@ -44,10 +44,10 @@ func TestIPParsing(t *testing.T) {
 }
 
 func TestDomainParsing(t *testing.T) {
-	rawJSON := "\"v2ray.com\""
+	rawJSON := "\"v2fly.org\""
 	var address Address
 	common.Must(json.Unmarshal([]byte(rawJSON), &address))
-	if address.Domain() != "v2ray.com" {
+	if address.Domain() != "v2fly.org" {
 		t.Error("domain: ", address.Domain())
 	}
 }
@@ -208,7 +208,7 @@ func TestUserParsing(t *testing.T) {
 	user := new(User)
 	common.Must(json.Unmarshal([]byte(`{
     "id": "96edb838-6d68-42ef-a933-25f7ac3a9d09",
-    "email": "love@v2ray.com",
+    "email": "love@v2fly.org",
     "level": 1,
     "alterId": 100
   }`), user))
@@ -216,7 +216,7 @@ func TestUserParsing(t *testing.T) {
 	nUser := user.Build()
 	if r := cmp.Diff(nUser, &protocol.User{
 		Level: 1,
-		Email: "love@v2ray.com",
+		Email: "love@v2fly.org",
 	}, cmpopts.IgnoreUnexported(protocol.User{})); r != "" {
 		t.Error(r)
 	}

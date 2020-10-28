@@ -283,7 +283,7 @@ func TestCommanderAddRemoveUser(t *testing.T) {
 		Operation: serial.ToTypedMessage(
 			&command.AddUserOperation{
 				User: &protocol.User{
-					Email: "test@v2ray.com",
+					Email: "test@v2fly.org",
 					Account: serial.ToTypedMessage(&vmess.Account{
 						Id:      u2.String(),
 						AlterId: 64,
@@ -302,7 +302,7 @@ func TestCommanderAddRemoveUser(t *testing.T) {
 
 	resp, err = hsClient.AlterInbound(context.Background(), &command.AlterInboundRequest{
 		Tag:       "v",
-		Operation: serial.ToTypedMessage(&command.RemoveUserOperation{Email: "test@v2ray.com"}),
+		Operation: serial.ToTypedMessage(&command.RemoveUserOperation{Email: "test@v2fly.org"}),
 	})
 	common.Must(err)
 	if resp == nil {

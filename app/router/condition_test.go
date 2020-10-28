@@ -63,7 +63,7 @@ func TestRoutingRule(t *testing.T) {
 			rule: &RoutingRule{
 				Domain: []*Domain{
 					{
-						Value: "v2ray.com",
+						Value: "v2fly.org",
 						Type:  Domain_Plain,
 					},
 					{
@@ -78,11 +78,11 @@ func TestRoutingRule(t *testing.T) {
 			},
 			test: []ruleTest{
 				{
-					input:  withOutbound(&session.Outbound{Target: net.TCPDestination(net.DomainAddress("v2ray.com"), 80)}),
+					input:  withOutbound(&session.Outbound{Target: net.TCPDestination(net.DomainAddress("v2fly.org"), 80)}),
 					output: true,
 				},
 				{
-					input:  withOutbound(&session.Outbound{Target: net.TCPDestination(net.DomainAddress("www.v2ray.com.www"), 80)}),
+					input:  withOutbound(&session.Outbound{Target: net.TCPDestination(net.DomainAddress("www.v2fly.org.www"), 80)}),
 					output: true,
 				},
 				{
@@ -206,16 +206,16 @@ func TestRoutingRule(t *testing.T) {
 		{
 			rule: &RoutingRule{
 				UserEmail: []string{
-					"admin@v2ray.com",
+					"admin@v2fly.org",
 				},
 			},
 			test: []ruleTest{
 				{
-					input:  withInbound(&session.Inbound{User: &protocol.MemoryUser{Email: "admin@v2ray.com"}}),
+					input:  withInbound(&session.Inbound{User: &protocol.MemoryUser{Email: "admin@v2fly.org"}}),
 					output: true,
 				},
 				{
-					input:  withInbound(&session.Inbound{User: &protocol.MemoryUser{Email: "love@v2ray.com"}}),
+					input:  withInbound(&session.Inbound{User: &protocol.MemoryUser{Email: "love@v2fly.org"}}),
 					output: false,
 				},
 				{

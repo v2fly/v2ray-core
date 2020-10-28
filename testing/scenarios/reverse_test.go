@@ -46,7 +46,7 @@ func TestReverseProxy(t *testing.T) {
 				PortalConfig: []*reverse.PortalConfig{
 					{
 						Tag:    "portal",
-						Domain: "test.v2ray.com",
+						Domain: "test.v2fly.org",
 					},
 				},
 			}),
@@ -54,7 +54,7 @@ func TestReverseProxy(t *testing.T) {
 				Rule: []*router.RoutingRule{
 					{
 						Domain: []*router.Domain{
-							{Type: router.Domain_Full, Value: "test.v2ray.com"},
+							{Type: router.Domain_Full, Value: "test.v2fly.org"},
 						},
 						TargetTag: &router.RoutingRule_Tag{
 							Tag: "portal",
@@ -115,7 +115,7 @@ func TestReverseProxy(t *testing.T) {
 				BridgeConfig: []*reverse.BridgeConfig{
 					{
 						Tag:    "bridge",
-						Domain: "test.v2ray.com",
+						Domain: "test.v2fly.org",
 					},
 				},
 			}),
@@ -123,7 +123,7 @@ func TestReverseProxy(t *testing.T) {
 				Rule: []*router.RoutingRule{
 					{
 						Domain: []*router.Domain{
-							{Type: router.Domain_Full, Value: "test.v2ray.com"},
+							{Type: router.Domain_Full, Value: "test.v2fly.org"},
 						},
 						TargetTag: &router.RoutingRule_Tag{
 							Tag: "reverse",
@@ -231,7 +231,7 @@ func TestReverseProxyLongRunning(t *testing.T) {
 				PortalConfig: []*reverse.PortalConfig{
 					{
 						Tag:    "portal",
-						Domain: "test.v2ray.com",
+						Domain: "test.v2fly.org",
 					},
 				},
 			}),
@@ -239,7 +239,7 @@ func TestReverseProxyLongRunning(t *testing.T) {
 				Rule: []*router.RoutingRule{
 					{
 						Domain: []*router.Domain{
-							{Type: router.Domain_Full, Value: "test.v2ray.com"},
+							{Type: router.Domain_Full, Value: "test.v2fly.org"},
 						},
 						TargetTag: &router.RoutingRule_Tag{
 							Tag: "portal",
@@ -314,7 +314,7 @@ func TestReverseProxyLongRunning(t *testing.T) {
 				BridgeConfig: []*reverse.BridgeConfig{
 					{
 						Tag:    "bridge",
-						Domain: "test.v2ray.com",
+						Domain: "test.v2fly.org",
 					},
 				},
 			}),
@@ -322,7 +322,7 @@ func TestReverseProxyLongRunning(t *testing.T) {
 				Rule: []*router.RoutingRule{
 					{
 						Domain: []*router.Domain{
-							{Type: router.Domain_Full, Value: "test.v2ray.com"},
+							{Type: router.Domain_Full, Value: "test.v2fly.org"},
 						},
 						TargetTag: &router.RoutingRule_Tag{
 							Tag: "reverse",
