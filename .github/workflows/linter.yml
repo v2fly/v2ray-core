@@ -2,11 +2,15 @@ name: Linter
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+      - v*
     paths:
       - "**/*.go"
   pull_request:
-    branches: [master]
+    branches:
+      - master
+      - v*
     types: [opened, synchronize, reopened]
     paths:
       - "**/*.go"

@@ -2,13 +2,17 @@ name: Test
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+      - v*
     paths:
       - "**/*.go"
       - "go.mod"
       - "go.sum"
   pull_request:
-    branches: [master]
+    branches:
+      - master
+      - v*
     types: [opened, synchronize, reopened]
     paths:
       - "**/*.go"

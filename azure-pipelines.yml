@@ -3,6 +3,7 @@ trigger:
   branches:
     include:
       - master
+      - v5
       - dev*
       - refs/tags/*
 
