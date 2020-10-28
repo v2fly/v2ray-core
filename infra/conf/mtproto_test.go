@@ -3,10 +3,10 @@ package conf_test
 import (
 	"testing"
 
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	. "v2ray.com/core/infra/conf"
-	"v2ray.com/core/proxy/mtproto"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	. "github.com/v2fly/v2ray-core/v5/infra/conf"
+	"github.com/v2fly/v2ray-core/v5/proxy/mtproto"
 )
 
 func TestMTProtoServerConfig(t *testing.T) {

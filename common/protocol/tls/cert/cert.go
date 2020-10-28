@@ -12,7 +12,7 @@ import (
 	"math/big"
 	"time"
 
-	"v2ray.com/core/common"
+	"github.com/v2fly/v2ray-core/v5/common"
 )
 
 //go:generate go run v2ray.com/core/common/errors/errorgen

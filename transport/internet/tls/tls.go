@@ -5,8 +5,8 @@ package tls
 import (
 	"crypto/tls"
 
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
 )
 
 //go:generate go run v2ray.com/core/common/errors/errorgen

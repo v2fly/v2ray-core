@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	. "v2ray.com/core/transport/internet/headers/utp"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	. "github.com/v2fly/v2ray-core/v5/transport/internet/headers/utp"
 )
 
 func TestUTPWrite(t *testing.T) {

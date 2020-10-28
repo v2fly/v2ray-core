@@ -10,10 +10,10 @@ import (
 
 	"google.golang.org/grpc"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/features/stats"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/features/stats"
 )
 
 // routingServer is an implementation of RoutingService.

@@ -6,12 +6,12 @@ import (
 	"context"
 	"sync"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/features/inbound"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/proxyman"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/features/inbound"
 )
 
 // Manager is to manage all inbound handlers.

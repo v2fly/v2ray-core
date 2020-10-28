@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/platform"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/platform"
 )
 
 //go:generate go run v2ray.com/core/common/errors/errorgen

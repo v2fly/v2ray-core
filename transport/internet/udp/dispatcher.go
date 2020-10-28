@@ -6,16 +6,16 @@ import (
 	"sync"
 	"time"
 
-	"v2ray.com/core/common/signal/done"
+	"github.com/v2fly/v2ray-core/v5/common/signal/done"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol/udp"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/common/signal"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/transport"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol/udp"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/transport"
 )
 
 type ResponseCallback func(ctx context.Context, packet *udp.Packet)

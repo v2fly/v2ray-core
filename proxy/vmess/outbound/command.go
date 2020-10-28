@@ -5,10 +5,10 @@ package outbound
 import (
 	"time"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/proxy/vmess"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess"
 )
 
 func (h *Handler) handleSwitchAccount(cmd *protocol.CommandSwitchAccount) {

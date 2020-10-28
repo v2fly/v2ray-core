@@ -8,10 +8,10 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/proxy/trojan"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/proxy/trojan"
 )
 
 // TrojanServerTarget is configuration of a single trojan server

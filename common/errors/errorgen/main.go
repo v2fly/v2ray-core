@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"v2ray.com/core/common"
+	"github.com/v2fly/v2ray-core/v5/common"
 )
 
 func main() {

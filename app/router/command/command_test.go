@@ -8,15 +8,15 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/v2fly/v2ray-core/v5/app/router"
+	. "github.com/v2fly/v2ray-core/v5/app/router/command"
+	"github.com/v2fly/v2ray-core/v5/app/stats"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/testing/mocks"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
-	"v2ray.com/core/app/router"
-	. "v2ray.com/core/app/router/command"
-	"v2ray.com/core/app/stats"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/testing/mocks"
 )
 
 func TestServiceSubscribeRoutingStats(t *testing.T) {

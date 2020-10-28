@@ -4,12 +4,12 @@ import (
 	"encoding/binary"
 	"io"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/bitmask"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/bitmask"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
 )
 
 type SessionStatus byte

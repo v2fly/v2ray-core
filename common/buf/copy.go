@@ -4,8 +4,8 @@ import (
 	"io"
 	"time"
 
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/signal"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
 )
 
 type dataHandler func(MultiBuffer)

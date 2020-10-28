@@ -11,12 +11,12 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	http_proto "v2ray.com/core/common/protocol/http"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/transport/internet"
-	v2tls "v2ray.com/core/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	http_proto "github.com/v2fly/v2ray-core/v5/common/protocol/http"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	v2tls "github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
 
 type requestHandler struct {

@@ -4,9 +4,9 @@ import (
 	"encoding/binary"
 	"io"
 
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
 )
 
 var (

@@ -7,13 +7,13 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	"v2ray.com/core/app/dns"
-	"v2ray.com/core/app/router"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/platform"
-	"v2ray.com/core/common/platform/filesystem"
-	. "v2ray.com/core/infra/conf"
+	"github.com/v2fly/v2ray-core/v5/app/dns"
+	"github.com/v2fly/v2ray-core/v5/app/router"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/platform"
+	"github.com/v2fly/v2ray-core/v5/common/platform/filesystem"
+	. "github.com/v2fly/v2ray-core/v5/infra/conf"
 )
 
 func init() {

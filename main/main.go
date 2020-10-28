@@ -15,10 +15,10 @@ import (
 	"strings"
 	"syscall"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common/cmdarg"
-	"v2ray.com/core/common/platform"
-	_ "v2ray.com/core/main/distro/all"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common/cmdarg"
+	"github.com/v2fly/v2ray-core/v5/common/platform"
+	_ "github.com/v2fly/v2ray-core/v5/main/distro/all"
 )
 
 var (

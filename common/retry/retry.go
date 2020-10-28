@@ -1,4 +1,4 @@
-package retry // import "v2ray.com/core/common/retry"
+package retry // import "github.com/v2fly/v2ray-core/v5/common/retry"
 
 //go:generate go run v2ray.com/core/common/errors/errorgen
 

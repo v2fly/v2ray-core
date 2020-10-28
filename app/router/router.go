@@ -7,12 +7,12 @@ package router
 import (
 	"context"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common"
-	"v2ray.com/core/features/dns"
-	"v2ray.com/core/features/outbound"
-	"v2ray.com/core/features/routing"
-	routing_dns "v2ray.com/core/features/routing/dns"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
+	"github.com/v2fly/v2ray-core/v5/features/outbound"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	routing_dns "github.com/v2fly/v2ray-core/v5/features/routing/dns"
 )
 
 // Router is an implementation of routing.Router.

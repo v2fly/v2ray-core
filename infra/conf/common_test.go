@@ -8,10 +8,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	. "v2ray.com/core/infra/conf"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	. "github.com/v2fly/v2ray-core/v5/infra/conf"
 )
 
 func TestStringListUnmarshalError(t *testing.T) {

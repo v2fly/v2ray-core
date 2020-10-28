@@ -14,7 +14,7 @@ package core
 import (
 	"runtime"
 
-	"v2ray.com/core/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
 )
 
 var (

@@ -3,9 +3,9 @@ package outbound
 import (
 	"context"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/features"
-	"v2ray.com/core/transport"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/features"
+	"github.com/v2fly/v2ray-core/v5/transport"
 )
 
 // Handler is the interface for handlers that process outbound connections.

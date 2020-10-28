@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
 
 // Dial dials a WebSocket connection to the given destination.

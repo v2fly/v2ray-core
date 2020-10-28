@@ -14,16 +14,16 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol/dns"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal/pubsub"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	dns_feature "github.com/v2fly/v2ray-core/v5/features/dns"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
 	"golang.org/x/net/dns/dnsmessage"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol/dns"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/common/signal/pubsub"
-	"v2ray.com/core/common/task"
-	dns_feature "v2ray.com/core/features/dns"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/transport/internet"
 )
 
 // DoHNameServer implemented DNS over HTTPS (RFC8484) Wire Format,

@@ -5,8 +5,8 @@ package stats
 import (
 	"context"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/features"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/features"
 )
 
 // Counter is the interface for stats counters.

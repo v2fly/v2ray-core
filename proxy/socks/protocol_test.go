@@ -6,11 +6,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	. "v2ray.com/core/proxy/socks"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	. "github.com/v2fly/v2ray-core/v5/proxy/socks"
 )
 
 func TestUDPEncoding(t *testing.T) {

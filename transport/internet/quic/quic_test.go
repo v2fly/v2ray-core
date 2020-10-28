@@ -8,17 +8,17 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/protocol/tls/cert"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/testing/servers/udp"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/headers/wireguard"
-	"v2ray.com/core/transport/internet/quic"
-	"v2ray.com/core/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/protocol/tls/cert"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/testing/servers/udp"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/headers/wireguard"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/quic"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
 
 func TestQuicConnection(t *testing.T) {

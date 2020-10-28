@@ -7,11 +7,11 @@ import (
 	"strings"
 	"sync"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/features/outbound"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/proxyman"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/features/outbound"
 )
 
 // Manager is to manage all outbound handlers.

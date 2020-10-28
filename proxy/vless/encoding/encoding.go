@@ -9,14 +9,14 @@ import (
 	"io"
 	"syscall"
 
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/signal"
-	"v2ray.com/core/features/stats"
-	"v2ray.com/core/proxy/vless"
-	"v2ray.com/core/transport/internet/xtls"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/features/stats"
+	"github.com/v2fly/v2ray-core/v5/proxy/vless"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/xtls"
 )
 
 const (
