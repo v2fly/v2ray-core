@@ -61,7 +61,7 @@ type UnsafeLoggerServiceServer interface {
 	mustEmbedUnimplementedLoggerServiceServer()
 }
 
-func RegisterLoggerServiceServer(s *grpc.Server, srv LoggerServiceServer) {
+func RegisterLoggerServiceServer(s grpc.ServiceRegistrar, srv LoggerServiceServer) {
 	s.RegisterService(&_LoggerService_serviceDesc, srv)
 }
 

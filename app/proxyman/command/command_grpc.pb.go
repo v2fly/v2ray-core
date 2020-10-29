@@ -131,7 +131,7 @@ type UnsafeHandlerServiceServer interface {
 	mustEmbedUnimplementedHandlerServiceServer()
 }
 
-func RegisterHandlerServiceServer(s *grpc.Server, srv HandlerServiceServer) {
+func RegisterHandlerServiceServer(s grpc.ServiceRegistrar, srv HandlerServiceServer) {
 	s.RegisterService(&_HandlerService_serviceDesc, srv)
 }
 
