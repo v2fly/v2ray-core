@@ -12,9 +12,8 @@ enum Network {
   RawTCP = 1 [deprecated = true];
   TCP = 2;
   UDP = 3;
+  UNIX = 4;
 }
 
 // NetworkList is a list of Networks.
-message NetworkList {
-  repeated Network network = 1;
-}
+message NetworkList { repeated Network network = 1; }
