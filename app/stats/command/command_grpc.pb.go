@@ -89,7 +89,7 @@ type UnsafeStatsServiceServer interface {
 	mustEmbedUnimplementedStatsServiceServer()
 }
 
-func RegisterStatsServiceServer(s *grpc.Server, srv StatsServiceServer) {
+func RegisterStatsServiceServer(s grpc.ServiceRegistrar, srv StatsServiceServer) {
 	s.RegisterService(&_StatsService_serviceDesc, srv)
 }
 

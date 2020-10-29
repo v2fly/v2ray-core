@@ -98,7 +98,7 @@ type UnsafeRoutingServiceServer interface {
 	mustEmbedUnimplementedRoutingServiceServer()
 }
 
-func RegisterRoutingServiceServer(s *grpc.Server, srv RoutingServiceServer) {
+func RegisterRoutingServiceServer(s grpc.ServiceRegistrar, srv RoutingServiceServer) {
 	s.RegisterService(&_RoutingService_serviceDesc, srv)
 }
 
