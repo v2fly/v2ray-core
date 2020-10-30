@@ -75,8 +75,8 @@ BigCmdLoop:
 	}
 }
 
-// Sort sorts the commands
-func Sort() {
+// SortCommands sorts the first level sub commands
+func SortCommands() {
 	sort.Slice(RootCommand.Commands, func(i, j int) bool {
 		return SortLessFunc(RootCommand.Commands[i], RootCommand.Commands[j])
 	})
