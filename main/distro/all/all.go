@@ -65,4 +65,7 @@ import (
 
 	// Load config from file or http(s)
 	_ "v2ray.com/core/main/confloader/external"
+
+	// commands
+	_ "v2ray.com/core/commands/all"
 )

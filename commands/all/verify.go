@@ -1,0 +1,51 @@
+package all
+
+import (
+	"os"
+
+	"github.com/xiaokangwang/VSign/signerVerify"
+	"v2ray.com/core/commands/base"
+)
+
+var cmdVerify = &base.Command{
+	UsageLine: "{{.Exec}} verify [--sig=sig-file] file",
+	Short:     "Verify if a binary is officially signed",
+	Long: `
+Verify if a binary is officially signed.
+
+The -sig sets the path to the signature file
+	`,
+}
+
+func init() {
+	cmdVerify.Run = executeVerify //break init loop
+}
+
+var (
+	verifySigFile = cmdVerify.Flag.String("sig", "", "Path to the signature file")
+)
+
+func executeVerify(cmd *base.Command, args []string) {
+	target := cmdVerify.Flag.Arg(0)
+	if target == "" {
+		base.Fatalf("empty file path.")
+	}
+
+	if *verifySigFile == "" {
+		base.Fatalf("empty signature path.")
+	}
+
+	sigReader, err := os.Open(os.ExpandEnv(*verifySigFile))
+	if err != nil {
+		base.Fatalf("failed to open file %s: %s ", *verifySigFile, err)
+	}
+
+	files := cmdVerify.Flag.Args()
+
+	err = signerVerify.OutputAndJudge(signerVerify.CheckSignaturesV2Fly(sigReader, files))
+
+	if err != nil {
+		base.Fatalf("file is not officially signed by V2Ray: %s", err)
+	}
+
+}
