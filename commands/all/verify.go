@@ -18,7 +18,7 @@ The -sig sets the path to the signature file
 }
 
 func init() {
-	cmdVerify.Run = executeVerify //break init loop
+	cmdVerify.Run = executeVerify // break init loop
 }
 
 var (
@@ -47,5 +47,4 @@ func executeVerify(cmd *base.Command, args []string) {
 	if err != nil {
 		base.Fatalf("file is not officially signed by V2Ray: %s", err)
 	}
-
 }

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"v2ray.com/core/commands/base"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
@@ -32,7 +32,7 @@ Examples:
 }
 
 func init() {
-	cmdConvert.Run = executeConvert //break init loop
+	cmdConvert.Run = executeConvert // break init loop
 }
 
 func executeConvert(cmd *base.Command, args []string) {
@@ -43,7 +43,7 @@ func executeConvert(cmd *base.Command, args []string) {
 
 	conf := &conf.Config{}
 	for _, arg := range unnamedArgs {
-		fmt.Fprintf(os.Stderr, "Read config: ", arg)
+		fmt.Fprintf(os.Stderr, "Read config: %s", arg)
 		r, err := loadArg(arg)
 		common.Must(err)
 		c, err := serial.DecodeJSONConfig(r)

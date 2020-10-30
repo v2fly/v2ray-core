@@ -43,7 +43,6 @@ func getArgsV4Compatible() []string {
 		fmt.Println("PLEASE USE: v2ray help")
 		fmt.Println()
 		return []string{os.Args[0], "help"}
-		fmt.Println()
 	}
 	if version {
 		fmt.Println("DEPRECATED: -version, WILL BE REMOVED IN V5.")

@@ -9,6 +9,7 @@ import (
 	"v2ray.com/core/commands/base"
 )
 
+// CmdPing is the tls ping command
 var CmdPing = &base.Command{
 	UsageLine: "{{.Exec}} tls ping [-ip <ip>] <domain>",
 	Short:     "Ping the domain with TLS handshake",
@@ -20,7 +21,7 @@ The -ip flag sets the IP address of the domain.
 }
 
 func init() {
-	CmdPing.Run = executePing //break init loop
+	CmdPing.Run = executePing // break init loop
 }
 
 var (
@@ -39,7 +40,7 @@ func executePing(cmd *base.Command, args []string) {
 	if len(*pingIPStr) > 0 {
 		v := net.ParseIP(*pingIPStr)
 		if v == nil {
-			base.Fatalf("invalid IP: ", *pingIPStr)
+			base.Fatalf("invalid IP: %s", *pingIPStr)
 		}
 		ip = v
 	} else {

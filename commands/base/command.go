@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package base defines shared basic pieces of the v2ray command,
+// Package base defines shared basic pieces of the commands,
 // in particular logging and the Command structure.
 package base
 
