@@ -14,6 +14,7 @@ import (
 
 // Execute excute the commands
 func Execute() {
+	buildCommandsText(RootCommand)
 	flag.Parse()
 	args := flag.Args()
 	if len(args) < 1 {

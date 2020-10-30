@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package help implements the ``v2ray help'' command.
 package base
 
 import (
@@ -30,7 +29,7 @@ Args:
 		}
 
 		// helpSuccess is the help command using as many args as possible that would succeed.
-		helpSuccess := "v2ray help"
+		helpSuccess := CommandEnv.Exec + " help"
 		if i > 0 {
 			helpSuccess += " " + strings.Join(args[:i], " ")
 		}
@@ -39,14 +38,11 @@ Args:
 		Exit()
 	}
 
-	buildCommandText(cmd)
 	if len(cmd.Commands) > 0 {
 		PrintUsage(os.Stdout, cmd)
 	} else {
 		tmpl(os.Stdout, helpTemplate, makeTmplData(cmd))
 	}
-	// not exit 2: succeeded at 'v2ray help cmd'.
-	return
 }
 
 var usageTemplate = `{{.Long | trim}}
@@ -122,16 +118,20 @@ func capitalize(s string) string {
 
 // PrintUsage prints usage of cmd to w
 func PrintUsage(w io.Writer, cmd *Command) {
-	buildCommandText(cmd)
 	bw := bufio.NewWriter(w)
-	for _, c := range cmd.Commands {
-		buildCommandText(c)
-	}
 	tmpl(bw, usageTemplate, makeTmplData(cmd))
 	bw.Flush()
 }
 
-// BuildCommandText build command text as template
+// buildCommandsText build text of command and its children as template
+func buildCommandsText(cmd *Command) {
+	buildCommandText(cmd)
+	for _, cmd := range cmd.Commands {
+		buildCommandsText(cmd)
+	}
+}
+
+// buildCommandText build command text as template
 func buildCommandText(cmd *Command) {
 	cmd.UsageLine = buildText(cmd.UsageLine, makeTmplData(cmd))
 	cmd.Short = buildText(cmd.Short, makeTmplData(cmd))
@@ -141,7 +141,7 @@ func buildCommandText(cmd *Command) {
 func buildText(text string, data interface{}) string {
 	buf := bytes.NewBuffer([]byte{})
 	tmpl(buf, text, data)
-	return string(buf.String())
+	return buf.String()
 }
 
 type tmplData struct {

@@ -14,6 +14,7 @@ import (
 	"v2ray.com/core/common/task"
 )
 
+// CmdCert is the tls cert command
 var CmdCert = &base.Command{
 	UsageLine: "{{.Exec}} tls cert [--ca] [--domain=v2ray.com] [--expire=240h]",
 	Short:     "Generate TLS certificates",
@@ -38,7 +39,7 @@ value 3 months.
 }
 
 func init() {
-	CmdCert.Run = executeCert //break init loop
+	CmdCert.Run = executeCert // break init loop
 }
 
 var (

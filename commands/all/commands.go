@@ -2,7 +2,7 @@ package all
 
 import "v2ray.com/core/commands/base"
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+// go:generate go run v2ray.com/core/common/errors/errorgen
 
 func init() {
 	base.RootCommand.Commands = append(
