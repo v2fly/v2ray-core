@@ -97,6 +97,12 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 
 		netConn, err := setUpHTTPTunnel(ctx, dest, targetAddr, user, dialer, firstPayload)
 		if netConn != nil {
+			if _, ok := netConn.(*http2Conn); !ok {
+				if _, err := netConn.Write(firstPayload); err != nil {
+					netConn.Close()
+					return err
+				}
+			}
 			conn = internet.Connection(netConn)
 		}
 		return err
@@ -155,11 +161,6 @@ func setUpHTTPTunnel(ctx context.Context, dest net.Destination, target string, u
 
 		err := req.Write(rawConn)
 		if err != nil {
-			rawConn.Close()
-			return nil, err
-		}
-
-		if _, err := rawConn.Write(firstPayload); err != nil {
 			rawConn.Close()
 			return nil, err
 		}
