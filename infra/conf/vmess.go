@@ -67,9 +67,6 @@ type VMessDefaultConfig struct {
 func (c *VMessDefaultConfig) Build() *inbound.DefaultConfig {
 	config := new(inbound.DefaultConfig)
 	config.AlterId = uint32(c.AlterIDs)
-	if config.AlterId == 0 {
-		config.AlterId = 32
-	}
 	config.Level = uint32(c.Level)
 	return config
 }
