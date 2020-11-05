@@ -8,6 +8,7 @@ import (
 	"context"
 	"io"
 	"strconv"
+	"syscall"
 	"time"
 
 	"v2ray.com/core"
@@ -372,6 +373,8 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 		// Flow: requestAddons.Flow,
 	}
 
+	var rawConn syscall.RawConn
+
 	switch requestAddons.Flow {
 	case vless.XRO, vless.XRD:
 		if account.Flow == requestAddons.Flow {
@@ -387,6 +390,9 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 					xtlsConn.MARK = "XTLS"
 					if requestAddons.Flow == vless.XRD {
 						xtlsConn.DirectMode = true
+						if sc, ok := xtlsConn.Connection.(syscall.Conn); ok {
+							rawConn, _ = sc.SyscallConn()
+						}
 					}
 				} else {
 					return newError(`failed to use ` + requestAddons.Flow + `, maybe "security" is not "xtls"`).AtWarning()
@@ -429,8 +435,16 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 		// default: clientReader := reader
 		clientReader := encoding.DecodeBodyAddons(reader, request, requestAddons)
 
-		// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBufer
-		if err := buf.Copy(clientReader, serverWriter, buf.UpdateActivity(timer)); err != nil {
+		var err error
+
+		if rawConn != nil {
+			err = encoding.ReadV(clientReader, serverWriter, timer, iConn.(*xtls.Conn), rawConn)
+		} else {
+			// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBufer
+			err = buf.Copy(clientReader, serverWriter, buf.UpdateActivity(timer))
+		}
+
+		if err != nil {
 			return newError("failed to transfer request payload").Base(err).AtInfo()
 		}
 

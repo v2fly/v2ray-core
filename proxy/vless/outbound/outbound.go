@@ -6,6 +6,7 @@ package outbound
 
 import (
 	"context"
+	"syscall"
 	"time"
 
 	"v2ray.com/core"
@@ -124,6 +125,8 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		Flow: account.Flow,
 	}
 
+	var rawConn syscall.RawConn
+
 	allowUDP443 := false
 	switch requestAddons.Flow {
 	case vless.XRO + "-udp443", vless.XRD + "-udp443":
@@ -146,6 +149,9 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 				xtlsConn.MARK = "XTLS"
 				if requestAddons.Flow == vless.XRD {
 					xtlsConn.DirectMode = true
+					if sc, ok := xtlsConn.Connection.(syscall.Conn); ok {
+						rawConn, _ = sc.SyscallConn()
+					}
 				}
 			} else {
 				return newError(`failed to use ` + requestAddons.Flow + `, maybe "security" is not "xtls"`).AtWarning()
@@ -206,8 +212,14 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		// default: serverReader := buf.NewReader(conn)
 		serverReader := encoding.DecodeBodyAddons(conn, request, responseAddons)
 
-		// from serverReader.ReadMultiBuffer to clientWriter.WriteMultiBufer
-		if err := buf.Copy(serverReader, clientWriter, buf.UpdateActivity(timer)); err != nil {
+		if rawConn != nil {
+			err = encoding.ReadV(serverReader, clientWriter, timer, iConn.(*xtls.Conn), rawConn)
+		} else {
+			// from serverReader.ReadMultiBuffer to clientWriter.WriteMultiBufer
+			err = buf.Copy(serverReader, clientWriter, buf.UpdateActivity(timer))
+		}
+
+		if err != nil {
 			return newError("failed to transfer response payload").Base(err).AtInfo()
 		}
 
