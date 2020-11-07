@@ -32,40 +32,40 @@ ART_ROOT=${WORKDIR}/bazel-bin/release
 
 pushd ${ART_ROOT}
 {
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen version ${RELEASE_TAG}
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen project "v2flyunstable"
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-macos-64.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-windows-64.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-windows-32.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-windows-arm32-v7a.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-linux-64.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-linux-32.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-linux-arm64-v8a.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-linux-arm32-v7a.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-linux-arm32-v6.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-linux-arm32-v5.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-linux-mips64.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-linux-mips64le.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-linux-mips32.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-linux-mips32le.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-linux-ppc64.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-linux-ppc64le.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-linux-riscv64.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-linux-s390x.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-freebsd-64.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-freebsd-32.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-openbsd-64.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-openbsd-32.zip
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen file v2ray-dragonfly-64.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen version ${RELEASE_TAG}
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen project "v2flyunstable"
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-macos-64.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-windows-64.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-windows-32.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-windows-arm32-v7a.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-linux-64.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-linux-32.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-linux-arm64-v8a.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-linux-arm32-v7a.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-linux-arm32-v6.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-linux-arm32-v5.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-linux-mips64.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-linux-mips64le.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-linux-mips32.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-linux-mips32le.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-linux-ppc64.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-linux-ppc64le.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-linux-riscv64.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-linux-s390x.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-freebsd-64.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-freebsd-32.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-openbsd-64.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-openbsd-32.zip
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen file v2ray-dragonfly-64.zip
 } >Release.unsigned.unsorted
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil gen sort < Release.unsigned.unsorted > Release.unsigned
+  go run github.com/v2fly/V2BuildAssist/v2buildutil gen sort < Release.unsigned.unsorted > Release.unsigned
 
   {
     echo "Build Finished"
     echo "https://github.com/v2fly/V2FlyBleedingEdgeBinary/releases/tag/${RELEASE_TAG}"
   } > buildcomment
 
-  go run github.com/xiaokangwang/V2BuildAssist/v2buildutil post commit "${RELEASE_SHA}" < buildcomment
+  go run github.com/v2fly/V2BuildAssist/v2buildutil post commit "${RELEASE_SHA}" < buildcomment
 popd
 
 upload ${ART_ROOT}/v2ray-macos-64.zip
