@@ -4,6 +4,7 @@ package trojan
 
 import (
 	"context"
+	"syscall"
 	"time"
 
 	"v2ray.com/core"
@@ -90,6 +91,8 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		iConn = statConn.Connection
 	}
 
+	var rawConn syscall.RawConn
+
 	connWriter := &ConnWriter{}
 	allowUDP443 := false
 	switch account.Flow {
@@ -112,6 +115,9 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 				connWriter.Flow = account.Flow
 				if account.Flow == XRD {
 					xtlsConn.DirectMode = true
+					if sc, ok := xtlsConn.Connection.(syscall.Conn); ok {
+						rawConn, _ = sc.SyscallConn()
+					}
 				}
 			} else {
 				return newError(`failed to use ` + account.Flow + `, maybe "security" is not "xtls"`).AtWarning()
@@ -146,7 +152,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 
 		// write some request payload to buffer
 		if err = buf.CopyOnceTimeout(link.Reader, bodyWriter, time.Millisecond*100); err != nil && err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
-			return newError("failed to write A reqeust payload").Base(err).AtWarning()
+			return newError("failed to write A request payload").Base(err).AtWarning()
 		}
 
 		// Flush; bufferWriter.WriteMultiBufer now is bufferWriter.writer.WriteMultiBuffer
@@ -171,6 +177,9 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 			}
 		} else {
 			reader = buf.NewReader(conn)
+		}
+		if rawConn != nil {
+			return ReadV(reader, link.Writer, timer, iConn.(*xtls.Conn), rawConn)
 		}
 		return buf.Copy(reader, link.Writer, buf.UpdateActivity(timer))
 	}

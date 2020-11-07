@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"io"
 	"strconv"
+	"syscall"
 	"time"
 
 	"v2ray.com/core"
@@ -208,6 +209,8 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 		return newError("user account is not valid")
 	}
 
+	var rawConn syscall.RawConn
+
 	switch clientReader.Flow {
 	case XRO, XRD:
 		if account.Flow == clientReader.Flow {
@@ -219,6 +222,9 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 				xtlsConn.SHOW = trojanXTLSShow
 				if clientReader.Flow == XRD {
 					xtlsConn.DirectMode = true
+					if sc, ok := xtlsConn.Connection.(syscall.Conn); ok {
+						rawConn, _ = sc.SyscallConn()
+					}
 				}
 			} else {
 				return newError(`failed to use ` + clientReader.Flow + `, maybe "security" is not "xtls"`).AtWarning()
@@ -240,7 +246,7 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 	})
 
 	newError("received request for ", destination).WriteToLog(sid)
-	return s.handleConnection(ctx, sessionPolicy, destination, clientReader, buf.NewWriter(conn), dispatcher)
+	return s.handleConnection(ctx, sessionPolicy, destination, clientReader, buf.NewWriter(conn), dispatcher, iConn, rawConn)
 }
 
 func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReader, clientWriter *PacketWriter, dispatcher routing.Dispatcher) error {
@@ -283,7 +289,7 @@ func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReade
 func (s *Server) handleConnection(ctx context.Context, sessionPolicy policy.Session,
 	destination net.Destination,
 	clientReader buf.Reader,
-	clientWriter buf.Writer, dispatcher routing.Dispatcher) error {
+	clientWriter buf.Writer, dispatcher routing.Dispatcher, iConn internet.Connection, rawConn syscall.RawConn) error {
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
 	ctx = policy.ContextWithBufferPolicy(ctx, sessionPolicy.Buffer)
@@ -295,8 +301,13 @@ func (s *Server) handleConnection(ctx context.Context, sessionPolicy policy.Sess
 
 	requestDone := func() error {
 		defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
-
-		if err := buf.Copy(clientReader, link.Writer, buf.UpdateActivity(timer)); err != nil {
+		var err error
+		if rawConn != nil {
+			err = ReadV(clientReader, link.Writer, timer, iConn.(*xtls.Conn), rawConn)
+		} else {
+			err = buf.Copy(clientReader, link.Writer, buf.UpdateActivity(timer))
+		}
+		if err != nil {
 			return newError("failed to transfer request").Base(err)
 		}
 		return nil
