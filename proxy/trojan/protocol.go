@@ -17,6 +17,8 @@ var (
 		protocol.AddressFamilyByte(0x04, net.AddressFamilyIPv6),
 		protocol.AddressFamilyByte(0x03, net.AddressFamilyDomain),
 	)
+
+	trojanXTLSShow = false
 )
 
 const (
