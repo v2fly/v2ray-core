@@ -105,6 +105,11 @@ func NewHandler(ctx context.Context, config *core.OutboundHandlerConfig) (outbou
 		if config.Concurrency < 1 || config.Concurrency > 1024 {
 			return nil, newError("invalid mux concurrency: ", config.Concurrency).AtWarning()
 		}
+		var MaxConnection uint32 = 128
+		if MaxConnection < config.Concurrency {
+			MaxConnection = config.Concurrency
+		}
+
 		h.mux = &mux.ClientManager{
 			Enabled: h.senderSettings.MultiplexSettings.Enabled,
 			Picker: &mux.IncrementalWorkerPicker{
@@ -113,7 +118,7 @@ func NewHandler(ctx context.Context, config *core.OutboundHandlerConfig) (outbou
 					Dialer: h,
 					Strategy: mux.ClientStrategy{
 						MaxConcurrency: config.Concurrency,
-						MaxConnection:  128,
+						MaxConnection:  MaxConnection,
 					},
 				},
 			},
