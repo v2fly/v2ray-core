@@ -10,6 +10,7 @@ import (
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
 	"v2ray.com/core/common/net"
+	"v2ray.com/core/common/platform"
 	"v2ray.com/core/common/protocol"
 	"v2ray.com/core/common/retry"
 	"v2ray.com/core/common/session"
@@ -107,6 +108,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		} else { // enable XTLS only if making TCP request
 			if xtlsConn, ok := iConn.(*xtls.Conn); ok {
 				xtlsConn.RPRX = true
+				xtlsConn.SHOW = trojanXTLSShow
 				connWriter.Flow = account.Flow
 				if account.Flow == XRD {
 					xtlsConn.DirectMode = true
@@ -185,4 +187,11 @@ func init() {
 	common.Must(common.RegisterConfig((*ClientConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return NewClient(ctx, config.(*ClientConfig))
 	}))
+
+	const defaultFlagValue = "NOT_DEFINED_AT_ALL"
+
+	xtlsShow := platform.NewEnvFlag("v2ray.trojan.xtls.show").GetValue(func() string { return defaultFlagValue })
+	if xtlsShow == "true" {
+		trojanXTLSShow = true
+	}
 }
