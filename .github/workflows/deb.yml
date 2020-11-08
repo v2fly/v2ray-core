@@ -35,4 +35,18 @@ jobs:
         with:
           name: v2ray-debian-packages
           path: ./*.deb
+      - name: Setup Repository
+        if: github.event_name == 'release' && !contains(github.ref, 'pre')
+        run: |
+          git clone https://github.com/v2fly/debian.git archive
+          echo ${{ secrets.GPG_KEY }} | base64 -d > private.key
+          gpg --import private.key
+          cd archive
+          git config --local user.name "${{ github.actor }}"
+          git config --local user.email "${{ github.actor }}@users.noreply.github.com"
+          git remote set-url origin https://${{ github.actor }}:${{ secrets.DEBIAN_REPO_TOKEN }}@github.com/v2fly/debian.git
+          reprepro includedeb ../*.deb
+          git add -A
+          git commit -am 'update'
+          git push origin master
       
