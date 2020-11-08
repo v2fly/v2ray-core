@@ -1,5 +1,5 @@
 Source: v2ray-core
-Section: unknown
+Section: net
 Priority: optional
 Maintainer: ymshenyu <ymshenyu@gmail.com>
 Build-Depends:  debhelper-compat (= 12),
