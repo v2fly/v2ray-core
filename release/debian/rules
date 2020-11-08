@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/default.mk
+
+BUILDDIR=_build
+
+%:
+	dh $@ --builddirectory=$(BUILDDIR) --buildsystem=golang --with=golang
+
+execute_after_dh_auto_configure:
+	go mod vendor
+	cp -r vendor/* _build/src
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf vendor
+
+override_dh_auto_build:
+	DH_GOPKG="v2ray.com/core/main" dh_auto_build -- -ldflags "-s -w" -tags $(DEB_VERSION_UPSTREAM)
+	cd $(BUILDDIR); mv bin/main bin/v2ray
+	DH_GOPKG="v2ray.com/core/infra/control/main" dh_auto_build -- -ldflags "-s -w" -tags $(DEB_VERSION_UPSTREAM)
+	cd $(BUILDDIR); mv bin/main bin/v2ctl
+
+override_dh_auto_install:
+	dh_auto_install -- --no-source
+
+override_dh_auto_test:
