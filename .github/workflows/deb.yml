@@ -39,7 +39,7 @@ jobs:
         if: github.event_name == 'release' && !contains(github.ref, 'pre')
         run: |
           git clone https://github.com/v2fly/debian.git archive
-          echo ${{ secrets.GPG_KEY }} | base64 -d > private.key
+          echo ${{ secrets.DEBIAN_GPG_PRIVE }} | base64 -d > private.key
           gpg --import private.key
           cd archive
           git config --local user.name "${{ github.actor }}"
