@@ -38,6 +38,11 @@ func (*Client) LookupIP(host string) ([]net.IP, error) {
 	return parsedIPs, nil
 }
 
+// LookupFakeIP implements Client.
+func (c *Client) LookupFakeIP(host string) ([]net.IP, error) {
+	return nil, newError("local client does not support fake DNS")
+}
+
 // LookupIPv4 implements IPv4Lookup.
 func (c *Client) LookupIPv4(host string) ([]net.IP, error) {
 	ips, err := c.LookupIP(host)

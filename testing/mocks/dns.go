@@ -5,9 +5,10 @@
 package mocks
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	net "net"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
 // DNSClient is a mock of Client interface
@@ -60,6 +61,21 @@ func (m *DNSClient) LookupIP(arg0 string) ([]net.IP, error) {
 func (mr *DNSClientMockRecorder) LookupIP(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupIP", reflect.TypeOf((*DNSClient)(nil).LookupIP), arg0)
+}
+
+// LookupFakeIP mocks base method
+func (m *DNSClient) LookupFakeIP(arg0 string) ([]net.IP, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LookupFakeIP", arg0)
+	ret0, _ := ret[0].([]net.IP)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LookupFakeIP indicates an expected call of LookupFakeIP
+func (mr *DNSClientMockRecorder) LookupFakeIP(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupFakeIP", reflect.TypeOf((*DNSClient)(nil).LookupFakeIP), arg0)
 }
 
 // Start mocks base method

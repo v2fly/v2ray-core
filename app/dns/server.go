@@ -37,6 +37,7 @@ type Server struct {
 	domainMatcher strmatcher.IndexMatcher
 	matcherInfos  []DomainMatcherInfo // matcherIdx -> DomainMatcherInfo
 	tag           string
+	fakeEnabled   bool
 }
 
 // DomainMatcherInfo contains information attached to index returned by Server.domainMatcher
@@ -74,9 +75,14 @@ func generateRandomTag() string {
 
 // New creates a new DNS server with given configuration.
 func New(ctx context.Context, config *Config) (*Server, error) {
+	fake := false
+	if config.Fake != nil {
+		fake = config.Fake.Enabled
+	}
 	server := &Server{
-		clients: make([]Client, 0, len(config.NameServers)+len(config.NameServer)),
-		tag:     config.Tag,
+		clients:     make([]Client, 0, len(config.NameServers)+len(config.NameServer)),
+		tag:         config.Tag,
+		fakeEnabled: fake,
 	}
 	if server.tag == "" {
 		server.tag = generateRandomTag()
@@ -320,6 +326,20 @@ func (s *Server) LookupIP(domain string) ([]net.IP, error) {
 		IPv4Enable: true,
 		IPv6Enable: true,
 	})
+}
+
+// LookupFakeIP implements dns.Client.
+func (s *Server) LookupFakeIP(domain string) ([]net.IP, error) {
+	if !s.fakeEnabled {
+		return nil, newError("fake DNS is disabled")
+	}
+	// normalize the FQDN form query
+	if domain[len(domain)-1] == '.' {
+		domain = domain[:len(domain)-1]
+	}
+	ips := GetFakeIPForDomain(domain)
+	newError("returning fake IP ", ips[0].String(), " for domain ", domain).WriteToLog()
+	return toNetIP(ips), nil
 }
 
 // LookupIPv4 implements dns.IPv4Lookup.
