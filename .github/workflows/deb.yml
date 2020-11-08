@@ -1,0 +1,38 @@
+name: Build debian packages
+
+on:
+  push:
+  release:
+    types: [prereleased]
+
+jobs:
+  linux:
+    name: Debian sid
+    runs-on: ubuntu-latest
+    container: debian:sid
+
+    steps:
+      - name: Install git
+        run: |
+          apt-get update
+          apt-get install -y git
+      - name: Checking out sources
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: Install build dependencies
+        run: |
+          apt-get install -y build-essential dh-golang golang-any
+      - name: Build
+        run: |
+          cp -r release/debian .
+          dpkg-buildpackage -us -uc -i -b
+      - name: Copy binary
+        run: |
+          cp ../*.deb ./
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: v2ray-debian-packages
+          path: ./*.deb
+      
