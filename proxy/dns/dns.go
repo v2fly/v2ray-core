@@ -38,6 +38,7 @@ type ownLinkVerifier interface {
 }
 
 type Handler struct {
+	client          dns.Client
 	ipv4Lookup      dns.IPv4Lookup
 	ipv6Lookup      dns.IPv6Lookup
 	ownLinkVerifier ownLinkVerifier
@@ -45,6 +46,7 @@ type Handler struct {
 }
 
 func (h *Handler) Init(config *Config, dnsClient dns.Client) error {
+	h.client = dnsClient
 	ipv4lookup, ok := dnsClient.(dns.IPv4Lookup)
 	if !ok {
 		return newError("dns.Client doesn't implement IPv4Lookup")
@@ -211,11 +213,14 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 	var ips []net.IP
 	var err error
 
-	switch qType {
-	case dnsmessage.TypeA:
-		ips, err = h.ipv4Lookup.LookupIPv4(domain)
-	case dnsmessage.TypeAAAA:
-		ips, err = h.ipv6Lookup.LookupIPv6(domain)
+	ips, err = h.client.LookupFakeIP(domain)
+	if ips == nil {
+		switch qType {
+		case dnsmessage.TypeA:
+			ips, err = h.ipv4Lookup.LookupIPv4(domain)
+		case dnsmessage.TypeAAAA:
+			ips, err = h.ipv6Lookup.LookupIPv6(domain)
+		}
 	}
 
 	rcode := dns.RCodeFromError(err)

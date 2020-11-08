@@ -69,4 +69,11 @@ message Config {
 
   // Tag is the inbound tag of DNS client.
   string tag = 6;
+
+  message FakeConfig {
+    // Whether or not to return fake result for dns outbounds.
+    bool enabled = 1;
+  }
+
+  FakeConfig fake = 7;
 }

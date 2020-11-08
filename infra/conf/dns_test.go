@@ -137,6 +137,7 @@ func TestDNSConfigParsing(t *testing.T) {
 					},
 				},
 				ClientIp: []byte{10, 0, 0, 1},
+				Fake:     &dns.Config_FakeConfig{},
 			},
 		},
 	})
