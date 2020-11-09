@@ -22,7 +22,9 @@ func NewFakeDnsHolder() (*FakeDnsHolder, error) {
 	var ipRange *gonet.IPNet
 	var currentIP *big.Int
 
-	if ipaddr, ipRangeResult, err := gonet.ParseCIDR("240.0.0.0/24"); err != nil {
+	var lruSize = 65535
+
+	if ipaddr, ipRangeResult, err := gonet.ParseCIDR("240.0.0.0/8"); err != nil {
 		return nil, newError("Unable to parse CIDR for Fake DNS IP assignment").Base(err).AtError()
 	} else {
 		ipRange = ipRangeResult
@@ -32,7 +34,13 @@ func NewFakeDnsHolder() (*FakeDnsHolder, error) {
 		}
 	}
 
-	return &FakeDnsHolder{cache.NewLru(65535), currentIP, ipRange}, nil
+	ones, bits := ipRange.Mask.Size()
+	rooms := bits - ones
+	if lruSize >= 1<<rooms {
+		return nil, newError("LRU size is bigger than subnet size").AtError()
+	}
+
+	return &FakeDnsHolder{cache.NewLru(lruSize), currentIP, ipRange}, nil
 }
 
 // GetFakeIPForDomain check and generate a fake IP for a domain name
