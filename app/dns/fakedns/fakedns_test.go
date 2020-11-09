@@ -1,4 +1,4 @@
-package dns
+package fakedns
 
 import (
 	"github.com/stretchr/testify/assert"

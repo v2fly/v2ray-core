@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"v2ray.com/core"
-	"v2ray.com/core/app/dns"
+	"v2ray.com/core/app/dns/fakedns"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
 	"v2ray.com/core/common/log"
@@ -204,7 +204,7 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 		ctx = session.ContextWithContent(ctx, content)
 	}
 	sniffingRequest := content.SniffingRequest
-	domainFromFakeDNS := dns.GetDefaultFakeDnsFromContext(ctx).GetDomainFromFakeDNS(destination.Address)
+	domainFromFakeDNS := fakedns.GetDefaultFakeDnsFromContext(ctx).GetDomainFromFakeDNS(destination.Address)
 	switch {
 	case domainFromFakeDNS != "":
 		go func() {

@@ -1,10 +1,11 @@
-package dns
+package fakedns
 
 import (
 	"context"
 	"math/big"
 	"v2ray.com/core/common/cache"
 	"v2ray.com/core/common/net"
+	dns2 "v2ray.com/core/features/dns"
 
 	gonet "net"
 )
@@ -79,6 +80,6 @@ func (fkdns *FakeDnsHolder) GetDomainFromFakeDNS(ip net.Address) string {
 
 // GetDefaultFakeDnsFromContext will retrieve a FakeDnsHolder from context, local to that context
 // TODO: Current a stub function, should not relay on global variable
-func GetDefaultFakeDnsFromContext(ctx context.Context) FakeDns {
+func GetDefaultFakeDnsFromContext(ctx context.Context) dns2.FakeDnsEngine {
 	return fakeDnsHolder
 }
