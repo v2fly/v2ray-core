@@ -204,7 +204,7 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 		ctx = session.ContextWithContent(ctx, content)
 	}
 	sniffingRequest := content.SniffingRequest
-	domainFromFakeDNS := dns.GetDomainFromFakeDNS(destination.Address)
+	domainFromFakeDNS := dns.GetDefaultFakeDnsFromContext(ctx).GetDomainFromFakeDNS(destination.Address)
 	switch {
 	case domainFromFakeDNS != "":
 		go func() {
