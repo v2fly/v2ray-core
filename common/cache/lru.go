@@ -1,4 +1,4 @@
-package dns
+package cache
 
 import (
 	"container/list"
