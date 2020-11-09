@@ -2,21 +2,34 @@ package dns
 
 import (
 	"context"
-	"strconv"
-
+	"math/big"
 	"v2ray.com/core/common/cache"
 	"v2ray.com/core/common/net"
+
+	gonet "net"
 )
 
 type FakeDnsHolder struct {
 	domainToIP cache.Lru
-	nextIP     int
+	nextIP     *big.Int
+
+	ipRange *gonet.IPNet
 }
 
-var fakednsHolder = NewFakeDnsHolder()
+var fakeDnsHolder, _ = NewFakeDnsHolder()
 
-func NewFakeDnsHolder() *FakeDnsHolder {
-	return &FakeDnsHolder{cache.NewLru(65535), 0}
+func NewFakeDnsHolder() (*FakeDnsHolder, error) {
+	var ipRange *gonet.IPNet
+	var currentIP *big.Int
+
+	if ipaddr, ipRangeResult, err := gonet.ParseCIDR("240.0.0.0/24"); err != nil {
+		return nil, newError("Unable to parse CIDR for Fake DNS IP assignment").Base(err).AtError()
+	} else {
+		ipRange = ipRangeResult
+		currentIP = big.NewInt(0).SetBytes(ipaddr)
+	}
+
+	return &FakeDnsHolder{cache.NewLru(65535), currentIP, ipRange}, nil
 }
 
 // GetFakeIPForDomain check and generate a fake IP for a domain name
@@ -26,12 +39,13 @@ func (fkdns *FakeDnsHolder) GetFakeIPForDomain(domain string) []net.Address {
 	}
 	var ip net.Address
 	for {
-		as := "240."
-		as += strconv.Itoa((0xff0000&fkdns.nextIP)>>16) + "."
-		as += strconv.Itoa((0xff00&fkdns.nextIP)>>8) + "."
-		as += strconv.Itoa(0xff & fkdns.nextIP)
-		ip = net.ParseAddress(as)
-		fkdns.nextIP = 0xffffff & (fkdns.nextIP + 1)
+		ip = net.IPAddress(fkdns.nextIP.Bytes())
+
+		fkdns.nextIP = fkdns.nextIP.Add(fkdns.nextIP, big.NewInt(1))
+		if !fkdns.ipRange.Contains(fkdns.nextIP.Bytes()) {
+			fkdns.nextIP = big.NewInt(0).SetBytes(fkdns.ipRange.IP)
+		}
+
 		// if we run for a long time, we may go back to beginning and start seeing the IP in use
 		if _, ok := fkdns.domainToIP.GetKeyFromValue(ip); !ok {
 			break
@@ -43,7 +57,7 @@ func (fkdns *FakeDnsHolder) GetFakeIPForDomain(domain string) []net.Address {
 
 // GetDomainFromFakeDNS check if an IP is a fake IP and have corresponding domain name
 func (fkdns *FakeDnsHolder) GetDomainFromFakeDNS(ip net.Address) string {
-	if !ip.Family().IsIP() || ip.String()[:3] != "240" {
+	if !ip.Family().IsIP() || !fkdns.ipRange.Contains(ip.IP()) {
 		return ""
 	}
 	if k, ok := fkdns.domainToIP.GetKeyFromValue(ip); ok {
@@ -55,5 +69,5 @@ func (fkdns *FakeDnsHolder) GetDomainFromFakeDNS(ip net.Address) string {
 // GetDefaultFakeDnsFromContext will retrieve a FakeDnsHolder from context, local to that context
 // TODO: Current a stub function, should not relay on global variable
 func GetDefaultFakeDnsFromContext(ctx context.Context) FakeDns {
-	return fakednsHolder
+	return fakeDnsHolder
 }
