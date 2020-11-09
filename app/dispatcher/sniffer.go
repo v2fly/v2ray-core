@@ -3,6 +3,7 @@
 package dispatcher
 
 import (
+	"context"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/protocol/bittorrent"
 	"v2ray.com/core/common/protocol/http"
@@ -14,7 +15,7 @@ type SniffResult interface {
 	Domain() string
 }
 
-type protocolSniffer func([]byte) (SniffResult, error)
+type protocolSniffer func([]byte, context.Context) (SniffResult, error)
 
 type Sniffer struct {
 	sniffer []protocolSniffer
@@ -23,19 +24,19 @@ type Sniffer struct {
 func NewSniffer() *Sniffer {
 	return &Sniffer{
 		sniffer: []protocolSniffer{
-			func(b []byte) (SniffResult, error) { return http.SniffHTTP(b) },
-			func(b []byte) (SniffResult, error) { return tls.SniffTLS(b) },
-			func(b []byte) (SniffResult, error) { return bittorrent.SniffBittorrent(b) },
+			func(b []byte, c context.Context) (SniffResult, error) { return http.SniffHTTP(b) },
+			func(b []byte, c context.Context) (SniffResult, error) { return tls.SniffTLS(b) },
+			func(b []byte, c context.Context) (SniffResult, error) { return bittorrent.SniffBittorrent(b) },
 		},
 	}
 }
 
 var errUnknownContent = newError("unknown content")
 
-func (s *Sniffer) Sniff(payload []byte) (SniffResult, error) {
+func (s *Sniffer) Sniff(payload []byte, c context.Context) (SniffResult, error) {
 	var pendingSniffer []protocolSniffer
 	for _, s := range s.sniffer {
-		result, err := s(payload)
+		result, err := s(payload, c)
 		if err == common.ErrNoClue {
 			pendingSniffer = append(pendingSniffer, s)
 			continue
