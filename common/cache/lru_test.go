@@ -1,9 +1,9 @@
-package dns_test
+package cache_test
 
 import (
 	"testing"
 
-	. "v2ray.com/core/app/dns"
+	. "v2ray.com/core/common/cache"
 )
 
 func TestLruReplaceValue(t *testing.T) {

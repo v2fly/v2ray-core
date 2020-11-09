@@ -3,10 +3,11 @@ package dns
 import (
 	"strconv"
 
+	"v2ray.com/core/common/cache"
 	"v2ray.com/core/common/net"
 )
 
-var domainToIP = NewLru(65535)
+var domainToIP = cache.NewLru(65535)
 var nextIP = 0
 
 // GetFakeIPForDomain check and generate a fake IP for a domain name
