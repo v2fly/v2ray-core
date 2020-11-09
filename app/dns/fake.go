@@ -27,6 +27,9 @@ func NewFakeDnsHolder() (*FakeDnsHolder, error) {
 	} else {
 		ipRange = ipRangeResult
 		currentIP = big.NewInt(0).SetBytes(ipaddr)
+		if ipaddr.To4() != nil {
+			currentIP = big.NewInt(0).SetBytes(ipaddr.To4())
+		}
 	}
 
 	return &FakeDnsHolder{cache.NewLru(65535), currentIP, ipRange}, nil
