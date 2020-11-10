@@ -27,33 +27,34 @@ func (f FakeDnsPostProcessingStage) Process(conf *Config) error {
 			IPPool:  "240.0.0.0/8",
 			LruSize: 65535,
 		}
-	}
-	found := false
-	//Check if there is a Outbound with necessary sniffer on
-	var inbounds []InboundDetourConfig
+		found := false
+		//Check if there is a Outbound with necessary sniffer on
+		var inbounds []InboundDetourConfig
 
-	if conf.InboundConfig != nil {
-		inbounds = append(inbounds, *conf.InboundConfig)
-	}
+		if conf.InboundConfig != nil {
+			inbounds = append(inbounds, *conf.InboundConfig)
+		}
 
-	if len(conf.InboundDetours) > 0 {
-		inbounds = append(inbounds, conf.InboundDetours...)
-	}
+		if len(conf.InboundDetours) > 0 {
+			inbounds = append(inbounds, conf.InboundDetours...)
+		}
 
-	if len(conf.InboundConfigs) > 0 {
-		inbounds = append(inbounds, conf.InboundConfigs...)
-	}
-	for _, v := range inbounds {
-		if v.SniffingConfig != nil && v.SniffingConfig.Enabled != true && v.SniffingConfig.DestOverride != nil {
-			for _, dov := range *v.SniffingConfig.DestOverride {
-				if dov == "fakedns" {
-					found = true
+		if len(conf.InboundConfigs) > 0 {
+			inbounds = append(inbounds, conf.InboundConfigs...)
+		}
+		for _, v := range inbounds {
+			if v.SniffingConfig != nil && v.SniffingConfig.Enabled != true && v.SniffingConfig.DestOverride != nil {
+				for _, dov := range *v.SniffingConfig.DestOverride {
+					if dov == "fakedns" {
+						found = true
+					}
 				}
 			}
 		}
+		if !found {
+			newError("Defined Fake DNS but haven't enabled fake dns sniffing at any inbound.").AtWarning().WriteToLog()
+		}
 	}
-	if !found {
-		newError("Defined Fake DNS but haven't enabled fake dns sniffing at any inbound.").AtWarning().WriteToLog()
-	}
+
 	return nil
 }
