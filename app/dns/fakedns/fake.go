@@ -7,6 +7,7 @@ import (
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/cache"
 	"v2ray.com/core/common/net"
+	"v2ray.com/core/features/dns"
 )
 
 type FakeDnsHolder struct {
@@ -19,7 +20,7 @@ type FakeDnsHolder struct {
 }
 
 func (fkdns *FakeDnsHolder) Type() interface{} {
-	return (*FakeDnsHolder)(nil)
+	return (*dns.FakeDnsEngine)(nil)
 }
 
 func (fkdns *FakeDnsHolder) Start() error {
