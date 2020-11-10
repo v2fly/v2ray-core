@@ -3,6 +3,7 @@ package fakedns
 import (
 	"context"
 	"math/big"
+	"v2ray.com/core/common"
 	"v2ray.com/core/common/cache"
 	"v2ray.com/core/common/net"
 	dns2 "v2ray.com/core/features/dns"
@@ -116,4 +117,15 @@ func (fkdns *FakeDnsHolder) GetDomainFromFakeDNS(ip net.Address) string {
 // TODO: Current a stub function, should not relay on global variable
 func GetDefaultFakeDnsFromContext(ctx context.Context) dns2.FakeDnsEngine {
 	return fakeDnsHolder
+}
+
+func init() {
+	common.Must(common.RegisterConfig((*FakeDnsPool)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
+		if f, err := NewFakeDnsHolderConfigOnly(config.(*FakeDnsPool)); err != nil {
+			return nil, err
+		} else {
+			return f, nil
+		}
+
+	}))
 }
