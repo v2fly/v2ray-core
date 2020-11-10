@@ -21,7 +21,7 @@ type protocolSnifferWithMetadata struct {
 	protocolSniffer protocolSniffer
 	// A Metadata sniffer will be invoked on connection establishment only, with nil body,
 	// for both TCP and UDP connections
-	// It will not be shown as a traffic type for routing.
+	// It will not be shown as a traffic type for routing unless there is no other successful sniffing.
 	metadataSniffer bool
 }
 
@@ -29,14 +29,18 @@ type Sniffer struct {
 	sniffer []protocolSnifferWithMetadata
 }
 
-func NewSniffer() *Sniffer {
-	return &Sniffer{
+func NewSniffer(ctx context.Context) *Sniffer {
+	ret := &Sniffer{
 		sniffer: []protocolSnifferWithMetadata{
 			{func(b []byte, c context.Context) (SniffResult, error) { return http.SniffHTTP(b) }, false},
 			{func(b []byte, c context.Context) (SniffResult, error) { return tls.SniffTLS(b) }, false},
 			{func(b []byte, c context.Context) (SniffResult, error) { return bittorrent.SniffBittorrent(b) }, false},
 		},
 	}
+	if sniffer, err := NewFakeDNSSniffer(ctx); err != nil {
+		ret.sniffer = append(ret.sniffer, sniffer)
+	}
+	return ret
 }
 
 var errUnknownContent = newError("unknown content")
@@ -109,4 +113,12 @@ func (c compositeResult) Protocol() string {
 
 func (c compositeResult) Domain() string {
 	return c.domainResult.Domain()
+}
+
+func (c compositeResult) ProtocolForDomainResult() string {
+	return c.domainResult.Protocol()
+}
+
+type SnifferResultComposite interface {
+	ProtocolForDomainResult() string
 }

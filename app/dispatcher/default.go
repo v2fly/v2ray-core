@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"v2ray.com/core"
-	"v2ray.com/core/app/dns/fakedns"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
 	"v2ray.com/core/common/log"
@@ -179,8 +178,12 @@ func (d *DefaultDispatcher) getLink(ctx context.Context) (*transport.Link, *tran
 }
 
 func shouldOverride(result SniffResult, domainOverride []string) bool {
+	protocolString := result.Protocol()
+	if resComp, ok := result.(SnifferResultComposite); ok {
+		protocolString = resComp.ProtocolForDomainResult()
+	}
 	for _, p := range domainOverride {
-		if strings.HasPrefix(result.Protocol(), p) {
+		if strings.HasPrefix(protocolString, p) {
 			return true
 		}
 	}
@@ -204,15 +207,7 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 		ctx = session.ContextWithContent(ctx, content)
 	}
 	sniffingRequest := content.SniffingRequest
-	domainFromFakeDNS := fakedns.GetDefaultFakeDnsFromContext(ctx).GetDomainFromFakeDNS(destination.Address)
 	switch {
-	case domainFromFakeDNS != "":
-		go func() {
-			newError("fake dns got domain: ", domainFromFakeDNS, " for ip: ", destination.Address.String()).WriteToLog(session.ExportIDToError(ctx))
-			destination.Address = net.ParseAddress(domainFromFakeDNS)
-			ob.Target = destination
-			d.routedDispatch(ctx, outbound, destination)
-		}()
 	case !sniffingRequest.Enabled:
 		go d.routedDispatch(ctx, outbound, destination)
 	case destination.Network != net.Network_TCP:
@@ -254,7 +249,7 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool) (Sni
 	payload := buf.New()
 	defer payload.Release()
 
-	sniffer := NewSniffer()
+	sniffer := NewSniffer(ctx)
 
 	metaresult, metadataErr := sniffer.SniffMetadata(ctx)
 
