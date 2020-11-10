@@ -33,8 +33,6 @@ func (fkdns *FakeDnsHolder) Close() error {
 	return nil
 }
 
-var fakeDnsHolder, _ = NewFakeDnsHolder()
-
 func NewFakeDnsHolder() (*FakeDnsHolder, error) {
 	if fkdnsw, err := NewFakeDnsHolderConfigOnly(nil); err != nil {
 		return nil, newError("Unable to create Fake Dns Engine").Base(err).AtError()
