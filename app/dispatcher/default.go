@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"v2ray.com/core/app/dispatcher/speed"
 
 	"v2ray.com/core"
 	"v2ray.com/core/common"
@@ -154,6 +155,17 @@ func (d *DefaultDispatcher) getLink(ctx context.Context) (*transport.Link, *tran
 
 	if user != nil && len(user.Email) > 0 {
 		p := d.policy.ForLevel(user.Level)
+
+		if p.Speed.Inbound != 0 || p.Speed.Outbound != 0 {
+			bm := speed.NewBucketHub()
+			if p.Speed.Inbound != 0 {
+				inboundLink.Writer = speed.RateWriter(inboundLink.Writer, bm.GetUserBucket(user, p.Speed.Inbound))
+			}
+			if p.Speed.Outbound != 0 {
+				outboundLink.Writer = speed.RateWriter(outboundLink.Writer, bm.GetUserBucket(user, p.Speed.Outbound))
+			}
+		}
+
 		if p.Stats.UserUplink {
 			name := "user>>>" + user.Email + ">>>traffic>>>uplink"
 			if c, _ := stats.GetOrRegisterCounter(d.stats, name); c != nil {
