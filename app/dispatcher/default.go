@@ -229,7 +229,7 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 				reader: outbound.Reader.(*pipe.Reader),
 			}
 			outbound.Reader = cReader
-			result, err := sniffer(ctx, cReader, !sniffingRequest.MetadataOnly)
+			result, err := sniffer(ctx, cReader, sniffingRequest.MetadataOnly)
 			if err == nil {
 				content.Protocol = result.Protocol()
 			}
