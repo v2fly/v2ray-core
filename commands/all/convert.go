@@ -27,8 +27,8 @@ Convert multiple json config to protobuf.
 
 Examples:
 
-    {{.Exec}} convert config.json c1.json c2.json <url>.json
-	`,
+    {{.Exec}} {{.LongName}} config.json c1.json c2.json <url>.json
+`,
 }
 
 func init() {

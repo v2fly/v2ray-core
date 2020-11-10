@@ -16,8 +16,11 @@ var CmdPing = &base.Command{
 	Long: `
 Ping the domain with TLS handshake.
 
-The -ip flag sets the IP address of the domain.
-	`,
+Arguments:
+
+	-ip
+		The IP address of the domain.
+`,
 }
 
 func init() {

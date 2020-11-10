@@ -24,16 +24,27 @@ var cmdRun = &base.Command{
 	Long: `
 Run V2Ray with config.
 
-The -config=file, -c=file flags set the config files for 
-V2Ray. Multiple assign is accepted.
+Example:
 
-The -confdir=dir flag sets a dir with multiple json config
+	{{.Exec}} {{.LongName}} -c config.json
 
-The -format=json flag sets the format of config files. 
-Default "json".
+Arguments:
 
-The -test flag tells V2Ray to test config files only, 
-without launching the server
+	-c value
+		Short alias of -config
+
+	-config value
+		Config file for V2Ray. Multiple assign is accepted (only
+		json). Latter ones overrides the former ones.
+
+	-confdir string
+		A dir with multiple json config
+
+	-format string
+		Format of input file. (default "json")
+
+	-test
+		Test config file only, without launching V2Ray server.
 	`,
 }
 

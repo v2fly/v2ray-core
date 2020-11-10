@@ -140,6 +140,7 @@ func buildCommandText(cmd *Command) {
 
 func buildText(text string, data interface{}) string {
 	buf := bytes.NewBuffer([]byte{})
+	text = strings.ReplaceAll(text, "\t", "    ")
 	tmpl(buf, text, data)
 	return buf.String()
 }

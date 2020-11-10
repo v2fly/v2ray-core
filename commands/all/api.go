@@ -24,16 +24,16 @@ Call V2Ray API, API calls in this command have a timeout to the server of 3 seco
 
 The following methods are currently supported:
 
-    LoggerService.RestartLogger
-    StatsService.GetStats
-    StatsService.QueryStats
+	LoggerService.RestartLogger
+	StatsService.GetStats
+	StatsService.QueryStats
 
 Examples:
 
-    {{.Exec}} api --server=127.0.0.1:8080 LoggerService.RestartLogger '' 
-    {{.Exec}} api --server=127.0.0.1:8080 StatsService.QueryStats 'pattern: "" reset: false'
-    {{.Exec}} api --server=127.0.0.1:8080 StatsService.GetStats 'name: "inbound>>>statin>>>traffic>>>downlink" reset: false'
-    {{.Exec}} api --server=127.0.0.1:8080 StatsService.GetSysStats ''
+	{{.Exec}} {{.LongName}} --server=127.0.0.1:8080 LoggerService.RestartLogger '' 
+	{{.Exec}} {{.LongName}} --server=127.0.0.1:8080 StatsService.QueryStats 'pattern: "" reset: false'
+	{{.Exec}} {{.LongName}} --server=127.0.0.1:8080 StatsService.GetStats 'name: "inbound>>>statin>>>traffic>>>downlink" reset: false'
+	{{.Exec}} {{.LongName}} --server=127.0.0.1:8080 StatsService.GetSysStats ''
 	`,
 }
 

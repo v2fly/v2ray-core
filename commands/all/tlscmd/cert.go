@@ -21,21 +21,26 @@ var CmdCert = &base.Command{
 	Long: `
 Generate TLS certificates.
 
-The -domain=domain_name flag sets the domain name for the 
-certificate.
+Arguments:
 
-The -org=organization flag sets the organization name for the 
-certificate.
+	-domain=domain_name 
+		The domain name for the certificate.
 
-The -ca flag sets whether this certificate is a CA
+	-org=organization 
+		The organization name for the certificate.
 
-The -json flag sets the output of certificate to JSON
+	-ca 
+		Whether this certificate is a CA
 
-The -file flag sets the certificate path to save.
+	-json 
+		The output of certificate to JSON
 
-The -expire flag expire time of the certificate. Default 
-value 3 months.
-	`,
+	-file 
+		The certificate path to save.
+
+	-expire 
+		Expire time of the certificate. Default value 3 months.
+`,
 }
 
 func init() {

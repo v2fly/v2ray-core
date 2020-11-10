@@ -13,8 +13,11 @@ var cmdVerify = &base.Command{
 	Long: `
 Verify if a binary is officially signed.
 
-The -sig sets the path to the signature file
-	`,
+Arguments:
+
+	-sig 
+		The path to the signature file
+`,
 }
 
 func init() {
