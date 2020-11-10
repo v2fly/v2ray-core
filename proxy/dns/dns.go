@@ -213,6 +213,8 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 	var ips []net.IP
 	var err error
 
+	var ttl uint32 = 600
+
 	ips, err = h.client.LookupFakeIP(domain)
 	if ips == nil {
 		switch qType {
@@ -221,6 +223,8 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 		case dnsmessage.TypeAAAA:
 			ips, err = h.ipv6Lookup.LookupIPv6(domain)
 		}
+	} else {
+		ttl = 5
 	}
 
 	rcode := dns.RCodeFromError(err)
@@ -248,7 +252,7 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 	}))
 	common.Must(builder.StartAnswers())
 
-	rHeader := dnsmessage.ResourceHeader{Name: dnsmessage.MustNewName(domain), Class: dnsmessage.ClassINET, TTL: 600}
+	rHeader := dnsmessage.ResourceHeader{Name: dnsmessage.MustNewName(domain), Class: dnsmessage.ClassINET, TTL: ttl}
 	for _, ip := range ips {
 		if len(ip) == net.IPv4len {
 			var r dnsmessage.AResource
