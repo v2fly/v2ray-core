@@ -37,7 +37,7 @@ func NewSniffer(ctx context.Context) *Sniffer {
 			{func(b []byte, c context.Context) (SniffResult, error) { return bittorrent.SniffBittorrent(b) }, false},
 		},
 	}
-	if sniffer, err := NewFakeDNSSniffer(ctx); err != nil {
+	if sniffer, err := NewFakeDNSSniffer(ctx); err == nil {
 		ret.sniffer = append(ret.sniffer, sniffer)
 	}
 	return ret
