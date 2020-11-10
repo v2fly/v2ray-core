@@ -6,6 +6,7 @@ import (
 	"unicode"
 )
 
+// Simple size conversion
 const (
 	BYTE = 1 << (10 * iota)
 	KILOBYTE
@@ -14,6 +15,7 @@ const (
 
 var invalidByteQuantityError = newError("only accept byte like M/MB/MIB, K/KB/KIB, B").AtError()
 
+// String to byte
 func ToBytes(s string) (uint64, error) {
 	s = strings.TrimSpace(s)
 	s = strings.ToUpper(s)

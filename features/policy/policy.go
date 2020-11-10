@@ -35,7 +35,7 @@ type Buffer struct {
 	PerConnection int32
 }
 
-// inbound and outbound speed limit
+// Speed limit inbound and outbound
 type Speed struct {
 	Inbound  uint64
 	Outbound uint64
