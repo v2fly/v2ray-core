@@ -271,7 +271,7 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool) (Sni
 
 				cReader.Cache(payload)
 				if !payload.IsEmpty() {
-					result, err := sniffer.Sniff(payload.Bytes(), ctx)
+					result, err := sniffer.Sniff(ctx, payload.Bytes())
 					if err != common.ErrNoClue {
 						return result, err
 					}
