@@ -10,7 +10,7 @@ import (
 	"v2ray.com/core/features/dns"
 )
 
-type FakeDnsHolder struct {
+type FakeDNSHolder struct {
 	domainToIP cache.Lru
 	nextIP     *big.Int
 
@@ -19,39 +19,41 @@ type FakeDnsHolder struct {
 	config *FakeDnsPool
 }
 
-func (fkdns *FakeDnsHolder) Type() interface{} {
-	return (*dns.FakeDnsEngine)(nil)
+func (fkdns *FakeDNSHolder) Type() interface{} {
+	return (*dns.FakeDNSEngine)(nil)
 }
 
-func (fkdns *FakeDnsHolder) Start() error {
+func (fkdns *FakeDNSHolder) Start() error {
 	return fkdns.initializeFromConfig()
 }
 
-func (fkdns *FakeDnsHolder) Close() error {
+func (fkdns *FakeDNSHolder) Close() error {
 	fkdns.domainToIP = nil
 	fkdns.nextIP = nil
 	fkdns.ipRange = nil
 	return nil
 }
 
-func NewFakeDnsHolder() (*FakeDnsHolder, error) {
-	if fkdnsw, err := NewFakeDnsHolderConfigOnly(nil); err != nil {
+func NewFakeDNSHolder() (*FakeDNSHolder, error) {
+	var fkdns *FakeDNSHolder
+	if fkdnsw, err := NewFakeDNSHolderConfigOnly(nil); err != nil {
 		return nil, newError("Unable to create Fake Dns Engine").Base(err).AtError()
 	} else {
 		fkdnsw.initialize("240.0.0.0/8", 65535)
-		return fkdnsw, nil
+		fkdns = fkdnsw
 	}
+	return fkdns, nil
 }
 
-func NewFakeDnsHolderConfigOnly(conf *FakeDnsPool) (*FakeDnsHolder, error) {
-	return &FakeDnsHolder{nil, nil, nil, conf}, nil
+func NewFakeDNSHolderConfigOnly(conf *FakeDnsPool) (*FakeDNSHolder, error) {
+	return &FakeDNSHolder{nil, nil, nil, conf}, nil
 }
 
-func (fkdns *FakeDnsHolder) initializeFromConfig() error {
+func (fkdns *FakeDNSHolder) initializeFromConfig() error {
 	return fkdns.initialize(fkdns.config.IpPool, int(fkdns.config.LruSize))
 }
 
-func (fkdns *FakeDnsHolder) initialize(ipPoolCidr string, lruSize int) error {
+func (fkdns *FakeDNSHolder) initialize(ipPoolCidr string, lruSize int) error {
 	var ipRange *gonet.IPNet
 	var currentIP *big.Int
 
@@ -77,7 +79,7 @@ func (fkdns *FakeDnsHolder) initialize(ipPoolCidr string, lruSize int) error {
 }
 
 // GetFakeIPForDomain check and generate a fake IP for a domain name
-func (fkdns *FakeDnsHolder) GetFakeIPForDomain(domain string) []net.Address {
+func (fkdns *FakeDNSHolder) GetFakeIPForDomain(domain string) []net.Address {
 	if v, ok := fkdns.domainToIP.Get(domain); ok {
 		return []net.Address{v.(net.Address)}
 	}
@@ -100,7 +102,7 @@ func (fkdns *FakeDnsHolder) GetFakeIPForDomain(domain string) []net.Address {
 }
 
 // GetDomainFromFakeDNS check if an IP is a fake IP and have corresponding domain name
-func (fkdns *FakeDnsHolder) GetDomainFromFakeDNS(ip net.Address) string {
+func (fkdns *FakeDNSHolder) GetDomainFromFakeDNS(ip net.Address) string {
 	if !ip.Family().IsIP() || !fkdns.ipRange.Contains(ip.IP()) {
 		return ""
 	}
@@ -112,7 +114,7 @@ func (fkdns *FakeDnsHolder) GetDomainFromFakeDNS(ip net.Address) string {
 
 func init() {
 	common.Must(common.RegisterConfig((*FakeDnsPool)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
-		if f, err := NewFakeDnsHolderConfigOnly(config.(*FakeDnsPool)); err != nil {
+		if f, err := NewFakeDNSHolderConfigOnly(config.(*FakeDnsPool)); err != nil {
 			return nil, err
 		} else {
 			return f, nil

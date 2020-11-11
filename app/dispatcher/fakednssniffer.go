@@ -11,9 +11,10 @@ import (
 	"v2ray.com/core/features/dns"
 )
 
+// NewFakeDNSSniffer Create a Fake DNS metadata sniffer
 func NewFakeDNSSniffer(ctx context.Context) (protocolSnifferWithMetadata, error) {
-	var fakeDNSEngine dns.FakeDnsEngine
-	err := core.RequireFeatures(ctx, func(fdns dns.FakeDnsEngine) {
+	var fakeDNSEngine dns.FakeDNSEngine
+	err := core.RequireFeatures(ctx, func(fdns dns.FakeDNSEngine) {
 		fakeDNSEngine = fdns
 	})
 	if err != nil {

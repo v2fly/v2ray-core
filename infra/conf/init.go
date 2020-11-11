@@ -1,5 +1,5 @@
 package conf
 
 func init() {
-	RegisterConfigureFilePostProcessingStage("FakeDns", &FakeDnsPostProcessingStage{})
+	RegisterConfigureFilePostProcessingStage("FakeDns", &FakeDNSPostProcessingStage{})
 }

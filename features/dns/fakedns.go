@@ -5,7 +5,7 @@ import (
 	"v2ray.com/core/features"
 )
 
-type FakeDnsEngine interface {
+type FakeDNSEngine interface {
 	features.Feature
 	GetFakeIPForDomain(domain string) []net.Address
 	GetDomainFromFakeDNS(ip net.Address) string

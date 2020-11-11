@@ -350,7 +350,7 @@ type Config struct {
 	API             *APIConfig             `json:"api"`
 	Stats           *StatsConfig           `json:"stats"`
 	Reverse         *ReverseConfig         `json:"reverse"`
-	FakeDns         *FakeDnsConfig         `json:"fakeDns"`
+	FakeDns         *FakeDNSConfig         `json:"fakeDns"`
 }
 
 func (c *Config) findInboundTag(tag string) int {

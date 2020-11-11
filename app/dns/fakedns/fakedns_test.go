@@ -9,12 +9,12 @@ import (
 )
 
 func TestNewFakeDnsHolder(t *testing.T) {
-	_, err := NewFakeDnsHolder()
+	_, err := NewFakeDNSHolder()
 	common.Must(err)
 }
 
 func TestFakeDnsHolderCreateMapping(t *testing.T) {
-	fkdns, err := NewFakeDnsHolder()
+	fkdns, err := NewFakeDNSHolder()
 	common.Must(err)
 
 	addr := fkdns.GetFakeIPForDomain("fakednstest.v2fly.org")
@@ -22,7 +22,7 @@ func TestFakeDnsHolderCreateMapping(t *testing.T) {
 }
 
 func TestFakeDnsHolderCreateMappingMany(t *testing.T) {
-	fkdns, err := NewFakeDnsHolder()
+	fkdns, err := NewFakeDNSHolder()
 	common.Must(err)
 
 	addr := fkdns.GetFakeIPForDomain("fakednstest.v2fly.org")
@@ -33,7 +33,7 @@ func TestFakeDnsHolderCreateMappingMany(t *testing.T) {
 }
 
 func TestFakeDnsHolderCreateMappingManyAndResolve(t *testing.T) {
-	fkdns, err := NewFakeDnsHolder()
+	fkdns, err := NewFakeDNSHolder()
 	common.Must(err)
 
 	{
@@ -58,7 +58,7 @@ func TestFakeDnsHolderCreateMappingManyAndResolve(t *testing.T) {
 }
 
 func TestFakeDnsHolderCreateMappingManySingleDomain(t *testing.T) {
-	fkdns, err := NewFakeDnsHolder()
+	fkdns, err := NewFakeDNSHolder()
 	common.Must(err)
 
 	addr := fkdns.GetFakeIPForDomain("fakednstest.v2fly.org")
@@ -73,7 +73,7 @@ func TestFakeDnsHolderCreateMappingAndRollOver(t *testing.T) {
 		t.Skip("skipping DNS Holder RollOver test in short mode. ~190s")
 	}
 
-	fkdns, err := NewFakeDnsHolder()
+	fkdns, err := NewFakeDNSHolder()
 	common.Must(err)
 
 	{

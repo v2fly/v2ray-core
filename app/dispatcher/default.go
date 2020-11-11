@@ -211,7 +211,7 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 	case !sniffingRequest.Enabled:
 		go d.routedDispatch(ctx, outbound, destination)
 	case destination.Network != net.Network_TCP:
-		//Only metadata sniff will be used for non tcp connection
+		// Only metadata sniff will be used for non tcp connection
 		result, err := sniffer(ctx, nil, true)
 		if err == nil {
 			content.Protocol = result.Protocol()

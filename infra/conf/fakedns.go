@@ -5,30 +5,30 @@ import (
 	"v2ray.com/core/app/dns/fakedns"
 )
 
-type FakeDnsConfig struct {
+type FakeDNSConfig struct {
 	IPPool  string `json:"ipPool"`
 	LruSize int64  `json:"poolSize"`
 }
 
-func (f FakeDnsConfig) Build() (proto.Message, error) {
+func (f FakeDNSConfig) Build() (proto.Message, error) {
 	return &fakedns.FakeDnsPool{
 		IpPool:  f.IPPool,
 		LruSize: f.LruSize,
 	}, nil
 }
 
-type FakeDnsPostProcessingStage struct {
+type FakeDNSPostProcessingStage struct {
 }
 
-func (f FakeDnsPostProcessingStage) Process(conf *Config) error {
+func (f FakeDNSPostProcessingStage) Process(conf *Config) error {
 	if conf.DNSConfig != nil && conf.DNSConfig.FakeConfig != nil && *conf.DNSConfig.FakeConfig {
-		//Add a Fake DNS Config if there is none
-		conf.FakeDns = &FakeDnsConfig{
+		// Add a Fake DNS Config if there is none
+		conf.FakeDns = &FakeDNSConfig{
 			IPPool:  "240.0.0.0/8",
 			LruSize: 65535,
 		}
 		found := false
-		//Check if there is a Outbound with necessary sniffer on
+		// Check if there is a Outbound with necessary sniffer on
 		var inbounds []InboundDetourConfig
 
 		if conf.InboundConfig != nil {
