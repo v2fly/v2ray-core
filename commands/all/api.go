@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/proto"
 
 	logService "v2ray.com/core/app/log/command"
 	statsService "v2ray.com/core/app/stats/command"
@@ -68,7 +68,7 @@ func executeAPI(cmd *base.Command, args []string) {
 
 	response, err := handler(ctx, conn, method, unnamedArgs[1])
 	if err != nil {
-		base.Fatalf("failed to call service %s", unnamedArgs[0])
+		base.Fatalf("failed to call service %s: %s", unnamedArgs[0], err)
 	}
 
 	fmt.Println(response)
@@ -97,18 +97,11 @@ func callLogService(ctx context.Context, conn *grpc.ClientConn, method string, r
 	switch strings.ToLower(method) {
 	case "restartlogger":
 		r := &logService.RestartLoggerRequest{}
-		if err := proto.Unmarshal([]byte(request), r); err != nil {
-			return "", err
-		}
 		resp, err := client.RestartLogger(ctx, r)
 		if err != nil {
 			return "", err
 		}
-		m, err := proto.Marshal(resp)
-		if err != nil {
-			return "", err
-		}
-		return string(m), nil
+		return proto.MarshalTextString(resp), nil
 	default:
 		return "", errors.New("Unknown method: " + method)
 	}
@@ -120,32 +113,24 @@ func callStatsService(ctx context.Context, conn *grpc.ClientConn, method string,
 	switch strings.ToLower(method) {
 	case "getstats":
 		r := &statsService.GetStatsRequest{}
-		if err := proto.Unmarshal([]byte(request), r); err != nil {
+		if err := proto.UnmarshalText(request, r); err != nil {
 			return "", err
 		}
 		resp, err := client.GetStats(ctx, r)
 		if err != nil {
 			return "", err
 		}
-		m, err := proto.Marshal(resp)
-		if err != nil {
-			return "", err
-		}
-		return string(m), nil
+		return proto.MarshalTextString(resp), nil
 	case "querystats":
 		r := &statsService.QueryStatsRequest{}
-		if err := proto.Unmarshal([]byte(request), r); err != nil {
+		if err := proto.UnmarshalText(request, r); err != nil {
 			return "", err
 		}
 		resp, err := client.QueryStats(ctx, r)
 		if err != nil {
 			return "", err
 		}
-		m, err := proto.Marshal(resp)
-		if err != nil {
-			return "", err
-		}
-		return string(m), nil
+		return proto.MarshalTextString(resp), nil
 	case "getsysstats":
 		// SysStatsRequest is an empty message
 		r := &statsService.SysStatsRequest{}
@@ -153,11 +138,7 @@ func callStatsService(ctx context.Context, conn *grpc.ClientConn, method string,
 		if err != nil {
 			return "", err
 		}
-		m, err := proto.Marshal(resp)
-		if err != nil {
-			return "", err
-		}
-		return string(m), nil
+		return proto.MarshalTextString(resp), nil
 	default:
 		return "", errors.New("Unknown method: " + method)
 	}
