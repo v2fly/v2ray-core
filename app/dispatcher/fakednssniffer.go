@@ -21,7 +21,7 @@ func newFakeDNSSniffer(ctx context.Context) (protocolSnifferWithMetadata, error)
 	if err != nil {
 		return protocolSnifferWithMetadata{}, err
 	}
-	return protocolSnifferWithMetadata{protocolSniffer: func(bytes []byte, ctx context.Context) (SniffResult, error) {
+	return protocolSnifferWithMetadata{protocolSniffer: func(ctx context.Context, bytes []byte) (SniffResult, error) {
 		Target := session.OutboundFromContext(ctx).Target
 		if Target.Network == net.Network_TCP || Target.Network == net.Network_UDP {
 			domainFromFakeDNS := fakeDNSEngine.GetDomainFromFakeDNS(Target.Address)
