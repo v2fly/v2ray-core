@@ -253,7 +253,7 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool) (Sni
 
 	metaresult, metadataErr := sniffer.SniffMetadata(ctx)
 
-	if metadataOnly == true {
+	if metadataOnly {
 		return metaresult, metadataErr
 	}
 

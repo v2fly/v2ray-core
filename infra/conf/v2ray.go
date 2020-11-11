@@ -350,7 +350,7 @@ type Config struct {
 	API             *APIConfig             `json:"api"`
 	Stats           *StatsConfig           `json:"stats"`
 	Reverse         *ReverseConfig         `json:"reverse"`
-	FakeDns         *FakeDNSConfig         `json:"fakeDns"`
+	FakeDNS         *FakeDNSConfig         `json:"fakeDns"`
 }
 
 func (c *Config) findInboundTag(tag string) int {
@@ -545,8 +545,8 @@ func (c *Config) Build() (*core.Config, error) {
 		config.App = append(config.App, serial.ToTypedMessage(r))
 	}
 
-	if c.FakeDns != nil {
-		r, err := c.FakeDns.Build()
+	if c.FakeDNS != nil {
+		r, err := c.FakeDNS.Build()
 		if err != nil {
 			return nil, err
 		}

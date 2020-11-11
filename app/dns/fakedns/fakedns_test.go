@@ -108,5 +108,4 @@ func TestFakeDnsHolderCreateMappingAndRollOver(t *testing.T) {
 			assert.Equal(t, domain, result)
 		}
 	}
-
 }

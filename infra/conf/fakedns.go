@@ -23,7 +23,7 @@ type FakeDNSPostProcessingStage struct {
 func (f FakeDNSPostProcessingStage) Process(conf *Config) error {
 	if conf.DNSConfig != nil && conf.DNSConfig.FakeConfig != nil && *conf.DNSConfig.FakeConfig {
 		// Add a Fake DNS Config if there is none
-		conf.FakeDns = &FakeDNSConfig{
+		conf.FakeDNS = &FakeDNSConfig{
 			IPPool:  "240.0.0.0/8",
 			LruSize: 65535,
 		}
@@ -43,7 +43,7 @@ func (f FakeDNSPostProcessingStage) Process(conf *Config) error {
 			inbounds = append(inbounds, conf.InboundConfigs...)
 		}
 		for _, v := range inbounds {
-			if v.SniffingConfig != nil && v.SniffingConfig.Enabled == true && v.SniffingConfig.DestOverride != nil {
+			if v.SniffingConfig != nil && v.SniffingConfig.Enabled && v.SniffingConfig.DestOverride != nil {
 				for _, dov := range *v.SniffingConfig.DestOverride {
 					if dov == "fakedns" {
 						found = true
