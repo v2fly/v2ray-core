@@ -21,6 +21,10 @@ func newFakeDNSSniffer(ctx context.Context) (protocolSnifferWithMetadata, error)
 	if err != nil {
 		return protocolSnifferWithMetadata{}, err
 	}
+	if fakeDNSEngine == nil {
+		errNotInit := newError("FakeDNSEngine is not initialized, but such a sniffer is used").AtError()
+		return protocolSnifferWithMetadata{}, errNotInit
+	}
 	return protocolSnifferWithMetadata{protocolSniffer: func(ctx context.Context, bytes []byte) (SniffResult, error) {
 		Target := session.OutboundFromContext(ctx).Target
 		if Target.Network == net.Network_TCP || Target.Network == net.Network_UDP {
