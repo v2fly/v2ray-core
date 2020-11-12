@@ -22,10 +22,12 @@ type FakeDNSPostProcessingStage struct {
 
 func (f FakeDNSPostProcessingStage) Process(conf *Config) error {
 	if conf.DNSConfig != nil && conf.DNSConfig.FakeConfig != nil && *conf.DNSConfig.FakeConfig {
-		// Add a Fake DNS Config if there is none
-		conf.FakeDNS = &FakeDNSConfig{
-			IPPool:  "240.0.0.0/8",
-			LruSize: 65535,
+		if conf.FakeDNS == nil {
+			// Add a Fake DNS Config if there is none
+			conf.FakeDNS = &FakeDNSConfig{
+				IPPool:  "240.0.0.0/8",
+				LruSize: 65535,
+			}
 		}
 		found := false
 		// Check if there is a Outbound with necessary sniffer on
