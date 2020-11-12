@@ -404,6 +404,10 @@ func (c *Config) Override(o *Config, fn string) {
 		c.Reverse = o.Reverse
 	}
 
+	if o.FakeDNS != nil {
+		c.FakeDNS = o.FakeDNS
+	}
+
 	// deprecated attrs... keep them for now
 	if o.InboundConfig != nil {
 		c.InboundConfig = o.InboundConfig
