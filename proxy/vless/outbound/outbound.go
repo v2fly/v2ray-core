@@ -20,6 +20,7 @@ import (
 	"v2ray.com/core/common/signal"
 	"v2ray.com/core/common/task"
 	"v2ray.com/core/features/policy"
+	"v2ray.com/core/features/stats"
 	"v2ray.com/core/proxy/vless"
 	"v2ray.com/core/proxy/vless/encoding"
 	"v2ray.com/core/transport"
@@ -91,7 +92,8 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	defer conn.Close()
 
 	iConn := conn
-	if statConn, ok := iConn.(*internet.StatCouterConnection); ok {
+	statConn, ok := iConn.(*internet.StatCouterConnection)
+	if ok {
 		iConn = statConn.Connection
 	}
 
@@ -213,7 +215,11 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		serverReader := encoding.DecodeBodyAddons(conn, request, responseAddons)
 
 		if rawConn != nil {
-			err = encoding.ReadV(serverReader, clientWriter, timer, iConn.(*xtls.Conn), rawConn)
+			var counter stats.Counter
+			if statConn != nil {
+				counter = statConn.ReadCounter
+			}
+			err = encoding.ReadV(serverReader, clientWriter, timer, iConn.(*xtls.Conn), rawConn, counter)
 		} else {
 			// from serverReader.ReadMultiBuffer to clientWriter.WriteMultiBufer
 			err = buf.Copy(serverReader, clientWriter, buf.UpdateActivity(timer))

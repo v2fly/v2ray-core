@@ -27,6 +27,7 @@ import (
 	feature_inbound "v2ray.com/core/features/inbound"
 	"v2ray.com/core/features/policy"
 	"v2ray.com/core/features/routing"
+	"v2ray.com/core/features/stats"
 	"v2ray.com/core/proxy/vless"
 	"v2ray.com/core/proxy/vless/encoding"
 	"v2ray.com/core/transport/internet"
@@ -145,8 +146,10 @@ func (*Handler) Network() []net.Network {
 // Process implements proxy.Inbound.Process().
 func (h *Handler) Process(ctx context.Context, network net.Network, connection internet.Connection, dispatcher routing.Dispatcher) error {
 	sid := session.ExportIDToError(ctx)
+
 	iConn := connection
-	if statConn, ok := iConn.(*internet.StatCouterConnection); ok {
+	statConn, ok := iConn.(*internet.StatCouterConnection)
+	if ok {
 		iConn = statConn.Connection
 	}
 
@@ -438,7 +441,11 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 		var err error
 
 		if rawConn != nil {
-			err = encoding.ReadV(clientReader, serverWriter, timer, iConn.(*xtls.Conn), rawConn)
+			var counter stats.Counter
+			if statConn != nil {
+				counter = statConn.ReadCounter
+			}
+			err = encoding.ReadV(clientReader, serverWriter, timer, iConn.(*xtls.Conn), rawConn, counter)
 		} else {
 			// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBufer
 			err = buf.Copy(clientReader, serverWriter, buf.UpdateActivity(timer))
