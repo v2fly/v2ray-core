@@ -70,8 +70,8 @@ func NewAuthIDDecoderHolder() *AuthIDDecoderHolder {
 }
 
 type AuthIDDecoderHolder struct {
-	decoders map[string]*AuthIDDecoderItem
-	replayFilter   *filter.ReplayFilter
+	decoders     map[string]*AuthIDDecoderItem
+	replayFilter *filter.ReplayFilter
 }
 
 type AuthIDDecoderItem struct {
