@@ -25,7 +25,7 @@ func RollDeterministic(n int, seed int64) int {
 
 // RollUint16 returns a random uint16 value.
 func RollUint16() uint16 {
-	return uint16(rand.Intn(65536))
+	return uint16(rand.Int31() >> 15)
 }
 
 func RollUint64() uint64 {
