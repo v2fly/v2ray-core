@@ -24,6 +24,10 @@ func NewReplayFilter(interval int64) *ReplayFilter {
 	return rf
 }
 
+func (rf *ReplayFilter) Interval() int64 {
+	return rf.interval
+}
+
 func (rf *ReplayFilter) Check(sum []byte) bool {
 	rf.lock.Lock()
 	defer rf.lock.Unlock()
