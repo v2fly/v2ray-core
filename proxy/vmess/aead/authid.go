@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"v2ray.com/core/common"
-	antiReplayWindow "v2ray.com/core/common/antireplay"
+	"v2ray.com/core/common/filter"
 )
 
 var (
@@ -66,12 +66,12 @@ func (aidd *AuthIDDecoder) Decode(data [16]byte) (int64, uint32, int32, []byte) 
 }
 
 func NewAuthIDDecoderHolder() *AuthIDDecoderHolder {
-	return &AuthIDDecoderHolder{make(map[string]*AuthIDDecoderItem), antiReplayWindow.NewAntiReplayWindow(120)}
+	return &AuthIDDecoderHolder{make(map[string]*AuthIDDecoderItem), filter.NewReplayFilter(120)}
 }
 
 type AuthIDDecoderHolder struct {
 	aidhi map[string]*AuthIDDecoderItem
-	apw   *antiReplayWindow.AntiReplayWindow
+	apw   *filter.ReplayFilter
 }
 
 type AuthIDDecoderItem struct {
