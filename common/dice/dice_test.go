@@ -31,15 +31,15 @@ func BenchmarkIntn20(b *testing.B) {
 	}
 }
 
-func BenchmarkInt31(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = uint16(rand.Int31() >> 15)
-	}
-}
-
 func BenchmarkInt63(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = uint16(rand.Int63() >> 47)
+	}
+}
+
+func BenchmarkInt31(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_ = uint16(rand.Int31() >> 15)
 	}
 }
 
