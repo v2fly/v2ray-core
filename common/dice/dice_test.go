@@ -3,7 +3,6 @@ package dice_test
 import (
 	"math/rand"
 	"testing"
-	"time"
 
 	. "v2ray.com/core/common/dice"
 )
@@ -33,24 +32,18 @@ func BenchmarkIntn20(b *testing.B) {
 }
 
 func BenchmarkInt31(b *testing.B) {
-	rand.Seed(time.Now().Unix())
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = uint16(rand.Int31() >> 15)
 	}
 }
 
 func BenchmarkInt63(b *testing.B) {
-	rand.Seed(time.Now().Unix())
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = uint16(rand.Int63() >> 47)
 	}
 }
 
 func BenchmarkIntn(b *testing.B) {
-	rand.Seed(time.Now().Unix())
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = uint16(rand.Intn(65536))
 	}
