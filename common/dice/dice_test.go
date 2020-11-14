@@ -40,6 +40,14 @@ func BenchmarkInt31(b *testing.B) {
 	}
 }
 
+func BenchmarkInt63(b *testing.B) {
+	rand.Seed(time.Now().Unix())
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = uint16(rand.Int63() >> 47)
+	}
+}
+
 func BenchmarkIntn(b *testing.B) {
 	rand.Seed(time.Now().Unix())
 	b.ResetTimer()
