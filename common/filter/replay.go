@@ -19,14 +19,14 @@ type ReplayFilter struct {
 	interval int64
 }
 
-// NewReplayFilter create a new filter with specifying the expiration time interval.
+// NewReplayFilter create a new filter with specifying the expiration time interval in seconds.
 func NewReplayFilter(interval int64) *ReplayFilter {
 	rf := &ReplayFilter{}
 	rf.interval = interval
 	return rf
 }
 
-// Interval for swap filter pool.
+// Interval for swap filter pool in seconds.
 func (rf *ReplayFilter) Interval() int64 {
 	return rf.interval
 }
