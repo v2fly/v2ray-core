@@ -30,7 +30,7 @@ func PickPort() net.Port {
 	}
 
 	if port == 0 {
-		common.Must(errors.New("Failed Cannot get a port on windows"))
+		common.Must(errors.New("Cannot get a port on windows"))
 	}
 
 	return net.Port(port)
