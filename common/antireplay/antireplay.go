@@ -18,7 +18,7 @@ type AntiReplayWindow struct {
 	poolA          *cuckoo.Filter
 	poolB          *cuckoo.Filter
 	lastSwapTime   int64
-	PoolSwap       bool
+	poolSwap       bool
 	AntiReplayTime int64
 }
 
@@ -35,11 +35,11 @@ func (aw *AntiReplayWindow) Check(sum []byte) bool {
 	timediff := tnow - aw.lastSwapTime
 
 	if timediff >= aw.AntiReplayTime {
-		if aw.PoolSwap {
-			aw.PoolSwap = false
+		if aw.poolSwap {
+			aw.poolSwap = false
 			aw.poolA.Reset()
 		} else {
-			aw.PoolSwap = true
+			aw.poolSwap = true
 			aw.poolB.Reset()
 		}
 		aw.lastSwapTime = tnow
