@@ -7,11 +7,7 @@ import (
 	cuckoo "github.com/seiflotfy/cuckoofilter"
 )
 
-func NewAntiReplayWindow(antiReplayTime int64) *AntiReplayWindow {
-	arw := &AntiReplayWindow{}
-	arw.AntiReplayTime = antiReplayTime
-	return arw
-}
+const replayFilterCapacity = 100000
 
 type AntiReplayWindow struct {
 	lock           sync.Mutex
@@ -22,14 +18,20 @@ type AntiReplayWindow struct {
 	AntiReplayTime int64
 }
 
+func NewAntiReplayWindow(antiReplayTime int64) *AntiReplayWindow {
+	arw := &AntiReplayWindow{}
+	arw.AntiReplayTime = antiReplayTime
+	return arw
+}
+
 func (aw *AntiReplayWindow) Check(sum []byte) bool {
 	aw.lock.Lock()
 	defer aw.lock.Unlock()
 
 	if aw.lastSwapTime == 0 {
 		aw.lastSwapTime = time.Now().Unix()
-		aw.poolA = cuckoo.NewFilter(100000)
-		aw.poolB = cuckoo.NewFilter(100000)
+		aw.poolA = cuckoo.NewFilter(replayFilterCapacity)
+		aw.poolB = cuckoo.NewFilter(replayFilterCapacity)
 	}
 
 	tnow := time.Now().Unix()
