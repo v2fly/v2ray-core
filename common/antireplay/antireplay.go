@@ -9,6 +9,7 @@ import (
 
 const replayFilterCapacity = 100000
 
+// AntiReplayWindow check for replay attacks.
 type AntiReplayWindow struct {
 	lock     sync.Mutex
 	m        *cuckoo.Filter
@@ -18,16 +19,19 @@ type AntiReplayWindow struct {
 	interval int64
 }
 
+// NewAntiReplayWindow create a new window with specifying the expiration time interval in seconds.
 func NewAntiReplayWindow(interval int64) *AntiReplayWindow {
 	arw := &AntiReplayWindow{}
 	arw.interval = interval
 	return arw
 }
 
+// Interval in second for expiration time for duplicate records.
 func (aw *AntiReplayWindow) Interval() int64 {
 	return aw.interval
 }
 
+// Check determine if there are duplicate records.
 func (aw *AntiReplayWindow) Check(sum []byte) bool {
 	aw.lock.Lock()
 	defer aw.lock.Unlock()
