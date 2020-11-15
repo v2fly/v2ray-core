@@ -96,7 +96,7 @@ func (a *AuthIDDecoderHolder) RemoveUser(key [16]byte) {
 
 func (a *AuthIDDecoderHolder) Match(authID [16]byte) (interface{}, error) {
 	for _, v := range a.decoders {
-		t, z, r, d := v.dec.Decode(authID)
+		t, z, _, d := v.dec.Decode(authID)
 		if z != crc32.ChecksumIEEE(d[:12]) {
 			continue
 		}
@@ -112,8 +112,6 @@ func (a *AuthIDDecoderHolder) Match(authID [16]byte) (interface{}, error) {
 		if !a.arw.Check(authID[:]) {
 			return nil, ErrReplay
 		}
-
-		_ = r
 
 		return v.ticket, nil
 	}
