@@ -15,13 +15,17 @@ type AntiReplayWindow struct {
 	n              *cuckoo.Filter
 	lastSwapTime   int64
 	poolSwap       bool
-	AntiReplayTime int64
+	antiReplayTime int64
 }
 
 func NewAntiReplayWindow(antiReplayTime int64) *AntiReplayWindow {
 	arw := &AntiReplayWindow{}
-	arw.AntiReplayTime = antiReplayTime
+	arw.antiReplayTime = antiReplayTime
 	return arw
+}
+
+func (aw *AntiReplayWindow) AntiReplayTime() int64 {
+	return aw.antiReplayTime
 }
 
 func (aw *AntiReplayWindow) Check(sum []byte) bool {
@@ -37,7 +41,7 @@ func (aw *AntiReplayWindow) Check(sum []byte) bool {
 	tnow := time.Now().Unix()
 	timediff := tnow - aw.lastSwapTime
 
-	if timediff >= aw.AntiReplayTime {
+	if timediff >= aw.antiReplayTime {
 		if aw.poolSwap {
 			aw.poolSwap = false
 			aw.m.Reset()
