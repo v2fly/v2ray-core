@@ -11,8 +11,8 @@ const replayFilterCapacity = 100000
 
 type AntiReplayWindow struct {
 	lock           sync.Mutex
-	poolA          *cuckoo.Filter
-	poolB          *cuckoo.Filter
+	m              *cuckoo.Filter
+	n              *cuckoo.Filter
 	lastSwapTime   int64
 	poolSwap       bool
 	AntiReplayTime int64
@@ -30,8 +30,8 @@ func (aw *AntiReplayWindow) Check(sum []byte) bool {
 
 	if aw.lastSwapTime == 0 {
 		aw.lastSwapTime = time.Now().Unix()
-		aw.poolA = cuckoo.NewFilter(replayFilterCapacity)
-		aw.poolB = cuckoo.NewFilter(replayFilterCapacity)
+		aw.m = cuckoo.NewFilter(replayFilterCapacity)
+		aw.n = cuckoo.NewFilter(replayFilterCapacity)
 	}
 
 	tnow := time.Now().Unix()
@@ -40,13 +40,13 @@ func (aw *AntiReplayWindow) Check(sum []byte) bool {
 	if timediff >= aw.AntiReplayTime {
 		if aw.poolSwap {
 			aw.poolSwap = false
-			aw.poolA.Reset()
+			aw.m.Reset()
 		} else {
 			aw.poolSwap = true
-			aw.poolB.Reset()
+			aw.n.Reset()
 		}
 		aw.lastSwapTime = tnow
 	}
 
-	return aw.poolA.InsertUnique(sum) && aw.poolB.InsertUnique(sum)
+	return aw.m.InsertUnique(sum) && aw.n.InsertUnique(sum)
 }
