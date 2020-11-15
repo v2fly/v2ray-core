@@ -20,6 +20,7 @@ jobs:
     if: github.repository != 'v2ray/v2ray-core'
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
