@@ -24,6 +24,7 @@ type AntiReplayWindow struct {
 
 func (aw *AntiReplayWindow) Check(sum []byte) bool {
 	aw.lock.Lock()
+	defer aw.lock.Unlock()
 
 	if aw.lastSwapTime == 0 {
 		aw.lastSwapTime = time.Now().Unix()
@@ -45,7 +46,5 @@ func (aw *AntiReplayWindow) Check(sum []byte) bool {
 		aw.lastSwapTime = tnow
 	}
 
-	ret := aw.poolA.InsertUnique(sum) && aw.poolB.InsertUnique(sum)
-	aw.lock.Unlock()
-	return ret
+	return aw.poolA.InsertUnique(sum) && aw.poolB.InsertUnique(sum)
 }
