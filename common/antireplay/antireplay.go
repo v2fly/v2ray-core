@@ -42,12 +42,11 @@ func (aw *AntiReplayWindow) Check(sum []byte) bool {
 	elapsed := now - aw.lastSwap
 	if elapsed >= aw.antiReplayTime {
 		if aw.poolSwap {
-			aw.poolSwap = false
 			aw.m.Reset()
 		} else {
-			aw.poolSwap = true
 			aw.n.Reset()
 		}
+		aw.poolSwap = !aw.poolSwap
 		aw.lastSwap = now
 	}
 
