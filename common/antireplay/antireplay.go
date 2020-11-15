@@ -10,22 +10,22 @@ import (
 const replayFilterCapacity = 100000
 
 type AntiReplayWindow struct {
-	lock           sync.Mutex
-	m              *cuckoo.Filter
-	n              *cuckoo.Filter
-	lastSwap       int64
-	poolSwap       bool
-	antiReplayTime int64
+	lock     sync.Mutex
+	m        *cuckoo.Filter
+	n        *cuckoo.Filter
+	lastSwap int64
+	poolSwap bool
+	interval int64
 }
 
-func NewAntiReplayWindow(antiReplayTime int64) *AntiReplayWindow {
+func NewAntiReplayWindow(interval int64) *AntiReplayWindow {
 	arw := &AntiReplayWindow{}
-	arw.antiReplayTime = antiReplayTime
+	arw.interval = interval
 	return arw
 }
 
-func (aw *AntiReplayWindow) AntiReplayTime() int64 {
-	return aw.antiReplayTime
+func (aw *AntiReplayWindow) Interval() int64 {
+	return aw.interval
 }
 
 func (aw *AntiReplayWindow) Check(sum []byte) bool {
@@ -40,7 +40,7 @@ func (aw *AntiReplayWindow) Check(sum []byte) bool {
 	}
 
 	elapsed := now - aw.lastSwap
-	if elapsed >= aw.antiReplayTime {
+	if elapsed >= aw.Interval() {
 		if aw.poolSwap {
 			aw.m.Reset()
 		} else {
