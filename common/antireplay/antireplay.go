@@ -32,16 +32,15 @@ func (aw *AntiReplayWindow) Check(sum []byte) bool {
 	aw.lock.Lock()
 	defer aw.lock.Unlock()
 
+	now := time.Now().Unix()
 	if aw.lastSwap == 0 {
-		aw.lastSwap = time.Now().Unix()
+		aw.lastSwap = now
 		aw.m = cuckoo.NewFilter(replayFilterCapacity)
 		aw.n = cuckoo.NewFilter(replayFilterCapacity)
 	}
 
-	tnow := time.Now().Unix()
-	timediff := tnow - aw.lastSwap
-
-	if timediff >= aw.antiReplayTime {
+	elapsed := now - aw.lastSwap
+	if elapsed >= aw.antiReplayTime {
 		if aw.poolSwap {
 			aw.poolSwap = false
 			aw.m.Reset()
@@ -49,7 +48,7 @@ func (aw *AntiReplayWindow) Check(sum []byte) bool {
 			aw.poolSwap = true
 			aw.n.Reset()
 		}
-		aw.lastSwap = tnow
+		aw.lastSwap = now
 	}
 
 	return aw.m.InsertUnique(sum) && aw.n.InsertUnique(sum)
