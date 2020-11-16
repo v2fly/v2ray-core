@@ -12,10 +12,10 @@ const replayFilterCapacity = 100000
 // ReplayFilter check for replay attacks.
 type ReplayFilter struct {
 	lock     sync.Mutex
-	m        *cuckoo.Filter
-	n        *cuckoo.Filter
-	lastSwap int64
+	poolA    *cuckoo.Filter
+	poolB    *cuckoo.Filter
 	poolSwap bool
+	lastSwap int64
 	interval int64
 }
 
@@ -39,20 +39,20 @@ func (filter *ReplayFilter) Check(sum []byte) bool {
 	now := time.Now().Unix()
 	if filter.lastSwap == 0 {
 		filter.lastSwap = now
-		filter.m = cuckoo.NewFilter(replayFilterCapacity)
-		filter.n = cuckoo.NewFilter(replayFilterCapacity)
+		filter.poolA = cuckoo.NewFilter(replayFilterCapacity)
+		filter.poolB = cuckoo.NewFilter(replayFilterCapacity)
 	}
 
 	elapsed := now - filter.lastSwap
 	if elapsed >= filter.Interval() {
 		if filter.poolSwap {
-			filter.m.Reset()
+			filter.poolA.Reset()
 		} else {
-			filter.n.Reset()
+			filter.poolB.Reset()
 		}
 		filter.poolSwap = !filter.poolSwap
 		filter.lastSwap = now
 	}
 
-	return filter.m.InsertUnique(sum) && filter.n.InsertUnique(sum)
+	return filter.poolA.InsertUnique(sum) && filter.poolB.InsertUnique(sum)
 }
