@@ -17,7 +17,7 @@ func PickPort() net.Port {
 			fmt.Println(v, " port is not available")
 			continue
 		} else {
-			addr := conn.LocalAddr().(*net.UDPAddr)
+			addr := listener.Addr().(*net.TCPAddr)
 			port = uint16(addr.Port)
 			_ = conn.Close()
 			break
