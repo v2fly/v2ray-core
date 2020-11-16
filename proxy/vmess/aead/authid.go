@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"v2ray.com/core/common"
-	antiReplayWindow "v2ray.com/core/common/antireplay"
+	"v2ray.com/core/common/antireplay"
 )
 
 var (
@@ -66,12 +66,12 @@ func (aidd *AuthIDDecoder) Decode(data [16]byte) (int64, uint32, int32, []byte) 
 }
 
 func NewAuthIDDecoderHolder() *AuthIDDecoderHolder {
-	return &AuthIDDecoderHolder{make(map[string]*AuthIDDecoderItem), antiReplayWindow.NewAntiReplayWindow(120)}
+	return &AuthIDDecoderHolder{make(map[string]*AuthIDDecoderItem), antiReplayWindow.NewReplayFilter(120)}
 }
 
 type AuthIDDecoderHolder struct {
 	decoders map[string]*AuthIDDecoderItem
-	arw      *antiReplayWindow.AntiReplayWindow
+	filter   *antireplay.ReplayFilter
 }
 
 type AuthIDDecoderItem struct {
@@ -109,7 +109,7 @@ func (a *AuthIDDecoderHolder) Match(authID [16]byte) (interface{}, error) {
 			continue
 		}
 
-		if !a.arw.Check(authID[:]) {
+		if !a.filter.Check(authID[:]) {
 			return nil, ErrReplay
 		}
 

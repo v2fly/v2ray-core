@@ -9,8 +9,8 @@ import (
 
 const replayFilterCapacity = 100000
 
-// AntiReplayWindow check for replay attacks.
-type AntiReplayWindow struct {
+// ReplayFilter check for replay attacks.
+type ReplayFilter struct {
 	lock     sync.Mutex
 	m        *cuckoo.Filter
 	n        *cuckoo.Filter
@@ -19,40 +19,40 @@ type AntiReplayWindow struct {
 	interval int64
 }
 
-// NewAntiReplayWindow create a new window with specifying the expiration time interval in seconds.
-func NewAntiReplayWindow(interval int64) *AntiReplayWindow {
-	arw := &AntiReplayWindow{}
-	arw.interval = interval
-	return arw
+// NewReplayFilter create a new filter with specifying the expiration time interval in seconds.
+func NewReplayFilter(interval int64) *ReplayFilter {
+	filter := &ReplayFilter{}
+	filter.interval = interval
+	return filter
 }
 
 // Interval in second for expiration time for duplicate records.
-func (aw *AntiReplayWindow) Interval() int64 {
-	return aw.interval
+func (filter *ReplayFilter) Interval() int64 {
+	return filter.interval
 }
 
 // Check determine if there are duplicate records.
-func (aw *AntiReplayWindow) Check(sum []byte) bool {
-	aw.lock.Lock()
-	defer aw.lock.Unlock()
+func (filter *ReplayFilter) Check(sum []byte) bool {
+	filter.lock.Lock()
+	defer filter.lock.Unlock()
 
 	now := time.Now().Unix()
-	if aw.lastSwap == 0 {
-		aw.lastSwap = now
-		aw.m = cuckoo.NewFilter(replayFilterCapacity)
-		aw.n = cuckoo.NewFilter(replayFilterCapacity)
+	if filter.lastSwap == 0 {
+		filter.lastSwap = now
+		filter.m = cuckoo.NewFilter(replayFilterCapacity)
+		filter.n = cuckoo.NewFilter(replayFilterCapacity)
 	}
 
-	elapsed := now - aw.lastSwap
-	if elapsed >= aw.Interval() {
-		if aw.poolSwap {
-			aw.m.Reset()
+	elapsed := now - filter.lastSwap
+	if elapsed >= filter.Interval() {
+		if filter.poolSwap {
+			filter.m.Reset()
 		} else {
-			aw.n.Reset()
+			filter.n.Reset()
 		}
-		aw.poolSwap = !aw.poolSwap
-		aw.lastSwap = now
+		filter.poolSwap = !filter.poolSwap
+		filter.lastSwap = now
 	}
 
-	return aw.m.InsertUnique(sum) && aw.n.InsertUnique(sum)
+	return filter.m.InsertUnique(sum) && filter.n.InsertUnique(sum)
 }
