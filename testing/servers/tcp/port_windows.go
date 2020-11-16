@@ -1,4 +1,4 @@
-package udp
+package tcp
 
 import (
 	"fmt"
