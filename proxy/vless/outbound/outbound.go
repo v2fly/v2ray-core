@@ -138,10 +138,6 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 			return newError("failed to transfer request payload").Base(err).AtInfo()
 		}
 
-		// Indicates the end of request payload.
-		switch requestAddons.Flow {
-		default:
-		}
 		return nil
 	}
 
