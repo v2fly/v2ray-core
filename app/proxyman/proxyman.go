@@ -8,7 +8,7 @@ import (
 )
 
 // ContextWithSniffingConfig is a wrapper of session.ContextWithContent.
-// Deprecated. Use session.ContextWithContent directly.
+// Deprecated: Use session.ContextWithContent directly.
 func ContextWithSniffingConfig(ctx context.Context, c *SniffingConfig) context.Context {
 	content := session.ContentFromContext(ctx)
 	if content == nil {

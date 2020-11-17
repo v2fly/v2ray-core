@@ -16,7 +16,7 @@ type Handler interface {
 	// The tag of this handler.
 	Tag() string
 
-	// Deprecated. Do not use in new code.
+	// Deprecated: Do not use in new code.
 	GetRandomInboundProxy() (interface{}, net.Port, int)
 }
 

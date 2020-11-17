@@ -329,16 +329,22 @@ func (c *StatsConfig) Build() (*stats.Config, error) {
 }
 
 type Config struct {
-	Port            uint16                 `json:"port"` // Port of this Point server. Deprecated.
+	// Port of this Point server.
+	// Deprecated: Port exists for historical compatibility.
+	Port            uint16                 `json:"port"`
 	LogConfig       *LogConfig             `json:"log"`
 	RouterConfig    *RouterConfig          `json:"routing"`
 	DNSConfig       *DNSConfig             `json:"dns"`
 	InboundConfigs  []InboundDetourConfig  `json:"inbounds"`
 	OutboundConfigs []OutboundDetourConfig `json:"outbounds"`
-	InboundConfig   *InboundDetourConfig   `json:"inbound"`        // Deprecated.
-	OutboundConfig  *OutboundDetourConfig  `json:"outbound"`       // Deprecated.
-	InboundDetours  []InboundDetourConfig  `json:"inboundDetour"`  // Deprecated.
-	OutboundDetours []OutboundDetourConfig `json:"outboundDetour"` // Deprecated.
+	// Deprecated: InboundConfig exists for historical compatibility.
+	InboundConfig *InboundDetourConfig `json:"inbound"`
+	// Deprecated: OutboundConfig exists for historical compatibility.
+	OutboundConfig *OutboundDetourConfig `json:"outbound"`
+	// Deprecated: InboundDetours exists for historical compatibility.
+	InboundDetours []InboundDetourConfig `json:"inboundDetour"`
+	// Deprecated: Deprecated exists for historical compatibility.
+	OutboundDetours []OutboundDetourConfig `json:"outboundDetour"`
 	Transport       *TransportConfig       `json:"transport"`
 	Policy          *PolicyConfig          `json:"policy"`
 	API             *APIConfig             `json:"api"`
