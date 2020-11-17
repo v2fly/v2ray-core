@@ -8,15 +8,12 @@ import (
 	gotls "crypto/tls"
 	"sync"
 
-	goxtls "github.com/xtls/go"
-
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/transport/internet"
 	"v2ray.com/core/transport/internet/tls"
 	"v2ray.com/core/transport/internet/udp"
-	"v2ray.com/core/transport/internet/xtls"
 )
 
 type ConnectionID struct {
@@ -31,7 +28,6 @@ type Listener struct {
 	sessions   map[ConnectionID]*Connection
 	hub        *udp.Hub
 	tlsConfig  *gotls.Config
-	xtlsConfig *goxtls.Config
 	config     *Config
 	reader     PacketReader
 	header     internet.PacketHeader
@@ -63,9 +59,6 @@ func NewListener(ctx context.Context, address net.Address, port net.Port, stream
 
 	if config := tls.ConfigFromStreamSettings(streamSettings); config != nil {
 		l.tlsConfig = config.GetTLSConfig()
-	}
-	if config := xtls.ConfigFromStreamSettings(streamSettings); config != nil {
-		l.xtlsConfig = config.GetXTLSConfig()
 	}
 
 	hub, err := udp.ListenUDP(ctx, address, port, streamSettings, udp.HubCapacity(1024))
@@ -139,8 +132,6 @@ func (l *Listener) OnReceive(payload *buf.Buffer, src net.Destination) {
 		var netConn internet.Connection = conn
 		if l.tlsConfig != nil {
 			netConn = tls.Server(conn, l.tlsConfig)
-		} else if l.xtlsConfig != nil {
-			netConn = xtls.Server(conn, l.xtlsConfig)
 		}
 
 		l.addConn(netConn)

@@ -8,7 +8,6 @@ import (
 	"context"
 	"io"
 	"strconv"
-	"syscall"
 	"time"
 
 	"v2ray.com/core"
@@ -17,7 +16,6 @@ import (
 	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/log"
 	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/platform"
 	"v2ray.com/core/common/protocol"
 	"v2ray.com/core/common/retry"
 	"v2ray.com/core/common/session"
@@ -27,16 +25,10 @@ import (
 	feature_inbound "v2ray.com/core/features/inbound"
 	"v2ray.com/core/features/policy"
 	"v2ray.com/core/features/routing"
-	"v2ray.com/core/features/stats"
 	"v2ray.com/core/proxy/vless"
 	"v2ray.com/core/proxy/vless/encoding"
 	"v2ray.com/core/transport/internet"
 	"v2ray.com/core/transport/internet/tls"
-	"v2ray.com/core/transport/internet/xtls"
-)
-
-var (
-	xtls_show = false
 )
 
 func init() {
@@ -50,13 +42,6 @@ func init() {
 		}
 		return New(ctx, config.(*Config), dc)
 	}))
-
-	const defaultFlagValue = "NOT_DEFINED_AT_ALL"
-
-	xtlsShow := platform.NewEnvFlag("v2ray.vless.xtls.show").GetValue(func() string { return defaultFlagValue })
-	if xtlsShow == "true" {
-		xtls_show = true
-	}
 }
 
 // Handler is an inbound connection handler that handles messages in VLess protocol.
@@ -193,9 +178,6 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 			if len(apfb) > 1 || apfb[""] == nil {
 				if tlsConn, ok := iConn.(*tls.Conn); ok {
 					alpn = tlsConn.ConnectionState().NegotiatedProtocol
-					newError("realAlpn = " + alpn).AtInfo().WriteToLog(sid)
-				} else if xtlsConn, ok := iConn.(*xtls.Conn); ok {
-					alpn = xtlsConn.ConnectionState().NegotiatedProtocol
 					newError("realAlpn = " + alpn).AtInfo().WriteToLog(sid)
 				}
 				if apfb[alpn] == nil {
@@ -370,44 +352,7 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 	}
 	inbound.User = request.User
 
-	account := request.User.Account.(*vless.MemoryAccount)
-
-	responseAddons := &encoding.Addons{
-		// Flow: requestAddons.Flow,
-	}
-
-	var rawConn syscall.RawConn
-
-	switch requestAddons.Flow {
-	case vless.XRO, vless.XRD:
-		if account.Flow == requestAddons.Flow {
-			switch request.Command {
-			case protocol.RequestCommandMux:
-				return newError(requestAddons.Flow + " doesn't support Mux").AtWarning()
-			case protocol.RequestCommandUDP:
-				return newError(requestAddons.Flow + " doesn't support UDP").AtWarning()
-			case protocol.RequestCommandTCP:
-				if xtlsConn, ok := iConn.(*xtls.Conn); ok {
-					xtlsConn.RPRX = true
-					xtlsConn.SHOW = xtls_show
-					xtlsConn.MARK = "XTLS"
-					if requestAddons.Flow == vless.XRD {
-						xtlsConn.DirectMode = true
-						if sc, ok := xtlsConn.Connection.(syscall.Conn); ok {
-							rawConn, _ = sc.SyscallConn()
-						}
-					}
-				} else {
-					return newError(`failed to use ` + requestAddons.Flow + `, maybe "security" is not "xtls"`).AtWarning()
-				}
-			}
-		} else {
-			return newError(account.ID.String() + " is not able to use " + requestAddons.Flow).AtWarning()
-		}
-	case "":
-	default:
-		return newError("unknown request flow " + requestAddons.Flow).AtWarning()
-	}
+	responseAddons := &encoding.Addons{}
 
 	if request.Command != protocol.RequestCommandMux {
 		ctx = log.ContextWithAccessMessage(ctx, &log.AccessMessage{
@@ -438,20 +383,8 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 		// default: clientReader := reader
 		clientReader := encoding.DecodeBodyAddons(reader, request, requestAddons)
 
-		var err error
-
-		if rawConn != nil {
-			var counter stats.Counter
-			if statConn != nil {
-				counter = statConn.ReadCounter
-			}
-			err = encoding.ReadV(clientReader, serverWriter, timer, iConn.(*xtls.Conn), rawConn, counter)
-		} else {
-			// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBufer
-			err = buf.Copy(clientReader, serverWriter, buf.UpdateActivity(timer))
-		}
-
-		if err != nil {
+		// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBufer
+		if err := buf.Copy(clientReader, serverWriter, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer request payload").Base(err).AtInfo()
 		}
 

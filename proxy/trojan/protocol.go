@@ -17,23 +17,12 @@ var (
 		protocol.AddressFamilyByte(0x04, net.AddressFamilyIPv6),
 		protocol.AddressFamilyByte(0x03, net.AddressFamilyDomain),
 	)
-
-	trojanXTLSShow = false
 )
 
 const (
 	maxLength = 8192
-	// XRD is constant for XTLS direct mode
-	XRD = "xtls-rprx-direct"
-	// XRO is constant for XTLS origin mode
-	XRO = "xtls-rprx-origin"
-
 	commandTCP byte = 1
 	commandUDP byte = 3
-
-	// for XTLS
-	commandXRD byte = 0xf0 // XTLS direct mode
-	commandXRO byte = 0xf1 // XTLS origin mode
 )
 
 // ConnWriter is TCP Connection Writer Wrapper for trojan protocol
@@ -41,7 +30,6 @@ type ConnWriter struct {
 	io.Writer
 	Target     net.Destination
 	Account    *MemoryAccount
-	Flow       string
 	headerSent bool
 }
 
@@ -78,10 +66,6 @@ func (c *ConnWriter) writeHeader() error {
 	command := commandTCP
 	if c.Target.Network == net.Network_UDP {
 		command = commandUDP
-	} else if c.Flow == XRO {
-		command = commandXRO
-	} else if c.Flow == XRD {
-		command = commandXRD
 	}
 
 	if _, err := buffer.Write(c.Account.Key); err != nil {
@@ -175,7 +159,6 @@ func (w *PacketWriter) writePacket(payload []byte, dest net.Destination) (int, e
 type ConnReader struct {
 	io.Reader
 	Target       net.Destination
-	Flow         string
 	headerParsed bool
 }
 
@@ -199,10 +182,6 @@ func (c *ConnReader) ParseHeader() error {
 	network := net.Network_TCP
 	if command[0] == commandUDP {
 		network = net.Network_UDP
-	} else if command[0] == commandXRO {
-		c.Flow = XRO
-	} else if command[0] == commandXRD {
-		c.Flow = XRD
 	}
 
 	addr, port, err := addrParser.ReadAddressPort(nil, c.Reader)
