@@ -68,7 +68,7 @@ func (c *Command) Name() string {
 // Usage prints usage of the Command
 func (c *Command) Usage() {
 	fmt.Fprintf(os.Stderr, "usage: %s\n", c.UsageLine)
-	fmt.Fprintf(os.Stderr, "Run 'go help %s' for details.\n", c.LongName())
+	fmt.Fprintf(os.Stderr, "Run '%s help %s' for details.\n", CommandEnv.Exec, c.LongName())
 	SetExitStatus(2)
 	Exit()
 }
