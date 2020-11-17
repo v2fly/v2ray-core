@@ -233,7 +233,7 @@ func (s *ServerSession) DecodeRequestHeader(reader io.Reader) (*protocol.Request
 
 	s.responseHeader = buffer.Byte(33)             // 1 byte
 	request.Option = bitmask.Byte(buffer.Byte(34)) // 1 byte
-	padingLen := int(buffer.Byte(35) >> 4)
+	paddingLen := int(buffer.Byte(35) >> 4)
 	request.Security = parseSecurityType(buffer.Byte(35) & 0x0F)
 	// 1 bytes reserved
 	request.Command = protocol.RequestCommand(buffer.Byte(37))
@@ -250,8 +250,8 @@ func (s *ServerSession) DecodeRequestHeader(reader io.Reader) (*protocol.Request
 		}
 	}
 
-	if padingLen > 0 {
-		if _, err := buffer.ReadFullFrom(decryptor, int32(padingLen)); err != nil {
+	if paddingLen > 0 {
+		if _, err := buffer.ReadFullFrom(decryptor, int32(paddingLen)); err != nil {
 			if !s.isAEADRequest {
 				burnErr := s.userValidator.BurnTaintFuse(fixedSizeAuthID[:])
 				if burnErr != nil {
