@@ -2,6 +2,7 @@ package fakedns
 
 import (
 	"context"
+	"math"
 	"math/big"
 	gonet "net"
 
@@ -72,7 +73,7 @@ func (fkdns *Holder) initialize(ipPoolCidr string, lruSize int) error {
 
 	ones, bits := ipRange.Mask.Size()
 	rooms := bits - ones
-	if lruSize >= 1<<rooms {
+	if math.Log2(float64(lruSize)) >= float64(rooms) {
 		return newError("LRU size is bigger than subnet size").AtError()
 	}
 	fkdns.domainToIP = cache.NewLru(lruSize)
