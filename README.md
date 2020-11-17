@@ -28,6 +28,10 @@ This repo relies on the following third-party projects:
 - In production:
   - [gorilla/websocket](https://github.com/gorilla/websocket)
   - [gRPC](https://google.golang.org/grpc)
+  - [lucas-clemente/quic-go](https://github.com/lucas-clemente/quic-go)
+  - [pires/go-proxyproto](https://github.com/pires/go-proxyproto)
+  - [seiflotfy/cuckoofilter](https://github.com/seiflotfy/cuckoofilter)
+  - [google/starlark-go](https://github.com/google/starlark-go)
 - For testing only:
   - [miekg/dns](https://github.com/miekg/dns)
   - [h12w/socks](https://github.com/h12w/socks)
