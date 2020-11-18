@@ -19,12 +19,12 @@ import (
 )
 
 type Listener struct {
-	addr       *net.UnixAddr
-	ln         net.Listener
-	tlsConfig  *gotls.Config
-	config     *Config
-	addConn    internet.ConnHandler
-	locker     *fileLocker
+	addr      *net.UnixAddr
+	ln        net.Listener
+	tlsConfig *gotls.Config
+	config    *Config
+	addConn   internet.ConnHandler
+	locker    *fileLocker
 }
 
 func Listen(ctx context.Context, address net.Address, port net.Port, streamSettings *internet.MemoryStreamConfig, handler internet.ConnHandler) (internet.Listener, error) {

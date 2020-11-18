@@ -94,7 +94,7 @@ func TestVLessInbound(t *testing.T) {
 				Clients: []*protocol.User{
 					{
 						Account: serial.ToTypedMessage(&vless.Account{
-							Id:   "27848739-7e62-4138-9fd3-098a63964b6b",
+							Id: "27848739-7e62-4138-9fd3-098a63964b6b",
 						}),
 						Level: 0,
 						Email: "love@v2fly.org",

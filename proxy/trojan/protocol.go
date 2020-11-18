@@ -20,7 +20,7 @@ var (
 )
 
 const (
-	maxLength = 8192
+	maxLength       = 8192
 	commandTCP byte = 1
 	commandUDP byte = 3
 )
