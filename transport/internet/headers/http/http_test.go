@@ -29,7 +29,7 @@ func TestReaderWriter(t *testing.T) {
 	common.Must(err)
 
 	reader := &HeaderReader{}
-	_, err := reader.Read(cache)
+	_, err = reader.Read(cache)
 	if err != nil && !strings.HasPrefix(err.Error(), "malformed HTTP request") {
 		t.Error("unknown error ", err)
 	}
