@@ -19,13 +19,10 @@ type AverageLatency struct {
 }
 
 func (al *AverageLatency) Update(newValue uint64) {
-	if newValue == al.value {
-		return
-	}
-
 	al.access.Lock()
+	defer al.access.Unlock()
+
 	al.value = (al.value + newValue*2) / 3
-	al.access.Unlock()
 }
 
 func (al *AverageLatency) Value() uint64 {
