@@ -3,7 +3,7 @@ package all
 import (
 	"os"
 
-	"github.com/xiaokangwang/VSign/signerVerify"
+	"github.com/v2fly/VSign/signerVerify"
 	"v2ray.com/core/commands/base"
 )
 

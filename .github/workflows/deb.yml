@@ -1,0 +1,60 @@
+name: Build debian packages
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "**/*.go"
+  release:
+    types: [prereleased]
+
+jobs:
+  build:
+    if: github.repository == 'v2fly/v2ray-core'
+    runs-on: ubuntu-latest
+    container: debian:sid
+
+    steps:
+      - name: Install git
+        run: |
+          apt-get update
+          apt-get install -y git
+
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Install build dependencies
+        run: |
+          apt-get install -y build-essential dh-golang golang-any reprepro
+
+      - name: Build
+        run: |
+          cp -r release/debian .
+          dpkg-buildpackage -us -uc -i -b
+
+      - name: Copy binary
+        run: |
+          cp ../*.deb ./
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: v2ray-debian-packages
+          path: ./*.deb
+
+      - name: Setup Repository
+        if: github.event_name == 'release'
+        run: |
+          git clone https://github.com/v2fly/debian.git archive
+          echo ${{ secrets.DEBIAN_GPG_PRIVE }} | base64 -d > private.key
+          gpg --import private.key
+          cd archive
+          git config --local user.name "${{ github.actor }}"
+          git config --local user.email "${{ github.actor }}@users.noreply.github.com"
+          git remote set-url origin https://${{ github.actor }}:${{ secrets.DEBIAN_REPO_TOKEN }}@github.com/v2fly/debian.git
+          reprepro includedeb stable ../*.deb
+          git add -A
+          git commit -am 'update'
+          git push origin main

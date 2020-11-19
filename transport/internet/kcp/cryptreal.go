@@ -9,7 +9,7 @@ import (
 )
 
 func NewAEADAESGCMBasedOnSeed(seed string) cipher.AEAD {
-	HashedSeed := sha256.Sum256([]byte(seed))
-	aesBlock := common.Must2(aes.NewCipher(HashedSeed[:16])).(cipher.Block)
+	hashedSeed := sha256.Sum256([]byte(seed))
+	aesBlock := common.Must2(aes.NewCipher(hashedSeed[:16])).(cipher.Block)
 	return common.Must2(cipher.NewGCM(aesBlock)).(cipher.AEAD)
 }

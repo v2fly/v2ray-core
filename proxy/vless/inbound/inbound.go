@@ -8,6 +8,7 @@ import (
 	"context"
 	"io"
 	"strconv"
+	"syscall"
 	"time"
 
 	"v2ray.com/core"
@@ -26,6 +27,7 @@ import (
 	feature_inbound "v2ray.com/core/features/inbound"
 	"v2ray.com/core/features/policy"
 	"v2ray.com/core/features/routing"
+	"v2ray.com/core/features/stats"
 	"v2ray.com/core/proxy/vless"
 	"v2ray.com/core/proxy/vless/encoding"
 	"v2ray.com/core/transport/internet"
@@ -138,14 +140,16 @@ func (h *Handler) RemoveUser(ctx context.Context, e string) error {
 
 // Network implements proxy.Inbound.Network().
 func (*Handler) Network() []net.Network {
-	return []net.Network{net.Network_TCP}
+	return []net.Network{net.Network_TCP, net.Network_UNIX}
 }
 
 // Process implements proxy.Inbound.Process().
 func (h *Handler) Process(ctx context.Context, network net.Network, connection internet.Connection, dispatcher routing.Dispatcher) error {
 	sid := session.ExportIDToError(ctx)
+
 	iConn := connection
-	if statConn, ok := iConn.(*internet.StatCouterConnection); ok {
+	statConn, ok := iConn.(*internet.StatCouterConnection)
+	if ok {
 		iConn = statConn.Connection
 	}
 
@@ -372,6 +376,8 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 		// Flow: requestAddons.Flow,
 	}
 
+	var rawConn syscall.RawConn
+
 	switch requestAddons.Flow {
 	case vless.XRO, vless.XRD:
 		if account.Flow == requestAddons.Flow {
@@ -387,6 +393,9 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 					xtlsConn.MARK = "XTLS"
 					if requestAddons.Flow == vless.XRD {
 						xtlsConn.DirectMode = true
+						if sc, ok := xtlsConn.Connection.(syscall.Conn); ok {
+							rawConn, _ = sc.SyscallConn()
+						}
 					}
 				} else {
 					return newError(`failed to use ` + requestAddons.Flow + `, maybe "security" is not "xtls"`).AtWarning()
@@ -429,8 +438,20 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 		// default: clientReader := reader
 		clientReader := encoding.DecodeBodyAddons(reader, request, requestAddons)
 
-		// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBufer
-		if err := buf.Copy(clientReader, serverWriter, buf.UpdateActivity(timer)); err != nil {
+		var err error
+
+		if rawConn != nil {
+			var counter stats.Counter
+			if statConn != nil {
+				counter = statConn.ReadCounter
+			}
+			err = encoding.ReadV(clientReader, serverWriter, timer, iConn.(*xtls.Conn), rawConn, counter)
+		} else {
+			// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBufer
+			err = buf.Copy(clientReader, serverWriter, buf.UpdateActivity(timer))
+		}
+
+		if err != nil {
 			return newError("failed to transfer request payload").Base(err).AtInfo()
 		}
 

@@ -15,6 +15,7 @@ import (
 	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/log"
 	"v2ray.com/core/common/net"
+	"v2ray.com/core/common/platform"
 	"v2ray.com/core/common/protocol"
 	udp_proto "v2ray.com/core/common/protocol/udp"
 	"v2ray.com/core/common/retry"
@@ -32,6 +33,13 @@ func init() {
 	common.Must(common.RegisterConfig((*ServerConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return NewServer(ctx, config.(*ServerConfig))
 	}))
+
+	const defaultFlagValue = "NOT_DEFINED_AT_ALL"
+
+	xtlsShow := platform.NewEnvFlag("v2ray.trojan.xtls.show").GetValue(func() string { return defaultFlagValue })
+	if xtlsShow == "true" {
+		trojanXTLSShow = true
+	}
 }
 
 // Server is an inbound connection handler that handles messages in trojan protocol.
@@ -97,7 +105,7 @@ func (s *Server) RemoveUser(ctx context.Context, e string) error {
 
 // Network implements proxy.Inbound.Network().
 func (s *Server) Network() []net.Network {
-	return []net.Network{net.Network_TCP}
+	return []net.Network{net.Network_TCP, net.Network_UNIX}
 }
 
 // Process implements proxy.Inbound.Process().
@@ -208,6 +216,7 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 			}
 			if xtlsConn, ok := iConn.(*xtls.Conn); ok {
 				xtlsConn.RPRX = true
+				xtlsConn.SHOW = trojanXTLSShow
 				if clientReader.Flow == XRD {
 					xtlsConn.DirectMode = true
 				}

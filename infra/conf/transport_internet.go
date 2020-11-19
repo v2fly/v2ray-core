@@ -222,19 +222,17 @@ func (c *QUICConfig) Build() (proto.Message, error) {
 }
 
 type DomainSocketConfig struct {
-	Path                string `json:"path"`
-	Abstract            bool   `json:"abstract"`
-	Padding             bool   `json:"padding"`
-	AcceptProxyProtocol bool   `json:"acceptProxyProtocol"`
+	Path     string `json:"path"`
+	Abstract bool   `json:"abstract"`
+	Padding  bool   `json:"padding"`
 }
 
 // Build implements Buildable.
 func (c *DomainSocketConfig) Build() (proto.Message, error) {
 	return &domainsocket.Config{
-		Path:                c.Path,
-		Abstract:            c.Abstract,
-		Padding:             c.Padding,
-		AcceptProxyProtocol: c.AcceptProxyProtocol,
+		Path:     c.Path,
+		Abstract: c.Abstract,
+		Padding:  c.Padding,
 	}, nil
 }
 
@@ -421,9 +419,10 @@ func (p TransportProtocol) Build() (string, error) {
 }
 
 type SocketConfig struct {
-	Mark   int32  `json:"mark"`
-	TFO    *bool  `json:"tcpFastOpen"`
-	TProxy string `json:"tproxy"`
+	Mark                int32  `json:"mark"`
+	TFO                 *bool  `json:"tcpFastOpen"`
+	TProxy              string `json:"tproxy"`
+	AcceptProxyProtocol bool   `json:"acceptProxyProtocol"`
 }
 
 // Build implements Buildable.
@@ -447,9 +446,10 @@ func (c *SocketConfig) Build() (*internet.SocketConfig, error) {
 	}
 
 	return &internet.SocketConfig{
-		Mark:   c.Mark,
-		Tfo:    tfoSettings,
-		Tproxy: tproxy,
+		Mark:                c.Mark,
+		Tfo:                 tfoSettings,
+		Tproxy:              tproxy,
+		AcceptProxyProtocol: c.AcceptProxyProtocol,
 	}, nil
 }
 
