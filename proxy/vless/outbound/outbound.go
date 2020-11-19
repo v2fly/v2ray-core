@@ -7,6 +7,7 @@ package outbound
 import (
 	"context"
 	"time"
+	"v2ray.com/core/proxy/vless"
 
 	"v2ray.com/core"
 	"v2ray.com/core/common"
@@ -105,7 +106,11 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		Port:    target.Port,
 	}
 
-	requestAddons := &encoding.Addons{}
+	account := request.User.Account.(*vless.MemoryAccount)
+
+	requestAddons := &encoding.Addons{
+		Flow: account.Flow,
+	}
 
 	sessionPolicy := h.policyManager.ForLevel(request.User.Level)
 	ctx, cancel := context.WithCancel(ctx)
@@ -136,6 +141,11 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBufer
 		if err := buf.Copy(clientReader, serverWriter, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer request payload").Base(err).AtInfo()
+		}
+
+		// Indicates the end of request payload.
+		switch requestAddons.Flow {
+		default:
 		}
 
 		return nil

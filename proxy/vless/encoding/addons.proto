@@ -7,5 +7,6 @@ option java_package = "com.v2ray.core.proxy.vless.encoding";
 option java_multiple_files = true;
 
 message Addons {
-  bytes Seed = 1;
+  string Flow = 1;
+  bytes Seed = 2;
 }
