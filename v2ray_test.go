@@ -3,7 +3,7 @@ package core_test
 import (
 	"testing"
 
-	proto "github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	. "v2ray.com/core"
 	"v2ray.com/core/app/dispatcher"
 	"v2ray.com/core/app/proxyman"

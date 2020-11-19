@@ -29,15 +29,10 @@ func TestReaderWriter(t *testing.T) {
 	common.Must(err)
 
 	reader := &HeaderReader{}
-	buffer, err := reader.Read(cache)
+	_, err = reader.Read(cache)
 	if err != nil && !strings.HasPrefix(err.Error(), "malformed HTTP request") {
 		t.Error("unknown error ", err)
 	}
-	_ = buffer
-	/*
-		if buffer.String() != "efg" {
-			t.Error("buffer: ", buffer.String())
-		}*/
 }
 
 func TestRequestHeader(t *testing.T) {
@@ -70,17 +65,11 @@ func TestLongRequestHeader(t *testing.T) {
 	payload = append(payload, []byte("abcd")...)
 
 	reader := HeaderReader{}
-	b, err := reader.Read(bytes.NewReader(payload))
+	_, err := reader.Read(bytes.NewReader(payload))
 
 	if err != nil && !(strings.HasPrefix(err.Error(), "invalid") || strings.HasPrefix(err.Error(), "malformed")) {
 		t.Error("unknown error ", err)
 	}
-	_ = b
-	/*
-		common.Must(err)
-		if b.String() != "abcd" {
-			t.Error("expect content abcd, but actually ", b.String())
-		}*/
 }
 
 func TestConnection(t *testing.T) {
