@@ -11,7 +11,7 @@ import (
 	"v2ray.com/core/common/protocol"
 )
 
-// Encode Header Addons
+// EncodeHeaderAddons Add addons byte to the header
 func EncodeHeaderAddons(buffer *buf.Buffer, addons *Addons) error {
 	switch addons.Flow {
 	default:
