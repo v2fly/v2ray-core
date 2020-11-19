@@ -23,6 +23,8 @@ func (c *APIConfig) Build() (*commander.Config, error) {
 	services := make([]*serial.TypedMessage, 0, 16)
 	for _, s := range c.Services {
 		switch strings.ToLower(s) {
+		case "reflectionservice":
+			services = append(services, serial.ToTypedMessage(&commander.ReflectionConfig{}))
 		case "handlerservice":
 			services = append(services, serial.ToTypedMessage(&handlerservice.Config{}))
 		case "loggerservice":
