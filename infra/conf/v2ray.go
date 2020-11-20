@@ -329,16 +329,32 @@ func (c *StatsConfig) Build() (*stats.Config, error) {
 }
 
 type Config struct {
-	Port            uint16                 `json:"port"` // Port of this Point server. Deprecated.
+	// Port of this Point server.
+	// Deprecated: Port exists for historical compatibility
+	// and should not be used.
+	Port uint16 `json:"port"`
+
+	// Deprecated: InboundConfig exists for historical compatibility
+	// and should not be used.
+	InboundConfig *InboundDetourConfig `json:"inbound"`
+
+	// Deprecated: OutboundConfig exists for historical compatibility
+	// and should not be used.
+	OutboundConfig *OutboundDetourConfig `json:"outbound"`
+
+	// Deprecated: InboundDetours exists for historical compatibility
+	// and should not be used.
+	InboundDetours []InboundDetourConfig `json:"inboundDetour"`
+
+	// Deprecated: OutboundDetours exists for historical compatibility
+	// and should not be used.
+	OutboundDetours []OutboundDetourConfig `json:"outboundDetour"`
+
 	LogConfig       *LogConfig             `json:"log"`
 	RouterConfig    *RouterConfig          `json:"routing"`
 	DNSConfig       *DNSConfig             `json:"dns"`
 	InboundConfigs  []InboundDetourConfig  `json:"inbounds"`
 	OutboundConfigs []OutboundDetourConfig `json:"outbounds"`
-	InboundConfig   *InboundDetourConfig   `json:"inbound"`        // Deprecated.
-	OutboundConfig  *OutboundDetourConfig  `json:"outbound"`       // Deprecated.
-	InboundDetours  []InboundDetourConfig  `json:"inboundDetour"`  // Deprecated.
-	OutboundDetours []OutboundDetourConfig `json:"outboundDetour"` // Deprecated.
 	Transport       *TransportConfig       `json:"transport"`
 	Policy          *PolicyConfig          `json:"policy"`
 	API             *APIConfig             `json:"api"`
