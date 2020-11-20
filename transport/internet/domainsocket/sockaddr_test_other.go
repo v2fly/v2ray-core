@@ -10,9 +10,7 @@ import (
 )
 
 func TestUnixSockaddrDial103(t *testing.T) {
-
 	name := "/tmp/len103_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.sock"
-
 	os.Remove(name)
 	addr := &net.UnixAddr{Net: "unix", Name: name}
 	if _, err := net.ListenUnix("unix", addr); err != nil {
@@ -22,13 +20,10 @@ func TestUnixSockaddrDial103(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
 }
 
 func TestUnixSockaddrDial104(t *testing.T) {
-
 	name := "/tmp/len104_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.sock"
-
 	os.Remove(name)
 	addr := &net.UnixAddr{Net: "unix", Name: name}
 	if _, err := net.ListenUnix("unix", addr); err == nil {
@@ -38,5 +33,4 @@ func TestUnixSockaddrDial104(t *testing.T) {
 	if err == nil {
 		t.Error(err)
 	}
-
 }

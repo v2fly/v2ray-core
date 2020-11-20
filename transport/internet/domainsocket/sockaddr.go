@@ -8,5 +8,6 @@ import (
 
 func UnixSockaddrCap() int {
 	addr := &unix.RawSockaddrUnix{}
-	return cap(addr.Path)
+	path := addr.Path
+	return cap(path)
 }
