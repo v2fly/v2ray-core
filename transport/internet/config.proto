@@ -20,7 +20,7 @@ enum TransportProtocol {
 message TransportConfig {
   // Type of network that this settings supports.
   // Deprecated. Use the string form below.
-  TransportProtocol protocol = 1;
+  TransportProtocol protocol = 1 [ deprecated = true ];
 
   // Type of network that this settings supports.
   string protocol_name = 3;
