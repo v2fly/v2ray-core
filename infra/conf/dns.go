@@ -119,10 +119,9 @@ func getHostMapping(addr *Address) *dns.Config_HostMapping {
 		return &dns.Config_HostMapping{
 			Ip: [][]byte{[]byte(addr.IP())},
 		}
-	} else {
-		return &dns.Config_HostMapping{
-			ProxiedDomain: addr.Domain(),
-		}
+	}
+	return &dns.Config_HostMapping{
+		ProxiedDomain: addr.Domain(),
 	}
 }
 

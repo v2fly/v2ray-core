@@ -179,9 +179,8 @@ func (s *ServerSession) DecodeRequestHeader(reader io.Reader) (*protocol.Request
 			if shouldDrain {
 				readSizeRemain -= bytesRead
 				return nil, drainConnection(newError("AEAD read failed").Base(errorReason))
-			} else {
-				return nil, drainConnection(newError("AEAD read failed, drain skipped").Base(errorReason))
 			}
+			return nil, drainConnection(newError("AEAD read failed, drain skipped").Base(errorReason))
 		}
 		decryptor = bytes.NewReader(aeadData)
 		s.isAEADRequest = true
@@ -226,9 +225,8 @@ func (s *ServerSession) DecodeRequestHeader(reader io.Reader) (*protocol.Request
 				return nil, drainConnection(newError("duplicated session id, possibly under replay attack, and failed to taint userHash").Base(drainErr))
 			}
 			return nil, drainConnection(newError("duplicated session id, possibly under replay attack, userHash tainted"))
-		} else {
-			return nil, newError("duplicated session id, possibly under replay attack, but this is a AEAD request")
 		}
+		return nil, newError("duplicated session id, possibly under replay attack, but this is a AEAD request")
 	}
 
 	s.responseHeader = buffer.Byte(33)             // 1 byte
@@ -288,9 +286,8 @@ func (s *ServerSession) DecodeRequestHeader(reader io.Reader) (*protocol.Request
 			}
 			// It is possible that we are under attack described in https://github.com/v2ray/v2ray-core/issues/2523
 			return nil, drainConnection(Autherr)
-		} else {
-			return nil, newError("invalid auth, but this is a AEAD request")
 		}
+		return nil, newError("invalid auth, but this is a AEAD request")
 	}
 
 	if request.Address == nil {

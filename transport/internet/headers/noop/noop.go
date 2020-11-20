@@ -7,34 +7,34 @@ import (
 	"v2ray.com/core/common"
 )
 
-type NoOpHeader struct{}
+type Header struct{}
 
-func (NoOpHeader) Size() int32 {
+func (Header) Size() int32 {
 	return 0
 }
 
 // Serialize implements PacketHeader.
-func (NoOpHeader) Serialize([]byte) {}
+func (Header) Serialize([]byte) {}
 
-func NewNoOpHeader(context.Context, interface{}) (interface{}, error) {
-	return NoOpHeader{}, nil
+func NewHeader(context.Context, interface{}) (interface{}, error) {
+	return Header{}, nil
 }
 
-type NoOpConnectionHeader struct{}
+type ConnectionHeader struct{}
 
-func (NoOpConnectionHeader) Client(conn net.Conn) net.Conn {
+func (ConnectionHeader) Client(conn net.Conn) net.Conn {
 	return conn
 }
 
-func (NoOpConnectionHeader) Server(conn net.Conn) net.Conn {
+func (ConnectionHeader) Server(conn net.Conn) net.Conn {
 	return conn
 }
 
-func NewNoOpConnectionHeader(context.Context, interface{}) (interface{}, error) {
-	return NoOpConnectionHeader{}, nil
+func NewConnectionHeader(context.Context, interface{}) (interface{}, error) {
+	return ConnectionHeader{}, nil
 }
 
 func init() {
-	common.Must(common.RegisterConfig((*Config)(nil), NewNoOpHeader))
-	common.Must(common.RegisterConfig((*ConnectionConfig)(nil), NewNoOpConnectionHeader))
+	common.Must(common.RegisterConfig((*Config)(nil), NewHeader))
+	common.Must(common.RegisterConfig((*ConnectionConfig)(nil), NewConnectionHeader))
 }

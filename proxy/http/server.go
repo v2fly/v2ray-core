@@ -279,7 +279,7 @@ func (s *Server) handlePlainHTTP(ctx context.Context, request *http.Request, wri
 
 	responseDone := func() error {
 		responseReader := bufio.NewReaderSize(&buf.BufferedReader{Reader: link.Reader}, buf.Size)
-		response, err := http.ReadResponse(responseReader, request)
+		response, err := http.ReadResponse(responseReader, request) // nolint: bodyclose
 		if err == nil {
 			http_proto.RemoveHopByHopHeaders(response.Header)
 			if response.ContentLength >= 0 {

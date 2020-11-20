@@ -11,7 +11,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/grpc"
-
 	"v2ray.com/core"
 	"v2ray.com/core/app/commander"
 	"v2ray.com/core/app/policy"

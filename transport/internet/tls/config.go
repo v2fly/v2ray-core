@@ -117,8 +117,9 @@ func getGetCertificateFunc(c *tls.Config, ca []*Certificate) func(hello *tls.Cli
 
 			access.Lock()
 			for _, certificate := range c.Certificates {
-				if !isCertificateExpired(&certificate) {
-					newCerts = append(newCerts, certificate)
+				cert := certificate
+				if !isCertificateExpired(&cert) {
+					newCerts = append(newCerts, cert)
 				}
 			}
 

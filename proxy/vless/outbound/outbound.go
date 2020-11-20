@@ -7,7 +7,6 @@ package outbound
 import (
 	"context"
 	"time"
-	"v2ray.com/core/proxy/vless"
 
 	"v2ray.com/core"
 	"v2ray.com/core/common"
@@ -19,6 +18,7 @@ import (
 	"v2ray.com/core/common/signal"
 	"v2ray.com/core/common/task"
 	"v2ray.com/core/features/policy"
+	"v2ray.com/core/proxy/vless"
 	"v2ray.com/core/proxy/vless/encoding"
 	"v2ray.com/core/transport"
 	"v2ray.com/core/transport/internet"
@@ -75,12 +75,6 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		return newError("failed to find an available destination").Base(err).AtWarning()
 	}
 	defer conn.Close()
-
-	iConn := conn
-	statConn, ok := iConn.(*internet.StatCouterConnection)
-	if ok {
-		iConn = statConn.Connection
-	}
 
 	outbound := session.OutboundFromContext(ctx)
 	if outbound == nil || !outbound.Target.IsValid() {
@@ -141,11 +135,6 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBufer
 		if err := buf.Copy(clientReader, serverWriter, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer request payload").Base(err).AtInfo()
-		}
-
-		// Indicates the end of request payload.
-		switch requestAddons.Flow {
-		default:
 		}
 
 		return nil
