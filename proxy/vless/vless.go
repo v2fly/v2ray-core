@@ -6,8 +6,3 @@
 package vless
 
 //go:generate go run v2ray.com/core/common/errors/errorgen
-
-const (
-	XRO = "xtls-rprx-origin"
-	XRD = "xtls-rprx-direct"
-)

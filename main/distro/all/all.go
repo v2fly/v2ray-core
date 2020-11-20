@@ -46,7 +46,6 @@ import (
 	_ "v2ray.com/core/transport/internet/tls"
 	_ "v2ray.com/core/transport/internet/udp"
 	_ "v2ray.com/core/transport/internet/websocket"
-	_ "v2ray.com/core/transport/internet/xtls"
 
 	// Transport headers
 	_ "v2ray.com/core/transport/internet/headers/http"

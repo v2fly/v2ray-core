@@ -173,8 +173,6 @@ github.com/v2fly/VSign v0.0.0-20201107160721-6e7f92656885 h1:nbFN1ZhtcffOD3ZWx0L
 github.com/v2fly/VSign v0.0.0-20201107160721-6e7f92656885/go.mod h1:p80Bv154ZtrGpXMN15slDCqc9UGmfBuUzheDFBYaW/M=
 github.com/viant/assertly v0.4.8/go.mod h1:aGifi++jvCrUaklKEKT0BU95igDNaqkvz+49uaYMPRU=
 github.com/viant/toolbox v0.24.0/go.mod h1:OxMCG57V0PXuIP2HNQrtJf2CjqdmbrOx5EkMILuUhzM=
-github.com/xtls/go v0.0.0-20201101145325-207fdcada8d0 h1:Q0OSaIJ+wOy38+g5KYVP9slhbznXwsYGkzscpUrVsak=
-github.com/xtls/go v0.0.0-20201101145325-207fdcada8d0/go.mod h1:5TB2+k58gx4A4g2Nf5miSHNDF6CuAzHKpWBooLAshTs=
 go.opencensus.io v0.18.0/go.mod h1:vKdFvxhtzZ9onBp9VKHK8z/sRpBMnKAsufL7wlDrCOA=
 go.opencensus.io v0.22.2/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=
 go.starlark.net v0.0.0-20201014215153-dff0ae5b4820 h1:GsJfRMJ3pXl+Pa5CkSQKIA1hNIo1u0M7I2+ff3RCCME=

@@ -6,43 +6,28 @@ package outbound
 
 import (
 	"context"
-	"syscall"
 	"time"
+	"v2ray.com/core/proxy/vless"
 
 	"v2ray.com/core"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
 	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/platform"
 	"v2ray.com/core/common/protocol"
 	"v2ray.com/core/common/retry"
 	"v2ray.com/core/common/session"
 	"v2ray.com/core/common/signal"
 	"v2ray.com/core/common/task"
 	"v2ray.com/core/features/policy"
-	"v2ray.com/core/features/stats"
-	"v2ray.com/core/proxy/vless"
 	"v2ray.com/core/proxy/vless/encoding"
 	"v2ray.com/core/transport"
 	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/xtls"
-)
-
-var (
-	xtls_show = false
 )
 
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return New(ctx, config.(*Config))
 	}))
-
-	const defaultFlagValue = "NOT_DEFINED_AT_ALL"
-
-	xtlsShow := platform.NewEnvFlag("v2ray.vless.xtls.show").GetValue(func() string { return defaultFlagValue })
-	if xtlsShow == "true" {
-		xtls_show = true
-	}
 }
 
 // Handler is an outbound connection handler for VLess protocol.
@@ -127,44 +112,6 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		Flow: account.Flow,
 	}
 
-	var rawConn syscall.RawConn
-
-	allowUDP443 := false
-	switch requestAddons.Flow {
-	case vless.XRO + "-udp443", vless.XRD + "-udp443":
-		allowUDP443 = true
-		requestAddons.Flow = requestAddons.Flow[:16]
-		fallthrough
-	case vless.XRO, vless.XRD:
-		switch request.Command {
-		case protocol.RequestCommandMux:
-			return newError(requestAddons.Flow + " doesn't support Mux").AtWarning()
-		case protocol.RequestCommandUDP:
-			if !allowUDP443 && request.Port == 443 {
-				return newError(requestAddons.Flow + " stopped UDP/443").AtInfo()
-			}
-			requestAddons.Flow = ""
-		case protocol.RequestCommandTCP:
-			if xtlsConn, ok := iConn.(*xtls.Conn); ok {
-				xtlsConn.RPRX = true
-				xtlsConn.SHOW = xtls_show
-				xtlsConn.MARK = "XTLS"
-				if requestAddons.Flow == vless.XRD {
-					xtlsConn.DirectMode = true
-					if sc, ok := xtlsConn.Connection.(syscall.Conn); ok {
-						rawConn, _ = sc.SyscallConn()
-					}
-				}
-			} else {
-				return newError(`failed to use ` + requestAddons.Flow + `, maybe "security" is not "xtls"`).AtWarning()
-			}
-		}
-	default:
-		if _, ok := iConn.(*xtls.Conn); ok {
-			panic(`To avoid misunderstanding, you must fill in VLESS "flow" when using XTLS.`)
-		}
-	}
-
 	sessionPolicy := h.policyManager.ForLevel(request.User.Level)
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
@@ -200,6 +147,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		switch requestAddons.Flow {
 		default:
 		}
+
 		return nil
 	}
 
@@ -214,18 +162,8 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		// default: serverReader := buf.NewReader(conn)
 		serverReader := encoding.DecodeBodyAddons(conn, request, responseAddons)
 
-		if rawConn != nil {
-			var counter stats.Counter
-			if statConn != nil {
-				counter = statConn.ReadCounter
-			}
-			err = encoding.ReadV(serverReader, clientWriter, timer, iConn.(*xtls.Conn), rawConn, counter)
-		} else {
-			// from serverReader.ReadMultiBuffer to clientWriter.WriteMultiBufer
-			err = buf.Copy(serverReader, clientWriter, buf.UpdateActivity(timer))
-		}
-
-		if err != nil {
+		// from serverReader.ReadMultiBuffer to clientWriter.WriteMultiBufer
+		if err := buf.Copy(serverReader, clientWriter, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer response payload").Base(err).AtInfo()
 		}
 
