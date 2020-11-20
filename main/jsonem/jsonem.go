@@ -26,7 +26,7 @@ func init() {
 					c, err := serial.DecodeJSONConfig(r)
 					common.Must(err)
 					if i == 0 {
-						// This ensure even if the muti-json parser by vcptr do not support a setting,
+						// This ensure even if the muti-json parser do not support a setting,
 						// It is still respected automatically for the first configure file
 						*cf = *c
 						continue
