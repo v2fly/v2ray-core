@@ -19,50 +19,9 @@ It secures your network connections and thus protects your privacy.</p>
 
 V2Ray binaries are directly available in {releases/latest} as well as some major distros' repositories, including Debian, Arch Linux, macOS (homebrew), etc. If you are willing to package V2Ray for other distros, you are also welcome to seek for help via our issues.
 
-
-### FHS-install-script
-_Maintainers: [@IceCodeNew](https://github.com/IceCodeNew)_
-
-```
-bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-release.sh)
-```
-
-### Docker
-_Maintainers wanted._
-
-```
-docker pull v2fly/v2fly-core
-```
-
-### Arch Linux
-_Maintainers: [@felixonmars](https://github.com/felixonmars)_
-
-```
-pacman -S v2ray
-```
-
-### Debian
-_Maintainers: [@rogers0](https://github.com/rogers0) [@ymshenyu](https://github.com/ymshenyu)_
-
-```
-coming soon
-```
-
-### macOS
-_Maintainers: [@kidonng](https://github.com/kidonng)_
-
-```
-brew install v2ray
-```
-
-### Windows
-_Maintainers: [@kidonng](https://github.com/kidonng)_
-
-```
-scoop install v2ray
-or
-choco install v2ray
-```
+[![Packaging status](https://repology.org/badge/vertical-allrepos/v2ray.svg)](https://repology.org/project/v2ray/versions)
+[![Packaging status](https://repology.org/badge/vertical-allrepos/go:v2ray-core.svg)](https://repology.org/project/go:v2ray-core/versions)
+[![Packaging status](https://repology.org/badge/vertical-allrepos/v2ray-core.svg)](https://repology.org/project/v2ray-core/versions)
 
 ## License
 
