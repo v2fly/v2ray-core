@@ -15,7 +15,7 @@ It secures your network connections and thus protects your privacy.</p>
  - [Documentation](https://www.v2fly.org/) and [Newcomer's Instructions](https://www.v2fly.org/guide/start.html)
  - Welcome to translate V2Ray via: **[Transifex](https://www.transifex.com/v2fly/public/)**
 
-## Installation
+## Packaging Status
 
 V2Ray binaries are directly available in {releases/latest} as well as some major distros' repositories, including Debian, Arch Linux, macOS (homebrew), etc. If you are willing to package V2Ray for other distros, you are also welcome to seek for help via our issues.
 
