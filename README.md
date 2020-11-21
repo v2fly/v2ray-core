@@ -21,7 +21,7 @@ V2Ray binaries are directly available in {releases/latest} as well as some major
 
 
 ### FHS-install-script
-_Maintainer: [@IceCodeNew](https://github.com/IceCodeNew)_
+_Maintainers: [@IceCodeNew](https://github.com/IceCodeNew)_
 
 ```
 bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-release.sh)
