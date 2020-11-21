@@ -1,5 +1,5 @@
 <div>
-<img width="190" height="210" align="left"  src="https://raw.githubusercontent.com/v2fly/v2fly-github-io/master/docs/.vuepress/public/readme-logo.png" alt="V2Ray"/>
+<img width="190" height="210" align="left" src="https://raw.githubusercontent.com/v2fly/v2fly-github-io/master/docs/.vuepress/public/readme-logo.png" alt="V2Ray"/>
 <br>
 <h1>Project V</h1> 
 <p>Project V is a set of network tools that helps you to build your own computer network.
@@ -9,7 +9,7 @@ It secures your network connections and thus protects your privacy.</p>
 [![GitHub Test Badge](https://github.com/v2fly/v2ray-core/workflows/Test/badge.svg)](https://github.com/v2fly/v2ray-core/actions)
 [![codecov.io](https://codecov.io/gh/v2fly/v2ray-core/branch/master/graph/badge.svg?branch=master)](https://codecov.io/gh/v2fly/v2ray-core?branch=master)
 [![codebeat](https://goreportcard.com/badge/github.com/v2fly/v2ray-core)](https://goreportcard.com/report/github.com/v2fly/v2ray-core)
-[![Downloads](https://img.shields.io/github/downloads/v2fly/v2ray-core/total.svg)]()
+[![Downloads](https://img.shields.io/github/downloads/v2fly/v2ray-core/total.svg)](https://github.com/v2fly/v2ray-core/releases/latest)
 
 ## Related Links
  - [Documentation](https://www.v2fly.org/) and [Newcomer's Instructions](https://www.v2fly.org/guide/start.html)
