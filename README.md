@@ -17,7 +17,7 @@ It secures your network connections and thus protects your privacy.</p>
 
 ## Installation
 
-V2Ray is currently available and packaged for Debian/Ubuntu, Arch Linux, macOS, Windows. If you’re interested in packaging V2Ray for your distro, don’t hesitate to open an issue.
+V2Ray binaries are directly available in {releases/latest} as well as some major distros' repositories, including Debian, Arch Linux, macOS (homebrew), etc. If you are willing to package V2Ray for other distros, you are also welcome to seek for help via our issues.
 
 
 ### FHS-install-script
