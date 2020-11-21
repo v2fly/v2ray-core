@@ -6,6 +6,7 @@ package encoding
 
 import (
 	"io"
+
 	"v2ray.com/core/common/buf"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/protocol"

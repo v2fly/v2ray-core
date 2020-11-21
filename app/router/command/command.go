@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
-
 	"v2ray.com/core"
 	"v2ray.com/core/common"
 	"v2ray.com/core/features/routing"
@@ -39,7 +38,7 @@ func (s *routingServer) TestRoute(ctx context.Context, request *TestRouteRequest
 		return nil, err
 	}
 	if request.PublishResult && s.routingStats != nil {
-		ctx, _ := context.WithTimeout(context.Background(), 4*time.Second)
+		ctx, _ := context.WithTimeout(context.Background(), 4*time.Second) // nolint: govet
 		s.routingStats.Publish(ctx, route)
 	}
 	return AsProtobufMessage(request.FieldSelectors)(route), nil

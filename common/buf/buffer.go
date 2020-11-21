@@ -46,7 +46,7 @@ func (b *Buffer) Release() {
 	p := b.v
 	b.v = nil
 	b.Clear()
-	pool.Put(p)
+	pool.Put(p) // nolint: staticcheck
 }
 
 // Clear clears the content of the buffer, results an empty buffer with

@@ -164,7 +164,7 @@ func testTCPConn(port net.Port, payloadSize int, timeout time.Duration) func() e
 	}
 }
 
-func testUDPConn(port net.Port, payloadSize int, timeout time.Duration) func() error {
+func testUDPConn(port net.Port, payloadSize int, timeout time.Duration) func() error { // nolint: unparam
 	return func() error {
 		conn, err := net.DialUDP("udp", nil, &net.UDPAddr{
 			IP:   []byte{127, 0, 0, 1},

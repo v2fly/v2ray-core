@@ -25,7 +25,7 @@ import (
 
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
-		d := new(DokodemoDoor)
+		d := new(Door)
 		err := core.RequireFeatures(ctx, func(pm policy.Manager) error {
 			return d.Init(config.(*Config), pm, session.SockoptFromContext(ctx))
 		})
@@ -33,7 +33,7 @@ func init() {
 	}))
 }
 
-type DokodemoDoor struct {
+type Door struct {
 	policyManager policy.Manager
 	config        *Config
 	address       net.Address
@@ -41,8 +41,8 @@ type DokodemoDoor struct {
 	sockopt       *session.Sockopt
 }
 
-// Init initializes the DokodemoDoor instance with necessary parameters.
-func (d *DokodemoDoor) Init(config *Config, pm policy.Manager, sockopt *session.Sockopt) error {
+// Init initializes the Door instance with necessary parameters.
+func (d *Door) Init(config *Config, pm policy.Manager, sockopt *session.Sockopt) error {
 	if (config.NetworkList == nil || len(config.NetworkList.Network) == 0) && len(config.Networks) == 0 {
 		return newError("no network specified")
 	}
@@ -56,7 +56,7 @@ func (d *DokodemoDoor) Init(config *Config, pm policy.Manager, sockopt *session.
 }
 
 // Network implements proxy.Inbound.
-func (d *DokodemoDoor) Network() []net.Network {
+func (d *Door) Network() []net.Network {
 	if len(d.config.Networks) > 0 {
 		return d.config.Networks
 	}
@@ -64,7 +64,7 @@ func (d *DokodemoDoor) Network() []net.Network {
 	return d.config.NetworkList.Network
 }
 
-func (d *DokodemoDoor) policy() policy.Session {
+func (d *Door) policy() policy.Session {
 	config := d.config
 	p := d.policyManager.ForLevel(config.UserLevel)
 	if config.Timeout > 0 && config.UserLevel == 0 {
@@ -78,7 +78,7 @@ type hasHandshakeAddress interface {
 }
 
 // Process implements proxy.Inbound.
-func (d *DokodemoDoor) Process(ctx context.Context, network net.Network, conn internet.Connection, dispatcher routing.Dispatcher) error {
+func (d *Door) Process(ctx context.Context, network net.Network, conn internet.Connection, dispatcher routing.Dispatcher) error {
 	newError("processing connection from: ", conn.RemoteAddr()).AtDebug().WriteToLog(session.ExportIDToError(ctx))
 	dest := net.Destination{
 		Network: network,

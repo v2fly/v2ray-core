@@ -6,11 +6,11 @@ import (
 
 const (
 	// TCP_FASTOPEN is the socket option on darwin for TCP fast open.
-	TCP_FASTOPEN = 0x105
+	TCP_FASTOPEN = 0x105 // nolint: golint,stylecheck
 	// TCP_FASTOPEN_SERVER is the value to enable TCP fast open on darwin for server connections.
-	TCP_FASTOPEN_SERVER = 0x01
+	TCP_FASTOPEN_SERVER = 0x01 // nolint: golint,stylecheck
 	// TCP_FASTOPEN_CLIENT is the value to enable TCP fast open on darwin for client connections.
-	TCP_FASTOPEN_CLIENT = 0x02
+	TCP_FASTOPEN_CLIENT = 0x02 // nolint: golint,stylecheck
 )
 
 func applyOutboundSocketOptions(network string, address string, fd uintptr, config *SocketConfig) error {

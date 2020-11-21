@@ -7,7 +7,6 @@ import (
 
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
-
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/strmatcher"
 	"v2ray.com/core/features/routing"
@@ -154,9 +153,8 @@ func NewPortMatcher(list *net.PortList, onSource bool) *PortMatcher {
 func (v *PortMatcher) Apply(ctx routing.Context) bool {
 	if v.onSource {
 		return v.port.Contains(ctx.GetSourcePort())
-	} else {
-		return v.port.Contains(ctx.GetTargetPort())
 	}
+	return v.port.Contains(ctx.GetTargetPort())
 }
 
 type NetworkMatcher struct {
