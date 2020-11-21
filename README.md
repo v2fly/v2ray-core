@@ -1,9 +1,8 @@
 <div>
-<img width="190" height="210" align="left" src="https://raw.githubusercontent.com/v2fly/v2fly-github-io/master/docs/.vuepress/public/readme-logo.png" alt="V2Ray"/>
-<br>
-<h1>Project V</h1> 
-<p>Project V is a set of network tools that helps you to build your own computer network.
-It secures your network connections and thus protects your privacy.</p>
+  <img width="190" height="210" align="left" src="https://raw.githubusercontent.com/v2fly/v2fly-github-io/master/docs/.vuepress/public/readme-logo.png" alt="V2Ray"/>
+  <br>
+  <h1>Project V</h1>
+  <p>Project V is a set of network tools that helps you to build your own computer network. It secures your network connections and thus protects your privacy.</p>
 </div>
 
 [![GitHub Test Badge](https://github.com/v2fly/v2ray-core/workflows/Test/badge.svg)](https://github.com/v2fly/v2ray-core/actions)
@@ -12,12 +11,13 @@ It secures your network connections and thus protects your privacy.</p>
 [![Downloads](https://img.shields.io/github/downloads/v2fly/v2ray-core/total.svg)](https://github.com/v2fly/v2ray-core/releases/latest)
 
 ## Related Links
-  - [Documentation](https://www.v2fly.org/) and [Newcomer's Instructions](https://www.v2fly.org/guide/start.html)
-  - Welcome to translate V2Ray via: **[Transifex](https://www.transifex.com/v2fly/public/)**
+
+- [Documentation](https://www.v2fly.org) and [Newcomer's Instructions](https://www.v2fly.org/guide/start.html)
+- Welcome to translate V2Ray documents via [Transifex](https://www.transifex.com/v2fly/public/)
 
 ## Packaging Status
 
-V2Ray binaries are directly available in {releases/latest} as well as some major distros' repositories, including Debian, Arch Linux, macOS (homebrew), etc. If you are willing to package V2Ray for other distros, you are also welcome to seek for help via our issues.
+> If you are willing to package V2Ray for other distros/platforms, please let us know or seek for help via [GitHub issues](https://github.com/v2fly/v2ray-core/issues).
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/v2ray.svg)](https://repology.org/project/v2ray/versions)
 [![Packaging status](https://repology.org/badge/vertical-allrepos/go:v2ray-core.svg)](https://repology.org/project/go:v2ray-core/versions)
