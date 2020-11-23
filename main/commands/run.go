@@ -19,8 +19,9 @@ import (
 
 // CmdRun runs V2Ray with config
 var CmdRun = &base.Command{
-	UsageLine: "{{.Exec}} run [-c config.json] [-confdir dir]",
-	Short:     "Run V2Ray with config",
+	CustomFlags: true,
+	UsageLine:   "{{.Exec}} run [-c config.json] [-confdir dir]",
+	Short:       "Run V2Ray with config",
 	Long: `
 Run V2Ray with config.
 
@@ -50,24 +51,21 @@ func init() {
 }
 
 var (
-	runConfigFiles cmdarg.Arg // "Config file for V2Ray.", the option is customed type, parse in main
-	runConfigDir   string
-	runFormat      = CmdRun.Flag.String("format", "json", "Format of input file.")
-
-	/* We have to do this here because Golang's Test will also need to parse flag, before
-	 * main func in this file is run.
-	 */
-	_ = func() bool {
-
-		CmdRun.Flag.Var(&runConfigFiles, "config", "Config path for V2Ray.")
-		CmdRun.Flag.Var(&runConfigFiles, "c", "Short alias of -config")
-		CmdRun.Flag.StringVar(&runConfigDir, "confdir", "", "A dir with multiple json config")
-
-		return true
-	}()
+	configFiles  cmdarg.Arg // "Config file for V2Ray.", the option is customed type
+	configDir    string
+	configFormat *string
 )
 
+func setConfigFlags(cmd *base.Command) {
+	configFormat = cmd.Flag.String("format", "json", "")
+
+	cmd.Flag.Var(&configFiles, "config", "")
+	cmd.Flag.Var(&configFiles, "c", "")
+	cmd.Flag.StringVar(&configDir, "confdir", "", "")
+}
 func executeRun(cmd *base.Command, args []string) {
+	setConfigFlags(cmd)
+	cmd.Flag.Parse(args)
 	printVersion()
 	server, err := startV2Ray()
 	if err != nil {
@@ -117,15 +115,15 @@ func readConfDir(dirPath string) cmdarg.Arg {
 }
 
 func getConfigFilePath() cmdarg.Arg {
-	if dirExists(runConfigDir) {
-		log.Println("Using confdir from arg:", runConfigDir)
-		runConfigFiles = append(runConfigFiles, readConfDir(runConfigDir)...)
+	if dirExists(configDir) {
+		log.Println("Using confdir from arg:", configDir)
+		configFiles = append(configFiles, readConfDir(configDir)...)
 	} else if envConfDir := platform.GetConfDirPath(); dirExists(envConfDir) {
 		log.Println("Using confdir from env:", envConfDir)
-		runConfigFiles = append(runConfigFiles, readConfDir(envConfDir)...)
+		configFiles = append(configFiles, readConfDir(envConfDir)...)
 	}
-	if len(runConfigFiles) > 0 {
-		return runConfigFiles
+	if len(configFiles) > 0 {
+		return configFiles
 	}
 
 	if workingDir, err := os.Getwd(); err == nil {
@@ -146,7 +144,7 @@ func getConfigFilePath() cmdarg.Arg {
 }
 
 func getConfigFormat() string {
-	switch strings.ToLower(*runFormat) {
+	switch strings.ToLower(*configFormat) {
 	case "pb", "protobuf":
 		return "protobuf"
 	default:

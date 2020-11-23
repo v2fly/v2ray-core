@@ -6,13 +6,13 @@ import (
 
 	"v2ray.com/core"
 	"v2ray.com/core/commands/base"
-	"v2ray.com/core/common/cmdarg"
 )
 
 // CmdTest tests config files
 var CmdTest = &base.Command{
-	UsageLine: "{{.Exec}} test [-format=json] [-c config.json] [-confdir dir]",
-	Short:     "Test config files",
+	CustomFlags: true,
+	UsageLine:   "{{.Exec}} test [-format=json] [-c config.json] [-confdir dir]",
+	Short:       "Test config files",
 	Long: `
 Test config files, without launching V2Ray server.
 
@@ -41,30 +41,14 @@ func init() {
 	CmdTest.Run = executeTest //break init loop
 }
 
-var (
-	testConfigFiles cmdarg.Arg // "Config file for V2Ray.", the option is customed type, parse in main
-	testConfigDir   string
-	testFormat      = CmdTest.Flag.String("format", "json", "Format of input file.")
-
-	/* We have to do this here because Golang's Test will also need to parse flag, before
-	 * main func in this file is run.
-	 */
-	_ = func() bool {
-
-		CmdTest.Flag.Var(&testConfigFiles, "config", "Config path for V2Ray.")
-		CmdTest.Flag.Var(&testConfigFiles, "c", "Short alias of -config")
-		CmdTest.Flag.StringVar(&testConfigDir, "confdir", "", "A dir with multiple json config")
-
-		return true
-	}()
-)
-
 func executeTest(cmd *base.Command, args []string) {
-	if dirExists(testConfigDir) {
-		log.Println("Using confdir from arg:", runConfigDir)
-		testConfigFiles = append(testConfigFiles, readConfDir(testConfigDir)...)
+	setConfigFlags(cmd)
+	cmd.Flag.Parse(args)
+	if dirExists(configDir) {
+		log.Println("Using confdir from arg:", configDir)
+		configFiles = append(configFiles, readConfDir(configDir)...)
 	}
-	if len(testConfigFiles) == 0 {
+	if len(configFiles) == 0 {
 		cmd.Flag.Usage()
 		base.SetExitStatus(1)
 		base.Exit()
@@ -78,9 +62,9 @@ func executeTest(cmd *base.Command, args []string) {
 }
 
 func startV2RayTesting() (core.Server, error) {
-	config, err := core.LoadConfig(getConfigFormat(), testConfigFiles[0], testConfigFiles)
+	config, err := core.LoadConfig(getConfigFormat(), configFiles[0], configFiles)
 	if err != nil {
-		return nil, newError("failed to read config files: [", testConfigFiles.String(), "]").Base(err)
+		return nil, newError("failed to read config files: [", configFiles.String(), "]").Base(err)
 	}
 
 	server, err := core.New(config)
