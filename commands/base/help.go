@@ -56,18 +56,14 @@ The commands are:
 	{{.Name | width $.CommandsWidth}} {{.Short}}{{end}}{{end}}
 
 Use "{{.Exec}} help{{with .LongName}} {{.}}{{end}} <command>" for more information about a command.
-`
+{{if eq (.UsageLine) (.Exec)}}
+Additional help topics:
+{{range .Commands}}{{if and (not .Runnable) (not .Commands)}}
+	{{.Name | width $.CommandsWidth}} {{.Short}}{{end}}{{end}}
 
-// APPEND FOLLOWING TO 'usageTemplate' IF YOU WANT DOC,
-// A DOC TOPIC IS JUST A COMMAND NOT RUNNABLE:
-//
-// {{if eq (.UsageLine) (.Exec)}}
-// Additional help topics:
-// {{range .Commands}}{{if and (not .Runnable) (not .Commands)}}
-// 	{{.Name | width $.CommandsWidth}} {{.Short}}{{end}}{{end}}
-//
-// Use "{{.Exec}} help{{with .LongName}} {{.}}{{end}} <topic>" for more information about that topic.
-// {{end}}
+Use "{{.Exec}} help{{with .LongName}} {{.}}{{end}} <topic>" for more information about that topic.
+{{end}}
+`
 
 var helpTemplate = `{{if .Runnable}}usage: {{.UsageLine}}
 
