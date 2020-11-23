@@ -2,7 +2,9 @@ name: Coverage
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+      - v*
     paths:
       - "**/*.go"
 
