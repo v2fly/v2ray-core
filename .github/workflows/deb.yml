@@ -2,7 +2,9 @@ name: Build debian packages
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+      - v*
     paths:
       - "**/*.go"
   release:

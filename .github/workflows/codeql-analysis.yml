@@ -2,16 +2,15 @@ name: CodeQL
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+      - v*
     paths:
       - "**/*.go"
   pull_request:
-    branches: [master]
     types: [opened, synchronize, reopened]
     paths:
       - "**/*.go"
-  schedule:
-    - cron: '0 0 * * 1'
 
 jobs:
   analyze:
