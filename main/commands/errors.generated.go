@@ -1,4 +1,4 @@
-package control
+package commands
 
 import "v2ray.com/core/common/errors"
 
