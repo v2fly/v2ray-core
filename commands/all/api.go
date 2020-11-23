@@ -1,9 +1,8 @@
-package control
+package all
 
 import (
 	"context"
 	"errors"
-	"flag"
 	"fmt"
 	"strings"
 	"time"
@@ -13,71 +12,66 @@ import (
 
 	logService "github.com/v2fly/v2ray-core/v4/app/log/command"
 	statsService "github.com/v2fly/v2ray-core/v4/app/stats/command"
-	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/commands/base"
 )
 
-type APICommand struct{}
+// cmdAPI calls an API in an V2Ray process
+var cmdAPI = &base.Command{
+	UsageLine: "{{.Exec}} api [-server 127.0.0.1:8080] <action> <parameter>",
+	Short:     "Call V2Ray API",
+	Long: `
+Call V2Ray API, API calls in this command have a timeout to the server of 3 seconds.
 
-func (c *APICommand) Name() string {
-	return "api"
+The following methods are currently supported:
+
+	LoggerService.RestartLogger
+	StatsService.GetStats
+	StatsService.QueryStats
+
+Examples:
+
+	{{.Exec}} {{.LongName}} --server=127.0.0.1:8080 LoggerService.RestartLogger '' 
+	{{.Exec}} {{.LongName}} --server=127.0.0.1:8080 StatsService.QueryStats 'pattern: "" reset: false'
+	{{.Exec}} {{.LongName}} --server=127.0.0.1:8080 StatsService.GetStats 'name: "inbound>>>statin>>>traffic>>>downlink" reset: false'
+	{{.Exec}} {{.LongName}} --server=127.0.0.1:8080 StatsService.GetSysStats ''
+	`,
 }
 
-func (c *APICommand) Description() Description {
-	return Description{
-		Short: "Call V2Ray API",
-		Usage: []string{
-			"v2ctl api [--server=127.0.0.1:8080] Service.Method Request",
-			"Call an API in an V2Ray process.",
-			"The following methods are currently supported:",
-			"\tLoggerService.RestartLogger",
-			"\tStatsService.GetStats",
-			"\tStatsService.QueryStats",
-			"API calls in this command have a timeout to the server of 3 seconds.",
-			"Examples:",
-			"v2ctl api --server=127.0.0.1:8080 LoggerService.RestartLogger '' ",
-			"v2ctl api --server=127.0.0.1:8080 StatsService.QueryStats 'pattern: \"\" reset: false'",
-			"v2ctl api --server=127.0.0.1:8080 StatsService.GetStats 'name: \"inbound>>>statin>>>traffic>>>downlink\" reset: false'",
-			"v2ctl api --server=127.0.0.1:8080 StatsService.GetSysStats ''",
-		},
-	}
+func init() {
+	cmdAPI.Run = executeAPI // break init loop
 }
 
-func (c *APICommand) Execute(args []string) error {
-	fs := flag.NewFlagSet(c.Name(), flag.ContinueOnError)
+var (
+	apiServerAddrPtr = cmdAPI.Flag.String("server", "127.0.0.1:8080", "")
+)
 
-	serverAddrPtr := fs.String("server", "127.0.0.1:8080", "Server address")
-
-	if err := fs.Parse(args); err != nil {
-		return err
-	}
-
-	unnamedArgs := fs.Args()
+func executeAPI(cmd *base.Command, args []string) {
+	unnamedArgs := cmdAPI.Flag.Args()
 	if len(unnamedArgs) < 2 {
-		return newError("service name or request not specified.")
+		base.Fatalf("service name or request not specified.")
 	}
 
 	service, method := getServiceMethod(unnamedArgs[0])
 	handler, found := serivceHandlerMap[strings.ToLower(service)]
 	if !found {
-		return newError("unknown service: ", service)
+		base.Fatalf("unknown service: %s", service)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, *serverAddrPtr, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.DialContext(ctx, *apiServerAddrPtr, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		return newError("failed to dial ", *serverAddrPtr).Base(err)
+		base.Fatalf("failed to dial %s", *apiServerAddrPtr)
 	}
 	defer conn.Close()
 
 	response, err := handler(ctx, conn, method, unnamedArgs[1])
 	if err != nil {
-		return newError("failed to call service ", unnamedArgs[0]).Base(err)
+		base.Fatalf("failed to call service %s: %s", unnamedArgs[0], err)
 	}
 
 	fmt.Println(response)
-	return nil
 }
 
 func getServiceMethod(s string) (string, string) {
@@ -103,9 +97,6 @@ func callLogService(ctx context.Context, conn *grpc.ClientConn, method string, r
 	switch strings.ToLower(method) {
 	case "restartlogger":
 		r := &logService.RestartLoggerRequest{}
-		if err := proto.UnmarshalText(request, r); err != nil {
-			return "", err
-		}
 		resp, err := client.RestartLogger(ctx, r)
 		if err != nil {
 			return "", err
@@ -151,8 +142,4 @@ func callStatsService(ctx context.Context, conn *grpc.ClientConn, method string,
 	default:
 		return "", errors.New("Unknown method: " + method)
 	}
-}
-
-func init() {
-	common.Must(RegisterCommand(&APICommand{}))
 }

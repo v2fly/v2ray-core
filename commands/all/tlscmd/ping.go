@@ -1,65 +1,57 @@
-package control
+package tlscmd
 
 import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
-	"flag"
 	"fmt"
 	"net"
 
-	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/commands/base"
 	v2tls "github.com/v2fly/v2ray-core/v4/transport/internet/tls"
 )
 
-type TLSPingCommand struct{}
+// CmdPing is the tls ping command
+var CmdPing = &base.Command{
+	UsageLine: "{{.Exec}} tls ping [-ip <ip>] <domain>",
+	Short:     "Ping the domain with TLS handshake",
+	Long: `
+Ping the domain with TLS handshake.
 
-func (c *TLSPingCommand) Name() string {
-	return "tlsping"
+Arguments:
+
+	-ip
+		The IP address of the domain.
+`,
 }
 
-func (c *TLSPingCommand) Description() Description {
-	return Description{
-		Short: "Ping the domain with TLS handshake",
-		Usage: []string{"v2ctl tlsping <domain> --ip <ip>"},
-	}
+func init() {
+	CmdPing.Run = executePing // break init loop
 }
 
-func printCertificates(certs []*x509.Certificate) {
-	for _, cert := range certs {
-		if len(cert.DNSNames) == 0 {
-			continue
-		}
-		fmt.Println("Allowed domains: ", cert.DNSNames)
-	}
-}
+var (
+	pingIPStr = CmdPing.Flag.String("ip", "", "")
+)
 
-func (c *TLSPingCommand) Execute(args []string) error {
-	fs := flag.NewFlagSet(c.Name(), flag.ContinueOnError)
-	ipStr := fs.String("ip", "", "IP address of the domain")
-
-	if err := fs.Parse(args); err != nil {
-		return newError("flag parsing").Base(err)
+func executePing(cmd *base.Command, args []string) {
+	if CmdPing.Flag.NArg() < 1 {
+		base.Fatalf("domain not specified")
 	}
 
-	if fs.NArg() < 1 {
-		return newError("domain not specified")
-	}
-
-	domain := fs.Arg(0)
+	domain := CmdPing.Flag.Arg(0)
 	fmt.Println("Tls ping: ", domain)
 
 	var ip net.IP
-	if len(*ipStr) > 0 {
-		v := net.ParseIP(*ipStr)
+	if len(*pingIPStr) > 0 {
+		v := net.ParseIP(*pingIPStr)
 		if v == nil {
-			return newError("invalid IP: ", *ipStr)
+			base.Fatalf("invalid IP: %s", *pingIPStr)
 		}
 		ip = v
 	} else {
 		v, err := net.ResolveIPAddr("ip", domain)
 		if err != nil {
-			return newError("resolve IP").Base(err)
+			base.Fatalf("Failed to resolve IP: %s", err)
 		}
 		ip = v.IP
 	}
@@ -70,7 +62,7 @@ func (c *TLSPingCommand) Execute(args []string) error {
 	{
 		tcpConn, err := net.DialTCP("tcp", nil, &net.TCPAddr{IP: ip, Port: 443})
 		if err != nil {
-			return newError("dial tcp").Base(err)
+			base.Fatalf("Failed to dial tcp: %s", err)
 		}
 		tlsConn := tls.Client(tcpConn, &tls.Config{
 			InsecureSkipVerify: true,
@@ -95,7 +87,7 @@ func (c *TLSPingCommand) Execute(args []string) error {
 	{
 		tcpConn, err := net.DialTCP("tcp", nil, &net.TCPAddr{IP: ip, Port: 443})
 		if err != nil {
-			return newError("dial tcp").Base(err)
+			base.Fatalf("Failed to dial tcp: %s", err)
 		}
 		tlsConn := tls.Client(tcpConn, &tls.Config{
 			ServerName: domain,
@@ -116,8 +108,15 @@ func (c *TLSPingCommand) Execute(args []string) error {
 	}
 
 	fmt.Println("Tls ping finished")
+}
 
-	return nil
+func printCertificates(certs []*x509.Certificate) {
+	for _, cert := range certs {
+		if len(cert.DNSNames) == 0 {
+			continue
+		}
+		fmt.Println("Allowed domains: ", cert.DNSNames)
+	}
 }
 
 func showCert() func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
@@ -126,8 +125,4 @@ func showCert() func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) er
 		fmt.Println("Certificate Chain Hash: ", base64.StdEncoding.EncodeToString(hash))
 		return nil
 	}
-}
-
-func init() {
-	common.Must(RegisterCommand(&TLSPingCommand{}))
 }

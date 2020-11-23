@@ -1,10 +1,11 @@
-package control
+package all
 
 import (
 	"flag"
 	"fmt"
 	"io/ioutil"
 
+	"github.com/v2fly/v2ray-core/v4/commands/base"
 	v2tls "github.com/v2fly/v2ray-core/v4/transport/internet/tls"
 )
 
@@ -14,13 +15,10 @@ func (c CertificateChainHashCommand) Name() string {
 	return "certChainHash"
 }
 
-func (c CertificateChainHashCommand) Description() Description {
-	return Description{
-		Short: "Calculate TLS certificates hash.",
-		Usage: []string{
-			"v2ctl certChainHash --cert <cert.pem>",
-			"Calculate TLS certificate chain hash.",
-		},
+func (c CertificateChainHashCommand) Description() base.Command {
+	return base.Command{
+		Short:     "Calculate TLS certificates hash.",
+		UsageLine: "v2ctl certChainHash --cert <cert.pem Calculate TLS certificate chain hash.",
 	}
 }
 

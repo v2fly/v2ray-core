@@ -62,15 +62,24 @@ func getExtension(filename string) string {
 // * []string slice of multiple filename/url(s) to open to read
 // * io.Reader that reads a config content (the original way)
 func LoadConfig(formatName string, filename string, input interface{}) (*Config, error) {
-	ext := getExtension(filename)
-	if len(ext) > 0 {
-		if f, found := configLoaderByExt[ext]; found {
+	if formatName != "" {
+		// if clearly specified, we can safely assume that user knows what they are
+		if f, found := configLoaderByName[formatName]; found {
 			return f.Loader(input)
 		}
-	}
-
-	if f, found := configLoaderByName[formatName]; found {
-		return f.Loader(input)
+	} else {
+		// no explicitly specified loader, extenstion detect first
+		ext := getExtension(filename)
+		if len(ext) > 0 {
+			if f, found := configLoaderByExt[ext]; found {
+				return f.Loader(input)
+			}
+		}
+		// try default loader
+		formatName = "json"
+		if f, found := configLoaderByName[formatName]; found {
+			return f.Loader(input)
+		}
 	}
 
 	return nil, newError("Unable to load config in ", formatName).AtWarning()

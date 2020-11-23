@@ -79,4 +79,7 @@ import (
 
 	// Load config from file or http(s)
 	_ "github.com/v2fly/v2ray-core/v4/main/confloader/external"
+
+	// commands
+	_ "github.com/v2fly/v2ray-core/v4/commands/all"
 )
