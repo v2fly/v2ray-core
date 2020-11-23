@@ -62,7 +62,7 @@ func executeTest(cmd *base.Command, args []string) {
 }
 
 func startV2RayTesting() (core.Server, error) {
-	config, err := core.LoadConfig(getConfigFormat(), configFiles[0], configFiles)
+	config, err := core.LoadConfig(getFormatFromAlias(), configFiles[0], configFiles)
 	if err != nil {
 		return nil, newError("failed to read config files: [", configFiles.String(), "]").Base(err)
 	}

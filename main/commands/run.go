@@ -57,7 +57,7 @@ var (
 )
 
 func setConfigFlags(cmd *base.Command) {
-	configFormat = cmd.Flag.String("format", "json", "")
+	configFormat = cmd.Flag.String("format", "", "")
 
 	cmd.Flag.Var(&configFiles, "config", "")
 	cmd.Flag.Var(&configFiles, "c", "")
@@ -143,19 +143,19 @@ func getConfigFilePath() cmdarg.Arg {
 	return cmdarg.Arg{"stdin:"}
 }
 
-func getConfigFormat() string {
+func getFormatFromAlias() string {
 	switch strings.ToLower(*configFormat) {
-	case "pb", "protobuf":
+	case "pb":
 		return "protobuf"
 	default:
-		return "json"
+		return *configFormat
 	}
 }
 
 func startV2Ray() (core.Server, error) {
 	configFiles := getConfigFilePath()
 
-	config, err := core.LoadConfig(getConfigFormat(), configFiles[0], configFiles)
+	config, err := core.LoadConfig(getFormatFromAlias(), configFiles[0], configFiles)
 	if err != nil {
 		return nil, newError("failed to read config files: [", configFiles.String(), "]").Base(err)
 	}
