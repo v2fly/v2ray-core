@@ -16,3 +16,6 @@ message Config {
   // interface.
   repeated v2ray.core.common.serial.TypedMessage service = 2;
 }
+
+// ReflectionConfig is the placeholder config for ReflectionService.
+message ReflectionConfig {}

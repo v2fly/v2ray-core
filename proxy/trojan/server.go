@@ -15,7 +15,6 @@ import (
 	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/log"
 	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/platform"
 	"v2ray.com/core/common/protocol"
 	udp_proto "v2ray.com/core/common/protocol/udp"
 	"v2ray.com/core/common/retry"
@@ -26,20 +25,12 @@ import (
 	"v2ray.com/core/features/routing"
 	"v2ray.com/core/transport/internet"
 	"v2ray.com/core/transport/internet/udp"
-	"v2ray.com/core/transport/internet/xtls"
 )
 
 func init() {
 	common.Must(common.RegisterConfig((*ServerConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return NewServer(ctx, config.(*ServerConfig))
 	}))
-
-	const defaultFlagValue = "NOT_DEFINED_AT_ALL"
-
-	xtlsShow := platform.NewEnvFlag("v2ray.trojan.xtls.show").GetValue(func() string { return defaultFlagValue })
-	if xtlsShow == "true" {
-		trojanXTLSShow = true
-	}
 }
 
 // Server is an inbound connection handler that handles messages in trojan protocol.
@@ -202,35 +193,6 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 		return s.handleUDPPayload(ctx, &PacketReader{Reader: clientReader}, &PacketWriter{Writer: conn}, dispatcher)
 	}
 
-	// handle tcp request
-	account, ok := user.Account.(*MemoryAccount)
-	if !ok {
-		return newError("user account is not valid")
-	}
-
-	switch clientReader.Flow {
-	case XRO, XRD:
-		if account.Flow == clientReader.Flow {
-			if destination.Address.Family().IsDomain() && destination.Address.Domain() == muxCoolAddress {
-				return newError(clientReader.Flow + " doesn't support Mux").AtWarning()
-			}
-			if xtlsConn, ok := iConn.(*xtls.Conn); ok {
-				xtlsConn.RPRX = true
-				xtlsConn.SHOW = trojanXTLSShow
-				if clientReader.Flow == XRD {
-					xtlsConn.DirectMode = true
-				}
-			} else {
-				return newError(`failed to use ` + clientReader.Flow + `, maybe "security" is not "xtls"`).AtWarning()
-			}
-		} else {
-			return newError("unable to use ", clientReader.Flow).AtWarning()
-		}
-	case "":
-	default:
-		return newError("unsupported flow " + account.Flow).AtWarning()
-	}
-
 	ctx = log.ContextWithAccessMessage(ctx, &log.AccessMessage{
 		From:   conn.RemoteAddr(),
 		To:     destination,
@@ -331,9 +293,6 @@ func (s *Server) fallback(ctx context.Context, sid errors.ExportOption, err erro
 	if len(apfb) > 1 || apfb[""] == nil {
 		if tlsConn, ok := iConn.(*tls.Conn); ok {
 			alpn = tlsConn.ConnectionState().NegotiatedProtocol
-			newError("realAlpn = " + alpn).AtInfo().WriteToLog(sid)
-		} else if xtlsConn, ok := iConn.(*xtls.Conn); ok {
-			alpn = xtlsConn.ConnectionState().NegotiatedProtocol
 			newError("realAlpn = " + alpn).AtInfo().WriteToLog(sid)
 		}
 		if apfb[alpn] == nil {

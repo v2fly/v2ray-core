@@ -21,7 +21,7 @@ type PacketWriter interface {
 	io.Writer
 }
 
-type KCPPacketReader struct {
+type KCPPacketReader struct { // nolint: golint
 	Security cipher.AEAD
 	Header   internet.PacketHeader
 }
@@ -57,7 +57,7 @@ func (r *KCPPacketReader) Read(b []byte) []Segment {
 	return result
 }
 
-type KCPPacketWriter struct {
+type KCPPacketWriter struct { // nolint: golint
 	Header   internet.PacketHeader
 	Security cipher.AEAD
 	Writer   io.Writer

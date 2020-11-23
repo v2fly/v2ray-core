@@ -29,7 +29,7 @@ func getControlFunc(ctx context.Context, sockopt *SocketConfig, controllers []co
 				}
 			}
 
-			setReusePort(fd)
+			setReusePort(fd) // nolint: staticcheck
 
 			for _, controller := range controllers {
 				if err := controller(network, address, fd); err != nil {
@@ -71,7 +71,7 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 			if err != nil {
 				return nil, err
 			}
-			ctx = context.WithValue(ctx, address, locker)
+			ctx = context.WithValue(ctx, address, locker) // nolint: golint,staticcheck
 		}
 	}
 

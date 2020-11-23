@@ -48,8 +48,9 @@ jobs:
         if: github.event_name == 'release'
         run: |
           git clone https://github.com/v2fly/debian.git archive
-          echo ${{ secrets.DEBIAN_GPG_PRIVE }} | base64 -d > private.key
-          gpg --import private.key
+          echo ${{ secrets.DEBIAN_GPG_PRIVATE }} | base64 -d > private.key
+          gpg --import --batch private.key
+          gpg -K
           cd archive
           git config --local user.name "${{ github.actor }}"
           git config --local user.email "${{ github.actor }}@users.noreply.github.com"

@@ -5,18 +5,12 @@ package encoding
 //go:generate go run v2ray.com/core/common/errors/errorgen
 
 import (
-	"fmt"
 	"io"
-	"syscall"
 
 	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/signal"
-	"v2ray.com/core/features/stats"
 	"v2ray.com/core/proxy/vless"
-	"v2ray.com/core/transport/internet/xtls"
 )
 
 const (
@@ -172,37 +166,4 @@ func DecodeResponseHeader(reader io.Reader, request *protocol.RequestHeader) (*A
 	}
 
 	return responseAddons, nil
-}
-
-func ReadV(reader buf.Reader, writer buf.Writer, timer signal.ActivityUpdater, conn *xtls.Conn, rawConn syscall.RawConn, counter stats.Counter) error {
-	err := func() error {
-		var ct stats.Counter
-		for {
-			if conn.DirectIn {
-				conn.DirectIn = false
-				reader = buf.NewReadVReader(conn.Connection, rawConn)
-				ct = counter
-				if conn.SHOW {
-					fmt.Println(conn.MARK, "ReadV")
-				}
-			}
-			buffer, err := reader.ReadMultiBuffer()
-			if !buffer.IsEmpty() {
-				if ct != nil {
-					ct.Add(int64(buffer.Len()))
-				}
-				timer.Update()
-				if werr := writer.WriteMultiBuffer(buffer); werr != nil {
-					return werr
-				}
-			}
-			if err != nil {
-				return err
-			}
-		}
-	}()
-	if err != nil && errors.Cause(err) != io.EOF {
-		return err
-	}
-	return nil
 }

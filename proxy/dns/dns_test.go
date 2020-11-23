@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/miekg/dns"
-
 	"v2ray.com/core"
 	"v2ray.com/core/app/dispatcher"
 	dnsapp "v2ray.com/core/app/dns"
