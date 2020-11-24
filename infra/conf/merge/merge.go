@@ -27,7 +27,7 @@ func JSONs(files []string) ([]byte, error) {
 // jsonsToMap merges multiple jsons into one map.
 // It accepts URLs, files
 func jsonsToMap(files []string) (map[string]interface{}, error) {
-	conf := make(map[string]interface{}, 0)
+	conf := make(map[string]interface{})
 	for _, arg := range files {
 		r, err := loadArg(arg)
 		if err != nil {
@@ -49,11 +49,12 @@ func jsonsToMap(files []string) (map[string]interface{}, error) {
 // loadArg loads one arg, maybe an remote url, or local file path
 func loadArg(arg string) (out io.Reader, err error) {
 	var data []byte
-	if strings.HasPrefix(arg, "http://") || strings.HasPrefix(arg, "https://") {
+	switch {
+	case strings.HasPrefix(arg, "http://"), strings.HasPrefix(arg, "https://"):
 		data, err = fetchHTTPContent(arg)
-	} else if arg == "stdin:" {
+	case (arg == "stdin:"):
 		data, err = ioutil.ReadAll(os.Stdin)
-	} else {
+	default:
 		data, err = ioutil.ReadFile(arg)
 	}
 	if err != nil {

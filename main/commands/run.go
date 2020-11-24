@@ -111,7 +111,7 @@ func readConfDir(dirPath string, extension []string) cmdarg.Arg {
 	for _, f := range confs {
 		ext := filepath.Ext(f.Name())
 		for _, e := range extension {
-			if strings.ToLower(e) == strings.ToLower(ext) {
+			if strings.EqualFold(e, ext) {
 				files.Set(filepath.Join(dirPath, f.Name()))
 				break
 			}
@@ -126,7 +126,7 @@ func readConfDirRecursively(dirPath string, extension []string) cmdarg.Arg {
 	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
 		ext := filepath.Ext(path)
 		for _, e := range extension {
-			if strings.ToLower(e) == strings.ToLower(ext) {
+			if strings.EqualFold(e, ext) {
 				files.Set(path)
 				break
 			}
