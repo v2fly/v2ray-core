@@ -48,7 +48,7 @@ func executeAddInbounds(cmd *base.Command, args []string) {
 		}
 		ins = append(ins, conf.InboundConfigs...)
 	}
-	if ins == nil || len(ins) == 0 {
+	if len(ins) == 0 {
 		base.Fatalf("no valid inbound found in %s", args)
 	}
 

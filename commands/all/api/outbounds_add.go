@@ -48,7 +48,7 @@ func executeAddOutbounds(cmd *base.Command, args []string) {
 		}
 		outs = append(outs, conf.OutboundConfigs...)
 	}
-	if outs == nil || len(outs) == 0 {
+	if len(outs) == 0 {
 		base.Fatalf("no valid outbound found in %s", args)
 	}
 
