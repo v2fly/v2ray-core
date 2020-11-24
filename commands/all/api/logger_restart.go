@@ -18,8 +18,11 @@ Restart the logger of V2Ray by calling its API. (timeout 3 seconds)
 
 Arguments:
 
-	-server=127.0.0.1:8080 
+	-s, -server 
 		The API server address. Default 127.0.0.1:8080
+
+	-t, -timeout
+		Timeout seconds to call API. Default 3
 `,
 	Run: executeRestartLogger,
 }
@@ -28,12 +31,12 @@ func executeRestartLogger(cmd *base.Command, args []string) {
 	setSharedFlags(cmd)
 	cmd.Flag.Parse(args)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(apiTimeout)*time.Second)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, *apiServerAddrPtr, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.DialContext(ctx, apiServerAddrPtr, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		base.Fatalf("failed to dial %s", *apiServerAddrPtr)
+		base.Fatalf("failed to dial %s", apiServerAddrPtr)
 	}
 	defer conn.Close()
 

@@ -11,15 +11,18 @@ import (
 
 var cmdQueryStats = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api statsquery [--server=127.0.0.1:8080]",
+	UsageLine:   "{{.Exec}} api statsquery [--server=127.0.0.1:8080] [-pattern '']",
 	Short:       "Query statistics",
 	Long: `
 Query statistics from V2Ray by calling its API. (timeout 3 seconds)
 
 Arguments:
 
-	-server=127.0.0.1:8080 
+	-s, -server 
 		The API server address. Default 127.0.0.1:8080
+
+	-t, -timeout
+		Timeout seconds to call API. Default 3
 
 	-pattern
 		Pattern of the query.
@@ -40,12 +43,12 @@ func executeQueryStats(cmd *base.Command, args []string) {
 	reset := cmd.Flag.Bool("reset", false, "")
 	cmd.Flag.Parse(args)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(apiTimeout)*time.Second)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, *apiServerAddrPtr, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.DialContext(ctx, apiServerAddrPtr, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		base.Fatalf("failed to dial %s", *apiServerAddrPtr)
+		base.Fatalf("failed to dial %s", apiServerAddrPtr)
 	}
 	defer conn.Close()
 

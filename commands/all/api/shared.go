@@ -16,11 +16,15 @@ import (
 type serviceHandler func(ctx context.Context, conn *grpc.ClientConn, cmd *base.Command, args []string) string
 
 var (
-	apiServerAddrPtr *string
+	apiServerAddrPtr string
+	apiTimeout       int
 )
 
 func setSharedFlags(cmd *base.Command) {
-	apiServerAddrPtr = cmd.Flag.String("server", "127.0.0.1:8080", "")
+	cmd.Flag.StringVar(&apiServerAddrPtr, "s", "127.0.0.1:8080", "")
+	cmd.Flag.StringVar(&apiServerAddrPtr, "server", "127.0.0.1:8080", "")
+	cmd.Flag.IntVar(&apiTimeout, "t", 3, "")
+	cmd.Flag.IntVar(&apiTimeout, "timeout", 3, "")
 }
 
 func jsonToConfig(f string) (*conf.Config, error) {
