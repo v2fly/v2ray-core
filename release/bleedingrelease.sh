@@ -4,7 +4,7 @@ RELBODY="https://github.com/v2fly/v2ray-core/commit/${RELEASE_SHA}"
 JSON_DATA=$(echo "{}" | jq -c ".tag_name=\"${RELEASE_TAG}\"")
 JSON_DATA=$(echo ${JSON_DATA} | jq -c ".prerelease=${PRERELEASE}")
 JSON_DATA=$(echo ${JSON_DATA} | jq -c ".body=\"${RELBODY}\"")
-RELEASE_DATA=$(curl --data "${JSON_DATA}" -H "Authorization: token ${GITHUB_TOKEN}" -X POST https://api.github.com/repos/v2fly/V2FlyBleedingEdgeBinary/releases)
+RELEASE_DATA=$(curl --data "${JSON_DATA}" -H "Authorization: token ${PERSONAL_TOKEN}" -X POST https://api.github.com/repos/v2fly/V2FlyBleedingEdgeBinary/releases)
 echo $RELEASE_DATA
 RELEASE_ID=$(echo $RELEASE_DATA | jq ".id")
 
@@ -13,7 +13,7 @@ function uploadfile() {
   CTYPE=$(file -b --mime-type $FILE)
 
   sleep 1
-  curl -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: ${CTYPE}" --data-binary @$FILE "https://uploads.github.com/repos/v2fly/V2FlyBleedingEdgeBinary/releases/${RELEASE_ID}/assets?name=$(basename $FILE)"
+  curl -H "Authorization: token ${PERSONAL_TOKEN}" -H "Content-Type: ${CTYPE}" --data-binary @$FILE "https://uploads.github.com/repos/v2fly/V2FlyBleedingEdgeBinary/releases/${RELEASE_ID}/assets?name=$(basename $FILE)"
   sleep 1
 }
 
