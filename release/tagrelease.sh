@@ -22,7 +22,7 @@ GITHUB_RELEASE_TAG=${TRIGGER_REASON:${#CONST_refsB}:25}
 
 echo ${GITHUB_RELEASE_TAG}
 
-RELEASE_DATA=$(curl -H "Authorization: token ${GITHUB_TOKEN}" -X GET https://api.github.com/repos/v2fly/v2ray-core/releases/tags/${GITHUB_RELEASE_TAG})
+RELEASE_DATA=$(curl -H "Authorization: token ${PERSONAL_TOKEN}" -X GET https://api.github.com/repos/v2fly/v2ray-core/releases/tags/${GITHUB_RELEASE_TAG})
 echo $RELEASE_DATA
 RELEASE_ID=$(echo $RELEASE_DATA | jq ".id")
 
@@ -33,7 +33,7 @@ function uploadfile() {
   CTYPE=$(file -b --mime-type $FILE)
 
   sleep 1
-  curl -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: ${CTYPE}" --data-binary @$FILE "https://uploads.github.com/repos/v2fly/v2ray-core/releases/${RELEASE_ID}/assets?name=$(basename $FILE)"
+  curl -H "Authorization: token ${PERSONAL_TOKEN}" -H "Content-Type: ${CTYPE}" --data-binary @$FILE "https://uploads.github.com/repos/v2fly/v2ray-core/releases/${RELEASE_ID}/assets?name=$(basename $FILE)"
   sleep 1
 }
 
