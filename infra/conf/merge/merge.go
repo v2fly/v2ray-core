@@ -3,6 +3,7 @@ package merge
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -17,29 +18,45 @@ import (
 // JSONs merges multiple jsons into one.
 // It accepts local files, URLs
 func JSONs(files []string) ([]byte, error) {
-	m, err := jsonsToMap(files)
+	m, err := JSONsToMap(files)
 	if err != nil {
 		return nil, err
 	}
 	return json.Marshal(m)
 }
 
-// jsonsToMap merges multiple jsons into one map.
-// It accepts URLs, files
-func jsonsToMap(files []string) (map[string]interface{}, error) {
+// JSONsToMap merges multiple jsons into one map.
+// It accepts []string for URLs, files, [][]byte for json contents
+func JSONsToMap(args interface{}) (map[string]interface{}, error) {
 	conf := make(map[string]interface{})
-	for _, arg := range files {
-		r, err := loadArg(arg)
-		if err != nil {
-			return nil, err
+	switch v := args.(type) {
+	case []string:
+		for _, arg := range v {
+			r, err := loadArg(arg)
+			if err != nil {
+				return nil, err
+			}
+			m, err := jsonToMap(r)
+			if err != nil {
+				return nil, err
+			}
+			if err = mergeMaps(conf, m); err != nil {
+				return nil, err
+			}
 		}
-		m, err := jsonToMap(r)
-		if err != nil {
-			return nil, err
+	case [][]byte:
+		for _, arg := range v {
+			r := bytes.NewReader(arg)
+			m, err := jsonToMap(r)
+			if err != nil {
+				return nil, err
+			}
+			if err = mergeMaps(conf, m); err != nil {
+				return nil, err
+			}
 		}
-		if err = mergeMaps(conf, m); err != nil {
-			return nil, err
-		}
+	default:
+		return nil, errors.New("unsupport args for JSONsToMap")
 	}
 	sortSlicesInMap(conf)
 	removePriorityKey(conf)
