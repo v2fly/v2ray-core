@@ -44,7 +44,7 @@ func executeConvert(cmd *base.Command, args []string) {
 		base.Fatalf("empty config list")
 	}
 
-	data, err := merge.JSONs(files)
+	data, err := merge.ToJSON(files)
 	if err != nil {
 		base.Fatalf("failed to load json: %s", err)
 	}

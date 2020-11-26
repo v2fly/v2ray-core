@@ -41,7 +41,7 @@ func executeMerge(cmd *base.Command, args []string) {
 		base.Fatalf("empty config list")
 	}
 
-	data, err := merge.JSONs(files)
+	data, err := merge.ToJSON(files)
 	if err != nil {
 		base.Fatalf(err.Error())
 	}

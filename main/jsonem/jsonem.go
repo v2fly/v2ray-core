@@ -18,7 +18,7 @@ func init() {
 		Loader: func(input interface{}) (*core.Config, error) {
 			switch v := input.(type) {
 			case cmdarg.Arg:
-				data, err := merge.JSONs(v)
+				data, err := merge.ToJSON(v)
 				if err != nil {
 					return nil, err
 				}

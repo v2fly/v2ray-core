@@ -13,21 +13,22 @@ import (
 	"time"
 
 	"v2ray.com/core/common/buf"
+	"v2ray.com/core/infra/conf/serial"
 )
 
-// JSONs merges multiple jsons into one.
-// It accepts local files, URLs
-func JSONs(files []string) ([]byte, error) {
-	m, err := JSONsToMap(files)
+// ToJSON merges multiple jsons into one.
+// It accepts []string for URLs, files, [][]byte for json contents
+func ToJSON(args interface{}) ([]byte, error) {
+	m, err := ToMap(args)
 	if err != nil {
 		return nil, err
 	}
 	return json.Marshal(m)
 }
 
-// JSONsToMap merges multiple jsons into one map.
+// ToMap merges multiple jsons into one map.
 // It accepts []string for URLs, files, [][]byte for json contents
-func JSONsToMap(args interface{}) (map[string]interface{}, error) {
+func ToMap(args interface{}) (map[string]interface{}, error) {
 	conf := make(map[string]interface{})
 	switch v := args.(type) {
 	case []string:
@@ -40,7 +41,7 @@ func JSONsToMap(args interface{}) (map[string]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			if _, err = Maps(conf, m); err != nil {
+			if err = mergeMaps(conf, m); err != nil {
 				return nil, err
 			}
 		}
@@ -51,7 +52,7 @@ func JSONsToMap(args interface{}) (map[string]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			if _, err = Maps(conf, m); err != nil {
+			if err = mergeMaps(conf, m); err != nil {
 				return nil, err
 			}
 		}
@@ -59,12 +60,21 @@ func JSONsToMap(args interface{}) (map[string]interface{}, error) {
 		return nil, errors.New("unsupport args for JSONsToMap")
 	}
 	sortSlicesInMap(conf)
-	err := mergeSliceSameTag(conf)
+	err := mergeSameTag(conf)
 	if err != nil {
 		return nil, err
 	}
-	removeHelperKey(conf)
+	removeHelperFields(conf)
 	return conf, nil
+}
+
+func jsonToMap(r io.Reader) (map[string]interface{}, error) {
+	c := make(map[string]interface{})
+	err := serial.DecodeJSON(r, &c)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }
 
 // loadArg loads one arg, maybe an remote url, or local file path
