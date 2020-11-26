@@ -11,7 +11,6 @@ import (
 )
 
 func TestMergeJSON(t *testing.T) {
-
 	json1 := `
 	  {
 		"log": {"access": "some_value", "loglevel": "debug"},
@@ -109,7 +108,6 @@ func TestMergeJSON_MergeTag(t *testing.T) {
 }
 
 func TestMergeJSON_MergeTag2(t *testing.T) {
-
 	json1 := `
 	{
 	  "array": [

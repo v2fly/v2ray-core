@@ -29,8 +29,8 @@ func mergeField(target interface{}, source interface{}) (interface{}, error) {
 	}
 	if slice, ok := source.([]interface{}); ok {
 		if tslice, ok := target.([]interface{}); ok {
-			target = append(tslice, slice...)
-			return target, nil
+			tslice = append(tslice, slice...)
+			return tslice, nil
 		}
 		return nil, fmt.Errorf("value type mismatch, source is 'slice' but target not: %s", source)
 	} else if smap, ok := source.(map[string]interface{}); ok {
