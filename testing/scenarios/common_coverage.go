@@ -4,6 +4,7 @@ package scenarios
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 
@@ -27,7 +28,8 @@ func RunV2RayProtobuf(config []byte) *exec.Cmd {
 	os.MkdirAll(covDir, os.ModeDir)
 	randomID := uuid.New()
 	profile := randomID.String() + ".out"
-	proc := exec.Command(testBinaryPath, "-config=stdin:", "-format=pb", "-test.run", "TestRunMainForCoverage", "-test.coverprofile", profile, "-test.outputdir", covDir)
+	proc := exec.Command(testBinaryPath, "run", "-config=stdin:", "-format=pb", "-test.run", "TestRunMainForCoverage", "-test.coverprofile", profile, "-test.outputdir", covDir)
+	fmt.Println(proc.Args())
 	proc.Stdin = bytes.NewBuffer(config)
 	proc.Stderr = os.Stderr
 	proc.Stdout = os.Stdout
