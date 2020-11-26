@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  release:
+    types: [prereleased]
+  push:
+    branches:
+      - master
+      - v*
+      - dev*
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+
+jobs:
+  release:
+    if: github.repository != 'v2ray/v2ray-core'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get project dependencies
+        run: go mod download
+
+      - name: Set variables
+        run: |
+          echo "BleedingReleaseTag=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+          echo "TagReleaseTag=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Build binaries
+        run: bazel build --action_env=PATH=$PATH --action_env=GOPATH=$(go env GOPATH) --action_env=GOCACHE=$(go env GOCACHE) --action_env=SPWD=$(pwd) --spawn_strategy local //release:all
+
+      - name: Upload binaries to repo "v2fly/V2FlyBleedingEdgeBinary"
+        if: github.event_name != 'release' && github.repository == 'v2fly/v2ray-core'
+        env:
+          IsBleedingRelease: true
+          WORKDIR: ${{ github.workspace }}
+          PRERELEASE: true
+          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_TAG: ${{ env.BleedingReleaseTag }}
+          UPLOAD_REPO: v2fly/V2FlyBleedingEdgeBinary
+          PERSONAL_TOKEN: ${{ secrets.BLEEDINGEDGEBINARY_REPO_TOKEN }}
+          COMMENT_TARGETTED_REPO_OWNER: v2fly
+          COMMENT_TARGETTED_REPO_NAME: v2ray-core
+        run: |
+          chmod u+x ./release/release.sh
+          ./release/release.sh
+
+      - name: Upload binaries to current repo
+        if: github.event_name == 'release'
+        env:
+          IsBleedingRelease: false
+          WORKDIR: ${{ github.workspace }}
+          PRERELEASE: true
+          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_TAG: ${{ env.TagReleaseTag }}
+          UPLOAD_REPO: ${{ github.repository }}
+          PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          chmod u+x ./release/release.sh
+          ./release/release.sh
