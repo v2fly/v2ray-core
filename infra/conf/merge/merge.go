@@ -40,7 +40,7 @@ func JSONsToMap(args interface{}) (map[string]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			if err = mergeMaps(conf, m); err != nil {
+			if _, err = Maps(conf, m); err != nil {
 				return nil, err
 			}
 		}
@@ -51,7 +51,7 @@ func JSONsToMap(args interface{}) (map[string]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			if err = mergeMaps(conf, m); err != nil {
+			if _, err = Maps(conf, m); err != nil {
 				return nil, err
 			}
 		}
@@ -59,7 +59,11 @@ func JSONsToMap(args interface{}) (map[string]interface{}, error) {
 		return nil, errors.New("unsupport args for JSONsToMap")
 	}
 	sortSlicesInMap(conf)
-	removePriorityKey(conf)
+	err := mergeSliceSameTag(conf)
+	if err != nil {
+		return nil, err
+	}
+	removeHelperKey(conf)
 	return conf, nil
 }
 

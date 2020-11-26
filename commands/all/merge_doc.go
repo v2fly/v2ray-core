@@ -21,8 +21,10 @@ The 1st one:
 	{
 	  "log": {"access": "some_value", "loglevel": "debug"},
 	  "inbounds": [{"tag": "in-1"}],
-	  "outbounds": [{"priority": 100, "tag": "out-1"}],
-	  "routing": {"rules": [{"inboundTag":["in-1"],"outboundTag":"out-1"}]}
+	  "outbounds": [{"_priority": 100, "tag": "out-1"}],
+	  "routing": {"rules": [
+		{"_tag":"default_route","inboundTag":["in-1"],"outboundTag":"out-1"}
+	  ]}
 	}
 
 The 2nd one:
@@ -30,8 +32,11 @@ The 2nd one:
 	{
 	  "log": {"loglevel": "error"},
 	  "inbounds": [{"tag": "in-2"}],
-	  "outbounds": [{"priority": -100, "tag": "out-2"}],
-	  "routing": {"rules": [{"inboundTag":["in-2"],"outboundTag":"out-2"}]}
+	  "outbounds": [{"_priority": -100, "tag": "out-2"}],
+	  "routing": {"rules": [
+		{"inboundTag":["in-2"],"outboundTag":"out-2"},
+		{"_tag":"default_route","inboundTag":["in-1.1"]}
+	  ]}
 	}
 
 Output:
@@ -44,7 +49,7 @@ Output:
 		{"tag": "out-1"}
 	  ],
 	  "routing": {"rules": [
-		{"inboundTag":["in-1"],"outboundTag":"out-1"}
+		{"inboundTag":["in-1","in-1.1"],"outboundTag":"out-1"}
 		{"inboundTag":["in-2"],"outboundTag":"out-2"}
 	  ]}
 	}
@@ -52,6 +57,7 @@ Output:
 Explained: 
 
 - Simple values (string, number, boolean) are override, all others are merged
-- Add "priority" property to array elements will help sort the array
+- Add "_priority" property to array elements will help sort the array
+- Items with same "tag" (or "_tag") in an array will be merged
 `,
 }

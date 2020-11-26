@@ -1,69 +1,183 @@
 package merge_test
 
 import (
+	"encoding/json"
+	"reflect"
+	"strings"
 	"testing"
 
 	"v2ray.com/core/infra/conf/merge"
+	"v2ray.com/core/infra/conf/serial"
 )
 
 func TestMergeJSON(t *testing.T) {
 
 	json1 := `
-	{
-	  "log": {"access": "some_value", "loglevel": "debug"},
-	  "inbounds": [{"tag": "in-1"}],
-	  "outbounds": [{"priority": 100, "tag": "out-1"}],
-	  "routing": {"rules": [{"inboundTag":["in-1"],"outboundTag":"out-1"}]}
-	}
+	  {
+		"log": {"access": "some_value", "loglevel": "debug"},
+		"inbounds": [{"tag": "in-1"}],
+		"outbounds": [{"_priority": 100, "tag": "out-1"}],
+		"routing": {"rules": [
+		  {"_tag":"default_route","inboundTag":["in-1"],"outboundTag":"out-1"}
+		]}
+	  }
 `
 	json2 := `
-	{
-	  "log": {"loglevel": "error"},
-	  "inbounds": [{"tag": "in-2"}],
-	  "outbounds": [{"priority": -100, "tag": "out-2"}],
-	  "routing": {"rules": [{"inboundTag":["in-2"],"outboundTag":"out-2"}]}
-	}	
+	  {
+		"log": {"loglevel": "error"},
+		"inbounds": [{"tag": "in-2"}],
+		"outbounds": [{"_priority": -100, "tag": "out-2"}],
+		"routing": {"rules": [
+		  {"inboundTag":["in-2"],"outboundTag":"out-2"},
+		  {"_tag":"default_route","inboundTag":["in-1.1"]}
+		]}
+	  }
 `
+	expected := `
+	{
+	  "log": {"access": "some_value", "loglevel": "error"},
+	  "inbounds": [{"tag": "in-1"},{"tag": "in-2"}],
+	  "outbounds": [
+		   {"tag": "out-2"},
+		   {"tag": "out-1"}
+	  ],
+	  "routing": {"rules": [
+		   {"inboundTag":["in-1","in-1.1"],"outboundTag":"out-1"},
+		   {"inboundTag":["in-2"],"outboundTag":"out-2"}
+	  ]}
+	}
+	`
 	m, err := merge.JSONsToMap([][]byte{[]byte(json1), []byte(json2)})
 	if err != nil {
 		t.Error(err)
 	}
-	assertField(t, m, []interface{}{"log", "access"}, "some_value")
-	assertField(t, m, []interface{}{"log", "loglevel"}, "error")
-	assertField(t, m, []interface{}{"outbounds", 0, "tag"}, "out-2")
-	assertField(t, m, []interface{}{"outbounds", 1, "tag"}, "out-1")
-	assertField(t, m, []interface{}{"routing", "rules", 1, "inboundTag", 0}, "in-2")
+	assertResult(t, m, expected)
 }
 
-func assertField(t *testing.T, m map[string]interface{}, path []interface{}, value string) {
-	var cur interface{}
-	cur = m
-	for i, key := range path {
-		if k, ok := key.(string); ok {
-			c, ok := cur.(map[string]interface{})
-			if !ok {
-				t.Fatalf("no field for %s: %v[%d]", k, path, i)
-			}
-			cur, ok = c[k]
-			if !ok {
-				t.Fatalf("%s not found: %s", k, path)
-			}
-			continue
-		}
-		if k, ok := key.(int); ok {
-			c, ok := cur.([]interface{})
-			if !ok {
-				t.Fatalf("not a slice for %d: %v[%d]", k, path, i)
-			}
-			if k < 0 || k > len(c)-1 {
-				t.Fatalf("%d out of range for %v[%d]: %v", k, path, i, c)
-			}
-			cur = c[k]
-			continue
+func TestMergeJSON_MergeTag(t *testing.T) {
+	json1 := `
+	{
+	  	"routing": {
+		  	"rules": [
+				{
+					"tag":"1",
+					"inboundTag": [
+						"in-1"
+					],
+					"outboundTag": "out-1"
+				}
+			]
 		}
 	}
-	v, ok := cur.(string)
-	if !ok || v != value {
-		t.Fatalf("%v: value mismatch, expected: %s, actual: %s", path, value, v)
+`
+	json2 := `
+	{
+	  	"routing": {
+		  	"rules": [
+				{
+					"_tag":"1",
+					"inboundTag": [
+						"in-2"
+					],
+					"outboundTag": "out-2"
+				}
+			]
+		}
+	}	
+`
+	expected := `
+	{
+	  "routing": {
+	    "rules": [
+	      {
+			"tag":"1",
+	        "inboundTag": [
+	          "in-1",
+	          "in-2"
+	        ],
+	        "outboundTag": "out-2"
+	      }
+	    ]
+	  }
+	}
+	`
+	m, err := merge.JSONsToMap([][]byte{[]byte(json1), []byte(json2)})
+	if err != nil {
+		t.Error(err)
+	}
+	assertResult(t, m, expected)
+}
+
+func TestMergeJSON_MergeTag2(t *testing.T) {
+
+	json1 := `
+	{
+	  "array": [
+		{
+			"_tag":"1",
+			"rules": [
+				{
+					"_tag":"2",
+					"inboundTag": [
+						"in-1"
+					],
+					"outboundTag": "out-1"
+				}
+			]
+		}
+	  ]
+	}
+`
+	json2 := `
+	{
+		"array": [
+			{
+				"_tag":"1",
+				"rules": [
+					{
+						"_tag":"2",
+						"inboundTag": [
+							"in-2"
+						],
+						"outboundTag": "out-2"
+					}
+				]
+			}
+		]
+	}
+`
+	expected := `
+	{
+	  "array": [
+	    {
+	      "rules": [
+	        {
+	          "inboundTag": [
+	            "in-1",
+	            "in-2"
+	          ],
+	          "outboundTag": "out-2"
+	        }
+	      ]
+	    }
+	  ]
+	}
+	`
+	m, err := merge.JSONsToMap([][]byte{[]byte(json1), []byte(json2)})
+	if err != nil {
+		t.Error(err)
+	}
+	assertResult(t, m, expected)
+}
+
+func assertResult(t *testing.T, value map[string]interface{}, expected string) {
+	e := make(map[string]interface{})
+	err := serial.DecodeJSON(strings.NewReader(expected), &e)
+	if err != nil {
+		t.Error(err)
+	}
+	if !reflect.DeepEqual(value, e) {
+		bs, _ := json.Marshal(value)
+		t.Fatalf("expected:\n%s\n\nactual:\n%s", expected, string(bs))
 	}
 }

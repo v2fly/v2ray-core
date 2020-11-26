@@ -4,80 +4,43 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"sort"
 
 	"v2ray.com/core/infra/conf/serial"
 )
 
-func isZero(v interface{}) bool {
-	return getValue(reflect.ValueOf(v)).IsZero()
-}
-
-func getPriority(v interface{}) float64 {
-	var m map[string]interface{}
-	var ok bool
-	if m, ok = v.(map[string]interface{}); !ok {
-		return 0
-	}
-	if i, ok := m["priority"]; ok {
-		if p, ok := i.(float64); ok {
-			return p
-		}
-	}
-	return 0
-}
-func sortSlicesInMap(target map[string]interface{}) {
-	for key, value := range target {
-		if slice, ok := value.([]interface{}); ok {
-			sort.Slice(slice, func(i, j int) bool { return getPriority(slice[i]) < getPriority(slice[j]) })
-			target[key] = slice
-		} else if field, ok := value.(map[string]interface{}); ok {
-			sortSlicesInMap(field)
-		}
-	}
-}
-func removePriorityKey(target map[string]interface{}) {
-	for key, value := range target {
-		if _, ok := value.(float64); key == "priority" && ok {
-			delete(target, key)
-		} else if slice, ok := value.([]interface{}); ok {
-			for _, e := range slice {
-				if el, ok := e.(map[string]interface{}); ok {
-					removePriorityKey(el)
-				}
-			}
-		} else if field, ok := value.(map[string]interface{}); ok {
-			removePriorityKey(field)
-		}
-	}
-}
-func mergeMaps(target map[string]interface{}, source map[string]interface{}) error {
+// Maps merges source map into target, and return it
+func Maps(target map[string]interface{}, source map[string]interface{}) (out map[string]interface{}, err error) {
 	for key, value := range source {
 		// fmt.Printf("[%s] type: %s, kind: %s\n", key, getType(fieldTypeSrc.Type).Name(), getType(fieldTypeSrc.Type).Kind())
-		if (value == nil) || isZero(value) {
-			continue
-		}
-		if target[key] == nil || isZero(value) {
-			target[key] = value
-			continue
-		}
-		if slice, ok := value.([]interface{}); ok {
-			if tslice, ok := target[key].([]interface{}); ok {
-				target[key] = append(tslice, slice...)
-			} else {
-				return fmt.Errorf("value type of key (%s) mismatch, source is 'slice' but target not", key)
-			}
-		} else if field, ok := value.(map[string]interface{}); ok {
-			if mapField, ok := target[key].(map[string]interface{}); ok {
-				if err := mergeMaps(mapField, field); err != nil {
-					return err
-				}
-			} else {
-				return fmt.Errorf("value type of key (%s) mismatch, source is 'map[string]interface{}' but target not", key)
-			}
+		target[key], err = mergeField(target[key], value)
+		if err != nil {
+			return nil, err
 		}
 	}
-	return nil
+	return target, nil
+}
+
+func mergeField(target interface{}, source interface{}) (interface{}, error) {
+	if (source == nil) || isZero(source) {
+		return target, nil
+	}
+	if target == nil || isZero(target) {
+		return source, nil
+	}
+	if slice, ok := source.([]interface{}); ok {
+		if tslice, ok := target.([]interface{}); ok {
+			target = append(tslice, slice...)
+			return target, nil
+		}
+		return nil, fmt.Errorf("value type mismatch, source is 'slice' but target not: %s", source)
+	} else if smap, ok := source.(map[string]interface{}); ok {
+		if tmap, ok := target.(map[string]interface{}); ok {
+			_, err := Maps(tmap, smap)
+			return tmap, err
+		}
+		return nil, fmt.Errorf("value type mismatch, source is 'map[string]interface{}' but target not: %s", source)
+	}
+	return source, nil
 }
 
 func jsonToMap(r io.Reader) (map[string]interface{}, error) {
@@ -87,6 +50,10 @@ func jsonToMap(r io.Reader) (map[string]interface{}, error) {
 		return nil, err
 	}
 	return c, nil
+}
+
+func isZero(v interface{}) bool {
+	return getValue(reflect.ValueOf(v)).IsZero()
 }
 
 func getValue(v reflect.Value) reflect.Value {
