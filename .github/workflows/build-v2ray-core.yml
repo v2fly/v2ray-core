@@ -78,29 +78,33 @@ jobs:
       CGO_ENABLED: 0
 
     steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - name: Show Workflow Information
+        id: get_filename
         run: |
-          echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM"
+          export _NAME=$(jq ".[\"$GOOS-$GOARCH$GOARM\"].friendlyName" -r < v2ray-core/release/friendly-filenames.json)
+          echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM, RELEASE_NAME: $_NAME"
+          echo "::set-output ASSET_NAME=file::$_NAME"
+          echo "ASSET_NAME=\"$_NAME\"" >> $GITHUB_ENV
 
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
           go-version: 1.15
 
-      - name: Checkout codebase
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
       - name: Get project dependencies
         run: go mod download
-      
+
       - name: Build
         run: |
           mkdir build_assets
           go build -v -o build_assets/v2ray -trimpath -ldflags "-s -w -buildid=" ./main
           go build -v -o build_assets/v2ctl -trimpath -ldflags "-s -w -buildid=" -tags confonly ./infra/control/main
-      
+
       - name: Build Windows wv2ray
         if: matrix.goos == 'windows'
         run: |
@@ -123,19 +127,18 @@ jobs:
       - name: Creating ZIP Archive
         run: |
           cd ./build_assets
-          zip -9vr ./$GOOS-$GOARCH$GOARM.zip .
-          mv ./$GOOS-$GOARCH$GOARM.zip ../v2ray-$GOOS-$GOARCH$GOARM.zip
+          zip -9vr ../v2ray-$ASSET_NAME.zip .
 
       - uses: actions/upload-artifact@v2
         with:
-          name: v2ray-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm }}.zip
-          path: v2ray-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm }}.zip
+          name: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
+          path: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
 
       - name: Upload to release
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: v2ray-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm }}.zip
-          asset_name: v2ray-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm }}.zip
+          file: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
+          asset_name: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
           tag: ${{ github.ref }}
           overwrite: true
