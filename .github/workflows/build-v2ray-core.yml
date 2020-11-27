@@ -89,7 +89,7 @@ jobs:
           export _NAME=$(jq ".[\"$GOOS-$GOARCH$GOARM\"].friendlyName" -r < release/friendly-filenames.json)
           echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM, RELEASE_NAME: $_NAME"
           echo "::set-output name=ASSET_NAME::$_NAME"
-          echo "ASSET_NAME=\"$_NAME\"" >> $GITHUB_ENV
+          echo "ASSET_NAME=$_NAME" >> $GITHUB_ENV
 
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -114,19 +114,16 @@ jobs:
           mv ./v2ctl ./v2ctl.exe
 
       - name: Prepare Package
-        run: |
-          cp -v ./release/config/*.* ./build_assets
-          ls -lah ./build_assets
+        run: cp -v ./release/config/*.* ./build_assets
 
       - name: Prepare Package for Linux
         if: matrix.goos == 'linux'
-        run: |
-          cp -rv ./release/config/systemd ./build_assets/
-          ls -lah ./build_assets
+        run: cp -rv ./release/config/systemd ./build_assets/
 
       - name: Creating ZIP Archive
         run: |
           cd ./build_assets
+          ls -lah .
           zip -9vr ./v2ray-$ASSET_NAME.zip .
           mv -v ./v2ray-$ASSET_NAME.zip ../v2ray-$ASSET_NAME.zip
           cd .. && pwd && ls -lah
