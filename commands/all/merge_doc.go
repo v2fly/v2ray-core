@@ -35,13 +35,14 @@ The 2nd one:
 	  "outbounds": [{"_priority": -100, "tag": "out-2"}],
 	  "routing": {"rules": [
 		{"inboundTag":["in-2"],"outboundTag":"out-2"},
-		{"_tag":"default_route","inboundTag":["in-1.1"]}
+		{"_tag":"default_route","inboundTag":["in-1.1"],"outboundTag":"out-1.1"}
 	  ]}
 	}
 
 Output:
 
 	{
+	  // loglevel is overwritten
 	  "log": {"access": "some_value", "loglevel": "error"},
 	  "inbounds": [{"tag": "in-1"}, {"tag": "in-2"}],
 	  "outbounds": [
@@ -49,15 +50,17 @@ Output:
 		{"tag": "out-1"}
 	  ],
 	  "routing": {"rules": [
-		{"inboundTag":["in-1","in-1.1"],"outboundTag":"out-1"}
+		// note 3 rules are merged into 2, and outboundTag is overwritten,
+		// because 2 of them has same tag
+		{"inboundTag":["in-1","in-1.1"],"outboundTag":"out-1.1"}
 		{"inboundTag":["in-2"],"outboundTag":"out-2"}
 	  ]}
 	}
 
 Explained: 
 
-- Simple values (string, number, boolean) are override, all others are merged
+- Simple values (string, number, boolean) are overwritten, others are merged
+- Elements with same "tag" (or "_tag") in an array will be merged
 - Add "_priority" property to array elements will help sort the array
-- Items with same "tag" (or "_tag") in an array will be merged
 `,
 }

@@ -11,10 +11,12 @@ import (
 )
 
 var cmdConvert = &base.Command{
-	UsageLine: "{{.Exec}} convert [c1.json] [<url>.json] [dir1] ...",
+	UsageLine: "{{.Exec}} convert [-r] [c1.json] [<url>.json] [dir1] ...",
 	Short:     "Convert multiple json config to protobuf",
 	Long: `
-Merge multiple JSON config and convert to protobuf.
+Convert JSON config to protobuf.
+
+If multiple JSON files or folders specified, it merges them first, then convert.
 
 Arguments:
 
@@ -23,11 +25,10 @@ Arguments:
 
 Examples:
 
-	{{.Exec}} {{.LongName}} c1.json c2.json 
-	{{.Exec}} {{.LongName}} c1.json https://url.to/c2.json 
+	{{.Exec}} {{.LongName}} config.json
+	{{.Exec}} {{.LongName}} c1.json c2.json
+	{{.Exec}} {{.LongName}} c1.json https://url.to/c2.json
 	{{.Exec}} {{.LongName}} "path/to/json_dir"
-
-To learn how JSON files are merged, run "{{.Exec}} help merge"
 `,
 }
 

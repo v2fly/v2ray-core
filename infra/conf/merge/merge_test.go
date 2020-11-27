@@ -28,7 +28,7 @@ func TestMergeJSON(t *testing.T) {
 		"outbounds": [{"_priority": -100, "tag": "out-2"}],
 		"routing": {"rules": [
 		  {"inboundTag":["in-2"],"outboundTag":"out-2"},
-		  {"_tag":"default_route","inboundTag":["in-1.1"]}
+		  {"_tag":"default_route","inboundTag":["in-1.1"],"outboundTag":"out-1.1"}
 		]}
 	  }
 `
@@ -41,7 +41,7 @@ func TestMergeJSON(t *testing.T) {
 		   {"tag": "out-1"}
 	  ],
 	  "routing": {"rules": [
-		   {"inboundTag":["in-1","in-1.1"],"outboundTag":"out-1"},
+		   {"inboundTag":["in-1","in-1.1"],"outboundTag":"out-1.1"},
 		   {"inboundTag":["in-2"],"outboundTag":"out-2"}
 	  ]}
 	}
@@ -57,47 +57,34 @@ func TestMergeJSON_MergeTag(t *testing.T) {
 	json1 := `
 	{
 	  	"routing": {
-		  	"rules": [
-				{
-					"tag":"1",
-					"inboundTag": [
-						"in-1"
-					],
-					"outboundTag": "out-1"
-				}
-			]
+		  	"rules": [{
+				"tag":"1",
+				"inboundTag": ["in-1"],
+				"outboundTag": "out-1"
+			}]
 		}
 	}
 `
 	json2 := `
 	{
 	  	"routing": {
-		  	"rules": [
-				{
-					"_tag":"1",
-					"inboundTag": [
-						"in-2"
-					],
-					"outboundTag": "out-2"
-				}
-			]
+		  	"rules": [{
+				"_tag":"1",
+				"inboundTag": ["in-2"],
+				"outboundTag": "out-2"
+			}]
 		}
 	}	
 `
 	expected := `
 	{
-	  "routing": {
-	    "rules": [
-	      {
-			"tag":"1",
-	        "inboundTag": [
-	          "in-1",
-	          "in-2"
-	        ],
-	        "outboundTag": "out-2"
-	      }
-	    ]
-	  }
+	  	"routing": {
+			"rules": [{
+				"tag":"1",
+				"inboundTag": ["in-1", "in-2"],
+				"outboundTag": "out-2"
+			}]
+	  	}
 	}
 	`
 	m, err := merge.ToMap([][]byte{[]byte(json1), []byte(json2)})
@@ -110,55 +97,36 @@ func TestMergeJSON_MergeTag(t *testing.T) {
 func TestMergeJSON_MergeTag2(t *testing.T) {
 	json1 := `
 	{
-	  "array": [
-		{
+	  	"array_1": [{
 			"_tag":"1",
-			"rules": [
-				{
-					"_tag":"2",
-					"inboundTag": [
-						"in-1"
-					],
-					"outboundTag": "out-1"
-				}
-			]
-		}
-	  ]
+			"array_2": [{
+				"_tag":"2",
+				"array_3": ["element-1"],
+				"str": "string-1"
+			}]
+		}]
 	}
 `
 	json2 := `
 	{
-		"array": [
-			{
-				"_tag":"1",
-				"rules": [
-					{
-						"_tag":"2",
-						"inboundTag": [
-							"in-2"
-						],
-						"outboundTag": "out-2"
-					}
-				]
-			}
-		]
+		"array_1": [{
+			"_tag":"1",
+			"array_2": [{
+				"_tag":"2",
+				"array_3": ["element-2"],
+				"str": "string-2"
+			}]
+		}]
 	}
 `
 	expected := `
 	{
-	  "array": [
-	    {
-	      "rules": [
-	        {
-	          "inboundTag": [
-	            "in-1",
-	            "in-2"
-	          ],
-	          "outboundTag": "out-2"
-	        }
-	      ]
-	    }
-	  ]
+	  "array_1": [{
+		"array_2": [{
+			"array_3": ["element-1", "element-2"],
+			"str": "string-2"
+		}]
+	  }]
 	}
 	`
 	m, err := merge.ToMap([][]byte{[]byte(json1), []byte(json2)})
