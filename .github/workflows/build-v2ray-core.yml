@@ -40,13 +40,7 @@ jobs:
           - goos: linux
             goarch: arm64
           - goos: linux
-            goarch: ppc64
-          - goos: linux
-            goarch: ppc64le
-          - goos: linux
             goarch: riscv64
-          - goos: linux
-            goarch: s390x
           # BEGIN MIPS
           - goos: linux
             goarch: mips64
