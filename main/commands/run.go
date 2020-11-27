@@ -24,24 +24,24 @@ var CmdRun = &base.Command{
 	Long: `
 Run V2Ray with config.
 
-Example:
-
-	{{.Exec}} {{.LongName}} -c config.json
-	{{.Exec}} {{.LongName}} -d path/to/json_dir
-
 Arguments:
 
 	-c, -config
 		Config file for V2Ray. Multiple assign is accepted.
 
 	-d, -confdir
-		A dir with multiple json config. Multiple assign is accepted.
+		A dir with config files. Multiple assign is accepted.
 
 	-r
 		Load confdir recursively.
 
 	-format
 		Format of input files. (default "json")
+
+Examples:
+
+	{{.Exec}} {{.LongName}} -c config.json
+	{{.Exec}} {{.LongName}} -d path/to/dir
 
 Use "{{.Exec}} help format-loader" for more information about format.
 	`,

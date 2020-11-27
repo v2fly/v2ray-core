@@ -46,7 +46,7 @@ func TestMergeJSON(t *testing.T) {
 	  ]}
 	}
 	`
-	m, err := merge.ToMap([][]byte{[]byte(json1), []byte(json2)})
+	m, err := merge.BytesToMap([][]byte{[]byte(json1), []byte(json2)})
 	if err != nil {
 		t.Error(err)
 	}
@@ -87,7 +87,7 @@ func TestMergeJSON_MergeTag(t *testing.T) {
 	  	}
 	}
 	`
-	m, err := merge.ToMap([][]byte{[]byte(json1), []byte(json2)})
+	m, err := merge.BytesToMap([][]byte{[]byte(json1), []byte(json2)})
 	if err != nil {
 		t.Error(err)
 	}
@@ -143,7 +143,7 @@ func TestMergeJSON_MergeTag2(t *testing.T) {
 	  }]
 	}
 	`
-	m, err := merge.ToMap([][]byte{[]byte(json1), []byte(json2)})
+	m, err := merge.BytesToMap([][]byte{[]byte(json1), []byte(json2)})
 	if err != nil {
 		t.Error(err)
 	}
