@@ -56,10 +56,6 @@ jobs:
             goarch: mipsle
           - goos: linux
             goarch: mips
-            gomips: softfloat
-          - goos: linux
-            goarch: mips
-            gomips: hardfloat
           # END MIPS
           # END Other architectures
       fail-fast: false
@@ -69,7 +65,6 @@ jobs:
       GOOS: ${{ matrix.goos }}
       GOARCH: ${{ matrix.goarch }}
       GOARM: ${{ matrix.goarm }}
-      GOMIPS: ${{ matrix.gomips }}
       CGO_ENABLED: 0
 
     steps:
@@ -81,8 +76,8 @@ jobs:
       - name: Show Workflow Information
         id: get_filename
         run: |
-          export _NAME=$(jq ".[\"$GOOS-$GOARCH$GOARM$GOMIPS\"].friendlyName" -r < release/friendly-filenames.json)
-          echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM, GOMIPS: $GOMIPS, RELEASE_NAME: $_NAME"
+          export _NAME=$(jq ".[\"$GOOS-$GOARCH$GOARM\"].friendlyName" -r < release/friendly-filenames.json)
+          echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM, RELEASE_NAME: $_NAME"
           echo "::set-output name=ASSET_NAME::$_NAME"
           echo "ASSET_NAME=$_NAME" >> $GITHUB_ENV
 
