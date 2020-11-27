@@ -128,7 +128,8 @@ jobs:
         run: |
           cd ./build_assets
           zip -9vr ./v2ray-$ASSET_NAME.zip .
-          mv ./v2ray-$ASSET_NAME.zip ..
+          mv -v ./v2ray-$ASSET_NAME.zip ../v2ray-$ASSET_NAME.zip
+          cd .. && pwd && ls -lah
 
       - uses: actions/upload-artifact@v2
         with:
