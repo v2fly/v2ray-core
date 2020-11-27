@@ -123,6 +123,7 @@ jobs:
 
       - name: Upload to release
         uses: svenstaro/upload-release-action@v1-release
+        if: github.event_name == 'release'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
