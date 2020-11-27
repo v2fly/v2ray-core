@@ -14,7 +14,7 @@ var cmdGetStats = &base.Command{
 	UsageLine:   "{{.Exec}} api stats [--server=127.0.0.1:8080] [-name '']",
 	Short:       "Get statistics",
 	Long: `
-Get statistics from V2Ray by calling its API. (timeout 3 seconds)
+Get statistics from V2Ray.
 
 Arguments:
 
@@ -61,5 +61,5 @@ func executeGetStats(cmd *base.Command, args []string) {
 	if err != nil {
 		base.Fatalf("failed to get stats: %s", err)
 	}
-	showResponese(responeseToString(resp))
+	showResponese(resp)
 }

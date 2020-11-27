@@ -14,7 +14,7 @@ var cmdRestartLogger = &base.Command{
 	UsageLine:   "{{.Exec}} api restartlogger [--server=127.0.0.1:8080]",
 	Short:       "Restart the logger",
 	Long: `
-Restart the logger of V2Ray by calling its API. (timeout 3 seconds)
+Restart the logger of V2Ray.
 
 Arguments:
 
@@ -46,5 +46,5 @@ func executeRestartLogger(cmd *base.Command, args []string) {
 	if err != nil {
 		base.Fatalf("failed to restart logger: %s", err)
 	}
-	showResponese(responeseToString(resp))
+	showResponese(resp)
 }

@@ -2,13 +2,13 @@ package api
 
 import (
 	"context"
-	"os"
-	"strings"
+	"fmt"
 	"time"
 
 	"google.golang.org/grpc"
 	handlerService "v2ray.com/core/app/proxyman/command"
 	"v2ray.com/core/commands/base"
+	"v2ray.com/core/infra/conf/serial"
 )
 
 var cmdRemoveInbounds = &base.Command{
@@ -16,7 +16,7 @@ var cmdRemoveInbounds = &base.Command{
 	UsageLine:   "{{.Exec}} api rmi [--server=127.0.0.1:8080] <json_file|tag> [json_file] [tag]...",
 	Short:       "Remove inbounds",
 	Long: `
-Remove inbounds from V2Ray by calling its API. (timeout 3 seconds)
+Remove inbounds from V2Ray.
 
 Arguments:
 
@@ -38,17 +38,16 @@ func executeRemoveInbounds(cmd *base.Command, args []string) {
 	cmd.Flag.Parse(args)
 	unnamedArgs := cmd.Flag.Args()
 	if len(unnamedArgs) == 0 {
-		cmd.Usage()
-		base.SetExitStatus(1)
-		base.Exit()
+		fmt.Println("reading from stdin:")
+		unnamedArgs = []string{"stdin:"}
 	}
 
 	tags := make([]string, 0)
 	for _, arg := range unnamedArgs {
-		if _, err := os.Stat(arg); err == nil || os.IsExist(err) {
-			conf, err := jsonToConfig(arg)
+		if r, err := loadArg(arg); err == nil {
+			conf, err := serial.DecodeJSONConfig(r)
 			if err != nil {
-				base.Fatalf("failed to read %s: %s", arg, err)
+				base.Fatalf("failed to decode %s: %s", arg, err)
 			}
 			ins := conf.InboundConfigs
 			for _, i := range ins {
@@ -60,6 +59,11 @@ func executeRemoveInbounds(cmd *base.Command, args []string) {
 		}
 	}
 
+	if len(tags) == 0 {
+		base.Fatalf("no inbound to remove")
+	}
+	fmt.Println("removing inbounds:", tags)
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(apiTimeout)*time.Second)
 	defer cancel()
 
@@ -70,19 +74,15 @@ func executeRemoveInbounds(cmd *base.Command, args []string) {
 	defer conn.Close()
 
 	client := handlerService.NewHandlerServiceClient(conn)
-	resps := make([]string, 0)
 	for _, tag := range tags {
+		fmt.Println("removing:", tag)
 		r := &handlerService.RemoveInboundRequest{
 			Tag: tag,
 		}
 		resp, err := client.RemoveInbound(ctx, r)
 		if err != nil {
-			base.Fatalf("failed to remove outbound: %s", err)
+			base.Fatalf("failed to remove inbound: %s", err)
 		}
-		msg := responeseToString(resp)
-		if msg != "" {
-			resps = append(resps, msg)
-		}
+		showResponese(resp)
 	}
-	showResponese(strings.Join(resps, "\n"))
 }

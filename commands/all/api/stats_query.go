@@ -14,7 +14,7 @@ var cmdQueryStats = &base.Command{
 	UsageLine:   "{{.Exec}} api statsquery [--server=127.0.0.1:8080] [-pattern '']",
 	Short:       "Query statistics",
 	Long: `
-Query statistics from V2Ray by calling its API. (timeout 3 seconds)
+Query statistics from V2Ray.
 
 Arguments:
 
@@ -61,5 +61,5 @@ func executeQueryStats(cmd *base.Command, args []string) {
 	if err != nil {
 		base.Fatalf("failed to query stats: %s", err)
 	}
-	showResponese(responeseToString(resp))
+	showResponese(resp)
 }
