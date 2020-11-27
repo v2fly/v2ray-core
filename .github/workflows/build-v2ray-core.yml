@@ -1,0 +1,141 @@
+name: Build V2Ray
+
+on:
+  release:
+    types: [prereleased]
+  push:
+    branches:
+      - master
+      - v*
+      - dev*
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/*.yml"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/*.yml"
+jobs:
+  build:
+    strategy:
+      matrix:
+        # Include amd64 on all platforms.
+        goos: [windows, freebsd, openbsd, linux, dragonfly, darwin]
+        goarch: [amd64, 386]
+        exclude:
+          # Exclude i386 on darwin and dragonfly.
+          - goarch: 386
+            goos: dragonfly
+          - goarch: 386
+            goos: darwin
+        include:
+          # BEGIN Linux ARM 5 6 7
+          - goos: linux
+            goarch: arm
+            goarm: 7
+          - goos: linux
+            goarch: arm
+            goarm: 6
+          - goos: linux
+            goarch: arm
+            goarm: 5
+          # END Linux ARM 5 6 7
+          # Windows ARM 7
+          - goos: windows
+            goarch: arm
+            goarm: 7
+          # Other Arch
+          - goos: linux
+            goarch: arm64
+          - goos: linux
+            goarch: mips64
+          - goos: linux
+            goarch: mips
+          - goos: linux
+            goarch: mips64le
+          - goos: linux
+            goarch: mipsle
+          - goos: linux
+            goarch: ppc64
+          - goos: linux
+            goarch: ppc64le
+          - goos: linux
+            goarch: riscv64
+          - goos: linux
+            goarch: s390x
+      fail-fast: false
+
+    runs-on: ubuntu-latest
+    env:
+      GOOS: ${{ matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
+      GOARM: ${{ matrix.goarm }}
+      CGO_ENABLED: 0
+
+    steps:
+      - name: Show Workflow Information
+        run: |
+          echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM"
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get project dependencies
+        run: go mod download
+      
+      - name: Build
+        run: |
+          mkdir build_assets
+          go build -v -o build_assets/v2ray -trimpath -ldflags "-s -w -buildid=" ./main
+          go build -v -o build_assets/v2ctl -trimpath -ldflags "-s -w -buildid=" -tags confonly ./infra/control/main
+      
+      - name: Build Windows wv2ray
+        if: matrix.goos == 'windows'
+        run: |
+          go build -v -o build_assets/wv2ray.exe -trimpath -ldflags "-s -w -H windowsgui -buildid=" ./main
+          cd ./build_assets
+          mv ./v2ray ./v2ray.exe
+          mv ./v2ctl ./v2ctl.exe
+
+      - name: Prepare Package
+        run: |
+          cp -v ./release/config/*.* ./build_assets
+          ls -lah ./build_assets
+
+      - name: Prepare Package for Linux
+        if: matrix.goos == 'linux'
+        run: |
+          cp -rv ./release/config/systemd ./build_assets/
+          ls -lah ./build_assets
+
+      - name: Creating ZIP Archive
+        run: |
+          cd ./build_assets
+          zip -9vr ./$GOOS-$GOARCH$GOARM.zip .
+          mv ./$GOOS-$GOARCH$GOARM.zip ../v2ray-$GOOS-$GOARCH$GOARM.zip
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: v2ray-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm }}.zip
+          path: v2ray-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm }}.zip
+
+      - name: Upload to release
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: v2ray-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm }}.zip
+          asset_name: v2ray-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm }}.zip
+          tag: ${{ github.ref }}
+          overwrite: true
