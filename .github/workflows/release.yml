@@ -12,19 +12,15 @@ on:
       - "**/*.go"
       - "go.mod"
       - "go.sum"
-      - ".github/workflows/*.yml"
-      - ".github/workflows/*.yaml"
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - "**/*.go"
       - "go.mod"
       - "go.sum"
-      - ".github/workflows/*.yml"
-      - ".github/workflows/*.yaml"
 
 jobs:
-  release:
+  build:
     if: github.repository != 'v2ray/v2ray-core'
     runs-on: ubuntu-latest
     steps:
