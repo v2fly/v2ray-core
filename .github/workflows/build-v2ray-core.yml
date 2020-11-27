@@ -40,14 +40,6 @@ jobs:
           - goos: linux
             goarch: arm64
           - goos: linux
-            goarch: mips64
-          - goos: linux
-            goarch: mips
-          - goos: linux
-            goarch: mips64le
-          - goos: linux
-            goarch: mipsle
-          - goos: linux
             goarch: ppc64
           - goos: linux
             goarch: ppc64le
@@ -55,6 +47,20 @@ jobs:
             goarch: riscv64
           - goos: linux
             goarch: s390x
+          # BEGIN MIPS
+          - goos: linux
+            goarch: mips64
+          - goos: linux
+            goarch: mips64le
+          - goos: linux
+            goarch: mipsle
+          - goos: linux
+            goarch: mips
+            gomips: softfloat
+          - goos: linux
+            goarch: mips
+            gomips: hardfloat
+          # END MIPS
           # END Other architectures
       fail-fast: false
 
@@ -63,6 +69,7 @@ jobs:
       GOOS: ${{ matrix.goos }}
       GOARCH: ${{ matrix.goarch }}
       GOARM: ${{ matrix.goarm }}
+      GOMIPS: ${{ matrix.gomips }}
       CGO_ENABLED: 0
 
     steps:
@@ -74,8 +81,8 @@ jobs:
       - name: Show Workflow Information
         id: get_filename
         run: |
-          export _NAME=$(jq ".[\"$GOOS-$GOARCH$GOARM\"].friendlyName" -r < release/friendly-filenames.json)
-          echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM, RELEASE_NAME: $_NAME"
+          export _NAME=$(jq ".[\"$GOOS-$GOARCH$GOARM$GOMIPS\"].friendlyName" -r < release/friendly-filenames.json)
+          echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM, GOMIPS: $GOMIPS, RELEASE_NAME: $_NAME"
           echo "::set-output name=ASSET_NAME::$_NAME"
           echo "ASSET_NAME=$_NAME" >> $GITHUB_ENV
 
@@ -87,7 +94,7 @@ jobs:
       - name: Get project dependencies
         run: go mod download
 
-      - name: Build
+      - name: Build V2Ray
         run: |
           mkdir build_assets
           go build -v -o build_assets/v2ray -trimpath -ldflags "-s -w -buildid=" ./main
