@@ -4,22 +4,9 @@ on:
   release:
     types: [prereleased]
   push:
-    branches:
-      - master
-      - v*
-      - dev*
-    paths:
-      - "**/*.go"
-      - "go.mod"
-      - "go.sum"
-      - ".github/workflows/*.yml"
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - "**/*.go"
-      - "go.mod"
-      - "go.sum"
-      - ".github/workflows/*.yml"
+
 jobs:
   build:
     strategy:
@@ -49,7 +36,7 @@ jobs:
           - goos: windows
             goarch: arm
             goarm: 7
-          # Other Arch
+          # BEGIN Other architectures
           - goos: linux
             goarch: arm64
           - goos: linux
@@ -68,6 +55,7 @@ jobs:
             goarch: riscv64
           - goos: linux
             goarch: s390x
+          # END Other architectures
       fail-fast: false
 
     runs-on: ubuntu-latest
