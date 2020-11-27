@@ -101,8 +101,12 @@ func TestMergeJSON_MergeTag2(t *testing.T) {
 			"_tag":"1",
 			"array_2": [{
 				"_tag":"2",
-				"array_3": ["element-1"],
-				"str": "string-1"
+				"array_3.1": ["string",true,false],
+				"array_3.2": [1,2,3],
+				"number_1": 1,
+				"number_2": 1,
+				"bool_1": true,
+				"bool_2": true
 			}]
 		}]
 	}
@@ -113,8 +117,13 @@ func TestMergeJSON_MergeTag2(t *testing.T) {
 			"_tag":"1",
 			"array_2": [{
 				"_tag":"2",
-				"array_3": ["element-2"],
-				"str": "string-2"
+				"array_3.1": [0,1,null],
+				"array_3.2": null,
+				"number_1": 0,
+				"number_2": 1,
+				"bool_1": true,
+				"bool_2": false,
+				"null_1": null
 			}]
 		}]
 	}
@@ -123,8 +132,13 @@ func TestMergeJSON_MergeTag2(t *testing.T) {
 	{
 	  "array_1": [{
 		"array_2": [{
-			"array_3": ["element-1", "element-2"],
-			"str": "string-2"
+			"array_3.1": ["string",true,false,0,1,null],
+			"array_3.2": [1,2,3],
+			"number_1": 0,
+			"number_2": 1,
+			"bool_1": true,
+			"bool_2": false,
+			"null_1": null
 		}]
 	  }]
 	}

@@ -2,7 +2,6 @@ package merge
 
 import (
 	"fmt"
-	"reflect"
 )
 
 // mergeMaps merges source map into target
@@ -17,10 +16,10 @@ func mergeMaps(target map[string]interface{}, source map[string]interface{}) (er
 }
 
 func mergeField(target interface{}, source interface{}) (interface{}, error) {
-	if (source == nil) || isZero(source) {
+	if source == nil {
 		return target, nil
 	}
-	if target == nil || isZero(target) {
+	if target == nil {
 		return source, nil
 	}
 	if slice, ok := source.([]interface{}); ok {
@@ -37,15 +36,4 @@ func mergeField(target interface{}, source interface{}) (interface{}, error) {
 		return nil, fmt.Errorf("value type mismatch, source is 'map[string]interface{}' but target not: %s", source)
 	}
 	return source, nil
-}
-
-func isZero(v interface{}) bool {
-	return getValue(reflect.ValueOf(v)).IsZero()
-}
-
-func getValue(v reflect.Value) reflect.Value {
-	if v.Kind() == reflect.Ptr {
-		return v.Elem()
-	}
-	return v
 }

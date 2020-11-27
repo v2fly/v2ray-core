@@ -23,7 +23,8 @@ func mergeSameTag(target map[string]interface{}) error {
 
 func mergeSameTagSingleSlice(s []interface{}) ([]interface{}, error) {
 	// from: [a,"",b,"",a,"",b,""]
-	// to: [a,"",b,"",nil,"",nil,""]
+	// to: [a,"",b,"",merged,"",merged,""]
+	merged := &struct{}{}
 	for i, item1 := range s {
 		map1, ok := item1.(map[string]interface{})
 		if !ok {
@@ -40,7 +41,7 @@ func mergeSameTagSingleSlice(s []interface{}) ([]interface{}, error) {
 			}
 			tag2 := getTag(map2)
 			if tag1 == tag2 {
-				s[j] = nil
+				s[j] = merged
 				err := mergeMaps(map1, map2)
 				if err != nil {
 					return nil, err
@@ -50,7 +51,7 @@ func mergeSameTagSingleSlice(s []interface{}) ([]interface{}, error) {
 	}
 	ns := make([]interface{}, 0)
 	for _, item := range s {
-		if item == nil {
+		if item == merged {
 			continue
 		}
 		ns = append(ns, item)
