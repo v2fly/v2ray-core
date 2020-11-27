@@ -3,7 +3,6 @@ package merge
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"time"
 
 	"v2ray.com/core/common/buf"
+	"v2ray.com/core/common/cmdarg"
 	"v2ray.com/core/infra/conf/serial"
 )
 
@@ -28,47 +28,63 @@ func ToJSON(args interface{}) ([]byte, error) {
 
 // ToMap merges multiple jsons into one map.
 // It accepts []string for URLs, files, [][]byte for json contents
-func ToMap(args interface{}) (map[string]interface{}, error) {
-	conf := make(map[string]interface{})
+func ToMap(args interface{}) (m map[string]interface{}, err error) {
 	switch v := args.(type) {
+	case cmdarg.Arg:
+		m, err = filesToMap([]string(v))
 	case []string:
-		for _, arg := range v {
-			r, err := loadArg(arg)
-			if err != nil {
-				return nil, err
-			}
-			m, err := jsonToMap(r)
-			if err != nil {
-				return nil, err
-			}
-			if err = mergeMaps(conf, m); err != nil {
-				return nil, err
-			}
-		}
+		m, err = filesToMap(v)
 	case [][]byte:
-		for _, arg := range v {
-			r := bytes.NewReader(arg)
-			m, err := jsonToMap(r)
-			if err != nil {
-				return nil, err
-			}
-			if err = mergeMaps(conf, m); err != nil {
-				return nil, err
-			}
-		}
+		m, err = bytesToMap(v)
 	default:
-		return nil, errors.New("unsupport args for JSONsToMap")
+		return nil, newError("unsupport args type")
 	}
-	sortSlicesInMap(conf)
-	err := mergeSameTag(conf)
 	if err != nil {
 		return nil, err
 	}
-	removeHelperFields(conf)
+	sortSlicesInMap(m)
+	err = mergeSameTag(m)
+	if err != nil {
+		return nil, err
+	}
+	removeHelperFields(m)
+	return m, nil
+}
+
+func filesToMap(args []string) (map[string]interface{}, error) {
+	conf := make(map[string]interface{})
+	for _, arg := range args {
+		r, err := loadArg(arg)
+		if err != nil {
+			return nil, err
+		}
+		m, err := readerToMap(r)
+		if err != nil {
+			return nil, err
+		}
+		if err = mergeMaps(conf, m); err != nil {
+			return nil, err
+		}
+	}
 	return conf, nil
 }
 
-func jsonToMap(r io.Reader) (map[string]interface{}, error) {
+func bytesToMap(args [][]byte) (map[string]interface{}, error) {
+	conf := make(map[string]interface{})
+	for _, arg := range args {
+		r := bytes.NewReader(arg)
+		m, err := readerToMap(r)
+		if err != nil {
+			return nil, err
+		}
+		if err = mergeMaps(conf, m); err != nil {
+			return nil, err
+		}
+	}
+	return conf, nil
+}
+
+func readerToMap(r io.Reader) (map[string]interface{}, error) {
 	c := make(map[string]interface{})
 	err := serial.DecodeJSON(r, &c)
 	if err != nil {
