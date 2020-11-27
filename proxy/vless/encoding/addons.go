@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"v2ray.com/core/common/buf"
+	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/protocol"
 )
 
@@ -67,7 +68,12 @@ type MultiLengthPacketWriter struct {
 
 func (w *MultiLengthPacketWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	defer buf.ReleaseMulti(mb)
-	mb2Write := make(buf.MultiBuffer, 0, len(mb)+1)
+
+	if len(mb)+1 > 64*1024*1024 {
+		return errors.New("value too large")
+	}
+	sliceSize := len(mb) + 1
+	mb2Write := make(buf.MultiBuffer, 0, sliceSize)
 	for _, b := range mb {
 		length := b.Len()
 		if length == 0 || length+2 > buf.Size {
