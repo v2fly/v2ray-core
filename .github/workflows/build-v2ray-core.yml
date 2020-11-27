@@ -127,7 +127,8 @@ jobs:
       - name: Creating ZIP Archive
         run: |
           cd ./build_assets
-          zip -9vr ../v2ray-$ASSET_NAME.zip .
+          zip -9vr ./v2ray-$ASSET_NAME.zip .
+          mv ./v2ray-$ASSET_NAME.zip ..
 
       - uses: actions/upload-artifact@v2
         with:
