@@ -16,14 +16,12 @@ func getPriority(v interface{}) float64 {
 	return 0
 }
 
-// sortSlicesInMap sort slices in map by field "priority"
-func sortSlicesInMap(target map[string]interface{}) {
-	for key, value := range target {
-		if slice, ok := value.([]interface{}); ok {
-			sort.Slice(slice, func(i, j int) bool { return getPriority(slice[i]) < getPriority(slice[j]) })
-			target[key] = slice
-		} else if field, ok := value.(map[string]interface{}); ok {
-			sortSlicesInMap(field)
-		}
-	}
+// sortByPriority sort slice by priority fields of their elements
+func sortByPriority(slice []interface{}) {
+	sort.Slice(
+		slice,
+		func(i, j int) bool {
+			return getPriority(slice[i]) < getPriority(slice[j])
+		},
+	)
 }

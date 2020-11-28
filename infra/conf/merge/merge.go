@@ -53,8 +53,7 @@ func BytesToMap(args [][]byte) (m map[string]interface{}, err error) {
 }
 
 func applyMergeRules(m map[string]interface{}) error {
-	sortSlicesInMap(m)
-	err := mergeSameTag(m)
+	err := sortMergeSlices(m)
 	if err != nil {
 		return err
 	}

@@ -10,7 +10,7 @@ import (
 	"v2ray.com/core/infra/conf/serial"
 )
 
-func TestMergeJSON(t *testing.T) {
+func TestMergeV2Style(t *testing.T) {
 	json1 := `
 	  {
 		"log": {"access": "some_value", "loglevel": "debug"},
@@ -53,7 +53,7 @@ func TestMergeJSON(t *testing.T) {
 	assertResult(t, m, expected)
 }
 
-func TestMergeJSON_MergeTag(t *testing.T) {
+func TestMergeTag(t *testing.T) {
 	json1 := `
 	{
 	  	"routing": {
@@ -94,7 +94,7 @@ func TestMergeJSON_MergeTag(t *testing.T) {
 	assertResult(t, m, expected)
 }
 
-func TestMergeJSON_MergeTag2(t *testing.T) {
+func TestMergeTagValueTypes(t *testing.T) {
 	json1 := `
 	{
 	  	"array_1": [{
@@ -150,6 +150,45 @@ func TestMergeJSON_MergeTag2(t *testing.T) {
 	assertResult(t, m, expected)
 }
 
+func TestMergeTagDeep(t *testing.T) {
+	json1 := `
+	{
+	  	"array_1": [{
+			"_tag":"1",
+			"array_2": [{
+				"_tag":"2",
+				"array_3": [true,false,"string"]
+			}]
+		}]
+	}
+`
+	json2 := `
+	{
+	  	"array_1": [{
+			"_tag":"1",
+			"array_2": [{
+				"_tag":"2",
+				"_priority":-100,
+				"array_3": [0,1,null]
+			}]
+		}]
+	}
+`
+	expected := `
+	{
+	  	"array_1": [{
+			"array_2": [{
+				"array_3": [0,1,null,true,false,"string"]
+			}]
+		}]
+	}
+	`
+	m, err := merge.BytesToMap([][]byte{[]byte(json1), []byte(json2)})
+	if err != nil {
+		t.Error(err)
+	}
+	assertResult(t, m, expected)
+}
 func assertResult(t *testing.T, value map[string]interface{}, expected string) {
 	e := make(map[string]interface{})
 	err := serial.DecodeJSON(strings.NewReader(expected), &e)
