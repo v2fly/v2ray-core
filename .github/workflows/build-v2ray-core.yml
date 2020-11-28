@@ -168,7 +168,7 @@ jobs:
           {
             go run github.com/v2fly/V2BuildAssist/v2buildutil gen version $(git describe --tags)
             go run github.com/v2fly/V2BuildAssist/v2buildutil gen project "v2fly"
-            for zip in (ls *.zip); do
+            for zip in $(ls *.zip); do
               go run github.com/v2fly/V2BuildAssist/v2buildutil gen file ${zip}
             done
           } >Release.unsigned.unsorted
