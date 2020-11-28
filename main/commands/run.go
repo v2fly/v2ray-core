@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -20,49 +19,52 @@ import (
 // CmdRun runs V2Ray with config
 var CmdRun = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} run [-c config.json] [-confdir dir]",
+	UsageLine:   "{{.Exec}} run [-c config.json] [-d dir]",
 	Short:       "Run V2Ray with config",
 	Long: `
 Run V2Ray with config.
 
-Example:
-
-	{{.Exec}} {{.LongName}} -c config.json
-
 Arguments:
 
-	-c value
-		Short alias of -config
+	-c, -config
+		Config file for V2Ray. Multiple assign is accepted.
 
-	-config value
-		Config file for V2Ray. Multiple assign is accepted (only
-		json). Latter ones overrides the former ones.
+	-d, -confdir
+		A dir with config files. Multiple assign is accepted.
 
-	-confdir string
-		A dir with multiple json config
+	-r
+		Load confdir recursively.
 
-	-format string
+	-format
 		Format of input files. (default "json")
-	`,
-}
 
-func init() {
-	CmdRun.Run = executeRun //break init loop
+Examples:
+
+	{{.Exec}} {{.LongName}} -c config.json
+	{{.Exec}} {{.LongName}} -d path/to/dir
+
+Use "{{.Exec}} help format-loader" for more information about format.
+	`,
+	Run: executeRun,
 }
 
 var (
-	configFiles  cmdarg.Arg // "Config file for V2Ray.", the option is customed type
-	configDir    string
-	configFormat *string
+	configFiles          cmdarg.Arg
+	configDirs           cmdarg.Arg
+	configFormat         *string
+	configDirRecursively *bool
 )
 
 func setConfigFlags(cmd *base.Command) {
-	configFormat = cmd.Flag.String("format", "", "")
+	configFormat = cmd.Flag.String("format", "json", "")
+	configDirRecursively = cmd.Flag.Bool("r", false, "")
 
 	cmd.Flag.Var(&configFiles, "config", "")
 	cmd.Flag.Var(&configFiles, "c", "")
-	cmd.Flag.StringVar(&configDir, "confdir", "", "")
+	cmd.Flag.Var(&configDirs, "confdir", "")
+	cmd.Flag.Var(&configDirs, "d", "")
 }
+
 func executeRun(cmd *base.Command, args []string) {
 	setConfigFlags(cmd)
 	cmd.Flag.Parse(args)
@@ -100,30 +102,79 @@ func dirExists(file string) bool {
 	return err == nil && info.IsDir()
 }
 
-func readConfDir(dirPath string) cmdarg.Arg {
+func readConfDir(dirPath string, extension []string) cmdarg.Arg {
 	confs, err := ioutil.ReadDir(dirPath)
 	if err != nil {
-		log.Fatalln(err)
+		base.Fatalf("failed to read dir %s: %s", dirPath, err)
 	}
 	files := make(cmdarg.Arg, 0)
 	for _, f := range confs {
-		if strings.HasSuffix(f.Name(), ".json") {
-			files.Set(path.Join(dirPath, f.Name()))
+		ext := filepath.Ext(f.Name())
+		for _, e := range extension {
+			if strings.EqualFold(e, ext) {
+				files.Set(filepath.Join(dirPath, f.Name()))
+				break
+			}
 		}
 	}
 	return files
 }
 
+// getFolderFiles get files in the folder and it's children
+func readConfDirRecursively(dirPath string, extension []string) cmdarg.Arg {
+	files := make(cmdarg.Arg, 0)
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		ext := filepath.Ext(path)
+		for _, e := range extension {
+			if strings.EqualFold(e, ext) {
+				files.Set(path)
+				break
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		base.Fatalf("failed to read dir %s: %s", dirPath, err)
+	}
+	return files
+}
+
+func getLoaderExtension() ([]string, error) {
+	firstFile := ""
+	if len(configFiles) > 0 {
+		firstFile = configFiles[0]
+	}
+	loader, err := core.GetConfigLoader(*configFormat, firstFile)
+	if err != nil {
+		return nil, err
+	}
+	return loader.Extension, nil
+}
+
 func getConfigFilePath() cmdarg.Arg {
-	if dirExists(configDir) {
-		log.Println("Using confdir from arg:", configDir)
-		configFiles = append(configFiles, readConfDir(configDir)...)
+	extension, err := getLoaderExtension()
+	if err != nil {
+		base.Fatalf(err.Error())
+	}
+	dirReader := readConfDir
+	if *configDirRecursively {
+		dirReader = readConfDirRecursively
+	}
+	if len(configDirs) > 0 {
+		for _, d := range configDirs {
+			log.Println("Using confdir from arg:", d)
+			configFiles = append(configFiles, dirReader(d, extension)...)
+		}
 	} else if envConfDir := platform.GetConfDirPath(); dirExists(envConfDir) {
 		log.Println("Using confdir from env:", envConfDir)
-		configFiles = append(configFiles, readConfDir(envConfDir)...)
+		configFiles = append(configFiles, dirReader(envConfDir, extension)...)
 	}
 	if len(configFiles) > 0 {
 		return configFiles
+	}
+
+	if len(configFiles) == 0 && len(configDirs) > 0 {
+		base.Fatalf("no config file found with extension: %s", extension)
 	}
 
 	if workingDir, err := os.Getwd(); err == nil {
@@ -143,19 +194,10 @@ func getConfigFilePath() cmdarg.Arg {
 	return cmdarg.Arg{"stdin:"}
 }
 
-func getFormatFromAlias() string {
-	switch strings.ToLower(*configFormat) {
-	case "pb":
-		return "protobuf"
-	default:
-		return *configFormat
-	}
-}
-
 func startV2Ray() (core.Server, error) {
 	configFiles := getConfigFilePath()
 
-	config, err := core.LoadConfig(getFormatFromAlias(), configFiles[0], configFiles)
+	config, err := core.LoadConfig(*configFormat, configFiles[0], configFiles)
 	if err != nil {
 		return nil, newError("failed to read config files: [", configFiles.String(), "]").Base(err)
 	}

@@ -14,8 +14,8 @@ import (
 
 func init() {
 	common.Must(core.RegisterConfigLoader(&core.ConfigFormat{
-		Name:      "JSON",
-		Extension: []string{"json"},
+		Name:      []string{"JSON"},
+		Extension: []string{".json", ".jsonc"},
 		Loader: func(input interface{}) (*core.Config, error) {
 			switch v := input.(type) {
 			case cmdarg.Arg:

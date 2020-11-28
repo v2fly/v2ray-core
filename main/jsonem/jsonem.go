@@ -1,37 +1,31 @@
 package jsonem
 
 import (
+	"bytes"
 	"io"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
-	"github.com/v2fly/v2ray-core/v4/infra/conf"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/merge"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
-	"github.com/v2fly/v2ray-core/v4/main/confloader"
 )
 
 func init() {
 	common.Must(core.RegisterConfigLoader(&core.ConfigFormat{
-		Name:      "JSON",
-		Extension: []string{"json"},
+		Name:      []string{"JSON"},
+		Extension: []string{".json", ".jsonc"},
 		Loader: func(input interface{}) (*core.Config, error) {
 			switch v := input.(type) {
 			case cmdarg.Arg:
-				cf := &conf.Config{}
-				for i, arg := range v {
-					newError("Reading config: ", arg).AtInfo().WriteToLog()
-					r, err := confloader.LoadConfig(arg)
-					common.Must(err)
-					c, err := serial.DecodeJSONConfig(r)
-					common.Must(err)
-					if i == 0 {
-						// This ensure even if the muti-json parser do not support a setting,
-						// It is still respected automatically for the first configure file
-						*cf = *c
-						continue
-					}
-					cf.Override(c, arg)
+				data, err := merge.FilesToJSON(v)
+				if err != nil {
+					return nil, err
+				}
+				r := bytes.NewReader(data)
+				cf, err := serial.DecodeJSONConfig(r)
+				if err != nil {
+					return nil, err
 				}
 				return cf.Build()
 			case io.Reader:

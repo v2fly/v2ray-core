@@ -13,5 +13,10 @@ func init() {
 		cmdTLS,
 		cmdUUID,
 		cmdVerify,
+		cmdMerge,
+
+		// documents
+		docFormat,
+		docMerge,
 	)
 }
