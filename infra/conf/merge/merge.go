@@ -1,3 +1,18 @@
+// Copyright 2020 Jebbs. All rights reserved.
+// Use of this source code is governed by MIT
+// license that can be found in the LICENSE file.
+
+/*
+Package merge provides the capbility to merge mutliple
+JSON files or contents into one output.
+
+Merge Rules:
+
+- Simple values (string, number, boolean) are overwritten, others are merged
+- Elements with same "tag" (or "_tag") in an array will be merged
+- Add "_priority" property to array elements will help sort the
+
+*/
 package merge
 
 import (
