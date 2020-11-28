@@ -110,14 +110,20 @@ jobs:
           ls -lah .
           zip -9vr ./v2ray-$ASSET_NAME.zip .
           mv -v ./v2ray-$ASSET_NAME.zip ../v2ray-$ASSET_NAME.zip
-          cd .. && pwd && ls -lah
+          cd ..
+          FILE=./v2ray-$ASSET_NAME.zip
+          DGST=$FILE.dgst
+          openssl dgst -md5    $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha1   $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha256 $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha512 $FILE | sed 's/([^)]*)//g' >>$DGST
 
       - uses: actions/upload-artifact@v2
         with:
           name: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
           path: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
 
-      - name: Upload to release
+      - name: Upload Zip File
         uses: svenstaro/upload-release-action@v1-release
         if: github.event_name == 'release'
         with:
@@ -125,7 +131,15 @@ jobs:
           file: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
           asset_name: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
           tag: ${{ github.ref }}
-          overwrite: true
+
+      - name: Upload Digest
+        uses: svenstaro/upload-release-action@v1-release
+        if: github.event_name == 'release'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip.dgst
+          asset_name: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip.dgst
+          tag: ${{ github.ref }}
 
   signature:
     runs-on: ubuntu-latest
@@ -147,18 +161,52 @@ jobs:
         run: |
           cd build_artifacts
           mkdir .temp
-          mv -v ./*/*.zip ./.temp
-          rmdir -v ./*/
-          mv -v ./.temp/* .
+          mv ./*/*.zip ./.temp
+          rmdir ./*/
+          mv ./.temp/* .
           ls -lah --recursive
           {
             go run github.com/v2fly/V2BuildAssist/v2buildutil gen version $(git describe --tags)
             go run github.com/v2fly/V2BuildAssist/v2buildutil gen project "v2fly"
-            for zip in $(find -L . -type f -name "*.zip"); do
+            for zip in (ls *.zip); do
               go run github.com/v2fly/V2BuildAssist/v2buildutil gen file ${zip}
             done
           } >Release.unsigned.unsorted
           # Generate Release.unsigned file
           go run github.com/v2fly/V2BuildAssist/v2buildutil gen sort < Release.unsigned.unsorted > Release.unsigned
           rm -f Release.unsigned.unsorted
-          cat ./Release.unsigned
+          FILE=./Release.unsigned
+          DGST=$FILE.dgst
+          openssl dgst -md5    $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha1   $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha256 $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha512 $FILE | sed 's/([^)]*)//g' >>$DGST
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Release.unsigned
+          path: build_artifacts/Release.unsigned
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Release.unsigned.dgst
+          path: build_artifacts/Release.unsigned.dgst
+
+      - name: Upload File Hash
+        uses: svenstaro/upload-release-action@v1-release
+        if: github.event_name == 'release'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build_artifacts/Release.unsigned
+          asset_name: Release.unsigned
+          tag: ${{ github.ref }}
+
+      - name: Upload Digest
+        uses: svenstaro/upload-release-action@v1-release
+        if: github.event_name == 'release'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build_artifacts/Release.unsigned.dgst
+          asset_name: Release.unsigned.dgst
+          tag: ${{ github.ref }}
+
