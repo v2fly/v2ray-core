@@ -3,9 +3,6 @@ package merge
 import (
 	"bytes"
 	"encoding/json"
-	"io"
-
-	"v2ray.com/core/infra/conf/serial"
 )
 
 // FilesToJSON merges multiple jsons files into one json, accepts remote url, or local file path
@@ -32,7 +29,7 @@ func FilesToMap(args []string) (m map[string]interface{}, err error) {
 	if err != nil {
 		return nil, err
 	}
-	err = applyMergeRules(m)
+	err = applyRules(m)
 	if err != nil {
 		return nil, err
 	}
@@ -45,20 +42,11 @@ func BytesToMap(args [][]byte) (m map[string]interface{}, err error) {
 	if err != nil {
 		return nil, err
 	}
-	err = applyMergeRules(m)
+	err = applyRules(m)
 	if err != nil {
 		return nil, err
 	}
 	return m, nil
-}
-
-func applyMergeRules(m map[string]interface{}) error {
-	err := sortMergeSlices(m)
-	if err != nil {
-		return err
-	}
-	removeHelperFields(m)
-	return nil
 }
 
 func loadFiles(args []string) (map[string]interface{}, error) {
@@ -92,13 +80,4 @@ func loadBytes(args [][]byte) (map[string]interface{}, error) {
 		}
 	}
 	return conf, nil
-}
-
-func decode(r io.Reader) (map[string]interface{}, error) {
-	c := make(map[string]interface{})
-	err := serial.DecodeJSON(r, &c)
-	if err != nil {
-		return nil, err
-	}
-	return c, nil
 }

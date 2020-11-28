@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"v2ray.com/core/common/buf"
+	"v2ray.com/core/infra/conf/serial"
 )
 
 // loadArg loads one arg, maybe an remote url, or local file path
@@ -65,4 +66,13 @@ func fetchHTTPContent(target string) ([]byte, error) {
 	}
 
 	return content, nil
+}
+
+func decode(r io.Reader) (map[string]interface{}, error) {
+	c := make(map[string]interface{})
+	err := serial.DecodeJSON(r, &c)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }

@@ -1,25 +1,17 @@
 package merge
 
-// sortMergeSlices enumerates all slices in a map, to sort by priority and merge by tag
-func sortMergeSlices(target map[string]interface{}) error {
-	for key, value := range target {
-		if slice, ok := value.([]interface{}); ok {
-			sortByPriority(slice)
-			s, err := mergeSameTag(slice)
-			if err != nil {
-				return err
-			}
-			target[key] = s
-			for _, item := range s {
-				if m, ok := item.(map[string]interface{}); ok {
-					sortMergeSlices(m)
-				}
-			}
-		} else if field, ok := value.(map[string]interface{}); ok {
-			sortMergeSlices(field)
+func getTag(v map[string]interface{}) string {
+	if field, ok := v["tag"]; ok {
+		if t, ok := field.(string); ok {
+			return t
 		}
 	}
-	return nil
+	if field, ok := v[tagKey]; ok {
+		if t, ok := field.(string); ok {
+			return t
+		}
+	}
+	return ""
 }
 
 func mergeSameTag(s []interface{}) ([]interface{}, error) {
@@ -50,6 +42,7 @@ func mergeSameTag(s []interface{}) ([]interface{}, error) {
 			}
 		}
 	}
+	// remove merged
 	ns := make([]interface{}, 0)
 	for _, item := range s {
 		if item == merged {
@@ -58,18 +51,4 @@ func mergeSameTag(s []interface{}) ([]interface{}, error) {
 		ns = append(ns, item)
 	}
 	return ns, nil
-}
-
-func getTag(v map[string]interface{}) string {
-	if field, ok := v["tag"]; ok {
-		if t, ok := field.(string); ok {
-			return t
-		}
-	}
-	if field, ok := v[tagKey]; ok {
-		if t, ok := field.(string); ok {
-			return t
-		}
-	}
-	return ""
 }
