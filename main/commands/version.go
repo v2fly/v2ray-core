@@ -11,7 +11,7 @@ import (
 var CmdVersion = &base.Command{
 	UsageLine: "{{.Exec}} version",
 	Short:     "Print V2Ray Versions",
-	Long: `Version prints the build information for V2Ray executables.
+	Long: `Prints the build information for V2Ray.
 `,
 	Run: executeVersion,
 }

@@ -42,14 +42,23 @@ func findOffset(b []byte, o int) *offset {
 // syntax error could be detected.
 func DecodeJSONConfig(reader io.Reader) (*conf.Config, error) {
 	jsonConfig := &conf.Config{}
+	err := DecodeJSON(reader, jsonConfig)
+	if err != nil {
+		return nil, err
+	}
+	return jsonConfig, nil
+}
 
+// DecodeJSON reads from reader and decode into target
+// syntax error could be detected.
+func DecodeJSON(reader io.Reader, target interface{}) error {
 	jsonContent := bytes.NewBuffer(make([]byte, 0, 10240))
 	jsonReader := io.TeeReader(&json_reader.Reader{
 		Reader: reader,
 	}, jsonContent)
 	decoder := json.NewDecoder(jsonReader)
 
-	if err := decoder.Decode(jsonConfig); err != nil {
+	if err := decoder.Decode(target); err != nil {
 		var pos *offset
 		cause := errors.Cause(err)
 		switch tErr := cause.(type) {
@@ -59,12 +68,12 @@ func DecodeJSONConfig(reader io.Reader) (*conf.Config, error) {
 			pos = findOffset(jsonContent.Bytes(), int(tErr.Offset))
 		}
 		if pos != nil {
-			return nil, newError("failed to read config file at line ", pos.line, " char ", pos.char).Base(err)
+			return newError("failed to read config file at line ", pos.line, " char ", pos.char).Base(err)
 		}
-		return nil, newError("failed to read config file").Base(err)
+		return newError("failed to read config file").Base(err)
 	}
 
-	return jsonConfig, nil
+	return nil
 }
 
 func LoadJSONConfig(reader io.Reader) (*core.Config, error) {
