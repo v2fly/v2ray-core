@@ -146,8 +146,10 @@ jobs:
       - name: Generate Hash
         run: |
           cd build_artifacts
-          mv ./*/* ./
+          mkdir .temp
+          mv -v ./*/*.zip ./.temp
           rmdir -v ./*/
+          mv -v ./.temp/* .
           ls -lah --recursive
           {
             go run github.com/v2fly/V2BuildAssist/v2buildutil gen version $(git describe --tags)
