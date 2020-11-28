@@ -126,3 +126,35 @@ jobs:
           asset_name: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
           tag: ${{ github.ref }}
           overwrite: true
+
+  signature:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+      - uses: actions/download-artifact@v2
+        with:
+          path: build_artifacts
+
+      - name: Generate Hash
+        run: |
+          cd build_artifacts
+          ls -lah --recursive
+          {
+            go run github.com/v2fly/V2BuildAssist/v2buildutil gen version $(git describe --tags)
+            go run github.com/v2fly/V2BuildAssist/v2buildutil gen project "v2fly"
+            for zip in $(find -L . -type f -name "*.zip"); do
+              go run github.com/v2fly/V2BuildAssist/v2buildutil gen file ${zip}
+            done
+          } >Release.unsigned.unsorted
+          # Generate Release.unsigned file
+          go run github.com/v2fly/V2BuildAssist/v2buildutil gen sort < Release.unsigned.unsorted > Release.unsigned
+          rm -f Release.unsigned.unsorted
+          cat ./Release.unsigned
