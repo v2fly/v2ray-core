@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package merge provides the capbility to merge mutliple
+Package merge provides the capbility to merge multiple
 JSON files or contents into one output.
 
 Merge Rules:
