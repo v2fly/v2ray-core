@@ -14,7 +14,6 @@ jobs:
 
       - name: Grant it execution permission
         run: |
-          chmod +x $GITHUB_WORKSPACE/release/requestsign_github.sh
           chmod +x $GITHUB_WORKSPACE/release/requestsign.sh
 
       - name: Invoke release signing
@@ -25,4 +24,4 @@ jobs:
         run: |
           export SIGN_VERSION=$(cat $GITHUB_EVENT_PATH| jq -r ".release.tag_name")
           echo $SIGN_VERSION
-          $GITHUB_WORKSPACE/release/requestsign_github.sh
+          $GITHUB_WORKSPACE/release/requestsign.sh
