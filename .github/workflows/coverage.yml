@@ -32,11 +32,12 @@ jobs:
 
       - name: Get dependencies
         if: steps.cache-gomodules.outputs.cache-hit != 'true'
-        run: |
-          go get -v -t -d ./...
+        run: go get -v -t -d ./...
 
       - name: Run coverage
-        run: ./testing/coverage/coverall2
+        run: |
+          chmod u+x ./testing/coverage/coverall.sh
+          ./testing/coverage/coverall.sh
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
