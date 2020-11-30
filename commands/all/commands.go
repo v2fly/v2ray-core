@@ -1,16 +1,20 @@
 package all
 
-import "v2ray.com/core/commands/base"
+import (
+	"v2ray.com/core/commands/all/api"
+	"v2ray.com/core/commands/all/tls"
+	"v2ray.com/core/commands/base"
+)
 
 // go:generate go run v2ray.com/core/common/errors/errorgen
 
 func init() {
 	base.RootCommand.Commands = append(
 		base.RootCommand.Commands,
-		cmdAPI,
+		api.CmdAPI,
 		cmdConvert,
 		cmdLove,
-		cmdTLS,
+		tls.CmdTLS,
 		cmdUUID,
 		cmdVerify,
 		cmdMerge,
