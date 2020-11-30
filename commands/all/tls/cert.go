@@ -1,4 +1,4 @@
-package tlscmd
+package tls
 
 import (
 	"context"
@@ -14,8 +14,8 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/task"
 )
 
-// CmdCert is the tls cert command
-var CmdCert = &base.Command{
+// cmdCert is the tls cert command
+var cmdCert = &base.Command{
 	UsageLine: "{{.Exec}} tls cert [--ca] [--domain=v2ray.com] [--expire=240h]",
 	Short:     "Generate TLS certificates",
 	Long: `
@@ -44,22 +44,22 @@ Arguments:
 }
 
 func init() {
-	CmdCert.Run = executeCert // break init loop
+	cmdCert.Run = executeCert // break init loop
 }
 
 var (
 	certDomainNames stringList
 	_               = func() bool {
-		CmdCert.Flag.Var(&certDomainNames, "domain", "Domain name for the certificate")
+		cmdCert.Flag.Var(&certDomainNames, "domain", "Domain name for the certificate")
 		return true
 	}()
 
-	certCommonName   = CmdCert.Flag.String("name", "V2Ray Inc", "The common name of this certificate")
-	certOrganization = CmdCert.Flag.String("org", "V2Ray Inc", "Organization of the certificate")
-	certIsCA         = CmdCert.Flag.Bool("ca", false, "Whether this certificate is a CA")
-	certJSONOutput   = CmdCert.Flag.Bool("json", true, "Print certificate in JSON format")
-	certFileOutput   = CmdCert.Flag.String("file", "", "Save certificate in file.")
-	certExpire       = CmdCert.Flag.Duration("expire", time.Hour*24*90 /* 90 days */, "Time until the certificate expires. Default value 3 months.")
+	certCommonName   = cmdCert.Flag.String("name", "V2Ray Inc", "The common name of this certificate")
+	certOrganization = cmdCert.Flag.String("org", "V2Ray Inc", "Organization of the certificate")
+	certIsCA         = cmdCert.Flag.Bool("ca", false, "Whether this certificate is a CA")
+	certJSONOutput   = cmdCert.Flag.Bool("json", true, "Print certificate in JSON format")
+	certFileOutput   = cmdCert.Flag.String("file", "", "Save certificate in file.")
+	certExpire       = cmdCert.Flag.Duration("expire", time.Hour*24*90 /* 90 days */, "Time until the certificate expires. Default value 3 months.")
 )
 
 func executeCert(cmd *base.Command, args []string) {

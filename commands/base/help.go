@@ -41,6 +41,7 @@ Args:
 	if len(cmd.Commands) > 0 {
 		PrintUsage(os.Stdout, cmd)
 	} else {
+		buildCommandText(cmd)
 		tmpl(os.Stdout, helpTemplate, makeTmplData(cmd))
 	}
 }
@@ -119,24 +120,21 @@ func width(width int, value string) string {
 
 // PrintUsage prints usage of cmd to w
 func PrintUsage(w io.Writer, cmd *Command) {
+	buildCommandText(cmd)
 	bw := bufio.NewWriter(w)
 	tmpl(bw, usageTemplate, makeTmplData(cmd))
 	bw.Flush()
 }
 
-// buildCommandsText build text of command and its children as template
-func buildCommandsText(cmd *Command) {
-	buildCommandText(cmd)
-	for _, cmd := range cmd.Commands {
-		buildCommandsText(cmd)
-	}
-}
-
 // buildCommandText build command text as template
 func buildCommandText(cmd *Command) {
-	cmd.UsageLine = buildText(cmd.UsageLine, makeTmplData(cmd))
-	cmd.Short = buildText(cmd.Short, makeTmplData(cmd))
-	cmd.Long = buildText(cmd.Long, makeTmplData(cmd))
+	data := makeTmplData(cmd)
+	cmd.UsageLine = buildText(cmd.UsageLine, data)
+	// DO NOT SUPPORT ".Short":
+	// - It's not necessary
+	// - Or, we have to build text for all sub commands of current command, like "v2ray help api"
+	// cmd.Short = buildText(cmd.Short, data)
+	cmd.Long = buildText(cmd.Long, data)
 }
 
 func buildText(text string, data interface{}) string {
