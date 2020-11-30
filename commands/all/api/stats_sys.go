@@ -1,10 +1,6 @@
 package api
 
 import (
-	"context"
-	"time"
-
-	"google.golang.org/grpc"
 	statsService "v2ray.com/core/app/stats/command"
 	"v2ray.com/core/commands/base"
 )
@@ -31,14 +27,8 @@ func executeSysStats(cmd *base.Command, args []string) {
 	setSharedFlags(cmd)
 	cmd.Flag.Parse(args)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(apiTimeout)*time.Second)
-	defer cancel()
-
-	conn, err := grpc.DialContext(ctx, apiServerAddrPtr, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		base.Fatalf("failed to dial %s", apiServerAddrPtr)
-	}
-	defer conn.Close()
+	conn, ctx, close := dialAPIServer()
+	defer close()
 
 	client := statsService.NewStatsServiceClient(conn)
 	r := &statsService.SysStatsRequest{}

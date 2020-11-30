@@ -1,11 +1,8 @@
 package api
 
 import (
-	"context"
 	"fmt"
-	"time"
 
-	"google.golang.org/grpc"
 	handlerService "v2ray.com/core/app/proxyman/command"
 	"v2ray.com/core/commands/base"
 	"v2ray.com/core/infra/conf/serial"
@@ -63,14 +60,8 @@ func executeRemoveOutbounds(cmd *base.Command, args []string) {
 		base.Fatalf("no outbound to remove")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(apiTimeout)*time.Second)
-	defer cancel()
-
-	conn, err := grpc.DialContext(ctx, apiServerAddrPtr, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		base.Fatalf("failed to dial %s", apiServerAddrPtr)
-	}
-	defer conn.Close()
+	conn, ctx, close := dialAPIServer()
+	defer close()
 
 	client := handlerService.NewHandlerServiceClient(conn)
 	for _, tag := range tags {

@@ -32,6 +32,19 @@ func setSharedFlags(cmd *base.Command) {
 	cmd.Flag.IntVar(&apiTimeout, "timeout", 3, "")
 }
 
+func dialAPIServer() (conn *grpc.ClientConn, ctx context.Context, close func()) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(apiTimeout)*time.Second)
+	conn, err := grpc.DialContext(ctx, apiServerAddrPtr, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		base.Fatalf("failed to dial %s", apiServerAddrPtr)
+	}
+	close = func() {
+		cancel()
+		conn.Close()
+	}
+	return
+}
+
 // loadArg loads one arg, maybe an remote url, or local file path
 func loadArg(arg string) (out io.Reader, err error) {
 	var data []byte
