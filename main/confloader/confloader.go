@@ -25,10 +25,10 @@ func LoadConfig(file string) (io.Reader, error) {
 
 // LoadExtConfig calls v2ctl to handle multiple config
 // the actual work also in external module
-func LoadExtConfig(files []string, reader io.Reader) (io.Reader, error) {
+func LoadExtConfig(args []string, reader io.Reader) (io.Reader, error) {
 	if EffectiveExtConfigLoader == nil {
 		return nil, newError("external config module not loaded").AtError()
 	}
 
-	return EffectiveExtConfigLoader(files, reader)
+	return EffectiveExtConfigLoader(args, reader)
 }

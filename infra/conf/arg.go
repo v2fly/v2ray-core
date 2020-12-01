@@ -1,6 +1,4 @@
-package external
-
-//go:generate go run v2ray.com/core/common/errors/errorgen
+package conf
 
 import (
 	"bytes"
@@ -13,31 +11,36 @@ import (
 	"time"
 
 	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/platform/ctlcmd"
-	"v2ray.com/core/main/confloader"
 )
 
-func ConfigLoader(arg string) (out io.Reader, err error) {
-	var data []byte
-	switch {
-	case strings.HasPrefix(arg, "http://"), strings.HasPrefix(arg, "https://"):
-		data, err = FetchHTTPContent(arg)
-
-	case arg == "stdin:":
-		data, err = ioutil.ReadAll(os.Stdin)
-
-	default:
-		data, err = ioutil.ReadFile(arg)
-	}
-
+// LoadArg loads one arg, maybe an remote url, or local file path
+func LoadArg(arg string) (out io.Reader, err error) {
+	bs, err := LoadArgToBytes(arg)
 	if err != nil {
-		return
+		return nil, err
 	}
-	out = bytes.NewBuffer(data)
+	out = bytes.NewBuffer(bs)
 	return
 }
 
-func FetchHTTPContent(target string) ([]byte, error) {
+// LoadArgToBytes loads one arg to []byte, maybe an remote url, or local file path
+func LoadArgToBytes(arg string) (out []byte, err error) {
+	switch {
+	case strings.HasPrefix(arg, "http://"), strings.HasPrefix(arg, "https://"):
+		out, err = fetchHTTPContent(arg)
+	case (arg == "stdin:"):
+		out, err = ioutil.ReadAll(os.Stdin)
+	default:
+		out, err = ioutil.ReadFile(arg)
+	}
+	if err != nil {
+		return
+	}
+	return
+}
+
+// fetchHTTPContent dials https for remote content
+func fetchHTTPContent(target string) ([]byte, error) {
 	parsedTarget, err := url.Parse(target)
 	if err != nil {
 		return nil, newError("invalid URL: ", target).Base(err)
@@ -70,19 +73,4 @@ func FetchHTTPContent(target string) ([]byte, error) {
 	}
 
 	return content, nil
-}
-
-// ExtConfigLoader calls v2ctl to load config
-func ExtConfigLoader(args []string, reader io.Reader) (io.Reader, error) {
-	buf, err := ctlcmd.Run(append([]string{"convert"}, args...), reader)
-	if err != nil {
-		return nil, err
-	}
-
-	return strings.NewReader(buf.String()), nil
-}
-
-func init() {
-	confloader.EffectiveConfigFileLoader = ConfigLoader
-	confloader.EffectiveExtConfigLoader = ExtConfigLoader
 }
