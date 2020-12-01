@@ -42,7 +42,7 @@ func executeAddOutbounds(cmd *base.Command, args []string) {
 
 	outs := make([]conf.OutboundDetourConfig, 0)
 	for _, arg := range unnamedArgs {
-		r, err := loadArg(arg)
+		r, err := conf.LoadArg(arg)
 		if err != nil {
 			base.Fatalf("failed to load %s: %s", arg, err)
 		}

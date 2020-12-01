@@ -42,7 +42,7 @@ func executeAddInbounds(cmd *base.Command, args []string) {
 
 	ins := make([]conf.InboundDetourConfig, 0)
 	for _, arg := range unnamedArgs {
-		r, err := loadArg(arg)
+		r, err := conf.LoadArg(arg)
 		if err != nil {
 			base.Fatalf("failed to load %s: %s", arg, err)
 		}

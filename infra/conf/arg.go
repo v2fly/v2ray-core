@@ -27,7 +27,7 @@ func LoadArg(arg string) (out io.Reader, err error) {
 func LoadArgToBytes(arg string) (out []byte, err error) {
 	switch {
 	case strings.HasPrefix(arg, "http://"), strings.HasPrefix(arg, "https://"):
-		out, err = fetchHTTPContent(arg)
+		out, err = FetchHTTPContent(arg)
 	case (arg == "stdin:"):
 		out, err = ioutil.ReadAll(os.Stdin)
 	default:
@@ -39,8 +39,8 @@ func LoadArgToBytes(arg string) (out []byte, err error) {
 	return
 }
 
-// fetchHTTPContent dials https for remote content
-func fetchHTTPContent(target string) ([]byte, error) {
+// FetchHTTPContent dials https for remote content
+func FetchHTTPContent(target string) ([]byte, error) {
 	parsedTarget, err := url.Parse(target)
 	if err != nil {
 		return nil, newError("invalid URL: ", target).Base(err)

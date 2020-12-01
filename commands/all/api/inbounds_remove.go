@@ -5,6 +5,7 @@ import (
 
 	handlerService "v2ray.com/core/app/proxyman/command"
 	"v2ray.com/core/commands/base"
+	"v2ray.com/core/infra/conf"
 	"v2ray.com/core/infra/conf/serial"
 )
 
@@ -41,7 +42,7 @@ func executeRemoveInbounds(cmd *base.Command, args []string) {
 
 	tags := make([]string, 0)
 	for _, arg := range unnamedArgs {
-		if r, err := loadArg(arg); err == nil {
+		if r, err := conf.LoadArg(arg); err == nil {
 			conf, err := serial.DecodeJSONConfig(r)
 			if err != nil {
 				base.Fatalf("failed to decode %s: %s", arg, err)

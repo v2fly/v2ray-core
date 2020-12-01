@@ -14,7 +14,7 @@ import (
 
 var cmdConvert = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} convert [-format=json] [-r] [c1.json] [<url>.json] [dir1] ...",
+	UsageLine:   "{{.Exec}} convert [c1.json] [<url>.json] [dir1] ...",
 	Short:       "Convert multiple json config to protobuf",
 	Long: `
 Merge and convert V2Ray config files.
@@ -34,17 +34,17 @@ Arguments:
 
 Examples:
 
-	{{.Exec}} {{.LongName}} -output=protobuf config.json         (1)
-	{{.Exec}} {{.LongName}} -output=yaml config.json             (2)
-	{{.Exec}} {{.LongName}} -input=yaml config.yaml              (3)
-	{{.Exec}} {{.LongName}} "path/to/dir"                        (4)
-	{{.Exec}} {{.LongName}} -i yaml -o yaml c1.yaml <url>.yaml   (5)
+	{{.Exec}} {{.LongName}} -output=protobuf config.json           (1)
+	{{.Exec}} {{.LongName}} -output=yaml config.json               (2)
+	{{.Exec}} {{.LongName}} -input=yaml config.yaml                (3)
+	{{.Exec}} {{.LongName}} "path/to/dir"                          (4)
+	{{.Exec}} {{.LongName}} -i yaml -o protobuf c1.yaml <url>.yaml (5)
 
 (1) Convert json to protobuf
 (2) Convert json to yaml
 (3) Convert yaml to json
-(4) Merge json files in dir into one json
-(5) Merge yaml files and convert to yaml
+(4) Merge json files in dir
+(5) Merge yaml files and convert to protobuf
 
 Use "{{.Exec}} help config-merge" for more information about merge.
 `,
