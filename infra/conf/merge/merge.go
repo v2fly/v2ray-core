@@ -18,6 +18,10 @@ package merge
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+
+	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
 )
 
 // FilesToJSON merges multiple jsons files into one json, accepts remote url, or local file path
@@ -65,9 +69,9 @@ func BytesToMap(args [][]byte) (m map[string]interface{}, err error) {
 }
 
 func loadFiles(args []string) (map[string]interface{}, error) {
-	conf := make(map[string]interface{})
+	c := make(map[string]interface{})
 	for _, arg := range args {
-		r, err := loadArg(arg)
+		r, err := cmdarg.LoadArg(arg)
 		if err != nil {
 			return nil, err
 		}
@@ -75,11 +79,11 @@ func loadFiles(args []string) (map[string]interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err = mergeMaps(conf, m); err != nil {
+		if err = mergeMaps(c, m); err != nil {
 			return nil, err
 		}
 	}
-	return conf, nil
+	return c, nil
 }
 
 func loadBytes(args [][]byte) (map[string]interface{}, error) {
@@ -95,4 +99,13 @@ func loadBytes(args [][]byte) (map[string]interface{}, error) {
 		}
 	}
 	return conf, nil
+}
+
+func decode(r io.Reader) (map[string]interface{}, error) {
+	c := make(map[string]interface{})
+	err := serial.DecodeJSON(r, &c)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }

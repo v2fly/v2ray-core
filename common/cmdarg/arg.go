@@ -1,6 +1,4 @@
-package external
-
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+package cmdarg
 
 import (
 	"bytes"
@@ -13,30 +11,35 @@ import (
 	"time"
 
 	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/platform/ctlcmd"
-	"github.com/v2fly/v2ray-core/v4/main/confloader"
 )
 
-func ConfigLoader(arg string) (out io.Reader, err error) {
-	var data []byte
-	switch {
-	case strings.HasPrefix(arg, "http://"), strings.HasPrefix(arg, "https://"):
-		data, err = FetchHTTPContent(arg)
-
-	case arg == "stdin:":
-		data, err = ioutil.ReadAll(os.Stdin)
-
-	default:
-		data, err = ioutil.ReadFile(arg)
-	}
-
+// LoadArg loads one arg, maybe an remote url, or local file path
+func LoadArg(arg string) (out io.Reader, err error) {
+	bs, err := LoadArgToBytes(arg)
 	if err != nil {
-		return
+		return nil, err
 	}
-	out = bytes.NewBuffer(data)
+	out = bytes.NewBuffer(bs)
 	return
 }
 
+// LoadArgToBytes loads one arg to []byte, maybe an remote url, or local file path
+func LoadArgToBytes(arg string) (out []byte, err error) {
+	switch {
+	case strings.HasPrefix(arg, "http://"), strings.HasPrefix(arg, "https://"):
+		out, err = FetchHTTPContent(arg)
+	case (arg == "stdin:"):
+		out, err = ioutil.ReadAll(os.Stdin)
+	default:
+		out, err = ioutil.ReadFile(arg)
+	}
+	if err != nil {
+		return
+	}
+	return
+}
+
+// FetchHTTPContent dials https for remote content
 func FetchHTTPContent(target string) ([]byte, error) {
 	parsedTarget, err := url.Parse(target)
 	if err != nil {
@@ -70,18 +73,4 @@ func FetchHTTPContent(target string) ([]byte, error) {
 	}
 
 	return content, nil
-}
-
-func ExtConfigLoader(files []string, reader io.Reader) (io.Reader, error) {
-	buf, err := ctlcmd.Run(append([]string{"convert"}, files...), reader)
-	if err != nil {
-		return nil, err
-	}
-
-	return strings.NewReader(buf.String()), nil
-}
-
-func init() {
-	confloader.EffectiveConfigFileLoader = ConfigLoader
-	confloader.EffectiveExtConfigLoader = ExtConfigLoader
 }

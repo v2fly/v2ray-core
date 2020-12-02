@@ -13,7 +13,6 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
-	"github.com/v2fly/v2ray-core/v4/main/confloader"
 )
 
 // ConfigFormat is a configurable format of V2Ray config file.
@@ -109,7 +108,7 @@ func init() {
 		Loader: func(input interface{}) (*Config, error) {
 			switch v := input.(type) {
 			case cmdarg.Arg:
-				r, err := confloader.LoadConfig(v[0])
+				r, err := cmdarg.LoadArg(v[0])
 				if err != nil {
 					return nil, err
 				}

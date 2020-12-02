@@ -1,8 +1,8 @@
 package api
 
 import (
-	statsService "v2ray.com/core/app/stats/command"
-	"v2ray.com/core/commands/base"
+	statsService "github.com/v2fly/v2ray-core/v4/app/stats/command"
+	"github.com/v2fly/v2ray-core/v4/commands/base"
 )
 
 var cmdSysStats = &base.Command{

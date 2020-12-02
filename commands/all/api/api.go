@@ -1,7 +1,7 @@
 package api
 
 import (
-	"v2ray.com/core/commands/base"
+	"github.com/v2fly/v2ray-core/v4/commands/base"
 )
 
 // CmdAPI calls an API in an V2Ray process

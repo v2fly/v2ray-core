@@ -5,14 +5,17 @@ import (
 )
 
 var docMerge = &base.Command{
-	UsageLine: "{{.Exec}} json-merge",
-	Short:     "json merge logic",
+	UsageLine: "{{.Exec}} config-merge",
+	Short:     "config merge logic",
 	Long: `
-Merging of JSON configs is applied in following commands:
+Merging of config files is applied in following commands:
 
 	{{.Exec}} run -c c1.json -c c2.json ...
-	{{.Exec}} merge c1.json https://url.to/c2.json ...
+	{{.Exec}} test -c c1.yaml -c c2.yaml ...
 	{{.Exec}} convert c1.json dir1 ...
+
+Support of yaml is implemented by converting yaml to json, 
+both merge and load. So we take json as example here.
 
 Suppose we have 2 JSON files,
 

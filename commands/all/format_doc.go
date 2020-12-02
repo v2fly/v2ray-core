@@ -14,7 +14,7 @@ var docFormat = &base.Command{
 	  The default loader, multiple config files support.
 
 	* yaml (.yml)
-	  The yaml loader (coming soon?), multiple config files support.
+	  The yaml loader, multiple config files support.
 
 	* protobuf / pb (.pb)
 	  Single conifg file support. If multiple files assigned, 

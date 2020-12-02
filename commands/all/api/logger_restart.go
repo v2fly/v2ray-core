@@ -1,8 +1,8 @@
 package api
 
 import (
-	logService "v2ray.com/core/app/log/command"
-	"v2ray.com/core/commands/base"
+	logService "github.com/v2fly/v2ray-core/v4/app/log/command"
+	"github.com/v2fly/v2ray-core/v4/commands/base"
 )
 
 var cmdRestartLogger = &base.Command{
