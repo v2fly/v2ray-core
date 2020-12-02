@@ -24,7 +24,7 @@ func mergeConvertToMap(files []string, format string) map[string]interface{} {
 			base.Fatalf("failed to load json: %s", err)
 		}
 	case "yaml":
-		bs, err := yamlsToJSON(files)
+		bs, err := yamlsToJSONs(files)
 		if err != nil {
 			base.Fatalf("failed to convert yaml to json: %s", err)
 		}
@@ -33,7 +33,9 @@ func mergeConvertToMap(files []string, format string) map[string]interface{} {
 			base.Fatalf("failed to merge converted json: %s", err)
 		}
 	default:
-		base.Fatalf("invalid input format: %s", format)
+		base.Errorf("invalid input format: %s", format)
+		base.Errorf("Run '%s help %s' for details.", base.CommandEnv.Exec, cmdConvert.LongName())
+		base.Exit()
 	}
 	return m
 }
@@ -94,7 +96,7 @@ func readConfDirRecursively(dirPath string, extensions []string) []string {
 	return files
 }
 
-func yamlsToJSON(files []string) ([][]byte, error) {
+func yamlsToJSONs(files []string) ([][]byte, error) {
 	jsons := make([][]byte, 0)
 	for _, file := range files {
 		bs, err := cmdarg.LoadArgToBytes(file)

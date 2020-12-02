@@ -15,9 +15,10 @@ import (
 var cmdConvert = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} convert [c1.json] [<url>.json] [dir1] ...",
-	Short:       "Convert multiple json config to protobuf",
+	Short:       "Convert config files",
 	Long: `
-Merge and convert V2Ray config files.
+Convert config files between different formats. Files are merged 
+before convert if multiple assigned.
 
 Arguments:
 
@@ -118,7 +119,9 @@ func executeConvert(cmd *base.Command, args []string) {
 			base.Fatalf("failed to marshal proto config: %s", err)
 		}
 	default:
-		base.Fatalf("invalid input format: %s", outputFormat)
+		base.Errorf("invalid ouput format: %s", outputFormat)
+		base.Errorf("Run '%s help %s' for details.", base.CommandEnv.Exec, cmd.LongName())
+		base.Exit()
 	}
 
 	if _, err := os.Stdout.Write(out); err != nil {
