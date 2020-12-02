@@ -9,9 +9,9 @@ import (
 
 const (
 	// For incoming connections.
-	TCP_FASTOPEN = 23
+	TCP_FASTOPEN = 23 // nolint: golint,stylecheck
 	// For out-going connections.
-	TCP_FASTOPEN_CONNECT = 30
+	TCP_FASTOPEN_CONNECT = 30 // nolint: golint,stylecheck
 )
 
 func bindAddr(fd uintptr, ip []byte, port uint32) error {
