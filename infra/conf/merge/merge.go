@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"v2ray.com/core/infra/conf"
+	"v2ray.com/core/common/cmdarg"
 	"v2ray.com/core/infra/conf/serial"
 )
 
@@ -71,7 +71,7 @@ func BytesToMap(args [][]byte) (m map[string]interface{}, err error) {
 func loadFiles(args []string) (map[string]interface{}, error) {
 	c := make(map[string]interface{})
 	for _, arg := range args {
-		r, err := conf.LoadArg(arg)
+		r, err := cmdarg.LoadArg(arg)
 		if err != nil {
 			return nil, err
 		}

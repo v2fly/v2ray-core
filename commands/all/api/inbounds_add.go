@@ -5,6 +5,7 @@ import (
 
 	handlerService "v2ray.com/core/app/proxyman/command"
 	"v2ray.com/core/commands/base"
+	"v2ray.com/core/common/cmdarg"
 	"v2ray.com/core/infra/conf"
 	"v2ray.com/core/infra/conf/serial"
 )
@@ -42,7 +43,7 @@ func executeAddInbounds(cmd *base.Command, args []string) {
 
 	ins := make([]conf.InboundDetourConfig, 0)
 	for _, arg := range unnamedArgs {
-		r, err := conf.LoadArg(arg)
+		r, err := cmdarg.LoadArg(arg)
 		if err != nil {
 			base.Fatalf("failed to load %s: %s", arg, err)
 		}

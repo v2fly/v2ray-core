@@ -1,4 +1,4 @@
-package jsonem
+package json
 
 import (
 	"bytes"

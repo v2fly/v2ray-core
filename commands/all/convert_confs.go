@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"v2ray.com/core/commands/base"
-	"v2ray.com/core/infra/conf"
+	"v2ray.com/core/common/cmdarg"
 	"v2ray.com/core/infra/conf/json"
 	"v2ray.com/core/infra/conf/merge"
 )
@@ -97,7 +97,7 @@ func readConfDirRecursively(dirPath string, extensions []string) []string {
 func yamlsToJSON(files []string) ([][]byte, error) {
 	jsons := make([][]byte, 0)
 	for _, file := range files {
-		bs, err := conf.LoadArgToBytes(file)
+		bs, err := cmdarg.LoadArgToBytes(file)
 		if err != nil {
 			return nil, err
 		}
