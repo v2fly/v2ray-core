@@ -56,7 +56,7 @@ var (
 )
 
 func setConfigFlags(cmd *base.Command) {
-	configFormat = cmd.Flag.String("format", "json", "")
+	configFormat = cmd.Flag.String("format", "", "")
 	configDirRecursively = cmd.Flag.Bool("r", false, "")
 
 	cmd.Flag.Var(&configFiles, "config", "")

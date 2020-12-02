@@ -1,4 +1,4 @@
-package merge
+package cmdarg
 
 import (
 	"bytes"
@@ -11,29 +11,36 @@ import (
 	"time"
 
 	"v2ray.com/core/common/buf"
-	"v2ray.com/core/infra/conf/serial"
 )
 
-// loadArg loads one arg, maybe an remote url, or local file path
-func loadArg(arg string) (out io.Reader, err error) {
-	var data []byte
+// LoadArg loads one arg, maybe an remote url, or local file path
+func LoadArg(arg string) (out io.Reader, err error) {
+	bs, err := LoadArgToBytes(arg)
+	if err != nil {
+		return nil, err
+	}
+	out = bytes.NewBuffer(bs)
+	return
+}
+
+// LoadArgToBytes loads one arg to []byte, maybe an remote url, or local file path
+func LoadArgToBytes(arg string) (out []byte, err error) {
 	switch {
 	case strings.HasPrefix(arg, "http://"), strings.HasPrefix(arg, "https://"):
-		data, err = fetchHTTPContent(arg)
+		out, err = FetchHTTPContent(arg)
 	case (arg == "stdin:"):
-		data, err = ioutil.ReadAll(os.Stdin)
+		out, err = ioutil.ReadAll(os.Stdin)
 	default:
-		data, err = ioutil.ReadFile(arg)
+		out, err = ioutil.ReadFile(arg)
 	}
 	if err != nil {
 		return
 	}
-	out = bytes.NewBuffer(data)
 	return
 }
 
-// fetchHTTPContent dials https for remote content
-func fetchHTTPContent(target string) ([]byte, error) {
+// FetchHTTPContent dials https for remote content
+func FetchHTTPContent(target string) ([]byte, error) {
 	parsedTarget, err := url.Parse(target)
 	if err != nil {
 		return nil, newError("invalid URL: ", target).Base(err)
@@ -66,13 +73,4 @@ func fetchHTTPContent(target string) ([]byte, error) {
 	}
 
 	return content, nil
-}
-
-func decode(r io.Reader) (map[string]interface{}, error) {
-	c := make(map[string]interface{})
-	err := serial.DecodeJSON(r, &c)
-	if err != nil {
-		return nil, err
-	}
-	return c, nil
 }

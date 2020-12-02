@@ -17,7 +17,6 @@ func init() {
 		tls.CmdTLS,
 		cmdUUID,
 		cmdVerify,
-		cmdMerge,
 
 		// documents
 		docFormat,

@@ -55,14 +55,11 @@ import (
 	_ "v2ray.com/core/transport/internet/headers/wechat"
 	_ "v2ray.com/core/transport/internet/headers/wireguard"
 
-	// JSON config support. Choose only one from the two below.
-	// The following line loads JSON from v2ctl
-	// _ "v2ray.com/core/main/json"
-	// The following line loads JSON internally
-	_ "v2ray.com/core/main/jsonem"
+	// JSON config support.
+	_ "v2ray.com/core/main/json"
 
-	// Load config from file or http(s)
-	_ "v2ray.com/core/main/confloader/external"
+	// YAML config support.
+	_ "v2ray.com/core/main/yaml"
 
 	// commands
 	_ "v2ray.com/core/commands/all"
