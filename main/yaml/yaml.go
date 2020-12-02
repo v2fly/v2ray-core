@@ -21,7 +21,7 @@ func init() {
 		Loader: func(input interface{}) (*core.Config, error) {
 			switch v := input.(type) {
 			case cmdarg.Arg:
-				bs, err := yamlsToJSON(v)
+				bs, err := yamlsToJSONs(v)
 				if err != nil {
 					return nil, err
 				}
@@ -52,7 +52,7 @@ func init() {
 	}))
 }
 
-func yamlsToJSON(files []string) ([][]byte, error) {
+func yamlsToJSONs(files []string) ([][]byte, error) {
 	jsons := make([][]byte, 0)
 	for _, file := range files {
 		bs, err := cmdarg.LoadArgToBytes(file)

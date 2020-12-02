@@ -92,6 +92,18 @@ date:
     - 2018-02-17    # yyyy-MM-dd
 datetime: 
     -  2018-02-17T15:02:31+08:00    # ISO 8601 time
+mixed:
+    - true
+    - false
+    - 1
+    - 0
+    - null
+    - hello
+# arbitrary keys
+1: 0
+true: false
+TRUE: TRUE
+"str": "hello"
 `
 	expected := `
 {
@@ -104,7 +116,11 @@ datetime:
     },
     "string": ["哈哈", "Hello world",  "newline newline2"],
     "date": ["2018-02-17"],
-    "datetime": ["2018-02-17T15:02:31+08:00"]
+    "datetime": ["2018-02-17T15:02:31+08:00"],
+    "mixed": [true,false,1,0,null,"hello"],
+    "1": 0,
+    "true": true,
+    "str": "hello"
 }
 `
 	bs, err := FromYAML([]byte(input))
