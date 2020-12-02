@@ -119,7 +119,7 @@ func executeConvert(cmd *base.Command, args []string) {
 			base.Fatalf("failed to marshal proto config: %s", err)
 		}
 	default:
-		base.Errorf("invalid ouput format: %s", outputFormat)
+		base.Errorf("invalid output format: %s", outputFormat)
 		base.Errorf("Run '%s help %s' for details.", base.CommandEnv.Exec, cmd.LongName())
 		base.Exit()
 	}
