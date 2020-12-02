@@ -37,7 +37,9 @@ func (err *Error) pkgPath() string {
 	if err.pathObj == nil {
 		return ""
 	}
-	return reflect.TypeOf(err.pathObj).PkgPath()
+	// remove v2ray.com/core/
+	oldPath := reflect.TypeOf(err.pathObj).PkgPath()
+	return strings.Join(strings.Split(oldPath, "/")[2:], "/")
 }
 
 // Error implements error.Error().

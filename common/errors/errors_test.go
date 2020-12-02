@@ -46,11 +46,11 @@ func TestErrorMessage(t *testing.T) {
 	}{
 		{
 			err: New("a").Base(New("b")).WithPathObj(e{}),
-			msg: "v2ray.com/core/common/errors_test: a > b",
+			msg: "common/errors_test: a > b",
 		},
 		{
 			err: New("a").Base(New("b").WithPathObj(e{})),
-			msg: "a > v2ray.com/core/common/errors_test: b",
+			msg: "a > common/errors_test: b",
 		},
 	}
 
