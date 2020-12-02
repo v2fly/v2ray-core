@@ -1,11 +1,9 @@
 package internet
 
-import (
-	"syscall"
-)
+import "syscall"
 
 const (
-	TCP_FASTOPEN = 15
+	TCP_FASTOPEN = 15 // nolint: golint,stylecheck
 )
 
 func setTFO(fd syscall.Handle, settings SocketConfig_TCPFastOpenState) error {
