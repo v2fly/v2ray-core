@@ -23,12 +23,14 @@ before convert if multiple assigned.
 Arguments:
 
 	-i, -input
-		Input format, options: "json", "yaml". 
-		Default "json"
+		Specify the input format.
+		Available values: "json", "yaml"
+		Default: "json"
 
 	-o, -output
-		Output format, options: "json", "yaml", "protobuf"/"pb".
-		Default "json"
+		Specify the output format
+		Available values: "json", "yaml", "protobuf" / "pb"
+		Default: "json"
 
 	-r
 		Load confdir recursively.
