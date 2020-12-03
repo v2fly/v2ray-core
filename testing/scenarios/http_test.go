@@ -129,7 +129,7 @@ func TestHttpError(t *testing.T) {
 			Transport: transport,
 		}
 
-		resp, err := client.Get("http://127.0.0.1:" + dest.Port.String()) // nolint: bodyclose
+		resp, err := client.Get("http://127.0.0.1:" + dest.Port.String())
 		common.Must(err)
 		defer resp.Body.Close()
 		if resp.StatusCode != 503 {

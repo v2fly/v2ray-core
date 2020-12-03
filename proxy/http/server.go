@@ -279,7 +279,7 @@ func (s *Server) handlePlainHTTP(ctx context.Context, request *http.Request, wri
 
 	responseDone := func() error {
 		responseReader := bufio.NewReaderSize(&buf.BufferedReader{Reader: link.Reader}, buf.Size)
-		response, err := http.ReadResponse(responseReader, request) // nolint: bodyclose
+		response, err := http.ReadResponse(responseReader, request)
 		if err == nil {
 			http_proto.RemoveHopByHopHeaders(response.Header)
 			if response.ContentLength >= 0 {
@@ -291,6 +291,7 @@ func (s *Server) handlePlainHTTP(ctx context.Context, request *http.Request, wri
 				response.Close = true
 				result = nil
 			}
+			defer response.Body.Close()
 		} else {
 			newError("failed to read response from ", request.Host).Base(err).AtWarning().WriteToLog(session.ExportIDToError(ctx))
 			response = &http.Response{
