@@ -10,7 +10,7 @@ import (
 	"v2ray.com/core/transport/internet"
 )
 
-const SO_ORIGINAL_DST = 80
+const SO_ORIGINAL_DST = 80 // nolint: golint,stylecheck
 
 func GetOriginalDestination(conn internet.Connection) (net.Destination, error) {
 	sysrawconn, f := conn.(syscall.Conn)
