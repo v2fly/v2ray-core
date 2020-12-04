@@ -1,5 +1,6 @@
 // +build !windows
 // +build !wasm
+
 package domainsocket
 
 import (
