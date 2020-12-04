@@ -1,6 +1,4 @@
 // +build !windows
-// +build !confonly
-
 package tls
 
 import (

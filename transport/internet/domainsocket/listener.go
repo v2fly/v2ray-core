@@ -1,7 +1,5 @@
 // +build !windows
 // +build !wasm
-// +build !confonly
-
 package domainsocket
 
 import (

@@ -1,5 +1,3 @@
-// +build !confonly
-
 package socks
 
 import "v2ray.com/core/common/protocol"
