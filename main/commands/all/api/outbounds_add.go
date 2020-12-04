@@ -4,18 +4,18 @@ import (
 	"fmt"
 
 	handlerService "github.com/v2fly/v2ray-core/v4/app/proxyman/command"
-	"github.com/v2fly/v2ray-core/v4/commands/base"
 	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
 	"github.com/v2fly/v2ray-core/v4/infra/conf"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
+	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 )
 
-var cmdAddInbounds = &base.Command{
+var cmdAddOutbounds = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api adi [--server=127.0.0.1:8080] <c1.json> [c2.json]...",
-	Short:       "Add inbounds",
+	UsageLine:   "{{.Exec}} api ado [--server=127.0.0.1:8080] <c1.json> [c2.json]...",
+	Short:       "Add outbounds",
 	Long: `
-Add inbounds to V2Ray.
+Add outbounds to V2Ray.
 
 Arguments:
 
@@ -29,19 +29,19 @@ Example:
 
     {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 c1.json c2.json
 `,
-	Run: executeAddInbounds,
+	Run: executeAddOutbounds,
 }
 
-func executeAddInbounds(cmd *base.Command, args []string) {
+func executeAddOutbounds(cmd *base.Command, args []string) {
 	setSharedFlags(cmd)
 	cmd.Flag.Parse(args)
 	unnamedArgs := cmd.Flag.Args()
 	if len(unnamedArgs) == 0 {
-		fmt.Println("reading from stdin:")
+		fmt.Println("Reading from STDIN")
 		unnamedArgs = []string{"stdin:"}
 	}
 
-	ins := make([]conf.InboundDetourConfig, 0)
+	outs := make([]conf.OutboundDetourConfig, 0)
 	for _, arg := range unnamedArgs {
 		r, err := cmdarg.LoadArg(arg)
 		if err != nil {
@@ -51,28 +51,28 @@ func executeAddInbounds(cmd *base.Command, args []string) {
 		if err != nil {
 			base.Fatalf("failed to decode %s: %s", arg, err)
 		}
-		ins = append(ins, conf.InboundConfigs...)
+		outs = append(outs, conf.OutboundConfigs...)
 	}
-	if len(ins) == 0 {
-		base.Fatalf("no valid inbound found")
+	if len(outs) == 0 {
+		base.Fatalf("no valid outbound found")
 	}
 
 	conn, ctx, close := dialAPIServer()
 	defer close()
 
 	client := handlerService.NewHandlerServiceClient(conn)
-	for _, in := range ins {
-		fmt.Println("adding:", in.Tag)
-		i, err := in.Build()
+	for _, out := range outs {
+		fmt.Println("adding:", out.Tag)
+		o, err := out.Build()
 		if err != nil {
 			base.Fatalf("failed to build conf: %s", err)
 		}
-		r := &handlerService.AddInboundRequest{
-			Inbound: i,
+		r := &handlerService.AddOutboundRequest{
+			Outbound: o,
 		}
-		resp, err := client.AddInbound(ctx, r)
+		resp, err := client.AddOutbound(ctx, r)
 		if err != nil {
-			base.Fatalf("failed to add inbound: %s", err)
+			base.Fatalf("failed to add outbound: %s", err)
 		}
 		showResponese(resp)
 	}

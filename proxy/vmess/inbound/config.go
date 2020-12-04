@@ -1,6 +1,3 @@
-//go:build !confonly
-// +build !confonly
-
 package inbound
 
 // GetDefaultValue returns default settings of DefaultConfig.

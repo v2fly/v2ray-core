@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/v2fly/v2ray-core/v4/commands/base"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
+	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 	"gopkg.in/yaml.v2"
 )
 

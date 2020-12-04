@@ -1,5 +1,4 @@
-//go:build linux && !confonly
-// +build linux,!confonly
+// +build linux
 
 package tcp
 

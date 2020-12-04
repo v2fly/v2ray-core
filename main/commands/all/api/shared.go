@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/commands/base"
+	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 )

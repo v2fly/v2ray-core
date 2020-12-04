@@ -2,8 +2,6 @@ package conf
 
 import (
 	"encoding/json"
-	"log"
-	"os"
 	"strings"
 
 	core "github.com/v2fly/v2ray-core/v4"
@@ -37,8 +35,6 @@ var (
 		"dns":         func() interface{} { return new(DNSOutboundConfig) },
 		"loopback":    func() interface{} { return new(LoopbackConfig) },
 	}, "protocol", "settings")
-
-	ctllog = log.New(os.Stderr, "v2ctl> ", 0)
 )
 
 func toProtocolList(s []string) ([]proxyman.KnownProtocols, error) {
@@ -379,98 +375,6 @@ func (c *Config) findOutboundTag(tag string) int {
 		}
 	}
 	return found
-}
-
-// Override method accepts another Config overrides the current attribute
-func (c *Config) Override(o *Config, fn string) {
-	// only process the non-deprecated members
-
-	if o.LogConfig != nil {
-		c.LogConfig = o.LogConfig
-	}
-	if o.RouterConfig != nil {
-		c.RouterConfig = o.RouterConfig
-	}
-	if o.DNSConfig != nil {
-		c.DNSConfig = o.DNSConfig
-	}
-	if o.Transport != nil {
-		c.Transport = o.Transport
-	}
-	if o.Policy != nil {
-		c.Policy = o.Policy
-	}
-	if o.API != nil {
-		c.API = o.API
-	}
-	if o.Stats != nil {
-		c.Stats = o.Stats
-	}
-	if o.Reverse != nil {
-		c.Reverse = o.Reverse
-	}
-
-	if o.FakeDNS != nil {
-		c.FakeDNS = o.FakeDNS
-	}
-
-	if o.BrowserForwarder != nil {
-		c.BrowserForwarder = o.BrowserForwarder
-	}
-
-	if o.Observatory != nil {
-		c.Observatory = o.Observatory
-	}
-
-	// deprecated attrs... keep them for now
-	if o.InboundConfig != nil {
-		c.InboundConfig = o.InboundConfig
-	}
-	if o.OutboundConfig != nil {
-		c.OutboundConfig = o.OutboundConfig
-	}
-	if o.InboundDetours != nil {
-		c.InboundDetours = o.InboundDetours
-	}
-	if o.OutboundDetours != nil {
-		c.OutboundDetours = o.OutboundDetours
-	}
-	// deprecated attrs
-
-	// update the Inbound in slice if the only one in overide config has same tag
-	if len(o.InboundConfigs) > 0 {
-		if len(c.InboundConfigs) > 0 && len(o.InboundConfigs) == 1 {
-			if idx := c.findInboundTag(o.InboundConfigs[0].Tag); idx > -1 {
-				c.InboundConfigs[idx] = o.InboundConfigs[0]
-				ctllog.Println("[", fn, "] updated inbound with tag: ", o.InboundConfigs[0].Tag)
-			} else {
-				c.InboundConfigs = append(c.InboundConfigs, o.InboundConfigs[0])
-				ctllog.Println("[", fn, "] appended inbound with tag: ", o.InboundConfigs[0].Tag)
-			}
-		} else {
-			c.InboundConfigs = o.InboundConfigs
-		}
-	}
-
-	// update the Outbound in slice if the only one in overide config has same tag
-	if len(o.OutboundConfigs) > 0 {
-		if len(c.OutboundConfigs) > 0 && len(o.OutboundConfigs) == 1 {
-			if idx := c.findOutboundTag(o.OutboundConfigs[0].Tag); idx > -1 {
-				c.OutboundConfigs[idx] = o.OutboundConfigs[0]
-				ctllog.Println("[", fn, "] updated outbound with tag: ", o.OutboundConfigs[0].Tag)
-			} else {
-				if strings.Contains(strings.ToLower(fn), "tail") {
-					c.OutboundConfigs = append(c.OutboundConfigs, o.OutboundConfigs[0])
-					ctllog.Println("[", fn, "] appended outbound with tag: ", o.OutboundConfigs[0].Tag)
-				} else {
-					c.OutboundConfigs = append(o.OutboundConfigs, c.OutboundConfigs...)
-					ctllog.Println("[", fn, "] prepended outbound with tag: ", o.OutboundConfigs[0].Tag)
-				}
-			}
-		} else {
-			c.OutboundConfigs = o.OutboundConfigs
-		}
-	}
 }
 
 func applyTransportConfig(s *StreamConfig, t *TransportConfig) {

@@ -1,7 +1,7 @@
 package tls
 
 import (
-	"github.com/v2fly/v2ray-core/v4/commands/base"
+	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 )
 
 // CmdTLS holds all tls sub commands

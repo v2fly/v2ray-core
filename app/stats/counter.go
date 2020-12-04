@@ -1,6 +1,3 @@
-//go:build !confonly
-// +build !confonly
-
 package stats
 
 import "sync/atomic"

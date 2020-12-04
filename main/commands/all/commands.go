@@ -1,9 +1,9 @@
 package all
 
 import (
-	"github.com/v2fly/v2ray-core/v4/commands/all/api"
-	"github.com/v2fly/v2ray-core/v4/commands/all/tls"
-	"github.com/v2fly/v2ray-core/v4/commands/base"
+	"github.com/v2fly/v2ray-core/v4/main/commands/all/api"
+	"github.com/v2fly/v2ray-core/v4/main/commands/all/tls"
+	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 )
 
 // go:generate go run v2ray.com/core/common/errors/errorgen

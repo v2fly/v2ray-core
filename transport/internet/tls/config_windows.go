@@ -1,5 +1,4 @@
-//go:build windows && !confonly
-// +build windows,!confonly
+// +build windows
 
 package tls
 

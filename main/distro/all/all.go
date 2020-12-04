@@ -80,5 +80,5 @@ import (
 	_ "github.com/v2fly/v2ray-core/v4/main/yaml"
 
 	// commands
-	_ "github.com/v2fly/v2ray-core/v4/commands/all"
+	_ "github.com/v2fly/v2ray-core/v4/main/commands/all"
 )

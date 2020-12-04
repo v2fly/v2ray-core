@@ -1,6 +1,3 @@
-//go:build !confonly
-// +build !confonly
-
 package shadowsocks
 
 import (
@@ -40,6 +37,7 @@ func ReadTCPSession(user *protocol.MemoryUser, reader io.Reader) (*protocol.Requ
 	behaviorSeed := crc32.ChecksumIEEE(hashkdf.Sum(nil))
 
 	drainer, err := drain.NewBehaviorSeedLimitedDrainer(int64(behaviorSeed), 16+38, 3266, 64)
+
 	if err != nil {
 		return nil, nil, newError("failed to initialize drainer").Base(err)
 	}
@@ -140,6 +138,7 @@ func ReadTCPResponse(user *protocol.MemoryUser, reader io.Reader) (buf.Reader, e
 	behaviorSeed := crc32.ChecksumIEEE(hashkdf.Sum(nil))
 
 	drainer, err := drain.NewBehaviorSeedLimitedDrainer(int64(behaviorSeed), 16+38, 3266, 64)
+
 	if err != nil {
 		return nil, newError("failed to initialize drainer").Base(err)
 	}

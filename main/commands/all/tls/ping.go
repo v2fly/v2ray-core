@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/v2fly/v2ray-core/v4/commands/base"
+	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 	v2tls "github.com/v2fly/v2ray-core/v4/transport/internet/tls"
 )
 
