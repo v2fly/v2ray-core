@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	handlerService "v2ray.com/core/app/proxyman/command"
-	"v2ray.com/core/main/commands/base"
 	"v2ray.com/core/common/cmdarg"
 	"v2ray.com/core/infra/conf/serial"
+	"v2ray.com/core/main/commands/base"
 )
 
 var cmdRemoveOutbounds = &base.Command{
