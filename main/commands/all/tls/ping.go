@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net"
 
-	"v2ray.com/core/commands/base"
+	"v2ray.com/core/main/commands/base"
 )
 
 // cmdPing is the tls ping command

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"v2ray.com/core/commands/base"
+	"v2ray.com/core/main/commands/base"
 	"v2ray.com/core/main/commands"
 	_ "v2ray.com/core/main/distro/all"
 )

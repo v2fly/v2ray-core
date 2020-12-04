@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"v2ray.com/core/commands/base"
+	"v2ray.com/core/main/commands/base"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/platform"
 )

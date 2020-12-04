@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v2"
-	"v2ray.com/core/commands/base"
+	"v2ray.com/core/main/commands/base"
 	"v2ray.com/core/infra/conf/serial"
 )
 

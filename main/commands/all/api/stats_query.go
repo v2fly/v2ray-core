@@ -2,7 +2,7 @@ package api
 
 import (
 	statsService "v2ray.com/core/app/stats/command"
-	"v2ray.com/core/commands/base"
+	"v2ray.com/core/main/commands/base"
 )
 
 var cmdQueryStats = &base.Command{

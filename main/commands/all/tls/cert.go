@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"v2ray.com/core/commands/base"
+	"v2ray.com/core/main/commands/base"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/protocol/tls/cert"
 	"v2ray.com/core/common/task"

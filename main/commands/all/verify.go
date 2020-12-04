@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/v2fly/VSign/signerVerify"
-	"v2ray.com/core/commands/base"
+	"v2ray.com/core/main/commands/base"
 )
 
 var cmdVerify = &base.Command{

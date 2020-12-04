@@ -11,7 +11,7 @@ import (
 	"syscall"
 
 	"v2ray.com/core"
-	"v2ray.com/core/commands/base"
+	"v2ray.com/core/main/commands/base"
 	"v2ray.com/core/common/cmdarg"
 	"v2ray.com/core/common/platform"
 )
