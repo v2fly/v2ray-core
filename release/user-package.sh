@@ -37,12 +37,6 @@ build_v2() {
 
 	echo ">>> Compile v2ray ..."
 	env CGO_ENABLED=0 go build -o "$TMP"/v2ray"${EXESUFFIX}" -ldflags "$LDFLAGS" ./main
-	if [[ $GOOS == "windows" ]]; then
-		env CGO_ENABLED=0 go build -o "$TMP"/wv2ray"${EXESUFFIX}" -ldflags "-H windowsgui $LDFLAGS" ./main
-	fi
-
-	echo ">>> Compile v2ctl ..."
-	env CGO_ENABLED=0 go build -o "$TMP"/v2ctl"${EXESUFFIX}" -tags confonly -ldflags "$LDFLAGS" ./infra/control/main
 }
 
 build_dat() {

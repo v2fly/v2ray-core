@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"v2ray.com/core/commands/base"
 	"v2ray.com/core/common/cmdarg"
 	"v2ray.com/core/infra/conf/json"
 	"v2ray.com/core/infra/conf/merge"
+	"v2ray.com/core/main/commands/base"
 )
 
 func mergeConvertToMap(files []string, format string) map[string]interface{} {

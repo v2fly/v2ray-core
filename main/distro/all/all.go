@@ -62,5 +62,5 @@ import (
 	_ "v2ray.com/core/main/yaml"
 
 	// commands
-	_ "v2ray.com/core/commands/all"
+	_ "v2ray.com/core/main/commands/all"
 )

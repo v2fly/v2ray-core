@@ -18,8 +18,6 @@ override_dh_auto_clean:
 override_dh_auto_build:
 	DH_GOPKG="v2ray.com/core/main" dh_auto_build -- -ldflags "-s -w" -tags $(DEB_VERSION_UPSTREAM)
 	cd $(BUILDDIR); mv bin/main bin/v2ray
-	DH_GOPKG="v2ray.com/core/infra/control/main" dh_auto_build -- -ldflags "-s -w" -tags $(DEB_VERSION_UPSTREAM)
-	cd $(BUILDDIR); mv bin/main bin/v2ctl
 
 override_dh_auto_install:
 	dh_auto_install -- --no-source

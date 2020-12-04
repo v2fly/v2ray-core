@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"v2ray.com/core"
-	"v2ray.com/core/commands/base"
+	"v2ray.com/core/main/commands/base"
 )
 
 // CmdVersion prints V2Ray Versions

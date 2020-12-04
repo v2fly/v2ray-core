@@ -4,17 +4,17 @@ import (
 	"fmt"
 
 	handlerService "v2ray.com/core/app/proxyman/command"
-	"v2ray.com/core/commands/base"
 	"v2ray.com/core/common/cmdarg"
 	"v2ray.com/core/infra/conf/serial"
+	"v2ray.com/core/main/commands/base"
 )
 
-var cmdRemoveInbounds = &base.Command{
+var cmdRemoveOutbounds = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api rmi [--server=127.0.0.1:8080] <json_file|tag> [json_file] [tag]...",
-	Short:       "Remove inbounds",
+	UsageLine:   "{{.Exec}} api rmo [--server=127.0.0.1:8080] <json_file|tag> [json_file] [tag]...",
+	Short:       "Remove outbounds",
 	Long: `
-Remove inbounds from V2Ray.
+Remove outbounds from V2Ray.
 
 Arguments:
 
@@ -28,10 +28,10 @@ Example:
 
     {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 c1.json "tag name"
 `,
-	Run: executeRemoveInbounds,
+	Run: executeRemoveOutbounds,
 }
 
-func executeRemoveInbounds(cmd *base.Command, args []string) {
+func executeRemoveOutbounds(cmd *base.Command, args []string) {
 	setSharedFlags(cmd)
 	cmd.Flag.Parse(args)
 	unnamedArgs := cmd.Flag.Args()
@@ -47,9 +47,9 @@ func executeRemoveInbounds(cmd *base.Command, args []string) {
 			if err != nil {
 				base.Fatalf("failed to decode %s: %s", arg, err)
 			}
-			ins := conf.InboundConfigs
-			for _, i := range ins {
-				tags = append(tags, i.Tag)
+			outs := conf.OutboundConfigs
+			for _, o := range outs {
+				tags = append(tags, o.Tag)
 			}
 		} else {
 			// take request as tag
@@ -58,9 +58,8 @@ func executeRemoveInbounds(cmd *base.Command, args []string) {
 	}
 
 	if len(tags) == 0 {
-		base.Fatalf("no inbound to remove")
+		base.Fatalf("no outbound to remove")
 	}
-	fmt.Println("removing inbounds:", tags)
 
 	conn, ctx, close := dialAPIServer()
 	defer close()
@@ -68,12 +67,12 @@ func executeRemoveInbounds(cmd *base.Command, args []string) {
 	client := handlerService.NewHandlerServiceClient(conn)
 	for _, tag := range tags {
 		fmt.Println("removing:", tag)
-		r := &handlerService.RemoveInboundRequest{
+		r := &handlerService.RemoveOutboundRequest{
 			Tag: tag,
 		}
-		resp, err := client.RemoveInbound(ctx, r)
+		resp, err := client.RemoveOutbound(ctx, r)
 		if err != nil {
-			base.Fatalf("failed to remove inbound: %s", err)
+			base.Fatalf("failed to remove outbound: %s", err)
 		}
 		showResponese(resp)
 	}
