@@ -9,6 +9,9 @@ import (
 	"github.com/pelletier/go-toml"
 	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v2"
+	"v2ray.com/core/common/cmdarg"
+	v2json "v2ray.com/core/infra/conf/json"
+	"v2ray.com/core/infra/conf/merge"
 	"v2ray.com/core/infra/conf/serial"
 	"v2ray.com/core/main/commands/base"
 )
@@ -81,16 +84,21 @@ func executeConvert(cmd *base.Command, args []string) {
 	inputFormat = strings.ToLower(inputFormat)
 	outputFormat = strings.ToLower(outputFormat)
 
-	files := resolveFolderToFiles(unnamed, formatExtensions[inputFormat], confDirRecursively)
-	if len(files) == 0 {
-		base.Fatalf("empty config list")
+	var (
+		files []string
+		err   error
+	)
+	if len(unnamed) == 0 {
+		files = []string{"stdin:"}
+	} else {
+		files, err = resolveFolderToFiles(unnamed, formatExtensions[inputFormat], confDirRecursively)
+		if err != nil {
+			base.Fatalf(err.Error())
+		}
 	}
 	m := mergeConvertToMap(files, inputFormat)
 
-	var (
-		out []byte
-		err error
-	)
+	var out []byte
 	switch outputFormat {
 	case "json":
 		out, err = json.Marshal(m)
@@ -132,6 +140,75 @@ func executeConvert(cmd *base.Command, args []string) {
 	}
 
 	if _, err := os.Stdout.Write(out); err != nil {
-		base.Fatalf("failed to write proto config: %s", err)
+		base.Fatalf("failed to write stdout: %s", err)
 	}
+}
+
+func mergeConvertToMap(files []string, format string) map[string]interface{} {
+	var (
+		m   map[string]interface{}
+		err error
+	)
+	switch inputFormat {
+	case "json":
+		m, err = merge.FilesToMap(files)
+		if err != nil {
+			base.Fatalf("failed to load json: %s", err)
+		}
+	case "toml":
+		bs, err := tomlsToJSONs(files)
+		if err != nil {
+			base.Fatalf("failed to convert toml to json: %s", err)
+		}
+		m, err = merge.BytesToMap(bs)
+		if err != nil {
+			base.Fatalf("failed to merge converted json: %s", err)
+		}
+	case "yaml":
+		bs, err := yamlsToJSONs(files)
+		if err != nil {
+			base.Fatalf("failed to convert yaml to json: %s", err)
+		}
+		m, err = merge.BytesToMap(bs)
+		if err != nil {
+			base.Fatalf("failed to merge converted json: %s", err)
+		}
+	default:
+		base.Errorf("invalid input format: %s", format)
+		base.Errorf("Run '%s help %s' for details.", base.CommandEnv.Exec, cmdConvert.LongName())
+		base.Exit()
+	}
+	return m
+}
+
+func yamlsToJSONs(files []string) ([][]byte, error) {
+	jsons := make([][]byte, 0)
+	for _, file := range files {
+		bs, err := cmdarg.LoadArgToBytes(file)
+		if err != nil {
+			return nil, err
+		}
+		j, err := v2json.FromYAML(bs)
+		if err != nil {
+			return nil, err
+		}
+		jsons = append(jsons, j)
+	}
+	return jsons, nil
+}
+
+func tomlsToJSONs(files []string) ([][]byte, error) {
+	jsons := make([][]byte, 0)
+	for _, file := range files {
+		bs, err := cmdarg.LoadArgToBytes(file)
+		if err != nil {
+			return nil, err
+		}
+		j, err := v2json.FromTOML(bs)
+		if err != nil {
+			return nil, err
+		}
+		jsons = append(jsons, j)
+	}
+	return jsons, nil
 }

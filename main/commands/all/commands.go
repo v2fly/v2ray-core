@@ -17,6 +17,8 @@ func init() {
 		tls.CmdTLS,
 		cmdUUID,
 		cmdVerify,
+		cmdPing,
+		cmdLinks,
 
 		// documents
 		docFormat,
