@@ -16,15 +16,15 @@ type Subscription struct {
 	Tag    string `json:"tag"`
 	URL    string `json:"url"`
 	Ignore string `json:"ignore"`
-	Match  string `json:"match"`
+	Select string `json:"select"`
 }
 
 func (s *Subscription) String() string {
 	return fmt.Sprintf(`Tag: %s
 URL: %s
 Ignore: %s
-Match: %s`,
-		s.Tag, s.URL, s.Ignore, s.Match)
+Select: %s`,
+		s.Tag, s.URL, s.Ignore, s.Select)
 }
 
 // SubscriptionConfig represents a subscription json
@@ -76,7 +76,7 @@ func subscriptionToJSONs(sub *Subscription, outdir string, socketMark int32, fil
 	}
 	fmt.Printf("%v link(s) found...\n", len(links))
 
-	links, err = filterLinks(links, sub.Ignore, sub.Match)
+	links, err = filterLinks(links, sub.Ignore, sub.Select)
 	if err != nil {
 		return err
 	}

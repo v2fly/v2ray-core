@@ -10,10 +10,10 @@ import (
 )
 
 var cmdLinks = &base.Command{
-	UsageLine: "{{.Exec}} links [-t tag] [vmess://...] [vmess://...]",
+	UsageLine: "{{.Exec}} links [-o dir] [vmess://...] ...",
 	Short:     "Fetch and convert V2Ray links",
 	Long: `
-Fetch, convert V2Ray links and save to files.
+Fetch, convert V2Ray links to json.
 
 {{.LongName}} now supports the following common seen link formats:
 
@@ -24,8 +24,8 @@ Fetch, convert V2Ray links and save to files.
 Arguments:
 
 	-o
-		Output directory to save config files. It is required when 
-		convert multiple links.
+		Save config files to output directory. Required when convert 
+		multiple links.
 
 	-t
 		Tag prefix for the subscription, outbounds will be tagged with 
@@ -35,46 +35,45 @@ Arguments:
 		Sets SO_MARK for outbounds, useful for Linux firewall.
 
 	-u
-	 	Fetch links from the the subscription URL.
-
-	-c
-		Fetch links from subscriptions defined by a config file.
+		Fetch links from the the subscription URL.
 
 	-i
-		Ignore pattern (REGEXP), nodes match this pattern are ignored 
-		and display their node names as information. The pattern is 
-		prior, if a node matches it, it is ignored even if it matches 
-		the select pattern.
+		Ignore pattern (REGEXP) for '-u' parameter, nodes match this 
+		pattern are ignored and display their names as information. 
+		The pattern is prior, if a node matches, it is ignored even 
+		it matches the select pattern.
 
 	-s
-		Select pattern (REGEXP), nodes whose tags match this pattern 
-		are selected. Leave blank to select all nodes.
+		Select pattern (REGEXP) for '-u' parameter, nodes whose tags 
+		match it are selected. Leave blank to select all nodes.
 
-** NOTE **
-
-	Patterns are only applies to subscription links.
-
-Subscriptions Config File Example:
+	-c
+		Fetch links from subscriptions spcified by a config file.
+		Config example:
 		
-	{
-		"subscriptions": [{
-			"enabled": true,
-			"tag": "all.name",
-			"url": "https://url.to/subscriptions",
-			"ignore": null,
-			"match": null
-		}]
-	}
+			{
+				"subscriptions": [{
+					"enabled": true,
+					"tag": "all.name",
+					"url": "https://url.to/subscriptions",
+					"ignore": null,
+					"select": null
+				}]
+			}
+
+		"ignore" and "select" pattern works just like "-i", "-s".
 
 Examples:
 
-	{{.Exec}} {{.LongName}} vmess://... vmess://...   (1)
-	{{.Exec}} {{.LongName}} -t name -u url -o dir     (2)
-	{{.Exec}} {{.LongName}} -c path/to/json -o dir    (3)
+	{{.Exec}} {{.LongName}} vmess://...                  (1)
+	{{.Exec}} {{.LongName}} -o . vmess://... vmess://... (2)
+	{{.Exec}} {{.LongName}} -o . -t name -u url          (3)
+	{{.Exec}} {{.LongName}} -o . -c path/to/json         (4)
 
-(1) Convert links and save to current directory.
-(2) Fetch and convert links from the subscription url.
-(3) Fetch and convert links from multiple subscriptions.
+(1) Convert a link, and print to stdout.
+(2) Convert links, and save to current directory.
+(3) Fetch, convert and save links from the subscription url.
+(4) Fetch, convert and save links from multiple subscriptions.
 `,
 }
 
@@ -87,7 +86,7 @@ var (
 	linksTag        = cmdLinks.Flag.String("t", "", "")
 	linksURL        = cmdLinks.Flag.String("u", "", "")
 	linksIgnore     = cmdLinks.Flag.String("i", "", "")
-	linksMatch      = cmdLinks.Flag.String("s", "", "")
+	linksSelect     = cmdLinks.Flag.String("s", "", "")
 	linksOutdir     = cmdLinks.Flag.String("o", "", "")
 	linksSocketMark = cmdLinks.Flag.Int("m", 0, "")
 )
@@ -112,7 +111,7 @@ func executeLinks(cmd *base.Command, args []string) {
 		conf.Subscriptions = append(conf.Subscriptions, &Subscription{
 			Tag:    *linksTag,
 			URL:    *linksURL,
-			Match:  *linksMatch,
+			Select: *linksSelect,
 			Ignore: *linksIgnore,
 		})
 	}

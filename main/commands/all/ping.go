@@ -20,14 +20,14 @@ var cmdPing = &base.Command{
 	UsageLine: "{{.Exec}} ping [argument]",
 	Short:     "vmessping, a prober for V2Ray",
 	Long: `
-A ping prober for vmess:// links and JSON config.
+A ping prober for vmess:// links and outbound config.
 
 vmessping supports the following common seen formats:
 
 	* V2rayN (V2rayNG) link
 	* Shadowrocket link
 	* Quantumult (X) link
-	* Outbound in JSON
+	* Outbound in json config
 
 > If multiple outbounds found in json file, the first
 one is used.
