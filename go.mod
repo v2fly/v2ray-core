@@ -21,5 +21,5 @@ require (
 	golang.org/x/sys v0.0.0-20201119102817-f84b799fce68
 	google.golang.org/grpc v1.34.0
 	google.golang.org/protobuf v1.25.0
-	h12.io/socks v1.0.1
+	h12.io/socks v1.0.2
 )
