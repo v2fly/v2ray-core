@@ -45,6 +45,7 @@ func init() {
 	common.Must(err)
 	common.Must2(geositeFile.Write(listBytes))
 }
+
 func TestDNSConfigParsing(t *testing.T) {
 	geositePath := platform.GetAssetLocation("geosite.dat")
 	defer func() {
@@ -67,6 +68,7 @@ func TestDNSConfigParsing(t *testing.T) {
 			Input: `{
 				"servers": [{
 					"address": "8.8.8.8",
+					"clientIp": "10.0.0.1",
 					"port": 5353,
 					"domains": ["domain:v2ray.com"]
 				}],
@@ -92,6 +94,7 @@ func TestDNSConfigParsing(t *testing.T) {
 							Network: net.Network_UDP,
 							Port:    5353,
 						},
+						ClientIp: []byte{10, 0, 0, 1},
 						PrioritizedDomain: []*dns.NameServer_PriorityDomain{
 							{
 								Type:   dns.DomainMatchingType_Subdomain,
