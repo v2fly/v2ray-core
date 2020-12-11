@@ -54,7 +54,8 @@ func NewClassicNameServer(address net.Destination, dispatcher routing.Dispatcher
 		Execute:  s.Cleanup,
 	}
 	s.udpServer = udp.NewDispatcher(dispatcher, s.HandleResponse)
-	newError("DNS: created udp client inited for ", address.NetAddr()).AtInfo().WriteToLog()
+	newError("DNS: created UDP client inited for ", address.NetAddr()).AtInfo().WriteToLog()
+	newError("DNS: UDP client ", address.NetAddr(), " use clientip ", clientIP.String()).AtInfo().WriteToLog()
 	return s
 }
 
