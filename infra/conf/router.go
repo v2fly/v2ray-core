@@ -396,6 +396,7 @@ func parseFieldRule(msg json.RawMessage) (*router.RoutingRule, error) {
 	type RawFieldRule struct {
 		RouterRule
 		Domain     *StringList  `json:"domain"`
+		Domains    *StringList  `json:"domains"`
 		IP         *StringList  `json:"ip"`
 		Port       *PortList    `json:"port"`
 		Network    *NetworkList `json:"network"`
@@ -428,6 +429,16 @@ func parseFieldRule(msg json.RawMessage) (*router.RoutingRule, error) {
 
 	if rawFieldRule.Domain != nil {
 		for _, domain := range *rawFieldRule.Domain {
+			rules, err := parseDomainRule(domain)
+			if err != nil {
+				return nil, newError("failed to parse domain rule: ", domain).Base(err)
+			}
+			rule.Domain = append(rule.Domain, rules...)
+		}
+	}
+	
+	if rawFieldRule.Domains != nil {
+		for _, domain := range *rawFieldRule.Domains {
 			rules, err := parseDomainRule(domain)
 			if err != nil {
 				return nil, newError("failed to parse domain rule: ", domain).Base(err)
