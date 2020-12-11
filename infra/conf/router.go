@@ -436,7 +436,7 @@ func parseFieldRule(msg json.RawMessage) (*router.RoutingRule, error) {
 			rule.Domain = append(rule.Domain, rules...)
 		}
 	}
-	
+
 	if rawFieldRule.Domains != nil {
 		for _, domain := range *rawFieldRule.Domains {
 			rules, err := parseDomainRule(domain)

@@ -2,8 +2,10 @@ package conf_test
 
 import (
 	"encoding/json"
-	"github.com/golang/protobuf/proto"
 	"testing"
+	
+	"github.com/golang/protobuf/proto"
+	
 	"v2ray.com/core/app/router"
 	"v2ray.com/core/common/net"
 	. "v2ray.com/core/infra/conf"
