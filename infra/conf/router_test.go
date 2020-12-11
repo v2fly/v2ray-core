@@ -94,8 +94,8 @@ func TestRouterConfig(t *testing.T) {
 						TargetTag: &router.RoutingRule_Tag{
 							Tag: "direct",
 						},
-					}, {
-
+					},
+					{
 						Domain: []*router.Domain{
 							{
 								Type:  router.Domain_Plain,
