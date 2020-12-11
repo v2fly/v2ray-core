@@ -19,7 +19,7 @@ func TestRouterConfig(t *testing.T) {
 			return config.Build()
 		}
 	}
-	
+
 	runMultiTestCase(t, []TestCase{
 		{
 			Input: `{
@@ -93,7 +93,7 @@ func TestRouterConfig(t *testing.T) {
 							Tag: "direct",
 						},
 					}, {
-						
+
 						Domain: []*router.Domain{
 							{
 								Type:  router.Domain_Plain,
