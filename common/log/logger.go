@@ -9,6 +9,8 @@ import (
 	"v2ray.com/core/common/platform"
 	"v2ray.com/core/common/signal/done"
 	"v2ray.com/core/common/signal/semaphore"
+
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 )
 
 // Writer is the interface for writing logs.
@@ -97,7 +99,7 @@ func (w *consoleLogWriter) Close() error {
 }
 
 type fileLogWriter struct {
-	file   *os.File
+	writer *rotatelogs.RotateLogs
 	logger *log.Logger
 }
 
@@ -107,7 +109,7 @@ func (w *fileLogWriter) Write(s string) error {
 }
 
 func (w *fileLogWriter) Close() error {
-	return w.file.Close()
+	return w.writer.Close()
 }
 
 // CreateStdoutLogWriter returns a LogWriterCreator that creates LogWriter for stdout.
@@ -129,20 +131,30 @@ func CreateStderrLogWriter() WriterCreator {
 }
 
 // CreateFileLogWriter returns a LogWriterCreator that creates LogWriter for the given file.
-func CreateFileLogWriter(path string) (WriterCreator, error) {
+func CreateFileLogWriter(path string, pathFomate string, maxAge int) (WriterCreator, error) {
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, err
 	}
 	file.Close()
 	return func() Writer {
-		file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-		if err != nil {
-			return nil
+		if pathFomate == "" {
+			// 默认配置
+			pathFomate = path + ".%Y-%m-%d"
 		}
+		age := maxAge
+		if maxAge <= 0 {
+			// 禁用日志删除
+			age = -1
+		}
+		writer, _ := rotatelogs.New(
+			pathFomate,
+			rotatelogs.WithLinkName(path),
+			rotatelogs.WithMaxAge(time.Duration(24*age)*time.Hour),
+		)
 		return &fileLogWriter{
-			file:   file,
-			logger: log.New(file, "", log.Ldate|log.Ltime),
+			writer: writer,
+			logger: log.New(writer, "", log.Ldate|log.Ltime),
 		}
 	}, nil
 }
