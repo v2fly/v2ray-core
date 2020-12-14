@@ -1,10 +1,10 @@
 package all
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"os"
 
+	"v2ray.com/core/common/cmdarg"
+	"v2ray.com/core/infra/conf/serial"
 	"v2ray.com/core/infra/link"
 	"v2ray.com/core/main/commands/base"
 )
@@ -95,13 +95,13 @@ func executeLinks(cmd *base.Command, args []string) {
 	links := cmd.Flag.Args()
 	conf := &SubscriptionConfig{}
 	if *linksConfPath != "" {
-		data, err := ioutil.ReadFile(*linksConfPath)
+		r, err := cmdarg.LoadArg(*linksConfPath)
 		if err != nil {
-			base.Fatalf("Failed to read file: %s", err)
+			base.Fatalf("Failed to load %s: %s", *linksConfPath, err)
 		}
-		err = json.Unmarshal(data, conf)
+		err = serial.DecodeJSON(r, conf)
 		if err != nil {
-			base.Fatalf("Failed to load: %s", err)
+			base.Fatalf("Failed to load %s: %s", *linksConfPath, err)
 		}
 	}
 	if *linksURL != "" {
@@ -134,7 +134,7 @@ func executeLinks(cmd *base.Command, args []string) {
 	if len(conf.Subscriptions) > 0 {
 		err := FetchSubscriptions(conf.Subscriptions, *linksOutdir, int32(*linksSocketMark))
 		if err != nil {
-			base.Fatalf("Failed to fetch subscriptions: %s", err)
+			base.Fatalf("%s", err)
 		}
 	}
 	if len(links) > 0 {
