@@ -66,7 +66,6 @@ import (
 
 	// commands
 	_ "v2ray.com/core/main/commands/all"
-
 	// third party vmess link support
-	_ "v2ray.com/core/infra/link/vmess3p"
+	// _ "v2ray.com/core/infra/link/vmess3p"
 )
