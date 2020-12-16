@@ -18,5 +18,6 @@
   "openbsd-amd64": { "friendlyName": "openbsd-64" },
   "windows-amd64": { "friendlyName": "windows-64" },
   "windows-386": { "friendlyName": "windows-32" },
-  "windows-arm7": { "friendlyName": "windows-arm32-v7a" }
+  "windows-arm7": { "friendlyName": "windows-arm32-v7a" },
+  "android-arm64": { "friendlyName": "android-arm64-v8a" }
 }

@@ -4,7 +4,7 @@ about: "Create a bug report to help us improve"
 ---
 
 Please answer all the questions with enough information. All issues not following this template will be closed immediately.
-If you are not sure if your question is truely a bug in V2Ray, please discuss it [here](https://github.com/v2fly/discussion/issues) first.
+If you are not sure if your question is truely a bug in V2Ray, please discuss it [here](https://github.com/v2fly/v2ray-core/discussions) first.
 
 1) What version of V2Ray are you using (If you deploy different version on server and client, please explicitly point out)?
 

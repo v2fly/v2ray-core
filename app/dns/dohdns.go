@@ -42,6 +42,9 @@ type DoHNameServer struct {
 // NewDoHNameServer creates DOH client object for remote resolving
 func NewDoHNameServer(url *url.URL, dispatcher routing.Dispatcher, clientIP net.IP) (*DoHNameServer, error) {
 	newError("DNS: created Remote DOH client for ", url.String()).AtInfo().WriteToLog()
+	if clientIP != nil {
+		newError("DNS: Remote DOH client ", url.String(), " uses clientip ", clientIP.String()).AtInfo().WriteToLog()
+	}
 	s := baseDOHNameServer(url, "DOH", clientIP)
 
 	// Dispatched connection will be closed (interrupted) after each request
@@ -105,6 +108,9 @@ func NewDoHLocalNameServer(url *url.URL, clientIP net.IP) *DoHNameServer {
 		Transport: tr,
 	}
 	newError("DNS: created Local DOH client for ", url.String()).AtInfo().WriteToLog()
+	if clientIP != nil {
+		newError("DNS: Local DOH client ", url.String(), " uses clientip ", clientIP.String()).AtInfo().WriteToLog()
+	}
 	return s
 }
 
