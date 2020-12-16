@@ -3,7 +3,6 @@ package link
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"v2ray.com/core/infra/conf"
@@ -11,28 +10,30 @@ import (
 
 // Link is the interface for v2ray links, like VMessLink
 type Link interface {
-	ToOutbound() *conf.OutboundDetourConfig
+	//  returns the tag of the link
 	Tag() string
+	// Detail returns human readable string of VmessLink
 	Detail() string
+	// ToOutbound converts the vmess link to *OutboundDetourConfig
+	ToOutbound() *conf.OutboundDetourConfig
+	// ToString unmarshals Link to string
+	ToString() string
 }
 
 // Parse parse link string to Link
 func Parse(arg string) (Link, error) {
-	u, err := url.Parse(arg)
+	ps, err := getParsers(arg)
 	if err != nil {
 		return nil, err
 	}
-	if u.Scheme == "" {
-		return nil, errors.New("invalid link")
-	}
-	switch {
-	case strings.EqualFold(u.Scheme, "vmess"):
-		lk, err := NewVmessLink(arg)
-		if err != nil {
-			return nil, err
+	errs := new(strings.Builder)
+	errs.WriteString("collected errors:")
+	for _, p := range ps {
+		lk, err := p.Parse(arg)
+		if err == nil {
+			return lk, nil
 		}
-		return lk, nil
-	default:
-		return nil, fmt.Errorf("unsupported link scheme: %s", u.Scheme)
+		errs.WriteString(fmt.Sprintf("\n  not a valid %s link: %s", p.Name, err))
 	}
+	return nil, errors.New(errs.String())
 }
