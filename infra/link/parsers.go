@@ -26,7 +26,7 @@ var (
 func RegisterParser(parser *Parser) error {
 	for _, scheme := range parser.Scheme {
 		s := strings.ToLower(scheme)
-		ps, _ := parsers[s]
+		ps := parsers[s]
 		if len(ps) == 0 {
 			ps = make([]*Parser, 0)
 		}
@@ -45,7 +45,7 @@ func getParsers(link string) ([]*Parser, error) {
 		return nil, errors.New("invalid link")
 	}
 	s := strings.ToLower(u.Scheme)
-	ps, _ := parsers[s]
+	ps := parsers[s]
 	if len(ps) == 0 {
 		return nil, fmt.Errorf("unsupported link scheme: %s", u.Scheme)
 	}
