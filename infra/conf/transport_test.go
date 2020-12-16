@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"v2ray.com/core/common/protocol"
 	"v2ray.com/core/common/serial"
 	. "v2ray.com/core/infra/conf"
