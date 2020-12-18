@@ -2,11 +2,9 @@ package serial
 
 import (
 	"errors"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
-	"log"
-
-	"google.golang.org/protobuf/proto"
 )
 
 // ToTypedMessage converts a proto Message into TypedMessage.
@@ -28,7 +26,6 @@ func GetMessageType(message proto.Message) string {
 
 // GetInstance creates a new instance of the message with messageType.
 func GetInstance(messageType string) (interface{}, error) {
-	log.Println(messageType)
 	mType, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(messageType))
 	if err != nil {
 		return nil, errors.New("Serial: Unknown type: " + messageType)
