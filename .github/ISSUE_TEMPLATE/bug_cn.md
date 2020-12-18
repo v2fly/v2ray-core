@@ -4,7 +4,7 @@ about: "提交一个 V2Ray 的程序问题报告。"
 ---
 
 除非特殊情况，请完整填写所有问题。不按模板发的 issue 将直接被关闭。
-如果你遇到的问题不是 V2Ray 的 bug，比如你不清楚要如何配置，请使用[Discussion](https://github.com/v2fly/discussion/issues)进行讨论。
+如果你遇到的问题不是 V2Ray 的 bug，比如你不清楚要如何配置，请使用[Discussion](https://github.com/v2fly/v2ray-core/discussions)进行讨论。
 
 1) 你正在使用哪个版本的 V2Ray？（如果服务器和客户端使用了不同版本，请注明）
 

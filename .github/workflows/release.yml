@@ -66,6 +66,10 @@ jobs:
           - goos: linux
             goarch: mips
           # END MIPS
+          # BEGIN Android
+          - goos: android
+            goarch: arm64
+          # END Android
           # END Other architectures
       fail-fast: false
 

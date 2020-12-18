@@ -12,6 +12,7 @@ import (
 
 type NameServerConfig struct {
 	Address   *Address
+	ClientIP  *Address
 	Port      uint16
 	Domains   []string
 	ExpectIPs StringList
@@ -26,12 +27,14 @@ func (c *NameServerConfig) UnmarshalJSON(data []byte) error {
 
 	var advanced struct {
 		Address   *Address   `json:"address"`
+		ClientIP  *Address   `json:"clientIp"`
 		Port      uint16     `json:"port"`
 		Domains   []string   `json:"domains"`
 		ExpectIPs StringList `json:"expectIps"`
 	}
 	if err := json.Unmarshal(data, &advanced); err == nil {
 		c.Address = advanced.Address
+		c.ClientIP = advanced.ClientIP
 		c.Port = advanced.Port
 		c.Domains = advanced.Domains
 		c.ExpectIPs = advanced.ExpectIPs
@@ -84,7 +87,15 @@ func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 
 	geoipList, err := toCidrList(c.ExpectIPs)
 	if err != nil {
-		return nil, newError("invalid ip rule: ", c.ExpectIPs).Base(err)
+		return nil, newError("invalid IP rule: ", c.ExpectIPs).Base(err)
+	}
+
+	var myClientIP []byte
+	if c.ClientIP != nil {
+		if !c.ClientIP.Family().IsIP() {
+			return nil, newError("not an IP address:", c.ClientIP.String())
+		}
+		myClientIP = []byte(c.ClientIP.IP())
 	}
 
 	return &dns.NameServer{
@@ -93,6 +104,7 @@ func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 			Address: c.Address.Build(),
 			Port:    uint32(c.Port),
 		},
+		ClientIp:          myClientIP,
 		PrioritizedDomain: domains,
 		Geoip:             geoipList,
 		OriginalRules:     originalRules,
@@ -141,7 +153,7 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 	for _, server := range c.Servers {
 		ns, err := server.Build()
 		if err != nil {
-			return nil, newError("failed to build name server").Base(err)
+			return nil, newError("failed to build nameserver").Base(err)
 		}
 		config.NameServer = append(config.NameServer, ns)
 	}
@@ -158,15 +170,23 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 			var mappings []*dns.Config_HostMapping
 			switch {
 			case strings.HasPrefix(domain, "domain:"):
+				domainName := domain[7:]
+				if len(domainName) == 0 {
+					return nil, newError("empty domain type of rule: ", domain)
+				}
 				mapping := getHostMapping(addr)
 				mapping.Type = dns.DomainMatchingType_Subdomain
-				mapping.Domain = domain[7:]
+				mapping.Domain = domainName
 				mappings = append(mappings, mapping)
 
 			case strings.HasPrefix(domain, "geosite:"):
-				domains, err := loadGeositeWithAttr("geosite.dat", strings.ToUpper(domain[8:]))
+				listName := domain[8:]
+				if len(listName) == 0 {
+					return nil, newError("empty geosite rule: ", domain)
+				}
+				domains, err := loadGeositeWithAttr("geosite.dat", listName)
 				if err != nil {
-					return nil, newError("invalid geosite settings: ", domain).Base(err)
+					return nil, newError("failed to load geosite: ", listName).Base(err)
 				}
 				for _, d := range domains {
 					mapping := getHostMapping(addr)
@@ -176,21 +196,33 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 				}
 
 			case strings.HasPrefix(domain, "regexp:"):
+				regexpVal := domain[7:]
+				if len(regexpVal) == 0 {
+					return nil, newError("empty regexp type of rule: ", domain)
+				}
 				mapping := getHostMapping(addr)
 				mapping.Type = dns.DomainMatchingType_Regex
-				mapping.Domain = domain[7:]
+				mapping.Domain = regexpVal
 				mappings = append(mappings, mapping)
 
 			case strings.HasPrefix(domain, "keyword:"):
+				keywordVal := domain[8:]
+				if len(keywordVal) == 0 {
+					return nil, newError("empty keyword type of rule: ", domain)
+				}
 				mapping := getHostMapping(addr)
 				mapping.Type = dns.DomainMatchingType_Keyword
-				mapping.Domain = domain[8:]
+				mapping.Domain = keywordVal
 				mappings = append(mappings, mapping)
 
 			case strings.HasPrefix(domain, "full:"):
+				fullVal := domain[5:]
+				if len(fullVal) == 0 {
+					return nil, newError("empty full domain type of rule: ", domain)
+				}
 				mapping := getHostMapping(addr)
 				mapping.Type = dns.DomainMatchingType_Full
-				mapping.Domain = domain[5:]
+				mapping.Domain = fullVal
 				mappings = append(mappings, mapping)
 
 			case strings.HasPrefix(domain, "dotless:"):
@@ -212,10 +244,10 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 					return nil, newError("invalid external resource: ", domain)
 				}
 				filename := kv[0]
-				country := kv[1]
-				domains, err := loadGeositeWithAttr(filename, country)
+				list := kv[1]
+				domains, err := loadGeositeWithAttr(filename, list)
 				if err != nil {
-					return nil, newError("failed to load domains: ", country, " from ", filename).Base(err)
+					return nil, newError("failed to load domain list: ", list, " from ", filename).Base(err)
 				}
 				for _, d := range domains {
 					mapping := getHostMapping(addr)
