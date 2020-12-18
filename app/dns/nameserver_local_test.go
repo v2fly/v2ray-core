@@ -7,12 +7,13 @@ import (
 
 	. "v2ray.com/core/app/dns"
 	"v2ray.com/core/common"
+	"v2ray.com/core/common/net"
 )
 
 func TestLocalNameServer(t *testing.T) {
 	s := NewLocalNameServer()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
-	ips, err := s.QueryIP(ctx, "google.com", IPOption{
+	ips, err := s.QueryIP(ctx, "google.com", net.IP{}, IPOption{
 		IPv4Enable: true,
 		IPv6Enable: true,
 	})
