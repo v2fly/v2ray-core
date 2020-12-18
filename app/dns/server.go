@@ -152,6 +152,18 @@ func New(ctx context.Context, config *Config) (*Server, error) {
 				server.clients[idx] = c
 			}))
 
+		case address.Family().IsDomain() && strings.HasPrefix(address.Domain(), "quic://"):
+			// DNS over QUIC
+			u, err := url.Parse(address.Domain())
+			if err != nil {
+				log.Fatalln(newError("DNS config error").Base(err))
+			}
+			c, err := NewDoQNameServer(u, myClientIP)
+			if err != nil {
+				log.Fatalln(newError("DNS config error").Base(err))
+			}
+			server.clients = append(server.clients, c)
+
 		default:
 			// UDP classic DNS mode
 			dest := endpoint.AsDestination()
