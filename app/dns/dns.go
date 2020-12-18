@@ -88,7 +88,13 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 			}
 			return nil
 		}
-		client, err := NewClient(ctx, ns, clientIP, geoipContainer, updateDomain)
+
+		myClientIP := clientIP
+		switch len(ns.ClientIp) {
+		case net.IPv4len, net.IPv6len:
+			myClientIP = net.IP(ns.ClientIp)
+		}
+		client, err := NewClient(ctx, ns, myClientIP, geoipContainer, updateDomain)
 		if err != nil {
 			return nil, newError("failed to create client").Base(err)
 		}

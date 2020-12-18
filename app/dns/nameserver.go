@@ -71,7 +71,7 @@ func NewClient(ctx context.Context, ns *NameServer, clientIP net.IP, container r
 		// Create a new server for each client for now
 		server, err := NewServer(ns.Address.AsDestination(), dispatcher)
 		if err != nil {
-			return newError("failed to create name server").Base(err).AtWarning()
+			return newError("failed to create nameserver").Base(err).AtWarning()
 		}
 
 		// Priotize local domains with specific TLDs or without any dot to local DNS
@@ -120,6 +120,15 @@ func NewClient(ctx context.Context, ns *NameServer, clientIP net.IP, container r
 			matchers = append(matchers, matcher)
 		}
 
+		if len(clientIP) > 0 {
+			switch ns.Address.Address.GetAddress().(type) {
+			case *net.IPOrDomain_Domain:
+				newError("DNS: client ", ns.Address.Address.GetDomain(), " uses clientIP ", clientIP.String()).AtInfo().WriteToLog()
+			case *net.IPOrDomain_Ip:
+				newError("DNS: client ", ns.Address.Address.GetIp(), " uses clientIP ", clientIP.String()).AtInfo().WriteToLog()
+			}
+		}
+
 		client.server = server
 		client.clientIP = clientIP
 		client.domains = rules
@@ -135,12 +144,22 @@ func NewSimpleClient(ctx context.Context, endpoint *net.Endpoint, clientIP net.I
 	err := core.RequireFeatures(ctx, func(dispatcher routing.Dispatcher) error {
 		server, err := NewServer(endpoint.AsDestination(), dispatcher)
 		if err != nil {
-			return newError("failed to create name server").Base(err).AtWarning()
+			return newError("failed to create nameserver").Base(err).AtWarning()
 		}
 		client.server = server
 		client.clientIP = clientIP
 		return nil
 	})
+
+	if len(clientIP) > 0 {
+		switch endpoint.Address.GetAddress().(type) {
+		case *net.IPOrDomain_Domain:
+			newError("DNS: client ", endpoint.Address.GetDomain(), " uses clientIP ", clientIP.String()).AtInfo().WriteToLog()
+		case *net.IPOrDomain_Ip:
+			newError("DNS: client ", endpoint.Address.GetIp(), " uses clientIP ", clientIP.String()).AtInfo().WriteToLog()
+		}
+	}
+
 	return client, err
 }
 
