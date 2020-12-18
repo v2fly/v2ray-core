@@ -2,7 +2,9 @@ package conf
 
 import (
 	"encoding/json"
+	"runtime"
 	"strconv"
+	"syscall"
 
 	"github.com/golang/protobuf/proto"
 
@@ -31,12 +33,7 @@ type VLessInboundConfig struct {
 
 // Build implements Buildable
 func (c *VLessInboundConfig) Build() (proto.Message, error) {
-
 	config := new(inbound.Config)
-
-	if len(c.Clients) == 0 {
-		return nil, newError(`VLESS settings: "clients" is empty`)
-	}
 	config.Clients = make([]*protocol.User, len(c.Clients))
 	for idx, rawUser := range c.Clients {
 		user := new(protocol.User)
@@ -46,12 +43,6 @@ func (c *VLessInboundConfig) Build() (proto.Message, error) {
 		account := new(vless.Account)
 		if err := json.Unmarshal(rawUser, account); err != nil {
 			return nil, newError(`VLESS clients: invalid user`).Base(err)
-		}
-
-		switch account.Flow {
-		case "", "xtls-rprx-origin":
-		default:
-			return nil, newError(`VLESS clients: "flow" only accepts "", "xtls-rprx-origin" in this version`)
 		}
 
 		if account.Encryption != "" {
@@ -102,6 +93,11 @@ func (c *VLessInboundConfig) Build() (proto.Message, error) {
 				switch fb.Dest[0] {
 				case '@', '/':
 					fb.Type = "unix"
+					if fb.Dest[0] == '@' && len(fb.Dest) > 1 && fb.Dest[1] == '@' && (runtime.GOOS == "linux" || runtime.GOOS == "android") {
+						fullAddr := make([]byte, len(syscall.RawSockaddrUnix{}.Path)) // may need padding to work with haproxy
+						copy(fullAddr, fb.Dest[1:])
+						fb.Dest = string(fullAddr)
+					}
 				default:
 					if _, err := strconv.Atoi(fb.Dest); err == nil {
 						fb.Dest = "127.0.0.1:" + fb.Dest
@@ -135,7 +131,6 @@ type VLessOutboundConfig struct {
 
 // Build implements Buildable
 func (c *VLessOutboundConfig) Build() (proto.Message, error) {
-
 	config := new(outbound.Config)
 
 	if len(c.Vnext) == 0 {
@@ -162,12 +157,6 @@ func (c *VLessOutboundConfig) Build() (proto.Message, error) {
 			account := new(vless.Account)
 			if err := json.Unmarshal(rawUser, account); err != nil {
 				return nil, newError(`VLESS users: invalid user`).Base(err)
-			}
-
-			switch account.Flow {
-			case "", "xtls-rprx-origin", "xtls-rprx-origin-udp443":
-			default:
-				return nil, newError(`VLESS users: "flow" only accepts "", "xtls-rprx-origin", "xtls-rprx-origin-udp443" in this version`)
 			}
 
 			if account.Encryption != "none" {

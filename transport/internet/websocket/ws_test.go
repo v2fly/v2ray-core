@@ -81,7 +81,7 @@ func TestDialWithRemoteAddr(t *testing.T) {
 
 			var b [1024]byte
 			_, err := c.Read(b[:])
-			//common.Must(err)
+			// common.Must(err)
 			if err != nil {
 				return
 			}

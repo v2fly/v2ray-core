@@ -12,7 +12,6 @@ import (
 	"sync"
 
 	"golang.org/x/net/http2"
-
 	"v2ray.com/core"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
@@ -97,6 +96,12 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 
 		netConn, err := setUpHTTPTunnel(ctx, dest, targetAddr, user, dialer, firstPayload)
 		if netConn != nil {
+			if _, ok := netConn.(*http2Conn); !ok {
+				if _, err := netConn.Write(firstPayload); err != nil {
+					netConn.Close()
+					return err
+				}
+			}
 			conn = internet.Connection(netConn)
 		}
 		return err
@@ -159,16 +164,12 @@ func setUpHTTPTunnel(ctx context.Context, dest net.Destination, target string, u
 			return nil, err
 		}
 
-		if _, err := rawConn.Write(firstPayload); err != nil {
-			rawConn.Close()
-			return nil, err
-		}
-
 		resp, err := http.ReadResponse(bufio.NewReader(rawConn), req)
 		if err != nil {
 			rawConn.Close()
 			return nil, err
 		}
+		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
 			rawConn.Close()
@@ -190,7 +191,7 @@ func setUpHTTPTunnel(ctx context.Context, dest net.Destination, target string, u
 			wg.Done()
 		}()
 
-		resp, err := h2clientConn.RoundTrip(req)
+		resp, err := h2clientConn.RoundTrip(req) // nolint: bodyclose
 		if err != nil {
 			rawConn.Close()
 			return nil, err

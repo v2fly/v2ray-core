@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	proto "github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"v2ray.com/core/app/router"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/net"

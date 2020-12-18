@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
 	"v2ray.com/core/common/net"
@@ -46,7 +45,7 @@ func TestRequestSerialization(t *testing.T) {
 	Validator := new(vless.Validator)
 	Validator.Add(user)
 
-	actualRequest, actualAddons, err, _ := DecodeRequestHeader(&buffer, Validator)
+	actualRequest, actualAddons, _, err := DecodeRequestHeader(false, nil, &buffer, Validator)
 	common.Must(err)
 
 	if r := cmp.Diff(actualRequest, expectedRequest, cmp.AllowUnexported(protocol.ID{})); r != "" {
@@ -83,7 +82,7 @@ func TestInvalidRequest(t *testing.T) {
 	Validator := new(vless.Validator)
 	Validator.Add(user)
 
-	_, _, err, _ := DecodeRequestHeader(&buffer, Validator)
+	_, _, _, err := DecodeRequestHeader(false, nil, &buffer, Validator)
 	if err == nil {
 		t.Error("nil error")
 	}
@@ -114,7 +113,7 @@ func TestMuxRequest(t *testing.T) {
 	Validator := new(vless.Validator)
 	Validator.Add(user)
 
-	actualRequest, actualAddons, err, _ := DecodeRequestHeader(&buffer, Validator)
+	actualRequest, actualAddons, _, err := DecodeRequestHeader(false, nil, &buffer, Validator)
 	common.Must(err)
 
 	if r := cmp.Diff(actualRequest, expectedRequest, cmp.AllowUnexported(protocol.ID{})); r != "" {

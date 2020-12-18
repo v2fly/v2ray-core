@@ -2,19 +2,19 @@ name: CodeQL
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+      - v*
     paths:
       - "**/*.go"
   pull_request:
-    branches: [master]
     types: [opened, synchronize, reopened]
     paths:
       - "**/*.go"
-  schedule:
-    - cron: '0 0 * * 1'
 
 jobs:
   analyze:
+    if: github.repository != 'v2ray/v2ray-core'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

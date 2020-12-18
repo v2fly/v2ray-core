@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/pires/go-proxyproto"
-
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/net"
 	http_proto "v2ray.com/core/common/protocol/http"
@@ -48,7 +46,10 @@ func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 	forwardedAddrs := http_proto.ParseXForwardedFor(request.Header)
 	remoteAddr := conn.RemoteAddr()
 	if len(forwardedAddrs) > 0 && forwardedAddrs[0].Family().IsIP() {
-		remoteAddr.(*net.TCPAddr).IP = forwardedAddrs[0].IP()
+		remoteAddr = &net.TCPAddr{
+			IP:   forwardedAddrs[0].IP(),
+			Port: int(0),
+		}
 	}
 
 	h.ln.addConn(newConnection(conn, remoteAddr))
@@ -60,23 +61,48 @@ type Listener struct {
 	listener net.Listener
 	config   *Config
 	addConn  internet.ConnHandler
+	locker   *internet.FileLocker // for unix domain socket
 }
 
 func ListenWS(ctx context.Context, address net.Address, port net.Port, streamSettings *internet.MemoryStreamConfig, addConn internet.ConnHandler) (internet.Listener, error) {
-	listener, err := internet.ListenSystem(ctx, &net.TCPAddr{
-		IP:   address.IP(),
-		Port: int(port),
-	}, streamSettings.SocketSettings)
-	if err != nil {
-		return nil, newError("failed to listen TCP(for WS) on", address, ":", port).Base(err)
+	l := &Listener{
+		addConn: addConn,
 	}
-	newError("listening TCP(for WS) on ", address, ":", port).WriteToLog(session.ExportIDToError(ctx))
-
 	wsSettings := streamSettings.ProtocolSettings.(*Config)
+	l.config = wsSettings
+	if l.config != nil {
+		if streamSettings.SocketSettings == nil {
+			streamSettings.SocketSettings = &internet.SocketConfig{}
+		}
+		streamSettings.SocketSettings.AcceptProxyProtocol = l.config.AcceptProxyProtocol
+	}
+	var listener net.Listener
+	var err error
+	if port == net.Port(0) { // unix
+		listener, err = internet.ListenSystem(ctx, &net.UnixAddr{
+			Name: address.Domain(),
+			Net:  "unix",
+		}, streamSettings.SocketSettings)
+		if err != nil {
+			return nil, newError("failed to listen unix domain socket(for WS) on ", address).Base(err)
+		}
+		newError("listening unix domain socket(for WS) on ", address).WriteToLog(session.ExportIDToError(ctx))
+		locker := ctx.Value(address.Domain())
+		if locker != nil {
+			l.locker = locker.(*internet.FileLocker)
+		}
+	} else { // tcp
+		listener, err = internet.ListenSystem(ctx, &net.TCPAddr{
+			IP:   address.IP(),
+			Port: int(port),
+		}, streamSettings.SocketSettings)
+		if err != nil {
+			return nil, newError("failed to listen TCP(for WS) on ", address, ":", port).Base(err)
+		}
+		newError("listening TCP(for WS) on ", address, ":", port).WriteToLog(session.ExportIDToError(ctx))
+	}
 
-	if wsSettings.AcceptProxyProtocol {
-		policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
-		listener = &proxyproto.Listener{Listener: listener, Policy: policyFunc}
+	if streamSettings.SocketSettings != nil && streamSettings.SocketSettings.AcceptProxyProtocol {
 		newError("accepting PROXY protocol").AtWarning().WriteToLog(session.ExportIDToError(ctx))
 	}
 
@@ -86,11 +112,7 @@ func ListenWS(ctx context.Context, address net.Address, port net.Port, streamSet
 		}
 	}
 
-	l := &Listener{
-		config:   wsSettings,
-		addConn:  addConn,
-		listener: listener,
-	}
+	l.listener = listener
 
 	l.server = http.Server{
 		Handler: &requestHandler{
@@ -117,6 +139,9 @@ func (ln *Listener) Addr() net.Addr {
 
 // Close implements net.Listener.Close().
 func (ln *Listener) Close() error {
+	if ln.locker != nil {
+		ln.locker.Release()
+	}
 	return ln.listener.Close()
 }
 

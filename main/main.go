@@ -1,6 +1,6 @@
 package main
 
-//go:generate errorgen
+//go:generate go run v2ray.com/core/common/errors/errorgen
 
 import (
 	"flag"
@@ -31,8 +31,7 @@ var (
 	/* We have to do this here because Golang's Test will also need to parse flag, before
 	 * main func in this file is run.
 	 */
-	_ = func() error {
-
+	_ = func() error { // nolint: unparam
 		flag.Var(&configFiles, "config", "Config file for V2Ray. Multiple assign is accepted (only json). Latter ones overrides the former ones.")
 		flag.Var(&configFiles, "c", "Short alias of -config")
 		flag.StringVar(&configDir, "confdir", "", "A dir with multiple json config")
@@ -66,36 +65,34 @@ func readConfDir(dirPath string) {
 	}
 }
 
-func getConfigFilePath() (cmdarg.Arg, error) {
+func getConfigFilePath() cmdarg.Arg {
 	if dirExists(configDir) {
 		log.Println("Using confdir from arg:", configDir)
 		readConfDir(configDir)
-	} else {
-		if envConfDir := platform.GetConfDirPath(); dirExists(envConfDir) {
-			log.Println("Using confdir from env:", envConfDir)
-			readConfDir(envConfDir)
-		}
+	} else if envConfDir := platform.GetConfDirPath(); dirExists(envConfDir) {
+		log.Println("Using confdir from env:", envConfDir)
+		readConfDir(envConfDir)
 	}
 
 	if len(configFiles) > 0 {
-		return configFiles, nil
+		return configFiles
 	}
 
 	if workingDir, err := os.Getwd(); err == nil {
 		configFile := filepath.Join(workingDir, "config.json")
 		if fileExists(configFile) {
 			log.Println("Using default config: ", configFile)
-			return cmdarg.Arg{configFile}, nil
+			return cmdarg.Arg{configFile}
 		}
 	}
 
 	if configFile := platform.GetConfigurationPath(); fileExists(configFile) {
 		log.Println("Using config from env: ", configFile)
-		return cmdarg.Arg{configFile}, nil
+		return cmdarg.Arg{configFile}
 	}
 
 	log.Println("Using config from STDIN")
-	return cmdarg.Arg{"stdin:"}, nil
+	return cmdarg.Arg{"stdin:"}
 }
 
 func GetConfigFormat() string {
@@ -108,10 +105,7 @@ func GetConfigFormat() string {
 }
 
 func startV2Ray() (core.Server, error) {
-	configFiles, err := getConfigFilePath()
-	if err != nil {
-		return nil, err
-	}
+	configFiles := getConfigFilePath()
 
 	config, err := core.LoadConfig(GetConfigFormat(), configFiles[0], configFiles)
 	if err != nil {
@@ -134,7 +128,6 @@ func printVersion() {
 }
 
 func main() {
-
 	flag.Parse()
 
 	printVersion()

@@ -11,6 +11,8 @@ const (
 	Size = 2048
 )
 
+var pool = bytespool.GetPool(Size)
+
 // Buffer is a recyclable allocation of a byte array. Buffer.Release() recycles
 // the buffer into an internal buffer pool, in order to recreate a buffer more
 // quickly.
@@ -18,6 +20,21 @@ type Buffer struct {
 	v     []byte
 	start int32
 	end   int32
+}
+
+// New creates a Buffer with 0 length and 2K capacity.
+func New() *Buffer {
+	return &Buffer{
+		v: pool.Get().([]byte),
+	}
+}
+
+// StackNew creates a new Buffer object on stack.
+// This method is for buffers that is released in the same function.
+func StackNew() Buffer {
+	return Buffer{
+		v: pool.Get().([]byte),
+	}
 }
 
 // Release recycles the buffer into an internal buffer pool.
@@ -29,7 +46,7 @@ func (b *Buffer) Release() {
 	p := b.v
 	b.v = nil
 	b.Clear()
-	pool.Put(p)
+	pool.Put(p) // nolint: staticcheck
 }
 
 // Clear clears the content of the buffer, results an empty buffer with
@@ -192,21 +209,4 @@ func (b *Buffer) ReadFullFrom(reader io.Reader, size int32) (int64, error) {
 // String returns the string form of this Buffer.
 func (b *Buffer) String() string {
 	return string(b.Bytes())
-}
-
-var pool = bytespool.GetPool(Size)
-
-// New creates a Buffer with 0 length and 2K capacity.
-func New() *Buffer {
-	return &Buffer{
-		v: pool.Get().([]byte),
-	}
-}
-
-// StackNew creates a new Buffer object on stack.
-// This method is for buffers that is released in the same function.
-func StackNew() Buffer {
-	return Buffer{
-		v: pool.Get().([]byte),
-	}
 }

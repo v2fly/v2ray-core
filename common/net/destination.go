@@ -20,8 +20,7 @@ func DestinationFromAddr(addr net.Addr) Destination {
 	case *net.UDPAddr:
 		return UDPDestination(IPAddress(addr.IP), Port(addr.Port))
 	case *net.UnixAddr:
-		// TODO: deal with Unix domain socket
-		return TCPDestination(LocalHostIP, Port(9))
+		return UnixDestination(DomainAddress(addr.Name))
 	default:
 		panic("Net: Unknown address type.")
 	}
@@ -33,12 +32,17 @@ func ParseDestination(dest string) (Destination, error) {
 		Address: AnyIP,
 		Port:    Port(0),
 	}
-	if strings.HasPrefix(dest, "tcp:") {
+
+	switch {
+	case strings.HasPrefix(dest, "tcp:"):
 		d.Network = Network_TCP
 		dest = dest[4:]
-	} else if strings.HasPrefix(dest, "udp:") {
+	case strings.HasPrefix(dest, "udp:"):
 		d.Network = Network_UDP
 		dest = dest[4:]
+	case strings.HasPrefix(dest, "unix:"):
+		d = UnixDestination(DomainAddress(dest[5:]))
+		return d, nil
 	}
 
 	hstr, pstr, err := SplitHostPort(dest)
@@ -76,9 +80,23 @@ func UDPDestination(address Address, port Port) Destination {
 	}
 }
 
+// UnixDestination creates a Unix destination with given address
+func UnixDestination(address Address) Destination {
+	return Destination{
+		Network: Network_UNIX,
+		Address: address,
+	}
+}
+
 // NetAddr returns the network address in this Destination in string form.
 func (d Destination) NetAddr() string {
-	return d.Address.String() + ":" + d.Port.String()
+	addr := ""
+	if d.Network == Network_TCP || d.Network == Network_UDP {
+		addr = d.Address.String() + ":" + d.Port.String()
+	} else if d.Network == Network_UNIX {
+		addr = d.Address.String()
+	}
+	return addr
 }
 
 // String returns the strings form of this Destination.
@@ -89,6 +107,8 @@ func (d Destination) String() string {
 		prefix = "tcp:"
 	case Network_UDP:
 		prefix = "udp:"
+	case Network_UNIX:
+		prefix = "unix:"
 	}
 	return prefix + d.NetAddr()
 }

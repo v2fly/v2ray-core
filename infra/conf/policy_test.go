@@ -27,7 +27,7 @@ func TestBufferSize(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		bs := int32(c.Input)
+		bs := c.Input
 		pConf := Policy{
 			BufferSize: &bs,
 		}

@@ -20,7 +20,7 @@ enum TransportProtocol {
 message TransportConfig {
   // Type of network that this settings supports.
   // Deprecated. Use the string form below.
-  TransportProtocol protocol = 1;
+  TransportProtocol protocol = 1 [ deprecated = true ];
 
   // Type of network that this settings supports.
   string protocol_name = 3;
@@ -31,7 +31,7 @@ message TransportConfig {
 
 message StreamConfig {
   // Effective network. Deprecated. Use the string form below.
-  TransportProtocol protocol = 1 [deprecated = true];
+  TransportProtocol protocol = 1 [ deprecated = true ];
 
   // Effective network.
   string protocol_name = 5;
@@ -40,16 +40,14 @@ message StreamConfig {
 
   // Type of security. Must be a message name of the settings proto.
   string security_type = 3;
-  
+
   // Settings for transport security. For now the only choice is TLS.
   repeated v2ray.core.common.serial.TypedMessage security_settings = 4;
 
   SocketConfig socket_settings = 6;
 }
 
-message ProxyConfig {
-  string tag = 1;
-}
+message ProxyConfig { string tag = 1; }
 
 // SocketConfig is options to be applied on network sockets.
 message SocketConfig {
@@ -80,11 +78,13 @@ message SocketConfig {
   // TProxy is for enabling TProxy socket option.
   TProxyMode tproxy = 3;
 
-  // ReceiveOriginalDestAddress is for enabling IP_RECVORIGDSTADDR socket option.
-  // This option is for UDP only.
+  // ReceiveOriginalDestAddress is for enabling IP_RECVORIGDSTADDR socket
+  // option. This option is for UDP only.
   bool receive_original_dest_address = 4;
 
   bytes bind_address = 5;
 
   uint32 bind_port = 6;
+
+  bool accept_proxy_protocol = 7;
 }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/miekg/dns"
-
 	"v2ray.com/core"
 	"v2ray.com/core/app/dispatcher"
 	dnsapp "v2ray.com/core/app/dns"
@@ -44,7 +43,8 @@ func (*staticHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	}
 
 	for _, q := range r.Question {
-		if q.Name == "google.com." && q.Qtype == dns.TypeA {
+		switch {
+		case q.Name == "google.com." && q.Qtype == dns.TypeA:
 			if clientIP == nil {
 				rr, _ := dns.NewRR("google.com. IN A 8.8.8.8")
 				ans.Answer = append(ans.Answer, rr)
@@ -52,18 +52,22 @@ func (*staticHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 				rr, _ := dns.NewRR("google.com. IN A 8.8.4.4")
 				ans.Answer = append(ans.Answer, rr)
 			}
-		} else if q.Name == "facebook.com." && q.Qtype == dns.TypeA {
+
+		case q.Name == "facebook.com." && q.Qtype == dns.TypeA:
 			rr, _ := dns.NewRR("facebook.com. IN A 9.9.9.9")
 			ans.Answer = append(ans.Answer, rr)
-		} else if q.Name == "ipv6.google.com." && q.Qtype == dns.TypeA {
+
+		case q.Name == "ipv6.google.com." && q.Qtype == dns.TypeA:
 			rr, err := dns.NewRR("ipv6.google.com. IN A 8.8.8.7")
 			common.Must(err)
 			ans.Answer = append(ans.Answer, rr)
-		} else if q.Name == "ipv6.google.com." && q.Qtype == dns.TypeAAAA {
+
+		case q.Name == "ipv6.google.com." && q.Qtype == dns.TypeAAAA:
 			rr, err := dns.NewRR("ipv6.google.com. IN AAAA 2001:4860:4860::8888")
 			common.Must(err)
 			ans.Answer = append(ans.Answer, rr)
-		} else if q.Name == "notexist.google.com." && q.Qtype == dns.TypeAAAA {
+
+		case q.Name == "notexist.google.com." && q.Qtype == dns.TypeAAAA:
 			ans.MsgHdr.Rcode = dns.RcodeNameError
 		}
 	}

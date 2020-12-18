@@ -1,24 +1,49 @@
+// +build !confonly
+
 package trojan
 
 import (
+	"strings"
 	"sync"
 
 	"v2ray.com/core/common/protocol"
 )
 
-// Validator stores valid trojan users
+// Validator stores valid trojan users.
 type Validator struct {
+	// Considering email's usage here, map + sync.Mutex/RWMutex may have better performance.
+	email sync.Map
 	users sync.Map
 }
 
-// Add a trojan user
+// Add a trojan user, Email must be empty or unique.
 func (v *Validator) Add(u *protocol.MemoryUser) error {
-	user := u.Account.(*MemoryAccount)
-	v.users.Store(hexString(user.Key), u)
+	if u.Email != "" {
+		_, loaded := v.email.LoadOrStore(strings.ToLower(u.Email), u)
+		if loaded {
+			return newError("User ", u.Email, " already exists.")
+		}
+	}
+	v.users.Store(hexString(u.Account.(*MemoryAccount).Key), u)
 	return nil
 }
 
-// Get user with hashed key, nil if user doesn't exist.
+// Del a trojan user with a non-empty Email.
+func (v *Validator) Del(e string) error {
+	if e == "" {
+		return newError("Email must not be empty.")
+	}
+	le := strings.ToLower(e)
+	u, _ := v.email.Load(le)
+	if u == nil {
+		return newError("User ", e, " not found.")
+	}
+	v.email.Delete(le)
+	v.users.Delete(hexString(u.(*protocol.MemoryUser).Account.(*MemoryAccount).Key))
+	return nil
+}
+
+// Get a trojan user with hashed key, nil if user doesn't exist.
 func (v *Validator) Get(hash string) *protocol.MemoryUser {
 	u, _ := v.users.Load(hash)
 	if u != nil {

@@ -6,51 +6,27 @@ import (
 	"io"
 
 	"github.com/golang/protobuf/proto"
-
 	"v2ray.com/core/common/buf"
+	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/proxy/vless"
 )
 
+// EncodeHeaderAddons Add addons byte to the header
 func EncodeHeaderAddons(buffer *buf.Buffer, addons *Addons) error {
-
-	switch addons.Flow {
-	case vless.XRO:
-
-		bytes, err := proto.Marshal(addons)
-		if err != nil {
-			return newError("failed to marshal addons protobuf value").Base(err)
-		}
-		if err := buffer.WriteByte(byte(len(bytes))); err != nil {
-			return newError("failed to write addons protobuf length").Base(err)
-		}
-		if _, err := buffer.Write(bytes); err != nil {
-			return newError("failed to write addons protobuf value").Base(err)
-		}
-
-	default:
-
-		if err := buffer.WriteByte(0); err != nil {
-			return newError("failed to write addons protobuf length").Base(err)
-		}
-
+	if err := buffer.WriteByte(0); err != nil {
+		return newError("failed to write addons protobuf length").Base(err)
 	}
-
 	return nil
-
 }
 
 func DecodeHeaderAddons(buffer *buf.Buffer, reader io.Reader) (*Addons, error) {
-
 	addons := new(Addons)
-
 	buffer.Clear()
 	if _, err := buffer.ReadFullFrom(reader, 1); err != nil {
 		return nil, newError("failed to read addons protobuf length").Base(err)
 	}
 
 	if length := int32(buffer.Byte(0)); length != 0 {
-
 		buffer.Clear()
 		if _, err := buffer.ReadFullFrom(reader, length); err != nil {
 			return nil, newError("failed to read addons protobuf value").Base(err)
@@ -59,49 +35,25 @@ func DecodeHeaderAddons(buffer *buf.Buffer, reader io.Reader) (*Addons, error) {
 		if err := proto.Unmarshal(buffer.Bytes(), addons); err != nil {
 			return nil, newError("failed to unmarshal addons protobuf value").Base(err)
 		}
-
-		// Verification.
-		switch addons.Flow {
-		default:
-
-		}
-
 	}
 
 	return addons, nil
-
 }
 
 // EncodeBodyAddons returns a Writer that auto-encrypt content written by caller.
 func EncodeBodyAddons(writer io.Writer, request *protocol.RequestHeader, addons *Addons) buf.Writer {
-
-	switch addons.Flow {
-	case vless.XRO:
-
-		if request.Command == protocol.RequestCommandUDP {
-			return NewMultiLengthPacketWriter(writer.(buf.Writer))
-		}
-
+	if request.Command == protocol.RequestCommandUDP {
+		return NewMultiLengthPacketWriter(writer.(buf.Writer))
 	}
-
 	return buf.NewWriter(writer)
-
 }
 
 // DecodeBodyAddons returns a Reader from which caller can fetch decrypted body.
 func DecodeBodyAddons(reader io.Reader, request *protocol.RequestHeader, addons *Addons) buf.Reader {
-
-	switch addons.Flow {
-	case vless.XRO:
-
-		if request.Command == protocol.RequestCommandUDP {
-			return NewLengthPacketReader(reader)
-		}
-
+	if request.Command == protocol.RequestCommandUDP {
+		return NewLengthPacketReader(reader)
 	}
-
 	return buf.NewReader(reader)
-
 }
 
 func NewMultiLengthPacketWriter(writer buf.Writer) *MultiLengthPacketWriter {
@@ -116,7 +68,12 @@ type MultiLengthPacketWriter struct {
 
 func (w *MultiLengthPacketWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	defer buf.ReleaseMulti(mb)
-	mb2Write := make(buf.MultiBuffer, 0, len(mb)+1)
+
+	if len(mb)+1 > 64*1024*1024 {
+		return errors.New("value too large")
+	}
+	sliceSize := len(mb) + 1
+	mb2Write := make(buf.MultiBuffer, 0, sliceSize)
 	for _, b := range mb {
 		length := b.Len()
 		if length == 0 || length+2 > buf.Size {
@@ -143,13 +100,6 @@ func (w *MultiLengthPacketWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	return w.Writer.WriteMultiBuffer(mb2Write)
 }
 
-func NewLengthPacketWriter(writer io.Writer) *LengthPacketWriter {
-	return &LengthPacketWriter{
-		Writer: writer,
-		cache:  make([]byte, 0, 65536),
-	}
-}
-
 type LengthPacketWriter struct {
 	io.Writer
 	cache []byte
@@ -157,7 +107,6 @@ type LengthPacketWriter struct {
 
 func (w *LengthPacketWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	length := mb.Len() // none of mb is nil
-	//fmt.Println("Write", length)
 	if length == 0 {
 		return nil
 	}
@@ -193,11 +142,10 @@ func (r *LengthPacketReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
 		return nil, newError("failed to read packet length").Base(err)
 	}
 	length := int32(r.cache[0])<<8 | int32(r.cache[1])
-	//fmt.Println("Read", length)
 	mb := make(buf.MultiBuffer, 0, length/buf.Size+1)
 	for length > 0 {
 		size := length
-		if length > buf.Size {
+		if size > buf.Size {
 			size = buf.Size
 		}
 		length -= size

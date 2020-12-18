@@ -1,0 +1,15 @@
+v2ray-core (4.33.0-1) unstable; urgency=medium
+
+  * Remove XTLS
+  * Add support for Debian package
+  * API: Reflection Service Support
+  * Update to IETF QUIC draft-32 (draft-29 is still supported)
+  * Use Go 1.15.5
+
+ -- kslr <kslrwang@gmail.com>  Sat Nov 21 20:42:25 CST 2020
+
+v2ray-core (4.32.1-1) unstable; urgency=medium
+
+  * Initial release
+
+ -- ymshenyu <ymshenyu@gmail.com>  Sun, 08 Nov 2020 08:59:07 +0800

@@ -19,6 +19,8 @@ func TestHTTPResponse(t *testing.T) {
 	reader := bufio.NewReader(buffer)
 	response, err := http.ReadResponse(reader, nil)
 	common.Must(err)
+	defer response.Body.Close()
+
 	if response.StatusCode != 403 {
 		t.Error("expected status code 403, but got ", response.StatusCode)
 	}

@@ -119,7 +119,6 @@ func (h *Hub) start() {
 			buffer.Release()
 			payload.Payload = nil
 		}
-
 	}
 }
 

@@ -5,7 +5,6 @@ package vmess
 import (
 	"crypto/hmac"
 	"crypto/sha256"
-	"hash"
 	"hash/crc64"
 	"strings"
 	"sync"
@@ -114,6 +113,7 @@ func (v *TimedUserValidator) removeExpiredHashes(expire uint32) {
 func (v *TimedUserValidator) updateUserHash() {
 	now := time.Now()
 	nowSec := protocol.Timestamp(now.Unix())
+
 	v.Lock()
 	defer v.Unlock()
 
@@ -142,7 +142,7 @@ func (v *TimedUserValidator) Add(u *protocol.MemoryUser) error {
 
 	account := uu.user.Account.(*MemoryAccount)
 	if !v.behaviorFused {
-		hashkdf := hmac.New(func() hash.Hash { return sha256.New() }, []byte("VMESSBSKDF"))
+		hashkdf := hmac.New(sha256.New, []byte("VMESSBSKDF"))
 		hashkdf.Write(account.ID.Bytes())
 		v.behaviorSeed = crc64.Update(v.behaviorSeed, crc64.MakeTable(crc64.ECMA), hashkdf.Sum(nil))
 	}
@@ -155,8 +155,8 @@ func (v *TimedUserValidator) Add(u *protocol.MemoryUser) error {
 }
 
 func (v *TimedUserValidator) Get(userHash []byte) (*protocol.MemoryUser, protocol.Timestamp, bool, error) {
-	defer v.RUnlock()
 	v.RLock()
+	defer v.RUnlock()
 
 	v.behaviorFused = true
 
@@ -174,8 +174,9 @@ func (v *TimedUserValidator) Get(userHash []byte) (*protocol.MemoryUser, protoco
 }
 
 func (v *TimedUserValidator) GetAEAD(userHash []byte) (*protocol.MemoryUser, bool, error) {
-	defer v.RUnlock()
 	v.RLock()
+	defer v.RUnlock()
+
 	var userHashFL [16]byte
 	copy(userHashFL[:], userHash)
 
@@ -221,6 +222,7 @@ func (v *TimedUserValidator) Close() error {
 func (v *TimedUserValidator) GetBehaviorSeed() uint64 {
 	v.Lock()
 	defer v.Unlock()
+
 	v.behaviorFused = true
 	if v.behaviorSeed == 0 {
 		v.behaviorSeed = dice.RollUint64()
@@ -231,6 +233,7 @@ func (v *TimedUserValidator) GetBehaviorSeed() uint64 {
 func (v *TimedUserValidator) BurnTaintFuse(userHash []byte) error {
 	v.RLock()
 	defer v.RUnlock()
+
 	var userHashFL [16]byte
 	copy(userHashFL[:], userHash)
 

@@ -62,6 +62,8 @@ func (v Network) Build() net.Network {
 		return net.Network_TCP
 	case "udp":
 		return net.Network_UDP
+	case "unix":
+		return net.Network_UNIX
 	default:
 		return net.Network_Unknown
 	}
@@ -221,7 +223,7 @@ func (list *PortList) UnmarshalJSON(data []byte) error {
 		}
 	}
 	if number != 0 {
-		list.Range = append(list.Range, PortRange{From: uint32(number), To: uint32(number)})
+		list.Range = append(list.Range, PortRange{From: number, To: number})
 	}
 	return nil
 }

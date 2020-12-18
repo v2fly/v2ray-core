@@ -16,13 +16,13 @@ import (
 	"v2ray.com/core/common"
 )
 
-type ApiCommand struct{}
+type APICommand struct{}
 
-func (c *ApiCommand) Name() string {
+func (c *APICommand) Name() string {
 	return "api"
 }
 
-func (c *ApiCommand) Description() Description {
+func (c *APICommand) Description() Description {
 	return Description{
 		Short: "Call V2Ray API",
 		Usage: []string{
@@ -42,7 +42,7 @@ func (c *ApiCommand) Description() Description {
 	}
 }
 
-func (c *ApiCommand) Execute(args []string) error {
+func (c *APICommand) Execute(args []string) error {
 	fs := flag.NewFlagSet(c.Name(), flag.ContinueOnError)
 
 	serverAddrPtr := fs.String("server", "127.0.0.1:8080", "Server address")
@@ -154,5 +154,5 @@ func callStatsService(ctx context.Context, conn *grpc.ClientConn, method string,
 }
 
 func init() {
-	common.Must(RegisterCommand(&ApiCommand{}))
+	common.Must(RegisterCommand(&APICommand{}))
 }

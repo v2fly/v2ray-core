@@ -5,8 +5,4 @@
 // clients with 'socks' for proxying.
 package vless
 
-//go:generate errorgen
-
-const (
-	XRO = "xtls-rprx-origin"
-)
+//go:generate go run v2ray.com/core/common/errors/errorgen

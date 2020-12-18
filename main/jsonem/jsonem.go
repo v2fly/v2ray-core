@@ -19,12 +19,18 @@ func init() {
 			switch v := input.(type) {
 			case cmdarg.Arg:
 				cf := &conf.Config{}
-				for _, arg := range v {
+				for i, arg := range v {
 					newError("Reading config: ", arg).AtInfo().WriteToLog()
 					r, err := confloader.LoadConfig(arg)
 					common.Must(err)
 					c, err := serial.DecodeJSONConfig(r)
 					common.Must(err)
+					if i == 0 {
+						// This ensure even if the muti-json parser do not support a setting,
+						// It is still respected automatically for the first configure file
+						*cf = *c
+						continue
+					}
 					cf.Override(c, arg)
 				}
 				return cf.Build()

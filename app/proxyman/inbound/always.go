@@ -87,17 +87,14 @@ func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *
 		}
 		mss.SocketSettings.ReceiveOriginalDestAddress = true
 	}
+	if pr == nil {
+		if net.HasNetwork(nl, net.Network_UNIX) {
+			newError("creating unix domain socket worker on ", address).AtDebug().WriteToLog()
 
-	for port := pr.From; port <= pr.To; port++ {
-		if net.HasNetwork(nl, net.Network_TCP) {
-			newError("creating stream worker on ", address, ":", port).AtDebug().WriteToLog()
-
-			worker := &tcpWorker{
+			worker := &dsWorker{
 				address:         address,
-				port:            net.Port(port),
 				proxy:           p,
 				stream:          mss,
-				recvOrigDest:    receiverConfig.ReceiveOriginalDestination,
 				tag:             tag,
 				dispatcher:      h.mux,
 				sniffingConfig:  receiverConfig.GetEffectiveSniffingSettings(),
@@ -107,19 +104,41 @@ func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *
 			}
 			h.workers = append(h.workers, worker)
 		}
+	}
+	if pr != nil {
+		for port := pr.From; port <= pr.To; port++ {
+			if net.HasNetwork(nl, net.Network_TCP) {
+				newError("creating stream worker on ", address, ":", port).AtDebug().WriteToLog()
 
-		if net.HasNetwork(nl, net.Network_UDP) {
-			worker := &udpWorker{
-				tag:             tag,
-				proxy:           p,
-				address:         address,
-				port:            net.Port(port),
-				dispatcher:      h.mux,
-				uplinkCounter:   uplinkCounter,
-				downlinkCounter: downlinkCounter,
-				stream:          mss,
+				worker := &tcpWorker{
+					address:         address,
+					port:            net.Port(port),
+					proxy:           p,
+					stream:          mss,
+					recvOrigDest:    receiverConfig.ReceiveOriginalDestination,
+					tag:             tag,
+					dispatcher:      h.mux,
+					sniffingConfig:  receiverConfig.GetEffectiveSniffingSettings(),
+					uplinkCounter:   uplinkCounter,
+					downlinkCounter: downlinkCounter,
+					ctx:             ctx,
+				}
+				h.workers = append(h.workers, worker)
 			}
-			h.workers = append(h.workers, worker)
+
+			if net.HasNetwork(nl, net.Network_UDP) {
+				worker := &udpWorker{
+					tag:             tag,
+					proxy:           p,
+					address:         address,
+					port:            net.Port(port),
+					dispatcher:      h.mux,
+					uplinkCounter:   uplinkCounter,
+					downlinkCounter: downlinkCounter,
+					stream:          mss,
+				}
+				h.workers = append(h.workers, worker)
+			}
 		}
 	}
 

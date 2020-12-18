@@ -22,9 +22,7 @@ func (c *Config) GetUnixAddr() (*net.UnixAddr, error) {
 	if c.Abstract && c.Padding {
 		raw := []byte(path)
 		addr := make([]byte, sizeofSunPath)
-		for i, c := range raw {
-			addr[i] = c
-		}
+		copy(addr, raw)
 		path = string(addr)
 	}
 	return &net.UnixAddr{

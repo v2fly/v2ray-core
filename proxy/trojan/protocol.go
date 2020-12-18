@@ -13,15 +13,14 @@ var (
 	crlf = []byte{'\r', '\n'}
 
 	addrParser = protocol.NewAddressParser(
-		protocol.AddressFamilyByte(0x01, net.AddressFamilyIPv4),   // nolint: gomnd
-		protocol.AddressFamilyByte(0x04, net.AddressFamilyIPv6),   // nolint: gomnd
-		protocol.AddressFamilyByte(0x03, net.AddressFamilyDomain), // nolint: gomnd
+		protocol.AddressFamilyByte(0x01, net.AddressFamilyIPv4),
+		protocol.AddressFamilyByte(0x04, net.AddressFamilyIPv6),
+		protocol.AddressFamilyByte(0x03, net.AddressFamilyDomain),
 	)
 )
 
 const (
-	maxLength = 8192
-
+	maxLength       = 8192
 	commandTCP byte = 1
 	commandUDP byte = 3
 )

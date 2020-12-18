@@ -16,7 +16,6 @@ import (
 	"v2ray.com/core/transport/internet/tcp"
 	"v2ray.com/core/transport/internet/tls"
 	"v2ray.com/core/transport/internet/websocket"
-	"v2ray.com/core/transport/internet/xtls"
 )
 
 var (
@@ -31,7 +30,7 @@ var (
 
 	tcpHeaderLoader = NewJSONConfigLoader(ConfigCreatorCache{
 		"none": func() interface{} { return new(NoOpConnectionAuthenticator) },
-		"http": func() interface{} { return new(HTTPAuthenticator) },
+		"http": func() interface{} { return new(Authenticator) },
 	}, "type", "")
 )
 
@@ -222,19 +221,17 @@ func (c *QUICConfig) Build() (proto.Message, error) {
 }
 
 type DomainSocketConfig struct {
-	Path                string `json:"path"`
-	Abstract            bool   `json:"abstract"`
-	Padding             bool   `json:"padding"`
-	AcceptProxyProtocol bool   `json:"acceptProxyProtocol"`
+	Path     string `json:"path"`
+	Abstract bool   `json:"abstract"`
+	Padding  bool   `json:"padding"`
 }
 
 // Build implements Buildable.
 func (c *DomainSocketConfig) Build() (proto.Message, error) {
 	return &domainsocket.Config{
-		Path:                c.Path,
-		Abstract:            c.Abstract,
-		Padding:             c.Padding,
-		AcceptProxyProtocol: c.AcceptProxyProtocol,
+		Path:     c.Path,
+		Abstract: c.Abstract,
+		Padding:  c.Padding,
 	}, nil
 }
 
@@ -323,81 +320,6 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 	return config, nil
 }
 
-type XTLSCertConfig struct {
-	CertFile string   `json:"certificateFile"`
-	CertStr  []string `json:"certificate"`
-	KeyFile  string   `json:"keyFile"`
-	KeyStr   []string `json:"key"`
-	Usage    string   `json:"usage"`
-}
-
-// Build implements Buildable.
-func (c *XTLSCertConfig) Build() (*xtls.Certificate, error) {
-	certificate := new(xtls.Certificate)
-
-	cert, err := readFileOrString(c.CertFile, c.CertStr)
-	if err != nil {
-		return nil, newError("failed to parse certificate").Base(err)
-	}
-	certificate.Certificate = cert
-
-	if len(c.KeyFile) > 0 || len(c.KeyStr) > 0 {
-		key, err := readFileOrString(c.KeyFile, c.KeyStr)
-		if err != nil {
-			return nil, newError("failed to parse key").Base(err)
-		}
-		certificate.Key = key
-	}
-
-	switch strings.ToLower(c.Usage) {
-	case "encipherment":
-		certificate.Usage = xtls.Certificate_ENCIPHERMENT
-	case "verify":
-		certificate.Usage = xtls.Certificate_AUTHORITY_VERIFY
-	case "issue":
-		certificate.Usage = xtls.Certificate_AUTHORITY_ISSUE
-	default:
-		certificate.Usage = xtls.Certificate_ENCIPHERMENT
-	}
-
-	return certificate, nil
-}
-
-type XTLSConfig struct {
-	Insecure                 bool              `json:"allowInsecure"`
-	InsecureCiphers          bool              `json:"allowInsecureCiphers"`
-	Certs                    []*XTLSCertConfig `json:"certificates"`
-	ServerName               string            `json:"serverName"`
-	ALPN                     *StringList       `json:"alpn"`
-	DisableSessionResumption bool              `json:"disableSessionResumption"`
-	DisableSystemRoot        bool              `json:"disableSystemRoot"`
-}
-
-// Build implements Buildable.
-func (c *XTLSConfig) Build() (proto.Message, error) {
-	config := new(xtls.Config)
-	config.Certificate = make([]*xtls.Certificate, len(c.Certs))
-	for idx, certConf := range c.Certs {
-		cert, err := certConf.Build()
-		if err != nil {
-			return nil, err
-		}
-		config.Certificate[idx] = cert
-	}
-	serverName := c.ServerName
-	config.AllowInsecure = c.Insecure
-	config.AllowInsecureCiphers = c.InsecureCiphers
-	if len(c.ServerName) > 0 {
-		config.ServerName = serverName
-	}
-	if c.ALPN != nil && len(*c.ALPN) > 0 {
-		config.NextProtocol = []string(*c.ALPN)
-	}
-	config.DisableSessionResumption = c.DisableSessionResumption
-	config.DisableSystemRoot = c.DisableSystemRoot
-	return config, nil
-}
-
 type TransportProtocol string
 
 // Build implements Buildable.
@@ -421,9 +343,10 @@ func (p TransportProtocol) Build() (string, error) {
 }
 
 type SocketConfig struct {
-	Mark   int32  `json:"mark"`
-	TFO    *bool  `json:"tcpFastOpen"`
-	TProxy string `json:"tproxy"`
+	Mark                int32  `json:"mark"`
+	TFO                 *bool  `json:"tcpFastOpen"`
+	TProxy              string `json:"tproxy"`
+	AcceptProxyProtocol bool   `json:"acceptProxyProtocol"`
 }
 
 // Build implements Buildable.
@@ -447,9 +370,10 @@ func (c *SocketConfig) Build() (*internet.SocketConfig, error) {
 	}
 
 	return &internet.SocketConfig{
-		Mark:   c.Mark,
-		Tfo:    tfoSettings,
-		Tproxy: tproxy,
+		Mark:                c.Mark,
+		Tfo:                 tfoSettings,
+		Tproxy:              tproxy,
+		AcceptProxyProtocol: c.AcceptProxyProtocol,
 	}, nil
 }
 
@@ -457,7 +381,6 @@ type StreamConfig struct {
 	Network        *TransportProtocol  `json:"network"`
 	Security       string              `json:"security"`
 	TLSSettings    *TLSConfig          `json:"tlsSettings"`
-	XTLSSettings   *XTLSConfig         `json:"xtlsSettings"`
 	TCPSettings    *TCPConfig          `json:"tcpSettings"`
 	KCPSettings    *KCPConfig          `json:"kcpSettings"`
 	WSSettings     *WebSocketConfig    `json:"wsSettings"`
@@ -473,7 +396,7 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 		ProtocolName: "tcp",
 	}
 	if c.Network != nil {
-		protocol, err := (*c.Network).Build()
+		protocol, err := c.Network.Build()
 		if err != nil {
 			return nil, err
 		}
@@ -482,33 +405,11 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 	if strings.EqualFold(c.Security, "tls") {
 		tlsSettings := c.TLSSettings
 		if tlsSettings == nil {
-			if c.XTLSSettings != nil {
-				return nil, newError(`TLS: Please use "tlsSettings" instead of "xtlsSettings".`)
-			}
 			tlsSettings = &TLSConfig{}
 		}
 		ts, err := tlsSettings.Build()
 		if err != nil {
 			return nil, newError("Failed to build TLS config.").Base(err)
-		}
-		tm := serial.ToTypedMessage(ts)
-		config.SecuritySettings = append(config.SecuritySettings, tm)
-		config.SecurityType = tm.Type
-	}
-	if strings.EqualFold(c.Security, "xtls") {
-		if config.ProtocolName != "tcp" {
-			return nil, newError("XTLS only supports TCP for now.")
-		}
-		xtlsSettings := c.XTLSSettings
-		if xtlsSettings == nil {
-			if c.TLSSettings != nil {
-				return nil, newError(`XTLS: Please use "xtlsSettings" instead of "tlsSettings".`)
-			}
-			xtlsSettings = &XTLSConfig{}
-		}
-		ts, err := xtlsSettings.Build()
-		if err != nil {
-			return nil, newError("Failed to build XTLS config.").Base(err)
 		}
 		tm := serial.ToTypedMessage(ts)
 		config.SecuritySettings = append(config.SecuritySettings, tm)

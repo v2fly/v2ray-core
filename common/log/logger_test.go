@@ -29,7 +29,7 @@ func TestFileLogger(t *testing.T) {
 
 	f, err = os.Open(path)
 	common.Must(err)
-	defer f.Close() // nolint: errcheck
+	defer f.Close()
 
 	b, err := buf.ReadAllToBytes(f)
 	common.Must(err)

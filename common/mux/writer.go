@@ -3,6 +3,7 @@ package mux
 import (
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
+	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/protocol"
 	"v2ray.com/core/common/serial"
@@ -70,7 +71,11 @@ func writeMetaWithFrame(writer buf.Writer, meta FrameMetadata, data buf.MultiBuf
 		return err
 	}
 
-	mb2 := make(buf.MultiBuffer, 0, len(data)+1)
+	if len(data)+1 > 64*1024*1024 {
+		return errors.New("value too large")
+	}
+	sliceSize := len(data) + 1
+	mb2 := make(buf.MultiBuffer, 0, sliceSize)
 	mb2 = append(mb2, frame)
 	mb2 = append(mb2, data...)
 	return writer.WriteMultiBuffer(mb2)
@@ -121,6 +126,6 @@ func (w *Writer) Close() error {
 	frame := buf.New()
 	common.Must(meta.WriteTo(frame))
 
-	w.writer.WriteMultiBuffer(buf.MultiBuffer{frame}) // nolint: errcheck
+	w.writer.WriteMultiBuffer(buf.MultiBuffer{frame})
 	return nil
 }

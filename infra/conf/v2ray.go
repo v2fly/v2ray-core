@@ -11,13 +11,12 @@ import (
 	"v2ray.com/core/app/proxyman"
 	"v2ray.com/core/app/stats"
 	"v2ray.com/core/common/serial"
-	"v2ray.com/core/transport/internet/xtls"
 )
 
 var (
 	inboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
 		"dokodemo-door": func() interface{} { return new(DokodemoConfig) },
-		"http":          func() interface{} { return new(HttpServerConfig) },
+		"http":          func() interface{} { return new(HTTPServerConfig) },
 		"shadowsocks":   func() interface{} { return new(ShadowsocksServerConfig) },
 		"socks":         func() interface{} { return new(SocksServerConfig) },
 		"vless":         func() interface{} { return new(VLessInboundConfig) },
@@ -29,14 +28,14 @@ var (
 	outboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
 		"blackhole":   func() interface{} { return new(BlackholeConfig) },
 		"freedom":     func() interface{} { return new(FreedomConfig) },
-		"http":        func() interface{} { return new(HttpClientConfig) },
+		"http":        func() interface{} { return new(HTTPClientConfig) },
 		"shadowsocks": func() interface{} { return new(ShadowsocksClientConfig) },
 		"socks":       func() interface{} { return new(SocksClientConfig) },
 		"vless":       func() interface{} { return new(VLessOutboundConfig) },
 		"vmess":       func() interface{} { return new(VMessOutboundConfig) },
 		"trojan":      func() interface{} { return new(TrojanClientConfig) },
 		"mtproto":     func() interface{} { return new(MTProtoClientConfig) },
-		"dns":         func() interface{} { return new(DnsOutboundConfig) },
+		"dns":         func() interface{} { return new(DNSOutboundConfig) },
 	}, "protocol", "settings")
 
 	ctllog = log.New(os.Stderr, "v2ctl> ", 0)
@@ -156,17 +155,35 @@ type InboundDetourConfig struct {
 func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 	receiverSettings := &proxyman.ReceiverConfig{}
 
-	if c.PortRange == nil {
-		return nil, newError("port range not specified in InboundDetour.")
-	}
-	receiverSettings.PortRange = c.PortRange.Build()
-
-	if c.ListenOn != nil {
-		if c.ListenOn.Family().IsDomain() {
+	if c.ListenOn == nil {
+		// Listen on anyip, must set PortRange
+		if c.PortRange == nil {
+			return nil, newError("Listen on AnyIP but no Port(s) set in InboundDetour.")
+		}
+		receiverSettings.PortRange = c.PortRange.Build()
+	} else {
+		// Listen on specific IP or Unix Domain Socket
+		receiverSettings.Listen = c.ListenOn.Build()
+		listenDS := c.ListenOn.Family().IsDomain() && (c.ListenOn.Domain()[0] == '/' || c.ListenOn.Domain()[0] == '@')
+		listenIP := c.ListenOn.Family().IsIP() || (c.ListenOn.Family().IsDomain() && c.ListenOn.Domain() == "localhost")
+		switch {
+		case listenIP:
+			// Listen on specific IP, must set PortRange
+			if c.PortRange == nil {
+				return nil, newError("Listen on specific ip without port in InboundDetour.")
+			}
+			// Listen on IP:Port
+			receiverSettings.PortRange = c.PortRange.Build()
+		case listenDS:
+			if c.PortRange != nil {
+				// Listen on Unix Domain Socket, PortRange should be nil
+				receiverSettings.PortRange = nil
+			}
+		default:
 			return nil, newError("unable to listen on domain address: ", c.ListenOn.Domain())
 		}
-		receiverSettings.Listen = c.ListenOn.Build()
 	}
+
 	if c.Allocation != nil {
 		concurrency := -1
 		if c.Allocation.Concurrency != nil && c.Allocation.Strategy == "random" {
@@ -187,9 +204,6 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 		ss, err := c.StreamSetting.Build()
 		if err != nil {
 			return nil, err
-		}
-		if ss.SecurityType == serial.GetMessageType(&xtls.Config{}) && !strings.EqualFold(c.Protocol, "vless") {
-			return nil, newError("XTLS only supports VLESS for now.")
 		}
 		receiverSettings.StreamSettings = ss
 	}
@@ -258,9 +272,6 @@ func (c *OutboundDetourConfig) Build() (*core.OutboundHandlerConfig, error) {
 		if err != nil {
 			return nil, err
 		}
-		if ss.SecurityType == serial.GetMessageType(&xtls.Config{}) && !strings.EqualFold(c.Protocol, "vless") {
-			return nil, newError("XTLS only supports VLESS for now.")
-		}
 		senderSettings.StreamSettings = ss
 	}
 
@@ -273,15 +284,7 @@ func (c *OutboundDetourConfig) Build() (*core.OutboundHandlerConfig, error) {
 	}
 
 	if c.MuxSettings != nil {
-		ms := c.MuxSettings.Build()
-		if ms != nil && ms.Enabled {
-			if ss := senderSettings.StreamSettings; ss != nil {
-				if ss.SecurityType == serial.GetMessageType(&xtls.Config{}) {
-					return nil, newError("XTLS doesn't support Mux for now.")
-				}
-			}
-		}
-		senderSettings.MultiplexSettings = ms
+		senderSettings.MultiplexSettings = c.MuxSettings.Build()
 	}
 
 	settings := []byte("{}")
@@ -312,19 +315,35 @@ func (c *StatsConfig) Build() (*stats.Config, error) {
 }
 
 type Config struct {
-	Port            uint16                 `json:"port"` // Port of this Point server. Deprecated.
+	// Port of this Point server.
+	// Deprecated: Port exists for historical compatibility
+	// and should not be used.
+	Port uint16 `json:"port"`
+
+	// Deprecated: InboundConfig exists for historical compatibility
+	// and should not be used.
+	InboundConfig *InboundDetourConfig `json:"inbound"`
+
+	// Deprecated: OutboundConfig exists for historical compatibility
+	// and should not be used.
+	OutboundConfig *OutboundDetourConfig `json:"outbound"`
+
+	// Deprecated: InboundDetours exists for historical compatibility
+	// and should not be used.
+	InboundDetours []InboundDetourConfig `json:"inboundDetour"`
+
+	// Deprecated: OutboundDetours exists for historical compatibility
+	// and should not be used.
+	OutboundDetours []OutboundDetourConfig `json:"outboundDetour"`
+
 	LogConfig       *LogConfig             `json:"log"`
 	RouterConfig    *RouterConfig          `json:"routing"`
-	DNSConfig       *DnsConfig             `json:"dns"`
+	DNSConfig       *DNSConfig             `json:"dns"`
 	InboundConfigs  []InboundDetourConfig  `json:"inbounds"`
 	OutboundConfigs []OutboundDetourConfig `json:"outbounds"`
-	InboundConfig   *InboundDetourConfig   `json:"inbound"`        // Deprecated.
-	OutboundConfig  *OutboundDetourConfig  `json:"outbound"`       // Deprecated.
-	InboundDetours  []InboundDetourConfig  `json:"inboundDetour"`  // Deprecated.
-	OutboundDetours []OutboundDetourConfig `json:"outboundDetour"` // Deprecated.
 	Transport       *TransportConfig       `json:"transport"`
 	Policy          *PolicyConfig          `json:"policy"`
-	Api             *ApiConfig             `json:"api"`
+	API             *APIConfig             `json:"api"`
 	Stats           *StatsConfig           `json:"stats"`
 	Reverse         *ReverseConfig         `json:"reverse"`
 }
@@ -353,7 +372,6 @@ func (c *Config) findOutboundTag(tag string) int {
 
 // Override method accepts another Config overrides the current attribute
 func (c *Config) Override(o *Config, fn string) {
-
 	// only process the non-deprecated members
 
 	if o.LogConfig != nil {
@@ -371,8 +389,8 @@ func (c *Config) Override(o *Config, fn string) {
 	if o.Policy != nil {
 		c.Policy = o.Policy
 	}
-	if o.Api != nil {
-		c.Api = o.Api
+	if o.API != nil {
+		c.API = o.API
 	}
 	if o.Stats != nil {
 		c.Stats = o.Stats
@@ -460,8 +478,8 @@ func (c *Config) Build() (*core.Config, error) {
 		},
 	}
 
-	if c.Api != nil {
-		apiConf, err := c.Api.Build()
+	if c.API != nil {
+		apiConf, err := c.API.Build()
 		if err != nil {
 			return nil, err
 		}

@@ -8,62 +8,70 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pires/go-proxyproto"
-	goxtls "github.com/xtls/go"
-
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/session"
 	"v2ray.com/core/transport/internet"
 	"v2ray.com/core/transport/internet/tls"
-	"v2ray.com/core/transport/internet/xtls"
 )
 
 // Listener is an internet.Listener that listens for TCP connections.
 type Listener struct {
 	listener   net.Listener
 	tlsConfig  *gotls.Config
-	xtlsConfig *goxtls.Config
 	authConfig internet.ConnectionAuthenticator
 	config     *Config
 	addConn    internet.ConnHandler
+	locker     *internet.FileLocker // for unix domain socket
 }
 
 // ListenTCP creates a new Listener based on configurations.
 func ListenTCP(ctx context.Context, address net.Address, port net.Port, streamSettings *internet.MemoryStreamConfig, handler internet.ConnHandler) (internet.Listener, error) {
-	listener, err := internet.ListenSystem(ctx, &net.TCPAddr{
-		IP:   address.IP(),
-		Port: int(port),
-	}, streamSettings.SocketSettings)
-	if err != nil {
-		return nil, newError("failed to listen TCP on", address, ":", port).Base(err)
+	l := &Listener{
+		addConn: handler,
 	}
-	newError("listening TCP on ", address, ":", port).WriteToLog(session.ExportIDToError(ctx))
-
 	tcpSettings := streamSettings.ProtocolSettings.(*Config)
-	var l *Listener
-
-	if tcpSettings.AcceptProxyProtocol {
-		policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
-		l = &Listener{
-			listener: &proxyproto.Listener{Listener: listener, Policy: policyFunc},
-			config:   tcpSettings,
-			addConn:  handler,
+	l.config = tcpSettings
+	if l.config != nil {
+		if streamSettings.SocketSettings == nil {
+			streamSettings.SocketSettings = &internet.SocketConfig{}
 		}
-		newError("accepting PROXY protocol").AtWarning().WriteToLog(session.ExportIDToError(ctx))
-	} else {
-		l = &Listener{
-			listener: listener,
-			config:   tcpSettings,
-			addConn:  handler,
-		}
+		streamSettings.SocketSettings.AcceptProxyProtocol = l.config.AcceptProxyProtocol
 	}
+	var listener net.Listener
+	var err error
+	if port == net.Port(0) { // unix
+		listener, err = internet.ListenSystem(ctx, &net.UnixAddr{
+			Name: address.Domain(),
+			Net:  "unix",
+		}, streamSettings.SocketSettings)
+		if err != nil {
+			return nil, newError("failed to listen Unix Domain Socket on ", address).Base(err)
+		}
+		newError("listening Unix Domain Socket on ", address).WriteToLog(session.ExportIDToError(ctx))
+		locker := ctx.Value(address.Domain())
+		if locker != nil {
+			l.locker = locker.(*internet.FileLocker)
+		}
+	} else {
+		listener, err = internet.ListenSystem(ctx, &net.TCPAddr{
+			IP:   address.IP(),
+			Port: int(port),
+		}, streamSettings.SocketSettings)
+		if err != nil {
+			return nil, newError("failed to listen TCP on ", address, ":", port).Base(err)
+		}
+		newError("listening TCP on ", address, ":", port).WriteToLog(session.ExportIDToError(ctx))
+	}
+
+	if streamSettings.SocketSettings != nil && streamSettings.SocketSettings.AcceptProxyProtocol {
+		newError("accepting PROXY protocol").AtWarning().WriteToLog(session.ExportIDToError(ctx))
+	}
+
+	l.listener = listener
 
 	if config := tls.ConfigFromStreamSettings(streamSettings); config != nil {
 		l.tlsConfig = config.GetTLSConfig(tls.WithNextProto("h2"))
-	}
-	if config := xtls.ConfigFromStreamSettings(streamSettings); config != nil {
-		l.xtlsConfig = config.GetXTLSConfig(xtls.WithNextProto("h2"))
 	}
 
 	if tcpSettings.HeaderSettings != nil {
@@ -99,8 +107,6 @@ func (v *Listener) keepAccepting() {
 
 		if v.tlsConfig != nil {
 			conn = tls.Server(conn, v.tlsConfig)
-		} else if v.xtlsConfig != nil {
-			conn = xtls.Server(conn, v.xtlsConfig)
 		}
 		if v.authConfig != nil {
 			conn = v.authConfig.Server(conn)
@@ -117,6 +123,9 @@ func (v *Listener) Addr() net.Addr {
 
 // Close implements internet.Listener.Close.
 func (v *Listener) Close() error {
+	if v.locker != nil {
+		v.locker.Release()
+	}
 	return v.listener.Close()
 }
 

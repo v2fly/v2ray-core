@@ -18,7 +18,7 @@ func pickString(arr []string) string {
 	}
 }
 
-func (v *RequestConfig) PickUri() string {
+func (v *RequestConfig) PickURI() string {
 	return pickString(v.Uri)
 }
 

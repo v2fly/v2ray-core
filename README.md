@@ -1,19 +1,28 @@
-# Project V
-![](https://github.com/v2fly/v2ray-core/workflows/Test/badge.svg)
-[![codecov.io][3]][4] [![GoDoc][5]][6] [![codebeat][7]][8] [![Downloads][9]][10] [![Downloads][11]][12]
+<div>
+  <img width="190" height="210" align="left" src="https://raw.githubusercontent.com/v2fly/v2fly-github-io/master/docs/.vuepress/public/readme-logo.png" alt="V2Ray"/>
+  <br>
+  <h1>Project V</h1>
+  <p>Project V is a set of network tools that helps you to build your own computer network. It secures your network connections and thus protects your privacy.</p>
+</div>
 
-[3]: https://codecov.io/gh/v2fly/v2ray-core/branch/master/graph/badge.svg?branch=master "Coverage badge"
-[4]: https://codecov.io/gh/v2fly/v2ray-core?branch=master "Codecov Status"
-[5]: https://godoc.org/v2ray.com/core?status.svg "GoDoc badge"
-[6]: https://godoc.org/v2ray.com/core "GoDoc"
-[7]: https://codebeat.co/badges/f2354ca8-3e24-463d-a2e3-159af73b2477 "Codebeat badge"
-[8]: https://codebeat.co/projects/github-com-v2ray-v2ray-core-master "Codebeat"
-[9]: https://img.shields.io/github/downloads/v2ray/v2ray-core/total.svg "All releases badge"
-[10]: https://github.com/v2ray/v2ray-core/releases/ "All releases number"
-[11]: https://img.shields.io/github/downloads/v2fly/v2ray-core/total.svg "All releases badge"
-[12]: https://github.com/v2fly/v2ray-core/releases/ "All releases number"
+[![GitHub Test Badge](https://github.com/v2fly/v2ray-core/workflows/Test/badge.svg)](https://github.com/v2fly/v2ray-core/actions)
+[![codecov.io](https://codecov.io/gh/v2fly/v2ray-core/branch/master/graph/badge.svg?branch=master)](https://codecov.io/gh/v2fly/v2ray-core?branch=master)
+[![codebeat](https://goreportcard.com/badge/github.com/v2fly/v2ray-core)](https://goreportcard.com/report/github.com/v2fly/v2ray-core)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/e150b7ede2114388921943bf23d95161)](https://www.codacy.com/gh/v2fly/v2ray-core/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=v2fly/v2ray-core&amp;utm_campaign=Badge_Grade)
+[![Downloads](https://img.shields.io/github/downloads/v2fly/v2ray-core/total.svg)](https://github.com/v2fly/v2ray-core/releases/latest)
 
-Project V is a set of network tools that help you to build your own computer network. It secures your network connections and thus protects your privacy. See [our website](https://www.v2fly.org/) for more information.
+## Related Links
+
+- [Documentation](https://www.v2fly.org) and [Newcomer's Instructions](https://www.v2fly.org/guide/start.html)
+- Welcome to translate V2Ray documents via [Transifex](https://www.transifex.com/v2fly/public/)
+
+## Packaging Status
+
+> If you are willing to package V2Ray for other distros/platforms, please let us know or seek for help via [GitHub issues](https://github.com/v2fly/v2ray-core/issues).
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/v2ray.svg)](https://repology.org/project/v2ray/versions)
+[![Packaging status](https://repology.org/badge/vertical-allrepos/go:v2ray-core.svg)](https://repology.org/project/go:v2ray-core/versions)
+[![Packaging status](https://repology.org/badge/vertical-allrepos/v2ray-core.svg)](https://repology.org/project/v2ray-core/versions)
 
 ## License
 
@@ -23,9 +32,12 @@ Project V is a set of network tools that help you to build your own computer net
 
 This repo relies on the following third-party projects:
 
-* In production:
-  * [gorilla/websocket](https://github.com/gorilla/websocket)
-  * [gRPC](https://google.golang.org/grpc)
-* For testing only:
-  * [miekg/dns](https://github.com/miekg/dns)
-  * [h12w/socks](https://github.com/h12w/socks)
+- In production:
+  - [gorilla/websocket](https://github.com/gorilla/websocket)
+  - [lucas-clemente/quic-go](https://github.com/lucas-clemente/quic-go)
+  - [pires/go-proxyproto](https://github.com/pires/go-proxyproto)
+  - [seiflotfy/cuckoofilter](https://github.com/seiflotfy/cuckoofilter)
+  - [google/starlark-go](https://github.com/google/starlark-go)
+- For testing only:
+  - [miekg/dns](https://github.com/miekg/dns)
+  - [h12w/socks](https://github.com/h12w/socks)

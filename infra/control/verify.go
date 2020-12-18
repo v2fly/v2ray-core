@@ -2,8 +2,9 @@ package control
 
 import (
 	"flag"
-	"github.com/xiaokangwang/VSign/signerVerify"
 	"os"
+
+	"github.com/v2fly/VSign/signerVerify"
 	"v2ray.com/core/common"
 )
 

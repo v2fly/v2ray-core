@@ -32,7 +32,7 @@ func (s *Server) Start() (net.Destination, error) {
 		Handler: s,
 	}
 	go s.server.ListenAndServe()
-	return net.TCPDestination(net.LocalHostIP, net.Port(s.Port)), nil
+	return net.TCPDestination(net.LocalHostIP, s.Port), nil
 }
 
 func (s *Server) Close() error {

@@ -1,0 +1,214 @@
+name: Release
+
+on:
+  release:
+    types: [prereleased]
+  push:
+    branches:
+      - master
+      - v*
+      - dev*
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/*.yml"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/*.yml"
+
+jobs:
+  build:
+    if: github.repository != 'v2ray/v2ray-core'
+    strategy:
+      matrix:
+        # Include amd64 on all platforms.
+        goos: [windows, freebsd, openbsd, linux, dragonfly, darwin]
+        goarch: [amd64, 386]
+        exclude:
+          # Exclude i386 on darwin and dragonfly.
+          - goarch: 386
+            goos: dragonfly
+          - goarch: 386
+            goos: darwin
+        include:
+          # BEGIN Linux ARM 5 6 7
+          - goos: linux
+            goarch: arm
+            goarm: 7
+          - goos: linux
+            goarch: arm
+            goarm: 6
+          - goos: linux
+            goarch: arm
+            goarm: 5
+          # END Linux ARM 5 6 7
+          # Windows ARM 7
+          - goos: windows
+            goarch: arm
+            goarm: 7
+          # BEGIN Other architectures
+          - goos: linux
+            goarch: arm64
+          - goos: linux
+            goarch: riscv64
+          # BEGIN MIPS
+          - goos: linux
+            goarch: mips64
+          - goos: linux
+            goarch: mips64le
+          - goos: linux
+            goarch: mipsle
+          - goos: linux
+            goarch: mips
+          # END MIPS
+          # BEGIN Android
+          - goos: android
+            goarch: arm64
+          # END Android
+          # END Other architectures
+      fail-fast: false
+
+    runs-on: ubuntu-latest
+    env:
+      GOOS: ${{ matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
+      GOARM: ${{ matrix.goarm }}
+      CGO_ENABLED: 0
+
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Show workflow information
+        id: get_filename
+        run: |
+          export _NAME=$(jq ".[\"$GOOS-$GOARCH$GOARM\"].friendlyName" -r < release/friendly-filenames.json)
+          echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM, RELEASE_NAME: $_NAME"
+          echo "::set-output name=ASSET_NAME::$_NAME"
+          echo "ASSET_NAME=$_NAME" >> $GITHUB_ENV
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+
+      - name: Get project dependencies
+        run: go mod download
+
+      - name: Build V2Ray
+        run: |
+          mkdir -p build_assets
+          go build -v -o build_assets/v2ray -trimpath -ldflags "-s -w -buildid=" ./main
+          go build -v -o build_assets/v2ctl -trimpath -ldflags "-s -w -buildid=" -tags confonly ./infra/control/main
+
+      - name: Build Windows wv2ray
+        if: matrix.goos == 'windows'
+        run: |
+          echo "::warning ::wv2ray.exe will be removed in v5"
+          go build -v -o build_assets/wv2ray.exe -trimpath -ldflags "-s -w -H windowsgui -buildid=" ./main
+          cd ./build_assets || exit 1
+          mv v2ray v2ray.exe
+          mv v2ctl v2ctl.exe
+
+      - name: Prepare package
+        run: cp -v ./release/config/*.* ./build_assets
+
+      - name: Prepare package for Linux
+        if: matrix.goos == 'linux'
+        run: cp -rv ./release/config/systemd ./build_assets/
+
+      - name: Create ZIP archive
+        run: |
+          pushd build_assets || exit 1
+          zip -9vr ../v2ray-$ASSET_NAME.zip .
+          popd || exit 1
+          FILE=./v2ray-$ASSET_NAME.zip
+          DGST=$FILE.dgst
+          openssl dgst -md5    $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha1   $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha256 $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha512 $FILE | sed 's/([^)]*)//g' >>$DGST
+
+      - name: Upload ZIP file to Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
+          path: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
+
+      - name: Upload files to GitHub release
+        uses: svenstaro/upload-release-action@v2
+        if: github.event_name == 'release'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          file: ./v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip*
+          tag: ${{ github.ref }}
+
+  signature:
+    if: github.repository != 'v2ray/v2ray-core'
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+
+      - uses: actions/download-artifact@v2
+        with:
+          path: build_artifacts
+
+      - name: Generate shasum
+        run: |
+          cd build_artifacts || exit 1
+          mkdir .temp
+          mv ./*/*.zip ./.temp
+          rmdir ./*/
+          mv ./.temp/* .
+          ls -lah --recursive
+          {
+            go run github.com/v2fly/V2BuildAssist/v2buildutil gen version $(git describe --tags $(git rev-list --tags --max-count=1))
+            go run github.com/v2fly/V2BuildAssist/v2buildutil gen project "v2fly"
+            for zip in $(ls *.zip); do
+              go run github.com/v2fly/V2BuildAssist/v2buildutil gen file ${zip}
+            done
+          } >Release.unsigned.unsorted
+          go run github.com/v2fly/V2BuildAssist/v2buildutil gen sort < Release.unsigned.unsorted > Release.unsigned
+          rm -f Release.unsigned.unsorted
+          FILE=./Release.unsigned
+          DGST=$FILE.dgst
+          openssl dgst -md5    $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha1   $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha256 $FILE | sed 's/([^)]*)//g' >>$DGST
+          openssl dgst -sha512 $FILE | sed 's/([^)]*)//g' >>$DGST
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Release.unsigned
+          path: build_artifacts/Release.unsigned
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Release.unsigned.dgst
+          path: build_artifacts/Release.unsigned.dgst
+
+      - name: Upload Release.unsigned related files
+        uses: svenstaro/upload-release-action@v2
+        if: github.event_name == 'release'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          file: build_artifacts/Release.unsigned*
+          tag: ${{ github.ref }}

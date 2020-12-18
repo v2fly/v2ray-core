@@ -53,7 +53,7 @@ func (c *CertificateCommand) Description() Description {
 	}
 }
 
-func (c *CertificateCommand) printJson(certificate *cert.Certificate) {
+func (c *CertificateCommand) printJSON(certificate *cert.Certificate) {
 	certPEM, keyPEM := certificate.ToPEM()
 	jCert := &jsonCert{
 		Certificate: strings.Split(strings.TrimSpace(string(certPEM)), "\n"),
@@ -122,7 +122,7 @@ func (c *CertificateCommand) Execute(args []string) error {
 	}
 
 	if *jsonOutput {
-		c.printJson(cert)
+		c.printJSON(cert)
 	}
 
 	if len(*fileOutput) > 0 {

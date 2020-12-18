@@ -2,13 +2,14 @@ name: Test
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+      - v*
     paths:
       - "**/*.go"
       - "go.mod"
       - "go.sum"
   pull_request:
-    branches: [master]
     types: [opened, synchronize, reopened]
     paths:
       - "**/*.go"
@@ -17,8 +18,10 @@ on:
 
 jobs:
   test:
+    if: github.repository != 'v2ray/v2ray-core'
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
     steps:

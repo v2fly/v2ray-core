@@ -2,13 +2,13 @@
 
 package command
 
-//go:generate errorgen
+//go:generate go run v2ray.com/core/common/errors/errorgen
 
 import (
 	"context"
+	"time"
 
 	"google.golang.org/grpc"
-
 	"v2ray.com/core"
 	"v2ray.com/core/common"
 	"v2ray.com/core/features/routing"
@@ -38,7 +38,8 @@ func (s *routingServer) TestRoute(ctx context.Context, request *TestRouteRequest
 		return nil, err
 	}
 	if request.PublishResult && s.routingStats != nil {
-		s.routingStats.Publish(route)
+		ctx, _ := context.WithTimeout(context.Background(), 4*time.Second) // nolint: govet
+		s.routingStats.Publish(ctx, route)
 	}
 	return AsProtobufMessage(request.FieldSelectors)(route), nil
 }
@@ -52,13 +53,16 @@ func (s *routingServer) SubscribeRoutingStats(request *SubscribeRoutingStatsRequ
 	if err != nil {
 		return err
 	}
-	defer stats.UnsubscribeClosableChannel(s.routingStats, subscriber) // nolint: errcheck
+	defer stats.UnsubscribeClosableChannel(s.routingStats, subscriber)
 	for {
 		select {
-		case value, received := <-subscriber:
+		case value, ok := <-subscriber:
+			if !ok {
+				return newError("Upstream closed the subscriber channel.")
+			}
 			route, ok := value.(routing.Route)
-			if !(received && ok) {
-				return newError("Receiving upstream statistics failed.")
+			if !ok {
+				return newError("Upstream sent malformed statistics.")
 			}
 			err := stream.Send(genMessage(route))
 			if err != nil {

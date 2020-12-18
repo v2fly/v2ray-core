@@ -7,9 +7,9 @@ import (
 	"v2ray.com/core/proxy/http"
 )
 
-func TestHttpServerConfig(t *testing.T) {
+func TestHTTPServerConfig(t *testing.T) {
 	creator := func() Buildable {
-		return new(HttpServerConfig)
+		return new(HTTPServerConfig)
 	}
 
 	runMultiTestCase(t, []TestCase{

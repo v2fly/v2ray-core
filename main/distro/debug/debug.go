@@ -1,7 +1,8 @@
 package debug
 
-import _ "net/http/pprof"
-import "net/http"
+import (
+	"net/http"
+)
 
 func init() {
 	go func() {

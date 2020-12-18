@@ -2,7 +2,7 @@
 
 package freedom
 
-//go:generate errorgen
+//go:generate go run v2ray.com/core/common/errors/errorgen
 
 import (
 	"context"
@@ -137,7 +137,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	if err != nil {
 		return newError("failed to open connection to ", destination).Base(err)
 	}
-	defer conn.Close() // nolint: errcheck
+	defer conn.Close()
 
 	plcy := h.policy()
 	ctx, cancel := context.WithCancel(ctx)
