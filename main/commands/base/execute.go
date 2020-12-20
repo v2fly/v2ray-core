@@ -28,7 +28,8 @@ func Execute() {
 
 BigCmdLoop:
 	for bigCmd := RootCommand; ; {
-		for _, cmd := range bigCmd.Commands {
+		for _, oCmd := range bigCmd.Commands {
+			cmd := oCmd
 			if cmd.Name() != args[0] {
 				continue
 			}
