@@ -2,7 +2,10 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -10,8 +13,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 )
-
-type serviceHandler func(ctx context.Context, conn *grpc.ClientConn, cmd *base.Command, args []string) string
 
 var (
 	apiServerAddrPtr string
@@ -39,16 +40,55 @@ func dialAPIServer() (conn *grpc.ClientConn, ctx context.Context, close func()) 
 }
 
 func showResponese(m proto.Message) {
-	msg := ""
-	bs, err := proto.Marshal(m)
-	if err != nil {
-		msg = err.Error()
-	} else {
-		msg = string(bs)
-		msg = strings.TrimSpace(msg)
-	}
-	if msg == "" {
+	if isEmpty(m) {
+		// avoid outputs like `{}`, `{"key":{}}`
 		return
 	}
-	fmt.Println(msg)
+	b := new(strings.Builder)
+	e := json.NewEncoder(b)
+	e.SetIndent("", "  ")
+	e.SetEscapeHTML(false)
+	err := e.Encode(m)
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "%v\n", m)
+		base.Fatalf("error encode json: %s", err)
+		return
+	}
+	fmt.Println(strings.TrimSpace(b.String()))
+}
+
+// isEmpty checks if the response is empty (all zero values).
+// proto.Message types always "omitempty" on fields,
+// there's no chance for a response to show zero-value messages,
+// so we can perform isZero test here
+func isEmpty(response interface{}) bool {
+	s := reflect.Indirect(reflect.ValueOf(response))
+	if s.Kind() == reflect.Invalid {
+		return true
+	}
+	switch s.Kind() {
+	case reflect.Struct:
+		for i := 0; i < s.NumField(); i++ {
+			f := s.Type().Field(i)
+			if f.Name[0] < 65 || f.Name[0] > 90 {
+				// continue if not exported.
+				continue
+			}
+			field := s.Field(i)
+			if !isEmpty(field.Interface()) {
+				return false
+			}
+		}
+	case reflect.Array, reflect.Slice:
+		for i := 0; i < s.Len(); i++ {
+			if !isEmpty(s.Index(i).Interface()) {
+				return false
+			}
+		}
+	default:
+		if !s.IsZero() {
+			return false
+		}
+	}
+	return true
 }

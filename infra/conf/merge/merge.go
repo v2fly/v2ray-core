@@ -18,6 +18,7 @@ package merge
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
@@ -73,14 +74,14 @@ func loadFiles(args []string) (map[string]interface{}, error) {
 	for _, arg := range args {
 		r, err := cmdarg.LoadArg(arg)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("fail to load %s: %s", arg, err)
 		}
 		m, err := decode(r)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("fail to decode %s: %s", arg, err)
 		}
 		if err = mergeMaps(c, m); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("fail to merge %s: %s", arg, err)
 		}
 	}
 	return c, nil
