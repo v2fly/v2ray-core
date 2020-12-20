@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"strings"
 
-	"v2ray.com/core"
 	"v2ray.com/core/common"
 )
 
@@ -64,12 +63,7 @@ func main() {
 
 	for _, files := range protoFilesMap {
 		for _, relProtoFile := range files {
-			var args []string
-			if core.ProtoFilesUsingProtocGenGoFast[relProtoFile] {
-				args = []string{"--gofast_out", pwd, "--gofast_opt", "paths=source_relative", "--plugin", "protoc-gen-gofast=" + GOBIN + "/protoc-gen-gofast" + EXE}
-			} else {
-				args = []string{"--go_out", pwd, "--go_opt", "paths=source_relative", "--go-grpc_out", pwd, "--go-grpc_opt", "paths=source_relative", "--plugin", "protoc-gen-go=" + GOBIN + "/protoc-gen-go" + EXE, "--plugin", "protoc-gen-go-grpc=" + GOBIN + "/protoc-gen-go-grpc" + EXE}
-			}
+			args := []string{"--go_out", pwd, "--go_opt", "paths=source_relative", "--go-grpc_out", pwd, "--go-grpc_opt", "paths=source_relative", "--plugin", "protoc-gen-go=" + GOBIN + "/protoc-gen-go" + EXE, "--plugin", "protoc-gen-go-grpc=" + GOBIN + "/protoc-gen-go-grpc" + EXE}
 			args = append(args, relProtoFile)
 			cmd := exec.Command(protoc, args...)
 			cmd.Env = append(cmd.Env, os.Environ()...)
