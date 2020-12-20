@@ -775,6 +775,7 @@ func TestVMessKCP(t *testing.T) {
 	var errg errgroup.Group
 	for i := 0; i < 10; i++ {
 		errg.Go(testTCPConn(clientPort, 10240*1024, time.Minute*2))
+		time.Sleep(time.Second)
 	}
 	if err := errg.Wait(); err != nil {
 		t.Error(err)
@@ -923,6 +924,7 @@ func TestVMessKCPLarge(t *testing.T) {
 	var errg errgroup.Group
 	for i := 0; i < 2; i++ {
 		errg.Go(testTCPConn(clientPort, 10240*1024, time.Minute*5))
+		time.Sleep(time.Second)
 	}
 	if err := errg.Wait(); err != nil {
 		t.Error(err)
@@ -1038,6 +1040,7 @@ func TestVMessGCMMux(t *testing.T) {
 		var errg errgroup.Group
 		for i := 0; i < 16; i++ {
 			errg.Go(testTCPConn(clientPort, 10240, time.Second*20))
+			time.Sleep(time.Second)
 		}
 		if err := errg.Wait(); err != nil {
 			t.Fatal(err)
@@ -1171,6 +1174,7 @@ func TestVMessGCMMuxUDP(t *testing.T) {
 		for i := 0; i < 16; i++ {
 			errg.Go(testTCPConn(clientPort, 10240, time.Second*20))
 			errg.Go(testUDPConn(clientUDPPort, 1024, time.Second*10))
+			time.Sleep(time.Second)
 		}
 		if err := errg.Wait(); err != nil {
 			t.Error(err)

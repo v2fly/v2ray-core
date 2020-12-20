@@ -584,6 +584,7 @@ func TestHTTP2(t *testing.T) {
 	var errg errgroup.Group
 	for i := 0; i < 10; i++ {
 		errg.Go(testTCPConn(clientPort, 10240*1024, time.Second*40))
+		time.Sleep(time.Second)
 	}
 	if err := errg.Wait(); err != nil {
 		t.Error(err)
