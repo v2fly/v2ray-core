@@ -22,7 +22,7 @@ var (
 	parsers = make(map[string][]*Parser)
 )
 
-// RegisterParser add a new ConfigLoader.
+// RegisterParser add a new link parser.
 func RegisterParser(parser *Parser) error {
 	for _, scheme := range parser.Scheme {
 		s := strings.ToLower(scheme)

@@ -10,16 +10,10 @@ import (
 )
 
 var cmdLinks = &base.Command{
-	UsageLine: "{{.Exec}} links [-o dir] [vmess://...] ...",
+	UsageLine: "{{.Exec}} links [-o dir] [\"vmess://...\"] ...",
 	Short:     "Fetch and convert V2Ray links",
 	Long: `
 Fetch, convert V2Ray links to json.
-
-{{.LongName}} now supports the following common seen link formats:
-
-	* V2rayN (V2rayNG) link
-	* Shadowrocket link
-	* Quantumult (X) link
 
 Arguments:
 
@@ -65,10 +59,10 @@ Arguments:
 
 Examples:
 
-	{{.Exec}} {{.LongName}} vmess://...                  (1)
-	{{.Exec}} {{.LongName}} -o . vmess://... vmess://... (2)
-	{{.Exec}} {{.LongName}} -o . -t name -u url          (3)
-	{{.Exec}} {{.LongName}} -o . -c path/to/json         (4)
+	{{.Exec}} {{.LongName}} "vmess://..."                    (1)
+	{{.Exec}} {{.LongName}} -o . "vmess://..." "vmess://..." (2)
+	{{.Exec}} {{.LongName}} -o . -t name -u url              (3)
+	{{.Exec}} {{.LongName}} -o . -c path/to/json             (4)
 
 (1) Convert a link, and print to stdout.
 (2) Convert links, and save to current directory.

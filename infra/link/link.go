@@ -8,7 +8,7 @@ import (
 	"v2ray.com/core/infra/conf"
 )
 
-// Link is the interface for v2ray links, like VMessLink
+// Link is the interface for v2ray links
 type Link interface {
 	//  returns the tag of the link
 	Tag() string
@@ -20,7 +20,7 @@ type Link interface {
 	ToString() string
 }
 
-// Parse parse link string to Link
+// Parse parses a link string to Link
 func Parse(arg string) (Link, error) {
 	ps, err := getParsers(arg)
 	if err != nil {
