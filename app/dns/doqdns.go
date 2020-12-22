@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"golang.org/x/net/dns/dnsmessage"
+	"golang.org/x/net/http2"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
 	net "v2ray.com/core/common/net"
+	"v2ray.com/core/common/protocol"
 	"v2ray.com/core/common/protocol/dns"
 	"v2ray.com/core/common/session"
 	"v2ray.com/core/common/signal/pubsub"
@@ -20,6 +22,10 @@ import (
 	"v2ray.com/core/transport/internet/quic"
 	"v2ray.com/core/transport/internet/tls"
 )
+
+// NextProtoDQ - During connection establishment, DNS/QUIC support is indicated
+// by selecting the ALPN token "dq" in the crypto handshake.
+const NextProtoDQ = "doq-i00"
 
 // DoQNameServer implemented DNS over QUIC
 type DoQNameServer struct {
@@ -170,9 +176,16 @@ func (s *DoQNameServer) sendQuery(ctx context.Context, domain string, option IPO
 
 			conn, err := quic.Dial(dnsCtx, s.destination, &internet.MemoryStreamConfig{
 				ProtocolName: "quic",
+				ProtocolSettings: &quic.Config{
+					Security: &protocol.SecurityConfig{
+						Type: protocol.SecurityType_NONE,
+					},
+				},
 				SecurityType: "tls",
 				SecuritySettings: &tls.Config{
-					AllowInsecure: true,
+					NextProtocol: []string{
+						"http/1.1", http2.NextProtoTLS, NextProtoDQ,
+					},
 				},
 			})
 			if err != nil {
@@ -186,10 +199,12 @@ func (s *DoQNameServer) sendQuery(ctx context.Context, domain string, option IPO
 				return
 			}
 
-			conn.Close()
+			_ = conn.Close()
 
-			respBuf, err := buf.ReadBuffer(conn)
-			if err != nil {
+			respBuf := buf.New()
+			defer respBuf.Release()
+			n, err := respBuf.ReadFrom(conn)
+			if err != nil && n == 0 {
 				newError("failed to read response").Base(err).AtError().WriteToLog()
 				return
 			}
