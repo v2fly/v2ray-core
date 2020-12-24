@@ -11,10 +11,10 @@ import (
 	"v2ray.com/core/common/net"
 )
 
-func TestDoQNameServer(t *testing.T) {
+func TestQUICNameServer(t *testing.T) {
 	url, err := url.Parse("quic://dns.adguard.com")
 	common.Must(err)
-	s, err := NewDoQNameServer(url)
+	s, err := NewQUICNameServer(url)
 	common.Must(err)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	ips, err := s.QueryIP(ctx, "google.com", net.IP(nil), IPOption{

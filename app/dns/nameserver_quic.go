@@ -29,8 +29,8 @@ const NextProtoDQ = "doq-i00"
 
 const handshakeTimeout = time.Second * 8
 
-// DoQNameServer implemented DNS over QUIC
-type DoQNameServer struct {
+// QUICNameServer implemented DNS over QUIC
+type QUICNameServer struct {
 	sync.RWMutex
 	ips         map[string]record
 	pub         *pubsub.Service
@@ -41,24 +41,41 @@ type DoQNameServer struct {
 	session     quic.Session
 }
 
-// NewDoQNameServer creates DNS-over-QUIC client object for local resolving
-func NewDoQNameServer(url *url.URL) (*DoQNameServer, error) {
+// NewQUICNameServer creates DNS-over-QUIC client object for local resolving
+func NewQUICNameServer(url *url.URL) (*QUICNameServer, error) {
 	newError("DNS: created Local DNS-over-QUIC client for ", url.String()).AtInfo().WriteToLog()
-	s, err := baseDOQNameServer(url)
-	if err != nil {
-		return nil, err
+
+	var err error
+	port := net.Port(784)
+	if url.Port() != "" {
+		port, err = net.PortFromString(url.Port())
+		if err != nil {
+			return nil, err
+		}
+	}
+	dest := net.UDPDestination(net.DomainAddress(url.Hostname()), port)
+
+	s := &QUICNameServer{
+		ips:         make(map[string]record),
+		pub:         pubsub.NewService(),
+		name:        url.String(),
+		destination: dest,
+	}
+	s.cleanup = &task.Periodic{
+		Interval: time.Minute,
+		Execute:  s.Cleanup,
 	}
 
 	return s, nil
 }
 
 // Name returns client name
-func (s *DoQNameServer) Name() string {
+func (s *QUICNameServer) Name() string {
 	return s.name
 }
 
 // Cleanup clears expired items from cache
-func (s *DoQNameServer) Cleanup() error {
+func (s *QUICNameServer) Cleanup() error {
 	now := time.Now()
 	s.Lock()
 	defer s.Unlock()
@@ -90,7 +107,7 @@ func (s *DoQNameServer) Cleanup() error {
 	return nil
 }
 
-func (s *DoQNameServer) updateIP(req *dnsRequest, ipRec *IPRecord) {
+func (s *QUICNameServer) updateIP(req *dnsRequest, ipRec *IPRecord) {
 	elapsed := time.Since(req.start)
 
 	s.Lock()
@@ -131,11 +148,11 @@ func (s *DoQNameServer) updateIP(req *dnsRequest, ipRec *IPRecord) {
 	common.Must(s.cleanup.Start())
 }
 
-func (s *DoQNameServer) newReqID() uint16 {
+func (s *QUICNameServer) newReqID() uint16 {
 	return uint16(atomic.AddUint32(&s.reqID, 1))
 }
 
-func (s *DoQNameServer) sendQuery(ctx context.Context, domain string, clientIP net.IP, option IPOption) {
+func (s *QUICNameServer) sendQuery(ctx context.Context, domain string, clientIP net.IP, option IPOption) {
 	newError(s.name, " querying: ", domain).AtInfo().WriteToLog(session.ExportIDToError(ctx))
 
 	reqs := buildReqMsgs(domain, option, s.newReqID, genEDNS0Options(clientIP))
@@ -205,7 +222,7 @@ func (s *DoQNameServer) sendQuery(ctx context.Context, domain string, clientIP n
 	}
 }
 
-func (s *DoQNameServer) findIPsForDomain(domain string, option IPOption) ([]net.IP, error) {
+func (s *QUICNameServer) findIPsForDomain(domain string, option IPOption) ([]net.IP, error) {
 	s.RLock()
 	record, found := s.ips[domain]
 	s.RUnlock()
@@ -248,7 +265,7 @@ func (s *DoQNameServer) findIPsForDomain(domain string, option IPOption) ([]net.
 }
 
 // QueryIP is called from dns.Server->queryIPTimeout
-func (s *DoQNameServer) QueryIP(ctx context.Context, domain string, clientIP net.IP, option IPOption) ([]net.IP, error) {
+func (s *QUICNameServer) QueryIP(ctx context.Context, domain string, clientIP net.IP, option IPOption) ([]net.IP, error) {
 	fqdn := Fqdn(domain)
 
 	ips, err := s.findIPsForDomain(fqdn, option)
@@ -308,7 +325,7 @@ func isActive(s quic.Session) bool {
 	}
 }
 
-func (s *DoQNameServer) getSession() (quic.Session, error) {
+func (s *QUICNameServer) getSession() (quic.Session, error) {
 	var session quic.Session
 	s.RLock()
 	session = s.session
@@ -342,7 +359,7 @@ func (s *DoQNameServer) getSession() (quic.Session, error) {
 	return session, nil
 }
 
-func (s *DoQNameServer) openSession() (quic.Session, error) {
+func (s *QUICNameServer) openSession() (quic.Session, error) {
 	tlsConfig := tls.Config{}
 	quicConfig := &quic.Config{
 		HandshakeTimeout: handshakeTimeout,
@@ -356,7 +373,7 @@ func (s *DoQNameServer) openSession() (quic.Session, error) {
 	return session, nil
 }
 
-func (s *DoQNameServer) openStream(ctx context.Context) (quic.Stream, error) {
+func (s *QUICNameServer) openStream(ctx context.Context) (quic.Stream, error) {
 	session, err := s.getSession()
 	if err != nil {
 		return nil, err
@@ -364,29 +381,4 @@ func (s *DoQNameServer) openStream(ctx context.Context) (quic.Stream, error) {
 
 	// open a new stream
 	return session.OpenStreamSync(ctx)
-}
-
-func baseDOQNameServer(url *url.URL) (*DoQNameServer, error) {
-	var err error
-	port := net.Port(784)
-	if url.Port() != "" {
-		port, err = net.PortFromString(url.Port())
-		if err != nil {
-			return nil, err
-		}
-	}
-	dest := net.UDPDestination(net.DomainAddress(url.Hostname()), port)
-
-	s := &DoQNameServer{
-		ips:         make(map[string]record),
-		pub:         pubsub.NewService(),
-		name:        url.String(),
-		destination: dest,
-	}
-	s.cleanup = &task.Periodic{
-		Interval: time.Minute,
-		Execute:  s.Cleanup,
-	}
-
-	return s, nil
 }
