@@ -9,25 +9,25 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/lucas-clemente/quic-go"
 	"golang.org/x/net/dns/dnsmessage"
 	"golang.org/x/net/http2"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
 	net "v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
 	"v2ray.com/core/common/protocol/dns"
 	"v2ray.com/core/common/session"
 	"v2ray.com/core/common/signal/pubsub"
 	"v2ray.com/core/common/task"
 	dns_feature "v2ray.com/core/features/dns"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/quic"
 	"v2ray.com/core/transport/internet/tls"
 )
 
 // NextProtoDQ - During connection establishment, DNS/QUIC support is indicated
 // by selecting the ALPN token "dq" in the crypto handshake.
 const NextProtoDQ = "doq-i00"
+
+const handshakeTimeout = time.Second * 8
 
 // DoQNameServer implemented DNS over QUIC
 type DoQNameServer struct {
@@ -38,11 +38,12 @@ type DoQNameServer struct {
 	reqID       uint32
 	name        string
 	destination net.Destination
+	session     quic.Session
 }
 
-// NewDoQNameServer creates DNS-over-QUIC client object for remote resolving
+// NewDoQNameServer creates DNS-over-QUIC client object for local resolving
 func NewDoQNameServer(url *url.URL) (*DoQNameServer, error) {
-	newError("DNS: created Remote DNS-over-QUIC client for ", url.String()).AtInfo().WriteToLog()
+	newError("DNS: created Local DNS-over-QUIC client for ", url.String()).AtInfo().WriteToLog()
 	s, err := baseDOQNameServer(url)
 	if err != nil {
 		return nil, err
@@ -172,20 +173,7 @@ func (s *DoQNameServer) sendQuery(ctx context.Context, domain string, clientIP n
 				return
 			}
 
-			conn, err := quic.Dial(dnsCtx, s.destination, &internet.MemoryStreamConfig{
-				ProtocolName: "quic",
-				ProtocolSettings: &quic.Config{
-					Security: &protocol.SecurityConfig{
-						Type: protocol.SecurityType_NONE,
-					},
-				},
-				SecurityType: "tls",
-				SecuritySettings: &tls.Config{
-					NextProtocol: []string{
-						"http/1.1", http2.NextProtoTLS, NextProtoDQ,
-					},
-				},
-			})
+			conn, err := s.openStream(dnsCtx)
 			if err != nil {
 				newError("failed to open quic session").Base(err).AtError().WriteToLog()
 				return
@@ -309,6 +297,73 @@ func (s *DoQNameServer) QueryIP(ctx context.Context, domain string, clientIP net
 		case <-done:
 		}
 	}
+}
+
+func isActive(s quic.Session) bool {
+	select {
+	case <-s.Context().Done():
+		return false
+	default:
+		return true
+	}
+}
+
+func (s *DoQNameServer) getSession() (quic.Session, error) {
+	var session quic.Session
+	s.RLock()
+	session = s.session
+	if session != nil && isActive(session) {
+		s.RUnlock()
+		return session, nil
+	}
+	if session != nil {
+		// we're recreating the session, let's create a new one
+		_ = session.CloseWithError(0, "")
+	}
+	s.RUnlock()
+
+	s.Lock()
+	defer s.Unlock()
+
+	var err error
+	session, err = s.openSession()
+	if err != nil {
+		// This does not look too nice, but QUIC (or maybe quic-go)
+		// doesn't seem stable enough.
+		// Maybe retransmissions aren't fully implemented in quic-go?
+		// Anyways, the simple solution is to make a second try when
+		// it fails to open the QUIC session.
+		session, err = s.openSession()
+		if err != nil {
+			return nil, err
+		}
+	}
+	s.session = session
+	return session, nil
+}
+
+func (s *DoQNameServer) openSession() (quic.Session, error) {
+	tlsConfig := tls.Config{}
+	quicConfig := &quic.Config{
+		HandshakeTimeout: handshakeTimeout,
+	}
+
+	session, err := quic.DialAddrContext(context.Background(), s.destination.NetAddr(), tlsConfig.GetTLSConfig(tls.WithNextProto("http/1.1", http2.NextProtoTLS, NextProtoDQ)), quicConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return session, nil
+}
+
+func (s *DoQNameServer) openStream(ctx context.Context) (quic.Stream, error) {
+	session, err := s.getSession()
+	if err != nil {
+		return nil, err
+	}
+
+	// open a new stream
+	return session.OpenStreamSync(ctx)
 }
 
 func baseDOQNameServer(url *url.URL) (*DoQNameServer, error) {

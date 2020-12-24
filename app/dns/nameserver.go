@@ -53,7 +53,7 @@ func NewServer(dest net.Destination, dispatcher routing.Dispatcher) (Server, err
 			return NewDoHNameServer(u, dispatcher)
 		case u.Scheme == "https+local": // DOH Local mode
 			return NewDoHLocalNameServer(u), nil
-		case u.Scheme == "quic": // DNS-over-QUIC
+		case u.Scheme == "quic+local": // DNS-over-QUIC Local mode
 			return NewDoQNameServer(u)
 		}
 	}

@@ -6,7 +6,6 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"errors"
-	"syscall"
 	"time"
 
 	"github.com/lucas-clemente/quic-go"
@@ -140,16 +139,6 @@ func (c *sysConn) SetReadDeadline(t time.Time) error {
 
 func (c *sysConn) SetWriteDeadline(t time.Time) error {
 	return c.conn.SetWriteDeadline(t)
-}
-
-func (c *sysConn) SetReadBuffer(bytes int) error {
-	udpConn, _ := c.conn.(*net.UDPConn)
-	return udpConn.SetReadBuffer(bytes)
-}
-
-func (c *sysConn) SyscallConn() (syscall.RawConn, error) {
-	sysrawconn, _ := c.conn.(syscall.Conn)
-	return sysrawconn.SyscallConn()
 }
 
 type interConn struct {

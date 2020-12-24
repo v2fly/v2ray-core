@@ -116,7 +116,7 @@ func (s *clientSessions) cleanSessions() error {
 	return nil
 }
 
-func (s *clientSessions) openConnection(dest net.Destination, config *Config, tlsConfig *tls.Config, sockopt *internet.SocketConfig) (internet.Connection, error) {
+func (s *clientSessions) openConnection(destAddr net.Addr, config *Config, tlsConfig *tls.Config, sockopt *internet.SocketConfig) (internet.Connection, error) {
 	s.access.Lock()
 	defer s.access.Unlock()
 
@@ -124,19 +124,7 @@ func (s *clientSessions) openConnection(dest net.Destination, config *Config, tl
 		s.sessions = make(map[net.Destination][]*sessionContext)
 	}
 
-	var destAddr *net.UDPAddr
-	if dest.Address.Family().IsIP() {
-		destAddr = &net.UDPAddr{
-			IP:   dest.Address.IP(),
-			Port: int(dest.Port),
-		}
-	} else {
-		addr, err := net.ResolveUDPAddr("udp", dest.NetAddr())
-		if err != nil {
-			return nil, err
-		}
-		destAddr = addr
-	}
+	dest := net.DestinationFromAddr(destAddr)
 
 	var sessions []*sessionContext
 	if s, found := s.sessions[dest]; found {
@@ -206,8 +194,23 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 		}
 	}
 
+	var destAddr *net.UDPAddr
+	if dest.Address.Family().IsIP() {
+		destAddr = &net.UDPAddr{
+			IP:   dest.Address.IP(),
+			Port: int(dest.Port),
+		}
+	} else {
+		addr, err := net.ResolveUDPAddr("udp", dest.NetAddr())
+		if err != nil {
+			return nil, err
+		}
+		destAddr = addr
+	}
+
 	config := streamSettings.ProtocolSettings.(*Config)
-	return client.openConnection(dest, config, tlsConfig, streamSettings.SocketSettings)
+
+	return client.openConnection(destAddr, config, tlsConfig, streamSettings.SocketSettings)
 }
 
 func init() {
