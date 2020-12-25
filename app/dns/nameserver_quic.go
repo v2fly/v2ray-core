@@ -5,7 +5,7 @@ package dns
 import (
 	"context"
 	"net/url"
-	sync "sync"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -14,7 +14,7 @@ import (
 	"golang.org/x/net/http2"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
-	net "v2ray.com/core/common/net"
+	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/protocol/dns"
 	"v2ray.com/core/common/session"
 	"v2ray.com/core/common/signal/pubsub"
