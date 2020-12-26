@@ -28,7 +28,6 @@ func cipherFromString(c string) shadowsocks.CipherType {
 type ShadowsocksServerConfig struct {
 	Cipher      string       `json:"method"`
 	Password    string       `json:"password"`
-	UDP         bool         `json:"udp"`
 	Level       byte         `json:"level"`
 	Email       string       `json:"email"`
 	NetworkList *NetworkList `json:"network"`
@@ -36,7 +35,6 @@ type ShadowsocksServerConfig struct {
 
 func (v *ShadowsocksServerConfig) Build() (proto.Message, error) {
 	config := new(shadowsocks.ServerConfig)
-	config.UdpEnabled = v.UDP
 	config.Network = v.NetworkList.Build()
 
 	if v.Password == "" {

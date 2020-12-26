@@ -30,9 +30,6 @@ func (c *FreedomConfig) Build() (proto.Message, error) {
 		config.DomainStrategy = freedom.Config_USE_IP6
 	}
 
-	if c.Timeout != nil {
-		config.Timeout = *c.Timeout
-	}
 	config.UserLevel = c.UserLevel
 	if len(c.Redirect) > 0 {
 		host, portStr, err := net.SplitHostPort(c.Redirect)

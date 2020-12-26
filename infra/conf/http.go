@@ -30,7 +30,6 @@ type HTTPServerConfig struct {
 
 func (c *HTTPServerConfig) Build() (proto.Message, error) {
 	config := &http.ServerConfig{
-		Timeout:          c.Timeout,
 		AllowTransparent: c.Transparent,
 		UserLevel:        c.UserLevel,
 	}

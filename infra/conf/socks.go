@@ -59,7 +59,6 @@ func (v *SocksServerConfig) Build() (proto.Message, error) {
 		config.Address = v.Host.Build()
 	}
 
-	config.Timeout = v.Timeout
 	config.UserLevel = v.UserLevel
 	return config, nil
 }

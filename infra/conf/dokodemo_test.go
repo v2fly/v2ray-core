@@ -32,7 +32,6 @@ func TestDokodemoConfig(t *testing.T) {
 				},
 				Port:           53,
 				Networks:       []net.Network{net.Network_TCP},
-				Timeout:        10,
 				FollowRedirect: true,
 				UserLevel:      1,
 			},

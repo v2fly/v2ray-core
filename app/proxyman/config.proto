@@ -67,10 +67,7 @@ message ReceiverConfig {
   v2ray.core.transport.internet.StreamConfig stream_settings = 4;
   bool receive_original_destination = 5;
   reserved 6;
-  // Override domains for the given protocol.
-  // Deprecated. Use sniffing_settings.
-  repeated KnownProtocols domain_override = 7 [deprecated = true];
-  SniffingConfig sniffing_settings = 8;
+  SniffingConfig sniffing_settings = 7;
 }
 
 message InboundHandlerConfig {

@@ -7,7 +7,6 @@ option java_package = "com.v2ray.core";
 option java_multiple_files = true;
 
 import "common/serial/typed_message.proto";
-import "transport/config.proto";
 
 // Config is the master config of V2Ray. V2Ray takes this config as input and
 // functions accordingly.
@@ -26,15 +25,10 @@ message Config {
   // through common.RegisterConfig.
   repeated v2ray.core.common.serial.TypedMessage app = 4;
 
-  // Transport settings.
-  // Deprecated. Each inbound and outbound should choose their own transport
-  // config. Date to remove: 2020-01-13
-  v2ray.core.transport.Config transport = 5 [deprecated = true];
-
   // Configuration for extensions. The config may not work if corresponding
   // extension is not loaded into V2Ray. V2Ray will ignore such config during
   // initialization.
-  repeated v2ray.core.common.serial.TypedMessage extension = 6;
+  repeated v2ray.core.common.serial.TypedMessage extension = 5;
 }
 
 // InboundHandlerConfig is the configuration for inbound handler.
@@ -56,8 +50,4 @@ message OutboundHandlerConfig {
   v2ray.core.common.serial.TypedMessage sender_settings = 2;
   // Settings for this outbound proxy. Must be one of the outbound proxies.
   v2ray.core.common.serial.TypedMessage proxy_settings = 3;
-  // If not zero, this outbound will be expired in seconds. Not used for now.
-  int64 expire = 4;
-  // Comment of this outbound handler. Not used for now.
-  string comment = 5;
 }

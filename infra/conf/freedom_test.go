@@ -25,7 +25,6 @@ func TestFreedomConfig(t *testing.T) {
 			Parser: loadJSON(creator),
 			Output: &freedom.Config{
 				DomainStrategy: freedom.Config_AS_IS,
-				Timeout:        10,
 				DestinationOverride: &freedom.DestinationOverride{
 					Server: &protocol.ServerEndpoint{
 						Address: &net.IPOrDomain{

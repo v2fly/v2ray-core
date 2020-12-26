@@ -101,10 +101,11 @@ func TestIPOnDemand(t *testing.T) {
 				TargetTag: &RoutingRule_Tag{
 					Tag: "test",
 				},
-				Cidr: []*CIDR{
+				Geoip: []*GeoIP{
 					{
-						Ip:     []byte{192, 168, 0, 0},
-						Prefix: 16,
+						Cidr: []*CIDR{
+							{Ip: []byte{192, 168, 0, 0}, Prefix: 16},
+						},
 					},
 				},
 			},
@@ -136,10 +137,11 @@ func TestIPIfNonMatchDomain(t *testing.T) {
 				TargetTag: &RoutingRule_Tag{
 					Tag: "test",
 				},
-				Cidr: []*CIDR{
+				Geoip: []*GeoIP{
 					{
-						Ip:     []byte{192, 168, 0, 0},
-						Prefix: 16,
+						Cidr: []*CIDR{
+							{Ip: []byte{192, 168, 0, 0}, Prefix: 16},
+						},
 					},
 				},
 			},
@@ -171,10 +173,11 @@ func TestIPIfNonMatchIP(t *testing.T) {
 				TargetTag: &RoutingRule_Tag{
 					Tag: "test",
 				},
-				Cidr: []*CIDR{
+				Geoip: []*GeoIP{
 					{
-						Ip:     []byte{127, 0, 0, 0},
-						Prefix: 8,
+						Cidr: []*CIDR{
+							{Ip: []byte{127, 0, 0, 0}, Prefix: 8},
+						},
 					},
 				},
 			},

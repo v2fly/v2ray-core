@@ -8,11 +8,9 @@ option java_multiple_files = true;
 
 enum Network {
   Unknown = 0;
-
-  RawTCP = 1 [deprecated = true];
-  TCP = 2;
-  UDP = 3;
-  UNIX = 4;
+  TCP = 1;
+  UDP = 2;
+  UNIX = 3;
 }
 
 // NetworkList is a list of Networks.

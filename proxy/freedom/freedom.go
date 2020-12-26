@@ -4,7 +4,6 @@ package freedom
 
 import (
 	"context"
-	"time"
 
 	"v2ray.com/core"
 	"v2ray.com/core/common"
@@ -51,9 +50,6 @@ func (h *Handler) Init(config *Config, pm policy.Manager, d dns.Client) error {
 
 func (h *Handler) policy() policy.Session {
 	p := h.policyManager.ForLevel(h.config.UserLevel)
-	if h.config.Timeout > 0 && h.config.UserLevel == 0 {
-		p.Timeouts.ConnectionIdle = time.Duration(h.config.Timeout) * time.Second
-	}
 	return p
 }
 

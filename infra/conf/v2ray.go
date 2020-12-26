@@ -35,21 +35,6 @@ var (
 	}, "protocol", "settings")
 )
 
-func toProtocolList(s []string) ([]proxyman.KnownProtocols, error) {
-	kp := make([]proxyman.KnownProtocols, 0, 8)
-	for _, p := range s {
-		switch strings.ToLower(p) {
-		case "http":
-			kp = append(kp, proxyman.KnownProtocols_HTTP)
-		case "https", "tls", "ssl":
-			kp = append(kp, proxyman.KnownProtocols_TLS)
-		default:
-			return nil, newError("Unknown protocol: ", p)
-		}
-	}
-	return kp, nil
-}
-
 type SniffingConfig struct {
 	Enabled      bool        `json:"enabled"`
 	DestOverride *StringList `json:"destOverride"`
@@ -208,13 +193,6 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 		}
 		receiverSettings.SniffingSettings = s
 	}
-	if c.DomainOverride != nil {
-		kp, err := toProtocolList(*c.DomainOverride)
-		if err != nil {
-			return nil, newError("failed to parse inbound detour config").Base(err)
-		}
-		receiverSettings.DomainOverride = kp
-	}
 
 	settings := []byte("{}")
 	if c.Settings != nil {
@@ -335,7 +313,6 @@ type Config struct {
 	DNSConfig       *DNSConfig             `json:"dns"`
 	InboundConfigs  []InboundDetourConfig  `json:"inbounds"`
 	OutboundConfigs []OutboundDetourConfig `json:"outbounds"`
-	Transport       *TransportConfig       `json:"transport"`
 	Policy          *PolicyConfig          `json:"policy"`
 	API             *APIConfig             `json:"api"`
 	Stats           *StatsConfig           `json:"stats"`
@@ -362,24 +339,6 @@ func (c *Config) findOutboundTag(tag string) int {
 		}
 	}
 	return found
-}
-
-func applyTransportConfig(s *StreamConfig, t *TransportConfig) {
-	if s.TCPSettings == nil {
-		s.TCPSettings = t.TCPConfig
-	}
-	if s.KCPSettings == nil {
-		s.KCPSettings = t.KCPConfig
-	}
-	if s.WSSettings == nil {
-		s.WSSettings = t.WSConfig
-	}
-	if s.HTTPSettings == nil {
-		s.HTTPSettings = t.HTTPConfig
-	}
-	if s.DSSettings == nil {
-		s.DSSettings = t.DSConfig
-	}
 }
 
 // Build implements Buildable.
@@ -473,12 +432,6 @@ func (c *Config) Build() (*core.Config, error) {
 	}
 
 	for _, rawInboundConfig := range inbounds {
-		if c.Transport != nil {
-			if rawInboundConfig.StreamSetting == nil {
-				rawInboundConfig.StreamSetting = &StreamConfig{}
-			}
-			applyTransportConfig(rawInboundConfig.StreamSetting, c.Transport)
-		}
 		ic, err := rawInboundConfig.Build()
 		if err != nil {
 			return nil, err
@@ -501,12 +454,6 @@ func (c *Config) Build() (*core.Config, error) {
 	}
 
 	for _, rawOutboundConfig := range outbounds {
-		if c.Transport != nil {
-			if rawOutboundConfig.StreamSetting == nil {
-				rawOutboundConfig.StreamSetting = &StreamConfig{}
-			}
-			applyTransportConfig(rawOutboundConfig.StreamSetting, c.Transport)
-		}
 		oc, err := rawOutboundConfig.Build()
 		if err != nil {
 			return nil, err

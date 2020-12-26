@@ -52,9 +52,6 @@ func (s *Server) Network() []net.Network {
 	if len(list) == 0 {
 		list = append(list, net.Network_TCP)
 	}
-	if s.config.UdpEnabled {
-		list = append(list, net.Network_UDP)
-	}
 	return list
 }
 

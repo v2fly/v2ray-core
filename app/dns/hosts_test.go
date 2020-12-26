@@ -34,7 +34,7 @@ func TestStaticHosts(t *testing.T) {
 		},
 	}
 
-	hosts, err := NewStaticHosts(pb, nil)
+	hosts, err := NewStaticHosts(pb)
 	common.Must(err)
 
 	{

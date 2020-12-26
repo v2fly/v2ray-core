@@ -14,7 +14,6 @@ import (
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/session"
 	"v2ray.com/core/common/strmatcher"
-	"v2ray.com/core/features"
 	"v2ray.com/core/features/dns"
 )
 
@@ -52,7 +51,7 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 		return nil, newError("unexpected client IP length ", len(config.ClientIp))
 	}
 
-	hosts, err := NewStaticHosts(config.StaticHosts, config.Hosts)
+	hosts, err := NewStaticHosts(config.StaticHosts)
 	if err != nil {
 		return nil, newError("failed to create hosts").Base(err)
 	}
@@ -70,15 +69,6 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 	matcherInfos := make([]DomainMatcherInfo, domainRuleCount+1)
 	domainMatcher := &strmatcher.MatcherGroup{}
 	geoipContainer := router.GeoIPMatcherContainer{}
-
-	for _, endpoint := range config.NameServers {
-		features.PrintDeprecatedFeatureWarning("simple DNS server")
-		client, err := NewSimpleClient(ctx, endpoint, clientIP)
-		if err != nil {
-			return nil, newError("failed to create client").Base(err)
-		}
-		clients = append(clients, client)
-	}
 
 	for _, ns := range config.NameServer {
 		clientIdx := len(clients)

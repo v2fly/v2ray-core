@@ -75,50 +75,36 @@ message RoutingRule {
     string tag = 1;
 
     // Tag of routing balancer.
-    string balancing_tag = 12;
+    string balancing_tag = 2;
   }
 
   // List of domains for target domain matching.
-  repeated Domain domain = 2;
-
-  // List of CIDRs for target IP address matching.
-  // Deprecated. Use geoip below.
-  repeated CIDR cidr = 3 [deprecated = true];
+  repeated Domain domain = 3;
 
   // List of GeoIPs for target IP address matching. If this entry exists, the
   // cidr above will have no effect. GeoIP fields with the same country code are
   // supposed to contain exactly same content. They will be merged during
   // runtime. For customized GeoIPs, please leave country code empty.
-  repeated GeoIP geoip = 10;
-
-  // A range of port [from, to]. If the destination port is in this range, this
-  // rule takes effect. Deprecated. Use port_list.
-  v2ray.core.common.net.PortRange port_range = 4 [deprecated = true];
+  repeated GeoIP geoip = 4;
 
   // List of ports.
-  v2ray.core.common.net.PortList port_list = 14;
-
-  // List of networks. Deprecated. Use networks.
-  v2ray.core.common.net.NetworkList network_list = 5 [deprecated = true];
+  v2ray.core.common.net.PortList port_list = 5;
 
   // List of networks for matching.
-  repeated v2ray.core.common.net.Network networks = 13;
-
-  // List of CIDRs for source IP address matching.
-  repeated CIDR source_cidr = 6 [deprecated = true];
+  repeated v2ray.core.common.net.Network networks = 6;
 
   // List of GeoIPs for source IP address matching. If this entry exists, the
   // source_cidr above will have no effect.
-  repeated GeoIP source_geoip = 11;
+  repeated GeoIP source_geoip = 7;
 
   // List of ports for source port matching.
-  v2ray.core.common.net.PortList source_port_list = 16;
+  v2ray.core.common.net.PortList source_port_list = 8;
 
-  repeated string user_email = 7;
-  repeated string inbound_tag = 8;
-  repeated string protocol = 9;
+  repeated string user_email = 9;
+  repeated string inbound_tag = 10;
+  repeated string protocol = 11;
 
-  string attributes = 15;
+  string attributes = 12;
 }
 
 message BalancingRule {

@@ -15,7 +15,6 @@ import (
 	"v2ray.com/core/common/session"
 	"v2ray.com/core/common/signal"
 	"v2ray.com/core/common/task"
-	"v2ray.com/core/features"
 	"v2ray.com/core/features/policy"
 	"v2ray.com/core/features/routing"
 	"v2ray.com/core/transport/internet"
@@ -41,12 +40,6 @@ func NewServer(ctx context.Context, config *ServerConfig) (*Server, error) {
 func (s *Server) policy() policy.Session {
 	config := s.config
 	p := s.policyManager.ForLevel(config.UserLevel)
-	if config.Timeout > 0 {
-		features.PrintDeprecatedFeatureWarning("Socks timeout")
-	}
-	if config.Timeout > 0 && config.UserLevel == 0 {
-		p.Timeouts.ConnectionIdle = time.Duration(config.Timeout) * time.Second
-	}
 	return p
 }
 
