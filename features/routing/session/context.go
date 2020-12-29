@@ -109,6 +109,14 @@ func (ctx *Context) GetAttributes() map[string]string {
 	return ctx.Content.Attributes
 }
 
+// GetSkipDNSRoutePick implements routing.Context.
+func (ctx *Context) GetSkipDNSRoutePick() bool {
+	if ctx.Content == nil {
+		return false
+	}
+	return ctx.Content.SkipRoutePick
+}
+
 // AsRoutingContext creates a context from context.context with session info.
 func AsRoutingContext(ctx context.Context) routing.Context {
 	return &Context{

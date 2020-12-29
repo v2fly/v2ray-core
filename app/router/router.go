@@ -9,7 +9,6 @@ import (
 
 	"v2ray.com/core"
 	"v2ray.com/core/common"
-	"v2ray.com/core/common/session"
 	"v2ray.com/core/features/dns"
 	"v2ray.com/core/features/outbound"
 	"v2ray.com/core/features/routing"
@@ -87,10 +86,7 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 	// SkipRoutePick is set from DNS DOH module.
 	// the remote server specified is a domain name,
 	// this prevents cycle resolving dead loop
-	skipDNSRoutePick := false
-	if content := session.ContentFromContext(ctx); content != nil {
-		skipDNSRoutePick = content.SkipRoutePick
-	}
+	skipDNSRoutePick := ctx.GetSkipDNSRoutePick()
 
 	if r.domainStrategy == Config_IpOnDemand && !skipDNSRoutePick {
 		ctx = routing_dns.ContextWithDNSClient(ctx, r.dns)
