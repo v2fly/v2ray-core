@@ -28,8 +28,9 @@ func (c routingContext) GetTargetPort() net.Port {
 	return net.Port(c.RoutingContext.GetTargetPort())
 }
 
-// GetSkipDNSRoutePick is a mock implementation here,
-//   SkipDNSRoutePick is set from dns module, not useful if coming from a protobuf object
+// GetSkipDNSResolve is a mock implementation here to match the interface,
+// SkipDNSResolve is set from dns module, no use if coming from a protobuf object?
+// TODO: please confirm @Vigilans
 func (c routingContext) GetSkipDNSResolve() bool {
 	return false
 }
