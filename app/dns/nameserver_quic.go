@@ -176,8 +176,8 @@ func (s *QUICNameServer) sendQuery(ctx context.Context, domain string, clientIP 
 			}
 
 			dnsCtx = session.ContextWithContent(dnsCtx, &session.Content{
-				Protocol:      "quic",
-				SkipDNSResove: true,
+				Protocol:       "quic",
+				SkipDNSResolve: true,
 			})
 
 			var cancel context.CancelFunc
