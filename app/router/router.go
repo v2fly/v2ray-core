@@ -83,12 +83,12 @@ func (r *Router) PickRoute(ctx routing.Context) (routing.Route, error) {
 
 func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context, error) {
 
-	// SkipRoutePick is set from DNS DOH module.
-	// the remote server specified is a domain name,
+	// SkipDNSResolve is set from DNS module.
+	// the DOH remote server maybe a domain name,
 	// this prevents cycle resolving dead loop
-	skipDNSRoutePick := ctx.GetSkipDNSRoutePick()
+	skipDNSResolve := ctx.GetSkipDNSResolve()
 
-	if r.domainStrategy == Config_IpOnDemand && !skipDNSRoutePick {
+	if r.domainStrategy == Config_IpOnDemand && !skipDNSResolve {
 		ctx = routing_dns.ContextWithDNSClient(ctx, r.dns)
 	}
 
@@ -98,7 +98,7 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 		}
 	}
 
-	if r.domainStrategy != Config_IpIfNonMatch || len(ctx.GetTargetDomain()) == 0 || skipDNSRoutePick {
+	if r.domainStrategy != Config_IpIfNonMatch || len(ctx.GetTargetDomain()) == 0 || skipDNSResolve {
 		return nil, ctx, common.ErrNoClue
 	}
 

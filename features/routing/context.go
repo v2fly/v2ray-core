@@ -38,6 +38,6 @@ type Context interface {
 	// GetAttributes returns extra attributes from the conneciont content.
 	GetAttributes() map[string]string
 
-	// GetSkipDNSRoutePick returns a flag switch for weather skipping route resolving.
-	GetSkipDNSRoutePick() bool
+	// GetSkipDNSResolve returns a flag switch for weather skip dns resovle during route pick.
+	GetSkipDNSResolve() bool
 }

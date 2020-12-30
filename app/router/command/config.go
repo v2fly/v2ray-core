@@ -30,7 +30,7 @@ func (c routingContext) GetTargetPort() net.Port {
 
 // GetSkipDNSRoutePick is a mock implementation here,
 //   SkipDNSRoutePick is set from dns module, not useful if coming from a protobuf object
-func (c routingContext) GetSkipDNSRoutePick() bool {
+func (c routingContext) GetSkipDNSResolve() bool {
 	return false
 }
 

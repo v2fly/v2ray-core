@@ -110,11 +110,11 @@ func (ctx *Context) GetAttributes() map[string]string {
 }
 
 // GetSkipDNSRoutePick implements routing.Context.
-func (ctx *Context) GetSkipDNSRoutePick() bool {
+func (ctx *Context) GetSkipDNSResolve() bool {
 	if ctx.Content == nil {
 		return false
 	}
-	return ctx.Content.SkipRoutePick
+	return ctx.Content.SkipDNSResove
 }
 
 // AsRoutingContext creates a context from context.context with session info.

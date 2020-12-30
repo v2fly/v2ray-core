@@ -68,7 +68,7 @@ type Content struct {
 
 	Attributes map[string]string
 
-	SkipRoutePick bool
+	SkipDNSResove bool
 }
 
 // Sockopt is the settings for socket connection.
