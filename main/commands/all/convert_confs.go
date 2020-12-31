@@ -23,6 +23,15 @@ func mergeConvertToMap(files []string, format string) map[string]interface{} {
 		if err != nil {
 			base.Fatalf("failed to load json: %s", err)
 		}
+	case "toml":
+		bs, err := tomlsToJSONs(files)
+		if err != nil {
+			base.Fatalf("failed to convert toml to json: %s", err)
+		}
+		m, err = merge.BytesToMap(bs)
+		if err != nil {
+			base.Fatalf("failed to merge converted json: %s", err)
+		}
 	case "yaml":
 		bs, err := yamlsToJSONs(files)
 		if err != nil {
@@ -104,6 +113,22 @@ func yamlsToJSONs(files []string) ([][]byte, error) {
 			return nil, err
 		}
 		j, err := json.FromYAML(bs)
+		if err != nil {
+			return nil, err
+		}
+		jsons = append(jsons, j)
+	}
+	return jsons, nil
+}
+
+func tomlsToJSONs(files []string) ([][]byte, error) {
+	jsons := make([][]byte, 0)
+	for _, file := range files {
+		bs, err := cmdarg.LoadArgToBytes(file)
+		if err != nil {
+			return nil, err
+		}
+		j, err := json.FromTOML(bs)
 		if err != nil {
 			return nil, err
 		}
