@@ -18,7 +18,7 @@ func TestShadowsocksServerConfigParsing(t *testing.T) {
 	runMultiTestCase(t, []TestCase{
 		{
 			Input: `{
-				"method": "aes-128-cfb",
+				"method": "aes-256-GCM",
 				"password": "v2ray-password"
 			}`,
 			Parser: loadJSON(creator),
