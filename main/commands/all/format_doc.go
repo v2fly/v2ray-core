@@ -11,7 +11,10 @@ var docFormat = &base.Command{
 {{.Exec}} supports different config formats:
 
 	* json (.json, .jsonc)
-	  The default loader, multiple config files support.
+	  The default loader, multiple config files support.	
+
+	* toml (.toml)
+	  The toml loader, multiple config files support.
 
 	* yaml (.yml)
 	  The yaml loader, multiple config files support.

@@ -3,6 +3,7 @@ package all
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/pelletier/go-toml"
 	"google.golang.org/protobuf/proto"
 	"os"
 	"strings"
@@ -24,12 +25,12 @@ Arguments:
 
 	-i, -input
 		Specify the input format.
-		Available values: "json", "yaml"
+		Available values: "json", "toml", "yaml"
 		Default: "json"
 
 	-o, -output
 		Specify the output format
-		Available values: "json", "yaml", "protobuf" / "pb"
+		Available values: "json", "toml", "yaml", "protobuf" / "pb"
 		Default: "json"
 
 	-r
@@ -38,16 +39,14 @@ Arguments:
 Examples:
 
 	{{.Exec}} {{.LongName}} -output=protobuf config.json           (1)
-	{{.Exec}} {{.LongName}} -output=yaml config.json               (2)
-	{{.Exec}} {{.LongName}} -input=yaml config.yaml                (3)
-	{{.Exec}} {{.LongName}} "path/to/dir"                          (4)
-	{{.Exec}} {{.LongName}} -i yaml -o protobuf c1.yaml <url>.yaml (5)
+	{{.Exec}} {{.LongName}} -input=toml config.toml                (2)
+	{{.Exec}} {{.LongName}} "path/to/dir"                          (3)
+	{{.Exec}} {{.LongName}} -i yaml -o protobuf c1.yaml <url>.yaml (4)
 
 (1) Convert json to protobuf
-(2) Convert json to yaml
-(3) Convert yaml to json
-(4) Merge json files in dir
-(5) Merge yaml files and convert to protobuf
+(2) Convert toml to json
+(3) Merge json files in dir
+(4) Merge yaml files and convert to protobuf
 
 Use "{{.Exec}} help config-merge" for more information about merge.
 `,
@@ -64,6 +63,7 @@ var (
 )
 var formatExtensions = map[string][]string{
 	"json": {".json", ".jsonc"},
+	"toml": {".toml"},
 	"yaml": {".yaml", ".yml"},
 }
 
@@ -94,6 +94,11 @@ func executeConvert(cmd *base.Command, args []string) {
 	switch outputFormat {
 	case "json":
 		out, err = json.Marshal(m)
+		if err != nil {
+			base.Fatalf("failed to marshal json: %s", err)
+		}
+	case "toml":
+		out, err = toml.Marshal(m)
 		if err != nil {
 			base.Fatalf("failed to marshal json: %s", err)
 		}

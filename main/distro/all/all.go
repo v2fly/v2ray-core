@@ -76,6 +76,9 @@ import (
 	// The following line loads JSON internally
 	_ "github.com/v2fly/v2ray-core/v4/main/json"
 
+	// TOML config support.
+	_ "github.com/v2fly/v2ray-core/v4/main/toml"
+
 	// YAML config support.
 	_ "github.com/v2fly/v2ray-core/v4/main/yaml"
 

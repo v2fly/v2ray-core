@@ -10,6 +10,7 @@ require (
 	github.com/jhump/protoreflect v1.8.2
 	github.com/lucas-clemente/quic-go v0.21.1
 	github.com/miekg/dns v1.1.42
+	github.com/pelletier/go-toml v1.8.1
 	github.com/pires/go-proxyproto v0.5.0
 	github.com/seiflotfy/cuckoofilter v0.0.0-20201222105146-bc6005554a0c
 	github.com/stretchr/testify v1.7.0

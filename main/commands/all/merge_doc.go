@@ -14,7 +14,7 @@ Merging of config files is applied in following commands:
 	{{.Exec}} test -c c1.yaml -c c2.yaml ...
 	{{.Exec}} convert c1.json dir1 ...
 
-Support of yaml is implemented by converting yaml to json, 
+Support of toml and yaml is implemented by converting them to json, 
 both merge and load. So we take json as example here.
 
 Suppose we have 2 JSON files,
