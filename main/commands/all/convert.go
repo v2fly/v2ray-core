@@ -39,22 +39,14 @@ Arguments:
 Examples:
 
 	{{.Exec}} {{.LongName}} -output=protobuf config.json           (1)
-	{{.Exec}} {{.LongName}} -output=toml config.json               (2)
-	{{.Exec}} {{.LongName}} -input=toml config.toml                (3)
-	{{.Exec}} {{.LongName}} -output=yaml config.json               (4)
-	{{.Exec}} {{.LongName}} -input=yaml config.yaml                (5)
-	{{.Exec}} {{.LongName}} "path/to/dir"                          (6)
-	{{.Exec}} {{.LongName}} -i toml -o protobuf c1.toml <url>.toml (7)
-	{{.Exec}} {{.LongName}} -i yaml -o protobuf c1.yaml <url>.yaml (8)
+	{{.Exec}} {{.LongName}} -input=toml config.toml                (2)
+	{{.Exec}} {{.LongName}} "path/to/dir"                          (3)
+	{{.Exec}} {{.LongName}} -i yaml -o protobuf c1.yaml <url>.yaml (4)
 
 (1) Convert json to protobuf
-(2) Convert json to toml
-(3) Convert toml to json
-(4) Convert json to yaml
-(5) Convert yaml to json
-(6) Merge json files in dir
-(7) Merge toml files and convert to protobuf
-(8) Merge yaml files and convert to protobuf
+(2) Convert toml to json
+(3) Merge json files in dir
+(4) Merge yaml files and convert to protobuf
 
 Use "{{.Exec}} help config-merge" for more information about merge.
 `,

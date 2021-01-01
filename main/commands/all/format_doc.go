@@ -33,7 +33,6 @@ Examples:
 
 	{{.Exec}} run -d dir                                  (1)
 	{{.Exec}} run -format=protobuf -d dir                 (2)
-	{{.Exec}} test -c c1.toml -d dir                       (3)
 	{{.Exec}} test -c c1.yml -d dir                       (3)
 	{{.Exec}} test -format=pb -c c1.json                  (4)
 
@@ -44,15 +43,11 @@ Examples:
 	all protobuf files in the "dir", but only the the first 
 	.pb file is loaded.
 
-(3) The toml loader is selected because of the "c1.toml" file, 
-	{{.Exec}} will try to load "c1.toml" and all toml files in 
-	the "dir".
-
-(4) The yaml loader is selected because of the "c1.yml" file, 
+(3) The yaml loader is selected because of the "c1.yml" file, 
 	{{.Exec}} will try to load "c1.yml" and all yaml files in 
 	the "dir".
 
-(5) The protobuf loader is specified, {{.Exec}} will load 
+(4) The protobuf loader is specified, {{.Exec}} will load 
 	"c1.json" as protobuf, no matter its extension.
 `,
 }
