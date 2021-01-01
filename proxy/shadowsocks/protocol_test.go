@@ -18,6 +18,12 @@ func toAccount(a *Account) protocol.Account {
 	return account
 }
 
+func equalRequestHeader(x, y *protocol.RequestHeader) bool {
+	return cmp.Equal(x, y, cmp.Comparer(func(x, y protocol.RequestHeader) bool {
+		return x == y
+	}))
+}
+
 func TestUDPEncoding(t *testing.T) {
 	request := &protocol.RequestHeader{
 		Version: Version,
@@ -25,10 +31,10 @@ func TestUDPEncoding(t *testing.T) {
 		Address: net.LocalHostIP,
 		Port:    1234,
 		User: &protocol.MemoryUser{
-			Email: "love@v2ray.com",
+			Email: "love@v2fly.org",
 			Account: toAccount(&Account{
-				Password:   "shadowsocks-password",
-				CipherType: CipherType_AES_128_CFB,
+				Password:   "password",
+				CipherType: CipherType_AES_128_GCM,
 			}),
 		},
 	}
@@ -45,8 +51,8 @@ func TestUDPEncoding(t *testing.T) {
 		t.Error("data: ", r)
 	}
 
-	if r := cmp.Diff(decodedRequest, request); r != "" {
-		t.Error("request: ", r)
+	if equalRequestHeader(decodedRequest, request) == false {
+		t.Error("different request")
 	}
 }
 
@@ -62,10 +68,10 @@ func TestTCPRequest(t *testing.T) {
 				Address: net.LocalHostIP,
 				Port:    1234,
 				User: &protocol.MemoryUser{
-					Email: "love@v2ray.com",
+					Email: "love@v2fly.org",
 					Account: toAccount(&Account{
 						Password:   "tcp-password",
-						CipherType: CipherType_CHACHA20,
+						CipherType: CipherType_AES_128_GCM,
 					}),
 				},
 			},
@@ -78,10 +84,10 @@ func TestTCPRequest(t *testing.T) {
 				Address: net.LocalHostIPv6,
 				Port:    1234,
 				User: &protocol.MemoryUser{
-					Email: "love@v2ray.com",
+					Email: "love@v2fly.org",
 					Account: toAccount(&Account{
 						Password:   "password",
-						CipherType: CipherType_AES_256_CFB,
+						CipherType: CipherType_AES_256_GCM,
 					}),
 				},
 			},
@@ -91,13 +97,13 @@ func TestTCPRequest(t *testing.T) {
 			request: &protocol.RequestHeader{
 				Version: Version,
 				Command: protocol.RequestCommandTCP,
-				Address: net.DomainAddress("v2ray.com"),
+				Address: net.DomainAddress("v2fly.org"),
 				Port:    1234,
 				User: &protocol.MemoryUser{
-					Email: "love@v2ray.com",
+					Email: "love@v2fly.org",
 					Account: toAccount(&Account{
 						Password:   "password",
-						CipherType: CipherType_CHACHA20_IETF,
+						CipherType: CipherType_CHACHA20_POLY1305,
 					}),
 				},
 			},
@@ -119,8 +125,8 @@ func TestTCPRequest(t *testing.T) {
 
 		decodedRequest, reader, err := ReadTCPSession(request.User, cache)
 		common.Must(err)
-		if r := cmp.Diff(decodedRequest, request); r != "" {
-			t.Error("request: ", r)
+		if equalRequestHeader(decodedRequest, request) == false {
+			t.Error("different request")
 		}
 
 		decodedData, err := reader.ReadMultiBuffer()
@@ -139,7 +145,7 @@ func TestUDPReaderWriter(t *testing.T) {
 	user := &protocol.MemoryUser{
 		Account: toAccount(&Account{
 			Password:   "test-password",
-			CipherType: CipherType_CHACHA20_IETF,
+			CipherType: CipherType_CHACHA20_POLY1305,
 		}),
 	}
 	cache := buf.New()
@@ -149,7 +155,7 @@ func TestUDPReaderWriter(t *testing.T) {
 		Writer: cache,
 		Request: &protocol.RequestHeader{
 			Version: Version,
-			Address: net.DomainAddress("v2ray.com"),
+			Address: net.DomainAddress("v2fly.org"),
 			Port:    123,
 			User:    user,
 		},

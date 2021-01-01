@@ -18,14 +18,14 @@ func TestShadowsocksServerConfigParsing(t *testing.T) {
 	runMultiTestCase(t, []TestCase{
 		{
 			Input: `{
-				"method": "aes-128-cfb",
+				"method": "aes-256-GCM",
 				"password": "v2ray-password"
 			}`,
 			Parser: loadJSON(creator),
 			Output: &shadowsocks.ServerConfig{
 				User: &protocol.User{
 					Account: serial.ToTypedMessage(&shadowsocks.Account{
-						CipherType: shadowsocks.CipherType_AES_128_CFB,
+						CipherType: shadowsocks.CipherType_AES_256_GCM,
 						Password:   "v2ray-password",
 					}),
 				},
