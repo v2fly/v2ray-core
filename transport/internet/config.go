@@ -43,15 +43,11 @@ func (c *TransportConfig) GetUnifiedProtocolName() string {
 }
 
 func (c *StreamConfig) GetEffectiveProtocol() string {
-	if c == nil {
+	if c == nil || c.ProtocolName == "" {
 		return "tcp"
 	}
 
-	if len(c.ProtocolName) > 0 {
-		return c.ProtocolName
-	}
-
-	return unknownProtocol
+	return c.ProtocolName
 }
 
 func (c *StreamConfig) GetEffectiveTransportSettings() (interface{}, error) {
