@@ -58,6 +58,9 @@ import (
 	// JSON config support.
 	_ "v2ray.com/core/main/json"
 
+	// TOML config support.
+	_ "v2ray.com/core/main/toml"
+
 	// YAML config support.
 	_ "v2ray.com/core/main/yaml"
 
