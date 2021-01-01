@@ -18,6 +18,12 @@ func toAccount(a *Account) protocol.Account {
 	return account
 }
 
+func equalRequestHeader(x, y *protocol.RequestHeader) bool {
+	return cmp.Equal(x, y, cmp.Comparer(func(x, y protocol.RequestHeader) bool {
+		return x == y
+	}))
+}
+
 func TestUDPEncoding(t *testing.T) {
 	request := &protocol.RequestHeader{
 		Version: Version,
@@ -45,8 +51,8 @@ func TestUDPEncoding(t *testing.T) {
 		t.Error("data: ", r)
 	}
 
-	if r := cmp.Diff(decodedRequest, request); r != "" {
-		t.Error("request: ", r)
+	if equalRequestHeader(decodedRequest, request) == false {
+		t.Error("different request")
 	}
 }
 
@@ -119,8 +125,8 @@ func TestTCPRequest(t *testing.T) {
 
 		decodedRequest, reader, err := ReadTCPSession(request.User, cache)
 		common.Must(err)
-		if r := cmp.Diff(decodedRequest, request); r != "" {
-			t.Error("request: ", r)
+		if equalRequestHeader(decodedRequest, request) == false {
+			t.Error("different request")
 		}
 
 		decodedData, err := reader.ReadMultiBuffer()
