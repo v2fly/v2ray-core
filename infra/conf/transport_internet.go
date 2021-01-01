@@ -286,13 +286,12 @@ func (c *TLSCertConfig) Build() (*tls.Certificate, error) {
 }
 
 type TLSConfig struct {
-	Insecure                 bool             `json:"allowInsecure"`
-	InsecureCiphers          bool             `json:"allowInsecureCiphers"`
-	Certs                    []*TLSCertConfig `json:"certificates"`
-	ServerName               string           `json:"serverName"`
-	ALPN                     *StringList      `json:"alpn"`
-	DisableSessionResumption bool             `json:"disableSessionResumption"`
-	DisableSystemRoot        bool             `json:"disableSystemRoot"`
+	Insecure                bool             `json:"allowInsecure"`
+	Certs                   []*TLSCertConfig `json:"certificates"`
+	ServerName              string           `json:"serverName"`
+	ALPN                    *StringList      `json:"alpn"`
+	EnableSessionResumption bool             `json:"enableSessionResumption"`
+	DisableSystemRoot       bool             `json:"disableSystemRoot"`
 }
 
 // Build implements Buildable.
@@ -308,14 +307,13 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 	}
 	serverName := c.ServerName
 	config.AllowInsecure = c.Insecure
-	config.AllowInsecureCiphers = c.InsecureCiphers
 	if len(c.ServerName) > 0 {
 		config.ServerName = serverName
 	}
 	if c.ALPN != nil && len(*c.ALPN) > 0 {
 		config.NextProtocol = []string(*c.ALPN)
 	}
-	config.DisableSessionResumption = c.DisableSessionResumption
+	config.EnableSessionResumption = c.EnableSessionResumption
 	config.DisableSystemRoot = c.DisableSystemRoot
 	return config, nil
 }
