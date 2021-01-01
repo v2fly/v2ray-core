@@ -183,7 +183,7 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 			RootCAs:                root,
 			InsecureSkipVerify:     false,
 			NextProtos:             nil,
-			SessionTicketsDisabled: false,
+			SessionTicketsDisabled: true,
 		}
 	}
 
