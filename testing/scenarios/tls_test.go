@@ -483,12 +483,12 @@ func TestHTTP2(t *testing.T) {
 					PortRange: net.SinglePortRange(serverPort),
 					Listen:    net.NewIPOrDomain(net.LocalHostIP),
 					StreamSettings: &internet.StreamConfig{
-						Protocol: internet.TransportProtocol_HTTP,
+						ProtocolName: "http",
 						TransportSettings: []*internet.TransportConfig{
 							{
-								Protocol: internet.TransportProtocol_HTTP,
+								ProtocolName: "http",
 								Settings: serial.ToTypedMessage(&http.Config{
-									Host: []string{"v2ray.com"},
+									Host: []string{"v2fly.org"},
 									Path: "/testpath",
 								}),
 							},
@@ -530,9 +530,7 @@ func TestHTTP2(t *testing.T) {
 				ProxySettings: serial.ToTypedMessage(&dokodemo.Config{
 					Address: net.NewIPOrDomain(dest.Address),
 					Port:    uint32(dest.Port),
-					NetworkList: &net.NetworkList{
-						Network: []net.Network{net.Network_TCP},
-					},
+					Networks: []net.Network{net.Network_TCP},
 				}),
 			},
 		},
@@ -555,12 +553,12 @@ func TestHTTP2(t *testing.T) {
 				}),
 				SenderSettings: serial.ToTypedMessage(&proxyman.SenderConfig{
 					StreamSettings: &internet.StreamConfig{
-						Protocol: internet.TransportProtocol_HTTP,
+						ProtocolName: "http",
 						TransportSettings: []*internet.TransportConfig{
 							{
-								Protocol: internet.TransportProtocol_HTTP,
+								ProtocolName: "http",
 								Settings: serial.ToTypedMessage(&http.Config{
-									Host: []string{"v2ray.com"},
+									Host: []string{"v2fly.org"},
 									Path: "/testpath",
 								}),
 							},
@@ -581,11 +579,11 @@ func TestHTTP2(t *testing.T) {
 	common.Must(err)
 	defer CloseAllServers(servers)
 
-	var errg errgroup.Group
+	var errGroup errgroup.Group
 	for i := 0; i < 10; i++ {
-		errg.Go(testTCPConn(clientPort, 10240*1024, time.Second*40))
+		errGroup.Go(testTCPConn(clientPort, 10240*1024, time.Second*20))
 	}
-	if err := errg.Wait(); err != nil {
+	if err := errGroup.Wait(); err != nil {
 		t.Error(err)
 	}
 }
