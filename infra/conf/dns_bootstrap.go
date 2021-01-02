@@ -2,6 +2,8 @@
 
 package conf
 
-func BootstrapDNS(ns []byte) string {
-	return ""
+const bootstrapDNS = ""
+
+func BootstrapDNS() bool {
+	return false
 }

@@ -158,14 +158,8 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 		config.NameServer = append(config.NameServer, ns)
 	}
 
-	for _, serverName := range config.GetNameServer() {
-		ns := serverName.GetAddress().GetAddress().GetIp()
-		if ns != nil {
-			if ret := BootstrapDNS(ns); ret != "" {
-				newError("Bootstrap DNS: ", ret).AtWarning().WriteToLog()
-			}
-			break
-		}
+	if BootstrapDNS() {
+		newError("Bootstrap DNS: ", bootstrapDNS).AtWarning().WriteToLog()
 	}
 
 	if c.Hosts != nil && len(c.Hosts) > 0 {
