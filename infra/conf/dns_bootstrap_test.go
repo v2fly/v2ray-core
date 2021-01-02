@@ -7,8 +7,10 @@ import (
 )
 
 func TestBootstrapDNS(t *testing.T) {
-	defaultNS := "8.8.8.8:53"
-	const domain = "github.com"
+	const (
+		defaultNS = "8.8.8.8:53"
+		domain    = "github.com"
+	)
 	var dialer net.Dialer
 	net.DefaultResolver = &net.Resolver{
 		PreferGo: true,
