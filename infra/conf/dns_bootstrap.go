@@ -1,6 +1,6 @@
 // +build !android
 
-package net
+package conf
 
 func BootstrapDNS(ns []byte) string {
 	return ""

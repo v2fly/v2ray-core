@@ -161,7 +161,7 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 	for _, serverName := range config.GetNameServer() {
 		ns := serverName.GetAddress().GetAddress().GetIp()
 		if ns != nil {
-			if ret := net.BootstrapDNS(ns); ret != "" {
+			if ret := BootstrapDNS(ns); ret != "" {
 				newError("Bootstrap DNS: ", ret).AtWarning().WriteToLog()
 			}
 			break
