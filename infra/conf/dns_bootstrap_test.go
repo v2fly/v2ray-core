@@ -34,7 +34,7 @@ func TestBootstrapDNS(t *testing.T) {
 			return conn, nil
 		},
 	}
-	if ips, err := net.LookupIP(domain); len(ips) <= 0 {
+	if ips, err := net.LookupIP(domain); len(ips) == 0 {
 		t.Error("set BootstrapDNS failed: ", err)
 	}
 }
