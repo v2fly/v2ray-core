@@ -6,12 +6,14 @@ on:
       - master
       - v*
     paths:
+      - ".github/workflows/*.yml"
       - "**/*.go"
       - "go.mod"
       - "go.sum"
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
+      - ".github/workflows/*.yml"
       - "**/*.go"
       - "go.mod"
       - "go.sum"
@@ -23,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest, macos-11.0]
     steps:
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
