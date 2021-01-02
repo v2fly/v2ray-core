@@ -8,7 +8,7 @@ import (
 	"net"
 )
 
-func SetDefaultResolver(ns []byte) string {
+func BootstrapDNS(ns []byte) string {
 	if ns == nil {
 		return ""
 	}
