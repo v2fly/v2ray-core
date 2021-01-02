@@ -26,7 +26,7 @@ func TestHTTPConnection(t *testing.T) {
 		ProtocolSettings: &Config{},
 		SecurityType:     "tls",
 		SecuritySettings: &tls.Config{
-			Certificate: []*tls.Certificate{tls.ParseCertificate(cert.MustGenerate(nil, cert.CommonName("www.v2ray.com")))},
+			Certificate: []*tls.Certificate{tls.ParseCertificate(cert.MustGenerate(nil, cert.CommonName("www.v2fly.org")))},
 		},
 	}, func(conn internet.Connection) {
 		go func() {
@@ -56,7 +56,7 @@ func TestHTTPConnection(t *testing.T) {
 		ProtocolSettings: &Config{},
 		SecurityType:     "tls",
 		SecuritySettings: &tls.Config{
-			ServerName:    "www.v2ray.com",
+			ServerName:    "www.v2fly.org",
 			AllowInsecure: true,
 		},
 	})
