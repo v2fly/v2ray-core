@@ -1,14 +1,10 @@
 package conf
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
-	"runtime"
 	"sort"
 	"strings"
 
-	net2 "net"
 	"v2ray.com/core/app/dns"
 	"v2ray.com/core/app/router"
 	"v2ray.com/core/common/net"
@@ -162,25 +158,13 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 		config.NameServer = append(config.NameServer, ns)
 	}
 
-	if runtime.GOOS == "android" {
-		for _, nameServer := range config.GetNameServer() {
-			ns := nameServer.GetAddress().GetAddress().GetIp()
-			if ns != nil {
-				defaultNS := fmt.Sprintf("%d.%d.%d.%d", ns[0], ns[1], ns[2], ns[3])
-				var dialer net.Dialer
-				net2.DefaultResolver = &net.Resolver{
-					PreferGo: true,
-					Dial: func(context context.Context, _, _ string) (net.Conn, error) {
-						conn, err := dialer.DialContext(context, "udp", defaultNS+":53")
-						if err != nil {
-							return nil, err
-						}
-						return conn, nil
-					},
-				}
-				newError("set DefaultResolver: ", defaultNS).AtWarning().WriteToLog()
-				break
+	for _, serverName := range config.GetNameServer() {
+		ns := serverName.GetAddress().GetAddress().GetIp()
+		if ns != nil {
+			if ret := net.SetDefaultResolver(ns); ret != "" {
+				newError("set DefaultResolver: ", ret).AtWarning().WriteToLog()
 			}
+			break
 		}
 	}
 
