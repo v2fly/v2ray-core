@@ -122,8 +122,23 @@ message RoutingRule {
 }
 
 message BalancingRule {
+  enum BalancingStrategy{
+    // Choose the tag randomly
+    Random = 0;
+  }
   string tag = 1;
   repeated string outbound_selector = 2;
+  BalancingStrategy strategy = 3;
+  HealthCheckSetting health_check = 4;
+}
+
+message HealthCheckSetting {
+  bool enabled = 1;
+  // destination url, need 204 for success return
+  // default http://www.google.com/gen_204
+  string destination = 2;
+  int32 round = 3;
+  int32 timeout = 4;
 }
 
 message Config {

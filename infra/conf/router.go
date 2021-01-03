@@ -16,11 +16,15 @@ type RouterRulesConfig struct {
 	DomainStrategy string            `json:"domainStrategy"`
 }
 
+// BalancingRule represents a balancing rule
 type BalancingRule struct {
-	Tag       string     `json:"tag"`
-	Selectors StringList `json:"selector"`
+	Tag         string                    `json:"tag"`
+	Strategy    string                    `json:"strategy"`
+	HealthCheck router.HealthCheckSetting `json:"healthCheck"`
+	Selectors   StringList                `json:"selector"`
 }
 
+// Build builds the balancing rule
 func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 	if r.Tag == "" {
 		return nil, newError("empty balancer tag")
@@ -29,9 +33,19 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 		return nil, newError("empty selector list")
 	}
 
+	var strategy router.BalancingRule_BalancingStrategy
+	switch strings.ToLower(r.Strategy) {
+	case "random", "":
+		strategy = router.BalancingRule_Random
+	default:
+		return nil, newError("unknown balancing strategy: " + r.Strategy)
+	}
+
 	return &router.BalancingRule{
 		Tag:              r.Tag,
 		OutboundSelector: []string(r.Selectors),
+		Strategy:         strategy,
+		HealthCheck:      &r.HealthCheck,
 	}, nil
 }
 

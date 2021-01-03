@@ -1,6 +1,8 @@
 package router
 
 import (
+	"time"
+
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/features/outbound"
 	"v2ray.com/core/features/routing"
@@ -145,10 +147,22 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 	return conds, nil
 }
 
+// Build builds the balancing rule
 func (br *BalancingRule) Build(ohm outbound.Manager) (*Balancer, error) {
-	return &Balancer{
-		selectors: br.OutboundSelector,
-		strategy:  &RandomStrategy{},
-		ohm:       ohm,
-	}, nil
+	switch br.Strategy {
+	case BalancingRule_Random:
+		b := &Balancer{
+			selectors: br.OutboundSelector,
+			healthChecker: &HealthChecker{
+				Enabled:     br.HealthCheck.Enabled,
+				Destination: br.HealthCheck.Destination,
+				Round:       int(br.HealthCheck.Round),
+				Timeout:     time.Second * time.Duration(br.HealthCheck.Timeout),
+			},
+			ohm: ohm,
+		}
+		b.strategy = &RandomStrategy{balancer: b}
+		return b, nil
+	}
+	return nil, nil
 }

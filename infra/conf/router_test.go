@@ -67,6 +67,16 @@ func TestRouterConfig(t *testing.T) {
 					{
 						"tag": "b1",
 						"selector": ["test"]
+					},
+					{
+						"tag": "b1",
+						"selector": ["test"],
+						"strategy": "random",
+						"healthCheck": {
+							"enabled": true,
+							"round": 3,
+							"timeout": 10
+						}
 					}
 				]
 			}`,
@@ -77,6 +87,18 @@ func TestRouterConfig(t *testing.T) {
 					{
 						Tag:              "b1",
 						OutboundSelector: []string{"test"},
+						Strategy:         router.BalancingRule_Random,
+						HealthCheck:      &router.HealthCheckSetting{},
+					},
+					{
+						Tag:              "b1",
+						OutboundSelector: []string{"test"},
+						Strategy:         router.BalancingRule_Random,
+						HealthCheck: &router.HealthCheckSetting{
+							Enabled: true,
+							Round:   3,
+							Timeout: 10,
+						},
 					},
 				},
 				Rule: []*router.RoutingRule{

@@ -112,12 +112,18 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 }
 
 // Start implements common.Runnable.
-func (*Router) Start() error {
+func (r *Router) Start() error {
+	for _, b := range r.balancers {
+		b.StartHealthCheck()
+	}
 	return nil
 }
 
 // Close implements common.Closable.
-func (*Router) Close() error {
+func (r *Router) Close() error {
+	for _, b := range r.balancers {
+		b.StopHealthCheck()
+	}
 	return nil
 }
 

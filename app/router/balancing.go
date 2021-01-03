@@ -1,32 +1,23 @@
 package router
 
 import (
-	"v2ray.com/core/common/dice"
 	"v2ray.com/core/features/outbound"
 )
 
+// BalancingStrategy is the interface of a balancing strategy
 type BalancingStrategy interface {
-	PickOutbound([]string) string
+	PickOutbound() string
 }
 
-type RandomStrategy struct {
-}
-
-func (s *RandomStrategy) PickOutbound(tags []string) string {
-	n := len(tags)
-	if n == 0 {
-		panic("0 tags")
-	}
-
-	return tags[dice.Roll(n)]
-}
-
+// Balancer represents a balancer
 type Balancer struct {
-	selectors []string
-	strategy  BalancingStrategy
-	ohm       outbound.Manager
+	selectors     []string
+	strategy      BalancingStrategy
+	healthChecker *HealthChecker
+	ohm           outbound.Manager
 }
 
+// PickOutbound picks the tag of a outbound
 func (b *Balancer) PickOutbound() (string, error) {
 	hs, ok := b.ohm.(outbound.HandlerSelector)
 	if !ok {
@@ -36,7 +27,7 @@ func (b *Balancer) PickOutbound() (string, error) {
 	if len(tags) == 0 {
 		return "", newError("no available outbounds selected")
 	}
-	tag := b.strategy.PickOutbound(tags)
+	tag := b.strategy.PickOutbound()
 	if tag == "" {
 		return "", newError("balancing strategy returns empty tag")
 	}
