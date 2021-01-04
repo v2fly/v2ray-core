@@ -189,6 +189,7 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 	if !destination.IsValid() {
 		panic("Dispatcher: Invalid destination.")
 	}
+
 	ob := &session.Outbound{
 		Target: destination,
 	}
@@ -200,9 +201,15 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 		content = new(session.Content)
 		ctx = session.ContextWithContent(ctx, content)
 	}
+
+	handler := session.HandlerFromContext(ctx)
 	sniffingRequest := content.SniffingRequest
 	if destination.Network != net.Network_TCP || !sniffingRequest.Enabled {
-		go d.routedDispatch(ctx, outbound, destination)
+		if handler != nil {
+			go d.targetedDispatch(ctx, outbound, handler.Tag)
+		} else {
+			go d.routedDispatch(ctx, outbound, destination)
+		}
 	} else {
 		go func() {
 			cReader := &cachedReader{
@@ -219,7 +226,11 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 				destination.Address = net.ParseAddress(domain)
 				ob.Target = destination
 			}
-			d.routedDispatch(ctx, outbound, destination)
+			if handler != nil {
+				d.targetedDispatch(ctx, outbound, handler.Tag)
+			} else {
+				d.routedDispatch(ctx, outbound, destination)
+			}
 		}()
 	}
 	return inbound, nil
@@ -253,6 +264,24 @@ func sniffer(ctx context.Context, cReader *cachedReader) (SniffResult, error) {
 			}
 		}
 	}
+}
+
+func (d *DefaultDispatcher) targetedDispatch(ctx context.Context, link *transport.Link, tag string) {
+	handler := d.ohm.GetHandler(tag)
+	if handler == nil {
+		newError("outbound handler [", tag, "] not exist").WriteToLog(session.ExportIDToError(ctx))
+		common.Close(link.Writer)
+		common.Interrupt(link.Reader)
+		return
+	}
+	if accessMessage := log.AccessMessageFromContext(ctx); accessMessage != nil {
+		if tag := handler.Tag(); tag != "" {
+			accessMessage.Detour = tag
+		}
+		log.Record(accessMessage)
+	}
+
+	handler.Dispatch(ctx, link)
 }
 
 func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.Link, destination net.Destination) {

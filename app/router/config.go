@@ -149,14 +149,15 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 }
 
 // Build builds the balancing rule
-func (br *BalancingRule) Build(ohm outbound.Manager) (*Balancer, error) {
+func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatcher) (*Balancer, error) {
 	h := &HealthChecker{
+		dispatcher: dispatcher,
 		Settings: &HealthCheckSettings{
 			Enabled:     br.HealthCheck.Enabled,
 			Destination: strings.TrimSpace(br.HealthCheck.Destination),
-			Interval:    uint(br.HealthCheck.Interval),
+			Interval:    time.Duration(br.HealthCheck.Interval) * time.Minute,
 			Round:       uint(br.HealthCheck.Round),
-			Timeout:     time.Second * time.Duration(br.HealthCheck.Timeout),
+			Timeout:     time.Duration(br.HealthCheck.Timeout) * time.Second,
 		},
 		Results: make(map[string]time.Duration),
 	}
@@ -164,13 +165,13 @@ func (br *BalancingRule) Build(ohm outbound.Manager) (*Balancer, error) {
 		h.Settings.Destination = "http://www.google.com/gen_204"
 	}
 	if h.Settings.Interval == 0 {
-		h.Settings.Interval = 15
+		h.Settings.Interval = time.Duration(15) * time.Minute
 	}
 	if h.Settings.Round == 0 {
 		h.Settings.Round = 1
 	}
 	if h.Settings.Timeout == 0 {
-		h.Settings.Timeout = 10
+		h.Settings.Timeout = time.Duration(30) * time.Second
 	}
 	b := &Balancer{
 		selectors:     br.OutboundSelector,
