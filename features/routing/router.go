@@ -15,6 +15,15 @@ type Router interface {
 	PickRoute(ctx Context) (Route, error)
 }
 
+// HealthChecker is able to check health of outbound hanlders of its balancers.
+//
+// v2ray:api:stable
+type HealthChecker interface {
+
+	// HealthCheck performs a health cheeck for outbound hanlders of its balancers
+	HealthCheck(uncheckedOnly bool)
+}
+
 // Route is the routing result of Router feature.
 //
 // v2ray:api:stable

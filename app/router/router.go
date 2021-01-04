@@ -118,16 +118,27 @@ func (r *Router) Start() error {
 			continue
 		}
 		newError("Created health checker for balancer '", t, "' with settings: ", b.healthChecker.Settings).AtInfo().WriteToLog()
-		b.StartHealthCheck()
+		b.StartHealthCheckScheduler()
 	}
 	return nil
+}
+
+// HealthCheck implements routing.HealthChecker.
+func (r *Router) HealthCheck(uncheckedOnly bool) {
+	for t, b := range r.balancers {
+		if !b.healthChecker.Settings.Enabled {
+			continue
+		}
+		newError("Perform one-time health check for balancer '", t, "'").AtInfo().WriteToLog()
+		b.HealthCheck(uncheckedOnly)
+	}
 }
 
 // Close implements common.Closable.
 func (r *Router) Close() error {
 	for t, b := range r.balancers {
 		newError("Stop Health Checker for Balancer '", t, "'").AtInfo().WriteToLog()
-		b.StopHealthCheck()
+		b.StopHealthCheckScheduler()
 	}
 	return nil
 }

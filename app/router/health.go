@@ -37,8 +37,8 @@ type HealthChecker struct {
 	Results  map[string]*HealthCheckResult
 }
 
-// StartHealthCheck start the health checker
-func (b *Balancer) StartHealthCheck() {
+// StartHealthCheckScheduler start the health checker
+func (b *Balancer) StartHealthCheckScheduler() {
 	if !b.healthChecker.Settings.Enabled {
 		return
 	}
@@ -48,37 +48,44 @@ func (b *Balancer) StartHealthCheck() {
 	ticker := time.NewTicker(b.healthChecker.Settings.Interval)
 	b.healthChecker.ticker = ticker
 	for {
-		go b.doHealthCheck()
 		_, ok := <-ticker.C
 		if !ok {
 			break
 		}
+		go b.HealthCheck(false)
 	}
 }
 
-// StopHealthCheck stop the health checker
-func (b *Balancer) StopHealthCheck() error {
+// StopHealthCheckScheduler stop the health checker
+func (b *Balancer) StopHealthCheckScheduler() error {
 	b.healthChecker.ticker.Stop()
 	return nil
 }
 
-// StopHealthCheck stop the health checker
-func (b *Balancer) doHealthCheck() {
-	tags, err := b.SelectOutbounds()
+// HealthCheck start the health checking. if uncheckedOnly set to true,
+// it checks only those outbounds not yet checed, useful to perform a check
+//  while adding outbound handlers to manager
+func (b *Balancer) HealthCheck(uncheckedOnly bool) {
+	all, err := b.SelectOutbounds()
 	if err != nil {
 		newError("error select balancer outbounds: ", err).AtWarning().WriteToLog()
 		return
 	}
-	channels := make(map[string]chan time.Duration)
-	rtts := make(map[string][]time.Duration)
-	client := &pingClient{
-		Dispatcher:  b.healthChecker.dispatcher,
-		Destination: b.healthChecker.Settings.Destination,
-		Timeout:     b.healthChecker.Settings.Timeout,
+	if len(all) == 0 {
+		return
 	}
-
-	// make sure other go routines don't check them again
+	tags := all
 	b.healthChecker.access.Lock()
+	if uncheckedOnly {
+		tags = make([]string, 0)
+		for _, tag := range all {
+			if _, ok := b.healthChecker.Results[tag]; ok {
+				continue
+			}
+			tags = append(tags, tag)
+		}
+	}
+	// make sure other go routines don't check them again
 	for _, tag := range tags {
 		_, ok := b.healthChecker.Results[tag]
 		if !ok {
@@ -86,6 +93,19 @@ func (b *Balancer) doHealthCheck() {
 		}
 	}
 	b.healthChecker.access.Unlock()
+
+	if len(tags) == 0 {
+		newError("no outbound check needed.").AtInfo().WriteToLog()
+		return
+	}
+
+	channels := make(map[string]chan time.Duration)
+	rtts := make(map[string][]time.Duration)
+	client := &pingClient{
+		Dispatcher:  b.healthChecker.dispatcher,
+		Destination: b.healthChecker.Settings.Destination,
+		Timeout:     b.healthChecker.Settings.Timeout,
+	}
 
 	for _, tag := range tags {
 		ch := make(chan time.Duration, int(b.healthChecker.Settings.Round))
