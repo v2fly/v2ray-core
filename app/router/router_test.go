@@ -42,7 +42,7 @@ func TestSimpleRouter(t *testing.T) {
 	common.Must(r.Init(config, mockDNS, &mockOutboundManager{
 		Manager:         mockOhm,
 		HandlerSelector: mockHs,
-	}))
+	}, nil))
 
 	ctx := session.ContextWithOutbound(context.Background(), &session.Outbound{Target: net.TCPDestination(net.DomainAddress("v2ray.com"), 80)})
 	route, err := r.PickRoute(routing_session.AsRoutingContext(ctx))
@@ -66,6 +66,7 @@ func TestSimpleBalancer(t *testing.T) {
 			{
 				Tag:              "balance",
 				OutboundSelector: []string{"test-"},
+				HealthCheck:      &HealthCheckSetting{},
 			},
 		},
 	}
@@ -83,7 +84,7 @@ func TestSimpleBalancer(t *testing.T) {
 	common.Must(r.Init(config, mockDNS, &mockOutboundManager{
 		Manager:         mockOhm,
 		HandlerSelector: mockHs,
-	}))
+	}, nil))
 
 	ctx := session.ContextWithOutbound(context.Background(), &session.Outbound{Target: net.TCPDestination(net.DomainAddress("v2ray.com"), 80)})
 	route, err := r.PickRoute(routing_session.AsRoutingContext(ctx))
@@ -118,7 +119,7 @@ func TestIPOnDemand(t *testing.T) {
 	mockDNS.EXPECT().LookupIP(gomock.Eq("v2ray.com")).Return([]net.IP{{192, 168, 0, 1}}, nil).AnyTimes()
 
 	r := new(Router)
-	common.Must(r.Init(config, mockDNS, nil))
+	common.Must(r.Init(config, mockDNS, nil, nil))
 
 	ctx := session.ContextWithOutbound(context.Background(), &session.Outbound{Target: net.TCPDestination(net.DomainAddress("v2ray.com"), 80)})
 	route, err := r.PickRoute(routing_session.AsRoutingContext(ctx))
@@ -153,7 +154,7 @@ func TestIPIfNonMatchDomain(t *testing.T) {
 	mockDNS.EXPECT().LookupIP(gomock.Eq("v2ray.com")).Return([]net.IP{{192, 168, 0, 1}}, nil).AnyTimes()
 
 	r := new(Router)
-	common.Must(r.Init(config, mockDNS, nil))
+	common.Must(r.Init(config, mockDNS, nil, nil))
 
 	ctx := session.ContextWithOutbound(context.Background(), &session.Outbound{Target: net.TCPDestination(net.DomainAddress("v2ray.com"), 80)})
 	route, err := r.PickRoute(routing_session.AsRoutingContext(ctx))
@@ -187,7 +188,7 @@ func TestIPIfNonMatchIP(t *testing.T) {
 	mockDNS := mocks.NewDNSClient(mockCtl)
 
 	r := new(Router)
-	common.Must(r.Init(config, mockDNS, nil))
+	common.Must(r.Init(config, mockDNS, nil, nil))
 
 	ctx := session.ContextWithOutbound(context.Background(), &session.Outbound{Target: net.TCPDestination(net.LocalHostIP, 80)})
 	route, err := r.PickRoute(routing_session.AsRoutingContext(ctx))

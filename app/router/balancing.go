@@ -6,7 +6,7 @@ import (
 
 // BalancingStrategy is the interface of a balancing strategy
 type BalancingStrategy interface {
-	PickOutbound() string
+	PickOutbound(tags []string) string
 }
 
 // Balancer represents a balancer
@@ -26,7 +26,7 @@ func (b *Balancer) PickOutbound() (string, error) {
 	if len(tags) == 0 {
 		return "", newError("no available outbounds selected")
 	}
-	tag := b.strategy.PickOutbound()
+	tag := b.strategy.PickOutbound(tags)
 	if tag == "" {
 		return "", newError("balancing strategy returns empty tag")
 	}
