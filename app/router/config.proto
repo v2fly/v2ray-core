@@ -137,8 +137,9 @@ message HealthCheckSetting {
   // destination url, need 204 for success return
   // default http://www.google.com/gen_204
   string destination = 2;
-  int32 round = 3;
-  int32 timeout = 4;
+  int32 interval = 3;
+  int32 round = 4;
+  int32 timeout = 5;
 }
 
 message Config {

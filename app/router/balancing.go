@@ -19,11 +19,10 @@ type Balancer struct {
 
 // PickOutbound picks the tag of a outbound
 func (b *Balancer) PickOutbound() (string, error) {
-	hs, ok := b.ohm.(outbound.HandlerSelector)
-	if !ok {
-		return "", newError("outbound.Manager is not a HandlerSelector")
+	tags, err := b.SelectOutbounds()
+	if err != nil {
+		return "", err
 	}
-	tags := hs.Select(b.selectors)
 	if len(tags) == 0 {
 		return "", newError("no available outbounds selected")
 	}
@@ -32,4 +31,14 @@ func (b *Balancer) PickOutbound() (string, error) {
 		return "", newError("balancing strategy returns empty tag")
 	}
 	return tag, nil
+}
+
+// SelectOutbounds select outbounds with selectors of the Balancer
+func (b *Balancer) SelectOutbounds() ([]string, error) {
+	hs, ok := b.ohm.(outbound.HandlerSelector)
+	if !ok {
+		return nil, newError("outbound.Manager is not a HandlerSelector")
+	}
+	tags := hs.Select(b.selectors)
+	return tags, nil
 }

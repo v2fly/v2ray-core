@@ -1,6 +1,7 @@
 package router
 
 import (
+	"strings"
 	"time"
 
 	"v2ray.com/core/common/net"
@@ -149,20 +150,38 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 
 // Build builds the balancing rule
 func (br *BalancingRule) Build(ohm outbound.Manager) (*Balancer, error) {
+	h := &HealthChecker{
+		Settings: &HealthCheckSettings{
+			Enabled:     br.HealthCheck.Enabled,
+			Destination: strings.TrimSpace(br.HealthCheck.Destination),
+			Interval:    uint(br.HealthCheck.Interval),
+			Round:       uint(br.HealthCheck.Round),
+			Timeout:     time.Second * time.Duration(br.HealthCheck.Timeout),
+		},
+		Results: make(map[string]time.Duration),
+	}
+	if h.Settings.Destination == "" {
+		h.Settings.Destination = "http://www.google.com/gen_204"
+	}
+	if h.Settings.Interval == 0 {
+		h.Settings.Interval = 15
+	}
+	if h.Settings.Round == 0 {
+		h.Settings.Round = 1
+	}
+	if h.Settings.Timeout == 0 {
+		h.Settings.Timeout = 10
+	}
+	b := &Balancer{
+		selectors:     br.OutboundSelector,
+		healthChecker: h,
+		ohm:           ohm,
+	}
 	switch br.Strategy {
 	case BalancingRule_Random:
-		b := &Balancer{
-			selectors: br.OutboundSelector,
-			healthChecker: &HealthChecker{
-				Enabled:     br.HealthCheck.Enabled,
-				Destination: br.HealthCheck.Destination,
-				Round:       int(br.HealthCheck.Round),
-				Timeout:     time.Second * time.Duration(br.HealthCheck.Timeout),
-			},
-			ohm: ohm,
-		}
+		fallthrough
+	default:
 		b.strategy = &RandomStrategy{balancer: b}
-		return b, nil
 	}
-	return nil, nil
+	return b, nil
 }
