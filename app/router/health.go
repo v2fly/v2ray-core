@@ -101,16 +101,16 @@ func (b *Balancer) HealthCheck(uncheckedOnly bool) {
 
 	channels := make(map[string]chan time.Duration)
 	rtts := make(map[string][]time.Duration)
-	client := &pingClient{
-		Dispatcher:  b.healthChecker.dispatcher,
-		Destination: b.healthChecker.Settings.Destination,
-		Timeout:     b.healthChecker.Settings.Timeout,
-	}
 
 	for _, tag := range tags {
 		ch := make(chan time.Duration, int(b.healthChecker.Settings.Round))
 		channels[tag] = ch
-		client.Handler = tag
+		client := &pingClient{
+			Dispatcher:  b.healthChecker.dispatcher,
+			Handler:     tag,
+			Destination: b.healthChecker.Settings.Destination,
+			Timeout:     b.healthChecker.Settings.Timeout,
+		}
 		for i := 0; i < int(b.healthChecker.Settings.Round); i++ {
 			// newError("health checker ping ", tag, "#", i).AtDebug().WriteToLog()
 			go func() {
