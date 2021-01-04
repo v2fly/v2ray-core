@@ -159,7 +159,7 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 			Round:       uint(br.HealthCheck.Round),
 			Timeout:     time.Duration(br.HealthCheck.Timeout) * time.Second,
 		},
-		Results: make(map[string]time.Duration),
+		Results: make(map[string]*HealthCheckResult),
 	}
 	if h.Settings.Destination == "" {
 		h.Settings.Destination = "http://www.google.com/gen_204"

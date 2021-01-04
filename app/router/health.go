@@ -17,6 +17,16 @@ type HealthCheckSettings struct {
 	Timeout     time.Duration
 }
 
+// HealthCheckResult holds result for health Checker
+type HealthCheckResult struct {
+	Count        int
+	SuccessCount int
+	AverageRTT   time.Duration
+	MaxRTT       time.Duration
+	MinRTT       time.Duration
+	RTTs         []time.Duration
+}
+
 // HealthChecker is the health checker for balancers
 type HealthChecker struct {
 	access     sync.Mutex
@@ -24,7 +34,7 @@ type HealthChecker struct {
 	dispatcher routing.Dispatcher
 
 	Settings *HealthCheckSettings
-	Results  map[string]time.Duration
+	Results  map[string]*HealthCheckResult
 }
 
 // StartHealthCheck start the health checker
@@ -66,6 +76,17 @@ func (b *Balancer) doHealthCheck() {
 		Destination: b.healthChecker.Settings.Destination,
 		Timeout:     b.healthChecker.Settings.Timeout,
 	}
+
+	// make sure other go routines don't check them again
+	b.healthChecker.access.Lock()
+	for _, tag := range tags {
+		_, ok := b.healthChecker.Results[tag]
+		if !ok {
+			b.healthChecker.Results[tag] = &HealthCheckResult{}
+		}
+	}
+	b.healthChecker.access.Unlock()
+
 	for _, tag := range tags {
 		ch := make(chan time.Duration, int(b.healthChecker.Settings.Round))
 		channels[tag] = ch
@@ -89,17 +110,41 @@ func (b *Balancer) doHealthCheck() {
 	for tag, ch := range channels {
 		for i := 0; i < int(b.healthChecker.Settings.Round); i++ {
 			rtt := <-ch
-			newError("health checker rtt of '", tag, "'=", rtt).AtDebug().WriteToLog()
+			newError("ping rtt of '", tag, "'=", rtt).AtDebug().WriteToLog()
 			rtts[tag] = append(rtts[tag], rtt)
 		}
 	}
+	b.healthChecker.access.Lock()
 	for tag, r := range rtts {
+		result, _ := b.healthChecker.Results[tag]
 		sum := time.Duration(0)
+		result.Count = len(r)
+		result.SuccessCount = 0
+		result.MaxRTT = 0
+		result.MinRTT = r[0]
 		for _, rtt := range r {
+			if rtt < 0 {
+				continue
+			}
 			sum += rtt
+			result.SuccessCount++
+			if result.MaxRTT < rtt {
+				result.MaxRTT = rtt
+			}
+			if result.MinRTT > rtt {
+				result.MinRTT = rtt
+			}
 		}
-		avg := time.Duration(int(sum) / len(r))
-		newError("health checker average rtt of '", tag, "'=", avg).AtInfo().WriteToLog()
-		b.healthChecker.Results[tag] = avg
+		result.AverageRTT = time.Duration(int(sum) / result.Count)
+		newError(fmt.Sprintf(
+			"health checker '%s': %d of %d success, rtt min/avg/max = %s/%s/%s",
+			tag,
+			result.SuccessCount,
+			result.Count,
+			result.MinRTT,
+			result.AverageRTT,
+			result.MaxRTT,
+		)).AtInfo().WriteToLog()
 	}
+	b.healthChecker.access.Unlock()
 }
