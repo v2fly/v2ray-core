@@ -28,25 +28,22 @@ type HealthChecker struct {
 }
 
 // StartHealthCheck start the health checker
-func (b *Balancer) StartHealthCheck() error {
+func (b *Balancer) StartHealthCheck() {
 	if !b.healthChecker.Settings.Enabled {
-		return nil
+		return
 	}
 	if b.healthChecker.ticker != nil {
-		return nil
+		return
 	}
-	ticker := time.NewTicker(time.Duration(b.healthChecker.Settings.Interval) * time.Minute)
+	ticker := time.NewTicker(b.healthChecker.Settings.Interval)
 	b.healthChecker.ticker = ticker
-	go func() {
-		for {
-			err := b.doHealthCheck()
-			if err != nil {
-				newError("healthChecker error:", err).AtWarning().WriteToLog()
-			}
-			<-ticker.C
+	for {
+		go b.doHealthCheck()
+		_, ok := <-ticker.C
+		if !ok {
+			break
 		}
-	}()
-	return nil
+	}
 }
 
 // StopHealthCheck stop the health checker
@@ -56,10 +53,11 @@ func (b *Balancer) StopHealthCheck() error {
 }
 
 // StopHealthCheck stop the health checker
-func (b *Balancer) doHealthCheck() error {
+func (b *Balancer) doHealthCheck() {
 	tags, err := b.SelectOutbounds()
 	if err != nil {
-		return err
+		newError("error select balancer outbounds: ", err).AtWarning().WriteToLog()
+		return
 	}
 	channels := make(map[string]chan time.Duration)
 	rtts := make(map[string][]time.Duration)
@@ -91,7 +89,7 @@ func (b *Balancer) doHealthCheck() error {
 	for tag, ch := range channels {
 		for i := 0; i < int(b.healthChecker.Settings.Round); i++ {
 			rtt := <-ch
-			newError("health checker rtt of ", tag, "=", rtt).AtDebug().WriteToLog()
+			newError("health checker rtt of '", tag, "'=", rtt).AtDebug().WriteToLog()
 			rtts[tag] = append(rtts[tag], rtt)
 		}
 	}
@@ -101,8 +99,7 @@ func (b *Balancer) doHealthCheck() error {
 			sum += rtt
 		}
 		avg := time.Duration(int(sum) / len(r))
-		newError("health checker average rtt of ", tag, "=", avg).AtInfo().WriteToLog()
+		newError("health checker average rtt of '", tag, "'=", avg).AtInfo().WriteToLog()
 		b.healthChecker.Results[tag] = avg
 	}
-	return nil
 }
