@@ -179,6 +179,19 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 		ohm:           ohm,
 	}
 	switch br.Strategy {
+	case BalancingRule_LeastLoad:
+		i, err := br.StrategySettings.GetInstance()
+		if err != nil {
+			return nil, err
+		}
+		s, ok := i.(*StrategyLeastLoadConfig)
+		if !ok {
+			return nil, newError("not a StrategyLeastLoadConfig").AtError()
+		}
+		b.strategy = &LeastLoadStrategy{
+			balancer: b,
+			settings: s,
+		}
 	case BalancingRule_Random:
 		fallthrough
 	default:

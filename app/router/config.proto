@@ -6,6 +6,7 @@ option go_package = "v2ray.com/core/app/router";
 option java_package = "com.v2ray.core.app.router";
 option java_multiple_files = true;
 
+import "common/serial/typed_message.proto";
 import "common/net/port.proto";
 import "common/net/network.proto";
 
@@ -125,11 +126,21 @@ message BalancingRule {
   enum BalancingStrategy{
     // Choose the tag randomly
     Random = 0;
+    // Choose nodes with the least amount of load
+    LeastLoad = 1;
   }
   string tag = 1;
   repeated string outbound_selector = 2;
   BalancingStrategy strategy = 3;
   HealthCheckSetting health_check = 4;
+  v2ray.core.common.serial.TypedMessage strategy_settings = 5;
+}
+
+message StrategyLeastLoadConfig {
+  // RTT baselines for selecting, int64 values of time.Duration
+  repeated int64 Baselines = 1;
+	// minimal nodes count to select
+	int32 MinNodes = 2;
 }
 
 message HealthCheckSetting {

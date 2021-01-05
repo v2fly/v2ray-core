@@ -45,28 +45,3 @@ func (b *Balancer) SelectOutbounds() ([]string, error) {
 	tags := hs.Select(b.selectors)
 	return tags, nil
 }
-
-// SelectOutboundsAlive select alive outbounds according to the
-// selectors and health chekerer of the Balancer. If health chekerer
-// not enabled, it's equivalent to SelectOutbounds()
-func (b *Balancer) SelectOutboundsAlive() ([]string, error) {
-	tags, err := b.SelectOutbounds()
-	if !b.healthChecker.Settings.Enabled {
-		return tags, err
-	}
-	if err != nil || len(tags) == 0 {
-		return nil, err
-	}
-	aliveTags := make([]string, 0)
-	for _, tag := range tags {
-		r, ok := b.healthChecker.Results[tag]
-		if !ok {
-			continue
-		}
-		if r.AverageRTT <= 0 {
-			continue
-		}
-		aliveTags = append(aliveTags, tag)
-	}
-	return aliveTags, nil
-}

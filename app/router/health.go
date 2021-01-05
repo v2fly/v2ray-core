@@ -19,12 +19,12 @@ type HealthCheckSettings struct {
 
 // HealthCheckResult holds result for health Checker
 type HealthCheckResult struct {
-	Count        int
-	SuccessCount int
-	AverageRTT   time.Duration
-	MaxRTT       time.Duration
-	MinRTT       time.Duration
-	RTTs         []time.Duration
+	Count      int
+	FailCount  int
+	AverageRTT time.Duration
+	MaxRTT     time.Duration
+	MinRTT     time.Duration
+	RTTs       []time.Duration
 }
 
 // HealthChecker is the health checker for balancers
@@ -130,24 +130,25 @@ func (b *Balancer) HealthCheck(uncheckedOnly bool) {
 	for tag, ch := range channels {
 		for i := 0; i < int(b.healthChecker.Settings.Round); i++ {
 			rtt := <-ch
-			newError("ping rtt of '", tag, "'=", rtt).AtDebug().WriteToLog()
+			// newError("ping rtt of '", tag, "'=", rtt).AtDebug().WriteToLog()
 			rtts[tag] = append(rtts[tag], rtt)
 		}
 	}
 	b.healthChecker.access.Lock()
+	defer b.healthChecker.access.Unlock()
 	for tag, r := range rtts {
 		result, _ := b.healthChecker.Results[tag]
 		sum := time.Duration(0)
 		result.Count = len(r)
-		result.SuccessCount = 0
+		result.FailCount = 0
 		result.MaxRTT = 0
 		result.MinRTT = r[0]
 		for _, rtt := range r {
 			if rtt < 0 {
+				result.FailCount++
 				continue
 			}
 			sum += rtt
-			result.SuccessCount++
 			if result.MaxRTT < rtt {
 				result.MaxRTT = rtt
 			}
@@ -163,12 +164,11 @@ func (b *Balancer) HealthCheck(uncheckedOnly bool) {
 		newError(fmt.Sprintf(
 			"health checker '%s': %d of %d success, rtt min/avg/max = %s/%s/%s",
 			tag,
-			result.SuccessCount,
+			result.Count-result.FailCount,
 			result.Count,
 			result.MinRTT,
 			result.AverageRTT,
 			result.MaxRTT,
 		)).AtInfo().WriteToLog()
 	}
-	b.healthChecker.access.Unlock()
 }

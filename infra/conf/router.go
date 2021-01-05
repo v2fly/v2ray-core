@@ -9,6 +9,7 @@ import (
 	"v2ray.com/core/app/router"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/platform/filesystem"
+	"v2ray.com/core/common/serial"
 )
 
 type RouterRulesConfig struct {
@@ -16,10 +17,16 @@ type RouterRulesConfig struct {
 	DomainStrategy string            `json:"domainStrategy"`
 }
 
+// StrategyConfig represents a strategy config
+type StrategyConfig struct {
+	Name     string           `json:"name"`
+	Settings *json.RawMessage `json:"settings"`
+}
+
 // BalancingRule represents a balancing rule
 type BalancingRule struct {
 	Tag         string                    `json:"tag"`
-	Strategy    string                    `json:"strategy"`
+	Strategy    StrategyConfig            `json:"strategy"`
 	HealthCheck router.HealthCheckSetting `json:"healthCheck"`
 	Selectors   StringList                `json:"selector"`
 }
@@ -34,17 +41,34 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 	}
 
 	var strategy router.BalancingRule_BalancingStrategy
-	switch strings.ToLower(r.Strategy) {
-	case "random", "":
+	switch strings.ToLower(r.Strategy.Name) {
+	case strategyRandom, "":
+		r.Strategy.Name = strategyRandom
 		strategy = router.BalancingRule_Random
+	case strategyLeastLoad:
+		strategy = router.BalancingRule_LeastLoad
 	default:
-		return nil, newError("unknown balancing strategy: " + r.Strategy)
+		return nil, newError("unknown balancing strategy: " + r.Strategy.Name)
+	}
+
+	settings := []byte("{}")
+	if r.Strategy.Settings != nil {
+		settings = ([]byte)(*r.Strategy.Settings)
+	}
+	rawConfig, err := strategyConfigLoader.LoadWithID(settings, r.Strategy.Name)
+	if err != nil {
+		return nil, newError("failed to parse to outbound detour config.").Base(err)
+	}
+	ts, err := rawConfig.(Buildable).Build()
+	if err != nil {
+		return nil, err
 	}
 
 	return &router.BalancingRule{
 		Tag:              r.Tag,
 		OutboundSelector: []string(r.Selectors),
 		Strategy:         strategy,
+		StrategySettings: serial.ToTypedMessage(ts),
 		HealthCheck:      &r.HealthCheck,
 	}, nil
 }
