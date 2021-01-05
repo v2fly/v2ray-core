@@ -135,7 +135,7 @@ func throttle(fn func(bool), delay time.Duration) func() {
 		}
 		prev = time.AfterFunc(delay, func() {
 			// newError("#", idx, "running").AtDebug().WriteToLog()
-			fn(false)
+			fn(true)
 		})
 	}
 }
@@ -155,6 +155,7 @@ func AddOutboundHandler(server *Instance, config *OutboundHandlerConfig) error {
 		return err
 	}
 
+	// TODO: re-check on override
 	if checker, ok := server.GetFeature(routing.RouterType()).(routing.HealthChecker); ok {
 		if throttledChecker == nil {
 			delay := time.Duration(2) * time.Second
