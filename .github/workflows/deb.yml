@@ -45,6 +45,7 @@ jobs:
           path: ./*.deb
 
       - name: Setup Repository
+        if: github.event_name == 'release'
         run: |
           git clone https://github.com/v2fly/debian.git archive
           echo ${{ secrets.DEBIAN_GPG_PRIVATE }} | base64 -d > private.key
