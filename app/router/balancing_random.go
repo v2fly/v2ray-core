@@ -11,11 +11,25 @@ type RandomStrategy struct {
 
 // PickOutbound implements the BalancingStrategy.
 // It picks an outbound from tags randomly and respects the health check settings
-func (s *RandomStrategy) PickOutbound(tags []string) string {
+func (s *RandomStrategy) PickOutbound() (string, error) {
+	var (
+		tags []string
+		err  error
+	)
+
+	if s.balancer.healthChecker.Settings.Enabled {
+		tags, err = s.balancer.SelectOutboundsAlive()
+		newError("alive tags: ", tags).AtDebug().WriteToLog()
+	} else {
+		tags, err = s.balancer.SelectOutbounds()
+	}
+	if err != nil {
+		return "", err
+	}
+
 	n := len(tags)
 	if n == 0 {
-		panic("0 tags")
+		return "", newError("no available outbounds")
 	}
-	// TODO: filter alive outbounds
-	return tags[dice.Roll(n)]
+	return tags[dice.Roll(n)], nil
 }
