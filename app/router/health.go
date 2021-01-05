@@ -155,6 +155,10 @@ func (b *Balancer) HealthCheck(uncheckedOnly bool) {
 				result.MinRTT = rtt
 			}
 		}
+		if result.MinRTT < 0 {
+			// all failed
+			result.MinRTT = 0
+		}
 		result.AverageRTT = time.Duration(int(sum) / result.Count)
 		newError(fmt.Sprintf(
 			"health checker '%s': %d of %d success, rtt min/avg/max = %s/%s/%s",
