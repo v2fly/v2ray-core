@@ -156,8 +156,8 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 			Enabled:     br.HealthCheck.Enabled,
 			Destination: strings.TrimSpace(br.HealthCheck.Destination),
 			Interval:    time.Duration(br.HealthCheck.Interval) * time.Minute,
-			Rounds:      int(br.HealthCheck.Rounds),
-			Timeout:     time.Duration(br.HealthCheck.Timeout) * time.Second,
+			// Rounds:      int(br.HealthCheck.Rounds),
+			Timeout: time.Duration(br.HealthCheck.Timeout) * time.Second,
 		},
 		Results: make(map[string]*HealthCheckResult),
 	}

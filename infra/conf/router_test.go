@@ -96,8 +96,6 @@ func TestRouterConfig(t *testing.T) {
 						Strategy:         router.BalancingRule_Random,
 						HealthCheck: &router.HealthCheckSettingsProto{
 							Enabled: true,
-							Rounds:  3,
-							Timeout: 10,
 						},
 					},
 				},
