@@ -52,7 +52,7 @@ func (b *Balancer) StartHealthCheckScheduler() {
 		if !ok {
 			break
 		}
-		go b.HealthCheck(false)
+		go b.HealthCheck(nil)
 	}
 }
 
@@ -62,10 +62,12 @@ func (b *Balancer) StopHealthCheckScheduler() error {
 	return nil
 }
 
-// HealthCheck start the health checking. if uncheckedOnly set to true,
-// it checks only those outbounds not yet checed, useful to perform a check
-//  while adding outbound handlers to manager
-func (b *Balancer) HealthCheck(uncheckedOnly bool) {
+// HealthCheck start the health checking for given tags. if tags not provided,
+// it checks only those outbounds not yet checed.
+func (b *Balancer) HealthCheck(tags []string) {
+	if !b.healthChecker.Settings.Enabled {
+		return
+	}
 	all, err := b.SelectOutbounds()
 	if err != nil {
 		newError("error select balancer outbounds: ", err).AtWarning().WriteToLog()
@@ -74,35 +76,29 @@ func (b *Balancer) HealthCheck(uncheckedOnly bool) {
 	if len(all) == 0 {
 		return
 	}
-	tags := all
-	b.healthChecker.access.Lock()
-	if uncheckedOnly {
-		tags = make([]string, 0)
-		for _, tag := range all {
-			if _, ok := b.healthChecker.Results[tag]; ok {
-				continue
+	checkingTags := all
+	if len(tags) > 0 {
+		checkingTags = make([]string, 0)
+		for _, t1 := range tags {
+			for _, t2 := range all {
+				if t1 == t2 {
+					checkingTags = append(checkingTags, t1)
+					break
+				}
 			}
-			tags = append(tags, tag)
 		}
+		newError("Perform one-time health check for tags ", checkingTags).AtInfo().WriteToLog()
 	}
-	// make sure other go routines don't check them again
-	for _, tag := range tags {
-		_, ok := b.healthChecker.Results[tag]
-		if !ok {
-			b.healthChecker.Results[tag] = &HealthCheckResult{}
-		}
-	}
-	b.healthChecker.access.Unlock()
 
-	if len(tags) == 0 {
-		newError("no outbound check needed.").AtInfo().WriteToLog()
+	if len(checkingTags) == 0 {
+		// newError("no outbound check needed.").AtInfo().WriteToLog()
 		return
 	}
 
 	channels := make(map[string]chan time.Duration)
 	rtts := make(map[string][]time.Duration)
 
-	for _, tag := range tags {
+	for _, tag := range checkingTags {
 		ch := make(chan time.Duration, b.healthChecker.Settings.Rounds)
 		channels[tag] = ch
 		client := &pingClient{
@@ -137,7 +133,11 @@ func (b *Balancer) HealthCheck(uncheckedOnly bool) {
 	b.healthChecker.access.Lock()
 	defer b.healthChecker.access.Unlock()
 	for tag, r := range rtts {
-		result, _ := b.healthChecker.Results[tag]
+		result, ok := b.healthChecker.Results[tag]
+		if !ok {
+			result = &HealthCheckResult{}
+			b.healthChecker.Results[tag] = result
+		}
 		sum := time.Duration(0)
 		result.Count = len(r)
 		result.FailCount = 0

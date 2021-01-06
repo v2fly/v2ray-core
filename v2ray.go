@@ -122,23 +122,7 @@ func addInboundHandlers(server *Instance, configs []*InboundHandlerConfig) error
 }
 
 // throttledChecker makes sure only the last call run, if many calls raised in 2 seconds
-var throttledChecker func()
-
-func throttle(fn func(bool), delay time.Duration) func() {
-	var prev *time.Timer
-	// var idx int = 0
-	return func() {
-		// idx++
-		// newError("#", idx, "raised").AtDebug().WriteToLog()
-		if prev != nil {
-			prev.Stop()
-		}
-		prev = time.AfterFunc(delay, func() {
-			// newError("#", idx, "running").AtDebug().WriteToLog()
-			fn(true)
-		})
-	}
-}
+var throttledChecker *routing.ThrottledChecker
 
 // AddOutboundHandler adds an outbound handler to Instance
 func AddOutboundHandler(server *Instance, config *OutboundHandlerConfig) error {
@@ -155,13 +139,16 @@ func AddOutboundHandler(server *Instance, config *OutboundHandlerConfig) error {
 		return err
 	}
 
-	// TODO: re-check on override
 	if checker, ok := server.GetFeature(routing.RouterType()).(routing.HealthChecker); ok {
 		if throttledChecker == nil {
-			delay := time.Duration(2) * time.Second
-			throttledChecker = throttle(checker.HealthCheck, delay)
+			throttledChecker = &routing.ThrottledChecker{
+				Delay:   time.Duration(2) * time.Second,
+				Checker: checker,
+			}
 		}
-		throttledChecker()
+		if config.Tag != "" {
+			throttledChecker.Run(config.Tag)
+		}
 	}
 	return nil
 }

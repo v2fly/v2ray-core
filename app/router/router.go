@@ -124,13 +124,12 @@ func (r *Router) Start() error {
 }
 
 // HealthCheck implements routing.HealthChecker.
-func (r *Router) HealthCheck(uncheckedOnly bool) {
-	for t, b := range r.balancers {
+func (r *Router) HealthCheck(tags []string) {
+	for _, b := range r.balancers {
 		if !b.healthChecker.Settings.Enabled {
 			continue
 		}
-		newError("Perform one-time health check for balancer '", t, "'").AtInfo().WriteToLog()
-		b.HealthCheck(uncheckedOnly)
+		b.HealthCheck(tags)
 	}
 }
 
