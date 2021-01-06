@@ -8,6 +8,7 @@ import (
 	. "v2ray.com/core/app/router"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/net"
+	serial "v2ray.com/core/common/serial"
 	"v2ray.com/core/common/session"
 	"v2ray.com/core/features/outbound"
 	routing_session "v2ray.com/core/features/routing/session"
@@ -91,6 +92,54 @@ func TestSimpleBalancer(t *testing.T) {
 	common.Must(err)
 	if tag := route.GetOutboundTag(); tag != "test" {
 		t.Error("expect tag 'test', bug actually ", tag)
+	}
+}
+
+func TestLeastLoadBalancer(t *testing.T) {
+	config := &Config{
+		Rule: []*RoutingRule{
+			{
+				TargetTag: &RoutingRule_BalancingTag{
+					BalancingTag: "balance",
+				},
+				Networks: []net.Network{net.Network_TCP},
+			},
+		},
+		BalancingRule: []*BalancingRule{
+			{
+				Tag:              "balance",
+				OutboundSelector: []string{"test-"},
+				HealthCheck: &HealthCheckSettingsProto{
+					Enabled: true,
+				},
+				Strategy: BalancingRule_LeastLoad,
+				StrategySettings: serial.ToTypedMessage(&StrategyLeastLoadConfig{
+					Baselines: nil,
+					Expected:  1,
+				}),
+			},
+		},
+	}
+
+	mockCtl := gomock.NewController(t)
+	defer mockCtl.Finish()
+
+	mockDNS := mocks.NewDNSClient(mockCtl)
+	mockOhm := mocks.NewOutboundManager(mockCtl)
+	mockHs := mocks.NewOutboundHandlerSelector(mockCtl)
+
+	mockHs.EXPECT().Select(gomock.Eq([]string{"test-"})).Return([]string{"test1", "test2", "test3"})
+
+	r := new(Router)
+	common.Must(r.Init(config, mockDNS, &mockOutboundManager{
+		Manager:         mockOhm,
+		HandlerSelector: mockHs,
+	}, nil))
+	ctx := session.ContextWithOutbound(context.Background(), &session.Outbound{Target: net.TCPDestination(net.DomainAddress("v2ray.com"), 80)})
+	route, err := r.PickRoute(routing_session.AsRoutingContext(ctx))
+	common.Must(err)
+	if tag := route.GetOutboundTag(); tag != "test1" {
+		t.Error("expect tag 'test1', bug actually ", tag)
 	}
 }
 
