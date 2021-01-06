@@ -19,13 +19,6 @@ type Balancer struct {
 
 // PickOutbound picks the tag of a outbound
 func (b *Balancer) PickOutbound() (string, error) {
-	tags, err := b.SelectOutbounds()
-	if err != nil {
-		return "", err
-	}
-	if len(tags) == 0 {
-		return "", newError("no available outbounds selected")
-	}
 	tag, err := b.strategy.PickOutbound()
 	if err != nil {
 		return "", err
