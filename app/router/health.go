@@ -52,7 +52,13 @@ func (b *Balancer) StartHealthCheckScheduler() {
 		if !ok {
 			break
 		}
-		go b.HealthCheck(nil)
+		tags, err := b.SelectOutbounds()
+		if err != nil {
+			newError("HealthCheckScheduler: error select outbounds: ", err).AtWarning().WriteToLog()
+			return
+		}
+		b.cleanupResults(tags)
+		go b.doHealthCheck(tags)
 	}
 }
 
@@ -62,43 +68,32 @@ func (b *Balancer) StopHealthCheckScheduler() error {
 	return nil
 }
 
-// HealthCheck start the health checking for given tags. if tags not provided,
-// it checks only those outbounds not yet checed.
+// HealthCheck start the health checking for given tags.
+// it validates tags and checks those only in current balancer
 func (b *Balancer) HealthCheck(tags []string) {
-	if !b.healthChecker.Settings.Enabled {
-		return
-	}
-	all, err := b.SelectOutbounds()
+	ts, err := b.getOneTimeCheckTags(tags)
 	if err != nil {
-		newError("error select balancer outbounds: ", err).AtWarning().WriteToLog()
+		newError("HealthCheck: error select outbounds: ", err).AtWarning().WriteToLog()
 		return
 	}
-	if len(all) == 0 {
+	if len(ts) == 0 {
 		return
 	}
-	checkingTags := all
-	if len(tags) > 0 {
-		checkingTags = make([]string, 0)
-		for _, t1 := range tags {
-			for _, t2 := range all {
-				if t1 == t2 {
-					checkingTags = append(checkingTags, t1)
-					break
-				}
-			}
-		}
-		newError("Perform one-time health check for tags ", checkingTags).AtInfo().WriteToLog()
-	}
+	newError("HealthCheck: Perform one-time check for tags ", ts).AtInfo().WriteToLog()
+	b.doHealthCheck(ts)
+}
 
-	if len(checkingTags) == 0 {
-		// newError("no outbound check needed.").AtInfo().WriteToLog()
+// doHealthCheck do check for tags, you should make
+// sure all tags are valid for current balancer
+func (b *Balancer) doHealthCheck(tags []string) {
+	if !b.healthChecker.Settings.Enabled || len(tags) == 0 {
 		return
 	}
 
 	channels := make(map[string]chan time.Duration)
 	rtts := make(map[string][]time.Duration)
 
-	for _, tag := range checkingTags {
+	for _, tag := range tags {
 		ch := make(chan time.Duration, b.healthChecker.Settings.Rounds)
 		channels[tag] = ch
 		client := &pingClient{
@@ -170,5 +165,46 @@ func (b *Balancer) HealthCheck(tags []string) {
 			result.AverageRTT,
 			result.MaxRTT,
 		)).AtInfo().WriteToLog()
+	}
+}
+
+func (b *Balancer) getOneTimeCheckTags(tags []string) ([]string, error) {
+	if len(tags) == 0 {
+		return nil, nil
+	}
+	all, err := b.SelectOutbounds()
+	if err != nil {
+		return nil, err
+	}
+	ts := make([]string, 0)
+	for _, t1 := range tags {
+		for _, t2 := range all {
+			if t1 == t2 {
+				ts = append(ts, t1)
+				break
+			}
+		}
+	}
+	return ts, nil
+}
+
+// cleanupResults removes results of removed handlers,
+// tags is all valid tags for the Balancer now
+func (b *Balancer) cleanupResults(tags []string) {
+	b.healthChecker.access.Lock()
+	defer b.healthChecker.access.Unlock()
+
+	for tag := range b.healthChecker.Results {
+		found := false
+		for _, v := range tags {
+			if tag == v {
+				found = true
+				break
+			}
+		}
+		if !found {
+			// newError("healthChecker: remove tag ", tag).AtDebug().WriteToLog()
+			delete(b.healthChecker.Results, tag)
+		}
 	}
 }
