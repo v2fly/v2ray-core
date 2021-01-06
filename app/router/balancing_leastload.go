@@ -64,6 +64,8 @@ func (s *LeastLoadStrategy) PickOutbound() (string, error) {
 	return nodes[dice.Roll(cntNodes)].Tag, nil
 }
 
+// TODO: test for config modes below
+
 // selectLeastLoad selects nodes according to Baselines and Expected Count.
 //
 // The strategy always improves network response speed, not matter which mode below is configurated.

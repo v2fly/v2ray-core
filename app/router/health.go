@@ -93,6 +93,7 @@ func (b *Balancer) doHealthCheck(tags []string) {
 	channels := make(map[string]chan time.Duration)
 	rtts := make(map[string][]time.Duration)
 
+	// TODO: too many concurrent health check ping?
 	for _, tag := range tags {
 		ch := make(chan time.Duration, b.healthChecker.Settings.Rounds)
 		channels[tag] = ch

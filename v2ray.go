@@ -139,6 +139,7 @@ func AddOutboundHandler(server *Instance, config *OutboundHandlerConfig) error {
 		return err
 	}
 
+	// TODO: check result is outdated when handler updated but health check not done
 	if checker, ok := server.GetFeature(routing.RouterType()).(routing.HealthChecker); ok {
 		if throttledChecker == nil {
 			throttledChecker = &routing.ThrottledChecker{
