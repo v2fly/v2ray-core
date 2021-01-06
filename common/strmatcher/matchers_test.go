@@ -237,6 +237,5 @@ func TestACAutomaton(t *testing.T) {
 				t.Error("unexpected output: ", m, " for test case ", test)
 			}
 		}
-
 	}
 }

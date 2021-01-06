@@ -1,11 +1,12 @@
 package router_test
 
 import (
-	"github.com/golang/protobuf/proto"
 	"os"
 	"path/filepath"
 	"strconv"
 	"testing"
+
+	"github.com/golang/protobuf/proto"
 
 	. "v2ray.com/core/app/router"
 	"v2ray.com/core/common"

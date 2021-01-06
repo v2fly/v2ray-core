@@ -137,7 +137,7 @@ func (ac *ACAutomaton) Add(domain string, t Type) {
 	for i := len(domain) - 1; i >= 0; i-- {
 		var idx = char2Index[domain[i]]
 		if ac.trie[node][idx].nextNode == 0 {
-			ac.count += 1
+			ac.count++
 			if len(ac.trie) < ac.count+1 {
 				ac.trie = append(ac.trie, newNode())
 				ac.fail = append(ac.fail, 0)
@@ -165,7 +165,7 @@ func (ac *ACAutomaton) Add(domain string, t Type) {
 		}
 		var idx = char2Index['.']
 		if ac.trie[node][idx].nextNode == 0 {
-			ac.count += 1
+			ac.count++
 			if len(ac.trie) < ac.count+1 {
 				ac.trie = append(ac.trie, newNode())
 				ac.fail = append(ac.fail, 0)
@@ -186,7 +186,6 @@ func (ac *ACAutomaton) Add(domain string, t Type) {
 		}
 	default:
 		break
-
 	}
 }
 
