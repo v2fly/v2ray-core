@@ -171,7 +171,9 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 		h.Settings.Rounds = 1
 	}
 	if h.Settings.Timeout == 0 {
-		h.Settings.Timeout = time.Duration(30) * time.Second
+		// results are saved after all health pings finish,
+		// a larger timeout could possibly makes checks run longer
+		h.Settings.Timeout = time.Duration(5) * time.Second
 	}
 	b := &Balancer{
 		selectors:     br.OutboundSelector,
