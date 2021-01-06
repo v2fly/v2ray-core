@@ -19,16 +19,16 @@ type RouterRulesConfig struct {
 
 // StrategyConfig represents a strategy config
 type StrategyConfig struct {
-	Name     string           `json:"name"`
+	Type     string           `json:"type"`
 	Settings *json.RawMessage `json:"settings"`
 }
 
 // BalancingRule represents a balancing rule
 type BalancingRule struct {
-	Tag         string                    `json:"tag"`
-	Strategy    StrategyConfig            `json:"strategy"`
-	HealthCheck router.HealthCheckSetting `json:"healthCheck"`
-	Selectors   StringList                `json:"selector"`
+	Tag         string                          `json:"tag"`
+	Strategy    StrategyConfig                  `json:"strategy"`
+	HealthCheck router.HealthCheckSettingsProto `json:"healthCheck"`
+	Selectors   StringList                      `json:"selector"`
 }
 
 // Build builds the balancing rule
@@ -41,21 +41,21 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 	}
 
 	var strategy router.BalancingRule_BalancingStrategy
-	switch strings.ToLower(r.Strategy.Name) {
+	switch strings.ToLower(r.Strategy.Type) {
 	case strategyRandom, "":
-		r.Strategy.Name = strategyRandom
+		r.Strategy.Type = strategyRandom
 		strategy = router.BalancingRule_Random
 	case strategyLeastLoad:
 		strategy = router.BalancingRule_LeastLoad
 	default:
-		return nil, newError("unknown balancing strategy: " + r.Strategy.Name)
+		return nil, newError("unknown balancing strategy: " + r.Strategy.Type)
 	}
 
 	settings := []byte("{}")
 	if r.Strategy.Settings != nil {
 		settings = ([]byte)(*r.Strategy.Settings)
 	}
-	rawConfig, err := strategyConfigLoader.LoadWithID(settings, r.Strategy.Name)
+	rawConfig, err := strategyConfigLoader.LoadWithID(settings, r.Strategy.Type)
 	if err != nil {
 		return nil, newError("failed to parse to outbound detour config.").Base(err)
 	}

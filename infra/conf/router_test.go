@@ -88,15 +88,15 @@ func TestRouterConfig(t *testing.T) {
 						Tag:              "b1",
 						OutboundSelector: []string{"test"},
 						Strategy:         router.BalancingRule_Random,
-						HealthCheck:      &router.HealthCheckSetting{},
+						HealthCheck:      &router.HealthCheckSettingsProto{},
 					},
 					{
 						Tag:              "b1",
 						OutboundSelector: []string{"test"},
 						Strategy:         router.BalancingRule_Random,
-						HealthCheck: &router.HealthCheckSetting{
+						HealthCheck: &router.HealthCheckSettingsProto{
 							Enabled: true,
-							Round:   3,
+							Rounds:  3,
 							Timeout: 10,
 						},
 					},

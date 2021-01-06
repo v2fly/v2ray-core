@@ -132,25 +132,28 @@ message BalancingRule {
   string tag = 1;
   repeated string outbound_selector = 2;
   BalancingStrategy strategy = 3;
-  HealthCheckSetting health_check = 4;
+  HealthCheckSettingsProto health_check = 4;
   v2ray.core.common.serial.TypedMessage strategy_settings = 5;
 }
 
 message StrategyLeastLoadConfig {
   // RTT baselines for selecting, int64 values of time.Duration
   repeated int64 Baselines = 1;
-	// minimal nodes count to select
-	int32 MinNodes = 2;
+	// expected nodes count to select
+	int32 Expected = 2;
 }
 
-message HealthCheckSetting {
+message HealthCheckSettingsProto {
   bool enabled = 1;
   // destination url, need 204 for success return
   // default http://www.google.com/gen_204
-  string destination = 2;
-  int32 interval = 3;
-  int32 round = 4;
-  int32 timeout = 5;
+  string Destination = 2;
+  // health check interval(minutes)
+  int32 Interval = 3;
+  // rounds to perform for each outbound, each check
+  int32 Rounds = 4;
+  // ping timeout
+  int32 Timeout = 5;
 }
 
 message Config {

@@ -60,32 +60,32 @@ func (s *LeastLoadStrategy) PickOutbound() (string, error) {
 	return nodes[dice.Roll(cntNodes)].Tag, nil
 }
 
-// selectLeastLoad selects nodes with baselines and minCount.
+// selectLeastLoad selects nodes with Baselines and Expected Count.
 //
-// If no baseline provided: selects first `minCount` amount of nodes.
-// (first one if minCount <= 0)
+// If no baseline provided: selects first `Expected Count` amount of nodes.
+// (first one if Expected Count <= 0)
 //
-// If baselines provided and `minCount <= 0`: no minimal nodes required, selecting only according
-// to baselines[0]
+// If Baselines provided and `Expected Count <= 0`: no minimal nodes required, selecting only according
+// to Baselines[0]
 //
-// If baselines provided and `minCount > 0`: requires a minimal amount of nodes, selecting according
-// to different baselines, until one of them matches minCount.
-// If no baselines match, minCount applied.
+// If Baselines provided and `Expected Count > 0`: requires a minimal amount of nodes, selecting according
+// to different Baselines, until one of them matches Expected Count.
+// If no Baselines match, Expected Count applied.
 func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) ([]*node, error) {
-	minCount := int(s.settings.MinNodes)
+	expected := int(s.settings.Expected)
 	availableCount := len(nodes)
-	if minCount > availableCount {
+	if expected > availableCount {
 		return nodes, nil
 	}
 	if len(s.settings.Baselines) == 0 {
-		if minCount <= 0 {
+		if expected <= 0 {
 			return nodes[:1], nil
 		}
-		return nodes[:minCount], nil
+		return nodes[:expected], nil
 	}
 
-	// no minCount required
-	if minCount == 0 {
+	// no Expected Count required
+	if expected == 0 {
 		count := 0
 		baseline := time.Duration(s.settings.Baselines[0])
 		newError("applied baseline: ", baseline).AtDebug().WriteToLog()
@@ -97,15 +97,15 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) ([]*node, error) {
 		}
 		return nodes[:count], nil
 	}
-	// minCount required
-	count := minCount
-	baseline := nodes[minCount-1].AverageRTT
+	// Expected Count required
+	count := expected
+	baseline := nodes[expected-1].AverageRTT
 	for _, b := range s.settings.Baselines {
 		tb := time.Duration(b)
 		if tb > baseline {
 			newError("applied baseline: ", tb).AtDebug().WriteToLog()
 			baseline = tb
-			for i := minCount; i < availableCount; i++ {
+			for i := expected; i < availableCount; i++ {
 				if nodes[i].AverageRTT > baseline {
 					break
 				}

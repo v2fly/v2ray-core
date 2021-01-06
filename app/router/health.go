@@ -13,7 +13,7 @@ type HealthCheckSettings struct {
 	Enabled     bool
 	Destination string
 	Interval    time.Duration
-	Round       uint
+	Rounds      int
 	Timeout     time.Duration
 }
 
@@ -103,7 +103,7 @@ func (b *Balancer) HealthCheck(uncheckedOnly bool) {
 	rtts := make(map[string][]time.Duration)
 
 	for _, tag := range tags {
-		ch := make(chan time.Duration, int(b.healthChecker.Settings.Round))
+		ch := make(chan time.Duration, b.healthChecker.Settings.Rounds)
 		channels[tag] = ch
 		client := &pingClient{
 			Dispatcher:  b.healthChecker.dispatcher,
@@ -111,7 +111,7 @@ func (b *Balancer) HealthCheck(uncheckedOnly bool) {
 			Destination: b.healthChecker.Settings.Destination,
 			Timeout:     b.healthChecker.Settings.Timeout,
 		}
-		for i := 0; i < int(b.healthChecker.Settings.Round); i++ {
+		for i := 0; i < b.healthChecker.Settings.Rounds; i++ {
 			// newError("health checker ping ", tag, "#", i).AtDebug().WriteToLog()
 			go func() {
 				delay, err := client.MeasureDelay()
@@ -128,7 +128,7 @@ func (b *Balancer) HealthCheck(uncheckedOnly bool) {
 		}
 	}
 	for tag, ch := range channels {
-		for i := 0; i < int(b.healthChecker.Settings.Round); i++ {
+		for i := 0; i < b.healthChecker.Settings.Rounds; i++ {
 			rtt := <-ch
 			// newError("ping rtt of '", tag, "'=", rtt).AtDebug().WriteToLog()
 			rtts[tag] = append(rtts[tag], rtt)

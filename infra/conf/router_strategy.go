@@ -16,7 +16,7 @@ var (
 	strategyConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
 		strategyRandom:    func() interface{} { return new(strategyEmptyConfig) },
 		strategyLeastLoad: func() interface{} { return new(strategyLeastLoadConfig) },
-	}, "name", "settings")
+	}, "type", "settings")
 )
 
 type strategyEmptyConfig struct {
@@ -30,13 +30,13 @@ type strategyLeastLoadConfig struct {
 	// ping rtt baselines (ms)
 	Baselines []int `json:"baselines"`
 	// minimal nodes count to select
-	MinNodes int32 `json:"minNodes"`
+	Expected int32 `json:"expected"`
 }
 
 // Build implements Buildable.
 func (v *strategyLeastLoadConfig) Build() (proto.Message, error) {
 	config := new(router.StrategyLeastLoadConfig)
-	config.MinNodes = v.MinNodes
+	config.Expected = v.Expected
 	config.Baselines = make([]int64, 0)
 	for _, b := range v.Baselines {
 		config.Baselines = append(config.Baselines, int64(time.Duration(b)*time.Millisecond))

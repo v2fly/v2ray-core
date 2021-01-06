@@ -66,7 +66,7 @@ func TestSimpleBalancer(t *testing.T) {
 			{
 				Tag:              "balance",
 				OutboundSelector: []string{"test-"},
-				HealthCheck:      &HealthCheckSetting{},
+				HealthCheck:      &HealthCheckSettingsProto{},
 			},
 		},
 	}
