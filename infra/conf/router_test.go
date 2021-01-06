@@ -3,11 +3,13 @@ package conf_test
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 
 	"v2ray.com/core/app/router"
 	"v2ray.com/core/common/net"
+	"v2ray.com/core/common/serial"
 	. "v2ray.com/core/infra/conf"
 )
 
@@ -69,13 +71,17 @@ func TestRouterConfig(t *testing.T) {
 						"selector": ["test"]
 					},
 					{
-						"tag": "b1",
+						"tag": "b2",
 						"selector": ["test"],
-						"strategy": "random",
 						"healthCheck": {
-							"enabled": true,
-							"round": 3,
-							"timeout": 10
+							"enabled": true
+						},
+						"strategy": {
+							"type": "LeastLoad",
+							"settings": {
+								"baselines": [400, 600],
+								"expected": 6
+							}
 						}
 					}
 				]
@@ -91,9 +97,16 @@ func TestRouterConfig(t *testing.T) {
 						HealthCheck:      &router.HealthCheckSettingsProto{},
 					},
 					{
-						Tag:              "b1",
+						Tag:              "b2",
 						OutboundSelector: []string{"test"},
-						Strategy:         router.BalancingRule_Random,
+						Strategy:         router.BalancingRule_LeastLoad,
+						StrategySettings: serial.ToTypedMessage(&router.StrategyLeastLoadConfig{
+							Baselines: []int64{
+								int64(time.Duration(400) * time.Millisecond),
+								int64(time.Duration(600) * time.Millisecond),
+							},
+							Expected: 6,
+						}),
 						HealthCheck: &router.HealthCheckSettingsProto{
 							Enabled: true,
 						},

@@ -57,7 +57,7 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 	}
 	rawConfig, err := strategyConfigLoader.LoadWithID(settings, r.Strategy.Type)
 	if err != nil {
-		return nil, newError("failed to parse to outbound detour config.").Base(err)
+		return nil, newError("failed to parse to strategy config.").Base(err)
 	}
 	ts, err := rawConfig.(Buildable).Build()
 	if err != nil {

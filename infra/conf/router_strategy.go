@@ -29,7 +29,7 @@ func (v *strategyEmptyConfig) Build() (proto.Message, error) {
 type strategyLeastLoadConfig struct {
 	// ping rtt baselines (ms)
 	Baselines []int `json:"baselines"`
-	// minimal nodes count to select
+	// expected nodes count to select
 	Expected int32 `json:"expected"`
 }
 

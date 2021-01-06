@@ -27,7 +27,7 @@ func (n *node) String() string {
 }
 
 // PickOutbound implements the BalancingStrategy.
-// It picks an outbound from tags randomly and respects the health check settings
+// It picks an outbound from least load tags, according to the health check results
 func (s *LeastLoadStrategy) PickOutbound() (string, error) {
 	if !s.balancer.healthChecker.Settings.Enabled {
 		newError("least load: health checher not enabled, will work like random strategy").AtWarning().WriteToLog()
@@ -51,10 +51,7 @@ func (s *LeastLoadStrategy) PickOutbound() (string, error) {
 		return tags[dice.Roll(cntAll)], nil
 	}
 
-	nodes, err := s.selectLeastLoad(alive)
-	if err != nil {
-		return "", err
-	}
+	nodes := s.selectLeastLoad(alive)
 	cntNodes := len(nodes)
 	if cntNodes == 0 {
 		newError("least load: no outbound matches, select alive one whatever").AtInfo().WriteToLog()
@@ -80,19 +77,19 @@ func (s *LeastLoadStrategy) PickOutbound() (string, error) {
 // the Expected Count, if no Baseline matches, Expected Count applied.
 //
 // 3. Speed priority: Baselines + `Expected Count <= 0`.
-// go through all base line until find selects, if not, select the fastest first one
-func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) ([]*node, error) {
+// go through all baselines until find selects, if not, select the fastest first one
+func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 	expected := int(s.settings.Expected)
 	availableCount := len(nodes)
 	if expected > availableCount {
-		return nodes, nil
+		return nodes
 	}
 
 	if expected <= 0 {
 		expected = 1
 	}
 	if len(s.settings.Baselines) == 0 {
-		return nodes[:expected], nil
+		return nodes[:expected]
 	}
 
 	count := 0
@@ -114,7 +111,7 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) ([]*node, error) {
 	if count < expected {
 		count = expected
 	}
-	return nodes[:count], nil
+	return nodes[:count]
 }
 
 func (s *LeastLoadStrategy) getNodesAlive(tags []string) (nodes []*node, err error) {
