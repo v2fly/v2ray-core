@@ -30,7 +30,7 @@ func (n *node) String() string {
 // It picks an outbound from tags randomly and respects the health check settings
 func (s *LeastLoadStrategy) PickOutbound() (string, error) {
 	if !s.balancer.healthChecker.Settings.Enabled {
-		newError("health checher not enabled, 'Least Load' strategy will work like 'Random'").AtWarning().WriteToLog()
+		newError("least load: health checher not enabled, will work like random strategy").AtWarning().WriteToLog()
 	}
 	tags, err := s.balancer.SelectOutbounds()
 	if err != nil {
@@ -38,81 +38,79 @@ func (s *LeastLoadStrategy) PickOutbound() (string, error) {
 	}
 	cntAll := len(tags)
 	if cntAll == 0 {
-		return "", newError("no available outbounds").AtWarning()
+		return "", newError("least load: no available outbounds").AtWarning()
 	}
 
-	nodes, err := s.getNodesAlive(tags)
+	alive, err := s.getNodesAlive(tags)
 	if err != nil {
 		return "", err
 	}
-	if len(nodes) > 0 {
-		nodes, err = s.selectLeastLoad(nodes)
-		if err != nil {
-			return "", err
-		}
+	cntAlive := len(alive)
+	if cntAlive == 0 {
+		newError("least load: no outbound alive, select one whatever").AtInfo().WriteToLog()
+		return tags[dice.Roll(cntAll)], nil
+	}
+
+	nodes, err := s.selectLeastLoad(alive)
+	if err != nil {
+		return "", err
 	}
 	cntNodes := len(nodes)
 	if cntNodes == 0 {
-		newError("no outbounds alive, select one whatever").AtInfo().WriteToLog()
-		return tags[dice.Roll(cntAll)], nil
+		newError("least load: no outbound matches, select alive one whatever").AtInfo().WriteToLog()
+		return alive[dice.Roll(cntAlive)].Tag, nil
 	}
 	newError("least load tags: ", nodes).AtDebug().WriteToLog()
 	return nodes[dice.Roll(cntNodes)].Tag, nil
 }
 
-// selectLeastLoad selects nodes with Baselines and Expected Count.
+// selectLeastLoad selects nodes according to Baselines and Expected Count.
 //
-// If no baseline provided: selects first `Expected Count` amount of nodes.
-// (first one if Expected Count <= 0)
+// The strategy always improves network response speed, not matter which mode below is configurated.
+// But they can still have different priorities.
 //
-// If Baselines provided and `Expected Count <= 0`: no minimal nodes required, selecting only according
-// to Baselines[0]
+// 1. Bandwidth priority: no Baseline + Expected Count > 0.: selects `Expected Count` amount of nodes.
+// (one if Expected Count <= 0)
 //
-// If Baselines provided and `Expected Count > 0`: requires a minimal amount of nodes, selecting according
-// to different Baselines, until one of them matches Expected Count.
-// If no Baselines match, Expected Count applied.
+// 2. Bandwidth priority advanced: Baselines + Expected Count > 0.
+// Select `Expected Count` amount of nodes, and also those near them according to baselines.
+// In other words, it selects according to different Baselines, until one of them matches
+// the Expected Count, if no Baseline matches, Expected Count applied.
+//
+// 3. Speed priority: Baselines + `Expected Count <= 0`.
+// go through all base line until find selects, if not, select the fastest first one
 func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) ([]*node, error) {
 	expected := int(s.settings.Expected)
 	availableCount := len(nodes)
 	if expected > availableCount {
 		return nodes, nil
 	}
+
+	if expected <= 0 {
+		expected = 1
+	}
 	if len(s.settings.Baselines) == 0 {
-		if expected <= 0 {
-			return nodes[:1], nil
-		}
 		return nodes[:expected], nil
 	}
 
-	// no Expected Count required
-	if expected == 0 {
-		count := 0
-		baseline := time.Duration(s.settings.Baselines[0])
-		newError("applied baseline: ", baseline).AtDebug().WriteToLog()
+	count := 0
+	// go through all base line until find expected selects
+	for _, b := range s.settings.Baselines {
+		baseline := time.Duration(b)
 		for i := 0; i < availableCount; i++ {
 			if nodes[i].AverageRTT > baseline {
 				break
 			}
 			count = i + 1
 		}
-		return nodes[:count], nil
-	}
-	// Expected Count required
-	count := expected
-	baseline := nodes[expected-1].AverageRTT
-	for _, b := range s.settings.Baselines {
-		tb := time.Duration(b)
-		if tb > baseline {
-			newError("applied baseline: ", tb).AtDebug().WriteToLog()
-			baseline = tb
-			for i := expected; i < availableCount; i++ {
-				if nodes[i].AverageRTT > baseline {
-					break
-				}
-				count = i + 1
-			}
+		// don't continue if find expected selects
+		if count >= expected {
+			newError("applied baseline: ", baseline).AtDebug().WriteToLog()
 			break
 		}
+	}
+	if count < expected {
+		count = expected
 	}
 	return nodes[:count], nil
 }

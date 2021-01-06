@@ -18,7 +18,7 @@ func (s *RandomStrategy) PickOutbound() (string, error) {
 	}
 	cntAll := len(tags)
 	if cntAll == 0 {
-		return "", newError("no available outbounds").AtWarning()
+		return "", newError("random: no available outbounds").AtWarning()
 	}
 	if !s.balancer.healthChecker.Settings.Enabled {
 		return tags[dice.Roll(cntAll)], nil
@@ -30,7 +30,7 @@ func (s *RandomStrategy) PickOutbound() (string, error) {
 	}
 	cntAlive := len(alive)
 	if cntAll == 0 {
-		newError("no outbounds alive, select one whatever").AtInfo().WriteToLog()
+		newError("random: no outbound alive, select one whatever").AtInfo().WriteToLog()
 		return tags[dice.Roll(cntAll)], nil
 	}
 	return alive[dice.Roll(cntAlive)], nil
