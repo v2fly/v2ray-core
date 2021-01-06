@@ -398,7 +398,7 @@ func TestChinaSites(t *testing.T) {
 	}
 }
 
-func BenchmarkChinaSitesWithACDomainMatcher(b *testing.B) {
+func BenchmarkACDomainMatcher(b *testing.B) {
 	domains, err := loadGeoSite("CN")
 	common.Must(err)
 
