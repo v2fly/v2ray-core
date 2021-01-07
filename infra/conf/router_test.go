@@ -82,7 +82,8 @@ func TestRouterConfig(t *testing.T) {
 								"baselines": [400, 600],
 								"expected": 6
 							}
-						}
+						},
+						"fallbackTag": "fall"
 					}
 				]
 			}`,
@@ -110,6 +111,7 @@ func TestRouterConfig(t *testing.T) {
 						HealthCheck: &router.HealthCheckSettingsProto{
 							Enabled: true,
 						},
+						FallbackTag: "fall",
 					},
 				},
 				Rule: []*router.RoutingRule{

@@ -15,6 +15,7 @@ type Balancer struct {
 	strategy      BalancingStrategy
 	healthChecker *HealthChecker
 	ohm           outbound.Manager
+	fallbackTag   string
 }
 
 // PickOutbound picks the tag of a outbound
@@ -24,6 +25,11 @@ func (b *Balancer) PickOutbound() (string, error) {
 		return "", err
 	}
 	if tag == "" {
+		if b.fallbackTag != "" {
+			newError("balancing strategy returns empty tag, fallback to [", b.fallbackTag, "]").AtInfo().WriteToLog()
+			return b.fallbackTag, nil
+		}
+		// will use default handler
 		return "", newError("balancing strategy returns empty tag")
 	}
 	return tag, nil

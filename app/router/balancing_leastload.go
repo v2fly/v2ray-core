@@ -38,7 +38,7 @@ func (s *LeastLoadStrategy) PickOutbound() (string, error) {
 	}
 	cntAll := len(tags)
 	if cntAll == 0 {
-		return "", newError("least load: no available outbounds").AtWarning()
+		return "", nil
 	}
 
 	alive, err := s.getNodesAlive(tags)
@@ -47,8 +47,9 @@ func (s *LeastLoadStrategy) PickOutbound() (string, error) {
 	}
 	cntAlive := len(alive)
 	if cntAlive == 0 {
-		newError("least load: no outbound alive, select one whatever").AtInfo().WriteToLog()
-		return tags[dice.Roll(cntAll)], nil
+		newError("least load: no outbound alive").AtInfo().WriteToLog()
+		// goes to fallbackTag
+		return "", nil
 	}
 
 	nodes := s.selectLeastLoad(alive)

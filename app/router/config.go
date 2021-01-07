@@ -179,6 +179,7 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 		selectors:     br.OutboundSelector,
 		healthChecker: h,
 		ohm:           ohm,
+		fallbackTag:   br.FallbackTag,
 	}
 	switch br.Strategy {
 	case BalancingRule_LeastLoad:

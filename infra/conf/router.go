@@ -29,6 +29,7 @@ type BalancingRule struct {
 	Strategy    StrategyConfig                  `json:"strategy"`
 	HealthCheck router.HealthCheckSettingsProto `json:"healthCheck"`
 	Selectors   StringList                      `json:"selector"`
+	FallbackTag string                          `json:"fallbackTag"`
 }
 
 // Build builds the balancing rule
@@ -70,6 +71,7 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 		Strategy:         strategy,
 		StrategySettings: serial.ToTypedMessage(ts),
 		HealthCheck:      &r.HealthCheck,
+		FallbackTag:      r.FallbackTag,
 	}, nil
 }
 

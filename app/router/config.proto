@@ -134,6 +134,7 @@ message BalancingRule {
   BalancingStrategy strategy = 3;
   HealthCheckSettingsProto health_check = 4;
   v2ray.core.common.serial.TypedMessage strategy_settings = 5;
+  string fallback_tag = 6;
 }
 
 message StrategyLeastLoadConfig {
