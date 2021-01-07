@@ -19,7 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 type RoutingServiceClient interface {
 	SubscribeRoutingStats(ctx context.Context, in *SubscribeRoutingStatsRequest, opts ...grpc.CallOption) (RoutingService_SubscribeRoutingStatsClient, error)
 	TestRoute(ctx context.Context, in *TestRouteRequest, opts ...grpc.CallOption) (*RoutingContext, error)
-	GetHealthStats(ctx context.Context, in *HealthStatsRequest, opts ...grpc.CallOption) (*HealthStatsResponse, error)
+	GetHealthInfo(ctx context.Context, in *GetHealthInfoRequest, opts ...grpc.CallOption) (*GetHealthInfoResponse, error)
+	CheckBalancers(ctx context.Context, in *CheckBalancersRequest, opts ...grpc.CallOption) (*CheckBalancersResponse, error)
 }
 
 type routingServiceClient struct {
@@ -71,9 +72,18 @@ func (c *routingServiceClient) TestRoute(ctx context.Context, in *TestRouteReque
 	return out, nil
 }
 
-func (c *routingServiceClient) GetHealthStats(ctx context.Context, in *HealthStatsRequest, opts ...grpc.CallOption) (*HealthStatsResponse, error) {
-	out := new(HealthStatsResponse)
-	err := c.cc.Invoke(ctx, "/v2ray.core.app.router.command.RoutingService/GetHealthStats", in, out, opts...)
+func (c *routingServiceClient) GetHealthInfo(ctx context.Context, in *GetHealthInfoRequest, opts ...grpc.CallOption) (*GetHealthInfoResponse, error) {
+	out := new(GetHealthInfoResponse)
+	err := c.cc.Invoke(ctx, "/v2ray.core.app.router.command.RoutingService/GetHealthInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *routingServiceClient) CheckBalancers(ctx context.Context, in *CheckBalancersRequest, opts ...grpc.CallOption) (*CheckBalancersResponse, error) {
+	out := new(CheckBalancersResponse)
+	err := c.cc.Invoke(ctx, "/v2ray.core.app.router.command.RoutingService/CheckBalancers", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +96,8 @@ func (c *routingServiceClient) GetHealthStats(ctx context.Context, in *HealthSta
 type RoutingServiceServer interface {
 	SubscribeRoutingStats(*SubscribeRoutingStatsRequest, RoutingService_SubscribeRoutingStatsServer) error
 	TestRoute(context.Context, *TestRouteRequest) (*RoutingContext, error)
-	GetHealthStats(context.Context, *HealthStatsRequest) (*HealthStatsResponse, error)
+	GetHealthInfo(context.Context, *GetHealthInfoRequest) (*GetHealthInfoResponse, error)
+	CheckBalancers(context.Context, *CheckBalancersRequest) (*CheckBalancersResponse, error)
 	mustEmbedUnimplementedRoutingServiceServer()
 }
 
@@ -100,8 +111,11 @@ func (UnimplementedRoutingServiceServer) SubscribeRoutingStats(*SubscribeRouting
 func (UnimplementedRoutingServiceServer) TestRoute(context.Context, *TestRouteRequest) (*RoutingContext, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TestRoute not implemented")
 }
-func (UnimplementedRoutingServiceServer) GetHealthStats(context.Context, *HealthStatsRequest) (*HealthStatsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetHealthStats not implemented")
+func (UnimplementedRoutingServiceServer) GetHealthInfo(context.Context, *GetHealthInfoRequest) (*GetHealthInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHealthInfo not implemented")
+}
+func (UnimplementedRoutingServiceServer) CheckBalancers(context.Context, *CheckBalancersRequest) (*CheckBalancersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckBalancers not implemented")
 }
 func (UnimplementedRoutingServiceServer) mustEmbedUnimplementedRoutingServiceServer() {}
 
@@ -155,20 +169,38 @@ func _RoutingService_TestRoute_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RoutingService_GetHealthStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HealthStatsRequest)
+func _RoutingService_GetHealthInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetHealthInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RoutingServiceServer).GetHealthStats(ctx, in)
+		return srv.(RoutingServiceServer).GetHealthInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v2ray.core.app.router.command.RoutingService/GetHealthStats",
+		FullMethod: "/v2ray.core.app.router.command.RoutingService/GetHealthInfo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RoutingServiceServer).GetHealthStats(ctx, req.(*HealthStatsRequest))
+		return srv.(RoutingServiceServer).GetHealthInfo(ctx, req.(*GetHealthInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RoutingService_CheckBalancers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckBalancersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoutingServiceServer).CheckBalancers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v2ray.core.app.router.command.RoutingService/CheckBalancers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoutingServiceServer).CheckBalancers(ctx, req.(*CheckBalancersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -182,8 +214,12 @@ var _RoutingService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _RoutingService_TestRoute_Handler,
 		},
 		{
-			MethodName: "GetHealthStats",
-			Handler:    _RoutingService_GetHealthStats_Handler,
+			MethodName: "GetHealthInfo",
+			Handler:    _RoutingService_GetHealthInfo_Handler,
+		},
+		{
+			MethodName: "CheckBalancers",
+			Handler:    _RoutingService_CheckBalancers_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

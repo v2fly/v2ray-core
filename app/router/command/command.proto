@@ -60,30 +60,37 @@ message TestRouteRequest {
   bool PublishResult = 3;
 }
 
-message HealthStatsRequest {
-  string Tag = 1;
+message GetHealthInfoRequest {
+  repeated string BalancerTags = 1;
 }
 
-message HealthStatItem {
-  string Outbound = 1;
+message OutboundHealth {
+  string Tag = 1;
   int64 RTT = 2;
 }
 
-message HealthStats {
-  string Balancer = 1;
-  repeated HealthStatItem Selects = 2;
-  repeated HealthStatItem Outbounds = 3;
+message BalancerHealth {
+  string Tag = 1;
+  repeated OutboundHealth Selects = 2;
+  repeated OutboundHealth Outbounds = 3;
 }
 
-message HealthStatsResponse {
-  repeated HealthStats stats = 1;
+message GetHealthInfoResponse {
+  repeated BalancerHealth Balancers = 1;
 }
+
+message CheckBalancersRequest {
+  repeated string BalancerTags = 1;
+}
+
+message CheckBalancersResponse {}
 
 service RoutingService {
   rpc SubscribeRoutingStats(SubscribeRoutingStatsRequest)
       returns (stream RoutingContext) {}
   rpc TestRoute(TestRouteRequest) returns (RoutingContext) {}
-  rpc GetHealthStats(HealthStatsRequest) returns (HealthStatsResponse) {}
+  rpc GetHealthInfo(GetHealthInfoRequest) returns (GetHealthInfoResponse) {}
+  rpc CheckBalancers(CheckBalancersRequest) returns (CheckBalancersResponse) {}
 }
 
 message Config {}

@@ -5,26 +5,29 @@ import (
 	"time"
 )
 
-// HealthStatItem represents a health stats of an outbound
-type HealthStatItem struct {
+// OutboundHealth represents a health stats of an outbound
+type OutboundHealth struct {
 	Outbound string
 	RTT      time.Duration
 }
 
-// HealthStats represents a health stats of a balancers
-type HealthStats struct {
+// BalancerHealth represents a health stats of a balancers
+type BalancerHealth struct {
 	Balancer  string
-	Selects   []*HealthStatItem
-	Outbounds []*HealthStatItem
+	Selects   []*OutboundHealth
+	Outbounds []*OutboundHealth
 }
 
 // HealthChecker is able to perform health check and stats for outbound hanlders.
 type HealthChecker interface {
-
-	// HealthCheck performs a health check for outbound hanlders
-	HealthCheck(tags []string)
-	// GetHealthStats get health info of specific balancer, if balancer not specified, get all
-	GetHealthStats(tag string) ([]*HealthStats, error)
+	// CheckHanlders performs a health check for specified outbound hanlders
+	CheckHanlders(tags []string) error
+	// BalancerHealthCheck performs health checks for specified balancers,
+	// if not specified, check them all
+	CheckBalancers(tags []string) error
+	// GetHealthInfo get health info of specific balancer, if balancer not
+	//  specified, get all
+	GetHealthInfo(tags []string) ([]*BalancerHealth, error)
 }
 
 // ThrottledChecker run Health Checks Throttled
@@ -51,6 +54,6 @@ func (t *ThrottledChecker) Run(tag string) {
 		t.tags = make([]string, 0)
 		t.mux.Unlock()
 		// newError("#", idx, "running").AtDebug().WriteToLog()
-		t.Checker.HealthCheck(tags)
+		t.Checker.CheckHanlders(tags)
 	})
 }

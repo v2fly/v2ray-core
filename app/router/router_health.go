@@ -1,35 +1,86 @@
 package router
 
-import "v2ray.com/core/features/routing"
+import (
+	"errors"
+	"strings"
 
-// HealthCheck implements routing.HealthChecker.
-func (r *Router) HealthCheck(tags []string) {
+	"v2ray.com/core/features/routing"
+)
+
+// CheckHanlders implements routing.HealthChecker.
+func (r *Router) CheckHanlders(tags []string) error {
+	errs := make([]error, 0)
 	for _, b := range r.balancers {
 		if !b.healthChecker.Settings.Enabled {
 			continue
 		}
-		b.HealthCheck(tags)
+		err := b.Check(tags)
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return getCollectError(errs)
 }
 
-// GetHealthStats implements routing.HealthChecker.
-func (r *Router) GetHealthStats(tag string) ([]*routing.HealthStats, error) {
-	resp := make([]*routing.HealthStats, 0)
-	for t, b := range r.balancers {
-		if tag != "" && t != tag {
-			continue
-		}
+// CheckBalancers implements routing.HealthChecker.
+func (r *Router) CheckBalancers(tags []string) error {
+	errs := make([]error, 0)
+	for _, b := range r.balancers {
 		if !b.healthChecker.Settings.Enabled {
 			continue
 		}
-		stat := &routing.HealthStats{
+		_, err := b.CheckAll()
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return getCollectError(errs)
+}
+
+func getCollectError(errs []error) error {
+	sb := new(strings.Builder)
+	sb.WriteString("collect errors:\n")
+	for _, err := range errs {
+		sb.WriteString("    * ")
+		sb.WriteString(err.Error())
+		sb.WriteString("\n")
+	}
+	return errors.New(sb.String())
+}
+
+// GetHealthInfo implements routing.HealthChecker.
+func (r *Router) GetHealthInfo(tags []string) ([]*routing.BalancerHealth, error) {
+	resp := make([]*routing.BalancerHealth, 0)
+	for t, b := range r.balancers {
+		if !b.healthChecker.Settings.Enabled {
+			continue
+		}
+		if len(tags) > 0 {
+			found := false
+			for _, v := range tags {
+				if t == v {
+					found = true
+					break
+				}
+			}
+			if !found {
+				continue
+			}
+		}
+		stat := &routing.BalancerHealth{
 			Balancer:  t,
-			Selects:   make([]*routing.HealthStatItem, 0),
-			Outbounds: make([]*routing.HealthStatItem, 0),
+			Selects:   make([]*routing.OutboundHealth, 0),
+			Outbounds: make([]*routing.OutboundHealth, 0),
 		}
 		selects, err := b.strategy.SelectOutbounds()
 		if err != nil {
-			stat.Selects = append(stat.Selects, &routing.HealthStatItem{
+			stat.Selects = append(stat.Selects, &routing.OutboundHealth{
 				Outbound: err.Error(),
 			})
 		} else {
@@ -37,7 +88,7 @@ func (r *Router) GetHealthStats(tag string) ([]*routing.HealthStats, error) {
 		}
 		all, err := b.SelectOutbounds()
 		if err != nil {
-			stat.Outbounds = append(stat.Outbounds, &routing.HealthStatItem{
+			stat.Outbounds = append(stat.Outbounds, &routing.OutboundHealth{
 				Outbound: err.Error(),
 			})
 		} else {

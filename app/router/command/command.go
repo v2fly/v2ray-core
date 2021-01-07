@@ -74,39 +74,52 @@ func (s *routingServer) SubscribeRoutingStats(request *SubscribeRoutingStatsRequ
 	}
 }
 
-func (s *routingServer) GetHealthStats(ctx context.Context, request *HealthStatsRequest) (*HealthStatsResponse, error) {
+func (s *routingServer) GetHealthInfo(ctx context.Context, request *GetHealthInfoRequest) (*GetHealthInfoResponse, error) {
 	h, ok := s.router.(routing.HealthChecker)
 	if !ok {
 		return nil, status.Errorf(codes.Unavailable, "current router is not a health checker")
 	}
-	results, err := h.GetHealthStats(request.Tag)
+	results, err := h.GetHealthInfo(request.BalancerTags)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	rsp := &HealthStatsResponse{
-		Stats: make([]*HealthStats, 0),
+	rsp := &GetHealthInfoResponse{
+		Balancers: make([]*BalancerHealth, 0),
 	}
 	for _, result := range results {
-		stat := &HealthStats{
-			Balancer:  result.Balancer,
-			Selects:   make([]*HealthStatItem, 0),
-			Outbounds: make([]*HealthStatItem, 0),
+		stat := &BalancerHealth{
+			Tag:       result.Balancer,
+			Selects:   make([]*OutboundHealth, 0),
+			Outbounds: make([]*OutboundHealth, 0),
 		}
 		for _, item := range result.Selects {
-			stat.Selects = append(stat.Selects, &HealthStatItem{
-				Outbound: item.Outbound,
-				RTT:      int64(item.RTT),
+			stat.Selects = append(stat.Selects, &OutboundHealth{
+				Tag: item.Outbound,
+				RTT: int64(item.RTT),
 			})
 		}
 		for _, item := range result.Outbounds {
-			stat.Outbounds = append(stat.Outbounds, &HealthStatItem{
-				Outbound: item.Outbound,
-				RTT:      int64(item.RTT),
+			stat.Outbounds = append(stat.Outbounds, &OutboundHealth{
+				Tag: item.Outbound,
+				RTT: int64(item.RTT),
 			})
 		}
-		rsp.Stats = append(rsp.Stats, stat)
+		rsp.Balancers = append(rsp.Balancers, stat)
 	}
 	return rsp, nil
+}
+func (s *routingServer) CheckBalancers(ctx context.Context, request *CheckBalancersRequest) (*CheckBalancersResponse, error) {
+	h, ok := s.router.(routing.HealthChecker)
+	if !ok {
+		return nil, status.Errorf(codes.Unavailable, "current router is not a health checker")
+	}
+	go func() {
+		err := h.CheckBalancers(request.BalancerTags)
+		if err != nil {
+			newError("CheckBalancers error:", err).AtInfo().WriteToLog()
+		}
+	}()
+	return &CheckBalancersResponse{}, nil
 }
 
 func (s *routingServer) mustEmbedUnimplementedRoutingServiceServer() {}

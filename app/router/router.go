@@ -118,7 +118,7 @@ func (r *Router) Start() error {
 			continue
 		}
 		newError("Created health checker for balancer '", t, "' with settings: ", b.healthChecker.Settings).AtInfo().WriteToLog()
-		b.StartHealthCheckScheduler()
+		b.StartScheduler()
 	}
 	return nil
 }

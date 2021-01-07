@@ -38,8 +38,8 @@ type HealthChecker struct {
 	Results  map[string]*HealthCheckResult
 }
 
-// StartHealthCheckScheduler start the health checker
-func (b *Balancer) StartHealthCheckScheduler() {
+// StartScheduler start the health checker scheduler
+func (b *Balancer) StartScheduler() {
 	if !b.healthChecker.Settings.Enabled {
 		return
 	}
@@ -53,14 +53,26 @@ func (b *Balancer) StartHealthCheckScheduler() {
 		if !ok {
 			break
 		}
-		tags, err := b.SelectOutbounds()
-		if err != nil {
-			newError("HealthCheckScheduler: error select outbounds: ", err).AtWarning().WriteToLog()
-			return
-		}
-		b.cleanupResults(tags)
-		go b.doHealthCheck(tags)
+		go func() {
+			_, err := b.CheckAll()
+			if err != nil {
+				newError("HealthCheckScheduler: ", err).AtWarning().WriteToLog()
+				return
+			}
+		}()
 	}
+}
+
+// CheckAll checks all outbounds, and return their tags
+func (b *Balancer) CheckAll() ([]string, error) {
+	tags, err := b.SelectOutbounds()
+	if err != nil {
+		return nil, newError("error select outbounds: ", err)
+
+	}
+	b.cleanupResults(tags)
+	b.doCheck(tags)
+	return tags, nil
 }
 
 // StopHealthCheckScheduler stop the health checker
@@ -69,24 +81,24 @@ func (b *Balancer) StopHealthCheckScheduler() error {
 	return nil
 }
 
-// HealthCheck start the health checking for given tags.
+// Check start the health checking for given tags.
 // it validates tags and checks those only in current balancer
-func (b *Balancer) HealthCheck(tags []string) {
-	ts, err := b.getOneTimeCheckTags(tags)
+func (b *Balancer) Check(tags []string) error {
+	ts, err := b.getCheckTags(tags)
 	if err != nil {
-		newError("HealthCheck: error select outbounds: ", err).AtWarning().WriteToLog()
-		return
+		return err
 	}
 	if len(ts) == 0 {
-		return
+		return nil
 	}
 	newError("HealthCheck: Perform one-time check for tags ", ts).AtInfo().WriteToLog()
-	b.doHealthCheck(ts)
+	b.doCheck(ts)
+	return nil
 }
 
-// doHealthCheck do check for tags, you should make
+// doCheck do check for tags, you should make
 // sure all tags are valid for current balancer
-func (b *Balancer) doHealthCheck(tags []string) {
+func (b *Balancer) doCheck(tags []string) {
 	if !b.healthChecker.Settings.Enabled || len(tags) == 0 {
 		return
 	}
@@ -170,7 +182,7 @@ func (b *Balancer) doHealthCheck(tags []string) {
 	}
 }
 
-func (b *Balancer) getOneTimeCheckTags(tags []string) ([]string, error) {
+func (b *Balancer) getCheckTags(tags []string) ([]string, error) {
 	if len(tags) == 0 {
 		return nil, nil
 	}
@@ -211,29 +223,33 @@ func (b *Balancer) cleanupResults(tags []string) {
 	}
 }
 
-func (b *Balancer) makeHealthStatItems(tags []string) []*routing.HealthStatItem {
+func (b *Balancer) makeHealthStatItems(tags []string) []*routing.OutboundHealth {
 	b.healthChecker.access.Lock()
 	defer b.healthChecker.access.Unlock()
-	items := make([]*routing.HealthStatItem, 0)
+	items := make([]*routing.OutboundHealth, 0)
 	for _, tag := range tags {
-		item := &routing.HealthStatItem{
+		item := &routing.OutboundHealth{
 			Outbound: tag,
 			RTT:      0,
 		}
 		result, ok := b.healthChecker.Results[tag]
 		if ok {
-			item.RTT = result.AverageRTT
+			if result.FailCount > 0 {
+				item.RTT = -1
+			} else {
+				item.RTT = result.AverageRTT
+			}
 		}
 		items = append(items, item)
 	}
 	sort.Slice(items, func(i, j int) bool {
 		iRTT := items[i].RTT
 		jRTT := items[j].RTT
-		// 0 rtt means not checked, sort in the tail
-		if iRTT == 0 && jRTT > 0 {
+		// 0 rtt means not checked or failed, sort in the tail
+		if iRTT <= 0 && jRTT > 0 {
 			return false
 		}
-		if iRTT > 0 && jRTT == 0 {
+		if iRTT > 0 && jRTT <= 0 {
 			return true
 		}
 		return iRTT < jRTT
