@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	"v2ray.com/core"
 	"v2ray.com/core/common"
 	"v2ray.com/core/features/routing"
@@ -70,6 +72,41 @@ func (s *routingServer) SubscribeRoutingStats(request *SubscribeRoutingStatsRequ
 			return stream.Context().Err()
 		}
 	}
+}
+
+func (s *routingServer) GetHealthStats(ctx context.Context, request *HealthStatsRequest) (*HealthStatsResponse, error) {
+	h, ok := s.router.(routing.HealthChecker)
+	if !ok {
+		return nil, status.Errorf(codes.Unavailable, "current router is not a health checker")
+	}
+	results, err := h.GetHealthStats(request.Tag)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	rsp := &HealthStatsResponse{
+		Stats: make([]*HealthStats, 0),
+	}
+	for _, result := range results {
+		stat := &HealthStats{
+			Balancer:  result.Balancer,
+			Selects:   make([]*HealthStatItem, 0),
+			Outbounds: make([]*HealthStatItem, 0),
+		}
+		for _, item := range result.Selects {
+			stat.Selects = append(stat.Selects, &HealthStatItem{
+				Outbound: item.Outbound,
+				RTT:      int64(item.RTT),
+			})
+		}
+		for _, item := range result.Outbounds {
+			stat.Outbounds = append(stat.Outbounds, &HealthStatItem{
+				Outbound: item.Outbound,
+				RTT:      int64(item.RTT),
+			})
+		}
+		rsp.Stats = append(rsp.Stats, stat)
+	}
+	return rsp, nil
 }
 
 func (s *routingServer) mustEmbedUnimplementedRoutingServiceServer() {}

@@ -1,7 +1,6 @@
 package router
 
 import (
-	"fmt"
 	"sort"
 	"time"
 
@@ -22,44 +21,60 @@ type node struct {
 	AverageRTT time.Duration
 }
 
-func (n *node) String() string {
-	return fmt.Sprintf("%s(%s)", n.Tag, n.AverageRTT)
-}
-
 // PickOutbound implements the BalancingStrategy.
 // It picks an outbound from least load tags, according to the health check results
 func (s *LeastLoadStrategy) PickOutbound() (string, error) {
+	tags, err := s.SelectOutbounds()
+	if err != nil {
+		return "", err
+	}
+	count := len(tags)
+	if count == 0 {
+		// goes to fallbackTag
+		return "", nil
+	}
+	return tags[dice.Roll(count)], nil
+}
+
+// SelectOutbounds implements BalancingStrategy
+func (s *LeastLoadStrategy) SelectOutbounds() ([]string, error) {
 	if !s.balancer.healthChecker.Settings.Enabled {
 		newError("least load: health checher not enabled, will work like random strategy").AtWarning().WriteToLog()
 	}
 	tags, err := s.balancer.SelectOutbounds()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	cntAll := len(tags)
 	if cntAll == 0 {
-		return "", nil
+		return nil, nil
 	}
 
 	alive, err := s.getNodesAlive(tags)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	cntAlive := len(alive)
 	if cntAlive == 0 {
 		newError("least load: no outbound alive").AtInfo().WriteToLog()
-		// goes to fallbackTag
-		return "", nil
+		return nil, nil
 	}
 
+	selects := make([]string, 0)
 	nodes := s.selectLeastLoad(alive)
 	cntNodes := len(nodes)
 	if cntNodes == 0 {
-		newError("least load: no outbound matches, select alive one whatever").AtInfo().WriteToLog()
-		return alive[dice.Roll(cntAlive)].Tag, nil
+		newError("least load: no outbound matches, select alive ones").AtInfo().WriteToLog()
+		for _, node := range alive {
+			selects = append(selects, node.Tag)
+		}
+		return selects, nil
 	}
-	newError("least load tags: ", nodes).AtDebug().WriteToLog()
-	return nodes[dice.Roll(cntNodes)].Tag, nil
+
+	for _, node := range nodes {
+		selects = append(selects, node.Tag)
+	}
+	return selects, nil
 }
 
 // TODO: test for config modes below

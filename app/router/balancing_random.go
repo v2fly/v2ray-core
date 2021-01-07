@@ -12,30 +12,27 @@ type RandomStrategy struct {
 // PickOutbound implements the BalancingStrategy.
 // It picks an outbound from all tags (or alive tags if health check enabled) randomly
 func (s *RandomStrategy) PickOutbound() (string, error) {
-	tags, err := s.balancer.SelectOutbounds()
+	tags, err := s.SelectOutbounds()
 	if err != nil {
 		return "", err
 	}
-	cntAll := len(tags)
-	if cntAll == 0 {
-		return "", nil
-	}
-	if !s.balancer.healthChecker.Settings.Enabled {
-		return tags[dice.Roll(cntAll)], nil
-	}
-
-	alive := s.selectOutboundsAlive(tags)
-	cntAlive := len(alive)
-	if cntAll == 0 {
-		newError("random: no outbound alive").AtInfo().WriteToLog()
+	count := len(tags)
+	if count == 0 {
 		// goes to fallbackTag
 		return "", nil
 	}
-	return alive[dice.Roll(cntAlive)], nil
+	return tags[dice.Roll(count)], nil
 }
 
-// selectOutboundsAlive select alive outbounds.
-func (s *RandomStrategy) selectOutboundsAlive(tags []string) []string {
+// SelectOutbounds implements BalancingStrategy
+func (s *RandomStrategy) SelectOutbounds() ([]string, error) {
+	tags, err := s.balancer.SelectOutbounds()
+	if err != nil || len(tags) == 0 {
+		return nil, err
+	}
+	if !s.balancer.healthChecker.Settings.Enabled {
+		return tags, nil
+	}
 	aliveTags := make([]string, 0)
 	s.balancer.healthChecker.access.Lock()
 	defer s.balancer.healthChecker.access.Unlock()
@@ -49,5 +46,8 @@ func (s *RandomStrategy) selectOutboundsAlive(tags []string) []string {
 		}
 		aliveTags = append(aliveTags, tag)
 	}
-	return aliveTags
+	if len(aliveTags) == 0 {
+		newError("random: no outbound alive").AtInfo().WriteToLog()
+	}
+	return aliveTags, nil
 }

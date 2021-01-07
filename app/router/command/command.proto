@@ -60,10 +60,30 @@ message TestRouteRequest {
   bool PublishResult = 3;
 }
 
+message HealthStatsRequest {
+  string Tag = 1;
+}
+
+message HealthStatItem {
+  string Outbound = 1;
+  int64 RTT = 2;
+}
+
+message HealthStats {
+  string Balancer = 1;
+  repeated HealthStatItem Selects = 2;
+  repeated HealthStatItem Outbounds = 3;
+}
+
+message HealthStatsResponse {
+  repeated HealthStats stats = 1;
+}
+
 service RoutingService {
   rpc SubscribeRoutingStats(SubscribeRoutingStatsRequest)
       returns (stream RoutingContext) {}
   rpc TestRoute(TestRouteRequest) returns (RoutingContext) {}
+  rpc GetHealthStats(HealthStatsRequest) returns (HealthStatsResponse) {}
 }
 
 message Config {}

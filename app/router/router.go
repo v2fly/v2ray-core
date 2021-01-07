@@ -123,16 +123,6 @@ func (r *Router) Start() error {
 	return nil
 }
 
-// HealthCheck implements routing.HealthChecker.
-func (r *Router) HealthCheck(tags []string) {
-	for _, b := range r.balancers {
-		if !b.healthChecker.Settings.Enabled {
-			continue
-		}
-		b.HealthCheck(tags)
-	}
-}
-
 // Close implements common.Closable.
 func (r *Router) Close() error {
 	for t, b := range r.balancers {

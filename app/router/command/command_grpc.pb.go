@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 type RoutingServiceClient interface {
 	SubscribeRoutingStats(ctx context.Context, in *SubscribeRoutingStatsRequest, opts ...grpc.CallOption) (RoutingService_SubscribeRoutingStatsClient, error)
 	TestRoute(ctx context.Context, in *TestRouteRequest, opts ...grpc.CallOption) (*RoutingContext, error)
+	GetHealthStats(ctx context.Context, in *HealthStatsRequest, opts ...grpc.CallOption) (*HealthStatsResponse, error)
 }
 
 type routingServiceClient struct {
@@ -70,12 +71,22 @@ func (c *routingServiceClient) TestRoute(ctx context.Context, in *TestRouteReque
 	return out, nil
 }
 
+func (c *routingServiceClient) GetHealthStats(ctx context.Context, in *HealthStatsRequest, opts ...grpc.CallOption) (*HealthStatsResponse, error) {
+	out := new(HealthStatsResponse)
+	err := c.cc.Invoke(ctx, "/v2ray.core.app.router.command.RoutingService/GetHealthStats", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoutingServiceServer is the server API for RoutingService service.
 // All implementations must embed UnimplementedRoutingServiceServer
 // for forward compatibility
 type RoutingServiceServer interface {
 	SubscribeRoutingStats(*SubscribeRoutingStatsRequest, RoutingService_SubscribeRoutingStatsServer) error
 	TestRoute(context.Context, *TestRouteRequest) (*RoutingContext, error)
+	GetHealthStats(context.Context, *HealthStatsRequest) (*HealthStatsResponse, error)
 	mustEmbedUnimplementedRoutingServiceServer()
 }
 
@@ -88,6 +99,9 @@ func (UnimplementedRoutingServiceServer) SubscribeRoutingStats(*SubscribeRouting
 }
 func (UnimplementedRoutingServiceServer) TestRoute(context.Context, *TestRouteRequest) (*RoutingContext, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TestRoute not implemented")
+}
+func (UnimplementedRoutingServiceServer) GetHealthStats(context.Context, *HealthStatsRequest) (*HealthStatsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHealthStats not implemented")
 }
 func (UnimplementedRoutingServiceServer) mustEmbedUnimplementedRoutingServiceServer() {}
 
@@ -141,6 +155,24 @@ func _RoutingService_TestRoute_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoutingService_GetHealthStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HealthStatsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoutingServiceServer).GetHealthStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v2ray.core.app.router.command.RoutingService/GetHealthStats",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoutingServiceServer).GetHealthStats(ctx, req.(*HealthStatsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _RoutingService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "v2ray.core.app.router.command.RoutingService",
 	HandlerType: (*RoutingServiceServer)(nil),
@@ -148,6 +180,10 @@ var _RoutingService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TestRoute",
 			Handler:    _RoutingService_TestRoute_Handler,
+		},
+		{
+			MethodName: "GetHealthStats",
+			Handler:    _RoutingService_GetHealthStats_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

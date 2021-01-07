@@ -5,11 +5,26 @@ import (
 	"time"
 )
 
-// HealthChecker is able to check health of outbound hanlders of its balancers.
+// HealthStatItem represents a health stats of an outbound
+type HealthStatItem struct {
+	Outbound string
+	RTT      time.Duration
+}
+
+// HealthStats represents a health stats of a balancers
+type HealthStats struct {
+	Balancer  string
+	Selects   []*HealthStatItem
+	Outbounds []*HealthStatItem
+}
+
+// HealthChecker is able to perform health check and stats for outbound hanlders.
 type HealthChecker interface {
 
-	// HealthCheck performs a health check for outbound hanlders of its balancers
+	// HealthCheck performs a health check for outbound hanlders
 	HealthCheck(tags []string)
+	// GetHealthStats get health info of specific balancer, if balancer not specified, get all
+	GetHealthStats(tag string) ([]*HealthStats, error)
 }
 
 // ThrottledChecker run Health Checks Throttled

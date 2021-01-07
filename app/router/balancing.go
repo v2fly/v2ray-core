@@ -6,7 +6,10 @@ import (
 
 // BalancingStrategy is the interface of a balancing strategy
 type BalancingStrategy interface {
+	// PickOutbound pick one outbound from the results of SelectOutbound()
 	PickOutbound() (string, error)
+	// SelectOutbound selects outbounds before the final pick
+	SelectOutbounds() ([]string, error)
 }
 
 // Balancer represents a balancer
@@ -22,11 +25,15 @@ type Balancer struct {
 func (b *Balancer) PickOutbound() (string, error) {
 	tag, err := b.strategy.PickOutbound()
 	if err != nil {
+		if b.fallbackTag != "" {
+			newError("fallback to [", b.fallbackTag, "], due to error: ", err).AtInfo().WriteToLog()
+			return b.fallbackTag, nil
+		}
 		return "", err
 	}
 	if tag == "" {
 		if b.fallbackTag != "" {
-			newError("balancing strategy returns empty tag, fallback to [", b.fallbackTag, "]").AtInfo().WriteToLog()
+			newError("fallback to [", b.fallbackTag, "], due to empty tag returned").AtInfo().WriteToLog()
 			return b.fallbackTag, nil
 		}
 		// will use default handler
