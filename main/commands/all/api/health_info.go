@@ -13,10 +13,10 @@ import (
 var cmdHealthInfo = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} api hci [--server=127.0.0.1:8080] [balancerTag]...",
-	Short:       "get health check infomation",
+	Short:       "get health check information",
 	Long: `
-Get health check infomation of specified balancers. If no 
-balancer tag specified, get infomation of all balancers.
+Get health check information of specified balancers. If no 
+balancer tag specified, get information of all balancers.
 
 > Make sure you have "RouterService" set in "config.api.services" 
 of server config.

@@ -68,7 +68,6 @@ func (b *Balancer) CheckAll() ([]string, error) {
 	tags, err := b.SelectOutbounds()
 	if err != nil {
 		return nil, newError("error select outbounds: ", err)
-
 	}
 	b.cleanupResults(tags)
 	b.doCheck(tags)
