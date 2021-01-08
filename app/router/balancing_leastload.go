@@ -62,14 +62,6 @@ func (s *LeastLoadStrategy) SelectOutbounds() ([]string, error) {
 
 	selects := make([]string, 0)
 	nodes := s.selectLeastLoad(alive)
-	cntNodes := len(nodes)
-	if cntNodes == 0 {
-		newError("least load: no outbound matches, select alive ones").AtInfo().WriteToLog()
-		for _, node := range alive {
-			selects = append(selects, node.Tag)
-		}
-		return selects, nil
-	}
 
 	for _, node := range nodes {
 		selects = append(selects, node.Tag)
