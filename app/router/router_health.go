@@ -54,47 +54,39 @@ func getCollectError(errs []error) error {
 	return errors.New(sb.String())
 }
 
-// GetHealthInfo implements routing.HealthChecker.
-func (r *Router) GetHealthInfo(tags []string) ([]*routing.BalancerHealth, error) {
-	resp := make([]*routing.BalancerHealth, 0)
+// GetBalancersInfo implements routing.HealthChecker.
+func (r *Router) GetBalancersInfo(tags []string) (resp []*routing.BalancerInfo, err error) {
+	resp = make([]*routing.BalancerInfo, 0)
 	for t, b := range r.balancers {
 		if !b.healthChecker.Settings.Enabled {
 			continue
 		}
-		if len(tags) > 0 {
-			found := false
-			for _, v := range tags {
-				if t == v {
-					found = true
-					break
-				}
-			}
-			if !found {
-				continue
-			}
+		if len(tags) > 0 && findSliceIndex(tags, t) < 0 {
+			continue
 		}
-		stat := &routing.BalancerHealth{
-			Balancer:  t,
-			Selects:   make([]*routing.OutboundHealth, 0),
-			Outbounds: make([]*routing.OutboundHealth, 0),
-		}
-		selects, err := b.strategy.SelectOutbounds()
+		s, err := b.strategy.GetInfo()
 		if err != nil {
-			stat.Selects = append(stat.Selects, &routing.OutboundHealth{
-				Outbound: err.Error(),
-			})
-		} else {
-			stat.Selects = b.makeHealthStatItems(selects)
+			return nil, err
 		}
-		all, err := b.SelectOutbounds()
-		if err != nil {
-			stat.Outbounds = append(stat.Outbounds, &routing.OutboundHealth{
-				Outbound: err.Error(),
-			})
-		} else {
-			stat.Outbounds = b.makeHealthStatItems(all)
+		stat := &routing.BalancerInfo{
+			Tag:      t,
+			Strategy: s,
 		}
 		resp = append(resp, stat)
 	}
 	return resp, nil
+}
+
+func findSliceIndex(slice []string, find string) int {
+	if len(slice) == 0 {
+		return -1
+	}
+	index := -1
+	for i, v := range slice {
+		if find == v {
+			index = i
+			break
+		}
+	}
+	return index
 }

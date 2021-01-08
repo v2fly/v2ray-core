@@ -5,17 +5,25 @@ import (
 	"time"
 )
 
-// OutboundHealth represents a health stats of an outbound
-type OutboundHealth struct {
-	Outbound string
-	RTT      time.Duration
+// OutboundInfo holds information of an outbound, like health stats
+type OutboundInfo struct {
+	Tag    string
+	Values []string
 }
 
-// BalancerHealth represents a health stats of a balancers
-type BalancerHealth struct {
-	Balancer  string
-	Selects   []*OutboundHealth
-	Outbounds []*OutboundHealth
+// StrategyInfo hold strategy running infomations, like
+// selected and other handlers, which contains RTT etc.
+type StrategyInfo struct {
+	Name        string
+	ValueTitles []string
+	Selects     []*OutboundInfo
+	Others      []*OutboundInfo
+}
+
+// BalancerInfo represents a health stats of a balancers
+type BalancerInfo struct {
+	Tag      string
+	Strategy *StrategyInfo
 }
 
 // HealthChecker is able to perform health check and stats for outbound hanlders.
@@ -25,9 +33,9 @@ type HealthChecker interface {
 	// BalancerHealthCheck performs health checks for specified balancers,
 	// if not specified, check them all
 	CheckBalancers(tags []string) error
-	// GetHealthInfo get health info of specific balancer, if balancer not
+	// GetBalancersInfo get health info of specific balancer, if balancer not
 	//  specified, get all
-	GetHealthInfo(tags []string) ([]*BalancerHealth, error)
+	GetBalancersInfo(tags []string) ([]*BalancerInfo, error)
 }
 
 // ThrottledChecker run Health Checks Throttled

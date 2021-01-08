@@ -1,10 +1,13 @@
 package router
 
 import (
+	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"v2ray.com/core/common/dice"
+	"v2ray.com/core/features/routing"
 )
 
 // LeastLoadStrategy represents a random balancing strategy
@@ -19,6 +22,44 @@ type LeastLoadStrategy struct {
 type node struct {
 	Tag        string
 	AverageRTT time.Duration
+}
+
+// String implements the BalancingStrategy.
+func (s *LeastLoadStrategy) String() string {
+	sb := new(strings.Builder)
+	for i, b := range s.settings.Baselines {
+		if i > 0 {
+			sb.WriteByte(' ')
+		}
+		sb.WriteString(time.Duration(b).String())
+	}
+	return fmt.Sprintf(`LeastLoad strategy, expected: %d, baselines: %s`, s.settings.Expected, sb)
+}
+
+// GetInfo implements the BalancingStrategy.
+func (s *LeastLoadStrategy) GetInfo() (*routing.StrategyInfo, error) {
+	tags, err := s.SelectOutbounds()
+	if err != nil {
+		return nil, err
+	}
+	selectsCount := len(tags)
+	all, err := s.balancer.SelectOutbounds()
+	if err != nil {
+		return nil, err
+	}
+	// append other outbounds to selected tags
+	for _, t := range all {
+		if findSliceIndex(tags, t) < 0 {
+			tags = append(tags, t)
+		}
+	}
+	items := getHealthRTT(tags, s.balancer.healthChecker)
+	return &routing.StrategyInfo{
+		Name:        s.String(),
+		ValueTitles: []string{"RTT"},
+		Selects:     items[:selectsCount],
+		Others:      items[selectsCount:],
+	}, nil
 }
 
 // PickOutbound implements the BalancingStrategy.

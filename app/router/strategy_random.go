@@ -2,11 +2,43 @@ package router
 
 import (
 	"v2ray.com/core/common/dice"
+	"v2ray.com/core/features/routing"
 )
 
 // RandomStrategy represents a random balancing strategy
 type RandomStrategy struct {
 	balancer *Balancer
+}
+
+// String implements the BalancingStrategy.
+func (s *RandomStrategy) String() string {
+	return "Random"
+}
+
+// GetInfo implements the BalancingStrategy.
+func (s *RandomStrategy) GetInfo() (*routing.StrategyInfo, error) {
+	tags, err := s.SelectOutbounds()
+	if err != nil {
+		return nil, err
+	}
+	selectsCount := len(tags)
+	all, err := s.balancer.SelectOutbounds()
+	if err != nil {
+		return nil, err
+	}
+	// append other outbounds to selected tags
+	for _, t := range all {
+		if findSliceIndex(tags, t) < 0 {
+			tags = append(tags, t)
+		}
+	}
+	items := getHealthRTT(tags, s.balancer.healthChecker)
+	return &routing.StrategyInfo{
+		Name:        s.String(),
+		ValueTitles: []string{"RTT"},
+		Selects:     items[:selectsCount],
+		Others:      items[selectsCount:],
+	}, nil
 }
 
 // PickOutbound implements the BalancingStrategy.

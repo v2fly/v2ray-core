@@ -2,7 +2,6 @@ package router
 
 import (
 	"fmt"
-	"sort"
 	sync "sync"
 	"time"
 
@@ -220,38 +219,4 @@ func (b *Balancer) cleanupResults(tags []string) {
 			delete(b.healthChecker.Results, tag)
 		}
 	}
-}
-
-func (b *Balancer) makeHealthStatItems(tags []string) []*routing.OutboundHealth {
-	b.healthChecker.access.Lock()
-	defer b.healthChecker.access.Unlock()
-	items := make([]*routing.OutboundHealth, 0)
-	for _, tag := range tags {
-		item := &routing.OutboundHealth{
-			Outbound: tag,
-			RTT:      0,
-		}
-		result, ok := b.healthChecker.Results[tag]
-		if ok {
-			if result.FailCount > 0 {
-				item.RTT = -1
-			} else {
-				item.RTT = result.AverageRTT
-			}
-		}
-		items = append(items, item)
-	}
-	sort.Slice(items, func(i, j int) bool {
-		iRTT := items[i].RTT
-		jRTT := items[j].RTT
-		// 0 rtt means not checked or failed, sort in the tail
-		if iRTT <= 0 && jRTT > 0 {
-			return false
-		}
-		if iRTT > 0 && jRTT <= 0 {
-			return true
-		}
-		return iRTT < jRTT
-	})
-	return items
 }

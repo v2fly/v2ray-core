@@ -64,19 +64,21 @@ message GetHealthInfoRequest {
   repeated string BalancerTags = 1;
 }
 
-message OutboundHealth {
+message OutboundInfo {
   string Tag = 1;
-  int64 RTT = 2;
+  repeated string Values = 2;
 }
 
-message BalancerHealth {
+message BalancerInfo {
   string Tag = 1;
-  repeated OutboundHealth Selects = 2;
-  repeated OutboundHealth Outbounds = 3;
+  string Strategy = 2;
+  repeated string Titles = 3;
+  repeated OutboundInfo Selects = 4;
+  repeated OutboundInfo Others = 5;
 }
 
 message GetHealthInfoResponse {
-  repeated BalancerHealth Balancers = 1;
+  repeated BalancerInfo Balancers = 1;
 }
 
 message CheckBalancersRequest {

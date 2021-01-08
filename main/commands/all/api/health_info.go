@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	routerService "v2ray.com/core/app/router/command"
 	"v2ray.com/core/main/commands/base"
@@ -13,7 +12,7 @@ import (
 var cmdHealthInfo = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} api hci [--server=127.0.0.1:8080] [balancerTag]...",
-	Short:       "get health check information",
+	Short:       "get health information",
 	Long: `
 Get health check information of specified balancers. If no 
 balancer tag specified, get information of all balancers.
@@ -46,32 +45,40 @@ func executeHealthInfo(cmd *base.Command, args []string) {
 		base.Fatalf("failed to get health information: %s", err)
 	}
 	for _, b := range resp.Balancers {
-		showBalancerHealth(b)
+		showBalancerInfo(b)
 	}
 }
 
-func showBalancerHealth(b *routerService.BalancerHealth) {
+func showBalancerInfo(b *routerService.BalancerInfo) {
 	sb := new(strings.Builder)
-	sb.WriteString(fmt.Sprintf("Balancer: %s\n", b.Tag))
+	sb.WriteString(fmt.Sprintf("Balancer: %s (%s)\n", b.Tag, b.Strategy))
+	const format = "%-14s"
 	sb.WriteString("  - Selects:\n")
-	const format = "    %-4d %-14s %s\n"
+	writeHealthLine(sb, format, 0, b.Titles, "Tag")
 	for i, o := range b.Selects {
-		sb.WriteString(getHealthLine(format, i+1, o))
+		writeHealthLine(sb, format, i+1, o.Values, o.Tag)
 	}
-	sb.WriteString("  - Outbounds:\n")
-	for i, o := range b.Outbounds {
-		sb.WriteString(getHealthLine(format, i+1, o))
+	scnt := len(b.Selects)
+	if len(b.Others) > 0 {
+		sb.WriteString("  - Others:\n")
+		writeHealthLine(sb, format, 0, b.Titles, "Tag")
+		for i, o := range b.Others {
+			writeHealthLine(sb, format, scnt+i+1, o.Values, o.Tag)
+		}
 	}
 	os.Stdout.WriteString(sb.String())
 }
 
-func getHealthLine(format string, index int, o *routerService.OutboundHealth) string {
-	switch {
-	case o.RTT < 0:
-		return fmt.Sprintf(format, index, "failed", o.Tag)
-	case o.RTT == 0:
-		return fmt.Sprintf(format, index, "not checked", o.Tag)
-	default:
-		return fmt.Sprintf(format, index, time.Duration(o.RTT), o.Tag)
+func writeHealthLine(sb *strings.Builder, format string, index int, values []string, tag string) {
+	if index == 0 {
+		// title line
+		sb.WriteString("        ")
+	} else {
+		sb.WriteString(fmt.Sprintf("    %-4d", index))
 	}
+	for _, v := range values {
+		sb.WriteString(fmt.Sprintf(format, v))
+	}
+	sb.WriteString(tag)
+	sb.WriteByte('\n')
 }

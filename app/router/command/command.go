@@ -79,29 +79,31 @@ func (s *routingServer) GetHealthInfo(ctx context.Context, request *GetHealthInf
 	if !ok {
 		return nil, status.Errorf(codes.Unavailable, "current router is not a health checker")
 	}
-	results, err := h.GetHealthInfo(request.BalancerTags)
+	results, err := h.GetBalancersInfo(request.BalancerTags)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	rsp := &GetHealthInfoResponse{
-		Balancers: make([]*BalancerHealth, 0),
+		Balancers: make([]*BalancerInfo, 0),
 	}
 	for _, result := range results {
-		stat := &BalancerHealth{
-			Tag:       result.Balancer,
-			Selects:   make([]*OutboundHealth, 0),
-			Outbounds: make([]*OutboundHealth, 0),
+		stat := &BalancerInfo{
+			Tag:      result.Tag,
+			Strategy: result.Strategy.Name,
+			Titles:   result.Strategy.ValueTitles,
+			Selects:  make([]*OutboundInfo, 0),
+			Others:   make([]*OutboundInfo, 0),
 		}
-		for _, item := range result.Selects {
-			stat.Selects = append(stat.Selects, &OutboundHealth{
-				Tag: item.Outbound,
-				RTT: int64(item.RTT),
+		for _, item := range result.Strategy.Selects {
+			stat.Selects = append(stat.Selects, &OutboundInfo{
+				Tag:    item.Tag,
+				Values: item.Values,
 			})
 		}
-		for _, item := range result.Outbounds {
-			stat.Outbounds = append(stat.Outbounds, &OutboundHealth{
-				Tag: item.Outbound,
-				RTT: int64(item.RTT),
+		for _, item := range result.Strategy.Others {
+			stat.Others = append(stat.Others, &OutboundInfo{
+				Tag:    item.Tag,
+				Values: item.Values,
 			})
 		}
 		rsp.Balancers = append(rsp.Balancers, stat)

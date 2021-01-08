@@ -2,20 +2,13 @@ package router
 
 import (
 	"v2ray.com/core/features/outbound"
+	"v2ray.com/core/features/routing"
 )
-
-// BalancingStrategy is the interface of a balancing strategy
-type BalancingStrategy interface {
-	// PickOutbound pick one outbound from the results of SelectOutbound()
-	PickOutbound() (string, error)
-	// SelectOutbound selects outbounds before the final pick
-	SelectOutbounds() ([]string, error)
-}
 
 // Balancer represents a balancer
 type Balancer struct {
 	selectors     []string
-	strategy      BalancingStrategy
+	strategy      routing.BalancingStrategy
 	healthChecker *HealthChecker
 	ohm           outbound.Manager
 	fallbackTag   string
