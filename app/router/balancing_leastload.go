@@ -84,7 +84,7 @@ func (s *LeastLoadStrategy) SelectOutbounds() ([]string, error) {
 // The strategy always improves network response speed, not matter which mode below is configurated.
 // But they can still have different priorities.
 //
-// 1. Bandwidth priority: no Baseline + Expected Count > 0.: selects `Expected Count` amount of nodes.
+// 1. Bandwidth priority: no Baseline + Expected Count > 0.: selects `Expected Count` of nodes.
 // (one if Expected Count <= 0)
 //
 // 2. Bandwidth priority advanced: Baselines + Expected Count > 0.
@@ -93,7 +93,8 @@ func (s *LeastLoadStrategy) SelectOutbounds() ([]string, error) {
 // the Expected Count, if no Baseline matches, Expected Count applied.
 //
 // 3. Speed priority: Baselines + `Expected Count <= 0`.
-// go through all baselines until find selects, if not, select the fastest first one
+// go through all baselines until find selects, if not, select none. Used in combination
+// with 'balancer.fallbackTag', it means: selects qualified nodes or use the fallback.
 func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 	expected := int(s.settings.Expected)
 	availableCount := len(nodes)
@@ -124,7 +125,7 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 			break
 		}
 	}
-	if count < expected {
+	if s.settings.Expected > 0 && count < expected {
 		count = expected
 	}
 	return nodes[:count]
