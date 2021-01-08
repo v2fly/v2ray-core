@@ -52,24 +52,23 @@ func executeHealthInfo(cmd *base.Command, args []string) {
 func showBalancerInfo(b *routerService.BalancerInfo) {
 	sb := new(strings.Builder)
 	sb.WriteString(fmt.Sprintf("Balancer: %s (%s)\n", b.Tag, b.Strategy))
-	const format = "%-14s"
 	sb.WriteString("  - Selects:\n")
-	writeHealthLine(sb, format, 0, b.Titles, "Tag")
+	writeHealthLine(sb, 0, b.Titles, "Tag")
 	for i, o := range b.Selects {
-		writeHealthLine(sb, format, i+1, o.Values, o.Tag)
+		writeHealthLine(sb, i+1, o.Values, o.Tag)
 	}
 	scnt := len(b.Selects)
 	if len(b.Others) > 0 {
 		sb.WriteString("  - Others:\n")
-		writeHealthLine(sb, format, 0, b.Titles, "Tag")
+		writeHealthLine(sb, 0, b.Titles, "Tag")
 		for i, o := range b.Others {
-			writeHealthLine(sb, format, scnt+i+1, o.Values, o.Tag)
+			writeHealthLine(sb, scnt+i+1, o.Values, o.Tag)
 		}
 	}
 	os.Stdout.WriteString(sb.String())
 }
 
-func writeHealthLine(sb *strings.Builder, format string, index int, values []string, tag string) {
+func writeHealthLine(sb *strings.Builder, index int, values []string, tag string) {
 	if index == 0 {
 		// title line
 		sb.WriteString("        ")
@@ -77,7 +76,7 @@ func writeHealthLine(sb *strings.Builder, format string, index int, values []str
 		sb.WriteString(fmt.Sprintf("    %-4d", index))
 	}
 	for _, v := range values {
-		sb.WriteString(fmt.Sprintf(format, v))
+		sb.WriteString(fmt.Sprintf("%-14s", v))
 	}
 	sb.WriteString(tag)
 	sb.WriteByte('\n')
