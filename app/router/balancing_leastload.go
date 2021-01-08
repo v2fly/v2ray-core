@@ -77,8 +77,6 @@ func (s *LeastLoadStrategy) SelectOutbounds() ([]string, error) {
 	return selects, nil
 }
 
-// TODO: test for config modes below
-
 // selectLeastLoad selects nodes according to Baselines and Expected Count.
 //
 // The strategy always improves network response speed, not matter which mode below is configurated.
