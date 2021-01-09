@@ -362,7 +362,7 @@ func (s *QUICNameServer) getSession() (quic.Session, error) {
 func (s *QUICNameServer) openSession() (quic.Session, error) {
 	tlsConfig := tls.Config{}
 	quicConfig := &quic.Config{
-		HandshakeTimeout: handshakeTimeout,
+		HandshakeIdleTimeout: handshakeTimeout,
 	}
 
 	session, err := quic.DialAddrContext(context.Background(), s.destination.NetAddr(), tlsConfig.GetTLSConfig(tls.WithNextProto("http/1.1", http2.NextProtoTLS, NextProtoDQ)), quicConfig)
