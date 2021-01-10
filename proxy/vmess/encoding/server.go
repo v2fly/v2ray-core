@@ -118,6 +118,10 @@ func NewServerSession(validator *vmess.TimedUserValidator, sessionHistory *Sessi
 	}
 }
 
+func (s *ServerSession) SetAEADForced(isAEADForced bool) {
+	s.isAEADForced = isAEADForced
+}
+
 func parseSecurityType(b byte) protocol.SecurityType {
 	if _, f := protocol.SecurityType_name[int32(b)]; f {
 		st := protocol.SecurityType(b)
