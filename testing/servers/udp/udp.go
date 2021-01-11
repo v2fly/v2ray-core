@@ -56,6 +56,7 @@ func (server *Server) handleConnection(conn *net.UDPConn) {
 }
 
 func (server *Server) Close() error {
+	server.quit <- 1
 	close(server.quit)
 	return server.conn.Close()
 }
