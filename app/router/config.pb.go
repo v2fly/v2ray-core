@@ -892,9 +892,9 @@ type HealthCheckSettingsProto struct {
 	// destination url, need 204 for success return
 	// default http://www.google.com/gen_204
 	Destination string `protobuf:"bytes,2,opt,name=Destination,proto3" json:"Destination,omitempty"`
-	// health check interval(minutes)
+	// health check interval (seconds)
 	Interval int32 `protobuf:"varint,3,opt,name=Interval,proto3" json:"Interval,omitempty"`
-	// ping timeout
+	// ping timeout (seconds)
 	Timeout int32 `protobuf:"varint,5,opt,name=Timeout,proto3" json:"Timeout,omitempty"`
 }
 

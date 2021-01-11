@@ -10,6 +10,10 @@ import (
 	"v2ray.com/core/features/routing"
 )
 
+// FIXME: balancer unavailable if: top nodes are failed now,
+// but next check not yet performed. "top but failed" nodes
+// will always be selected.
+
 // LeastLoadStrategy represents a random balancing strategy
 type LeastLoadStrategy struct {
 	settings *StrategyLeastLoadConfig
