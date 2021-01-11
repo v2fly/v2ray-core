@@ -2,7 +2,6 @@ package udp
 
 import (
 	"fmt"
-
 	"v2ray.com/core/common/net"
 )
 
@@ -27,6 +26,7 @@ func (server *Server) Start() (net.Destination, error) {
 
 	server.conn = conn
 	go server.handleConnection(conn)
+
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 	return net.UDPDestination(net.IPAddress(localAddr.IP), net.Port(localAddr.Port)), nil
 }
