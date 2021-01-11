@@ -2,6 +2,7 @@ package udp
 
 import (
 	"fmt"
+	"golang.org/x/net/context"
 
 	"v2ray.com/core/common/net"
 )
@@ -10,7 +11,7 @@ type Server struct {
 	Port         net.Port
 	MsgProcessor func(msg []byte) []byte
 	conn         *net.UDPConn
-	quit         chan int
+	cancel       context.CancelFunc
 }
 
 func (server *Server) Start() (net.Destination, error) {
@@ -25,19 +26,20 @@ func (server *Server) Start() (net.Destination, error) {
 	server.Port = net.Port(conn.LocalAddr().(*net.UDPAddr).Port)
 	fmt.Println("UDP server started on port ", server.Port)
 
+	ctx, cancel := context.WithCancel(context.Background())
 	server.conn = conn
-	server.quit = make(chan int)
+	server.cancel = cancel
 
-	go server.handleConnection(conn)
+	go server.handleConnection(ctx, conn)
 
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 	return net.UDPDestination(net.IPAddress(localAddr.IP), net.Port(localAddr.Port)), nil
 }
 
-func (server *Server) handleConnection(conn *net.UDPConn) {
+func (server *Server) handleConnection(ctx context.Context, conn *net.UDPConn) {
 	for {
 		select {
-		case <-server.quit:
+		case <-ctx.Done():
 			return
 		default:
 			buffer := make([]byte, 2*1024)
@@ -56,7 +58,6 @@ func (server *Server) handleConnection(conn *net.UDPConn) {
 }
 
 func (server *Server) Close() error {
-	server.quit <- 1
-	close(server.quit)
+	server.cancel()
 	return server.conn.Close()
 }
