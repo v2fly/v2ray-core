@@ -45,7 +45,6 @@ func (server *Server) handleConnection(conn *net.UDPConn) {
 		if _, err := conn.WriteToUDP(response, addr); err != nil {
 			fmt.Println("Failed to write to UDP: ", err.Error())
 		}
-
 	}
 }
 
