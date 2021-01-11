@@ -32,7 +32,7 @@ func (c *APIConfig) Build() (*commander.Config, error) {
 			services = append(services, serial.ToTypedMessage(&loggerservice.Config{}))
 		case "statsservice":
 			services = append(services, serial.ToTypedMessage(&statsservice.Config{}))
-		case "routerservice":
+		case "routingservice":
 			services = append(services, serial.ToTypedMessage(&routerservice.Config{}))
 		}
 	}

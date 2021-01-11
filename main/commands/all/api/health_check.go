@@ -13,7 +13,7 @@ var cmdHealthCheck = &base.Command{
 Perform health checks for specific balancers. if no balancer tag 
 specified, check all balancers.
 
-> Make sure you have "RouterService" set in "config.api.services" 
+> Make sure you have "RoutingService" set in "config.api.services" 
 of server config.
 
 Arguments:
