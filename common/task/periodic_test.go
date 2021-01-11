@@ -10,7 +10,7 @@ import (
 )
 
 func TestPeriodicTaskStop(t *testing.T) {
-	var value uint64 = 0
+	var value uint64
 	task := &Periodic{
 		Interval: time.Second * 2,
 		Execute: func() error {
