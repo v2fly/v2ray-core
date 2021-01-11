@@ -24,9 +24,14 @@ func (b *Balancer) PickOutbound() (string, error) {
 		}
 		return "", err
 	}
-	b.healthChecker.access.Lock()
-	tag := b.strategy.PickOutbound(candidates, b.healthChecker.Results)
-	b.healthChecker.access.Unlock()
+	var tag string
+	if b.healthChecker.Settings.Enabled {
+		b.healthChecker.access.Lock()
+		tag = b.strategy.PickOutbound(candidates, b.healthChecker.Results)
+		b.healthChecker.access.Unlock()
+	} else {
+		tag = b.strategy.PickOutbound(candidates, nil)
+	}
 	if tag == "" {
 		if b.fallbackTag != "" {
 			newError("fallback to [", b.fallbackTag, "], due to empty tag returned").AtInfo().WriteToLog()

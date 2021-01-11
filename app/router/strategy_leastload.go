@@ -72,6 +72,10 @@ func (s *LeastLoadStrategy) PickOutbound(candidates []string, results map[string
 
 // SelectOutbounds implements BalancingStrategy
 func (s *LeastLoadStrategy) SelectOutbounds(candidates []string, results map[string]*routing.HealthCheckResult) []string {
+	if results == nil {
+		return candidates
+	}
+
 	cntAll := len(candidates)
 	if cntAll == 0 {
 		return nil
