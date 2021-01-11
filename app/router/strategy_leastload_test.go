@@ -6,7 +6,6 @@ import (
 
 func TestSelectLeastExpected(t *testing.T) {
 	strategy := &LeastLoadStrategy{
-		balancer: nil,
 		settings: &StrategyLeastLoadConfig{
 			Baselines: nil,
 			Expected:  3,
@@ -26,7 +25,6 @@ func TestSelectLeastExpected(t *testing.T) {
 }
 func TestSelectLeastExpected2(t *testing.T) {
 	strategy := &LeastLoadStrategy{
-		balancer: nil,
 		settings: &StrategyLeastLoadConfig{
 			Baselines: nil,
 			Expected:  3,
@@ -44,7 +42,6 @@ func TestSelectLeastExpected2(t *testing.T) {
 }
 func TestSelectLeastExpectedAndBaselines(t *testing.T) {
 	strategy := &LeastLoadStrategy{
-		balancer: nil,
 		settings: &StrategyLeastLoadConfig{
 			Baselines: []int64{200, 300, 400},
 			Expected:  3,
@@ -65,7 +62,6 @@ func TestSelectLeastExpectedAndBaselines(t *testing.T) {
 }
 func TestSelectLeastExpectedAndBaselines2(t *testing.T) {
 	strategy := &LeastLoadStrategy{
-		balancer: nil,
 		settings: &StrategyLeastLoadConfig{
 			Baselines: []int64{200, 300, 400},
 			Expected:  3,
@@ -86,7 +82,6 @@ func TestSelectLeastExpectedAndBaselines2(t *testing.T) {
 }
 func TestSelectLeastLoadBaselines(t *testing.T) {
 	strategy := &LeastLoadStrategy{
-		balancer: nil,
 		settings: &StrategyLeastLoadConfig{
 			Baselines: []int64{200, 400, 600},
 			Expected:  0,
@@ -105,7 +100,6 @@ func TestSelectLeastLoadBaselines(t *testing.T) {
 }
 func TestSelectLeastLoadBaselinesNoQualified(t *testing.T) {
 	strategy := &LeastLoadStrategy{
-		balancer: nil,
 		settings: &StrategyLeastLoadConfig{
 			Baselines: []int64{200, 400, 600},
 			Expected:  0,

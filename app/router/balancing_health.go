@@ -17,16 +17,6 @@ type HealthCheckSettings struct {
 	Timeout     time.Duration
 }
 
-// HealthCheckResult holds result for health Checker
-type HealthCheckResult struct {
-	Count      int
-	FailCount  int
-	AverageRTT time.Duration
-	MaxRTT     time.Duration
-	MinRTT     time.Duration
-	RTTs       []time.Duration
-}
-
 // HealthChecker is the health checker for balancers
 type HealthChecker struct {
 	access     sync.Mutex
@@ -34,7 +24,7 @@ type HealthChecker struct {
 	dispatcher routing.Dispatcher
 
 	Settings *HealthCheckSettings
-	Results  map[string]*HealthCheckResult
+	Results  map[string]*routing.HealthCheckResult
 }
 
 // StartScheduler start the health checker scheduler
@@ -142,7 +132,7 @@ func (b *Balancer) doCheck(tags []string) {
 	for tag, r := range rtts {
 		result, ok := b.healthChecker.Results[tag]
 		if !ok {
-			result = &HealthCheckResult{}
+			result = &routing.HealthCheckResult{}
 			b.healthChecker.Results[tag] = result
 		}
 		sum := time.Duration(0)

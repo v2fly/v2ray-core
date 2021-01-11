@@ -5,6 +5,16 @@ import (
 	"time"
 )
 
+// HealthCheckResult holds result for health Checker
+type HealthCheckResult struct {
+	Count      int
+	FailCount  int
+	AverageRTT time.Duration
+	MaxRTT     time.Duration
+	MinRTT     time.Duration
+	RTTs       []time.Duration
+}
+
 // OutboundInfo holds information of an outbound, like health stats
 type OutboundInfo struct {
 	Tag    string
@@ -26,10 +36,15 @@ type BalancerInfo struct {
 	Strategy *StrategyInfo
 }
 
-// HealthChecker is able to perform health check and stats for outbound hanlders.
+// HealthChecker represents a health checker
 type HealthChecker interface {
 	// CheckHanlders performs a health check for specified outbound hanlders
 	CheckHanlders(tags []string) error
+}
+
+// RouterChecker is a router able to perform health check and stats for outbound hanlders.
+type RouterChecker interface {
+	HealthChecker
 	// BalancerHealthCheck performs health checks for specified balancers,
 	// if not specified, check them all
 	CheckBalancers(tags []string) error
@@ -44,7 +59,7 @@ type ThrottledChecker struct {
 	tags []string
 	prev *time.Timer
 
-	Checker HealthChecker
+	Checker RouterChecker
 	Delay   time.Duration
 }
 

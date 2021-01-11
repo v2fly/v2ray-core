@@ -6,9 +6,7 @@ import (
 )
 
 // RandomStrategy represents a random balancing strategy
-type RandomStrategy struct {
-	balancer *Balancer
-}
+type RandomStrategy struct{}
 
 // String implements the BalancingStrategy.
 func (s *RandomStrategy) String() string {
@@ -16,60 +14,44 @@ func (s *RandomStrategy) String() string {
 }
 
 // GetInfo implements the BalancingStrategy.
-func (s *RandomStrategy) GetInfo() (*routing.StrategyInfo, error) {
-	tags, err := s.SelectOutbounds()
-	if err != nil {
-		return nil, err
-	}
-	selectsCount := len(tags)
-	all, err := s.balancer.SelectOutbounds()
-	if err != nil {
-		return nil, err
-	}
+func (s *RandomStrategy) GetInfo(tags []string, results map[string]*routing.HealthCheckResult) *routing.StrategyInfo {
+	selects := s.SelectOutbounds(tags, results)
+	selectsCount := len(selects)
 	// append other outbounds to selected tags
-	for _, t := range all {
-		if findSliceIndex(tags, t) < 0 {
-			tags = append(tags, t)
+	for _, t := range tags {
+		if findSliceIndex(selects, t) < 0 {
+			selects = append(selects, t)
 		}
 	}
-	items := getHealthRTT(tags, s.balancer.healthChecker)
+	items := getHealthRTT(selects, results)
 	return &routing.StrategyInfo{
 		Name:        s.String(),
 		ValueTitles: []string{"RTT"},
 		Selects:     items[:selectsCount],
 		Others:      items[selectsCount:],
-	}, nil
+	}
 }
 
 // PickOutbound implements the BalancingStrategy.
 // It picks an outbound from all tags (or alive tags if health check enabled) randomly
-func (s *RandomStrategy) PickOutbound() (string, error) {
-	tags, err := s.SelectOutbounds()
-	if err != nil {
-		return "", err
-	}
+func (s *RandomStrategy) PickOutbound(candidates []string, results map[string]*routing.HealthCheckResult) string {
+	tags := s.SelectOutbounds(candidates, results)
 	count := len(tags)
 	if count == 0 {
 		// goes to fallbackTag
-		return "", nil
+		return ""
 	}
-	return tags[dice.Roll(count)], nil
+	return tags[dice.Roll(count)]
 }
 
 // SelectOutbounds implements BalancingStrategy
-func (s *RandomStrategy) SelectOutbounds() ([]string, error) {
-	tags, err := s.balancer.SelectOutbounds()
-	if err != nil || len(tags) == 0 {
-		return nil, err
-	}
-	if !s.balancer.healthChecker.Settings.Enabled {
-		return tags, nil
+func (s *RandomStrategy) SelectOutbounds(candidates []string, results map[string]*routing.HealthCheckResult) []string {
+	if results == nil {
+		return candidates
 	}
 	aliveTags := make([]string, 0)
-	s.balancer.healthChecker.access.Lock()
-	defer s.balancer.healthChecker.access.Unlock()
-	for _, tag := range tags {
-		r, ok := s.balancer.healthChecker.Results[tag]
+	for _, tag := range candidates {
+		r, ok := results[tag]
 		if !ok {
 			continue
 		}
@@ -81,5 +63,5 @@ func (s *RandomStrategy) SelectOutbounds() ([]string, error) {
 	if len(aliveTags) == 0 {
 		newError("random: no outbound alive").AtInfo().WriteToLog()
 	}
-	return aliveTags, nil
+	return aliveTags
 }

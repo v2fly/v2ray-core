@@ -6,9 +6,9 @@ type BalancingStrategy interface {
 	// and its settings
 	String() string
 	// PickOutbound pick one outbound from the results of SelectOutbound()
-	PickOutbound() (string, error)
+	PickOutbound(candidates []string, results map[string]*HealthCheckResult) string
 	// SelectOutbound selects outbounds before the final pick
-	SelectOutbounds() ([]string, error)
+	SelectOutbounds(candidates []string, results map[string]*HealthCheckResult) []string
 	// GetInfo get running information of the strategy
-	GetInfo() (*StrategyInfo, error)
+	GetInfo(tags []string, results map[string]*HealthCheckResult) *StrategyInfo
 }

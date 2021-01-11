@@ -64,10 +64,13 @@ func (r *Router) GetBalancersInfo(tags []string) (resp []*routing.BalancerInfo, 
 		if len(tags) > 0 && findSliceIndex(tags, t) < 0 {
 			continue
 		}
-		s, err := b.strategy.GetInfo()
+		all, err := b.SelectOutbounds()
 		if err != nil {
 			return nil, err
 		}
+		b.healthChecker.access.Lock()
+		s := b.strategy.GetInfo(all, b.healthChecker.Results)
+		b.healthChecker.access.Unlock()
 		stat := &routing.BalancerInfo{
 			Tag:      t,
 			Strategy: s,

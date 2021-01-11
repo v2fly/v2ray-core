@@ -15,10 +15,7 @@ type healthExt struct {
 
 // getHealthRTT is the shared health info maker
 // for AverageRTT base strategies, like random, leastload
-func getHealthRTT(tags []string, health *HealthChecker) []*routing.OutboundInfo {
-	health.access.Lock()
-	defer health.access.Unlock()
-
+func getHealthRTT(tags []string, results map[string]*routing.HealthCheckResult) []*routing.OutboundInfo {
 	failed := []string{"failed"}
 	notTested := []string{"not tested"}
 	items := make([]*healthExt, 0)
@@ -28,7 +25,7 @@ func getHealthRTT(tags []string, health *HealthChecker) []*routing.OutboundInfo 
 				Tag: tag,
 			},
 		}
-		result, ok := health.Results[tag]
+		result, ok := results[tag]
 		switch {
 		case !ok || result.Count == 0:
 			item.Values = notTested

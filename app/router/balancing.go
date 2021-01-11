@@ -16,7 +16,7 @@ type Balancer struct {
 
 // PickOutbound picks the tag of a outbound
 func (b *Balancer) PickOutbound() (string, error) {
-	tag, err := b.strategy.PickOutbound()
+	candidates, err := b.SelectOutbounds()
 	if err != nil {
 		if b.fallbackTag != "" {
 			newError("fallback to [", b.fallbackTag, "], due to error: ", err).AtInfo().WriteToLog()
@@ -24,6 +24,9 @@ func (b *Balancer) PickOutbound() (string, error) {
 		}
 		return "", err
 	}
+	b.healthChecker.access.Lock()
+	tag := b.strategy.PickOutbound(candidates, b.healthChecker.Results)
+	b.healthChecker.access.Unlock()
 	if tag == "" {
 		if b.fallbackTag != "" {
 			newError("fallback to [", b.fallbackTag, "], due to empty tag returned").AtInfo().WriteToLog()

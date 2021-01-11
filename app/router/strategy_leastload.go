@@ -12,7 +12,6 @@ import (
 
 // LeastLoadStrategy represents a random balancing strategy
 type LeastLoadStrategy struct {
-	balancer *Balancer
 	settings *StrategyLeastLoadConfig
 }
 
@@ -37,68 +36,48 @@ func (s *LeastLoadStrategy) String() string {
 }
 
 // GetInfo implements the BalancingStrategy.
-func (s *LeastLoadStrategy) GetInfo() (*routing.StrategyInfo, error) {
-	tags, err := s.SelectOutbounds()
-	if err != nil {
-		return nil, err
-	}
-	selectsCount := len(tags)
-	all, err := s.balancer.SelectOutbounds()
-	if err != nil {
-		return nil, err
-	}
+func (s *LeastLoadStrategy) GetInfo(tags []string, results map[string]*routing.HealthCheckResult) *routing.StrategyInfo {
+	selects := s.SelectOutbounds(tags, results)
+	selectsCount := len(selects)
 	// append other outbounds to selected tags
-	for _, t := range all {
-		if findSliceIndex(tags, t) < 0 {
-			tags = append(tags, t)
+	for _, t := range tags {
+		if findSliceIndex(selects, t) < 0 {
+			selects = append(selects, t)
 		}
 	}
-	items := getHealthRTT(tags, s.balancer.healthChecker)
+	items := getHealthRTT(selects, results)
 	return &routing.StrategyInfo{
 		Name:        s.String(),
 		ValueTitles: []string{"RTT"},
 		Selects:     items[:selectsCount],
 		Others:      items[selectsCount:],
-	}, nil
+	}
 }
 
 // PickOutbound implements the BalancingStrategy.
 // It picks an outbound from least load tags, according to the health check results
-func (s *LeastLoadStrategy) PickOutbound() (string, error) {
-	tags, err := s.SelectOutbounds()
-	if err != nil {
-		return "", err
-	}
+func (s *LeastLoadStrategy) PickOutbound(candidates []string, results map[string]*routing.HealthCheckResult) string {
+	tags := s.SelectOutbounds(candidates, results)
 	count := len(tags)
 	if count == 0 {
 		// goes to fallbackTag
-		return "", nil
+		return ""
 	}
-	return tags[dice.Roll(count)], nil
+	return tags[dice.Roll(count)]
 }
 
 // SelectOutbounds implements BalancingStrategy
-func (s *LeastLoadStrategy) SelectOutbounds() ([]string, error) {
-	if !s.balancer.healthChecker.Settings.Enabled {
-		newError("least load: health checher not enabled, will work like random strategy").AtWarning().WriteToLog()
-	}
-	tags, err := s.balancer.SelectOutbounds()
-	if err != nil {
-		return nil, err
-	}
-	cntAll := len(tags)
+func (s *LeastLoadStrategy) SelectOutbounds(candidates []string, results map[string]*routing.HealthCheckResult) []string {
+	cntAll := len(candidates)
 	if cntAll == 0 {
-		return nil, nil
+		return nil
 	}
 
-	alive, err := s.getNodesAlive(tags)
-	if err != nil {
-		return nil, err
-	}
+	alive := s.getNodesAlive(candidates, results)
 	cntAlive := len(alive)
 	if cntAlive == 0 {
 		newError("least load: no outbound alive").AtInfo().WriteToLog()
-		return nil, nil
+		return nil
 	}
 
 	selects := make([]string, 0)
@@ -107,7 +86,7 @@ func (s *LeastLoadStrategy) SelectOutbounds() ([]string, error) {
 	for _, node := range nodes {
 		selects = append(selects, node.Tag)
 	}
-	return selects, nil
+	return selects
 }
 
 // selectLeastLoad selects nodes according to Baselines and Expected Count.
@@ -162,12 +141,10 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 	return nodes[:count]
 }
 
-func (s *LeastLoadStrategy) getNodesAlive(tags []string) (nodes []*node, err error) {
-	s.balancer.healthChecker.access.Lock()
-	defer s.balancer.healthChecker.access.Unlock()
-	// nodes := make([]*node, 0)
-	for _, tag := range tags {
-		r, ok := s.balancer.healthChecker.Results[tag]
+func (s *LeastLoadStrategy) getNodesAlive(candidates []string, results map[string]*routing.HealthCheckResult) []*node {
+	nodes := make([]*node, 0)
+	for _, tag := range candidates {
+		r, ok := results[tag]
 		if !ok {
 			// not checked, marked with AverageRTT=0
 			nodes = append(nodes, &node{
@@ -196,5 +173,5 @@ func (s *LeastLoadStrategy) getNodesAlive(tags []string) (nodes []*node, err err
 		}
 		return iRTT < jRTT
 	})
-	return nodes, nil
+	return nodes
 }

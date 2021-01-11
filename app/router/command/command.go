@@ -75,7 +75,7 @@ func (s *routingServer) SubscribeRoutingStats(request *SubscribeRoutingStatsRequ
 }
 
 func (s *routingServer) GetHealthInfo(ctx context.Context, request *GetHealthInfoRequest) (*GetHealthInfoResponse, error) {
-	h, ok := s.router.(routing.HealthChecker)
+	h, ok := s.router.(routing.RouterChecker)
 	if !ok {
 		return nil, status.Errorf(codes.Unavailable, "current router is not a health checker")
 	}
@@ -111,7 +111,7 @@ func (s *routingServer) GetHealthInfo(ctx context.Context, request *GetHealthInf
 	return rsp, nil
 }
 func (s *routingServer) CheckBalancers(ctx context.Context, request *CheckBalancersRequest) (*CheckBalancersResponse, error) {
-	h, ok := s.router.(routing.HealthChecker)
+	h, ok := s.router.(routing.RouterChecker)
 	if !ok {
 		return nil, status.Errorf(codes.Unavailable, "current router is not a health checker")
 	}

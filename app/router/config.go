@@ -159,7 +159,7 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 			// Rounds:      int(br.HealthCheck.Rounds),
 			Timeout: time.Duration(br.HealthCheck.Timeout) * time.Second,
 		},
-		Results: make(map[string]*HealthCheckResult),
+		Results: make(map[string]*routing.HealthCheckResult),
 	}
 	if h.Settings.Destination == "" {
 		h.Settings.Destination = "http://www.google.com/gen_204"
@@ -192,13 +192,12 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 			return nil, newError("not a StrategyLeastLoadConfig").AtError()
 		}
 		b.strategy = &LeastLoadStrategy{
-			balancer: b,
 			settings: s,
 		}
 	case BalancingRule_Random:
 		fallthrough
 	default:
-		b.strategy = &RandomStrategy{balancer: b}
+		b.strategy = &RandomStrategy{}
 	}
 	return b, nil
 }
