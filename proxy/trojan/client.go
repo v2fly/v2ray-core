@@ -9,6 +9,7 @@ import (
 	"v2ray.com/core"
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/buf"
+	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/protocol"
 	"v2ray.com/core/common/retry"
@@ -108,6 +109,11 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		// Flush; bufferWriter.WriteMultiBufer now is bufferWriter.writer.WriteMultiBuffer
 		if err = bufferWriter.SetBuffered(false); err != nil {
 			return newError("failed to flush payload").Base(err).AtWarning()
+		}
+
+		// Send header if not sent yet
+		if _, err = connWriter.Write([]byte{}); err != nil {
+			return err.(*errors.Error).AtWarning()
 		}
 
 		if err = buf.Copy(link.Reader, bodyWriter, buf.UpdateActivity(timer)); err != nil {
