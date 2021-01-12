@@ -128,7 +128,7 @@ func TestLeastLoadBalancer(t *testing.T) {
 	mockOhm := mocks.NewOutboundManager(mockCtl)
 	mockHs := mocks.NewOutboundHandlerSelector(mockCtl)
 
-	mockHs.EXPECT().Select(gomock.Eq([]string{"test-"})).Return([]string{"test1", "test2", "test3"})
+	mockHs.EXPECT().Select(gomock.Eq([]string{"test-"})).Return([]string{"test1"})
 
 	r := new(Router)
 	common.Must(r.Init(config, mockDNS, &mockOutboundManager{
