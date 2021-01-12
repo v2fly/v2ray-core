@@ -1,7 +1,6 @@
 package all
 
 import (
-	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -11,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 
+	"golang.org/x/crypto/sha3"
 	"v2ray.com/core/infra/conf"
 	"v2ray.com/core/infra/link"
 )
@@ -22,17 +22,17 @@ func writeFile(outdir, filename string, data []byte, filesMap map[string]string)
 		if err != nil {
 			return err
 		}
-		hasher := md5.New()
+		hasher := sha3.New256()
 		s, err := ioutil.ReadFile(file)
 		if err != nil {
 			return err
 		}
 		hasher.Write(s)
-		fileMD5 := hex.EncodeToString(hasher.Sum(nil))
+		fileHash := hex.EncodeToString(hasher.Sum(nil))
 		hasher.Reset()
 		hasher.Write(data)
-		dataMD5 := hex.EncodeToString(hasher.Sum(nil))
-		if fileMD5 != dataMD5 {
+		dataHash := hex.EncodeToString(hasher.Sum(nil))
+		if fileHash != dataHash {
 			fmt.Println("Updated:", rel)
 			err = ioutil.WriteFile(file, data, 0644)
 			if err != nil {
