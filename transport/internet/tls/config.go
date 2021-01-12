@@ -181,7 +181,7 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 			RootCAs:                root,
 			InsecureSkipVerify:     false,
 			NextProtos:             nil,
-			SessionTicketsDisabled: false,
+			SessionTicketsDisabled: true,
 		}
 	}
 
@@ -190,7 +190,7 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 		RootCAs:                root,
 		InsecureSkipVerify:     c.AllowInsecure,
 		NextProtos:             c.NextProtocol,
-		SessionTicketsDisabled: c.DisableSessionResumption,
+		SessionTicketsDisabled: !c.EnableSessionResumption,
 	}
 
 	for _, opt := range opts {

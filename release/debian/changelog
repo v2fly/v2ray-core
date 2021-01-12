@@ -1,3 +1,15 @@
+v2ray-core (4.34.0-1) unstable; urgency=medium
+
+  * TLS Session Resumption is now disabled by default (#569).
+    See #557 for more information.
+  * Support for the legacy Shadowsocks protocol with stream ciphers has been removed (#566). 
+    If you are still using the unsecure stream ciphers, migrate to Shadowsocks AEAD (ChaCha20Poly1305 and AES-GCM) immediately.
+  * We have added preliminary support for DNS over QUIC (#534).
+    Currently only non-proxied lookup is supported.
+  * No longer Release s390x, ppc64, ppc64le, and MIPS SoftFloat
+
+ -- ymshenyu <ymshenyu@gmail.com>  Mon, 04 Jan 2021 22:00:51 +0800
+
 v2ray-core (4.33.0-1) unstable; urgency=medium
 
   * Remove XTLS
@@ -6,7 +18,7 @@ v2ray-core (4.33.0-1) unstable; urgency=medium
   * Update to IETF QUIC draft-32 (draft-29 is still supported)
   * Use Go 1.15.5
 
- -- kslr <kslrwang@gmail.com>  Sat Nov 21 20:42:25 CST 2020
+ -- kslr <kslrwang@gmail.com>  Mon, 04 Jan 2021 22:00:07 +0800
 
 v2ray-core (4.32.1-1) unstable; urgency=medium
 

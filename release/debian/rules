@@ -16,7 +16,7 @@ override_dh_auto_clean:
 	rm -rf vendor
 
 override_dh_auto_build:
-	DH_GOPKG="v2ray.com/core/main" dh_auto_build -- -ldflags "-s -w" -tags $(DEB_VERSION_UPSTREAM)
+	DH_GOPKG="v2ray.com/core/main" dh_auto_build -- -ldflags "-s -w"
 	cd $(BUILDDIR); mv bin/main bin/v2ray
 
 override_dh_auto_install:

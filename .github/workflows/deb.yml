@@ -5,10 +5,6 @@ on:
     branches:
       - master
       - v*
-    paths:
-      - "**/*.go"
-      - "go.mod"
-      - "go.sum"
   release:
     types: [prereleased]
 
@@ -27,7 +23,7 @@ jobs:
       - name: Checkout codebase
         uses: actions/checkout@v2
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Install build dependencies
         run: |
