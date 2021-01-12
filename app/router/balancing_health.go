@@ -9,22 +9,13 @@ import (
 	"v2ray.com/core/features/routing"
 )
 
-// HealthCheckSettings holds settings for health Checker
-type HealthCheckSettings struct {
-	Enabled     bool
-	Destination string
-	Interval    time.Duration
-	Rounds      int
-	Timeout     time.Duration
-}
-
 // HealthChecker is the health checker for balancers
 type HealthChecker struct {
 	access     sync.Mutex
 	ticker     *time.Ticker
 	dispatcher routing.Dispatcher
 
-	Settings *HealthCheckSettings
+	Settings *routing.HealthCheckSettings
 	Results  map[string]*routing.HealthCheckResult
 }
 
@@ -134,6 +125,9 @@ func (b *Balancer) doCheck(tags []string, distributed bool) {
 	}
 	b.healthChecker.access.Lock()
 	defer b.healthChecker.access.Unlock()
+	if b.healthChecker.Results == nil {
+		b.healthChecker.Results = make(map[string]*routing.HealthCheckResult)
+	}
 	for tag, r := range rtts {
 		result, ok := b.healthChecker.Results[tag]
 		if !ok {

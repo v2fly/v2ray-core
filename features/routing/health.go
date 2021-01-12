@@ -5,6 +5,15 @@ import (
 	"time"
 )
 
+// HealthCheckSettings holds settings for health Checker
+type HealthCheckSettings struct {
+	Enabled     bool
+	Destination string
+	Interval    time.Duration
+	Rounds      int
+	Timeout     time.Duration
+}
+
 // HealthCheckResult holds result for health Checker
 type HealthCheckResult struct {
 	Count      int
@@ -32,8 +41,9 @@ type StrategyInfo struct {
 
 // BalancerInfo represents a health stats of a balancers
 type BalancerInfo struct {
-	Tag      string
-	Strategy *StrategyInfo
+	Tag         string
+	Strategy    *StrategyInfo
+	HealthCheck *HealthCheckSettings
 }
 
 // HealthChecker represents a health checker

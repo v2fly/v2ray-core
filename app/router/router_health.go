@@ -58,9 +58,6 @@ func getCollectError(errs []error) error {
 func (r *Router) GetBalancersInfo(tags []string) (resp []*routing.BalancerInfo, err error) {
 	resp = make([]*routing.BalancerInfo, 0)
 	for t, b := range r.balancers {
-		if !b.healthChecker.Settings.Enabled {
-			continue
-		}
 		if len(tags) > 0 && findSliceIndex(tags, t) < 0 {
 			continue
 		}
@@ -68,12 +65,19 @@ func (r *Router) GetBalancersInfo(tags []string) (resp []*routing.BalancerInfo, 
 		if err != nil {
 			return nil, err
 		}
-		b.healthChecker.access.Lock()
-		s := b.strategy.GetInfo(all, b.healthChecker.Results)
-		b.healthChecker.access.Unlock()
+		var s *routing.StrategyInfo
+		if !b.healthChecker.Settings.Enabled {
+			// if not enabled, should ignore the results, since they could be outdated
+			s = b.strategy.GetInfo(all, nil)
+		} else {
+			b.healthChecker.access.Lock()
+			s = b.strategy.GetInfo(all, b.healthChecker.Results)
+			b.healthChecker.access.Unlock()
+		}
 		stat := &routing.BalancerInfo{
-			Tag:      t,
-			Strategy: s,
+			Tag:         t,
+			Strategy:    s,
+			HealthCheck: b.healthChecker.Settings,
 		}
 		resp = append(resp, stat)
 	}

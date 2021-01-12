@@ -180,5 +180,5 @@ func (s *LeastLoadStrategy) getName() string {
 		}
 		sb.WriteString(time.Duration(b).String())
 	}
-	return fmt.Sprintf(`LeastLoad strategy, expected: %d, baselines: %s`, s.settings.Expected, sb)
+	return fmt.Sprintf(`LeastLoad, expected: %d, baselines: %s`, s.settings.Expected, sb)
 }

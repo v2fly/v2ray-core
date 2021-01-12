@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	routerService "v2ray.com/core/app/router/command"
 	"v2ray.com/core/main/commands/base"
@@ -11,11 +12,12 @@ import (
 
 var cmdHealthInfo = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api hci [--server=127.0.0.1:8080] [balancerTag]...",
-	Short:       "get health information",
+	UsageLine:   "{{.Exec}} api bi [--server=127.0.0.1:8080] [balancerTag]...",
+	Short:       "balancer information",
 	Long: `
-Get health check information of specified balancers. If no 
-balancer tag specified, get information of all balancers.
+Get information of specified balancers, including health, strategy 
+and selecting. If no balancer tag specified, get information of 
+all balancers.
 
 > Make sure you have "RoutingService" set in "config.api.services" 
 of server config.
@@ -39,8 +41,8 @@ func executeHealthInfo(cmd *base.Command, args []string) {
 	defer close()
 
 	client := routerService.NewRoutingServiceClient(conn)
-	r := &routerService.GetHealthInfoRequest{BalancerTags: cmd.Flag.Args()}
-	resp, err := client.GetHealthInfo(ctx, r)
+	r := &routerService.GetBalancersRequest{BalancerTags: cmd.Flag.Args()}
+	resp, err := client.GetBalancers(ctx, r)
 	if err != nil {
 		base.Fatalf("failed to get health information: %s", err)
 	}
@@ -51,7 +53,27 @@ func executeHealthInfo(cmd *base.Command, args []string) {
 
 func showBalancerInfo(b *routerService.BalancerInfo) {
 	sb := new(strings.Builder)
-	sb.WriteString(fmt.Sprintf("Balancer: %s (%s)\n", b.Tag, b.Strategy))
+	sb.WriteString(fmt.Sprintf("Balancer: %s\n", b.Tag))
+	if !b.HealthCheck.Enabled {
+		sb.WriteString(
+			`  - Health Check:
+    enabled: false
+`)
+	} else {
+		sb.WriteString(fmt.Sprintf(
+			`  - Health Check:
+    enabled: %v, interval: %s, timeout: %s, destination: %s
+`,
+			b.HealthCheck.Enabled,
+			time.Duration(b.HealthCheck.Interval),
+			time.Duration(b.HealthCheck.Timeout),
+			b.HealthCheck.Destination,
+		))
+	}
+	sb.WriteString(fmt.Sprintf(
+		`  - Strategy:
+    %s
+`, b.Strategy))
 	sb.WriteString("  - Selects:\n")
 	writeHealthLine(sb, 0, b.Titles, "Tag")
 	for i, o := range b.Selects {

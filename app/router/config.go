@@ -152,14 +152,14 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatcher) (*Balancer, error) {
 	h := &HealthChecker{
 		dispatcher: dispatcher,
-		Settings: &HealthCheckSettings{
+		Settings: &routing.HealthCheckSettings{
 			Enabled:     br.HealthCheck.Enabled,
 			Destination: strings.TrimSpace(br.HealthCheck.Destination),
 			Interval:    time.Duration(br.HealthCheck.Interval) * time.Second,
 			// Rounds:      int(br.HealthCheck.Rounds),
 			Timeout: time.Duration(br.HealthCheck.Timeout) * time.Second,
 		},
-		Results: make(map[string]*routing.HealthCheckResult),
+		Results: nil, // nil means the check is not performed yets
 	}
 	if h.Settings.Destination == "" {
 		h.Settings.Destination = "http://www.google.com/gen_204"

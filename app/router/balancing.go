@@ -25,12 +25,13 @@ func (b *Balancer) PickOutbound() (string, error) {
 		return "", err
 	}
 	var tag string
-	if b.healthChecker.Settings.Enabled {
+	if !b.healthChecker.Settings.Enabled {
+		// if not enabled, should ignore the results, since they could be outdated
+		tag = b.strategy.PickOutbound(candidates, nil)
+	} else {
 		b.healthChecker.access.Lock()
 		tag = b.strategy.PickOutbound(candidates, b.healthChecker.Results)
 		b.healthChecker.access.Unlock()
-	} else {
-		tag = b.strategy.PickOutbound(candidates, nil)
 	}
 	if tag == "" {
 		if b.fallbackTag != "" {

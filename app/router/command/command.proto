@@ -7,6 +7,7 @@ option java_package = "com.v2ray.core.app.router.command";
 option java_multiple_files = true;
 
 import "common/net/network.proto";
+import "app/router/config.proto";
 
 // RoutingContext is the context with information relative to routing process.
 // It conforms to the structure of v2ray.core.features.routing.Context and
@@ -60,7 +61,7 @@ message TestRouteRequest {
   bool PublishResult = 3;
 }
 
-message GetHealthInfoRequest {
+message GetBalancersRequest {
   repeated string BalancerTags = 1;
 }
 
@@ -69,15 +70,20 @@ message OutboundInfo {
   repeated string Values = 2;
 }
 
+message HealthCheckInfo {
+  bool Enabled = 1;
+}
+
 message BalancerInfo {
   string Tag = 1;
   string Strategy = 2;
-  repeated string Titles = 3;
-  repeated OutboundInfo Selects = 4;
-  repeated OutboundInfo Others = 5;
+  HealthCheckSettingsProto HealthCheck = 3;
+  repeated string Titles = 4;
+  repeated OutboundInfo Selects = 5;
+  repeated OutboundInfo Others = 6;
 }
 
-message GetHealthInfoResponse {
+message GetBalancersResponse {
   repeated BalancerInfo Balancers = 1;
 }
 
@@ -91,7 +97,7 @@ service RoutingService {
   rpc SubscribeRoutingStats(SubscribeRoutingStatsRequest)
       returns (stream RoutingContext) {}
   rpc TestRoute(TestRouteRequest) returns (RoutingContext) {}
-  rpc GetHealthInfo(GetHealthInfoRequest) returns (GetHealthInfoResponse) {}
+  rpc GetBalancers(GetBalancersRequest) returns (GetBalancersResponse) {}
   rpc CheckBalancers(CheckBalancersRequest) returns (CheckBalancersResponse) {}
 }
 

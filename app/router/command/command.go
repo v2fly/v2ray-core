@@ -10,6 +10,7 @@ import (
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	"v2ray.com/core"
+	"v2ray.com/core/app/router"
 	"v2ray.com/core/common"
 	"v2ray.com/core/features/routing"
 	"v2ray.com/core/features/stats"
@@ -74,7 +75,7 @@ func (s *routingServer) SubscribeRoutingStats(request *SubscribeRoutingStatsRequ
 	}
 }
 
-func (s *routingServer) GetHealthInfo(ctx context.Context, request *GetHealthInfoRequest) (*GetHealthInfoResponse, error) {
+func (s *routingServer) GetBalancers(ctx context.Context, request *GetBalancersRequest) (*GetBalancersResponse, error) {
 	h, ok := s.router.(routing.RouterChecker)
 	if !ok {
 		return nil, status.Errorf(codes.Unavailable, "current router is not a health checker")
@@ -83,16 +84,22 @@ func (s *routingServer) GetHealthInfo(ctx context.Context, request *GetHealthInf
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	rsp := &GetHealthInfoResponse{
+	rsp := &GetBalancersResponse{
 		Balancers: make([]*BalancerInfo, 0),
 	}
 	for _, result := range results {
 		stat := &BalancerInfo{
 			Tag:      result.Tag,
 			Strategy: result.Strategy.Name,
-			Titles:   result.Strategy.ValueTitles,
-			Selects:  make([]*OutboundInfo, 0),
-			Others:   make([]*OutboundInfo, 0),
+			HealthCheck: &router.HealthCheckSettingsProto{
+				Enabled:     result.HealthCheck.Enabled,
+				Destination: result.HealthCheck.Destination,
+				Interval:    int64(result.HealthCheck.Interval),
+				Timeout:     int64(result.HealthCheck.Timeout),
+			},
+			Titles:  result.Strategy.ValueTitles,
+			Selects: make([]*OutboundInfo, 0),
+			Others:  make([]*OutboundInfo, 0),
 		}
 		for _, item := range result.Strategy.Selects {
 			stat.Selects = append(stat.Selects, &OutboundInfo{

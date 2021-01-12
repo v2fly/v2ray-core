@@ -150,12 +150,12 @@ message HealthCheckSettingsProto {
   // default http://www.google.com/gen_204
   string Destination = 2;
   // health check interval (seconds)
-  int32 Interval = 3;
+  int64 Interval = 3;
   // rounds to perform for each outbound, each check
   // int32 Rounds = 4;
   
   // ping timeout (seconds)
-  int32 Timeout = 5;
+  int64 Timeout = 5;
 }
 
 message Config {
