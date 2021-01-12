@@ -47,10 +47,7 @@ func (s *RandomStrategy) SelectOutbounds(candidates []string, results map[string
 	aliveTags := make([]string, 0)
 	for _, tag := range candidates {
 		r, ok := results[tag]
-		if !ok {
-			continue
-		}
-		if r.AverageRTT <= 0 {
+		if ok && r.FailCount > 0 {
 			continue
 		}
 		aliveTags = append(aliveTags, tag)
