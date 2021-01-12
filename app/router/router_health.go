@@ -8,13 +8,13 @@ import (
 )
 
 // CheckHanlders implements routing.HealthChecker.
-func (r *Router) CheckHanlders(tags []string) error {
+func (r *Router) CheckHanlders(tags []string, distributed bool) error {
 	errs := make([]error, 0)
 	for _, b := range r.balancers {
 		if !b.healthChecker.Settings.Enabled {
 			continue
 		}
-		err := b.Check(tags)
+		err := b.Check(tags, distributed)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -26,13 +26,13 @@ func (r *Router) CheckHanlders(tags []string) error {
 }
 
 // CheckBalancers implements routing.HealthChecker.
-func (r *Router) CheckBalancers(tags []string) error {
+func (r *Router) CheckBalancers(tags []string, distributed bool) error {
 	errs := make([]error, 0)
 	for _, b := range r.balancers {
 		if !b.healthChecker.Settings.Enabled {
 			continue
 		}
-		_, err := b.CheckAll()
+		_, err := b.CheckAll(distributed)
 		if err != nil {
 			errs = append(errs, err)
 		}

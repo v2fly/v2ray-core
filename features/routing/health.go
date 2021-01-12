@@ -38,16 +38,20 @@ type BalancerInfo struct {
 
 // HealthChecker represents a health checker
 type HealthChecker interface {
-	// CheckHanlders performs a health check for specified outbound hanlders
-	CheckHanlders(tags []string) error
+	// CheckHanlders performs a health check for specified outbound hanlders.
+	// Set distributed to make it not check all tags at same time, checks
+	// are distributed randomly in the timeline
+	CheckHanlders(tags []string, distributed bool) error
 }
 
 // RouterChecker is a router able to perform health check and stats for outbound hanlders.
 type RouterChecker interface {
 	HealthChecker
 	// BalancerHealthCheck performs health checks for specified balancers,
-	// if not specified, check them all
-	CheckBalancers(tags []string) error
+	// if not specified, check them all.
+	// Set distributed to make it not check all tags at same time, checks
+	// are distributed randomly in the timeline
+	CheckBalancers(tags []string, distributed bool) error
 	// GetBalancersInfo get health info of specific balancer, if balancer not
 	//  specified, get all
 	GetBalancersInfo(tags []string) ([]*BalancerInfo, error)
@@ -77,6 +81,6 @@ func (t *ThrottledChecker) Run(tag string) {
 		t.tags = make([]string, 0)
 		t.mux.Unlock()
 		// newError("#", idx, "running").AtDebug().WriteToLog()
-		t.Checker.CheckHanlders(tags)
+		t.Checker.CheckHanlders(tags, true)
 	})
 }

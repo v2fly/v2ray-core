@@ -5,6 +5,7 @@ import (
 	sync "sync"
 	"time"
 
+	"v2ray.com/core/common/dice"
 	"v2ray.com/core/features/routing"
 )
 
@@ -43,7 +44,7 @@ func (b *Balancer) StartScheduler() {
 			break
 		}
 		go func() {
-			_, err := b.CheckAll()
+			_, err := b.CheckAll(true)
 			if err != nil {
 				newError("HealthCheckScheduler: ", err).AtWarning().WriteToLog()
 				return
@@ -53,13 +54,13 @@ func (b *Balancer) StartScheduler() {
 }
 
 // CheckAll checks all outbounds, and return their tags
-func (b *Balancer) CheckAll() ([]string, error) {
+func (b *Balancer) CheckAll(distributed bool) ([]string, error) {
 	tags, err := b.SelectOutbounds()
 	if err != nil {
 		return nil, newError("error select outbounds: ", err)
 	}
 	b.cleanupResults(tags)
-	b.doCheck(tags)
+	b.doCheck(tags, distributed)
 	return tags, nil
 }
 
@@ -71,7 +72,7 @@ func (b *Balancer) StopHealthCheckScheduler() error {
 
 // Check start the health checking for given tags.
 // it validates tags and checks those only in current balancer
-func (b *Balancer) Check(tags []string) error {
+func (b *Balancer) Check(tags []string, distributed bool) error {
 	ts, err := b.getCheckTags(tags)
 	if err != nil {
 		return err
@@ -80,13 +81,13 @@ func (b *Balancer) Check(tags []string) error {
 		return nil
 	}
 	newError("HealthCheck: Perform one-time check for tags ", ts).AtInfo().WriteToLog()
-	b.doCheck(ts)
+	b.doCheck(ts, distributed)
 	return nil
 }
 
 // doCheck do check for tags, you should make
 // sure all tags are valid for current balancer
-func (b *Balancer) doCheck(tags []string) {
+func (b *Balancer) doCheck(tags []string, distributed bool) {
 	if !b.healthChecker.Settings.Enabled || len(tags) == 0 {
 		return
 	}
@@ -94,7 +95,6 @@ func (b *Balancer) doCheck(tags []string) {
 	channels := make(map[string]chan time.Duration)
 	rtts := make(map[string][]time.Duration)
 
-	// TODO: too many concurrent health check ping?
 	for _, tag := range tags {
 		ch := make(chan time.Duration, b.healthChecker.Settings.Rounds)
 		channels[tag] = ch
@@ -105,19 +105,24 @@ func (b *Balancer) doCheck(tags []string) {
 			Timeout:     b.healthChecker.Settings.Timeout,
 		}
 		for i := 0; i < b.healthChecker.Settings.Rounds; i++ {
-			// newError("health checker ping ", tag, "#", i).AtDebug().WriteToLog()
-			go func() {
+			delay := time.Duration(0)
+			if distributed {
+				delay = time.Duration(dice.Roll(int(b.healthChecker.Settings.Interval)))
+				newError("check with delay ", delay, ": ", client.Handler).AtDebug().WriteToLog()
+			}
+			time.AfterFunc(delay, func() {
+				newError("checking ", client.Handler).AtDebug().WriteToLog()
 				delay, err := client.MeasureDelay()
 				if err != nil {
 					newError(fmt.Sprintf(
 						"error ping %s with %s: %s",
 						b.healthChecker.Settings.Destination,
-						tag,
+						client.Handler,
 						err,
 					)).AtWarning().WriteToLog()
 				}
 				ch <- delay
-			}()
+			})
 		}
 	}
 	for tag, ch := range channels {
@@ -159,7 +164,7 @@ func (b *Balancer) doCheck(tags []string) {
 		}
 		result.AverageRTT = time.Duration(int(sum) / result.Count)
 		newError(fmt.Sprintf(
-			"health checker '%s': %d of %d success, rtt min/avg/max = %s/%s/%s",
+			"check '%s': %d of %d success, rtt min/avg/max = %s/%s/%s",
 			tag,
 			result.Count-result.FailCount,
 			result.Count,

@@ -10,8 +10,8 @@ var cmdHealthCheck = &base.Command{
 	UsageLine:   "{{.Exec}} api hc [--server=127.0.0.1:8080] [balancerTag]...",
 	Short:       "perform health checks",
 	Long: `
-Perform health checks for specific balancers. if no balancer tag 
-specified, check all balancers.
+Perform instant health checks for all outbound handlers of specific 
+balancers. if no balancer tag specified, check all balancers.
 
 > Make sure you have "RoutingService" set in "config.api.services" 
 of server config.
