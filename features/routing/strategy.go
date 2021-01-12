@@ -2,9 +2,6 @@ package routing
 
 // BalancingStrategy is the interface of a balancing strategy
 type BalancingStrategy interface {
-	// String return a human readable string of strategy name
-	// and its settings
-	String() string
 	// PickOutbound pick one outbound from the results of SelectOutbound().
 	// Note the results can be nil if health not enabled.
 	PickOutbound(candidates []string, results map[string]*HealthCheckResult) string

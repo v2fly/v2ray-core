@@ -27,18 +27,6 @@ type node struct {
 	AverageRTT time.Duration
 }
 
-// String implements the BalancingStrategy.
-func (s *LeastLoadStrategy) String() string {
-	sb := new(strings.Builder)
-	for i, b := range s.settings.Baselines {
-		if i > 0 {
-			sb.WriteByte(' ')
-		}
-		sb.WriteString(time.Duration(b).String())
-	}
-	return fmt.Sprintf(`LeastLoad strategy, expected: %d, baselines: %s`, s.settings.Expected, sb)
-}
-
 // GetInfo implements the BalancingStrategy.
 func (s *LeastLoadStrategy) GetInfo(tags []string, results map[string]*routing.HealthCheckResult) *routing.StrategyInfo {
 	selects := s.SelectOutbounds(tags, results)
@@ -51,7 +39,7 @@ func (s *LeastLoadStrategy) GetInfo(tags []string, results map[string]*routing.H
 	}
 	items := getHealthRTT(selects, results)
 	return &routing.StrategyInfo{
-		Name:        s.String(),
+		Name:        s.getName(),
 		ValueTitles: []string{"RTT"},
 		Selects:     items[:selectsCount],
 		Others:      items[selectsCount:],
@@ -182,4 +170,15 @@ func (s *LeastLoadStrategy) getNodesAlive(candidates []string, results map[strin
 		return iRTT < jRTT
 	})
 	return nodes
+}
+
+func (s *LeastLoadStrategy) getName() string {
+	sb := new(strings.Builder)
+	for i, b := range s.settings.Baselines {
+		if i > 0 {
+			sb.WriteByte(' ')
+		}
+		sb.WriteString(time.Duration(b).String())
+	}
+	return fmt.Sprintf(`LeastLoad strategy, expected: %d, baselines: %s`, s.settings.Expected, sb)
 }

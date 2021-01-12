@@ -8,11 +8,6 @@ import (
 // RandomStrategy represents a random balancing strategy
 type RandomStrategy struct{}
 
-// String implements the BalancingStrategy.
-func (s *RandomStrategy) String() string {
-	return "Random"
-}
-
 // GetInfo implements the BalancingStrategy.
 func (s *RandomStrategy) GetInfo(tags []string, results map[string]*routing.HealthCheckResult) *routing.StrategyInfo {
 	selects := s.SelectOutbounds(tags, results)
@@ -25,7 +20,7 @@ func (s *RandomStrategy) GetInfo(tags []string, results map[string]*routing.Heal
 	}
 	items := getHealthRTT(selects, results)
 	return &routing.StrategyInfo{
-		Name:        s.String(),
+		Name:        "Random",
 		ValueTitles: []string{"RTT"},
 		Selects:     items[:selectsCount],
 		Others:      items[selectsCount:],
