@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -46,6 +47,9 @@ func executeHealthInfo(cmd *base.Command, args []string) {
 	if err != nil {
 		base.Fatalf("failed to get health information: %s", err)
 	}
+	sort.Slice(resp.Balancers, func(i, j int) bool {
+		return resp.Balancers[i].Tag < resp.Balancers[j].Tag
+	})
 	for _, b := range resp.Balancers {
 		showBalancerInfo(b)
 	}
