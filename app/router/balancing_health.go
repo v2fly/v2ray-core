@@ -30,10 +30,6 @@ func (b *Balancer) StartScheduler() {
 	ticker := time.NewTicker(b.healthChecker.Settings.Interval)
 	b.healthChecker.ticker = ticker
 	for {
-		_, ok := <-ticker.C
-		if !ok {
-			break
-		}
 		go func() {
 			_, err := b.CheckAll(true)
 			if err != nil {
@@ -41,6 +37,10 @@ func (b *Balancer) StartScheduler() {
 				return
 			}
 		}()
+		_, ok := <-ticker.C
+		if !ok {
+			break
+		}
 	}
 }
 

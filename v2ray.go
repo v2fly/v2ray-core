@@ -4,7 +4,6 @@ import (
 	"context"
 	"reflect"
 	"sync"
-	"time"
 
 	"v2ray.com/core/common"
 	"v2ray.com/core/common/serial"
@@ -121,10 +120,6 @@ func addInboundHandlers(server *Instance, configs []*InboundHandlerConfig) error
 	return nil
 }
 
-// throttledChecker makes sure only the last call run, if many calls raised in 2 seconds
-var throttledChecker *routing.ThrottledChecker
-
-// AddOutboundHandler adds an outbound handler to Instance
 func AddOutboundHandler(server *Instance, config *OutboundHandlerConfig) error {
 	outboundManager := server.GetFeature(outbound.ManagerType()).(outbound.Manager)
 	rawHandler, err := CreateObject(server, config)
@@ -137,19 +132,6 @@ func AddOutboundHandler(server *Instance, config *OutboundHandlerConfig) error {
 	}
 	if err := outboundManager.AddHandler(server.ctx, handler); err != nil {
 		return err
-	}
-
-	// TODO: check result is outdated when handler updated but health check not done
-	if checker, ok := server.GetFeature(routing.RouterType()).(routing.RouterChecker); ok {
-		if throttledChecker == nil {
-			throttledChecker = &routing.ThrottledChecker{
-				Delay:   time.Duration(2) * time.Second,
-				Checker: checker,
-			}
-		}
-		if config.Tag != "" {
-			throttledChecker.Run(config.Tag)
-		}
 	}
 	return nil
 }
