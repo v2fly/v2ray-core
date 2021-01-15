@@ -37,8 +37,14 @@ type strategyLeastLoadConfig struct {
 func (v *strategyLeastLoadConfig) Build() (proto.Message, error) {
 	config := new(router.StrategyLeastLoadConfig)
 	config.Expected = v.Expected
+	if config.Expected < 0 {
+		config.Expected = 0
+	}
 	config.Baselines = make([]int64, 0)
 	for _, b := range v.Baselines {
+		if b <= 0 {
+			continue
+		}
 		config.Baselines = append(config.Baselines, int64(time.Duration(b)*time.Millisecond))
 	}
 	return config, nil

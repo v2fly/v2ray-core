@@ -166,11 +166,14 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 	}
 	if h.Settings.Interval == 0 {
 		h.Settings.Interval = time.Duration(15) * time.Minute
+	} else if h.Settings.Interval < 10 {
+		newError("health check interval is too small, 10s is applied").AtWarning().WriteToLog()
+		h.Settings.Interval = time.Duration(10) * time.Second
 	}
-	if h.Settings.Rounds == 0 {
+	if h.Settings.Rounds <= 0 {
 		h.Settings.Rounds = 1
 	}
-	if h.Settings.Timeout == 0 {
+	if h.Settings.Timeout <= 0 {
 		// results are saved after all health pings finish,
 		// a larger timeout could possibly makes checks run longer
 		h.Settings.Timeout = time.Duration(5) * time.Second

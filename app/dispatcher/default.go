@@ -269,7 +269,7 @@ func sniffer(ctx context.Context, cReader *cachedReader) (SniffResult, error) {
 func (d *DefaultDispatcher) targetedDispatch(ctx context.Context, link *transport.Link, tag string) {
 	handler := d.ohm.GetHandler(tag)
 	if handler == nil {
-		newError("outbound handler [", tag, "] not exist").WriteToLog(session.ExportIDToError(ctx))
+		newError("outbound handler [", tag, "] not exist").AtError().WriteToLog(session.ExportIDToError(ctx))
 		common.Close(link.Writer)
 		common.Interrupt(link.Reader)
 		return

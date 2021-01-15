@@ -46,18 +46,13 @@ type BalancerInfo struct {
 	HealthCheck *HealthCheckSettings
 }
 
-// HealthChecker represents a health checker
-type HealthChecker interface {
+// RouterChecker is a router able to perform health check and stats for outbound hanlders.
+type RouterChecker interface {
 	// CheckHanlders performs a health check for specified outbound hanlders.
 	// Set distributed to make it not check all tags at same time, checks
 	// are distributed randomly in the timeline
 	CheckHanlders(tags []string, distributed bool) error
-}
-
-// RouterChecker is a router able to perform health check and stats for outbound hanlders.
-type RouterChecker interface {
-	HealthChecker
-	// BalancerHealthCheck performs health checks for specified balancers,
+	// CheckBalancers performs health checks for specified balancers,
 	// if not specified, check them all.
 	// Set distributed to make it not check all tags at same time, checks
 	// are distributed randomly in the timeline

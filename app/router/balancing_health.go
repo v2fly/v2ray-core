@@ -37,7 +37,7 @@ func (b *Balancer) StartScheduler() {
 		go func() {
 			_, err := b.CheckAll(true)
 			if err != nil {
-				newError("HealthCheckScheduler: ", err).AtWarning().WriteToLog()
+				newError("error running scheduled health check: ", err).AtWarning().WriteToLog()
 				return
 			}
 		}()
@@ -71,7 +71,7 @@ func (b *Balancer) Check(tags []string, distributed bool) error {
 	if len(ts) == 0 {
 		return nil
 	}
-	newError("HealthCheck: Perform one-time check for tags ", ts).AtInfo().WriteToLog()
+	newError("perform one-time health check for tags ", ts).AtInfo().WriteToLog()
 	b.doCheck(ts, distributed)
 	return nil
 }
@@ -204,7 +204,6 @@ func (b *Balancer) cleanupResults(tags []string) {
 			}
 		}
 		if !found {
-			// newError("healthChecker: remove tag ", tag).AtDebug().WriteToLog()
 			delete(b.healthChecker.Results, tag)
 		}
 	}
