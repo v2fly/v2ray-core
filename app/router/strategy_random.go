@@ -9,51 +9,27 @@ import (
 type RandomStrategy struct{}
 
 // GetInfo implements the BalancingStrategy.
-func (s *RandomStrategy) GetInfo(tags []string, results map[string]*routing.HealthCheckResult) *routing.StrategyInfo {
-	selects := s.SelectOutbounds(tags, results)
-	selectsCount := len(selects)
-	// append other outbounds to selected tags
-	for _, t := range tags {
-		if findSliceIndex(selects, t) < 0 {
-			selects = append(selects, t)
-		}
+func (s *RandomStrategy) GetInfo(tags []string) *routing.StrategyInfo {
+
+	items := make([]*routing.OutboundInfo, 0)
+	for _, tag := range tags {
+		items = append(items, &routing.OutboundInfo{Tag: tag})
 	}
-	items := getHealthRTT(selects, results)
 	return &routing.StrategyInfo{
-		Name:        "Random",
-		ValueTitles: []string{"RTT"},
-		Selects:     items[:selectsCount],
-		Others:      items[selectsCount:],
+		Settings:    []string{"random"},
+		ValueTitles: nil,
+		Selects:     items,
+		Others:      nil,
 	}
 }
 
 // PickOutbound implements the BalancingStrategy.
 // It picks an outbound from all tags (or alive tags if health check enabled) randomly
-func (s *RandomStrategy) PickOutbound(candidates []string, results map[string]*routing.HealthCheckResult) string {
-	tags := s.SelectOutbounds(candidates, results)
-	count := len(tags)
+func (s *RandomStrategy) PickOutbound(candidates []string) string {
+	count := len(candidates)
 	if count == 0 {
 		// goes to fallbackTag
 		return ""
 	}
-	return tags[dice.Roll(count)]
-}
-
-// SelectOutbounds implements BalancingStrategy
-func (s *RandomStrategy) SelectOutbounds(candidates []string, results map[string]*routing.HealthCheckResult) []string {
-	if results == nil {
-		return candidates
-	}
-	aliveTags := make([]string, 0)
-	for _, tag := range candidates {
-		r, ok := results[tag]
-		if ok && r.FailCount > 0 {
-			continue
-		}
-		aliveTags = append(aliveTags, tag)
-	}
-	if len(aliveTags) == 0 {
-		newError("random: no outbound alive").AtInfo().WriteToLog()
-	}
-	return aliveTags
+	return candidates[dice.Roll(count)]
 }

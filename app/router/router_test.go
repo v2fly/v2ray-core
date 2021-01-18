@@ -67,7 +67,6 @@ func TestSimpleBalancer(t *testing.T) {
 			{
 				Tag:              "balance",
 				OutboundSelector: []string{"test-"},
-				HealthCheck:      &HealthCheckSettingsProto{},
 			},
 		},
 	}
@@ -109,13 +108,11 @@ func TestLeastLoadBalancer(t *testing.T) {
 			{
 				Tag:              "balance",
 				OutboundSelector: []string{"test-"},
-				HealthCheck: &HealthCheckSettingsProto{
-					Enabled: true,
-				},
-				Strategy: BalancingRule_LeastLoad,
+				Strategy:         BalancingRule_LeastLoad,
 				StrategySettings: serial.ToTypedMessage(&StrategyLeastLoadConfig{
-					Baselines: nil,
-					Expected:  1,
+					HealthCheck: nil,
+					Baselines:   nil,
+					Expected:    1,
 				}),
 			},
 		},

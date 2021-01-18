@@ -14,8 +14,8 @@ type healthExt struct {
 }
 
 // getHealthRTT is the shared health info maker
-// for AverageRTT base strategies, like random, leastload
-func getHealthRTT(tags []string, results map[string]*routing.HealthCheckResult) []*routing.OutboundInfo {
+// for HealthPing based strategies, like leastload
+func getHealthRTT(tags []string, results map[string]*HealthPingResult) []*routing.OutboundInfo {
 	failed := []string{"failed"}
 	notTested := []string{"not tested"}
 	items := make([]*healthExt, 0)

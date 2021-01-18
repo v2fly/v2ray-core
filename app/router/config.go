@@ -150,40 +150,7 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 
 // Build builds the balancing rule
 func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatcher) (*Balancer, error) {
-	h := &HealthChecker{
-		dispatcher: dispatcher,
-		Settings: &routing.HealthCheckSettings{
-			Enabled:     br.HealthCheck.Enabled,
-			Destination: strings.TrimSpace(br.HealthCheck.Destination),
-			Interval:    time.Duration(br.HealthCheck.Interval) * time.Second,
-			// Rounds:      int(br.HealthCheck.Rounds),
-			Timeout: time.Duration(br.HealthCheck.Timeout) * time.Second,
-		},
-		Results: nil, // nil means the check is not performed yets
-	}
-	if h.Settings.Destination == "" {
-		h.Settings.Destination = "http://www.google.com/gen_204"
-	}
-	if h.Settings.Interval == 0 {
-		h.Settings.Interval = time.Duration(15) * time.Minute
-	} else if h.Settings.Interval < 10 {
-		newError("health check interval is too small, 10s is applied").AtWarning().WriteToLog()
-		h.Settings.Interval = time.Duration(10) * time.Second
-	}
-	if h.Settings.Rounds <= 0 {
-		h.Settings.Rounds = 1
-	}
-	if h.Settings.Timeout <= 0 {
-		// results are saved after all health pings finish,
-		// a larger timeout could possibly makes checks run longer
-		h.Settings.Timeout = time.Duration(5) * time.Second
-	}
-	b := &Balancer{
-		selectors:     br.OutboundSelector,
-		healthChecker: h,
-		ohm:           ohm,
-		fallbackTag:   br.FallbackTag,
-	}
+	var strategy routing.BalancingStrategy
 	switch br.Strategy {
 	case BalancingRule_LeastLoad:
 		i, err := br.StrategySettings.GetInstance()
@@ -194,13 +161,53 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 		if !ok {
 			return nil, newError("not a StrategyLeastLoadConfig").AtError()
 		}
-		b.strategy = &LeastLoadStrategy{
-			settings: s,
+		strategy = &LeastLoadStrategy{
+			settings:   s,
+			HealthPing: healthPingFromConfig(s.HealthCheck, dispatcher),
 		}
 	case BalancingRule_Random:
 		fallthrough
 	default:
-		b.strategy = &RandomStrategy{}
+		strategy = &RandomStrategy{}
 	}
-	return b, nil
+	return &Balancer{
+		selectors:   br.OutboundSelector,
+		ohm:         ohm,
+		fallbackTag: br.FallbackTag,
+		strategy:    strategy,
+	}, nil
+}
+
+func healthPingFromConfig(config *HealthPingConfig, dispatcher routing.Dispatcher) *HealthPing {
+	settings := &HealthPingSettings{}
+	if config != nil {
+		settings = &HealthPingSettings{
+			Destination: strings.TrimSpace(config.Destination),
+			Interval:    time.Duration(config.Interval),
+			Rounds:      int(config.Rounds),
+			Timeout:     time.Duration(config.Timeout),
+		}
+	}
+	if settings.Destination == "" {
+		settings.Destination = "http://www.google.com/gen_204"
+	}
+	if settings.Interval == 0 {
+		settings.Interval = time.Duration(15) * time.Minute
+	} else if settings.Interval < 10 {
+		newError("health check interval is too small, 10s is applied").AtWarning().WriteToLog()
+		settings.Interval = time.Duration(10) * time.Second
+	}
+	if settings.Rounds <= 0 {
+		settings.Rounds = 1
+	}
+	if settings.Timeout <= 0 {
+		// results are saved after all health pings finish,
+		// a larger timeout could possibly makes checks run longer
+		settings.Timeout = time.Duration(5) * time.Second
+	}
+	return &HealthPing{
+		dispatcher: dispatcher,
+		Settings:   settings,
+		Results:    nil,
+	}
 }

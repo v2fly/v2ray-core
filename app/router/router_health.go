@@ -11,10 +11,16 @@ import (
 func (r *Router) CheckHanlders(tags []string, distributed bool) error {
 	errs := make([]error, 0)
 	for _, b := range r.balancers {
-		if !b.healthChecker.Settings.Enabled {
+		checker, ok := b.strategy.(routing.HealthChecker)
+		if !ok {
 			continue
 		}
-		err := b.Check(tags, distributed)
+		all, err := b.SelectOutbounds()
+		if err != nil {
+			return err
+		}
+		ts := getCheckTags(tags, all)
+		err = checker.Check(ts, distributed)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -25,14 +31,35 @@ func (r *Router) CheckHanlders(tags []string, distributed bool) error {
 	return getCollectError(errs)
 }
 
+func getCheckTags(tags, all []string) []string {
+	if len(tags) == 0 {
+		return nil
+	}
+	ts := make([]string, 0)
+	for _, t1 := range tags {
+		for _, t2 := range all {
+			if t1 == t2 {
+				ts = append(ts, t1)
+				break
+			}
+		}
+	}
+	return ts
+}
+
 // CheckBalancers implements routing.HealthChecker.
 func (r *Router) CheckBalancers(tags []string, distributed bool) error {
 	errs := make([]error, 0)
 	for _, b := range r.balancers {
-		if !b.healthChecker.Settings.Enabled {
+		checker, ok := b.strategy.(routing.HealthChecker)
+		if !ok {
 			continue
 		}
-		_, err := b.CheckAll(distributed)
+		tags, err := b.SelectOutbounds()
+		if err != nil {
+			errs = append(errs, err)
+		}
+		err = checker.Check(tags, distributed)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -66,18 +93,10 @@ func (r *Router) GetBalancersInfo(tags []string) (resp []*routing.BalancerInfo, 
 			return nil, err
 		}
 		var s *routing.StrategyInfo
-		if !b.healthChecker.Settings.Enabled {
-			// if not enabled, should ignore the results, since they could be outdated
-			s = b.strategy.GetInfo(all, nil)
-		} else {
-			b.healthChecker.access.Lock()
-			s = b.strategy.GetInfo(all, b.healthChecker.Results)
-			b.healthChecker.access.Unlock()
-		}
+		s = b.strategy.GetInfo(all)
 		stat := &routing.BalancerInfo{
-			Tag:         t,
-			Strategy:    s,
-			HealthCheck: b.healthChecker.Settings,
+			Tag:      t,
+			Strategy: s,
 		}
 		resp = append(resp, stat)
 	}

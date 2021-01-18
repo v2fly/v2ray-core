@@ -113,21 +113,24 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 
 // Start implements common.Runnable.
 func (r *Router) Start() error {
-	for t, b := range r.balancers {
-		if !b.healthChecker.Settings.Enabled {
+	for _, b := range r.balancers {
+		checker, ok := b.strategy.(routing.HealthChecker)
+		if !ok {
 			continue
 		}
-		newError("Created health checker for balancer '", t, "' with settings: ", b.healthChecker.Settings).AtInfo().WriteToLog()
-		b.StartScheduler()
+		checker.StartScheduler(b.SelectOutbounds)
 	}
 	return nil
 }
 
 // Close implements common.Closable.
 func (r *Router) Close() error {
-	for t, b := range r.balancers {
-		newError("Stop Health Checker for Balancer '", t, "'").AtInfo().WriteToLog()
-		b.StopHealthCheckScheduler()
+	for _, b := range r.balancers {
+		checker, ok := b.strategy.(routing.HealthChecker)
+		if !ok {
+			continue
+		}
+		checker.StopScheduler()
 	}
 	return nil
 }

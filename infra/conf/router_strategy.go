@@ -27,6 +27,7 @@ func (v *strategyEmptyConfig) Build() (proto.Message, error) {
 }
 
 type strategyLeastLoadConfig struct {
+	HealthCheck *router.HealthPingSettings `json:"healthCheck"`
 	// ping rtt baselines (ms)
 	Baselines []int `json:"baselines"`
 	// expected nodes count to select
@@ -35,7 +36,17 @@ type strategyLeastLoadConfig struct {
 
 // Build implements Buildable.
 func (v *strategyLeastLoadConfig) Build() (proto.Message, error) {
-	config := new(router.StrategyLeastLoadConfig)
+	config := &router.StrategyLeastLoadConfig{
+		HealthCheck: &router.HealthPingConfig{},
+	}
+	if v.HealthCheck != nil {
+		config.HealthCheck = &router.HealthPingConfig{
+			Destination: v.HealthCheck.Destination,
+			Interval:    int64(time.Duration(v.HealthCheck.Interval) * time.Second),
+			Timeout:     int64(time.Duration(v.HealthCheck.Timeout) * time.Second),
+			Rounds:      int32(v.HealthCheck.Rounds),
+		}
+	}
 	config.Expected = v.Expected
 	if config.Expected < 0 {
 		config.Expected = 0

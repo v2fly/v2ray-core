@@ -7,11 +7,10 @@ import (
 
 // Balancer represents a balancer
 type Balancer struct {
-	selectors     []string
-	strategy      routing.BalancingStrategy
-	healthChecker *HealthChecker
-	ohm           outbound.Manager
-	fallbackTag   string
+	selectors   []string
+	strategy    routing.BalancingStrategy
+	ohm         outbound.Manager
+	fallbackTag string
 }
 
 // PickOutbound picks the tag of a outbound
@@ -25,14 +24,7 @@ func (b *Balancer) PickOutbound() (string, error) {
 		return "", err
 	}
 	var tag string
-	if !b.healthChecker.Settings.Enabled {
-		// if not enabled, should ignore the results, since they could be outdated
-		tag = b.strategy.PickOutbound(candidates, nil)
-	} else {
-		b.healthChecker.access.Lock()
-		tag = b.strategy.PickOutbound(candidates, b.healthChecker.Results)
-		b.healthChecker.access.Unlock()
-	}
+	tag = b.strategy.PickOutbound(candidates)
 	if tag == "" {
 		if b.fallbackTag != "" {
 			newError("fallback to [", b.fallbackTag, "], due to empty tag returned").AtInfo().WriteToLog()

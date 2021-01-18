@@ -10,7 +10,6 @@ import (
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	"v2ray.com/core"
-	"v2ray.com/core/app/router"
 	"v2ray.com/core/common"
 	"v2ray.com/core/features/routing"
 	"v2ray.com/core/features/stats"
@@ -85,30 +84,24 @@ func (s *routingServer) GetBalancers(ctx context.Context, request *GetBalancersR
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	rsp := &GetBalancersResponse{
-		Balancers: make([]*BalancerInfo, 0),
+		Balancers: make([]*BalancerMsg, 0),
 	}
 	for _, result := range results {
-		stat := &BalancerInfo{
-			Tag:      result.Tag,
-			Strategy: result.Strategy.Name,
-			HealthCheck: &router.HealthCheckSettingsProto{
-				Enabled:     result.HealthCheck.Enabled,
-				Destination: result.HealthCheck.Destination,
-				Interval:    int64(result.HealthCheck.Interval),
-				Timeout:     int64(result.HealthCheck.Timeout),
-			},
-			Titles:  result.Strategy.ValueTitles,
-			Selects: make([]*OutboundInfo, 0),
-			Others:  make([]*OutboundInfo, 0),
+		stat := &BalancerMsg{
+			Tag:              result.Tag,
+			StrategySettings: result.Strategy.Settings,
+			Titles:           result.Strategy.ValueTitles,
+			Selects:          make([]*OutboundMsg, 0),
+			Others:           make([]*OutboundMsg, 0),
 		}
 		for _, item := range result.Strategy.Selects {
-			stat.Selects = append(stat.Selects, &OutboundInfo{
+			stat.Selects = append(stat.Selects, &OutboundMsg{
 				Tag:    item.Tag,
 				Values: item.Values,
 			})
 		}
 		for _, item := range result.Strategy.Others {
-			stat.Others = append(stat.Others, &OutboundInfo{
+			stat.Others = append(stat.Others, &OutboundMsg{
 				Tag:    item.Tag,
 				Values: item.Values,
 			})

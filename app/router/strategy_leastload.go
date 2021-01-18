@@ -16,6 +16,8 @@ import (
 
 // LeastLoadStrategy represents a random balancing strategy
 type LeastLoadStrategy struct {
+	*HealthPing
+
 	settings *StrategyLeastLoadConfig
 }
 
@@ -28,8 +30,10 @@ type node struct {
 }
 
 // GetInfo implements the BalancingStrategy.
-func (s *LeastLoadStrategy) GetInfo(tags []string, results map[string]*routing.HealthCheckResult) *routing.StrategyInfo {
-	selects := s.SelectOutbounds(tags, results)
+func (s *LeastLoadStrategy) GetInfo(tags []string) *routing.StrategyInfo {
+	s.HealthPing.access.Lock()
+	defer s.HealthPing.access.Unlock()
+	selects := s.selectOutbounds(tags, s.HealthPing.Results)
 	selectsCount := len(selects)
 	// append other outbounds to selected tags
 	for _, t := range tags {
@@ -37,9 +41,10 @@ func (s *LeastLoadStrategy) GetInfo(tags []string, results map[string]*routing.H
 			selects = append(selects, t)
 		}
 	}
-	items := getHealthRTT(selects, results)
+
+	items := getHealthRTT(selects, s.HealthPing.Results)
 	return &routing.StrategyInfo{
-		Name:        s.getName(),
+		Settings:    s.getSettings(),
 		ValueTitles: []string{"RTT"},
 		Selects:     items[:selectsCount],
 		Others:      items[selectsCount:],
@@ -48,8 +53,10 @@ func (s *LeastLoadStrategy) GetInfo(tags []string, results map[string]*routing.H
 
 // PickOutbound implements the BalancingStrategy.
 // It picks an outbound from least load tags, according to the health check results
-func (s *LeastLoadStrategy) PickOutbound(candidates []string, results map[string]*routing.HealthCheckResult) string {
-	tags := s.SelectOutbounds(candidates, results)
+func (s *LeastLoadStrategy) PickOutbound(candidates []string) string {
+	s.HealthPing.access.Lock()
+	defer s.HealthPing.access.Unlock()
+	tags := s.selectOutbounds(candidates, s.HealthPing.Results)
 	count := len(tags)
 	if count == 0 {
 		// goes to fallbackTag
@@ -58,8 +65,8 @@ func (s *LeastLoadStrategy) PickOutbound(candidates []string, results map[string
 	return tags[dice.Roll(count)]
 }
 
-// SelectOutbounds implements BalancingStrategy
-func (s *LeastLoadStrategy) SelectOutbounds(candidates []string, results map[string]*routing.HealthCheckResult) []string {
+// selectOutbounds selects outbounds before the final pick
+func (s *LeastLoadStrategy) selectOutbounds(candidates []string, results map[string]*HealthPingResult) []string {
 	if results == nil {
 		return candidates
 	}
@@ -137,7 +144,7 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 	return nodes[:count]
 }
 
-func (s *LeastLoadStrategy) getNodesAlive(candidates []string, results map[string]*routing.HealthCheckResult) []*node {
+func (s *LeastLoadStrategy) getNodesAlive(candidates []string, results map[string]*HealthPingResult) []*node {
 	nodes := make([]*node, 0)
 	for _, tag := range candidates {
 		r, ok := results[tag]
@@ -172,7 +179,8 @@ func (s *LeastLoadStrategy) getNodesAlive(candidates []string, results map[strin
 	return nodes
 }
 
-func (s *LeastLoadStrategy) getName() string {
+func (s *LeastLoadStrategy) getSettings() []string {
+	settings := make([]string, 0)
 	sb := new(strings.Builder)
 	for i, b := range s.settings.Baselines {
 		if i > 0 {
@@ -180,5 +188,14 @@ func (s *LeastLoadStrategy) getName() string {
 		}
 		sb.WriteString(time.Duration(b).String())
 	}
-	return fmt.Sprintf(`LeastLoad, expected: %d, baselines: %s`, s.settings.Expected, sb)
+	settings = append(settings, fmt.Sprintf(`leastload, expected: %d, baselines: %s`, s.settings.Expected, sb))
+	settings = append(settings, fmt.Sprintf(
+		`health ping, interval: %s, rounds: %d, timeout: %s, destination: %s`,
+		s.HealthPing.Settings.Interval,
+		s.HealthPing.Settings.Rounds,
+		s.HealthPing.Settings.Timeout,
+		s.HealthPing.Settings.Destination,
+	))
+
+	return settings
 }

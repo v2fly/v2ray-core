@@ -5,7 +5,6 @@ import (
 	"os"
 	"sort"
 	"strings"
-	"time"
 
 	routerService "v2ray.com/core/app/router/command"
 	"v2ray.com/core/main/commands/base"
@@ -55,29 +54,13 @@ func executeHealthInfo(cmd *base.Command, args []string) {
 	}
 }
 
-func showBalancerInfo(b *routerService.BalancerInfo) {
+func showBalancerInfo(b *routerService.BalancerMsg) {
 	sb := new(strings.Builder)
 	sb.WriteString(fmt.Sprintf("Balancer: %s\n", b.Tag))
-	if !b.HealthCheck.Enabled {
-		sb.WriteString(
-			`  - Health Check:
-    enabled: false
-`)
-	} else {
-		sb.WriteString(fmt.Sprintf(
-			`  - Health Check:
-    enabled: %v, interval: %s, timeout: %s, destination: %s
-`,
-			b.HealthCheck.Enabled,
-			time.Duration(b.HealthCheck.Interval),
-			time.Duration(b.HealthCheck.Timeout),
-			b.HealthCheck.Destination,
-		))
+	sb.WriteString("  - Strategy:\n")
+	for _, v := range b.StrategySettings {
+		sb.WriteString(fmt.Sprintf("    %s\n", v))
 	}
-	sb.WriteString(fmt.Sprintf(
-		`  - Strategy:
-    %s
-`, b.Strategy))
 	sb.WriteString("  - Selects:\n")
 	writeHealthLine(sb, 0, b.Titles, "Tag")
 	for i, o := range b.Selects {

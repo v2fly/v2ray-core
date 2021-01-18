@@ -73,12 +73,15 @@ func TestRouterConfig(t *testing.T) {
 					{
 						"tag": "b2",
 						"selector": ["test"],
-						"healthCheck": {
-							"enabled": true
-						},
 						"strategy": {
 							"type": "LeastLoad",
 							"settings": {
+								"healthCheck": {
+									"interval": 300,
+									"rounds": 2,
+									"timeout": 3,
+									"destination": "dest"
+								},
 								"baselines": [400, 600],
 								"expected": 6
 							}
@@ -95,22 +98,24 @@ func TestRouterConfig(t *testing.T) {
 						Tag:              "b1",
 						OutboundSelector: []string{"test"},
 						Strategy:         router.BalancingRule_Random,
-						HealthCheck:      &router.HealthCheckSettingsProto{},
 					},
 					{
 						Tag:              "b2",
 						OutboundSelector: []string{"test"},
 						Strategy:         router.BalancingRule_LeastLoad,
 						StrategySettings: serial.ToTypedMessage(&router.StrategyLeastLoadConfig{
+							HealthCheck: &router.HealthPingConfig{
+								Interval:    int64(time.Duration(300) * time.Second),
+								Rounds:      2,
+								Timeout:     int64(time.Duration(3) * time.Second),
+								Destination: "dest",
+							},
 							Baselines: []int64{
 								int64(time.Duration(400) * time.Millisecond),
 								int64(time.Duration(600) * time.Millisecond),
 							},
 							Expected: 6,
 						}),
-						HealthCheck: &router.HealthCheckSettingsProto{
-							Enabled: true,
-						},
 						FallbackTag: "fall",
 					},
 				},
