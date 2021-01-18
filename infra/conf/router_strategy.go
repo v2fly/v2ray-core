@@ -27,6 +27,9 @@ func (v *strategyEmptyConfig) Build() (proto.Message, error) {
 }
 
 type strategyLeastLoadConfig struct {
+	// note the time values of the HealthCheck holds is not
+	// 'time.Duration' but plain number, sice they were parsed
+	// directly from json
 	HealthCheck *router.HealthPingSettings `json:"healthCheck"`
 	// ping rtt baselines (ms)
 	Baselines []int `json:"baselines"`
@@ -42,8 +45,8 @@ func (v *strategyLeastLoadConfig) Build() (proto.Message, error) {
 	if v.HealthCheck != nil {
 		config.HealthCheck = &router.HealthPingConfig{
 			Destination: v.HealthCheck.Destination,
-			Interval:    int64(time.Duration(v.HealthCheck.Interval) * time.Second),
-			Timeout:     int64(time.Duration(v.HealthCheck.Timeout) * time.Second),
+			Interval:    int64(v.HealthCheck.Interval * time.Second),
+			Timeout:     int64(v.HealthCheck.Timeout * time.Second),
 			Rounds:      int32(v.HealthCheck.Rounds),
 		}
 	}

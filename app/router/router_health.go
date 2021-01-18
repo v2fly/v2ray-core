@@ -92,11 +92,9 @@ func (r *Router) GetBalancersInfo(tags []string) (resp []*routing.BalancerInfo, 
 		if err != nil {
 			return nil, err
 		}
-		var s *routing.StrategyInfo
-		s = b.strategy.GetInfo(all)
 		stat := &routing.BalancerInfo{
 			Tag:      t,
-			Strategy: s,
+			Strategy: b.strategy.GetInfo(all),
 		}
 		resp = append(resp, stat)
 	}

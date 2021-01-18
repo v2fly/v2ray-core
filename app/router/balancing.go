@@ -23,8 +23,7 @@ func (b *Balancer) PickOutbound() (string, error) {
 		}
 		return "", err
 	}
-	var tag string
-	tag = b.strategy.PickOutbound(candidates)
+	tag := b.strategy.PickOutbound(candidates)
 	if tag == "" {
 		if b.fallbackTag != "" {
 			newError("fallback to [", b.fallbackTag, "], due to empty tag returned").AtInfo().WriteToLog()

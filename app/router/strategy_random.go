@@ -10,7 +10,6 @@ type RandomStrategy struct{}
 
 // GetInfo implements the BalancingStrategy.
 func (s *RandomStrategy) GetInfo(tags []string) *routing.StrategyInfo {
-
 	items := make([]*routing.OutboundInfo, 0)
 	for _, tag := range tags {
 		items = append(items, &routing.OutboundInfo{Tag: tag})
