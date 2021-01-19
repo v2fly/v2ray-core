@@ -16,7 +16,7 @@ type OutboundInfo struct {
 	Values []string // Information of the outbound, which can be different between strategies, like health ping RTT
 }
 
-// StrategyInfo holds strategy running infomation, like selected handlers and others
+// StrategyInfo holds strategy running information, like selected handlers and others
 type StrategyInfo struct {
 	Settings    []string        // Strategy settings
 	ValueTitles []string        // Value titles of OutboundInfo.Values
