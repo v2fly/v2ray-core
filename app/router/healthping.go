@@ -38,7 +38,7 @@ type HealthPing struct {
 }
 
 // StartScheduler implements the HealthChecker
-func (h *HealthPing) StartScheduler(hs func() ([]string, error)) {
+func (h *HealthPing) StartScheduler(selector func() ([]string, error)) {
 	if h.ticker != nil {
 		return
 	}
@@ -46,7 +46,7 @@ func (h *HealthPing) StartScheduler(hs func() ([]string, error)) {
 	h.ticker = ticker
 	for {
 		go func() {
-			tags, err := hs()
+			tags, err := selector()
 			if err != nil {
 				newError("error select outbounds for scheduled health check: ", err).AtWarning().WriteToLog()
 			}

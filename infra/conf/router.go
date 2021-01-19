@@ -26,8 +26,8 @@ type StrategyConfig struct {
 // BalancingRule represents a balancing rule
 type BalancingRule struct {
 	Tag         string         `json:"tag"`
-	Strategy    StrategyConfig `json:"strategy"`
 	Selectors   StringList     `json:"selector"`
+	Strategy    StrategyConfig `json:"strategy"`
 	FallbackTag string         `json:"fallbackTag"`
 }
 

@@ -29,8 +29,8 @@ type node struct {
 	AverageRTT time.Duration
 }
 
-// GetInfo implements the BalancingStrategy.
-func (s *LeastLoadStrategy) GetInfo(tags []string) *routing.StrategyInfo {
+// GetInformation implements the routing.BalancingStrategy.
+func (s *LeastLoadStrategy) GetInformation(tags []string) *routing.StrategyInfo {
 	s.HealthPing.access.Lock()
 	defer s.HealthPing.access.Unlock()
 	selects := s.selectOutbounds(tags, s.HealthPing.Results)
@@ -42,16 +42,16 @@ func (s *LeastLoadStrategy) GetInfo(tags []string) *routing.StrategyInfo {
 		}
 	}
 
-	items := getHealthRTT(selects, s.HealthPing.Results)
+	titles, items := getHealthPingInfo(selects, s.HealthPing.Results)
 	return &routing.StrategyInfo{
 		Settings:    s.getSettings(),
-		ValueTitles: []string{"RTT"},
+		ValueTitles: titles,
 		Selects:     items[:selectsCount],
 		Others:      items[selectsCount:],
 	}
 }
 
-// PickOutbound implements the BalancingStrategy.
+// PickOutbound implements the routing.BalancingStrategy.
 // It picks an outbound from least load tags, according to the health check results
 func (s *LeastLoadStrategy) PickOutbound(candidates []string) string {
 	s.HealthPing.access.Lock()
@@ -188,9 +188,9 @@ func (s *LeastLoadStrategy) getSettings() []string {
 		}
 		sb.WriteString(time.Duration(b).String())
 	}
-	settings = append(settings, fmt.Sprintf(`leastload, expected: %d, baselines: %s`, s.settings.Expected, sb))
+	settings = append(settings, fmt.Sprintf("leastload, expected: %d, baselines: %s", s.settings.Expected, sb))
 	settings = append(settings, fmt.Sprintf(
-		`health ping, interval: %s, rounds: %d, timeout: %s, destination: %s`,
+		"health ping, interval: %s, rounds: %d, timeout: %s, destination: %s",
 		s.HealthPing.Settings.Interval,
 		s.HealthPing.Settings.Rounds,
 		s.HealthPing.Settings.Timeout,

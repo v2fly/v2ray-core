@@ -3,35 +3,34 @@ package routing
 // HealthChecker is the interface for health checkers
 type HealthChecker interface {
 	// StartScheduler starts the check scheduler
-	StartScheduler(hs func() ([]string, error))
+	StartScheduler(selector func() ([]string, error))
 	// StopScheduler stops the check scheduler
 	StopScheduler()
 	// Check start the health checking for given tags.
 	Check(tags []string, distributed bool) error
 }
 
-// OutboundInfo holds information of an outbound, like health stats
+// OutboundInfo holds information of an outbound
 type OutboundInfo struct {
-	Tag    string
-	Values []string
+	Tag    string   // Tag of the outbound
+	Values []string // Information of the outbound, which can be different between strategies, like health ping RTT
 }
 
-// StrategyInfo hold strategy running infomations, like
-// selected and other handlers, which contains RTT etc.
+// StrategyInfo holds strategy running infomation, like selected handlers and others
 type StrategyInfo struct {
-	Settings    []string
-	ValueTitles []string
-	Selects     []*OutboundInfo
-	Others      []*OutboundInfo
+	Settings    []string        // Strategy settings
+	ValueTitles []string        // Value titles of OutboundInfo.Values
+	Selects     []*OutboundInfo // Selects of the strategy
+	Others      []*OutboundInfo // Other outbounds
 }
 
-// BalancerInfo represents a health stats of a balancers
+// BalancerInfo holds information of a balancer
 type BalancerInfo struct {
-	Tag      string
-	Strategy *StrategyInfo
+	Tag      string        // Tag of the balancer
+	Strategy *StrategyInfo // Strategy and its running information
 }
 
-// RouterChecker is a router able to perform health check and stats for outbound hanlders.
+// RouterChecker represents a router that is able to perform checks for its balancers, and get statistics.
 type RouterChecker interface {
 	// CheckHanlders performs a health check for specified outbound hanlders.
 	// Set distributed to make it not check all tags at same time, checks

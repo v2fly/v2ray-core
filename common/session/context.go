@@ -91,7 +91,7 @@ func ContextWithHandler(ctx context.Context, handler *Handler) context.Context {
 	return context.WithValue(ctx, handlerSessionKey, handler)
 }
 
-// HandlerFromContext returns handler config in this context, or "" if not
+// HandlerFromContext returns handler config in this context, or nil if not
 func HandlerFromContext(ctx context.Context) *Handler {
 	if handler, ok := ctx.Value(handlerSessionKey).(*Handler); ok {
 		return handler

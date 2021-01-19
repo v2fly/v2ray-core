@@ -7,7 +7,7 @@ import (
 	"v2ray.com/core/features/routing"
 )
 
-// CheckHanlders implements routing.HealthChecker.
+// CheckHanlders implements routing.RouterChecker.
 func (r *Router) CheckHanlders(tags []string, distributed bool) error {
 	errs := make([]error, 0)
 	for _, b := range r.balancers {
@@ -32,22 +32,16 @@ func (r *Router) CheckHanlders(tags []string, distributed bool) error {
 }
 
 func getCheckTags(tags, all []string) []string {
-	if len(tags) == 0 {
-		return nil
-	}
 	ts := make([]string, 0)
-	for _, t1 := range tags {
-		for _, t2 := range all {
-			if t1 == t2 {
-				ts = append(ts, t1)
-				break
-			}
+	for _, t := range tags {
+		if findSliceIndex(all, t) >= 0 && findSliceIndex(ts, t) < 0 {
+			ts = append(ts, t)
 		}
 	}
 	return ts
 }
 
-// CheckBalancers implements routing.HealthChecker.
+// CheckBalancers implements routing.RouterChecker.
 func (r *Router) CheckBalancers(tags []string, distributed bool) error {
 	errs := make([]error, 0)
 	for _, b := range r.balancers {
@@ -81,7 +75,7 @@ func getCollectError(errs []error) error {
 	return errors.New(sb.String())
 }
 
-// GetBalancersInfo implements routing.HealthChecker.
+// GetBalancersInfo implements routing.RouterChecker.
 func (r *Router) GetBalancersInfo(tags []string) (resp []*routing.BalancerInfo, err error) {
 	resp = make([]*routing.BalancerInfo, 0)
 	for t, b := range r.balancers {
@@ -94,7 +88,7 @@ func (r *Router) GetBalancersInfo(tags []string) (resp []*routing.BalancerInfo, 
 		}
 		stat := &routing.BalancerInfo{
 			Tag:      t,
-			Strategy: b.strategy.GetInfo(all),
+			Strategy: b.strategy.GetInformation(all),
 		}
 		resp = append(resp, stat)
 	}
@@ -102,9 +96,6 @@ func (r *Router) GetBalancersInfo(tags []string) (resp []*routing.BalancerInfo, 
 }
 
 func findSliceIndex(slice []string, find string) int {
-	if len(slice) == 0 {
-		return -1
-	}
 	index := -1
 	for i, v := range slice {
 		if find == v {

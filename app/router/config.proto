@@ -140,8 +140,8 @@ message StrategyLeastLoadConfig {
   HealthPingConfig health_check = 1;
   // RTT baselines for selecting, int64 values of time.Duration
   repeated int64 Baselines = 2;
-	// expected nodes count to select
-	int32 Expected = 3;
+  // expected nodes count to select
+  int32 Expected = 3;
 }
 
 message HealthPingConfig {

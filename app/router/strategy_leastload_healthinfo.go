@@ -13,9 +13,9 @@ type healthExt struct {
 	rtt time.Duration
 }
 
-// getHealthRTT is the shared health info maker
+// getHealthPingInfo is the shared health info maker
 // for HealthPing based strategies, like leastload
-func getHealthRTT(tags []string, results map[string]*HealthPingResult) []*routing.OutboundInfo {
+func getHealthPingInfo(tags []string, results map[string]*HealthPingResult) ([]string, []*routing.OutboundInfo) {
 	failed := []string{"failed"}
 	notTested := []string{"not tested"}
 	items := make([]*healthExt, 0)
@@ -55,5 +55,5 @@ func getHealthRTT(tags []string, results map[string]*HealthPingResult) []*routin
 	for _, h := range items {
 		hs = append(hs, h.OutboundInfo)
 	}
-	return hs
+	return []string{"RTT"}, hs
 }

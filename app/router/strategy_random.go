@@ -8,8 +8,8 @@ import (
 // RandomStrategy represents a random balancing strategy
 type RandomStrategy struct{}
 
-// GetInfo implements the BalancingStrategy.
-func (s *RandomStrategy) GetInfo(tags []string) *routing.StrategyInfo {
+// GetInformation implements the routing.BalancingStrategy.
+func (s *RandomStrategy) GetInformation(tags []string) *routing.StrategyInfo {
 	items := make([]*routing.OutboundInfo, 0)
 	for _, tag := range tags {
 		items = append(items, &routing.OutboundInfo{Tag: tag})
@@ -22,8 +22,7 @@ func (s *RandomStrategy) GetInfo(tags []string) *routing.StrategyInfo {
 	}
 }
 
-// PickOutbound implements the BalancingStrategy.
-// It picks an outbound from all tags (or alive tags if health check enabled) randomly
+// PickOutbound implements the routing.BalancingStrategy.
 func (s *RandomStrategy) PickOutbound(candidates []string) string {
 	count := len(candidates)
 	if count == 0 {

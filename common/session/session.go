@@ -77,9 +77,9 @@ type Sockopt struct {
 	Mark int32
 }
 
-// Handler is the metadata of an Handler.
+// Handler is the handler setting for dispatching.
 type Handler struct {
-	// Tag outbound handler.
+	// Tag of outbound handler.
 	Tag string
 }
 
