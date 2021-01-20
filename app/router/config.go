@@ -69,7 +69,7 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 	conds := NewConditionChan()
 
 	if len(rr.Domain) > 0 {
-		matcher, err := NewDomainMatcher(rr.Domain)
+		matcher, err := NewACAutomatonDomainMatcher(rr.Domain)
 		if err != nil {
 			return nil, newError("failed to build domain condition").Base(err)
 		}
