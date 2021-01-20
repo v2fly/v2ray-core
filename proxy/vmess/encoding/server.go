@@ -118,6 +118,7 @@ func NewServerSession(validator *vmess.TimedUserValidator, sessionHistory *Sessi
 	}
 }
 
+// SetAEADForced sets isAEADForced for a ServerSession.
 func (s *ServerSession) SetAEADForced(isAEADForced bool) {
 	s.isAEADForced = isAEADForced
 }
