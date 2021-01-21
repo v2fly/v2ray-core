@@ -12,7 +12,7 @@ import (
 
 var cmdHealthInfo = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api bi [--server=127.0.0.1:8080] [balancerTag]...",
+	UsageLine:   "{{.Exec}} api bi [--server=127.0.0.1:8080] [balancer]...",
 	Short:       "balancer information",
 	Long: `
 Get information of specified balancers, including health, strategy 
@@ -29,6 +29,10 @@ Arguments:
 
 	-t, -timeout
 		Timeout seconds to call API. Default 3
+
+Example:
+
+    {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 balancer1 balancer2
 `,
 	Run: executeHealthInfo,
 }

@@ -7,7 +7,7 @@ import (
 
 var cmdHealthCheck = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api bc [--server=127.0.0.1:8080] [balancerTag]...",
+	UsageLine:   "{{.Exec}} api bc [--server=127.0.0.1:8080] [balancer]...",
 	Short:       "balancer health check",
 	Long: `
 Perform instant health checks for specific balancers. If no 
@@ -23,6 +23,10 @@ Arguments:
 
 	-t, -timeout
 		Timeout seconds to call API. Default 3
+
+Example:
+
+    {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 balancer1 balancer2
 `,
 	Run: executeHealthCheck,
 }
