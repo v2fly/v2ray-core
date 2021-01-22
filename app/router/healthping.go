@@ -49,6 +49,7 @@ func (h *HealthPing) StartScheduler(selector func() ([]string, error)) {
 			tags, err := selector()
 			if err != nil {
 				newError("error select outbounds for scheduled health check: ", err).AtWarning().WriteToLog()
+				return
 			}
 			h.doCheck(tags, true)
 			h.cleanupResults(tags)
@@ -109,6 +110,7 @@ func (h *HealthPing) doCheck(tags []string, distributed bool) {
 						client.Handler,
 						err,
 					)).AtWarning().WriteToLog()
+					delay = -1
 				}
 				ch <- delay
 			})

@@ -2,8 +2,6 @@ package router
 
 import (
 	"context"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -46,36 +44,28 @@ func (s *pingClient) newHTTPClient() *http.Client {
 	return &http.Client{
 		Transport: tr,
 		Timeout:   s.Timeout,
+		// don't follow redirect
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
-}
-
-func (s *pingClient) doRequest() (int, []byte, error) {
-	if s.httpClient == nil {
-		s.httpClient = s.newHTTPClient()
-	}
-	req, err := http.NewRequest("GET", s.Destination, nil)
-	if err != nil {
-		return -1, nil, err
-	}
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return -1, nil, err
-	}
-	defer resp.Body.Close()
-
-	b, _ := ioutil.ReadAll(resp.Body)
-	return resp.StatusCode, b, nil
 }
 
 // MeasureDelay returns the delay time of the request to dest
 func (s *pingClient) MeasureDelay() (time.Duration, error) {
-	start := time.Now()
-	code, _, err := s.doRequest()
+	if s.httpClient == nil {
+		s.httpClient = s.newHTTPClient()
+	}
+	req, err := http.NewRequest(http.MethodHead, s.Destination, nil)
 	if err != nil {
 		return -1, err
 	}
-	if code > 399 {
-		return -1, fmt.Errorf("status incorrect (>= 400): %d", code)
+	start := time.Now()
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return -1, err
 	}
+	// don't wait for body
+	resp.Body.Close()
 	return time.Since(start), nil
 }
