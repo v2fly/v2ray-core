@@ -86,8 +86,14 @@ func (h *HealthPing) doCheck(tags []string, distributed bool) {
 	channels := make(map[string]chan time.Duration)
 	rtts := make(map[string][]time.Duration)
 
+	rounds := h.Settings.Rounds
+	if !distributed {
+		// if not distributed, multiple rounds has no practical meaning,
+		// forced to use 1
+		rounds = 1
+	}
 	for _, tag := range tags {
-		ch := make(chan time.Duration, h.Settings.Rounds)
+		ch := make(chan time.Duration, rounds)
 		channels[tag] = ch
 		client := &pingClient{
 			Dispatcher:  h.dispatcher,
@@ -95,7 +101,7 @@ func (h *HealthPing) doCheck(tags []string, distributed bool) {
 			Destination: h.Settings.Destination,
 			Timeout:     h.Settings.Timeout,
 		}
-		for i := 0; i < h.Settings.Rounds; i++ {
+		for i := 0; i < rounds; i++ {
 			delay := time.Duration(0)
 			if distributed {
 				delay = time.Duration(dice.Roll(int(h.Settings.Interval)))
@@ -117,7 +123,7 @@ func (h *HealthPing) doCheck(tags []string, distributed bool) {
 		}
 	}
 	for tag, ch := range channels {
-		for i := 0; i < h.Settings.Rounds; i++ {
+		for i := 0; i < rounds; i++ {
 			rtt := <-ch
 			// newError("ping rtt of '", tag, "'=", rtt).AtDebug().WriteToLog()
 			rtts[tag] = append(rtts[tag], rtt)
