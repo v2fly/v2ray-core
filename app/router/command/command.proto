@@ -61,28 +61,28 @@ message TestRouteRequest {
 }
 
 message GetBalancersRequest {
-  repeated string BalancerTags = 1;
+  repeated string balancerTags = 1;
 }
 
 message OutboundMsg {
-  string Tag = 1;
-  repeated string Values = 2;
+  string tag = 1;
+  repeated string values = 2;
 }
 
 message BalancerMsg {
-  string Tag = 1;
-  repeated string StrategySettings = 2;
-  repeated string Titles = 4;
-  repeated OutboundMsg Selects = 5;
-  repeated OutboundMsg Others = 6;
+  string tag = 1;
+  repeated string strategySettings = 2;
+  repeated string titles = 4;
+  repeated OutboundMsg selects = 5;
+  repeated OutboundMsg others = 6;
 }
 
 message GetBalancersResponse {
-  repeated BalancerMsg Balancers = 1;
+  repeated BalancerMsg balancers = 1;
 }
 
 message CheckBalancersRequest {
-  repeated string BalancerTags = 1;
+  repeated string balancerTags = 1;
 }
 
 message CheckBalancersResponse {}

@@ -137,23 +137,25 @@ message BalancingRule {
 }
 
 message StrategyLeastLoadConfig {
-  HealthPingConfig health_check = 1;
+  HealthPingConfig healthCheck = 1;
   // RTT baselines for selecting, int64 values of time.Duration
-  repeated int64 Baselines = 2;
+  repeated int64 baselines = 2;
   // expected nodes count to select
-  int32 Expected = 3;
+  int32 expected = 3;
+  // max acceptable rtt, filter away high delay nodes. defalut 0
+  int64 maxRTT = 4;
 }
 
 message HealthPingConfig {
   // destination url, need 204 for success return
   // default http://www.google.com/gen_204
-  string Destination = 1;
+  string destination = 1;
   // health check interval, int64 values of time.Duration
-  int64 Interval = 2;
-  // SamplingCount is the amount of recent ping results which are kept for calculation
-  int32 SamplingCount = 4;
+  int64 interval = 2;
+  // samplingcount is the amount of recent ping results which are kept for calculation
+  int32 samplingCount = 4;
   // ping timeout, int64 values of time.Duration
-  int64 Timeout = 5;
+  int64 timeout = 5;
 }
 
 message Config {

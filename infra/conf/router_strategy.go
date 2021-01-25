@@ -35,6 +35,8 @@ type strategyLeastLoadConfig struct {
 	Baselines []int `json:"baselines"`
 	// expected nodes count to select
 	Expected int32 `json:"expected"`
+	// max acceptable rtt (ms), filter away high delay nodes. defalut 0
+	MaxRTT int `json:"maxRTT"`
 }
 
 // Build implements Buildable.
@@ -53,6 +55,10 @@ func (v *strategyLeastLoadConfig) Build() (proto.Message, error) {
 	config.Expected = v.Expected
 	if config.Expected < 0 {
 		config.Expected = 0
+	}
+	config.MaxRTT = int64(time.Duration(v.MaxRTT) * time.Millisecond)
+	if config.MaxRTT < 0 {
+		config.MaxRTT = 0
 	}
 	config.Baselines = make([]int64, 0)
 	for _, b := range v.Baselines {

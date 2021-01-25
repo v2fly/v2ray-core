@@ -11,10 +11,6 @@ import (
 	"v2ray.com/core/features/routing"
 )
 
-// FIXME: balancer unavailable if: top nodes are failed now,
-// but next check not yet performed. "top but failed" nodes
-// will always be selected.
-
 // LeastLoadStrategy represents a random balancing strategy
 type LeastLoadStrategy struct {
 	*HealthPing
@@ -35,25 +31,16 @@ type node struct {
 func (s *LeastLoadStrategy) GetInformation(tags []string) *routing.StrategyInfo {
 	s.HealthPing.access.Lock()
 	defer s.HealthPing.access.Unlock()
-	qualified, others := s.getNodes(tags, s.HealthPing.Results, 0)
-	// others is no sorted by getNodes()
-	leastloadSort(others)
+	qualified, others := s.getNodes(tags, s.HealthPing.Results, time.Duration(s.settings.MaxRTT))
 	selects := s.selectLeastLoad(qualified)
-	selectsCount := len(selects)
-	// append qualified but not selected outbounds to selected tags
-	for i := selectsCount; i < len(qualified); i++ {
-		selects = append(selects, qualified[i])
-	}
-	// append other outbounds to selected tags
-	for _, n := range others {
-		selects = append(selects, n)
-	}
-	titles, items := getHealthPingInfo(selects, s.HealthPing.Results)
+	// append qualified but not selected outbounds to others
+	others = append(others, qualified[len(selects):]...)
+	leastloadSort(others)
 	return &routing.StrategyInfo{
 		Settings:    s.getSettings(),
-		ValueTitles: titles,
-		Selects:     items[:selectsCount],
-		Others:      items[selectsCount:],
+		ValueTitles: []string{"RTT STD.", "RTT Avg."},
+		Selects:     getHealthPingInfo(selects, s.HealthPing.Results),
+		Others:      getHealthPingInfo(others, s.HealthPing.Results),
 	}
 }
 
@@ -62,7 +49,7 @@ func (s *LeastLoadStrategy) GetInformation(tags []string) *routing.StrategyInfo 
 func (s *LeastLoadStrategy) PickOutbound(candidates []string) string {
 	s.HealthPing.access.Lock()
 	defer s.HealthPing.access.Unlock()
-	qualified, _ := s.getNodes(candidates, s.HealthPing.Results, 0)
+	qualified, _ := s.getNodes(candidates, s.HealthPing.Results, time.Duration(s.settings.MaxRTT))
 	selects := s.selectLeastLoad(qualified)
 	count := len(selects)
 	if count == 0 {
@@ -185,7 +172,16 @@ func (s *LeastLoadStrategy) getSettings() []string {
 		}
 		sb.WriteString(time.Duration(b).String())
 	}
-	settings = append(settings, fmt.Sprintf("leastload, expected: %d, baselines: %s", s.settings.Expected, sb))
+	baselines := sb.String()
+	if baselines == "" {
+		baselines = "none"
+	}
+	if s.settings.MaxRTT == 0 {
+		settings = append(settings, fmt.Sprintf("leastload, expected: %d, baselines: %s", s.settings.Expected, baselines))
+	} else {
+		maxRTT := time.Duration(s.settings.MaxRTT)
+		settings = append(settings, fmt.Sprintf("leastload, expected: %d, baselines: %s, max rtt: %s", s.settings.Expected, baselines, maxRTT))
+	}
 	settings = append(settings, fmt.Sprintf(
 		"health ping, interval: %s, sampling: %d, timeout: %s, destination: %s",
 		s.HealthPing.Settings.Interval,
@@ -196,7 +192,7 @@ func (s *LeastLoadStrategy) getSettings() []string {
 	return settings
 }
 
-func getHealthPingInfo(nodes []*node, results map[string]*HealthPingResult) ([]string, []*routing.OutboundInfo) {
+func getHealthPingInfo(nodes []*node, results map[string]*HealthPingResult) []*routing.OutboundInfo {
 	failed := []string{"failed", "-"}
 	notTested := []string{"not tested", "-"}
 	items := make([]*routing.OutboundInfo, 0)
@@ -215,7 +211,7 @@ func getHealthPingInfo(nodes []*node, results map[string]*HealthPingResult) ([]s
 		}
 		items = append(items, item)
 	}
-	return []string{"RTT STD.", "RTT Avg."}, items
+	return items
 }
 
 func leastloadSort(nodes []*node) {
