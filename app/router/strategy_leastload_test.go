@@ -12,10 +12,10 @@ func TestSelectLeastExpected(t *testing.T) {
 		},
 	}
 	nodes := []*node{
-		{Tag: "a", AverageRTT: 100},
-		{Tag: "b", AverageRTT: 200},
-		{Tag: "c", AverageRTT: 300},
-		{Tag: "d", AverageRTT: 350},
+		{Tag: "a", RTTDeviation: 100},
+		{Tag: "b", RTTDeviation: 200},
+		{Tag: "c", RTTDeviation: 300},
+		{Tag: "d", RTTDeviation: 350},
 	}
 	expected := 3
 	ns := strategy.selectLeastLoad(nodes)
@@ -31,8 +31,8 @@ func TestSelectLeastExpected2(t *testing.T) {
 		},
 	}
 	nodes := []*node{
-		{Tag: "a", AverageRTT: 100},
-		{Tag: "b", AverageRTT: 200},
+		{Tag: "a", RTTDeviation: 100},
+		{Tag: "b", RTTDeviation: 200},
 	}
 	expected := 2
 	ns := strategy.selectLeastLoad(nodes)
@@ -48,11 +48,11 @@ func TestSelectLeastExpectedAndBaselines(t *testing.T) {
 		},
 	}
 	nodes := []*node{
-		{Tag: "a", AverageRTT: 100},
-		{Tag: "b", AverageRTT: 200},
-		{Tag: "c", AverageRTT: 250},
-		{Tag: "d", AverageRTT: 300},
-		{Tag: "e", AverageRTT: 310},
+		{Tag: "a", RTTDeviation: 100},
+		{Tag: "b", RTTDeviation: 200},
+		{Tag: "c", RTTDeviation: 250},
+		{Tag: "d", RTTDeviation: 300},
+		{Tag: "e", RTTDeviation: 310},
 	}
 	expected := 4
 	ns := strategy.selectLeastLoad(nodes)
@@ -68,11 +68,11 @@ func TestSelectLeastExpectedAndBaselines2(t *testing.T) {
 		},
 	}
 	nodes := []*node{
-		{Tag: "a", AverageRTT: 500},
-		{Tag: "b", AverageRTT: 600},
-		{Tag: "c", AverageRTT: 700},
-		{Tag: "d", AverageRTT: 800},
-		{Tag: "e", AverageRTT: 900},
+		{Tag: "a", RTTDeviation: 500},
+		{Tag: "b", RTTDeviation: 600},
+		{Tag: "c", RTTDeviation: 700},
+		{Tag: "d", RTTDeviation: 800},
+		{Tag: "e", RTTDeviation: 900},
 	}
 	expected := 3
 	ns := strategy.selectLeastLoad(nodes)
@@ -88,9 +88,9 @@ func TestSelectLeastLoadBaselines(t *testing.T) {
 		},
 	}
 	nodes := []*node{
-		{Tag: "a", AverageRTT: 100},
-		{Tag: "b", AverageRTT: 200},
-		{Tag: "c", AverageRTT: 300},
+		{Tag: "a", RTTDeviation: 100},
+		{Tag: "b", RTTDeviation: 200},
+		{Tag: "c", RTTDeviation: 300},
 	}
 	expected := 2
 	ns := strategy.selectLeastLoad(nodes)
@@ -106,8 +106,8 @@ func TestSelectLeastLoadBaselinesNoQualified(t *testing.T) {
 		},
 	}
 	nodes := []*node{
-		{Tag: "a", AverageRTT: 800},
-		{Tag: "b", AverageRTT: 1000},
+		{Tag: "a", RTTDeviation: 800},
+		{Tag: "b", RTTDeviation: 1000},
 	}
 	expected := 0
 	ns := strategy.selectLeastLoad(nodes)

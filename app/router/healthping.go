@@ -2,6 +2,7 @@ package router
 
 import (
 	"fmt"
+	"math"
 	sync "sync"
 	"time"
 
@@ -19,12 +20,12 @@ type HealthPingSettings struct {
 
 // HealthPingResult holds result for health Checker
 type HealthPingResult struct {
-	Count      int
-	FailCount  int
-	AverageRTT time.Duration
-	MaxRTT     time.Duration
-	MinRTT     time.Duration
-	RTTs       []time.Duration
+	Count        int
+	FailCount    int
+	RTTDeviation time.Duration
+	RTTAverage   time.Duration
+	RTTMax       time.Duration
+	RTTMin       time.Duration
 }
 
 // HealthPing is the health checker for balancers
@@ -143,34 +144,41 @@ func (h *HealthPing) doCheck(tags []string, distributed bool) {
 		sum := time.Duration(0)
 		result.Count = len(r)
 		result.FailCount = 0
-		result.MaxRTT = 0
-		result.MinRTT = r[0]
+		result.RTTMax = 0
+		result.RTTMin = r[0]
 		for _, rtt := range r {
 			if rtt < 0 {
 				result.FailCount++
 				continue
 			}
 			sum += rtt
-			if result.MaxRTT < rtt {
-				result.MaxRTT = rtt
+			if result.RTTMax < rtt {
+				result.RTTMax = rtt
 			}
-			if result.MinRTT > rtt {
-				result.MinRTT = rtt
+			if result.RTTMin > rtt {
+				result.RTTMin = rtt
 			}
 		}
-		if result.MinRTT < 0 {
+		if result.RTTMin < 0 {
 			// all failed
-			result.MinRTT = 0
+			result.RTTMin = 0
 		}
-		result.AverageRTT = time.Duration(int(sum) / result.Count)
+		result.RTTAverage = time.Duration(int(sum) / result.Count)
+
+		variance := float64(0)
+		for _, rtt := range r {
+			variance += math.Pow(float64(rtt-result.RTTAverage), 2)
+		}
+		std := math.Sqrt(variance / float64(result.Count-result.FailCount))
+		result.RTTDeviation = time.Duration(std)
 		newError(fmt.Sprintf(
 			"check '%s': %d of %d success, rtt min/avg/max = %s/%s/%s",
 			tag,
 			result.Count-result.FailCount,
 			result.Count,
-			result.MinRTT,
-			result.AverageRTT,
-			result.MaxRTT,
+			result.RTTMin,
+			result.RTTAverage,
+			result.RTTMax,
 		)).AtInfo().WriteToLog()
 	}
 }

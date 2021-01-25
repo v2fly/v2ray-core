@@ -2,6 +2,7 @@ package router
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 	"time"
@@ -25,23 +26,41 @@ type LeastLoadStrategy struct {
 // we don't use HealthCheckResult directly because
 // it may change by health checker during routing
 type node struct {
-	Tag        string
-	AverageRTT time.Duration
+	Tag          string
+	RTTAverage   time.Duration
+	RTTDeviation time.Duration
 }
 
 // GetInformation implements the routing.BalancingStrategy.
 func (s *LeastLoadStrategy) GetInformation(tags []string) *routing.StrategyInfo {
 	s.HealthPing.access.Lock()
 	defer s.HealthPing.access.Unlock()
-	selects := s.selectOutbounds(tags, s.HealthPing.Results)
-	selectsCount := len(selects)
-	// append other outbounds to selected tags
-	for _, t := range tags {
-		if findSliceIndex(selects, t) < 0 {
-			selects = append(selects, t)
+
+	var (
+		selects      []*node
+		selectsCount int
+	)
+	if s.HealthPing.Results == nil {
+		// be consistent with PickOutbound(), select all if not checked
+		_, selects = s.getNodes(tags, nil, 0)
+		selectsCount = len(tags)
+	} else {
+		qualified, others := s.getNodes(tags, s.HealthPing.Results, 0)
+		// others is no sorted by getNodes()
+		sort.Slice(others, func(i, j int) bool {
+			return leastloadSortLess(others[i], others[j])
+		})
+		selects = s.selectLeastLoad(qualified)
+		selectsCount = len(selects)
+		// append qualified but not selected outbounds to selected tags
+		for i := selectsCount; i < len(qualified); i++ {
+			selects = append(selects, qualified[i])
+		}
+		// append other outbounds to selected tags
+		for _, n := range others {
+			selects = append(selects, n)
 		}
 	}
-
 	titles, items := getHealthPingInfo(selects, s.HealthPing.Results)
 	return &routing.StrategyInfo{
 		Settings:    s.getSettings(),
@@ -56,40 +75,22 @@ func (s *LeastLoadStrategy) GetInformation(tags []string) *routing.StrategyInfo 
 func (s *LeastLoadStrategy) PickOutbound(candidates []string) string {
 	s.HealthPing.access.Lock()
 	defer s.HealthPing.access.Unlock()
-	tags := s.selectOutbounds(candidates, s.HealthPing.Results)
-	count := len(tags)
+	count := len(candidates)
 	if count == 0 {
 		// goes to fallbackTag
 		return ""
 	}
-	return tags[dice.Roll(count)]
-}
-
-// selectOutbounds selects outbounds before the final pick
-func (s *LeastLoadStrategy) selectOutbounds(candidates []string, results map[string]*HealthPingResult) []string {
-	if results == nil {
-		return candidates
+	if s.HealthPing.Results == nil {
+		return candidates[dice.Roll(count)]
 	}
-
-	cntAll := len(candidates)
-	if cntAll == 0 {
-		return nil
+	nodes, _ := s.getNodes(candidates, s.HealthPing.Results, 0)
+	selects := s.selectLeastLoad(nodes)
+	count = len(selects)
+	if count == 0 {
+		// goes to fallbackTag
+		return ""
 	}
-
-	alive := s.getNodesAlive(candidates, results)
-	cntAlive := len(alive)
-	if cntAlive == 0 {
-		newError("least load: no outbound alive").AtInfo().WriteToLog()
-		return nil
-	}
-
-	selects := make([]string, 0)
-	nodes := s.selectLeastLoad(alive)
-
-	for _, node := range nodes {
-		selects = append(selects, node.Tag)
-	}
-	return selects
+	return selects[dice.Roll(count)].Tag
 }
 
 // selectLeastLoad selects nodes according to Baselines and Expected Count.
@@ -109,6 +110,10 @@ func (s *LeastLoadStrategy) selectOutbounds(candidates []string, results map[str
 // go through all baselines until find selects, if not, select none. Used in combination
 // with 'balancer.fallbackTag', it means: selects qualified nodes or use the fallback.
 func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
+	if len(nodes) == 0 {
+		newError("least load: no qualified outbound").AtInfo().WriteToLog()
+		return nil
+	}
 	expected := int(s.settings.Expected)
 	availableCount := len(nodes)
 	if expected > availableCount {
@@ -127,7 +132,7 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 	for _, b := range s.settings.Baselines {
 		baseline := time.Duration(b)
 		for i := 0; i < availableCount; i++ {
-			if nodes[i].AverageRTT > baseline {
+			if nodes[i].RTTDeviation > baseline {
 				break
 			}
 			count = i + 1
@@ -144,39 +149,43 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 	return nodes[:count]
 }
 
-func (s *LeastLoadStrategy) getNodesAlive(candidates []string, results map[string]*HealthPingResult) []*node {
-	nodes := make([]*node, 0)
+func (s *LeastLoadStrategy) getNodes(candidates []string, results map[string]*HealthPingResult, maxRTT time.Duration) ([]*node, []*node) {
+	qualified := make([]*node, 0)
+	others := make([]*node, 0)
 	for _, tag := range candidates {
 		r, ok := results[tag]
-		if !ok {
-			// not checked, marked with AverageRTT=0
-			nodes = append(nodes, &node{
-				Tag:        tag,
-				AverageRTT: 0,
+		// make sure sort less order: "normal" < "not tested" < "failed"
+		switch {
+		case !ok:
+			others = append(others, &node{
+				Tag:          tag,
+				RTTDeviation: math.MaxInt64,
+				RTTAverage:   math.MaxInt64 - 1,
 			})
-			continue
+		case r.FailCount > 0:
+			others = append(others, &node{
+				Tag:          tag,
+				RTTDeviation: math.MaxInt64,
+				RTTAverage:   math.MaxInt64,
+			})
+		case maxRTT > 0 && r.RTTAverage > maxRTT:
+			others = append(others, &node{
+				Tag:          tag,
+				RTTDeviation: r.RTTDeviation,
+				RTTAverage:   r.RTTAverage,
+			})
+		default:
+			qualified = append(qualified, &node{
+				Tag:          tag,
+				RTTDeviation: r.RTTDeviation,
+				RTTAverage:   r.RTTAverage,
+			})
 		}
-		if r.FailCount > 0 {
-			continue
-		}
-		nodes = append(nodes, &node{
-			Tag:        tag,
-			AverageRTT: r.AverageRTT,
-		})
 	}
-	sort.Slice(nodes, func(i, j int) bool {
-		iRTT := nodes[i].AverageRTT
-		jRTT := nodes[j].AverageRTT
-		// 0 rtt means not checked, sort in the tail
-		if iRTT == 0 && jRTT > 0 {
-			return false
-		}
-		if iRTT > 0 && jRTT == 0 {
-			return true
-		}
-		return iRTT < jRTT
+	sort.Slice(qualified, func(i, j int) bool {
+		return leastloadSortLess(qualified[i], qualified[j])
 	})
-	return nodes
+	return qualified, others
 }
 
 func (s *LeastLoadStrategy) getSettings() []string {
@@ -196,6 +205,36 @@ func (s *LeastLoadStrategy) getSettings() []string {
 		s.HealthPing.Settings.Timeout,
 		s.HealthPing.Settings.Destination,
 	))
-
 	return settings
+}
+
+func getHealthPingInfo(nodes []*node, results map[string]*HealthPingResult) ([]string, []*routing.OutboundInfo) {
+	failed := []string{"failed", "-"}
+	notTested := []string{"not tested", "-"}
+	items := make([]*routing.OutboundInfo, 0)
+	for _, node := range nodes {
+		item := &routing.OutboundInfo{
+			Tag: node.Tag,
+		}
+		result, ok := results[node.Tag]
+		switch {
+		case !ok || result.Count == 0:
+			item.Values = notTested
+		case result.FailCount > 0:
+			item.Values = failed
+		default:
+			item.Values = []string{result.RTTDeviation.String(), result.RTTAverage.String()}
+		}
+		items = append(items, item)
+	}
+	return []string{"RTT STD.", "RTT Avg."}, items
+}
+
+func leastloadSortLess(i, j *node) bool {
+	left := i.RTTDeviation
+	right := j.RTTDeviation
+	if left == right {
+		return i.RTTAverage < j.RTTAverage
+	}
+	return left < right
 }
