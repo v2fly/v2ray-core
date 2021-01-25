@@ -69,8 +69,8 @@ func (h *HealthPing) Check(tags []string) error {
 }
 
 type rtt struct {
-	tag   string
-	value time.Duration
+	handler string
+	value   time.Duration
 }
 
 // doCheck performs the 'rounds' amount checks in given 'duration'. You should make
@@ -107,15 +107,15 @@ func (h *HealthPing) doCheck(tags []string, duration time.Duration, rounds int) 
 					delay = math.MaxInt64
 				}
 				ch <- &rtt{
-					tag:   client.Handler,
-					value: delay,
+					handler: client.Handler,
+					value:   delay,
 				}
 			})
 		}
 	}
 	for i := 0; i < count; i++ {
 		rtt := <-ch
-		h.putResult(rtt.tag, rtt.value)
+		h.putResult(rtt.handler, rtt.value)
 	}
 }
 
