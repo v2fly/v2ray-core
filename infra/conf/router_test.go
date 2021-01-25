@@ -78,7 +78,7 @@ func TestRouterConfig(t *testing.T) {
 							"settings": {
 								"healthCheck": {
 									"interval": 300,
-									"rounds": 2,
+									"sampling": 2,
 									"timeout": 3,
 									"destination": "dest"
 								},
@@ -105,10 +105,10 @@ func TestRouterConfig(t *testing.T) {
 						Strategy:         router.BalancingRule_LeastLoad,
 						StrategySettings: serial.ToTypedMessage(&router.StrategyLeastLoadConfig{
 							HealthCheck: &router.HealthPingConfig{
-								Interval:    int64(time.Duration(300) * time.Second),
-								Rounds:      2,
-								Timeout:     int64(time.Duration(3) * time.Second),
-								Destination: "dest",
+								Interval:      int64(time.Duration(300) * time.Second),
+								SamplingCount: 2,
+								Timeout:       int64(time.Duration(3) * time.Second),
+								Destination:   "dest",
 							},
 							Baselines: []int64{
 								int64(time.Duration(400) * time.Millisecond),

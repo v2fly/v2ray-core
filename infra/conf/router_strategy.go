@@ -44,10 +44,10 @@ func (v *strategyLeastLoadConfig) Build() (proto.Message, error) {
 	}
 	if v.HealthCheck != nil {
 		config.HealthCheck = &router.HealthPingConfig{
-			Destination: v.HealthCheck.Destination,
-			Interval:    int64(v.HealthCheck.Interval * time.Second),
-			Timeout:     int64(v.HealthCheck.Timeout * time.Second),
-			Rounds:      int32(v.HealthCheck.Rounds),
+			Destination:   v.HealthCheck.Destination,
+			Interval:      int64(v.HealthCheck.Interval * time.Second),
+			Timeout:       int64(v.HealthCheck.Timeout * time.Second),
+			SamplingCount: int32(v.HealthCheck.SamplingCount),
 		}
 	}
 	config.Expected = v.Expected

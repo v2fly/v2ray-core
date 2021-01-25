@@ -116,7 +116,7 @@ func (s *routingServer) CheckBalancers(ctx context.Context, request *CheckBalanc
 		return nil, status.Errorf(codes.Unavailable, "current router is not a health checker")
 	}
 	go func() {
-		err := h.CheckBalancers(request.BalancerTags, false)
+		err := h.CheckBalancers(request.BalancerTags)
 		if err != nil {
 			newError("CheckBalancers error:", err).AtInfo().WriteToLog()
 		}

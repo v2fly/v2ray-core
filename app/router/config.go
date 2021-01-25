@@ -182,23 +182,23 @@ func healthPingFromConfig(config *HealthPingConfig, dispatcher routing.Dispatche
 	settings := &HealthPingSettings{}
 	if config != nil {
 		settings = &HealthPingSettings{
-			Destination: strings.TrimSpace(config.Destination),
-			Interval:    time.Duration(config.Interval),
-			Rounds:      int(config.Rounds),
-			Timeout:     time.Duration(config.Timeout),
+			Destination:   strings.TrimSpace(config.Destination),
+			Interval:      time.Duration(config.Interval),
+			SamplingCount: int(config.SamplingCount),
+			Timeout:       time.Duration(config.Timeout),
 		}
 	}
 	if settings.Destination == "" {
 		settings.Destination = "http://www.google.com/gen_204"
 	}
 	if settings.Interval == 0 {
-		settings.Interval = time.Duration(15) * time.Minute
+		settings.Interval = time.Duration(1) * time.Minute
 	} else if settings.Interval < 10 {
 		newError("health check interval is too small, 10s is applied").AtWarning().WriteToLog()
 		settings.Interval = time.Duration(10) * time.Second
 	}
-	if settings.Rounds <= 0 {
-		settings.Rounds = 1
+	if settings.SamplingCount <= 0 {
+		settings.SamplingCount = 5
 	}
 	if settings.Timeout <= 0 {
 		// results are saved after all health pings finish,

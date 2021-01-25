@@ -8,7 +8,7 @@ import (
 )
 
 // CheckHanlders implements routing.RouterChecker.
-func (r *Router) CheckHanlders(tags []string, distributed bool) error {
+func (r *Router) CheckHanlders(tags []string) error {
 	errs := make([]error, 0)
 	for _, b := range r.balancers {
 		checker, ok := b.strategy.(routing.HealthChecker)
@@ -20,7 +20,7 @@ func (r *Router) CheckHanlders(tags []string, distributed bool) error {
 			return err
 		}
 		ts := getCheckTags(tags, all)
-		err = checker.Check(ts, distributed)
+		err = checker.Check(ts)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -42,7 +42,7 @@ func getCheckTags(tags, all []string) []string {
 }
 
 // CheckBalancers implements routing.RouterChecker.
-func (r *Router) CheckBalancers(tags []string, distributed bool) error {
+func (r *Router) CheckBalancers(tags []string) error {
 	errs := make([]error, 0)
 	for _, b := range r.balancers {
 		checker, ok := b.strategy.(routing.HealthChecker)
@@ -53,7 +53,7 @@ func (r *Router) CheckBalancers(tags []string, distributed bool) error {
 		if err != nil {
 			errs = append(errs, err)
 		}
-		err = checker.Check(tags, distributed)
+		err = checker.Check(tags)
 		if err != nil {
 			errs = append(errs, err)
 		}

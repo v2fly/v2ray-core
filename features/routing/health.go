@@ -7,7 +7,7 @@ type HealthChecker interface {
 	// StopScheduler stops the check scheduler
 	StopScheduler()
 	// Check start the health checking for given tags.
-	Check(tags []string, distributed bool) error
+	Check(tags []string) error
 }
 
 // OutboundInfo holds information of an outbound
@@ -35,12 +35,12 @@ type RouterChecker interface {
 	// CheckHanlders performs a health check for specified outbound hanlders.
 	// Set distributed to make it not check all tags at same time, checks
 	// are distributed randomly in the timeline
-	CheckHanlders(tags []string, distributed bool) error
+	CheckHanlders(tags []string) error
 	// CheckBalancers performs health checks for specified balancers,
 	// if not specified, check them all.
 	// Set distributed to make it not check all tags at same time, checks
 	// are distributed randomly in the timeline
-	CheckBalancers(tags []string, distributed bool) error
+	CheckBalancers(tags []string) error
 	// GetBalancersInfo get health info of specific balancer, if balancer not
 	//  specified, get all
 	GetBalancersInfo(tags []string) ([]*BalancerInfo, error)

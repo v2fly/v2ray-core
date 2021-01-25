@@ -2,6 +2,7 @@ package router
 
 import (
 	"context"
+	"math"
 	"net/http"
 	"time"
 
@@ -58,12 +59,12 @@ func (s *pingClient) MeasureDelay() (time.Duration, error) {
 	}
 	req, err := http.NewRequest(http.MethodHead, s.Destination, nil)
 	if err != nil {
-		return -1, err
+		return math.MaxInt64, err
 	}
 	start := time.Now()
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return -1, err
+		return math.MaxInt64, err
 	}
 	// don't wait for body
 	resp.Body.Close()

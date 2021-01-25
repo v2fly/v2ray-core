@@ -150,8 +150,8 @@ message HealthPingConfig {
   string Destination = 1;
   // health check interval, int64 values of time.Duration
   int64 Interval = 2;
-  // rounds to perform for each outbound, each check
-  int32 Rounds = 4;
+  // SamplingCount is the amount of recent ping results which are kept for calculation
+  int32 SamplingCount = 4;
   // ping timeout, int64 values of time.Duration
   int64 Timeout = 5;
 }
