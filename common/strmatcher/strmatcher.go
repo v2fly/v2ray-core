@@ -61,20 +61,38 @@ type matcherEntry struct {
 type ACAutomatonMatcherGroup struct {
 	count         uint32
 	ac            *ACAutomaton
+	nonSubstrMap  map[string]bool
 	otherMatchers []matcherEntry
 }
 
 func NewACAutomatonMatcherGroup() *ACAutomatonMatcherGroup {
 	var g = new(ACAutomatonMatcherGroup)
 	g.count = 1
-	g.ac = NewACAutomaton()
+	g.nonSubstrMap = map[string]bool{}
 	return g
+}
+
+func (g *ACAutomatonMatcherGroup) AddFullOrDomainPattern(pattern string, t Type) {
+	switch t {
+	case Full:
+		g.nonSubstrMap[pattern] = true
+	case Domain:
+		g.nonSubstrMap[pattern] = true
+		g.nonSubstrMap["."+pattern] = true
+	default:
+		break
+	}
 }
 
 func (g *ACAutomatonMatcherGroup) AddPattern(pattern string, t Type) (uint32, error) {
 	switch t {
-	case Full, Substr, Domain:
+	case Substr:
+		if g.ac == nil {
+			g.ac = NewACAutomaton()
+		}
 		g.ac.Add(pattern, t)
+	case Full, Domain:
+		g.AddFullOrDomainPattern(pattern, t)
 	case Regex:
 		g.count++
 		r, err := regexp.Compile(pattern)
@@ -92,18 +110,34 @@ func (g *ACAutomatonMatcherGroup) AddPattern(pattern string, t Type) (uint32, er
 }
 
 func (g *ACAutomatonMatcherGroup) Build() {
-	g.ac.Build()
+	if g.ac != nil {
+		g.ac.Build()
+	}
 }
 
 // Match implements IndexMatcher.Match.
 func (g *ACAutomatonMatcherGroup) Match(pattern string) []uint32 {
 	result := []uint32{}
-	if g.ac.Match(pattern) {
+	if _, ok := g.nonSubstrMap[pattern]; ok {
 		result = append(result, 1)
+		return result
+	}
+	for i := 0; i < len(pattern); i++ {
+		if pattern[i] == '.' {
+			if _, ok := g.nonSubstrMap[pattern[i:]]; ok {
+				result = append(result, 1)
+				return result
+			}
+		}
+	}
+	if g.ac != nil && g.ac.Match(pattern) {
+		result = append(result, 1)
+		return result
 	}
 	for _, e := range g.otherMatchers {
 		if e.m.Match(pattern) {
 			result = append(result, e.id)
+			return result
 		}
 	}
 	return result
