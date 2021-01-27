@@ -21,7 +21,19 @@ type FakeDNSPostProcessingStage struct {
 }
 
 func (f FakeDNSPostProcessingStage) Process(conf *Config) error {
-	if conf.DNSConfig != nil && conf.DNSConfig.FakeConfig != nil && *conf.DNSConfig.FakeConfig {
+	var fakednsInUse bool
+
+	if conf.DNSConfig != nil {
+		for _, v := range conf.DNSConfig.Servers {
+			if v.Address.Family().IsDomain() {
+				if v.Address.Domain() == "fakedns" {
+					fakednsInUse = true
+				}
+			}
+		}
+	}
+
+	if fakednsInUse {
 		if conf.FakeDNS == nil {
 			// Add a Fake DNS Config if there is none
 			conf.FakeDNS = &FakeDNSConfig{
