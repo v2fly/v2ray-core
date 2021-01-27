@@ -5,7 +5,7 @@ import (
 	"v2ray.com/core/main/commands/base"
 )
 
-var cmdHealthCheck = &base.Command{
+var cmdBalancerCheck = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} api bc [--server=127.0.0.1:8080] [balancer]...",
 	Short:       "balancer health check",
@@ -28,10 +28,10 @@ Example:
 
     {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 balancer1 balancer2
 `,
-	Run: executeHealthCheck,
+	Run: executeBalancerCheck,
 }
 
-func executeHealthCheck(cmd *base.Command, args []string) {
+func executeBalancerCheck(cmd *base.Command, args []string) {
 	setSharedFlags(cmd)
 	cmd.Flag.Parse(args)
 

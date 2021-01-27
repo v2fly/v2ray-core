@@ -10,7 +10,7 @@ import (
 	"v2ray.com/core/main/commands/base"
 )
 
-var cmdHealthInfo = &base.Command{
+var cmdBalancerInfo = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} api bi [--server=127.0.0.1:8080] [balancer]...",
 	Short:       "balancer information",
@@ -34,10 +34,10 @@ Example:
 
     {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 balancer1 balancer2
 `,
-	Run: executeHealthInfo,
+	Run: executeBalancerInfo,
 }
 
-func executeHealthInfo(cmd *base.Command, args []string) {
+func executeBalancerInfo(cmd *base.Command, args []string) {
 	setSharedFlags(cmd)
 	cmd.Flag.Parse(args)
 
@@ -60,23 +60,36 @@ func executeHealthInfo(cmd *base.Command, args []string) {
 
 func showBalancerInfo(b *routerService.BalancerMsg) {
 	sb := new(strings.Builder)
+	// Balancer
 	sb.WriteString(fmt.Sprintf("Balancer: %s\n", b.Tag))
+	// Strategy
 	sb.WriteString("  - Strategy:\n")
 	for _, v := range b.StrategySettings {
 		sb.WriteString(fmt.Sprintf("    %s\n", v))
 	}
-	formats := getColumnFormats(b.Titles)
-	sb.WriteString("  - Selects:\n")
-	writeHealthLine(sb, 0, b.Titles, formats, "Tag")
-	for i, o := range b.Selects {
-		writeHealthLine(sb, i+1, o.Values, formats, o.Tag)
+	// Override
+	if b.Override != nil {
+		sb.WriteString("  - Selecting Override:\n")
+		until := fmt.Sprintf("until: %s", b.Override.Until)
+		writeRow(sb, 0, nil, nil, until)
+		for i, s := range b.Override.Selects {
+			writeRow(sb, i+1, nil, nil, s)
+		}
 	}
+	formats := getColumnFormats(b.Titles)
+	// Selects
+	sb.WriteString("  - Selects:\n")
+	writeRow(sb, 0, b.Titles, formats, "Tag")
+	for i, o := range b.Selects {
+		writeRow(sb, i+1, o.Values, formats, o.Tag)
+	}
+	// Others
 	scnt := len(b.Selects)
 	if len(b.Others) > 0 {
 		sb.WriteString("  - Others:\n")
-		writeHealthLine(sb, 0, b.Titles, formats, "Tag")
+		writeRow(sb, 0, b.Titles, formats, "Tag")
 		for i, o := range b.Others {
-			writeHealthLine(sb, scnt+i+1, o.Values, formats, o.Tag)
+			writeRow(sb, scnt+i+1, o.Values, formats, o.Tag)
 		}
 	}
 	os.Stdout.WriteString(sb.String())
@@ -90,7 +103,7 @@ func getColumnFormats(titles []string) []string {
 	return w
 }
 
-func writeHealthLine(sb *strings.Builder, index int, values, formats []string, tag string) {
+func writeRow(sb *strings.Builder, index int, values, formats []string, tag string) {
 	if index == 0 {
 		// title line
 		sb.WriteString("        ")

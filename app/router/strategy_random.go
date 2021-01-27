@@ -22,8 +22,13 @@ func (s *RandomStrategy) GetInformation(tags []string) *routing.StrategyInfo {
 	}
 }
 
-// PickOutbound implements the routing.BalancingStrategy.
-func (s *RandomStrategy) PickOutbound(candidates []string) string {
+// SelectAndPick implements the routing.BalancingStrategy.
+func (s *RandomStrategy) SelectAndPick(candidates []string) string {
+	return s.Pick(candidates)
+}
+
+// Pick implements the routing.BalancingStrategy.
+func (s *RandomStrategy) Pick(candidates []string) string {
 	count := len(candidates)
 	if count == 0 {
 		// goes to fallbackTag

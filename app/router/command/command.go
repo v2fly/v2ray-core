@@ -87,10 +87,18 @@ func (s *routingServer) GetBalancers(ctx context.Context, request *GetBalancersR
 		Balancers: make([]*BalancerMsg, 0),
 	}
 	for _, result := range results {
+		var override *OverrideSelectingMsg
+		if result.Override != nil {
+			override = &OverrideSelectingMsg{
+				Until:   result.Override.Until.Local().String(),
+				Selects: result.Override.Selects,
+			}
+		}
 		stat := &BalancerMsg{
 			Tag:              result.Tag,
 			StrategySettings: result.Strategy.Settings,
 			Titles:           result.Strategy.ValueTitles,
+			Override:         override,
 			Selects:          make([]*OutboundMsg, 0),
 			Others:           make([]*OutboundMsg, 0),
 		}
@@ -122,6 +130,23 @@ func (s *routingServer) CheckBalancers(ctx context.Context, request *CheckBalanc
 		}
 	}()
 	return &CheckBalancersResponse{}, nil
+}
+
+func (s *routingServer) OverrideSelecting(ctx context.Context, request *OverrideSelectingRequest) (*OverrideSelectingResponse, error) {
+	bo, ok := s.router.(routing.BalancingOverrider)
+	if !ok {
+		return nil, status.Errorf(codes.Unavailable, "current router doesn't support balancing override")
+	}
+	err := bo.OverrideSelecting(
+		request.BalancerTag,
+		request.Selectors,
+		time.Duration(request.Validity),
+		request.PauseChecker,
+	)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+	return &OverrideSelectingResponse{}, nil
 }
 
 func (s *routingServer) mustEmbedUnimplementedRoutingServiceServer() {}

@@ -1,5 +1,7 @@
 package routing
 
+import "time"
+
 // HealthChecker is the interface for health checkers
 type HealthChecker interface {
 	// StartScheduler starts the check scheduler
@@ -24,9 +26,16 @@ type StrategyInfo struct {
 	Others      []*OutboundInfo // Other outbounds
 }
 
+// BalancingOverrideInfo holds balancing overridden information
+type BalancingOverrideInfo struct {
+	Until   time.Time
+	Selects []string
+}
+
 // BalancerInfo holds information of a balancer
 type BalancerInfo struct {
-	Tag      string        // Tag of the balancer
+	Tag      string // Tag of the balancer
+	Override *BalancingOverrideInfo
 	Strategy *StrategyInfo // Strategy and its running information
 }
 

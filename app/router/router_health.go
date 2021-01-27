@@ -86,8 +86,16 @@ func (r *Router) GetBalancersInfo(tags []string) (resp []*routing.BalancerInfo, 
 		if err != nil {
 			return nil, err
 		}
+		var override *routing.BalancingOverrideInfo
+		if b.checkOverride() {
+			override = &routing.BalancingOverrideInfo{
+				Until:   b.override.until,
+				Selects: b.override.selects,
+			}
+		}
 		stat := &routing.BalancerInfo{
 			Tag:      t,
+			Override: override,
 			Strategy: b.strategy.GetInformation(all),
 		}
 		resp = append(resp, stat)

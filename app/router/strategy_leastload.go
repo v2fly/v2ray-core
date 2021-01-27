@@ -64,9 +64,8 @@ func (s *LeastLoadStrategy) GetInformation(tags []string) *routing.StrategyInfo 
 	}
 }
 
-// PickOutbound implements the routing.BalancingStrategy.
-// It picks an outbound from least load tags, according to the health check results
-func (s *LeastLoadStrategy) PickOutbound(candidates []string) string {
+// SelectAndPick implements the routing.BalancingStrategy.
+func (s *LeastLoadStrategy) SelectAndPick(candidates []string) string {
 	s.HealthPing.access.Lock()
 	defer s.HealthPing.access.Unlock()
 	qualified, _ := s.getNodes(candidates, s.HealthPing.Results, time.Duration(s.settings.MaxRTT))
@@ -77,6 +76,16 @@ func (s *LeastLoadStrategy) PickOutbound(candidates []string) string {
 		return ""
 	}
 	return selects[dice.Roll(count)].Tag
+}
+
+// Pick implements the routing.BalancingStrategy.
+func (s *LeastLoadStrategy) Pick(candidates []string) string {
+	count := len(candidates)
+	if count == 0 {
+		// goes to fallbackTag
+		return ""
+	}
+	return candidates[dice.Roll(count)]
 }
 
 // selectLeastLoad selects nodes according to Baselines and Expected Count.

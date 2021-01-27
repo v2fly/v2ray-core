@@ -21,6 +21,7 @@ type RoutingServiceClient interface {
 	TestRoute(ctx context.Context, in *TestRouteRequest, opts ...grpc.CallOption) (*RoutingContext, error)
 	GetBalancers(ctx context.Context, in *GetBalancersRequest, opts ...grpc.CallOption) (*GetBalancersResponse, error)
 	CheckBalancers(ctx context.Context, in *CheckBalancersRequest, opts ...grpc.CallOption) (*CheckBalancersResponse, error)
+	OverrideSelecting(ctx context.Context, in *OverrideSelectingRequest, opts ...grpc.CallOption) (*OverrideSelectingResponse, error)
 }
 
 type routingServiceClient struct {
@@ -90,6 +91,15 @@ func (c *routingServiceClient) CheckBalancers(ctx context.Context, in *CheckBala
 	return out, nil
 }
 
+func (c *routingServiceClient) OverrideSelecting(ctx context.Context, in *OverrideSelectingRequest, opts ...grpc.CallOption) (*OverrideSelectingResponse, error) {
+	out := new(OverrideSelectingResponse)
+	err := c.cc.Invoke(ctx, "/v2ray.core.app.router.command.RoutingService/OverrideSelecting", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoutingServiceServer is the server API for RoutingService service.
 // All implementations must embed UnimplementedRoutingServiceServer
 // for forward compatibility
@@ -98,6 +108,7 @@ type RoutingServiceServer interface {
 	TestRoute(context.Context, *TestRouteRequest) (*RoutingContext, error)
 	GetBalancers(context.Context, *GetBalancersRequest) (*GetBalancersResponse, error)
 	CheckBalancers(context.Context, *CheckBalancersRequest) (*CheckBalancersResponse, error)
+	OverrideSelecting(context.Context, *OverrideSelectingRequest) (*OverrideSelectingResponse, error)
 	mustEmbedUnimplementedRoutingServiceServer()
 }
 
@@ -116,6 +127,9 @@ func (UnimplementedRoutingServiceServer) GetBalancers(context.Context, *GetBalan
 }
 func (UnimplementedRoutingServiceServer) CheckBalancers(context.Context, *CheckBalancersRequest) (*CheckBalancersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckBalancers not implemented")
+}
+func (UnimplementedRoutingServiceServer) OverrideSelecting(context.Context, *OverrideSelectingRequest) (*OverrideSelectingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OverrideSelecting not implemented")
 }
 func (UnimplementedRoutingServiceServer) mustEmbedUnimplementedRoutingServiceServer() {}
 
@@ -205,6 +219,24 @@ func _RoutingService_CheckBalancers_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoutingService_OverrideSelecting_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OverrideSelectingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoutingServiceServer).OverrideSelecting(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v2ray.core.app.router.command.RoutingService/OverrideSelecting",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoutingServiceServer).OverrideSelecting(ctx, req.(*OverrideSelectingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _RoutingService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "v2ray.core.app.router.command.RoutingService",
 	HandlerType: (*RoutingServiceServer)(nil),
@@ -220,6 +252,10 @@ var _RoutingService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckBalancers",
 			Handler:    _RoutingService_CheckBalancers_Handler,
+		},
+		{
+			MethodName: "OverrideSelecting",
+			Handler:    _RoutingService_OverrideSelecting_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
