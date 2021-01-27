@@ -1,9 +1,6 @@
 package router
 
 import (
-	"strings"
-	"time"
-
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/features/outbound"
 	"v2ray.com/core/features/routing"
@@ -161,10 +158,7 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 		if !ok {
 			return nil, newError("not a StrategyLeastLoadConfig").AtError()
 		}
-		strategy = &LeastLoadStrategy{
-			settings:   s,
-			HealthPing: healthPingFromConfig(s.HealthCheck, dispatcher),
-		}
+		strategy = NewLeastLoadStrategy(s, dispatcher)
 	case BalancingRule_Random:
 		fallthrough
 	default:
@@ -176,38 +170,4 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 		fallbackTag: br.FallbackTag,
 		strategy:    strategy,
 	}, nil
-}
-
-func healthPingFromConfig(config *HealthPingConfig, dispatcher routing.Dispatcher) *HealthPing {
-	settings := &HealthPingSettings{}
-	if config != nil {
-		settings = &HealthPingSettings{
-			Destination:   strings.TrimSpace(config.Destination),
-			Interval:      time.Duration(config.Interval),
-			SamplingCount: int(config.SamplingCount),
-			Timeout:       time.Duration(config.Timeout),
-		}
-	}
-	if settings.Destination == "" {
-		settings.Destination = "http://www.google.com/gen_204"
-	}
-	if settings.Interval == 0 {
-		settings.Interval = time.Duration(1) * time.Minute
-	} else if settings.Interval < 10 {
-		newError("health check interval is too small, 10s is applied").AtWarning().WriteToLog()
-		settings.Interval = time.Duration(10) * time.Second
-	}
-	if settings.SamplingCount <= 0 {
-		settings.SamplingCount = 5
-	}
-	if settings.Timeout <= 0 {
-		// results are saved after all health pings finish,
-		// a larger timeout could possibly makes checks run longer
-		settings.Timeout = time.Duration(5) * time.Second
-	}
-	return &HealthPing{
-		dispatcher: dispatcher,
-		Settings:   settings,
-		Results:    nil,
-	}
 }

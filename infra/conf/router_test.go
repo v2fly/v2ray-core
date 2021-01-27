@@ -82,6 +82,13 @@ func TestRouterConfig(t *testing.T) {
 									"timeout": 3,
 									"destination": "dest"
 								},
+								"costs": [
+									{
+										"regexp": true,
+										"match": "\\d+(\\.\\d+)",
+										"value": 5
+									}
+								],
 								"baselines": [400, 600],
 								"expected": 6,
 								"maxRTT": 1000
@@ -110,6 +117,13 @@ func TestRouterConfig(t *testing.T) {
 								SamplingCount: 2,
 								Timeout:       int64(time.Duration(3) * time.Second),
 								Destination:   "dest",
+							},
+							Costs: []*router.StrategyWeight{
+								{
+									Regexp: true,
+									Match:  "\\d+(\\.\\d+)",
+									Value:  5,
+								},
 							},
 							Baselines: []int64{
 								int64(time.Duration(400) * time.Millisecond),

@@ -65,31 +65,44 @@ func showBalancerInfo(b *routerService.BalancerMsg) {
 	for _, v := range b.StrategySettings {
 		sb.WriteString(fmt.Sprintf("    %s\n", v))
 	}
+	formats := getColumnFormats(b.Titles)
 	sb.WriteString("  - Selects:\n")
-	writeHealthLine(sb, 0, b.Titles, "Tag")
+	writeHealthLine(sb, 0, b.Titles, formats, "Tag")
 	for i, o := range b.Selects {
-		writeHealthLine(sb, i+1, o.Values, o.Tag)
+		writeHealthLine(sb, i+1, o.Values, formats, o.Tag)
 	}
 	scnt := len(b.Selects)
 	if len(b.Others) > 0 {
 		sb.WriteString("  - Others:\n")
-		writeHealthLine(sb, 0, b.Titles, "Tag")
+		writeHealthLine(sb, 0, b.Titles, formats, "Tag")
 		for i, o := range b.Others {
-			writeHealthLine(sb, scnt+i+1, o.Values, o.Tag)
+			writeHealthLine(sb, scnt+i+1, o.Values, formats, o.Tag)
 		}
 	}
 	os.Stdout.WriteString(sb.String())
 }
 
-func writeHealthLine(sb *strings.Builder, index int, values []string, tag string) {
+func getColumnFormats(titles []string) []string {
+	w := make([]string, len(titles))
+	for i, t := range titles {
+		w[i] = fmt.Sprintf("%%-%ds ", len(t))
+	}
+	return w
+}
+
+func writeHealthLine(sb *strings.Builder, index int, values, formats []string, tag string) {
 	if index == 0 {
 		// title line
 		sb.WriteString("        ")
 	} else {
 		sb.WriteString(fmt.Sprintf("    %-4d", index))
 	}
-	for _, v := range values {
-		sb.WriteString(fmt.Sprintf("%-14s", v))
+	for i, v := range values {
+		format := "%-14s"
+		if i < len(formats) {
+			format = formats[i]
+		}
+		sb.WriteString(fmt.Sprintf(format, v))
 	}
 	sb.WriteString(tag)
 	sb.WriteByte('\n')

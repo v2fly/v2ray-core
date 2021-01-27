@@ -3,6 +3,7 @@ package router
 import (
 	"fmt"
 	"math"
+	"strings"
 	sync "sync"
 	"time"
 
@@ -26,6 +27,41 @@ type HealthPing struct {
 
 	Settings *HealthPingSettings
 	Results  map[string]*HealthPingResult
+}
+
+// NewHealthPing creates a new HealthPing with settings
+func NewHealthPing(config *HealthPingConfig, dispatcher routing.Dispatcher) *HealthPing {
+	settings := &HealthPingSettings{}
+	if config != nil {
+		settings = &HealthPingSettings{
+			Destination:   strings.TrimSpace(config.Destination),
+			Interval:      time.Duration(config.Interval),
+			SamplingCount: int(config.SamplingCount),
+			Timeout:       time.Duration(config.Timeout),
+		}
+	}
+	if settings.Destination == "" {
+		settings.Destination = "http://www.google.com/gen_204"
+	}
+	if settings.Interval == 0 {
+		settings.Interval = time.Duration(2) * time.Minute
+	} else if settings.Interval < 10 {
+		newError("health check interval is too small, 10s is applied").AtWarning().WriteToLog()
+		settings.Interval = time.Duration(10) * time.Second
+	}
+	if settings.SamplingCount <= 0 {
+		settings.SamplingCount = 10
+	}
+	if settings.Timeout <= 0 {
+		// results are saved after all health pings finish,
+		// a larger timeout could possibly makes checks run longer
+		settings.Timeout = time.Duration(5) * time.Second
+	}
+	return &HealthPing{
+		dispatcher: dispatcher,
+		Settings:   settings,
+		Results:    nil,
+	}
 }
 
 // StartScheduler implements the HealthChecker
@@ -127,7 +163,12 @@ func (h *HealthPing) putResult(tag string, rtt time.Duration) {
 	}
 	r, ok := h.Results[tag]
 	if !ok {
-		r = newHealthPingResult(h.Settings.SamplingCount)
+		// validity is 2 times to sampling period, since the check are
+		// distributed in the time line randomly, in extreme cases,
+		// previous checks are distributed on the left, and latters
+		// on the right
+		validity := h.Settings.Interval * time.Duration(h.Settings.SamplingCount) * 2
+		r = NewHealthPingResult(h.Settings.SamplingCount, validity)
 		h.Results[tag] = r
 	}
 	r.Put(rtt)

@@ -136,14 +136,22 @@ message BalancingRule {
   string fallback_tag = 5;
 }
 
+message StrategyWeight {
+  bool regexp = 1;
+  string match = 2;
+  float value =3;
+}
+
 message StrategyLeastLoadConfig {
   HealthPingConfig healthCheck = 1;
+  // weight settings
+  repeated StrategyWeight costs = 2;
   // RTT baselines for selecting, int64 values of time.Duration
-  repeated int64 baselines = 2;
+  repeated int64 baselines = 3;
   // expected nodes count to select
-  int32 expected = 3;
+  int32 expected = 4;
   // max acceptable rtt, filter away high delay nodes. defalut 0
-  int64 maxRTT = 4;
+  int64 maxRTT = 5;
 }
 
 message HealthPingConfig {

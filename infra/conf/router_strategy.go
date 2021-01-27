@@ -31,6 +31,8 @@ type strategyLeastLoadConfig struct {
 	// 'time.Duration' but plain number, sice they were parsed
 	// directly from json
 	HealthCheck *router.HealthPingSettings `json:"healthCheck"`
+	// weight settings
+	Costs []*router.StrategyWeight `json:"costs"`
 	// ping rtt baselines (ms)
 	Baselines []int `json:"baselines"`
 	// expected nodes count to select
@@ -52,6 +54,7 @@ func (v *strategyLeastLoadConfig) Build() (proto.Message, error) {
 			SamplingCount: int32(v.HealthCheck.SamplingCount),
 		}
 	}
+	config.Costs = v.Costs
 	config.Expected = v.Expected
 	if config.Expected < 0 {
 		config.Expected = 0
