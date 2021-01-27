@@ -21,9 +21,8 @@ func (f FakeDNSServer) Name() string {
 
 func (f *FakeDNSServer) QueryIP(ctx context.Context, domain string, clientIP net.IP, option IPOption) ([]net.IP, error) {
 	if f.fakeDNSEngine == nil {
-		var fakeDNSEngine dns.FakeDNSEngine
 		if err := core.RequireFeatures(ctx, func(fdns dns.FakeDNSEngine) {
-			fakeDNSEngine = fdns
+			f.fakeDNSEngine = fdns
 		}); err != nil {
 			return nil, newError("Unable to locate a fake DNS Engine").Base(err).AtError()
 		}

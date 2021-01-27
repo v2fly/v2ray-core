@@ -190,7 +190,7 @@ func (s *DNS) lookupIPInternal(domain string, option IPOption) ([]net.IP, error)
 
 	// Name servers lookup
 	errs := []error{}
-	ctx := session.ContextWithInbound(context.Background(), &session.Inbound{Tag: s.tag})
+	ctx := session.ContextWithInbound(s.ctx, &session.Inbound{Tag: s.tag})
 	for _, client := range s.sortClients(domain) {
 		ips, err := client.QueryIP(ctx, domain, option)
 		if len(ips) > 0 {
