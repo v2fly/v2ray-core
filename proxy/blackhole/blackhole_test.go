@@ -12,7 +12,7 @@ import (
 	"v2ray.com/core/transport/pipe"
 )
 
-func TestBlackholeHTTPResponse(t *testing.T) {
+func TestBlackHoleHTTPResponse(t *testing.T) {
 	handler, err := blackhole.New(context.Background(), &blackhole.Config{
 		Response: serial.ToTypedMessage(&blackhole.HTTPResponse{}),
 	})
@@ -20,12 +20,12 @@ func TestBlackholeHTTPResponse(t *testing.T) {
 
 	reader, writer := pipe.New(pipe.WithoutSizeLimit())
 
+	var readerError = make(chan error)
 	var mb buf.MultiBuffer
-	var rerr error
 	go func() {
 		b, e := reader.ReadMultiBuffer()
 		mb = b
-		rerr = e
+		readerError <- e
 	}()
 
 	link := transport.Link{
@@ -33,7 +33,7 @@ func TestBlackholeHTTPResponse(t *testing.T) {
 		Writer: writer,
 	}
 	common.Must(handler.Process(context.Background(), &link, nil))
-	common.Must(rerr)
+	common.Must(<-readerError)
 	if mb.IsEmpty() {
 		t.Error("expect http response, but nothing")
 	}

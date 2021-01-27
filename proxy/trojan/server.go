@@ -207,7 +207,9 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 
 func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReader, clientWriter *PacketWriter, dispatcher routing.Dispatcher) error {
 	udpServer := udp.NewDispatcher(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
-		common.Must(clientWriter.WriteMultiBufferWithMetadata(buf.MultiBuffer{packet.Payload}, packet.Source))
+		if err := clientWriter.WriteMultiBufferWithMetadata(buf.MultiBuffer{packet.Payload}, packet.Source); err != nil {
+			newError("failed to write response").Base(err).AtWarning().WriteToLog(session.ExportIDToError(ctx))
+		}
 	})
 
 	inbound := session.InboundFromContext(ctx)
