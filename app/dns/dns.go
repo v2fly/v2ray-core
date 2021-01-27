@@ -26,7 +26,7 @@ type DNS struct {
 	tag     string
 	hosts   *StaticHosts
 	clients []*Client
-
+	ctx           context.Context
 	domainMatcher strmatcher.IndexMatcher
 	matcherInfos  []DomainMatcherInfo
 }
@@ -113,6 +113,7 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 		tag:           tag,
 		hosts:         hosts,
 		clients:       clients,
+		ctx:           ctx,
 		domainMatcher: domainMatcher,
 		matcherInfos:  matcherInfos,
 	}, nil

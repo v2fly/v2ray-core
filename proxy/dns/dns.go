@@ -215,16 +215,11 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 
 	var ttl uint32 = 600
 
-	ips, err = h.client.LookupFakeIP(domain)
-	if ips == nil {
-		switch qType {
-		case dnsmessage.TypeA:
-			ips, err = h.ipv4Lookup.LookupIPv4(domain)
-		case dnsmessage.TypeAAAA:
-			ips, err = h.ipv6Lookup.LookupIPv6(domain)
-		}
-	} else {
-		ttl = 5
+	switch qType {
+	case dnsmessage.TypeA:
+		ips, err = h.ipv4Lookup.LookupIPv4(domain)
+	case dnsmessage.TypeAAAA:
+		ips, err = h.ipv6Lookup.LookupIPv6(domain)
 	}
 
 	rcode := dns.RCodeFromError(err)
