@@ -38,6 +38,12 @@ func NewHealthPingResult(cap int, validity time.Duration) *HealthPingRTTS {
 
 // Get gets statistics of the HealthPingRTTS
 func (h *HealthPingRTTS) Get() *HealthPingStats {
+	return h.getStatistics()
+}
+
+// GetWithCache get statistics and write cache for next call
+// Make sure use Mutex.Lock() before calling it
+func (h *HealthPingRTTS) GetWithCache() *HealthPingStats {
 	lastPutAt := h.rtts[h.idx].time
 	now := time.Now()
 	if h.stats == nil || h.lastUpdateAt.Before(lastPutAt) || h.findOutdated(now) >= 0 {
