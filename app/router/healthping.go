@@ -151,7 +151,7 @@ func (h *HealthPing) doCheck(tags []string, duration time.Duration, rounds int) 
 					newError("network is down").AtWarning().WriteToLog()
 					ch <- &rtt{
 						handler: handler,
-						value:   0, // 0: not tested
+						value:   0,
 					}
 					return
 				}
@@ -170,7 +170,10 @@ func (h *HealthPing) doCheck(tags []string, duration time.Duration, rounds int) 
 	}
 	for i := 0; i < count; i++ {
 		rtt := <-ch
-		h.putResult(rtt.handler, rtt.value)
+		if rtt.value > 0 {
+			// should not put results when network is down
+			h.putResult(rtt.handler, rtt.value)
+		}
 	}
 }
 
