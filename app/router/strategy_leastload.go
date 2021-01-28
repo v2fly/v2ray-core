@@ -188,6 +188,12 @@ func (s *LeastLoadStrategy) getNodes(candidates []string, results map[string]*He
 			unqualified = append(unqualified, node)
 		case float64(stats.FailCount)/float64(stats.Count) > float64(s.settings.Tolerance):
 			node.applied = rttFailed
+			if stats.Count-stats.FailCount == 0 {
+				// no good, put them after has-good nodes
+				node.RTTDeviationCost = rttFailed
+				node.RTTDeviation = rttFailed
+				node.RTTAverage = rttFailed
+			}
 			failed = append(failed, node)
 		default:
 			node.applied = node.RTTDeviationCost
@@ -256,11 +262,11 @@ func (s *LeastLoadStrategy) getNodesInfo(nodes []*node) ([]string, []*routing.Ou
 		cost := fmt.Sprintf("%.2f", s.costs.Get(node.Tag))
 		switch node.applied {
 		case rttFailed:
-			status = "X"
+			status = "x"
 		case rttUntested:
 			status = "?"
 		case rttUnqualified:
-			status = "R"
+			status = ">"
 		default:
 			status = "OK"
 		}
@@ -287,7 +293,7 @@ func (s *LeastLoadStrategy) getNodesInfo(nodes []*node) ([]string, []*routing.Ou
 }
 
 func durationString(d time.Duration) string {
-	if d <= 0 {
+	if d <= 0 || d > time.Hour {
 		return "-"
 	}
 	return d.String()
