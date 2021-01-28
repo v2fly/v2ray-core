@@ -144,7 +144,7 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 	return nodes[:count]
 }
 
-func (s *LeastLoadStrategy) getNodes(candidates []string, results map[string]*HealthPingResult, maxRTT time.Duration) ([]*node, []*node) {
+func (s *LeastLoadStrategy) getNodes(candidates []string, results map[string]*HealthPingRTTS, maxRTT time.Duration) ([]*node, []*node) {
 	qualified := make([]*node, 0)
 	unqualified := make([]*node, 0)
 	failed := make([]*node, 0)
@@ -152,6 +152,16 @@ func (s *LeastLoadStrategy) getNodes(candidates []string, results map[string]*He
 	others := make([]*node, 0)
 	for _, tag := range candidates {
 		r, ok := results[tag]
+		if !ok {
+			untested = append(untested, &node{
+				Tag:              tag,
+				RTTDeviationCost: math.MaxInt64 - 1,
+				RTTDeviation:     math.MaxInt64 - 1,
+				RTTAverage:       math.MaxInt64 - 1,
+			})
+			continue
+		}
+		stats := r.Get()
 		switch {
 		case !ok:
 			untested = append(untested, &node{
@@ -160,32 +170,32 @@ func (s *LeastLoadStrategy) getNodes(candidates []string, results map[string]*He
 				RTTDeviation:     math.MaxInt64 - 1,
 				RTTAverage:       math.MaxInt64 - 1,
 			})
-		case r.FailCount > 0:
+		case stats.FailCount > 0:
 			failed = append(failed, &node{
 				Tag:              tag,
 				RTTDeviationCost: math.MaxInt64,
 				RTTDeviation:     math.MaxInt64,
 				RTTAverage:       math.MaxInt64,
-				Count:            r.Count,
-				Fail:             r.FailCount,
+				Count:            stats.Count,
+				Fail:             stats.FailCount,
 			})
-		case maxRTT > 0 && r.RTTAverage > maxRTT:
+		case maxRTT > 0 && stats.RTTAverage > maxRTT:
 			unqualified = append(unqualified, &node{
 				Tag:              tag,
-				RTTDeviationCost: time.Duration(s.costs.Apply(tag, float64(r.RTTDeviation))),
-				RTTDeviation:     r.RTTDeviation,
-				RTTAverage:       r.RTTAverage,
-				Count:            r.Count,
-				Fail:             r.FailCount,
+				RTTDeviationCost: time.Duration(s.costs.Apply(tag, float64(stats.RTTDeviation))),
+				RTTDeviation:     stats.RTTDeviation,
+				RTTAverage:       stats.RTTAverage,
+				Count:            stats.Count,
+				Fail:             stats.FailCount,
 			})
 		default:
 			qualified = append(qualified, &node{
 				Tag:              tag,
-				RTTDeviationCost: time.Duration(s.costs.Apply(tag, float64(r.RTTDeviation))),
-				RTTDeviation:     r.RTTDeviation,
-				RTTAverage:       r.RTTAverage,
-				Count:            r.Count,
-				Fail:             r.FailCount,
+				RTTDeviationCost: time.Duration(s.costs.Apply(tag, float64(stats.RTTDeviation))),
+				RTTDeviation:     stats.RTTDeviation,
+				RTTAverage:       stats.RTTAverage,
+				Count:            stats.Count,
+				Fail:             stats.FailCount,
 			})
 		}
 	}

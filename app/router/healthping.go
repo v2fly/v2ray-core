@@ -26,7 +26,7 @@ type HealthPing struct {
 	dispatcher routing.Dispatcher
 
 	Settings *HealthPingSettings
-	Results  map[string]*HealthPingResult
+	Results  map[string]*HealthPingRTTS
 }
 
 // NewHealthPing creates a new HealthPing with settings
@@ -159,7 +159,7 @@ func (h *HealthPing) putResult(tag string, rtt time.Duration) {
 	h.access.Lock()
 	defer h.access.Unlock()
 	if h.Results == nil {
-		h.Results = make(map[string]*HealthPingResult)
+		h.Results = make(map[string]*HealthPingRTTS)
 	}
 	r, ok := h.Results[tag]
 	if !ok {

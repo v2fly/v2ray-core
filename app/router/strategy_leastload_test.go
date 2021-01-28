@@ -12,10 +12,10 @@ func TestSelectLeastExpected(t *testing.T) {
 		},
 	}
 	nodes := []*node{
-		{Tag: "a", RTTDeviation: 100},
-		{Tag: "b", RTTDeviation: 200},
-		{Tag: "c", RTTDeviation: 300},
-		{Tag: "d", RTTDeviation: 350},
+		{Tag: "a", RTTDeviationCost: 100},
+		{Tag: "b", RTTDeviationCost: 200},
+		{Tag: "c", RTTDeviationCost: 300},
+		{Tag: "d", RTTDeviationCost: 350},
 	}
 	expected := 3
 	ns := strategy.selectLeastLoad(nodes)
@@ -31,8 +31,8 @@ func TestSelectLeastExpected2(t *testing.T) {
 		},
 	}
 	nodes := []*node{
-		{Tag: "a", RTTDeviation: 100},
-		{Tag: "b", RTTDeviation: 200},
+		{Tag: "a", RTTDeviationCost: 100},
+		{Tag: "b", RTTDeviationCost: 200},
 	}
 	expected := 2
 	ns := strategy.selectLeastLoad(nodes)
@@ -48,11 +48,11 @@ func TestSelectLeastExpectedAndBaselines(t *testing.T) {
 		},
 	}
 	nodes := []*node{
-		{Tag: "a", RTTDeviation: 100},
-		{Tag: "b", RTTDeviation: 200},
-		{Tag: "c", RTTDeviation: 250},
-		{Tag: "d", RTTDeviation: 300},
-		{Tag: "e", RTTDeviation: 310},
+		{Tag: "a", RTTDeviationCost: 100},
+		{Tag: "b", RTTDeviationCost: 200},
+		{Tag: "c", RTTDeviationCost: 250},
+		{Tag: "d", RTTDeviationCost: 300},
+		{Tag: "e", RTTDeviationCost: 310},
 	}
 	expected := 4
 	ns := strategy.selectLeastLoad(nodes)
@@ -68,11 +68,11 @@ func TestSelectLeastExpectedAndBaselines2(t *testing.T) {
 		},
 	}
 	nodes := []*node{
-		{Tag: "a", RTTDeviation: 500},
-		{Tag: "b", RTTDeviation: 600},
-		{Tag: "c", RTTDeviation: 700},
-		{Tag: "d", RTTDeviation: 800},
-		{Tag: "e", RTTDeviation: 900},
+		{Tag: "a", RTTDeviationCost: 500},
+		{Tag: "b", RTTDeviationCost: 600},
+		{Tag: "c", RTTDeviationCost: 700},
+		{Tag: "d", RTTDeviationCost: 800},
+		{Tag: "e", RTTDeviationCost: 900},
 	}
 	expected := 3
 	ns := strategy.selectLeastLoad(nodes)
@@ -88,9 +88,9 @@ func TestSelectLeastLoadBaselines(t *testing.T) {
 		},
 	}
 	nodes := []*node{
-		{Tag: "a", RTTDeviation: 100},
-		{Tag: "b", RTTDeviation: 200},
-		{Tag: "c", RTTDeviation: 300},
+		{Tag: "a", RTTDeviationCost: 100},
+		{Tag: "b", RTTDeviationCost: 200},
+		{Tag: "c", RTTDeviationCost: 300},
 	}
 	expected := 2
 	ns := strategy.selectLeastLoad(nodes)
@@ -106,8 +106,8 @@ func TestSelectLeastLoadBaselinesNoQualified(t *testing.T) {
 		},
 	}
 	nodes := []*node{
-		{Tag: "a", RTTDeviation: 800},
-		{Tag: "b", RTTDeviation: 1000},
+		{Tag: "a", RTTDeviationCost: 800},
+		{Tag: "b", RTTDeviationCost: 1000},
 	}
 	expected := 0
 	ns := strategy.selectLeastLoad(nodes)

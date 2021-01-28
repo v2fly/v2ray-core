@@ -5,19 +5,25 @@ import (
 	"time"
 )
 
-// HealthPingResult holds result for health Checker
-type HealthPingResult struct {
+// HealthPingStats is the statistics of HealthPingRTTS
+type HealthPingStats struct {
 	Count        int
 	FailCount    int
 	RTTDeviation time.Duration
 	RTTAverage   time.Duration
 	RTTMax       time.Duration
 	RTTMin       time.Duration
+}
 
+// HealthPingRTTS holds ping rtts for health Checker
+type HealthPingRTTS struct {
 	idx      int
 	cap      int
 	validity time.Duration
 	rtts     []*pingRTT
+
+	lastUpdateAt time.Time
+	stats        *HealthPingStats
 }
 
 type pingRTT struct {
@@ -26,12 +32,23 @@ type pingRTT struct {
 }
 
 // NewHealthPingResult returns a *HealthPingResult with specified capacity
-func NewHealthPingResult(cap int, validity time.Duration) *HealthPingResult {
-	return &HealthPingResult{cap: cap, validity: validity}
+func NewHealthPingResult(cap int, validity time.Duration) *HealthPingRTTS {
+	return &HealthPingRTTS{cap: cap, validity: validity}
+}
+
+// Get gets statistics of the HealthPingRTTS
+func (h *HealthPingRTTS) Get() *HealthPingStats {
+	lastPutAt := h.rtts[h.idx].time
+	now := time.Now()
+	if h.stats == nil || h.lastUpdateAt.Before(lastPutAt) || h.findOutdated(now) >= 0 {
+		h.stats = h.getStatistics()
+		h.lastUpdateAt = now
+	}
+	return h.stats
 }
 
 // Put puts a new rtt to the HealthPingResult
-func (h *HealthPingResult) Put(d time.Duration) {
+func (h *HealthPingRTTS) Put(d time.Duration) {
 	if h.rtts == nil {
 		h.rtts = make([]*pingRTT, h.cap)
 		for i := 0; i < h.cap; i++ {
@@ -39,70 +56,85 @@ func (h *HealthPingResult) Put(d time.Duration) {
 		}
 		h.idx = -1
 	}
-	h.moveIndex()
-	h.rtts[h.idx].time = time.Now()
+	h.idx = h.calcIndex(1)
+	now := time.Now()
+	h.rtts[h.idx].time = now
 	h.rtts[h.idx].value = d
-	h.update()
 }
 
-func (h *HealthPingResult) moveIndex() {
-	h.idx++
-	if h.idx >= h.cap {
-		h.idx %= h.cap
+func (h *HealthPingRTTS) calcIndex(step int) int {
+	idx := h.idx
+	idx += step
+	if idx >= h.cap {
+		idx %= h.cap
 	}
+	return idx
 }
 
-func (h *HealthPingResult) update() {
+func (h *HealthPingRTTS) getStatistics() *HealthPingStats {
+	stats := &HealthPingStats{}
+	stats.FailCount = 0
+	stats.RTTMax = 0
+	stats.RTTMin = time.Duration(math.MaxInt64)
 	sum := time.Duration(0)
-	h.FailCount = 0
-	h.RTTMax = 0
-	h.RTTMin = h.rtts[0].value
 	cnt := 0
+	validRTTs := make([]time.Duration, 0)
 	for _, rtt := range h.rtts {
 		switch {
 		case rtt.value == 0 || time.Since(rtt.time) > h.validity:
 			continue
 		case rtt.value == math.MaxInt64:
-			h.FailCount++
+			stats.FailCount++
 			continue
 		}
 		cnt++
 		sum += rtt.value
-		if h.RTTMax < rtt.value {
-			h.RTTMax = rtt.value
+		validRTTs = append(validRTTs, rtt.value)
+		if stats.RTTMax < rtt.value {
+			stats.RTTMax = rtt.value
 		}
-		if h.RTTMin > rtt.value {
-			h.RTTMin = rtt.value
+		if stats.RTTMin > rtt.value {
+			stats.RTTMin = rtt.value
 		}
 	}
-	if h.RTTMin < 0 {
-		// all failed
-		h.RTTMin = 0
+	stats.Count = cnt + stats.FailCount
+	if cnt == 0 {
+		stats.RTTMin = 0
 	}
-	h.Count = cnt + h.FailCount
-	if h.FailCount > 0 {
-		h.RTTAverage = time.Duration(math.MaxInt64)
-		h.RTTDeviation = time.Duration(math.MaxInt64)
-		return
+	if stats.FailCount > 0 || cnt == 0 {
+		stats.RTTAverage = time.Duration(math.MaxInt64)
+		stats.RTTDeviation = time.Duration(math.MaxInt64)
+		return stats
 	}
-	h.RTTAverage = time.Duration(int(sum) / cnt)
-	variance := float64(0)
-	cnt = 0
-	for _, rtt := range h.rtts {
-		if rtt.value <= 0 {
-			continue
-		}
-		cnt++
-		variance += math.Pow(float64(rtt.value-h.RTTAverage), 2)
-	}
+	stats.RTTAverage = time.Duration(int(sum) / cnt)
 	var std float64
 	if cnt < 2 {
 		// no enough data for standard deviation, we assume it's half of the average rtt
 		// if we don't do this, standard deviation of 1 round tested nodes is 0, will always
 		// selected before 2 or more rounds tested nodes
-		std = float64(h.RTTAverage / 2)
+		std = float64(stats.RTTAverage / 2)
 	} else {
+		variance := float64(0)
+		for _, rtt := range validRTTs {
+			variance += math.Pow(float64(rtt-stats.RTTAverage), 2)
+		}
 		std = math.Sqrt(variance / float64(cnt))
 	}
-	h.RTTDeviation = time.Duration(std)
+	stats.RTTDeviation = time.Duration(std)
+	return stats
+}
+
+func (h *HealthPingRTTS) findOutdated(now time.Time) int {
+	for i := h.cap - 1; i < 2*h.cap; i++ {
+		// from oldest to latest
+		idx := h.calcIndex(i)
+		validity := h.rtts[idx].time.Add(h.validity)
+		if h.lastUpdateAt.After(validity) {
+			return idx
+		}
+		if validity.Before(now) {
+			return idx
+		}
+	}
+	return -1
 }
