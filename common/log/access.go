@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"v2ray.com/core/common/serial"
@@ -27,6 +28,8 @@ type AccessMessage struct {
 	Reason interface{}
 	Email  string
 	Detour string
+	Up int64
+	Down int64
 }
 
 func (m *AccessMessage) String() string {
@@ -52,6 +55,8 @@ func (m *AccessMessage) String() string {
 		builder.WriteString(" email: ")
 		builder.WriteString(m.Email)
 	}
+
+	builder.WriteString(fmt.Sprintf(" up: %d down: %d", m.Up, m.Down))
 
 	return builder.String()
 }

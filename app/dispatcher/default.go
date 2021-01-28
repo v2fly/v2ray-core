@@ -154,12 +154,15 @@ func (d *DefaultDispatcher) getLink(ctx context.Context) (*transport.Link, *tran
 
 	if user != nil && len(user.Email) > 0 {
 		p := d.policy.ForLevel(user.Level)
+		accessMessage := log.AccessMessageFromContext(ctx)
+
 		if p.Stats.UserUplink {
 			name := "user>>>" + user.Email + ">>>traffic>>>uplink"
 			if c, _ := stats.GetOrRegisterCounter(d.stats, name); c != nil {
 				inboundLink.Writer = &SizeStatWriter{
 					Counter: c,
 					Writer:  inboundLink.Writer,
+					Record: &accessMessage.Up,
 				}
 			}
 		}
@@ -169,6 +172,7 @@ func (d *DefaultDispatcher) getLink(ctx context.Context) (*transport.Link, *tran
 				outboundLink.Writer = &SizeStatWriter{
 					Counter: c,
 					Writer:  outboundLink.Writer,
+					Record: &accessMessage.Down,
 				}
 			}
 		}
@@ -285,12 +289,17 @@ func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.
 		return
 	}
 
-	if accessMessage := log.AccessMessageFromContext(ctx); accessMessage != nil {
+	accessMessage := log.AccessMessageFromContext(ctx)
+
+	if accessMessage != nil {
 		if tag := handler.Tag(); tag != "" {
 			accessMessage.Detour = tag
 		}
-		log.Record(accessMessage)
 	}
 
 	handler.Dispatch(ctx, link)
+
+	if accessMessage != nil {
+		log.Record(accessMessage)
+	}
 }
