@@ -143,12 +143,11 @@ func (h *HealthPing) doCheck(tags []string, duration time.Duration, rounds int) 
 					return
 				}
 				// test netowrk connectivity
-				client = newDirectPingClient(
+				tester := newDirectPingClient(
 					h.Settings.Connectivity,
 					h.Settings.Timeout,
 				)
-				_, err2 := client.MeasureDelay()
-				if err2 != nil {
+				if _, err := tester.MeasureDelay(); err != nil {
 					newError("network is down").AtWarning().WriteToLog()
 					ch <- &rtt{
 						handler: handler,
