@@ -251,7 +251,7 @@ func (s *LeastLoadStrategy) getNodesInfo(nodes []*node) ([]string, []*routing.Ou
 	titles := []string{"   ", "RTT STD+C    ", "RTT STD.     ", "RTT Avg.     ", "Hit  ", "Cost "}
 	hasCost := len(s.settings.Costs) > 0
 	if !hasCost {
-		titles = titles[2:4]
+		titles = []string{"   ", "RTT STD.     ", "RTT Avg.     ", "Hit  "}
 	}
 	items := make([]*routing.OutboundInfo, 0)
 	for _, node := range nodes {
@@ -282,9 +282,9 @@ func (s *LeastLoadStrategy) getNodesInfo(nodes []*node) ([]string, []*routing.Ou
 		} else {
 			item.Values = []string{
 				status,
-				fmt.Sprintf("%d/%d", node.Count-node.Fail, node.Count),
 				durationString(node.RTTDeviation),
 				durationString(node.RTTAverage),
+				fmt.Sprintf("%d/%d", node.Count-node.Fail, node.Count),
 			}
 		}
 		items = append(items, item)

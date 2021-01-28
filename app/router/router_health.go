@@ -44,7 +44,10 @@ func getCheckTags(tags, all []string) []string {
 // CheckBalancers implements routing.RouterChecker.
 func (r *Router) CheckBalancers(tags []string) error {
 	errs := make([]error, 0)
-	for _, b := range r.balancers {
+	for t, b := range r.balancers {
+		if len(tags) > 0 && findSliceIndex(tags, t) < 0 {
+			continue
+		}
 		checker, ok := b.strategy.(routing.HealthChecker)
 		if !ok {
 			continue

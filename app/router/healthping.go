@@ -73,21 +73,23 @@ func (h *HealthPing) StartScheduler(selector func() ([]string, error)) {
 	interval := h.Settings.Interval * time.Duration(h.Settings.SamplingCount)
 	ticker := time.NewTicker(interval)
 	h.ticker = ticker
-	for {
-		go func() {
-			tags, err := selector()
-			if err != nil {
-				newError("error select outbounds for scheduled health check: ", err).AtWarning().WriteToLog()
-				return
+	go func() {
+		for {
+			go func() {
+				tags, err := selector()
+				if err != nil {
+					newError("error select outbounds for scheduled health check: ", err).AtWarning().WriteToLog()
+					return
+				}
+				h.doCheck(tags, interval, h.Settings.SamplingCount)
+				h.cleanupResults(tags)
+			}()
+			_, ok := <-ticker.C
+			if !ok {
+				break
 			}
-			h.doCheck(tags, interval, h.Settings.SamplingCount)
-			h.cleanupResults(tags)
-		}()
-		_, ok := <-ticker.C
-		if !ok {
-			break
 		}
-	}
+	}()
 }
 
 // StopScheduler implements the HealthChecker
@@ -142,7 +144,7 @@ func (h *HealthPing) doCheck(tags []string, duration time.Duration, rounds int) 
 					}
 					return
 				}
-				// test netowrk connectivity
+				// test network connectivity
 				tester := newDirectPingClient(
 					h.Settings.Connectivity,
 					h.Settings.Timeout,

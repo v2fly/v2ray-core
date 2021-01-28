@@ -42,15 +42,10 @@ type BalancerInfo struct {
 // RouterChecker represents a router that is able to perform checks for its balancers, and get statistics.
 type RouterChecker interface {
 	// CheckHanlders performs a health check for specified outbound hanlders.
-	// Set distributed to make it not check all tags at same time, checks
-	// are distributed randomly in the timeline
 	CheckHanlders(tags []string) error
 	// CheckBalancers performs health checks for specified balancers,
 	// if not specified, check them all.
-	// Set distributed to make it not check all tags at same time, checks
-	// are distributed randomly in the timeline
 	CheckBalancers(tags []string) error
-	// GetBalancersInfo get health info of specific balancer, if balancer not
-	//  specified, get all
+	// GetBalancersInfo get health info of specific balancer, if balancer not specified, get all
 	GetBalancersInfo(tags []string) ([]*BalancerInfo, error)
 }

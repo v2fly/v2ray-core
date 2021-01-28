@@ -12,7 +12,6 @@ import (
 
 type pingClient struct {
 	destination string
-	timeout     time.Duration
 	httpClient  *http.Client
 }
 
@@ -26,7 +25,7 @@ func newPingClient(destination string, timeout time.Duration, handler string, di
 func newDirectPingClient(destination string, timeout time.Duration) *pingClient {
 	return &pingClient{
 		destination: destination,
-		httpClient:  http.DefaultClient,
+		httpClient:  &http.Client{Timeout: timeout},
 	}
 }
 
