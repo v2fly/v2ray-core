@@ -17,7 +17,7 @@ Override a balancer's selecting in a duration of time.
 > Make sure you have "RoutingService" set in "config.api.services" 
 of server config.
 
-Once the balancer's selecting are overridden:
+Once a balancer's selecting is overridden:
 
 - The selectors of the balancer won't apply.
 - The strategy of the balancer stops selecting qualified nodes 
@@ -42,7 +42,8 @@ Arguments:
 
 Example:
 
-    {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 -b balancer node1 node2
+    {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 -b balancer selector1 selector2
+    {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 -b balancer -r
 `,
 	Run: executeBalancerOverride,
 }
