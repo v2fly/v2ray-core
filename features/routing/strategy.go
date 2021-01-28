@@ -17,6 +17,6 @@ type BalancingStrategy interface {
 // the selecting of its balancers
 type BalancingOverrider interface {
 	// OverrideSelecting overrides the selects of specified balancer, for 'validity'
-	// duration of time. 'stop' tells the balancer if it should stop the check scheduler
-	OverrideSelecting(balancer string, selects []string, validity time.Duration, stop bool) error
+	// duration of time.
+	OverrideSelecting(balancer string, selects []string, validity time.Duration) error
 }

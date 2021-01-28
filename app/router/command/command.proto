@@ -98,7 +98,6 @@ message OverrideSelectingRequest {
   string balancerTag = 1;
   repeated string selectors = 2;
   int64 validity = 3;
-  bool pauseChecker = 4;
 }
 
 message OverrideSelectingResponse {}

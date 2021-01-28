@@ -141,7 +141,6 @@ func (s *routingServer) OverrideSelecting(ctx context.Context, request *Override
 		request.BalancerTag,
 		request.Selectors,
 		time.Duration(request.Validity),
-		request.PauseChecker,
 	)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())

@@ -8,7 +8,6 @@ import (
 type overriddenSettings struct {
 	selects []string
 	until   time.Time
-	pasue   bool
 }
 
 type overridden struct {
@@ -26,17 +25,15 @@ func (o *overridden) Get() *overriddenSettings {
 	return &overriddenSettings{
 		selects: o.settings.selects,
 		until:   o.settings.until,
-		pasue:   o.settings.pasue,
 	}
 }
 
 // Put updates the overridden settings
-func (o *overridden) Put(selects []string, until time.Time, pause bool) {
+func (o *overridden) Put(selects []string, until time.Time) {
 	o.access.Lock()
 	defer o.access.Unlock()
 	o.settings.selects = selects
 	o.settings.until = until
-	o.settings.pasue = pause
 }
 
 // Clear clears the overridden settings
@@ -45,5 +42,4 @@ func (o *overridden) Clear() {
 	defer o.access.Unlock()
 	o.settings.selects = nil
 	o.settings.until = time.Time{}
-	o.settings.pasue = false
 }

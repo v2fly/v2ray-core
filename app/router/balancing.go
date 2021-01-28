@@ -28,7 +28,6 @@ func (b *Balancer) PickOutbound() (string, error) {
 		return "", err
 	}
 	var tag string
-	b.checkScheduler()
 	if o := b.override.Get(); o != nil {
 		tag = b.strategy.Pick(o.selects)
 	} else {
@@ -55,7 +54,7 @@ func (b *Balancer) SelectOutbounds() ([]string, error) {
 	return tags, nil
 }
 
-func (b *Balancer) overrideSelecting(selects []string, validity time.Duration, pause bool) error {
+func (b *Balancer) overrideSelecting(selects []string, validity time.Duration) error {
 	if validity <= 0 {
 		b.override.Clear()
 		return nil
@@ -68,25 +67,12 @@ func (b *Balancer) overrideSelecting(selects []string, validity time.Duration, p
 	if len(tags) == 0 {
 		return newError("no outbound selected")
 	}
-	b.override.Put(tags, time.Now().Add(validity), pause)
+	b.override.Put(tags, time.Now().Add(validity))
 	return nil
 }
 
-func (b *Balancer) checkScheduler() {
-	checker, ok := b.strategy.(routing.HealthChecker)
-	if !ok {
-		return
-	}
-	o := b.override.Get()
-	if o != nil && o.pasue {
-		checker.StopScheduler()
-		return
-	}
-	checker.StartScheduler(b.SelectOutbounds)
-}
-
 // OverrideSelecting implements routing.BalancingOverrider
-func (r *Router) OverrideSelecting(balancer string, selects []string, validity time.Duration, pause bool) error {
+func (r *Router) OverrideSelecting(balancer string, selects []string, validity time.Duration) error {
 	var b *Balancer
 	for tag, bl := range r.balancers {
 		if tag == balancer {
@@ -97,10 +83,9 @@ func (r *Router) OverrideSelecting(balancer string, selects []string, validity t
 	if b == nil {
 		return newError("balancer '", balancer, "' not found")
 	}
-	err := b.overrideSelecting(selects, validity, pause)
+	err := b.overrideSelecting(selects, validity)
 	if err != nil {
 		return err
 	}
-	b.checkScheduler()
 	return nil
 }

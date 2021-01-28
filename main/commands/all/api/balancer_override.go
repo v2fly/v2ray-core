@@ -34,10 +34,6 @@ Arguments:
 	-v, -validity
 		Time minutes of the validity of overridden. Default 60
 
-	-p, -pause
-		Pause the check scheduler (if has) when overridden applies,
-		will resume when overridden ends
-
 	-s, -server 
 		The API server address. Default 127.0.0.1:8080
 
@@ -55,15 +51,12 @@ func executeBalancerOverride(cmd *base.Command, args []string) {
 	var (
 		balancer string
 		validity int64
-		pause    bool
 		remove   bool
 	)
 	cmd.Flag.StringVar(&balancer, "b", "", "")
 	cmd.Flag.StringVar(&balancer, "balancer", "", "")
 	cmd.Flag.Int64Var(&validity, "v", 60, "")
 	cmd.Flag.Int64Var(&validity, "validity", 60, "")
-	cmd.Flag.BoolVar(&pause, "p", false, "")
-	cmd.Flag.BoolVar(&pause, "pause", false, "")
 	cmd.Flag.BoolVar(&remove, "r", false, "")
 	cmd.Flag.BoolVar(&remove, "remove", false, "")
 	setSharedFlags(cmd)
@@ -82,10 +75,9 @@ func executeBalancerOverride(cmd *base.Command, args []string) {
 	}
 	client := routerService.NewRoutingServiceClient(conn)
 	r := &routerService.OverrideSelectingRequest{
-		BalancerTag:  balancer,
-		Selectors:    cmd.Flag.Args(),
-		Validity:     v,
-		PauseChecker: pause,
+		BalancerTag: balancer,
+		Selectors:   cmd.Flag.Args(),
+		Validity:    v,
 	}
 	_, err := client.OverrideSelecting(ctx, r)
 	if err != nil {
