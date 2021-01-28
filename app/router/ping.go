@@ -12,15 +12,26 @@ import (
 )
 
 type pingClient struct {
-	httpClient *http.Client
-
-	Dispatcher  routing.Dispatcher
-	Handler     string
-	Destination string
-	Timeout     time.Duration
+	destination string
+	timeout     time.Duration
+	httpClient  *http.Client
 }
 
-func (s *pingClient) newHTTPClient() *http.Client {
+func newPingClient(destination string, timeout time.Duration, handler string, dispatcher routing.Dispatcher) *pingClient {
+	return &pingClient{
+		destination: destination,
+		httpClient:  newHTTPClient(handler, dispatcher, timeout),
+	}
+}
+
+func newDirectPingClient(destination string, timeout time.Duration) *pingClient {
+	return &pingClient{
+		destination: destination,
+		httpClient:  http.DefaultClient,
+	}
+}
+
+func newHTTPClient(handler string, dispatcher routing.Dispatcher, timeout time.Duration) *http.Client {
 	tr := &http.Transport{
 		DisableKeepAlives: true,
 		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -29,10 +40,10 @@ func (s *pingClient) newHTTPClient() *http.Client {
 				return nil, err
 			}
 			h := &session.Handler{
-				Tag: s.Handler,
+				Tag: handler,
 			}
 			ctx = session.ContextWithHandler(ctx, h)
-			link, err := s.Dispatcher.Dispatch(ctx, dest)
+			link, err := dispatcher.Dispatch(ctx, dest)
 			if err != nil {
 				return nil, err
 			}
@@ -44,7 +55,7 @@ func (s *pingClient) newHTTPClient() *http.Client {
 	}
 	return &http.Client{
 		Transport: tr,
-		Timeout:   s.Timeout,
+		Timeout:   timeout,
 		// don't follow redirect
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -55,9 +66,9 @@ func (s *pingClient) newHTTPClient() *http.Client {
 // MeasureDelay returns the delay time of the request to dest
 func (s *pingClient) MeasureDelay() (time.Duration, error) {
 	if s.httpClient == nil {
-		s.httpClient = s.newHTTPClient()
+		panic("pingClient no initialized")
 	}
-	req, err := http.NewRequest(http.MethodHead, s.Destination, nil)
+	req, err := http.NewRequest(http.MethodHead, s.destination, nil)
 	if err != nil {
 		return math.MaxInt64, err
 	}

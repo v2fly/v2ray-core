@@ -80,7 +80,8 @@ func TestRouterConfig(t *testing.T) {
 									"interval": 300,
 									"sampling": 2,
 									"timeout": 3,
-									"destination": "dest"
+									"destination": "dest",
+									"connectivity": "conn"
 								},
 								"costs": [
 									{
@@ -117,6 +118,7 @@ func TestRouterConfig(t *testing.T) {
 								SamplingCount: 2,
 								Timeout:       int64(time.Duration(3) * time.Second),
 								Destination:   "dest",
+								Connectivity:  "conn",
 							},
 							Costs: []*router.StrategyWeight{
 								{

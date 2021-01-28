@@ -158,8 +158,10 @@ message HealthPingConfig {
   // destination url, need 204 for success return
   // default http://www.google.com/gen_204
   string destination = 1;
+  // connectivity check url
+  string connectivity = 2;
   // health check interval, int64 values of time.Duration
-  int64 interval = 2;
+  int64 interval = 3;
   // samplingcount is the amount of recent ping results which are kept for calculation
   int32 samplingCount = 4;
   // ping timeout, int64 values of time.Duration

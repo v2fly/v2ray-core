@@ -14,6 +14,7 @@ import (
 // HealthPingSettings holds settings for health Checker
 type HealthPingSettings struct {
 	Destination   string        `json:"destination"`
+	Connectivity  string        `json:"connectivity"`
 	Interval      time.Duration `json:"interval"`
 	SamplingCount int           `json:"sampling"`
 	Timeout       time.Duration `json:"timeout"`
@@ -34,6 +35,7 @@ func NewHealthPing(config *HealthPingConfig, dispatcher routing.Dispatcher) *Hea
 	settings := &HealthPingSettings{}
 	if config != nil {
 		settings = &HealthPingSettings{
+			Connectivity:  strings.TrimSpace(config.Connectivity),
 			Destination:   strings.TrimSpace(config.Destination),
 			Interval:      time.Duration(config.Interval),
 			SamplingCount: int(config.SamplingCount),
@@ -119,32 +121,51 @@ func (h *HealthPing) doCheck(tags []string, duration time.Duration, rounds int) 
 	ch := make(chan *rtt, count)
 	// rtts := make(map[string][]time.Duration)
 	for _, tag := range tags {
-		client := &pingClient{
-			Dispatcher:  h.dispatcher,
-			Handler:     tag,
-			Destination: h.Settings.Destination,
-			Timeout:     h.Settings.Timeout,
-		}
+		handler := tag
+		client := newPingClient(
+			h.Settings.Destination,
+			h.Settings.Timeout,
+			handler,
+			h.dispatcher,
+		)
 		for i := 0; i < rounds; i++ {
 			delay := time.Duration(0)
 			if duration > 0 {
 				delay = time.Duration(dice.Roll(int(duration)))
 			}
 			time.AfterFunc(delay, func() {
-				newError("checking ", client.Handler).AtDebug().WriteToLog()
+				newError("checking ", handler).AtDebug().WriteToLog()
 				delay, err := client.MeasureDelay()
-				if err != nil {
-					newError(fmt.Sprintf(
-						"error ping %s with %s: %s",
-						h.Settings.Destination,
-						client.Handler,
-						err,
-					)).AtWarning().WriteToLog()
-					delay = math.MaxInt64
+				if err == nil {
+					ch <- &rtt{
+						handler: handler,
+						value:   delay,
+					}
+					return
 				}
+				// test netowrk connectivity
+				client = newDirectPingClient(
+					h.Settings.Connectivity,
+					h.Settings.Timeout,
+				)
+				_, err2 := client.MeasureDelay()
+				if err2 != nil {
+					newError("network is down").AtWarning().WriteToLog()
+					ch <- &rtt{
+						handler: handler,
+						value:   0, // 0: not tested
+					}
+					return
+				}
+				newError(fmt.Sprintf(
+					"error ping %s with %s: %s",
+					h.Settings.Destination,
+					handler,
+					err,
+				)).AtWarning().WriteToLog()
 				ch <- &rtt{
-					handler: client.Handler,
-					value:   delay,
+					handler: handler,
+					value:   math.MaxInt64, // MaxInt64: failed
 				}
 			})
 		}
