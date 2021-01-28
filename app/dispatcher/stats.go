@@ -11,10 +11,13 @@ import (
 type SizeStatWriter struct {
 	Counter stats.Counter
 	Writer  buf.Writer
+	Record  *int64
 }
 
 func (w *SizeStatWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
-	w.Counter.Add(int64(mb.Len()))
+	len := int64(mb.Len())
+	*w.Record += len
+	w.Counter.Add(len)
 	return w.Writer.WriteMultiBuffer(mb)
 }
 
