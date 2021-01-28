@@ -90,10 +90,11 @@ func (r *Router) GetBalancersInfo(tags []string) (resp []*routing.BalancerInfo, 
 			return nil, err
 		}
 		var override *routing.BalancingOverrideInfo
-		if b.checkOverride() {
+		b.checkScheduler()
+		if o := b.override.Get(); o != nil {
 			override = &routing.BalancingOverrideInfo{
-				Until:   b.override.until,
-				Selects: b.override.selects,
+				Until:   o.until,
+				Selects: o.selects,
 			}
 		}
 		stat := &routing.BalancerInfo{

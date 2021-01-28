@@ -55,9 +55,7 @@ type node struct {
 
 // GetInformation implements the routing.BalancingStrategy.
 func (s *LeastLoadStrategy) GetInformation(tags []string) *routing.StrategyInfo {
-	s.HealthPing.access.Lock()
-	defer s.HealthPing.access.Unlock()
-	qualified, others := s.getNodes(tags, s.HealthPing.Results, time.Duration(s.settings.MaxRTT))
+	qualified, others := s.getNodes(tags, time.Duration(s.settings.MaxRTT))
 	selects := s.selectLeastLoad(qualified)
 	// append qualified but not selected outbounds to others
 	others = append(others, qualified[len(selects):]...)
@@ -74,9 +72,7 @@ func (s *LeastLoadStrategy) GetInformation(tags []string) *routing.StrategyInfo 
 
 // SelectAndPick implements the routing.BalancingStrategy.
 func (s *LeastLoadStrategy) SelectAndPick(candidates []string) string {
-	s.HealthPing.access.Lock()
-	defer s.HealthPing.access.Unlock()
-	qualified, _ := s.getNodes(candidates, s.HealthPing.Results, time.Duration(s.settings.MaxRTT))
+	qualified, _ := s.getNodes(candidates, time.Duration(s.settings.MaxRTT))
 	selects := s.selectLeastLoad(qualified)
 	count := len(selects)
 	if count == 0 {
@@ -152,7 +148,10 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 	return nodes[:count]
 }
 
-func (s *LeastLoadStrategy) getNodes(candidates []string, results map[string]*HealthPingRTTS, maxRTT time.Duration) ([]*node, []*node) {
+func (s *LeastLoadStrategy) getNodes(candidates []string, maxRTT time.Duration) ([]*node, []*node) {
+	s.HealthPing.access.RLock()
+	defer s.HealthPing.access.RUnlock()
+	results := s.Results
 	qualified := make([]*node, 0)
 	unqualified := make([]*node, 0)
 	failed := make([]*node, 0)

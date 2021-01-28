@@ -21,7 +21,7 @@ type HealthPingSettings struct {
 
 // HealthPing is the health checker for balancers
 type HealthPing struct {
-	access     sync.Mutex
+	access     sync.RWMutex
 	ticker     *time.Ticker
 	dispatcher routing.Dispatcher
 
@@ -45,7 +45,7 @@ func NewHealthPing(config *HealthPingConfig, dispatcher routing.Dispatcher) *Hea
 		settings.Destination = "http://www.google.com/gen_204"
 	}
 	if settings.Interval == 0 {
-		settings.Interval = time.Duration(2) * time.Minute
+		settings.Interval = time.Duration(1) * time.Minute
 	} else if settings.Interval < 10 {
 		newError("health check interval is too small, 10s is applied").AtWarning().WriteToLog()
 		settings.Interval = time.Duration(10) * time.Second
@@ -82,7 +82,7 @@ func (h *HealthPing) StartScheduler(selector func() ([]string, error)) {
 					return
 				}
 				h.doCheck(tags, interval, h.Settings.SamplingCount)
-				h.cleanupResults(tags)
+				h.Cleanup(tags)
 			}()
 			_, ok := <-ticker.C
 			if !ok {
@@ -174,12 +174,13 @@ func (h *HealthPing) doCheck(tags []string, duration time.Duration, rounds int) 
 		rtt := <-ch
 		if rtt.value > 0 {
 			// should not put results when network is down
-			h.putResult(rtt.handler, rtt.value)
+			h.PutResult(rtt.handler, rtt.value)
 		}
 	}
 }
 
-func (h *HealthPing) putResult(tag string, rtt time.Duration) {
+// PutResult put a ping rtt to results
+func (h *HealthPing) PutResult(tag string, rtt time.Duration) {
 	h.access.Lock()
 	defer h.access.Unlock()
 	if h.Results == nil {
@@ -198,9 +199,9 @@ func (h *HealthPing) putResult(tag string, rtt time.Duration) {
 	r.Put(rtt)
 }
 
-// cleanupResults removes results of removed handlers,
-// tags is all valid tags for the Balancer now
-func (h *HealthPing) cleanupResults(tags []string) {
+// Cleanup removes results of removed handlers,
+// tags should be all valid tags of the Balancer now
+func (h *HealthPing) Cleanup(tags []string) {
 	h.access.Lock()
 	defer h.access.Unlock()
 	for tag := range h.Results {
