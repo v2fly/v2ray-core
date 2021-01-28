@@ -15,9 +15,11 @@ type SizeStatWriter struct {
 }
 
 func (w *SizeStatWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
-	len := int64(mb.Len())
-	*w.Record += len
-	w.Counter.Add(len)
+	bufLen := int64(mb.Len())
+	if w.Record != nil {
+		*w.Record += bufLen
+	}
+	w.Counter.Add(bufLen)
 	return w.Writer.WriteMultiBuffer(mb)
 }
 
