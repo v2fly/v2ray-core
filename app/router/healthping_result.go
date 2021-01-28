@@ -75,7 +75,7 @@ func (h *HealthPingRTTS) getStatistics() *HealthPingStats {
 	stats := &HealthPingStats{}
 	stats.FailCount = 0
 	stats.RTTMax = 0
-	stats.RTTMin = time.Duration(math.MaxInt64)
+	stats.RTTMin = rttFailed
 	sum := time.Duration(0)
 	cnt := 0
 	validRTTs := make([]time.Duration, 0)
@@ -83,7 +83,7 @@ func (h *HealthPingRTTS) getStatistics() *HealthPingStats {
 		switch {
 		case rtt.value == 0 || time.Since(rtt.time) > h.validity:
 			continue
-		case rtt.value == math.MaxInt64:
+		case rtt.value == rttFailed:
 			stats.FailCount++
 			continue
 		}
@@ -100,10 +100,6 @@ func (h *HealthPingRTTS) getStatistics() *HealthPingStats {
 	stats.Count = cnt + stats.FailCount
 	if cnt == 0 {
 		stats.RTTMin = 0
-	}
-	if stats.FailCount > 0 || cnt == 0 {
-		stats.RTTAverage = time.Duration(math.MaxInt64)
-		stats.RTTDeviation = time.Duration(math.MaxInt64)
 		return stats
 	}
 	stats.RTTAverage = time.Duration(int(sum) / cnt)

@@ -92,7 +92,8 @@ func TestRouterConfig(t *testing.T) {
 								],
 								"baselines": [400, 600],
 								"expected": 6,
-								"maxRTT": 1000
+								"maxRTT": 1000,
+								"tolerance": 0.5
 							}
 						},
 						"fallbackTag": "fall"
@@ -131,8 +132,9 @@ func TestRouterConfig(t *testing.T) {
 								int64(time.Duration(400) * time.Millisecond),
 								int64(time.Duration(600) * time.Millisecond),
 							},
-							Expected: 6,
-							MaxRTT:   int64(time.Duration(1000) * time.Millisecond),
+							Expected:  6,
+							MaxRTT:    int64(time.Duration(1000) * time.Millisecond),
+							Tolerance: 0.5,
 						}),
 						FallbackTag: "fall",
 					},

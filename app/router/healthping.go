@@ -2,7 +2,6 @@ package router
 
 import (
 	"fmt"
-	"math"
 	"strings"
 	sync "sync"
 	"time"
@@ -165,7 +164,7 @@ func (h *HealthPing) doCheck(tags []string, duration time.Duration, rounds int) 
 				)).AtWarning().WriteToLog()
 				ch <- &rtt{
 					handler: handler,
-					value:   math.MaxInt64, // MaxInt64: failed
+					value:   rttFailed,
 				}
 			})
 		}

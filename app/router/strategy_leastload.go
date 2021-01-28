@@ -11,6 +11,12 @@ import (
 	"v2ray.com/core/features/routing"
 )
 
+const (
+	rttFailed = time.Duration(math.MaxInt64 - iota)
+	rttUntested
+	rttUnqualified
+)
+
 // LeastLoadStrategy represents a random balancing strategy
 type LeastLoadStrategy struct {
 	*HealthPing
@@ -43,6 +49,8 @@ type node struct {
 	RTTAverage       time.Duration
 	RTTDeviation     time.Duration
 	RTTDeviationCost time.Duration
+
+	applied time.Duration
 }
 
 // GetInformation implements the routing.BalancingStrategy.
@@ -127,7 +135,7 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 	for _, b := range s.settings.Baselines {
 		baseline := time.Duration(b)
 		for i := 0; i < availableCount; i++ {
-			if nodes[i].RTTDeviationCost > baseline {
+			if nodes[i].applied > baseline {
 				break
 			}
 			count = i + 1
@@ -155,48 +163,35 @@ func (s *LeastLoadStrategy) getNodes(candidates []string, results map[string]*He
 		if !ok {
 			untested = append(untested, &node{
 				Tag:              tag,
-				RTTDeviationCost: math.MaxInt64 - 1,
-				RTTDeviation:     math.MaxInt64 - 1,
-				RTTAverage:       math.MaxInt64 - 1,
+				RTTDeviationCost: 0,
+				RTTDeviation:     0,
+				RTTAverage:       0,
+				applied:          rttUntested,
 			})
 			continue
 		}
 		stats := r.Get()
+		node := &node{
+			Tag:              tag,
+			RTTDeviationCost: time.Duration(s.costs.Apply(tag, float64(stats.RTTDeviation))),
+			RTTDeviation:     stats.RTTDeviation,
+			RTTAverage:       stats.RTTAverage,
+			Count:            stats.Count,
+			Fail:             stats.FailCount,
+		}
 		switch {
-		case !ok:
-			untested = append(untested, &node{
-				Tag:              tag,
-				RTTDeviationCost: math.MaxInt64 - 1,
-				RTTDeviation:     math.MaxInt64 - 1,
-				RTTAverage:       math.MaxInt64 - 1,
-			})
-		case stats.FailCount > 0:
-			failed = append(failed, &node{
-				Tag:              tag,
-				RTTDeviationCost: math.MaxInt64,
-				RTTDeviation:     math.MaxInt64,
-				RTTAverage:       math.MaxInt64,
-				Count:            stats.Count,
-				Fail:             stats.FailCount,
-			})
+		case stats.Count == 0:
+			node.applied = rttUntested
+			untested = append(untested, node)
 		case maxRTT > 0 && stats.RTTAverage > maxRTT:
-			unqualified = append(unqualified, &node{
-				Tag:              tag,
-				RTTDeviationCost: time.Duration(s.costs.Apply(tag, float64(stats.RTTDeviation))),
-				RTTDeviation:     stats.RTTDeviation,
-				RTTAverage:       stats.RTTAverage,
-				Count:            stats.Count,
-				Fail:             stats.FailCount,
-			})
+			node.applied = rttUnqualified
+			unqualified = append(unqualified, node)
+		case float64(stats.FailCount)/float64(stats.Count) > float64(s.settings.Tolerance):
+			node.applied = rttFailed
+			failed = append(failed, node)
 		default:
-			qualified = append(qualified, &node{
-				Tag:              tag,
-				RTTDeviationCost: time.Duration(s.costs.Apply(tag, float64(stats.RTTDeviation))),
-				RTTDeviation:     stats.RTTDeviation,
-				RTTAverage:       stats.RTTAverage,
-				Count:            stats.Count,
-				Fail:             stats.FailCount,
-			})
+			node.applied = node.RTTDeviationCost
+			qualified = append(qualified, node)
 		}
 	}
 	if len(qualified) > 0 {
@@ -229,7 +224,13 @@ func (s *LeastLoadStrategy) getSettings() []string {
 	if s.settings.MaxRTT == 0 {
 		maxRTT = "none"
 	}
-	settings = append(settings, fmt.Sprintf("leastload, expected: %d, baselines: %s, max rtt: %s", s.settings.Expected, baselines, maxRTT))
+	settings = append(settings, fmt.Sprintf(
+		"leastload, expected: %d, baselines: %s, max rtt: %s, tolerance: %.2f",
+		s.settings.Expected,
+		baselines,
+		maxRTT,
+		s.settings.Tolerance,
+	))
 	settings = append(settings, fmt.Sprintf(
 		"health ping, interval: %s, sampling: %d, timeout: %s, destination: %s",
 		s.HealthPing.Settings.Interval,
@@ -241,41 +242,43 @@ func (s *LeastLoadStrategy) getSettings() []string {
 }
 
 func (s *LeastLoadStrategy) getNodesInfo(nodes []*node) ([]string, []*routing.OutboundInfo) {
-	titles := []string{"RTT STD+C    ", "RTT STD.     ", "RTT Avg.     ", "Cost "}
+	titles := []string{"   ", "RTT STD+C    ", "RTT STD.     ", "RTT Avg.     ", "Hit  ", "Cost "}
 	hasCost := len(s.settings.Costs) > 0
 	if !hasCost {
-		titles = titles[1:3]
+		titles = titles[2:4]
 	}
 	items := make([]*routing.OutboundInfo, 0)
 	for _, node := range nodes {
 		item := &routing.OutboundInfo{
 			Tag: node.Tag,
 		}
+		var status string
 		cost := fmt.Sprintf("%.2f", s.costs.Get(node.Tag))
-		switch node.RTTAverage {
-		case math.MaxInt64 - 1:
-			item.Values = []string{"not tested", "-"}
-			if hasCost {
-				item.Values = append(item.Values, "-", cost)
-			}
-		case math.MaxInt64:
-			item.Values = []string{fmt.Sprintf("%d/%d failed", node.Fail, node.Count), "-"}
-			if hasCost {
-				item.Values = append(item.Values, "-", cost)
-			}
+		switch node.applied {
+		case rttFailed:
+			status = "X"
+		case rttUntested:
+			status = "?"
+		case rttUnqualified:
+			status = "R"
 		default:
-			if hasCost {
-				item.Values = []string{
-					node.RTTDeviationCost.String(),
-					node.RTTDeviation.String(),
-					node.RTTAverage.String(),
-					cost,
-				}
-			} else {
-				item.Values = []string{
-					node.RTTDeviation.String(),
-					node.RTTAverage.String(),
-				}
+			status = "OK"
+		}
+		if hasCost {
+			item.Values = []string{
+				status,
+				durationString(node.RTTDeviationCost),
+				durationString(node.RTTDeviation),
+				durationString(node.RTTAverage),
+				fmt.Sprintf("%d/%d", node.Count-node.Fail, node.Count),
+				cost,
+			}
+		} else {
+			item.Values = []string{
+				status,
+				fmt.Sprintf("%d/%d", node.Count-node.Fail, node.Count),
+				durationString(node.RTTDeviation),
+				durationString(node.RTTAverage),
 			}
 		}
 		items = append(items, item)
@@ -283,10 +286,20 @@ func (s *LeastLoadStrategy) getNodesInfo(nodes []*node) ([]string, []*routing.Ou
 	return titles, items
 }
 
+func durationString(d time.Duration) string {
+	if d <= 0 {
+		return "-"
+	}
+	return d.String()
+}
+
 func leastloadSort(nodes []*node) {
 	sort.Slice(nodes, func(i, j int) bool {
 		left := nodes[i]
 		right := nodes[j]
+		if left.applied != right.applied {
+			return left.applied < right.applied
+		}
 		if left.RTTDeviationCost != right.RTTDeviationCost {
 			return left.RTTDeviationCost < right.RTTDeviationCost
 		}
@@ -295,6 +308,9 @@ func leastloadSort(nodes []*node) {
 		}
 		if left.Fail != right.Fail {
 			return left.Fail < right.Fail
+		}
+		if left.Count != right.Count {
+			return left.Count > right.Count
 		}
 		return left.Tag < right.Tag
 	})

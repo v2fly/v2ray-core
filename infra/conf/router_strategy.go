@@ -30,15 +30,17 @@ type strategyLeastLoadConfig struct {
 	// note the time values of the HealthCheck holds is not
 	// 'time.Duration' but plain number, sice they were parsed
 	// directly from json
-	HealthCheck *router.HealthPingSettings `json:"healthCheck"`
+	HealthCheck *router.HealthPingSettings `json:"healthCheck,omitempty"`
 	// weight settings
-	Costs []*router.StrategyWeight `json:"costs"`
+	Costs []*router.StrategyWeight `json:"costs,omitempty"`
 	// ping rtt baselines (ms)
-	Baselines []int `json:"baselines"`
+	Baselines []int `json:"baselines,omitempty"`
 	// expected nodes count to select
-	Expected int32 `json:"expected"`
+	Expected int32 `json:"expected,omitempty"`
 	// max acceptable rtt (ms), filter away high delay nodes. defalut 0
-	MaxRTT int `json:"maxRTT"`
+	MaxRTT int `json:"maxRTT,omitempty"`
+	// acceptable failure rate
+	Tolerance float64 `json:"tolerance,omitempty"`
 }
 
 // Build implements Buildable.
@@ -56,6 +58,13 @@ func (v *strategyLeastLoadConfig) Build() (proto.Message, error) {
 		}
 	}
 	config.Costs = v.Costs
+	config.Tolerance = float32(v.Tolerance)
+	if config.Tolerance < 0 {
+		config.Tolerance = 0
+	}
+	if config.Tolerance > 1 {
+		config.Tolerance = 1
+	}
 	config.Expected = v.Expected
 	if config.Expected < 0 {
 		config.Expected = 0
