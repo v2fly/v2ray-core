@@ -162,7 +162,7 @@ func (d *DefaultDispatcher) getLink(ctx context.Context) (*transport.Link, *tran
 				inboundLink.Writer = &SizeStatWriter{
 					Counter: c,
 					Writer:  inboundLink.Writer,
-					Record:  &accessMessage.Up,
+					Record:  &accessMessage.BytesSent,
 				}
 			}
 		}
@@ -172,7 +172,7 @@ func (d *DefaultDispatcher) getLink(ctx context.Context) (*transport.Link, *tran
 				outboundLink.Writer = &SizeStatWriter{
 					Counter: c,
 					Writer:  outboundLink.Writer,
-					Record:  &accessMessage.Down,
+					Record:  &accessMessage.BytesReceived,
 				}
 			}
 		}
