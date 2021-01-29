@@ -145,12 +145,7 @@ func (h *HealthPing) doCheck(tags []string, duration time.Duration, rounds int) 
 					}
 					return
 				}
-				// test network connectivity
-				tester := newDirectPingClient(
-					h.Settings.Connectivity,
-					h.Settings.Timeout,
-				)
-				if _, err := tester.MeasureDelay(); err != nil {
+				if !h.checkConnectivity() {
 					newError("network is down").AtWarning().WriteToLog()
 					ch <- &rtt{
 						handler: handler,
@@ -217,4 +212,20 @@ func (h *HealthPing) Cleanup(tags []string) {
 			delete(h.Results, tag)
 		}
 	}
+}
+
+// checkConnectivity checks the network connectivity, it returns
+// true if network is good or "connectivity check url" not set
+func (h *HealthPing) checkConnectivity() bool {
+	if h.Settings.Connectivity == "" {
+		return true
+	}
+	tester := newDirectPingClient(
+		h.Settings.Connectivity,
+		h.Settings.Timeout,
+	)
+	if _, err := tester.MeasureDelay(); err != nil {
+		return false
+	}
+	return true
 }
