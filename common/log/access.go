@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"v2ray.com/core/common/serial"
@@ -21,12 +22,14 @@ const (
 )
 
 type AccessMessage struct {
-	From   interface{}
-	To     interface{}
-	Status AccessStatus
-	Reason interface{}
-	Email  string
-	Detour string
+	From          interface{}
+	To            interface{}
+	Status        AccessStatus
+	Reason        interface{}
+	Email         string
+	Detour        string
+	BytesSent     int64
+	BytesReceived int64
 }
 
 func (m *AccessMessage) String() string {
@@ -52,6 +55,8 @@ func (m *AccessMessage) String() string {
 		builder.WriteString(" email: ")
 		builder.WriteString(m.Email)
 	}
+
+	builder.WriteString(fmt.Sprintf(" bytes_sent: %d bytes_received: %d", m.BytesSent, m.BytesReceived))
 
 	return builder.String()
 }
