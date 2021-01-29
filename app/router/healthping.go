@@ -21,7 +21,7 @@ type HealthPingSettings struct {
 
 // HealthPing is the health checker for balancers
 type HealthPing struct {
-	access     sync.RWMutex
+	access     sync.Mutex
 	ticker     *time.Ticker
 	dispatcher routing.Dispatcher
 

@@ -149,8 +149,8 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 }
 
 func (s *LeastLoadStrategy) getNodes(candidates []string, maxRTT time.Duration) ([]*node, []*node) {
-	s.HealthPing.access.RLock()
-	defer s.HealthPing.access.RUnlock()
+	s.access.Lock()
+	defer s.access.Unlock()
 	results := s.Results
 	qualified := make([]*node, 0)
 	unqualified := make([]*node, 0)

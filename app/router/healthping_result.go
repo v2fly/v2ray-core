@@ -42,7 +42,8 @@ func (h *HealthPingRTTS) Get() *HealthPingStats {
 }
 
 // GetWithCache get statistics and write cache for next call
-// Make sure use Mutex.Lock() before calling it
+// Make sure use Mutex.Lock() before calling it, RWMutex.RLock()
+// is not an option since it writes cache
 func (h *HealthPingRTTS) GetWithCache() *HealthPingStats {
 	lastPutAt := h.rtts[h.idx].time
 	now := time.Now()
