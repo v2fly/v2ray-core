@@ -44,8 +44,8 @@ func NewLeastLoadStrategy(settings *StrategyLeastLoadConfig, dispatcher routing.
 // it may change by health checker during routing
 type node struct {
 	Tag              string
-	Count            int
-	Fail             int
+	CountAll         int
+	CountFail        int
 	RTTAverage       time.Duration
 	RTTDeviation     time.Duration
 	RTTDeviationCost time.Duration
@@ -172,22 +172,22 @@ func (s *LeastLoadStrategy) getNodes(candidates []string, maxRTT time.Duration) 
 		stats := r.Get()
 		node := &node{
 			Tag:              tag,
-			RTTDeviationCost: time.Duration(s.costs.Apply(tag, float64(stats.RTTDeviation))),
-			RTTDeviation:     stats.RTTDeviation,
-			RTTAverage:       stats.RTTAverage,
-			Count:            stats.Count,
-			Fail:             stats.FailCount,
+			RTTDeviationCost: time.Duration(s.costs.Apply(tag, float64(stats.Deviation))),
+			RTTDeviation:     stats.Deviation,
+			RTTAverage:       stats.Average,
+			CountAll:         stats.All,
+			CountFail:        stats.Fail,
 		}
 		switch {
-		case stats.Count == 0:
+		case stats.All == 0:
 			node.applied = rttUntested
 			untested = append(untested, node)
-		case maxRTT > 0 && stats.RTTAverage > maxRTT:
+		case maxRTT > 0 && stats.Average > maxRTT:
 			node.applied = rttUnqualified
 			unqualified = append(unqualified, node)
-		case float64(stats.FailCount)/float64(stats.Count) > float64(s.settings.Tolerance):
+		case float64(stats.Fail)/float64(stats.All) > float64(s.settings.Tolerance):
 			node.applied = rttFailed
-			if stats.Count-stats.FailCount == 0 {
+			if stats.All-stats.Fail == 0 {
 				// no good, put them after has-good nodes
 				node.RTTDeviationCost = rttFailed
 				node.RTTDeviation = rttFailed
@@ -275,7 +275,7 @@ func (s *LeastLoadStrategy) getNodesInfo(nodes []*node) ([]string, []*routing.Ou
 				durationString(node.RTTDeviationCost),
 				durationString(node.RTTDeviation),
 				durationString(node.RTTAverage),
-				fmt.Sprintf("%d/%d", node.Count-node.Fail, node.Count),
+				fmt.Sprintf("%d/%d", node.CountAll-node.CountFail, node.CountAll),
 				cost,
 			}
 		} else {
@@ -283,7 +283,7 @@ func (s *LeastLoadStrategy) getNodesInfo(nodes []*node) ([]string, []*routing.Ou
 				status,
 				durationString(node.RTTDeviation),
 				durationString(node.RTTAverage),
-				fmt.Sprintf("%d/%d", node.Count-node.Fail, node.Count),
+				fmt.Sprintf("%d/%d", node.CountAll-node.CountFail, node.CountAll),
 			}
 		}
 		items = append(items, item)
@@ -311,11 +311,11 @@ func leastloadSort(nodes []*node) {
 		if left.RTTAverage != right.RTTAverage {
 			return left.RTTAverage < right.RTTAverage
 		}
-		if left.Fail != right.Fail {
-			return left.Fail < right.Fail
+		if left.CountFail != right.CountFail {
+			return left.CountFail < right.CountFail
 		}
-		if left.Count != right.Count {
-			return left.Count > right.Count
+		if left.CountAll != right.CountAll {
+			return left.CountAll > right.CountAll
 		}
 		return left.Tag < right.Tag
 	})

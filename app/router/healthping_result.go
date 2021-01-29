@@ -7,12 +7,12 @@ import (
 
 // HealthPingStats is the statistics of HealthPingRTTS
 type HealthPingStats struct {
-	Count        int
-	FailCount    int
-	RTTDeviation time.Duration
-	RTTAverage   time.Duration
-	RTTMax       time.Duration
-	RTTMin       time.Duration
+	All       int
+	Fail      int
+	Deviation time.Duration
+	Average   time.Duration
+	Max       time.Duration
+	Min       time.Duration
 }
 
 // HealthPingRTTS holds ping rtts for health Checker
@@ -80,9 +80,9 @@ func (h *HealthPingRTTS) calcIndex(step int) int {
 
 func (h *HealthPingRTTS) getStatistics() *HealthPingStats {
 	stats := &HealthPingStats{}
-	stats.FailCount = 0
-	stats.RTTMax = 0
-	stats.RTTMin = rttFailed
+	stats.Fail = 0
+	stats.Max = 0
+	stats.Min = rttFailed
 	sum := time.Duration(0)
 	cnt := 0
 	validRTTs := make([]time.Duration, 0)
@@ -91,39 +91,39 @@ func (h *HealthPingRTTS) getStatistics() *HealthPingStats {
 		case rtt.value == 0 || time.Since(rtt.time) > h.validity:
 			continue
 		case rtt.value == rttFailed:
-			stats.FailCount++
+			stats.Fail++
 			continue
 		}
 		cnt++
 		sum += rtt.value
 		validRTTs = append(validRTTs, rtt.value)
-		if stats.RTTMax < rtt.value {
-			stats.RTTMax = rtt.value
+		if stats.Max < rtt.value {
+			stats.Max = rtt.value
 		}
-		if stats.RTTMin > rtt.value {
-			stats.RTTMin = rtt.value
+		if stats.Min > rtt.value {
+			stats.Min = rtt.value
 		}
 	}
-	stats.Count = cnt + stats.FailCount
+	stats.All = cnt + stats.Fail
 	if cnt == 0 {
-		stats.RTTMin = 0
+		stats.Min = 0
 		return stats
 	}
-	stats.RTTAverage = time.Duration(int(sum) / cnt)
+	stats.Average = time.Duration(int(sum) / cnt)
 	var std float64
 	if cnt < 2 {
 		// no enough data for standard deviation, we assume it's half of the average rtt
 		// if we don't do this, standard deviation of 1 round tested nodes is 0, will always
 		// selected before 2 or more rounds tested nodes
-		std = float64(stats.RTTAverage / 2)
+		std = float64(stats.Average / 2)
 	} else {
 		variance := float64(0)
 		for _, rtt := range validRTTs {
-			variance += math.Pow(float64(rtt-stats.RTTAverage), 2)
+			variance += math.Pow(float64(rtt-stats.Average), 2)
 		}
 		std = math.Sqrt(variance / float64(cnt))
 	}
-	stats.RTTDeviation = time.Duration(std)
+	stats.Deviation = time.Duration(std)
 	return stats
 }
 

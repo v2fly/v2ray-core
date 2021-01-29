@@ -95,6 +95,7 @@ func (h *HealthPing) StartScheduler(selector func() ([]string, error)) {
 // StopScheduler implements the HealthChecker
 func (h *HealthPing) StopScheduler() {
 	h.ticker.Stop()
+	h.ticker = nil
 }
 
 // Check implements the HealthChecker

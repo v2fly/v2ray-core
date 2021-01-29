@@ -17,12 +17,12 @@ func TestHealthPingResults(t *testing.T) {
 	}
 	rttFailed := time.Duration(math.MaxInt64)
 	expected := &router.HealthPingStats{
-		Count:        4,
-		FailCount:    0,
-		RTTDeviation: 40,
-		RTTAverage:   100,
-		RTTMax:       140,
-		RTTMin:       60,
+		All:       4,
+		Fail:      0,
+		Deviation: 40,
+		Average:   100,
+		Max:       140,
+		Min:       60,
 	}
 	actual := hr.Get()
 	if !reflect.DeepEqual(expected, actual) {
@@ -30,7 +30,7 @@ func TestHealthPingResults(t *testing.T) {
 	}
 	hr.Put(rttFailed)
 	hr.Put(rttFailed)
-	expected.FailCount = 2
+	expected.Fail = 2
 	actual = hr.Get()
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("failed half-failures test, expected: %v, actual: %v", expected, actual)
@@ -38,12 +38,12 @@ func TestHealthPingResults(t *testing.T) {
 	hr.Put(rttFailed)
 	hr.Put(rttFailed)
 	expected = &router.HealthPingStats{
-		Count:        4,
-		FailCount:    4,
-		RTTDeviation: 0,
-		RTTAverage:   0,
-		RTTMax:       0,
-		RTTMin:       0,
+		All:       4,
+		Fail:      4,
+		Deviation: 0,
+		Average:   0,
+		Max:       0,
+		Min:       0,
 	}
 	actual = hr.Get()
 	if !reflect.DeepEqual(expected, actual) {
@@ -63,12 +63,12 @@ func TestHealthPingResultsIgnoreOutdated(t *testing.T) {
 	}
 	hr.Get()
 	expected := &router.HealthPingStats{
-		Count:        2,
-		FailCount:    0,
-		RTTDeviation: 40,
-		RTTAverage:   100,
-		RTTMax:       140,
-		RTTMin:       60,
+		All:       2,
+		Fail:      0,
+		Deviation: 40,
+		Average:   100,
+		Max:       140,
+		Min:       60,
 	}
 	actual := hr.Get()
 	if !reflect.DeepEqual(expected, actual) {
@@ -77,12 +77,12 @@ func TestHealthPingResultsIgnoreOutdated(t *testing.T) {
 	// wait for all outdated
 	time.Sleep(time.Duration(10) * time.Millisecond)
 	expected = &router.HealthPingStats{
-		Count:        0,
-		FailCount:    0,
-		RTTDeviation: 0,
-		RTTAverage:   0,
-		RTTMax:       0,
-		RTTMin:       0,
+		All:       0,
+		Fail:      0,
+		Deviation: 0,
+		Average:   0,
+		Max:       0,
+		Min:       0,
 	}
 	actual = hr.Get()
 	if !reflect.DeepEqual(expected, actual) {
@@ -91,13 +91,13 @@ func TestHealthPingResultsIgnoreOutdated(t *testing.T) {
 
 	hr.Put(time.Duration(60))
 	expected = &router.HealthPingStats{
-		Count:     1,
-		FailCount: 0,
+		All:  1,
+		Fail: 0,
 		// 1 sample, std=0.5rtt
-		RTTDeviation: 30,
-		RTTAverage:   60,
-		RTTMax:       60,
-		RTTMin:       60,
+		Deviation: 30,
+		Average:   60,
+		Max:       60,
+		Min:       60,
 	}
 	actual = hr.Get()
 	if !reflect.DeepEqual(expected, actual) {
