@@ -84,7 +84,7 @@ func (g *ACAutomatonMatcherGroup) AddFullOrDomainPattern(pattern string, t Type)
 		g.nonSubstrMap[h] = pattern
 	case Domain:
 		g.nonSubstrMap[h] = pattern
-		g.nonSubstrMap[h*PrimeRK+uint32('.')] = pattern
+		g.nonSubstrMap[h*PrimeRK+uint32('.')] = "." + pattern
 	default:
 		break
 	}
@@ -127,9 +127,7 @@ func (g *ACAutomatonMatcherGroup) Match(pattern string) []uint32 {
 	hash := uint32(0)
 	for i := len(pattern) - 1; i >= 0; i-- {
 		hash = hash*PrimeRK + uint32(pattern[i])
-		if pattern[i] != '.' {
-			continue
-		} else {
+		if pattern[i] == '.' {
 			if v, ok := g.nonSubstrMap[hash]; ok && v == pattern[i:] {
 				result = append(result, 1)
 				return result
