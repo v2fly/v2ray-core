@@ -6,6 +6,7 @@ import (
 	"v2ray.com/core/app/commander"
 	loggerservice "v2ray.com/core/app/log/command"
 	handlerservice "v2ray.com/core/app/proxyman/command"
+	routerservice "v2ray.com/core/app/router/command"
 	statsservice "v2ray.com/core/app/stats/command"
 	"v2ray.com/core/common/serial"
 )
@@ -31,6 +32,8 @@ func (c *APIConfig) Build() (*commander.Config, error) {
 			services = append(services, serial.ToTypedMessage(&loggerservice.Config{}))
 		case "statsservice":
 			services = append(services, serial.ToTypedMessage(&statsservice.Config{}))
+		case "routingservice":
+			services = append(services, serial.ToTypedMessage(&routerservice.Config{}))
 		}
 	}
 

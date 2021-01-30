@@ -9,6 +9,7 @@ import (
 	"v2ray.com/core/app/router"
 	"v2ray.com/core/common/net"
 	"v2ray.com/core/common/platform/filesystem"
+	"v2ray.com/core/common/serial"
 )
 
 type RouterRulesConfig struct {
@@ -16,11 +17,21 @@ type RouterRulesConfig struct {
 	DomainStrategy string            `json:"domainStrategy"`
 }
 
-type BalancingRule struct {
-	Tag       string     `json:"tag"`
-	Selectors StringList `json:"selector"`
+// StrategyConfig represents a strategy config
+type StrategyConfig struct {
+	Type     string           `json:"type"`
+	Settings *json.RawMessage `json:"settings"`
 }
 
+// BalancingRule represents a balancing rule
+type BalancingRule struct {
+	Tag         string         `json:"tag"`
+	Selectors   StringList     `json:"selector"`
+	Strategy    StrategyConfig `json:"strategy"`
+	FallbackTag string         `json:"fallbackTag"`
+}
+
+// Build builds the balancing rule
 func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 	if r.Tag == "" {
 		return nil, newError("empty balancer tag")
@@ -29,9 +40,36 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 		return nil, newError("empty selector list")
 	}
 
+	var strategy router.BalancingRule_BalancingStrategy
+	switch strings.ToLower(r.Strategy.Type) {
+	case strategyRandom, "":
+		r.Strategy.Type = strategyRandom
+		strategy = router.BalancingRule_Random
+	case strategyLeastLoad:
+		strategy = router.BalancingRule_LeastLoad
+	default:
+		return nil, newError("unknown balancing strategy: " + r.Strategy.Type)
+	}
+
+	settings := []byte("{}")
+	if r.Strategy.Settings != nil {
+		settings = ([]byte)(*r.Strategy.Settings)
+	}
+	rawConfig, err := strategyConfigLoader.LoadWithID(settings, r.Strategy.Type)
+	if err != nil {
+		return nil, newError("failed to parse to strategy config.").Base(err)
+	}
+	ts, err := rawConfig.(Buildable).Build()
+	if err != nil {
+		return nil, err
+	}
+
 	return &router.BalancingRule{
 		Tag:              r.Tag,
 		OutboundSelector: []string(r.Selectors),
+		Strategy:         strategy,
+		StrategySettings: serial.ToTypedMessage(ts),
+		FallbackTag:      r.FallbackTag,
 	}, nil
 }
 

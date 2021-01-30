@@ -11,6 +11,7 @@ const (
 	contentSessionKey
 	muxPreferedSessionKey
 	sockoptSessionKey
+	handlerSessionKey
 )
 
 // ContextWithID returns a new context with the given ID.
@@ -81,6 +82,19 @@ func ContextWithSockopt(ctx context.Context, s *Sockopt) context.Context {
 func SockoptFromContext(ctx context.Context) *Sockopt {
 	if sockopt, ok := ctx.Value(sockoptSessionKey).(*Sockopt); ok {
 		return sockopt
+	}
+	return nil
+}
+
+// ContextWithHandler returns a new context with handler
+func ContextWithHandler(ctx context.Context, handler *Handler) context.Context {
+	return context.WithValue(ctx, handlerSessionKey, handler)
+}
+
+// HandlerFromContext returns handler config in this context, or nil if not
+func HandlerFromContext(ctx context.Context) *Handler {
+	if handler, ok := ctx.Value(handlerSessionKey).(*Handler); ok {
+		return handler
 	}
 	return nil
 }
