@@ -3,12 +3,14 @@ package conf_test
 import (
 	"encoding/json"
 	"testing"
+	"time"
 	_ "unsafe"
 
 	"github.com/golang/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 	. "github.com/v2fly/v2ray-core/v4/infra/conf"
 )
 
@@ -68,6 +70,34 @@ func TestRouterConfig(t *testing.T) {
 					{
 						"tag": "b1",
 						"selector": ["test"]
+					},
+					{
+						"tag": "b2",
+						"selector": ["test"],
+						"strategy": {
+							"type": "leastload",
+							"settings": {
+								"healthCheck": {
+									"interval": 300,
+									"sampling": 2,
+									"timeout": 3,
+									"destination": "dest",
+									"connectivity": "conn"
+								},
+								"costs": [
+									{
+										"regexp": true,
+										"match": "\\d+(\\.\\d+)",
+										"value": 5
+									}
+								],
+								"baselines": [400, 600],
+								"expected": 6,
+								"maxRTT": 1000,
+								"tolerance": 0.5
+							}
+						},
+						"fallbackTag": "fall"
 					}
 				]
 			}`,
@@ -79,6 +109,35 @@ func TestRouterConfig(t *testing.T) {
 						Tag:              "b1",
 						OutboundSelector: []string{"test"},
 						Strategy:         "random",
+					},
+					{
+						Tag:              "b2",
+						OutboundSelector: []string{"test"},
+						Strategy:         "leastload",
+						StrategySettings: serial.ToTypedMessage(&router.StrategyLeastLoadConfig{
+							HealthCheck: &router.HealthPingConfig{
+								Interval:      int64(time.Duration(300) * time.Second),
+								SamplingCount: 2,
+								Timeout:       int64(time.Duration(3) * time.Second),
+								Destination:   "dest",
+								Connectivity:  "conn",
+							},
+							Costs: []*router.StrategyWeight{
+								{
+									Regexp: true,
+									Match:  "\\d+(\\.\\d+)",
+									Value:  5,
+								},
+							},
+							Baselines: []int64{
+								int64(time.Duration(400) * time.Millisecond),
+								int64(time.Duration(600) * time.Millisecond),
+							},
+							Expected:  6,
+							MaxRTT:    int64(time.Duration(1000) * time.Millisecond),
+							Tolerance: 0.5,
+						}),
+						FallbackTag: "fall",
 					},
 				},
 				Rule: []*router.RoutingRule{

@@ -157,7 +157,8 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 	return conds, nil
 }
 
-func (br *BalancingRule) Build(ohm outbound.Manager) (*Balancer, error) {
+// Build builds the balancing rule
+func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatcher) (*Balancer, error) {
 	switch br.Strategy {
 	case "leastPing":
 		return &Balancer{
@@ -165,13 +166,28 @@ func (br *BalancingRule) Build(ohm outbound.Manager) (*Balancer, error) {
 			strategy:  &LeastPingStrategy{},
 			ohm:       ohm,
 		}, nil
+	case "leastLoad":
+		i, err := br.StrategySettings.GetInstance()
+		if err != nil {
+			return nil, err
+		}
+		s, ok := i.(*StrategyLeastLoadConfig)
+		if !ok {
+			return nil, newError("not a StrategyLeastLoadConfig").AtError()
+		}
+		leastLoadStrategy := NewLeastLoadStrategy(s, dispatcher)
+		return &Balancer{
+			selectors: br.OutboundSelector,
+			ohm:       ohm, fallbackTag: br.FallbackTag,
+			strategy: leastLoadStrategy,
+		}, nil
 	case "random":
 		fallthrough
 	default:
 		return &Balancer{
 			selectors: br.OutboundSelector,
-			strategy:  &RandomStrategy{},
-			ohm:       ohm,
+			ohm:       ohm, fallbackTag: br.FallbackTag,
+			strategy: &RandomStrategy{},
 		}, nil
 	}
 }

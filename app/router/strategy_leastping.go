@@ -5,6 +5,7 @@ package router
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v4/features/routing"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/observatory"
@@ -15,6 +16,20 @@ import (
 type LeastPingStrategy struct {
 	ctx         context.Context
 	observatory extension.Observatory
+}
+
+// TODO Fix PlaceHolder
+
+func (l *LeastPingStrategy) Pick(candidates []string) string {
+	panic("implement me")
+}
+
+func (l *LeastPingStrategy) SelectAndPick(candidates []string) string {
+	panic("implement me")
+}
+
+func (l *LeastPingStrategy) GetInformation(tags []string) *routing.StrategyInfo {
+	panic("implement me")
 }
 
 func (l *LeastPingStrategy) InjectContext(ctx context.Context) {

@@ -78,6 +78,12 @@ type Sockopt struct {
 	Mark int32
 }
 
+// Handler is the handler setting for dispatching.
+type Handler struct {
+	// Tag of outbound handler.
+	Tag string
+}
+
 // SetAttribute attachs additional string attributes to content.
 func (c *Content) SetAttribute(name string, value string) {
 	if c.Attributes == nil {

@@ -14,6 +14,7 @@ const (
 	muxPreferedSessionKey
 	sockoptSessionKey
 	trackedConnectionErrorKey
+	handlerSessionKey
 )
 
 // ContextWithID returns a new context with the given ID.
@@ -131,4 +132,17 @@ func SubmitOutboundErrorToOriginator(ctx context.Context, err error) {
 
 func TrackedConnectionError(ctx context.Context, tracker TrackedRequestErrorFeedback) context.Context {
 	return context.WithValue(ctx, trackedConnectionErrorKey, tracker)
+}
+
+// ContextWithHandler returns a new context with handler
+func ContextWithHandler(ctx context.Context, handler *Handler) context.Context {
+	return context.WithValue(ctx, handlerSessionKey, handler)
+}
+
+// HandlerFromContext returns handler config in this context, or nil if not
+func HandlerFromContext(ctx context.Context) *Handler {
+	if handler, ok := ctx.Value(handlerSessionKey).(*Handler); ok {
+		return handler
+	}
+	return nil
 }

@@ -3,10 +3,12 @@ package conf
 import (
 	"context"
 	"encoding/json"
+	"github.com/golang/protobuf/proto"
 	"strings"
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/common/platform"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
 	rule2 "github.com/v2fly/v2ray-core/v4/infra/conf/rule"
@@ -24,11 +26,13 @@ type StrategyConfig struct {
 }
 
 type BalancingRule struct {
-	Tag       string               `json:"tag"`
-	Selectors cfgcommon.StringList `json:"selector"`
-	Strategy  StrategyConfig       `json:"strategy"`
+	Tag         string               `json:"tag"`
+	Selectors   cfgcommon.StringList `json:"selector"`
+	Strategy    StrategyConfig       `json:"strategy"`
+	FallbackTag string               `json:"fallbackTag"`
 }
 
+// Build builds the balancing rule
 func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 	if r.Tag == "" {
 		return nil, newError("empty balancer tag")
@@ -40,17 +44,38 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 	var strategy string
 	switch strings.ToLower(r.Strategy.Type) {
 	case strategyRandom, "":
+		r.Strategy.Type = strategyRandom
 		strategy = strategyRandom
+	case strategyLeastLoad:
+		strategy = strategyLeastLoad
 	case strategyLeastPing:
 		strategy = "leastPing"
 	default:
 		return nil, newError("unknown balancing strategy: " + r.Strategy.Type)
 	}
 
+	settings := []byte("{}")
+	if r.Strategy.Settings != nil {
+		settings = ([]byte)(*r.Strategy.Settings)
+	}
+	rawConfig, err := strategyConfigLoader.LoadWithID(settings, r.Strategy.Type)
+	if err != nil {
+		return nil, newError("failed to parse to strategy config.").Base(err)
+	}
+	var ts proto.Message
+	if builder, ok := rawConfig.(Buildable); ok {
+		ts, err = builder.Build()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &router.BalancingRule{
-		Tag:              r.Tag,
-		OutboundSelector: []string(r.Selectors),
 		Strategy:         strategy,
+		StrategySettings: serial.ToTypedMessage(ts),
+		FallbackTag:      r.FallbackTag,
+		OutboundSelector: r.Selectors,
+		Tag:              r.Tag,
 	}, nil
 }
 

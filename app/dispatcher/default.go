@@ -207,10 +207,16 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 		content = new(session.Content)
 		ctx = session.ContextWithContent(ctx, content)
 	}
+
+	handler := session.HandlerFromContext(ctx)
 	sniffingRequest := content.SniffingRequest
 	switch {
 	case !sniffingRequest.Enabled:
-		go d.routedDispatch(ctx, outbound, destination)
+		if handler != nil {
+			go d.targetedDispatch(ctx, outbound, handler.Tag)
+		} else {
+			go d.routedDispatch(ctx, outbound, destination)
+		}
 	case destination.Network != net.Network_TCP:
 		// Only metadata sniff will be used for non tcp connection
 		result, err := sniffer(ctx, nil, true)
@@ -240,7 +246,11 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 				destination.Address = net.ParseAddress(domain)
 				ob.Target = destination
 			}
-			d.routedDispatch(ctx, outbound, destination)
+			if handler != nil {
+				d.targetedDispatch(ctx, outbound, handler.Tag)
+			} else {
+				d.routedDispatch(ctx, outbound, destination)
+			}
 		}()
 	}
 	return inbound, nil
@@ -290,6 +300,25 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool) (Sni
 		return CompositeResult(metaresult, contentResult), nil
 	}
 	return contentResult, contentErr
+}
+
+//TODO Pending removal for tagged connection
+func (d *DefaultDispatcher) targetedDispatch(ctx context.Context, link *transport.Link, tag string) {
+	handler := d.ohm.GetHandler(tag)
+	if handler == nil {
+		newError("outbound handler [", tag, "] not exist").AtError().WriteToLog(session.ExportIDToError(ctx))
+		common.Close(link.Writer)
+		common.Interrupt(link.Reader)
+		return
+	}
+	if accessMessage := log.AccessMessageFromContext(ctx); accessMessage != nil {
+		if tag := handler.Tag(); tag != "" {
+			accessMessage.Detour = tag
+		}
+		log.Record(accessMessage)
+	}
+
+	handler.Dispatch(ctx, link)
 }
 
 func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.Link, destination net.Destination) {
