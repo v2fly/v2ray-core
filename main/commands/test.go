@@ -2,9 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"log"
 
-	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 )
 
@@ -51,24 +49,9 @@ Use "{{.Exec}} help format-loader" for more information about format.
 func executeTest(cmd *base.Command, args []string) {
 	setConfigFlags(cmd)
 	cmd.Flag.Parse(args)
-
-	extension, err := core.GetLoaderExtensions(*configFormat)
-	if err != nil {
-		base.Fatalf(err.Error())
-	}
-
-	if len(configDirs) > 0 {
-		dirReader := readConfDir
-		if *configDirRecursively {
-			dirReader = readConfDirRecursively
-		}
-		for _, d := range configDirs {
-			log.Println("Using confdir from arg:", d)
-			configFiles = append(configFiles, dirReader(d, extension)...)
-		}
-	}
 	printVersion()
-	_, err = startV2Ray()
+	configFiles = getConfigFilePath()
+	_, err := startV2Ray()
 	if err != nil {
 		base.Fatalf("Test failed: %s", err)
 	}
