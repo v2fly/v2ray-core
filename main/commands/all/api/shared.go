@@ -3,8 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -39,22 +37,16 @@ func dialAPIServer() (conn *grpc.ClientConn, ctx context.Context, close func()) 
 	return
 }
 
-func showResponese(m proto.Message) {
-	if isEmpty(m) {
-		// avoid outputs like `{}`, `{"key":{}}`
-		return
-	}
+func protoToJSONString(m proto.Message) (string, error) {
 	b := new(strings.Builder)
 	e := json.NewEncoder(b)
 	e.SetIndent("", "  ")
 	e.SetEscapeHTML(false)
 	err := e.Encode(m)
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "%v\n", m)
-		base.Fatalf("error encode json: %s", err)
-		return
+		return "", err
 	}
-	fmt.Println(strings.TrimSpace(b.String()))
+	return strings.TrimSpace(b.String()), nil
 }
 
 // isEmpty checks if the response is empty (all zero values).

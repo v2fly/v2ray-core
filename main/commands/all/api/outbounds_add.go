@@ -70,10 +70,9 @@ func executeAddOutbounds(cmd *base.Command, args []string) {
 		r := &handlerService.AddOutboundRequest{
 			Outbound: o,
 		}
-		resp, err := client.AddOutbound(ctx, r)
+		_, err = client.AddOutbound(ctx, r)
 		if err != nil {
 			base.Fatalf("failed to add outbound: %s", err)
 		}
-		showResponese(resp)
 	}
 }

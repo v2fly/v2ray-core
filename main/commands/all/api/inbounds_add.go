@@ -70,10 +70,9 @@ func executeAddInbounds(cmd *base.Command, args []string) {
 		r := &handlerService.AddInboundRequest{
 			Inbound: i,
 		}
-		resp, err := client.AddInbound(ctx, r)
+		_, err = client.AddInbound(ctx, r)
 		if err != nil {
 			base.Fatalf("failed to add inbound: %s", err)
 		}
-		showResponese(resp)
 	}
 }

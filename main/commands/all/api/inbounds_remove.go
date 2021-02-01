@@ -71,10 +71,9 @@ func executeRemoveInbounds(cmd *base.Command, args []string) {
 		r := &handlerService.RemoveInboundRequest{
 			Tag: tag,
 		}
-		resp, err := client.RemoveInbound(ctx, r)
+		_, err := client.RemoveInbound(ctx, r)
 		if err != nil {
 			base.Fatalf("failed to remove inbound: %s", err)
 		}
-		showResponese(resp)
 	}
 }

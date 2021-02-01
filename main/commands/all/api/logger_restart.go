@@ -32,9 +32,8 @@ func executeRestartLogger(cmd *base.Command, args []string) {
 
 	client := logService.NewLoggerServiceClient(conn)
 	r := &logService.RestartLoggerRequest{}
-	resp, err := client.RestartLogger(ctx, r)
+	_, err := client.RestartLogger(ctx, r)
 	if err != nil {
 		base.Fatalf("failed to restart logger: %s", err)
 	}
-	showResponese(resp)
 }

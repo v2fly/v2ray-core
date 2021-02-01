@@ -7,7 +7,7 @@ import (
 
 var cmdGetStats = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api stats [--server=127.0.0.1:8080] [-name '']",
+	UsageLine:   "{{.Exec}} api statsget [--server=127.0.0.1:8080] [-name '']",
 	Short:       "Get statistics",
 	Long: `
 Get statistics from V2Ray.
@@ -47,9 +47,8 @@ func executeGetStats(cmd *base.Command, args []string) {
 		Name:   *statName,
 		Reset_: *reset,
 	}
-	resp, err := client.GetStats(ctx, r)
+	_, err := client.GetStats(ctx, r)
 	if err != nil {
 		base.Fatalf("failed to get stats: %s", err)
 	}
-	showResponese(resp)
 }

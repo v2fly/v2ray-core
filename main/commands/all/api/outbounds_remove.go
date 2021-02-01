@@ -70,10 +70,9 @@ func executeRemoveOutbounds(cmd *base.Command, args []string) {
 		r := &handlerService.RemoveOutboundRequest{
 			Tag: tag,
 		}
-		resp, err := client.RemoveOutbound(ctx, r)
+		_, err := client.RemoveOutbound(ctx, r)
 		if err != nil {
 			base.Fatalf("failed to remove outbound: %s", err)
 		}
-		showResponese(resp)
 	}
 }

@@ -1,6 +1,10 @@
 package api
 
 import (
+	"fmt"
+	"os"
+
+	"google.golang.org/protobuf/proto"
 	statsService "v2ray.com/core/app/stats/command"
 	"v2ray.com/core/main/commands/base"
 )
@@ -51,5 +55,14 @@ func executeQueryStats(cmd *base.Command, args []string) {
 	if err != nil {
 		base.Fatalf("failed to query stats: %s", err)
 	}
-	showResponese(resp)
+	showJSONResponse(resp)
+}
+
+func showJSONResponse(m proto.Message) {
+	output, err := protoToJSONString(m)
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "%v\n", m)
+		base.Fatalf("error encode json: %s", err)
+	}
+	fmt.Println(output)
 }
