@@ -12,7 +12,7 @@ import (
 var cmdRemoveOutbounds = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} api rmo [--server=127.0.0.1:8080] <json_file|tag> [json_file] [tag]...",
-	Short:       "Remove outbounds",
+	Short:       "remove outbounds",
 	Long: `
 Remove outbounds from V2Ray.
 

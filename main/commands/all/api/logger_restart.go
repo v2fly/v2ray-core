@@ -7,8 +7,8 @@ import (
 
 var cmdRestartLogger = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api restartlogger [--server=127.0.0.1:8080]",
-	Short:       "Restart the logger",
+	UsageLine:   "{{.Exec}} api rstlogger [--server=127.0.0.1:8080]",
+	Short:       "restart logger",
 	Long: `
 Restart the logger of V2Ray.
 

@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"google.golang.org/protobuf/proto"
 	statsService "v2ray.com/core/app/stats/command"
 	"v2ray.com/core/common/units"
 	"v2ray.com/core/main/commands/base"
@@ -16,7 +15,7 @@ import (
 var cmdStats = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} api stats [--server=127.0.0.1:8080] [pattern]...",
-	Short:       "Query statistics",
+	Short:       "query statistics",
 	Long: `
 Query statistics from V2Ray.
 
@@ -89,17 +88,18 @@ func getRuntimeStats(jsonOutput bool) {
 }
 
 func showRuntimeStats(s *statsService.SysStatsResponse) {
-	rows := make([][]string, 0)
-	rows = append(rows, []string{"Up time", (time.Duration(s.Uptime) * time.Second).String()})
-	rows = append(rows, []string{"Memory obtained", units.ByteSize(s.Sys).String()})
-	rows = append(rows, []string{"Number of goroutines", fmt.Sprintf("%d", s.NumGoroutine)})
-	rows = append(rows, []string{"Heap allocated", units.ByteSize(s.Alloc).String()})
-	rows = append(rows, []string{"Live objects", fmt.Sprintf("%d", s.LiveObjects)})
-	rows = append(rows, []string{"Heap allocated total", units.ByteSize(s.TotalAlloc).String()})
-	rows = append(rows, []string{"Heap allocate count", fmt.Sprintf("%d", s.Mallocs)})
-	rows = append(rows, []string{"Heap free count", fmt.Sprintf("%d", s.Frees)})
-	rows = append(rows, []string{"Number of GC", fmt.Sprintf("%d", s.NumGC)})
-	rows = append(rows, []string{"Time of GC pause", (time.Duration(s.PauseTotalNs) * time.Nanosecond).String()})
+	rows := [][]string{
+		{"Up time", (time.Duration(s.Uptime) * time.Second).String()},
+		{"Memory obtained", units.ByteSize(s.Sys).String()},
+		{"Number of goroutines", fmt.Sprintf("%d", s.NumGoroutine)},
+		{"Heap allocated", units.ByteSize(s.Alloc).String()},
+		{"Live objects", fmt.Sprintf("%d", s.LiveObjects)},
+		{"Heap allocated total", units.ByteSize(s.TotalAlloc).String()},
+		{"Heap allocate count", fmt.Sprintf("%d", s.Mallocs)},
+		{"Heap free count", fmt.Sprintf("%d", s.Frees)},
+		{"Number of GC", fmt.Sprintf("%d", s.NumGC)},
+		{"Time of GC pause", (time.Duration(s.PauseTotalNs) * time.Nanosecond).String()},
+	}
 	formts := []string{"%-22s", "%-10s"}
 	sb := new(strings.Builder)
 	for i, r := range rows {
@@ -156,13 +156,4 @@ func showStats(stats []*statsService.Stat) {
 		fmt.Sprintf("\nTotal: %s\n", units.ByteSize(sum)),
 	)
 	os.Stdout.WriteString(sb.String())
-}
-
-func showJSONResponse(m proto.Message) {
-	output, err := protoToJSONString(m)
-	if err != nil {
-		fmt.Fprintf(os.Stdout, "%v\n", m)
-		base.Fatalf("error encode json: %s", err)
-	}
-	fmt.Println(output)
 }

@@ -3,7 +3,8 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"reflect"
+	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -49,38 +50,11 @@ func protoToJSONString(m proto.Message) (string, error) {
 	return strings.TrimSpace(b.String()), nil
 }
 
-// isEmpty checks if the response is empty (all zero values).
-// proto.Message types always "omitempty" on fields,
-// there's no chance for a response to show zero-value messages,
-// so we can perform isZero test here
-func isEmpty(response interface{}) bool {
-	s := reflect.Indirect(reflect.ValueOf(response))
-	if s.Kind() == reflect.Invalid {
-		return true
+func showJSONResponse(m proto.Message) {
+	output, err := protoToJSONString(m)
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "%v\n", m)
+		base.Fatalf("error encode json: %s", err)
 	}
-	switch s.Kind() {
-	case reflect.Struct:
-		for i := 0; i < s.NumField(); i++ {
-			f := s.Type().Field(i)
-			if f.Name[0] < 65 || f.Name[0] > 90 {
-				// continue if not exported.
-				continue
-			}
-			field := s.Field(i)
-			if !isEmpty(field.Interface()) {
-				return false
-			}
-		}
-	case reflect.Array, reflect.Slice:
-		for i := 0; i < s.Len(); i++ {
-			if !isEmpty(s.Index(i).Interface()) {
-				return false
-			}
-		}
-	default:
-		if !s.IsZero() {
-			return false
-		}
-	}
-	return true
+	fmt.Println(output)
 }

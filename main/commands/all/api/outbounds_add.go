@@ -13,7 +13,7 @@ import (
 var cmdAddOutbounds = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} api ado [--server=127.0.0.1:8080] <c1.json> [c2.json]...",
-	Short:       "Add outbounds",
+	Short:       "add outbounds",
 	Long: `
 Add outbounds to V2Ray.
 

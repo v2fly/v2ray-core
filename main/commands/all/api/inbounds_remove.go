@@ -12,7 +12,7 @@ import (
 var cmdRemoveInbounds = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} api rmi [--server=127.0.0.1:8080] <json_file|tag> [json_file] [tag]...",
-	Short:       "Remove inbounds",
+	Short:       "remove inbounds",
 	Long: `
 Remove inbounds from V2Ray.
 
