@@ -38,10 +38,10 @@ func dialAPIServer() (conn *grpc.ClientConn, ctx context.Context, close func()) 
 	return
 }
 
-func protoToJSONString(m proto.Message) (string, error) {
+func protoToJSONString(m proto.Message, prefix, indent string) (string, error) {
 	b := new(strings.Builder)
 	e := json.NewEncoder(b)
-	e.SetIndent("", "  ")
+	e.SetIndent(prefix, indent)
 	e.SetEscapeHTML(false)
 	err := e.Encode(m)
 	if err != nil {
@@ -51,7 +51,7 @@ func protoToJSONString(m proto.Message) (string, error) {
 }
 
 func showJSONResponse(m proto.Message) {
-	output, err := protoToJSONString(m)
+	output, err := protoToJSONString(m, "", "")
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "%v\n", m)
 		base.Fatalf("error encode json: %s", err)
