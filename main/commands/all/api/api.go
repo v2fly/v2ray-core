@@ -11,10 +11,6 @@ var CmdAPI = &base.Command{
 	Long: `{{.Exec}} {{.LongName}} provides tools to manipulate V2Ray via its API.
 `,
 	Commands: []*base.Command{
-		cmdRestartLogger,
-		cmdGetStats,
-		cmdQueryStats,
-		cmdSysStats,
 		cmdBalancerCheck,
 		cmdBalancerInfo,
 		cmdBalancerOverride,
@@ -22,5 +18,7 @@ var CmdAPI = &base.Command{
 		cmdAddOutbounds,
 		cmdRemoveInbounds,
 		cmdRemoveOutbounds,
+		cmdStats,
+		cmdRestartLogger,
 	},
 }

@@ -10,6 +10,7 @@ import (
 	"v2ray.com/core/main/commands/base"
 )
 
+// TODO: support "-json" flag for json output
 var cmdBalancerInfo = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} api bi [--server=127.0.0.1:8080] [balancer]...",
@@ -71,25 +72,25 @@ func showBalancerInfo(b *routerService.BalancerMsg) {
 	if b.Override != nil {
 		sb.WriteString("  - Selecting Override:\n")
 		until := fmt.Sprintf("until: %s", b.Override.Until)
-		writeRow(sb, 0, nil, nil, until)
+		writeRow(sb, 4, 0, nil, nil, until)
 		for i, s := range b.Override.Selects {
-			writeRow(sb, i+1, nil, nil, s)
+			writeRow(sb, 4, i+1, nil, nil, s)
 		}
 	}
 	formats := getColumnFormats(b.Titles)
 	// Selects
 	sb.WriteString("  - Selects:\n")
-	writeRow(sb, 0, b.Titles, formats, "Tag")
+	writeRow(sb, 4, 0, b.Titles, formats, "Tag")
 	for i, o := range b.Selects {
-		writeRow(sb, i+1, o.Values, formats, o.Tag)
+		writeRow(sb, 4, i+1, o.Values, formats, o.Tag)
 	}
 	// Others
 	scnt := len(b.Selects)
 	if len(b.Others) > 0 {
 		sb.WriteString("  - Others:\n")
-		writeRow(sb, 0, b.Titles, formats, "Tag")
+		writeRow(sb, 4, 0, b.Titles, formats, "Tag")
 		for i, o := range b.Others {
-			writeRow(sb, scnt+i+1, o.Values, formats, o.Tag)
+			writeRow(sb, 4, scnt+i+1, o.Values, formats, o.Tag)
 		}
 	}
 	os.Stdout.WriteString(sb.String())
@@ -103,12 +104,12 @@ func getColumnFormats(titles []string) []string {
 	return w
 }
 
-func writeRow(sb *strings.Builder, index int, values, formats []string, tag string) {
+func writeRow(sb *strings.Builder, indent, index int, values, formats []string, tag string) {
 	if index == 0 {
 		// title line
-		sb.WriteString("        ")
+		sb.WriteString(strings.Repeat(" ", indent+4))
 	} else {
-		sb.WriteString(fmt.Sprintf("    %-4d", index))
+		sb.WriteString(fmt.Sprintf("%s%-4d", strings.Repeat(" ", indent), index))
 	}
 	for i, v := range values {
 		format := "%-14s"
