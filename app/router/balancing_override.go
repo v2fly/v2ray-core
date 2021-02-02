@@ -43,39 +43,39 @@ func (r *Router) OverrideSelecting(balancer string, selects []string, validity t
 	return nil
 }
 
-type overriddenSettings struct {
+type overrideSettings struct {
 	selects []string
 	until   time.Time
 }
 
-type overridden struct {
+type override struct {
 	access   sync.RWMutex
-	settings overriddenSettings
+	settings overrideSettings
 }
 
-// Get gets the overridden settings
-func (o *overridden) Get() *overriddenSettings {
+// Get gets the override settings
+func (o *override) Get() *overrideSettings {
 	o.access.RLock()
 	defer o.access.RUnlock()
 	if len(o.settings.selects) == 0 || time.Now().After(o.settings.until) {
 		return nil
 	}
-	return &overriddenSettings{
+	return &overrideSettings{
 		selects: o.settings.selects,
 		until:   o.settings.until,
 	}
 }
 
-// Put updates the overridden settings
-func (o *overridden) Put(selects []string, until time.Time) {
+// Put updates the override settings
+func (o *override) Put(selects []string, until time.Time) {
 	o.access.Lock()
 	defer o.access.Unlock()
 	o.settings.selects = selects
 	o.settings.until = until
 }
 
-// Clear clears the overridden settings
-func (o *overridden) Clear() {
+// Clear clears the override settings
+func (o *override) Clear() {
 	o.access.Lock()
 	defer o.access.Unlock()
 	o.settings.selects = nil

@@ -10,14 +10,14 @@ import (
 var cmdBalancerOverride = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} api bo [--server=127.0.0.1:8080] <-b balancer> selectors...",
-	Short:       "balancer select override",
+	Short:       "balancer override",
 	Long: `
-Override a balancer's selecting in a duration of time.
+Override a balancer's selection in a duration of time.
 
 > Make sure you have "RoutingService" set in "config.api.services" 
 of server config.
 
-Once a balancer's selecting is overridden:
+Once a balancer's selection is overridden:
 
 - The selectors of the balancer won't apply.
 - The strategy of the balancer stops selecting qualified nodes 
@@ -25,14 +25,14 @@ Once a balancer's selecting is overridden:
 
 Arguments:
 
-	-r, -remove
-		Remove the overridden
-
 	-b, -balancer
 		Tag of the balancer. Required
 
 	-v, -validity
-		Time minutes of the validity of overridden. Default 60
+		Time minutes of the validity of override. Default 60
+
+	-r, -remove
+		Remove the override
 
 	-s, -server 
 		The API server address. Default 127.0.0.1:8080
