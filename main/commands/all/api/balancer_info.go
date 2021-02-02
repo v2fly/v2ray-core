@@ -25,6 +25,9 @@ of server config.
 
 Arguments:
 
+	-json
+		Use json output.
+
 	-s, -server 
 		The API server address. Default 127.0.0.1:8080
 
@@ -39,6 +42,8 @@ Example:
 }
 
 func executeBalancerInfo(cmd *base.Command, args []string) {
+	var jsonOutput bool
+	cmd.Flag.BoolVar(&jsonOutput, "json", false, "")
 	setSharedFlags(cmd)
 	cmd.Flag.Parse(args)
 
@@ -54,6 +59,10 @@ func executeBalancerInfo(cmd *base.Command, args []string) {
 	sort.Slice(resp.Balancers, func(i, j int) bool {
 		return resp.Balancers[i].Tag < resp.Balancers[j].Tag
 	})
+	if jsonOutput {
+		showJSONResponse(resp)
+		return
+	}
 	for _, b := range resp.Balancers {
 		showBalancerInfo(b)
 	}
