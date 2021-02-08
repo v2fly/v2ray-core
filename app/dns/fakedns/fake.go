@@ -23,7 +23,7 @@ type Holder struct {
 	config *FakeDnsPool
 }
 
-func (fkdns *Holder) Type() interface{} {
+func (*Holder) Type() interface{} {
 	return (*dns.FakeDNSEngine)(nil)
 }
 
@@ -45,8 +45,10 @@ func NewFakeDNSHolder() (*Holder, error) {
 	if fkdns, err = NewFakeDNSHolderConfigOnly(nil); err != nil {
 		return nil, newError("Unable to create Fake Dns Engine").Base(err).AtError()
 	}
-	fkdns.initialize("240.0.0.0/8", 65535)
-
+	err = fkdns.initialize("240.0.0.0/8", 65535)
+	if err != nil {
+		return nil, err
+	}
 	return fkdns, nil
 }
 

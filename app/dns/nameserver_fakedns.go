@@ -18,7 +18,7 @@ func NewFakeDNSServer() *FakeDNSServer {
 	return &FakeDNSServer{}
 }
 
-func (f FakeDNSServer) Name() string {
+func (FakeDNSServer) Name() string {
 	return "FakeDNS"
 }
 

@@ -19,20 +19,20 @@ func (f FakeDNSConfig) Build() (proto.Message, error) {
 
 type FakeDNSPostProcessingStage struct{}
 
-func (f FakeDNSPostProcessingStage) Process(conf *Config) error {
-	var fakeDnsInUse bool
+func (FakeDNSPostProcessingStage) Process(conf *Config) error {
+	var fakeDNSInUse bool
 
 	if conf.DNSConfig != nil {
 		for _, v := range conf.DNSConfig.Servers {
 			if v.Address.Family().IsDomain() {
 				if v.Address.Domain() == "fakedns" {
-					fakeDnsInUse = true
+					fakeDNSInUse = true
 				}
 			}
 		}
 	}
 
-	if fakeDnsInUse {
+	if fakeDNSInUse {
 		if conf.FakeDNS == nil {
 			// Add a Fake DNS Config if there is none
 			conf.FakeDNS = &FakeDNSConfig{

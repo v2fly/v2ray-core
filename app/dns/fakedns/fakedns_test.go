@@ -9,7 +9,7 @@ import (
 	"v2ray.com/core/common/uuid"
 )
 
-func TestNewFakeDnsHolder(t *testing.T) {
+func TestNewFakeDnsHolder(_ *testing.T) {
 	_, err := NewFakeDNSHolder()
 	common.Must(err)
 }
