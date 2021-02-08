@@ -23,9 +23,9 @@ import (
 // DNS is a DNS rely server.
 type DNS struct {
 	sync.Mutex
-	tag     string
-	hosts   *StaticHosts
-	clients []*Client
+	tag           string
+	hosts         *StaticHosts
+	clients       []*Client
 	ctx           context.Context
 	domainMatcher strmatcher.IndexMatcher
 	matcherInfos  []DomainMatcherInfo
