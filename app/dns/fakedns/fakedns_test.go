@@ -70,7 +70,6 @@ func TestFakeDnsHolderCreateMappingManySingleDomain(t *testing.T) {
 }
 
 func TestFakeDnsHolderCreateMappingAndRollOver(t *testing.T) {
-
 	fkdns, err := NewFakeDNSHolderConfigOnly(&FakeDnsPool{
 		IpPool:  "240.0.0.0/12",
 		LruSize: 256,
