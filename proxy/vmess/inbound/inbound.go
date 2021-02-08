@@ -17,6 +17,7 @@ import (
 	"v2ray.com/core/common/errors"
 	"v2ray.com/core/common/log"
 	"v2ray.com/core/common/net"
+	"v2ray.com/core/common/platform"
 	"v2ray.com/core/common/protocol"
 	"v2ray.com/core/common/session"
 	"v2ray.com/core/common/signal"
@@ -224,6 +225,7 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 
 	reader := &buf.BufferedReader{Reader: buf.NewReader(connection)}
 	svrSession := encoding.NewServerSession(h.clients, h.sessionHistory)
+	svrSession.SetAEADForced(aeadForced)
 	request, err := svrSession.DecodeRequestHeader(reader)
 	if err != nil {
 		if errors.Cause(err) != io.EOF {
@@ -350,8 +352,17 @@ func (h *Handler) generateCommand(ctx context.Context, request *protocol.Request
 	return nil
 }
 
+var aeadForced = false
+
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return New(ctx, config.(*Config))
 	}))
+
+	const defaultFlagValue = "NOT_DEFINED_AT_ALL"
+
+	isAeadForced := platform.NewEnvFlag("v2ray.vmess.aead.forced").GetValue(func() string { return defaultFlagValue })
+	if isAeadForced == "true" {
+		aeadForced = true
+	}
 }
