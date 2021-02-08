@@ -57,6 +57,7 @@ type Outbound struct {
 type SniffingRequest struct {
 	OverrideDestinationForProtocol []string
 	Enabled                        bool
+	MetadataOnly                   bool
 }
 
 // Content is the metadata of the connection content.

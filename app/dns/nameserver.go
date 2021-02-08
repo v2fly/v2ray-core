@@ -55,6 +55,8 @@ func NewServer(dest net.Destination, dispatcher routing.Dispatcher) (Server, err
 			return NewDoHLocalNameServer(u), nil
 		case u.Scheme == "quic+local": // DNS-over-QUIC Local mode
 			return NewQUICNameServer(u)
+		case u.String() == "fakedns":
+			return NewFakeDNSServer(), nil
 		}
 	}
 	if dest.Network == net.Network_Unknown {
