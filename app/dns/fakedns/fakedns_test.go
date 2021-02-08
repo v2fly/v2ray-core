@@ -70,11 +70,15 @@ func TestFakeDnsHolderCreateMappingManySingleDomain(t *testing.T) {
 }
 
 func TestFakeDnsHolderCreateMappingAndRollOver(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping DNS Holder RollOver test in short mode. ~190s")
-	}
 
-	fkdns, err := NewFakeDNSHolder()
+	fkdns, err := NewFakeDNSHolderConfigOnly(&FakeDnsPool{
+		IpPool:  "240.0.0.0/12",
+		LruSize: 256,
+	})
+	common.Must(err)
+
+	err = fkdns.Start()
+
 	common.Must(err)
 
 	{
@@ -87,7 +91,7 @@ func TestFakeDnsHolderCreateMappingAndRollOver(t *testing.T) {
 		assert.Equal(t, "240.0.0.1", addr2[0].IP().String())
 	}
 
-	for i := 0; i <= 33554432; i++ {
+	for i := 0; i <= 8192; i++ {
 		{
 			result := fkdns.GetDomainFromFakeDNS(net.ParseAddress("240.0.0.0"))
 			assert.Equal(t, "fakednstest.v2fly.org", result)
