@@ -69,6 +69,7 @@ func executeBalancerInfo(cmd *base.Command, args []string) {
 }
 
 func showBalancerInfo(b *routerService.BalancerMsg) {
+	const tableIndent = 4
 	sb := new(strings.Builder)
 	// Balancer
 	sb.WriteString(fmt.Sprintf("Balancer: %s\n", b.Tag))
@@ -81,25 +82,28 @@ func showBalancerInfo(b *routerService.BalancerMsg) {
 	if b.Override != nil {
 		sb.WriteString("  - Selecting Override:\n")
 		until := fmt.Sprintf("until: %s", b.Override.Until)
-		writeRow(sb, 4, 0, nil, nil, until)
+		writeRow(sb, tableIndent, 0, []string{until}, nil)
 		for i, s := range b.Override.Selects {
-			writeRow(sb, 4, i+1, nil, nil, s)
+			writeRow(sb, tableIndent, i+1, []string{s}, nil)
 		}
 	}
+	b.Titles = append(b.Titles, "Tag")
 	formats := getColumnFormats(b.Titles)
 	// Selects
 	sb.WriteString("  - Selects:\n")
-	writeRow(sb, 4, 0, b.Titles, formats, "Tag")
+	writeRow(sb, tableIndent, 0, b.Titles, formats)
 	for i, o := range b.Selects {
-		writeRow(sb, 4, i+1, o.Values, formats, o.Tag)
+		o.Values = append(o.Values, o.Tag)
+		writeRow(sb, tableIndent, i+1, o.Values, formats)
 	}
 	// Others
 	scnt := len(b.Selects)
 	if len(b.Others) > 0 {
 		sb.WriteString("  - Others:\n")
-		writeRow(sb, 4, 0, b.Titles, formats, "Tag")
+		writeRow(sb, tableIndent, 0, b.Titles, formats)
 		for i, o := range b.Others {
-			writeRow(sb, 4, scnt+i+1, o.Values, formats, o.Tag)
+			o.Values = append(o.Values, o.Tag)
+			writeRow(sb, tableIndent, scnt+i+1, o.Values, formats)
 		}
 	}
 	os.Stdout.WriteString(sb.String())
@@ -113,7 +117,7 @@ func getColumnFormats(titles []string) []string {
 	return w
 }
 
-func writeRow(sb *strings.Builder, indent, index int, values, formats []string, tag string) {
+func writeRow(sb *strings.Builder, indent, index int, values, formats []string) {
 	if index == 0 {
 		// title line
 		sb.WriteString(strings.Repeat(" ", indent+4))
@@ -127,6 +131,5 @@ func writeRow(sb *strings.Builder, indent, index int, values, formats []string, 
 		}
 		sb.WriteString(fmt.Sprintf(format, v))
 	}
-	sb.WriteString(tag)
 	sb.WriteByte('\n')
 }

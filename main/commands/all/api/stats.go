@@ -88,6 +88,7 @@ func getRuntimeStats(jsonOutput bool) {
 }
 
 func showRuntimeStats(s *statsService.SysStatsResponse) {
+	formats := []string{"%-22s", "%-10s"}
 	rows := [][]string{
 		{"Up time", (time.Duration(s.Uptime) * time.Second).String()},
 		{"Memory obtained", units.ByteSize(s.Sys).String()},
@@ -100,10 +101,13 @@ func showRuntimeStats(s *statsService.SysStatsResponse) {
 		{"Number of GC", fmt.Sprintf("%d", s.NumGC)},
 		{"Time of GC pause", (time.Duration(s.PauseTotalNs) * time.Nanosecond).String()},
 	}
-	formts := []string{"%-22s", "%-10s"}
 	sb := new(strings.Builder)
+	writeRow(sb, 0, 0,
+		[]string{"Item", "Value"},
+		formats,
+	)
 	for i, r := range rows {
-		writeRow(sb, 0, i+1, r, formts, "")
+		writeRow(sb, 0, i+1, r, formats)
 	}
 	os.Stdout.WriteString(sb.String())
 }
@@ -136,9 +140,14 @@ func showStats(stats []*statsService.Stat) {
 	if len(stats) == 0 {
 		return
 	}
+	formats := []string{"%-12s", "%s"}
 	sum := int64(0)
 	sb := new(strings.Builder)
 	idx := 0
+	writeRow(sb, 0, 0,
+		[]string{"Value", "Name"},
+		formats,
+	)
 	for _, stat := range stats {
 		// if stat.Value == 0 {
 		// 	continue
@@ -147,9 +156,8 @@ func showStats(stats []*statsService.Stat) {
 		sum += stat.Value
 		writeRow(
 			sb, 0, idx,
-			[]string{units.ByteSize(stat.Value).String()},
-			[]string{"%-12s"},
-			stat.Name,
+			[]string{units.ByteSize(stat.Value).String(), stat.Name},
+			formats,
 		)
 	}
 	sb.WriteString(
