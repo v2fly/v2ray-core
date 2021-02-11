@@ -13,11 +13,11 @@ require (
 	github.com/seiflotfy/cuckoofilter v0.0.0-20201222105146-bc6005554a0c
 	github.com/stretchr/testify v1.7.0
 	github.com/v2fly/VSign v0.0.0-20201108000810-e2adc24bf848
-	go.starlark.net v0.0.0-20201210151846-e81fc95f7bd5
+	go.starlark.net v0.0.0-20210208172022-0a10e4fe7402
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
-	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
+	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
-	golang.org/x/sys v0.0.0-20201231184435-2d18734c6014
+	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c
 	google.golang.org/grpc v1.35.0
 	google.golang.org/protobuf v1.25.0
 	h12.io/socks v1.0.2
