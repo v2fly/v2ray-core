@@ -5,9 +5,10 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/proto"
-	v2net "v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/proxy/freedom"
+
+	v2net "github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/protocol"
+	"github.com/v2fly/v2ray-core/v4/proxy/freedom"
 )
 
 type FreedomConfig struct {

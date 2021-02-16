@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"io"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/infra/conf"
-	json_reader "v2ray.com/core/infra/conf/json"
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/common/errors"
+	"github.com/v2fly/v2ray-core/v4/infra/conf"
+	json_reader "github.com/v2fly/v2ray-core/v4/infra/conf/json"
 )
 
 type offset struct {

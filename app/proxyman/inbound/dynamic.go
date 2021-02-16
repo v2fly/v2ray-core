@@ -5,14 +5,14 @@ import (
 	"sync"
 	"time"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common/dice"
-	"v2ray.com/core/common/mux"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/task"
-	"v2ray.com/core/proxy"
-	"v2ray.com/core/transport/internet"
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/app/proxyman"
+	"github.com/v2fly/v2ray-core/v4/common/dice"
+	"github.com/v2fly/v2ray-core/v4/common/mux"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/task"
+	"github.com/v2fly/v2ray-core/v4/proxy"
+	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
 type DynamicInboundHandler struct {

@@ -2,17 +2,17 @@
 
 package router
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
 import (
 	"context"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common"
-	"v2ray.com/core/features/dns"
-	"v2ray.com/core/features/outbound"
-	"v2ray.com/core/features/routing"
-	routing_dns "v2ray.com/core/features/routing/dns"
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/features/dns"
+	"github.com/v2fly/v2ray-core/v4/features/outbound"
+	"github.com/v2fly/v2ray-core/v4/features/routing"
+	routing_dns "github.com/v2fly/v2ray-core/v4/features/routing/dns"
 )
 
 // Router is an implementation of routing.Router.

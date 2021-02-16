@@ -4,13 +4,14 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/uuid"
-	"v2ray.com/core/proxy/vless"
-	. "v2ray.com/core/proxy/vless/encoding"
+
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/buf"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/protocol"
+	"github.com/v2fly/v2ray-core/v4/common/uuid"
+	"github.com/v2fly/v2ray-core/v4/proxy/vless"
+	. "github.com/v2fly/v2ray-core/v4/proxy/vless/encoding"
 )
 
 func toAccount(a *vless.Account) protocol.Account {

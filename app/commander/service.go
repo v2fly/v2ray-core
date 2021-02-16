@@ -7,7 +7,8 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"v2ray.com/core/common"
+
+	"github.com/v2fly/v2ray-core/v4/common"
 )
 
 // Service is a Commander service.

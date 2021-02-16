@@ -1,8 +1,8 @@
 package routing
 
 import (
-	"v2ray.com/core/common"
-	"v2ray.com/core/features"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/features"
 )
 
 // Router is a feature to choose an outbound tag for the given request.

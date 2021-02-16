@@ -5,9 +5,9 @@ import (
 	"encoding/binary"
 	"hash/fnv"
 
-	"v2ray.com/core/common"
-
 	"golang.org/x/crypto/sha3"
+
+	"github.com/v2fly/v2ray-core/v4/common"
 )
 
 // Authenticate authenticates a byte array using Fnv hash.

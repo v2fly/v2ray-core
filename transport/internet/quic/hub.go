@@ -7,12 +7,13 @@ import (
 	"time"
 
 	"github.com/lucas-clemente/quic-go"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol/tls/cert"
-	"v2ray.com/core/common/signal/done"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/tls"
+
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/protocol/tls/cert"
+	"github.com/v2fly/v2ray-core/v4/common/signal/done"
+	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
 )
 
 // Listener is an internet.Listener that listens for TCP connections.

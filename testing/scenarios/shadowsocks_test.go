@@ -6,19 +6,19 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/log"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common"
-	clog "v2ray.com/core/common/log"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/proxy/dokodemo"
-	"v2ray.com/core/proxy/freedom"
-	"v2ray.com/core/proxy/shadowsocks"
-	"v2ray.com/core/testing/servers/tcp"
-	"v2ray.com/core/testing/servers/udp"
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/app/log"
+	"github.com/v2fly/v2ray-core/v4/app/proxyman"
+	"github.com/v2fly/v2ray-core/v4/common"
+	clog "github.com/v2fly/v2ray-core/v4/common/log"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/protocol"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"github.com/v2fly/v2ray-core/v4/proxy/dokodemo"
+	"github.com/v2fly/v2ray-core/v4/proxy/freedom"
+	"github.com/v2fly/v2ray-core/v4/proxy/shadowsocks"
+	"github.com/v2fly/v2ray-core/v4/testing/servers/tcp"
+	"github.com/v2fly/v2ray-core/v4/testing/servers/udp"
 )
 
 func TestShadowsocksChaCha20Poly1305TCP(t *testing.T) {

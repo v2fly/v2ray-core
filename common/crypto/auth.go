@@ -5,11 +5,11 @@ import (
 	"io"
 	"math/rand"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/bytespool"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/protocol"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/buf"
+	"github.com/v2fly/v2ray-core/v4/common/bytespool"
+	"github.com/v2fly/v2ray-core/v4/common/errors"
+	"github.com/v2fly/v2ray-core/v4/common/protocol"
 )
 
 type BytesGenerator func() []byte

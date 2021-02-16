@@ -6,8 +6,9 @@ import (
 	"syscall"
 
 	"github.com/pires/go-proxyproto"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/session"
+
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/session"
 )
 
 var (

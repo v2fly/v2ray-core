@@ -3,9 +3,9 @@
 package dns
 
 import (
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/strmatcher"
-	"v2ray.com/core/common/uuid"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/strmatcher"
+	"github.com/v2fly/v2ray-core/v4/common/uuid"
 )
 
 var typeMap = map[DomainMatchingType]strmatcher.Type{

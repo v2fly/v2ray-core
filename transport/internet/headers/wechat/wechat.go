@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/binary"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/dice"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/dice"
 )
 
 type VideoChat struct {

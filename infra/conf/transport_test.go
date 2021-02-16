@@ -5,18 +5,19 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	. "v2ray.com/core/infra/conf"
-	"v2ray.com/core/transport"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/headers/http"
-	"v2ray.com/core/transport/internet/headers/noop"
-	"v2ray.com/core/transport/internet/headers/tls"
-	"v2ray.com/core/transport/internet/kcp"
-	"v2ray.com/core/transport/internet/quic"
-	"v2ray.com/core/transport/internet/tcp"
-	"v2ray.com/core/transport/internet/websocket"
+
+	"github.com/v2fly/v2ray-core/v4/common/protocol"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
+	. "github.com/v2fly/v2ray-core/v4/infra/conf"
+	"github.com/v2fly/v2ray-core/v4/transport"
+	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/headers/http"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/headers/noop"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/headers/tls"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/kcp"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/quic"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/tcp"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/websocket"
 )
 
 func TestSocketConfig(t *testing.T) {

@@ -2,14 +2,14 @@
 
 package log
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
 import (
 	"context"
 	"sync"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/log"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/log"
 )
 
 // Instance is a log.Handler that handles logs.
