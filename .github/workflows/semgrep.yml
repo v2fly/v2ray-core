@@ -5,7 +5,7 @@ jobs:
     name: Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - uses: returntocorp/semgrep-action@v1
         env: # Optional environment variable for inline PR comments (beta)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
