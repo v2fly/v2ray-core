@@ -16,6 +16,7 @@ import (
 
 	// Other optional features.
 	_ "v2ray.com/core/app/dns"
+	_ "v2ray.com/core/app/dns/fakedns"
 	_ "v2ray.com/core/app/log"
 	_ "v2ray.com/core/app/policy"
 	_ "v2ray.com/core/app/reverse"

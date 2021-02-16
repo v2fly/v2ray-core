@@ -148,11 +148,13 @@ func (h *DynamicInboundHandler) refresh() error {
 
 		if net.HasNetwork(nl, net.Network_UDP) {
 			worker := &udpWorker{
+				ctx:             h.ctx,
 				tag:             h.tag,
 				proxy:           p,
 				address:         address,
 				port:            port,
 				dispatcher:      h.mux,
+				sniffingConfig:  h.receiverConfig.GetEffectiveSniffingSettings(),
 				uplinkCounter:   uplinkCounter,
 				downlinkCounter: downlinkCounter,
 				stream:          h.streamSettings,

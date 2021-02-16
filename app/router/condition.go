@@ -65,6 +65,24 @@ type DomainMatcher struct {
 	matchers strmatcher.IndexMatcher
 }
 
+func NewACAutomatonDomainMatcher(domains []*Domain) (*DomainMatcher, error) {
+	g := strmatcher.NewACAutomatonMatcherGroup()
+	for _, d := range domains {
+		matcherType, f := matcherTypeMap[d.Type]
+		if !f {
+			return nil, newError("unsupported domain type", d.Type)
+		}
+		_, err := g.AddPattern(d.Value, matcherType)
+		if err != nil {
+			return nil, err
+		}
+	}
+	g.Build()
+	return &DomainMatcher{
+		matchers: g,
+	}, nil
+}
+
 func NewDomainMatcher(domains []*Domain) (*DomainMatcher, error) {
 	g := new(strmatcher.MatcherGroup)
 	for _, d := range domains {

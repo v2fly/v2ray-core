@@ -128,11 +128,13 @@ func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *
 
 			if net.HasNetwork(nl, net.Network_UDP) {
 				worker := &udpWorker{
+					ctx:             ctx,
 					tag:             tag,
 					proxy:           p,
 					address:         address,
 					port:            net.Port(port),
 					dispatcher:      h.mux,
+					sniffingConfig:  receiverConfig.GetEffectiveSniffingSettings(),
 					uplinkCounter:   uplinkCounter,
 					downlinkCounter: downlinkCounter,
 					stream:          mss,
