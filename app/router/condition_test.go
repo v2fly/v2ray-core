@@ -8,17 +8,17 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	. "v2ray.com/core/app/router"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/platform"
-	"v2ray.com/core/common/platform/filesystem"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/protocol/http"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/features/routing"
-	routing_session "v2ray.com/core/features/routing/session"
+	. "github.com/v2fly/v2ray-core/v4/app/router"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/errors"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/platform"
+	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
+	"github.com/v2fly/v2ray-core/v4/common/protocol"
+	"github.com/v2fly/v2ray-core/v4/common/protocol/http"
+	"github.com/v2fly/v2ray-core/v4/common/session"
+	"github.com/v2fly/v2ray-core/v4/features/routing"
+	routing_session "github.com/v2fly/v2ray-core/v4/features/routing/session"
 )
 
 func init() {
@@ -63,7 +63,7 @@ func TestRoutingRule(t *testing.T) {
 			rule: &RoutingRule{
 				Domain: []*Domain{
 					{
-						Value: "v2ray.com",
+						Value: "v2fly.org",
 						Type:  Domain_Plain,
 					},
 					{
@@ -78,11 +78,11 @@ func TestRoutingRule(t *testing.T) {
 			},
 			test: []ruleTest{
 				{
-					input:  withOutbound(&session.Outbound{Target: net.TCPDestination(net.DomainAddress("v2ray.com"), 80)}),
+					input:  withOutbound(&session.Outbound{Target: net.TCPDestination(net.DomainAddress("v2fly.org"), 80)}),
 					output: true,
 				},
 				{
-					input:  withOutbound(&session.Outbound{Target: net.TCPDestination(net.DomainAddress("www.v2ray.com.www"), 80)}),
+					input:  withOutbound(&session.Outbound{Target: net.TCPDestination(net.DomainAddress("www.v2fly.org.www"), 80)}),
 					output: true,
 				},
 				{
@@ -206,16 +206,16 @@ func TestRoutingRule(t *testing.T) {
 		{
 			rule: &RoutingRule{
 				UserEmail: []string{
-					"admin@v2ray.com",
+					"admin@v2fly.org",
 				},
 			},
 			test: []ruleTest{
 				{
-					input:  withInbound(&session.Inbound{User: &protocol.MemoryUser{Email: "admin@v2ray.com"}}),
+					input:  withInbound(&session.Inbound{User: &protocol.MemoryUser{Email: "admin@v2fly.org"}}),
 					output: true,
 				},
 				{
-					input:  withInbound(&session.Inbound{User: &protocol.MemoryUser{Email: "love@v2ray.com"}}),
+					input:  withInbound(&session.Inbound{User: &protocol.MemoryUser{Email: "love@v2fly.org"}}),
 					output: false,
 				},
 				{

@@ -6,19 +6,20 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/miekg/dns"
-	"v2ray.com/core"
-	"v2ray.com/core/app/dispatcher"
-	. "v2ray.com/core/app/dns"
-	"v2ray.com/core/app/policy"
-	"v2ray.com/core/app/proxyman"
-	_ "v2ray.com/core/app/proxyman/outbound"
-	"v2ray.com/core/app/router"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/serial"
-	feature_dns "v2ray.com/core/features/dns"
-	"v2ray.com/core/proxy/freedom"
-	"v2ray.com/core/testing/servers/udp"
+
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/app/dispatcher"
+	. "github.com/v2fly/v2ray-core/v4/app/dns"
+	"github.com/v2fly/v2ray-core/v4/app/policy"
+	"github.com/v2fly/v2ray-core/v4/app/proxyman"
+	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/outbound"
+	"github.com/v2fly/v2ray-core/v4/app/router"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
+	feature_dns "github.com/v2fly/v2ray-core/v4/features/dns"
+	"github.com/v2fly/v2ray-core/v4/proxy/freedom"
+	"github.com/v2fly/v2ray-core/v4/testing/servers/udp"
 )
 
 type staticHandler struct {
