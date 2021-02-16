@@ -18,7 +18,6 @@ on:
 
 jobs:
   test:
-    if: github.repository != 'v2ray/v2ray-core'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
