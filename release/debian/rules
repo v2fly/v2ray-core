@@ -16,9 +16,9 @@ override_dh_auto_clean:
 	rm -rf vendor
 
 override_dh_auto_build:
-	DH_GOPKG="v2ray.com/core/main" dh_auto_build -- -ldflags "-s -w"
+	DH_GOPKG="github.com/v2fly/v2ray-core/v4/main" dh_auto_build -- -ldflags "-s -w"
 	cd $(BUILDDIR); mv bin/main bin/v2ray
-	DH_GOPKG="v2ray.com/core/infra/control/main" dh_auto_build -- -ldflags "-s -w" -tags confonly
+	DH_GOPKG="github.com/v2fly/v2ray-core/v4/infra/control/main" dh_auto_build -- -ldflags "-s -w" -tags confonly
 	cd $(BUILDDIR); mv bin/main bin/v2ctl
 
 override_dh_auto_install:
