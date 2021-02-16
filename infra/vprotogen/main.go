@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"strings"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common"
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/common"
 )
 
 func main() {

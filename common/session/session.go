@@ -1,13 +1,13 @@
 // Package session provides functions for sessions of incoming requests.
-package session // import "v2ray.com/core/common/session"
+package session // import "github.com/v2fly/v2ray-core/v4/common/session"
 
 import (
 	"context"
 	"math/rand"
 
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
+	"github.com/v2fly/v2ray-core/v4/common/errors"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/protocol"
 )
 
 // ID of a session.

@@ -1,8 +1,8 @@
 package features
 
-import "v2ray.com/core/common"
+import "github.com/v2fly/v2ray-core/v4/common"
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
 // Feature is the interface for V2Ray features. All features must implement this interface.
 // All existing features have an implementation in app directory. These features can be replaced by third-party ones.
