@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package v2ray.core.proxy.dns;
 option csharp_namespace = "V2Ray.Core.Proxy.Dns";
-option go_package = "v2ray.com/core/proxy/dns";
+option go_package = "github.com/v2fly/v2ray-core/v4/proxy/dns";
 option java_package = "com.v2ray.core.proxy.dns";
 option java_multiple_files = true;
 
