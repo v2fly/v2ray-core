@@ -1,5 +1,5 @@
 // Package session provides functions for sessions of incoming requests.
-package session // import "github.com/v2fly/v2ray-core/v4/common/session"
+package session
 
 import (
 	"context"

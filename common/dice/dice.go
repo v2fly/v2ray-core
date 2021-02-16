@@ -1,6 +1,6 @@
 // Package dice contains common functions to generate random number.
 // It also initialize math/rand with the time in seconds at launch time.
-package dice // import "github.com/v2fly/v2ray-core/v4/common/dice"
+package dice
 
 import (
 	"math/rand"
