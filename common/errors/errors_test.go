@@ -2,11 +2,13 @@ package errors_test
 
 import (
 	"io"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 
+	"github.com/v2fly/v2ray-core/v4/common"
 	. "github.com/v2fly/v2ray-core/v4/common/errors"
 	"github.com/v2fly/v2ray-core/v4/common/log"
 )
@@ -40,17 +42,26 @@ func TestError(t *testing.T) {
 type e struct{}
 
 func TestErrorMessage(t *testing.T) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		t.Error(err)
+	}
+	moduleName, gmnErr := common.GetModuleName(pwd)
+	if gmnErr != nil {
+		t.Error(gmnErr)
+	}
+
 	data := []struct {
 		err error
 		msg string
 	}{
 		{
 			err: New("a").Base(New("b")).WithPathObj(e{}),
-			msg: "github.com/v2fly/v2ray-core/v4/common/errors_test: a > b",
+			msg: moduleName + "/common/errors_test: a > b",
 		},
 		{
 			err: New("a").Base(New("b").WithPathObj(e{})),
-			msg: "a > github.com/v2fly/v2ray-core/v4/common/errors_test: b",
+			msg: "a > " + moduleName + "/common/errors_test: b",
 		},
 	}
 
