@@ -7,12 +7,15 @@ import (
 
 var cmdRestartLogger = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api restartlogger [--server=127.0.0.1:8080]",
-	Short:       "restart logger",
+	UsageLine:   "{{.Exec}} api log [--server=127.0.0.1:8080] --restart",
+	Short:       "log operations",
 	Long: `
-Restart the logger of V2Ray.
+Log operations, current supports only '-restart'.
 
 Arguments:
+
+	-restart 
+		Restart the logger
 
 	-s, -server 
 		The API server address. Default 127.0.0.1:8080
@@ -24,8 +27,15 @@ Arguments:
 }
 
 func executeRestartLogger(cmd *base.Command, args []string) {
+	var restart bool
+	cmd.Flag.BoolVar(&restart, "restart", false, "")
 	setSharedFlags(cmd)
 	cmd.Flag.Parse(args)
+
+	if !restart {
+		cmd.Usage()
+		return
+	}
 
 	conn, ctx, close := dialAPIServer()
 	defer close()
