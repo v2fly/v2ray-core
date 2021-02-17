@@ -3,7 +3,7 @@ package api
 import (
 	"testing"
 
-	statsService "v2ray.com/core/app/stats/command"
+	statsService "github.com/v2fly/v2ray-core/v4/app/stats/command"
 )
 
 func TestEmptyResponese_0(t *testing.T) {

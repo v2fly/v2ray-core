@@ -1,6 +1,6 @@
 // Config file of V2Ray. This file follows standard JSON format, with comments support.
 // Uncomment entries below to satisfy your needs. Also read our manual for more detail at
-// https://www.v2ray.com/
+// https://www.v2fly.org/
 {
   "log": {
     // By default, V2Ray writes access log to stdout.
@@ -83,8 +83,8 @@
   "dns": {
     // Static hosts, similar to hosts file.
     "hosts": {
-      // Match v2ray.com to another domain on CloudFlare. This domain will be used when querying IPs for v2ray.com.
-      "domain:v2ray.com": "www.vicemc.net",
+      // Match v2fly.org to another domain on CloudFlare. This domain will be used when querying IPs for v2fly.org.
+      "domain:v2fly.org": "www.vicemc.net",
 
       // The following settings help to eliminate DNS poisoning in mainland China.
       // It is safe to comment these out if this is not the case for you.

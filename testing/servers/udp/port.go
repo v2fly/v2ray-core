@@ -1,6 +1,6 @@
 package udp
 
-import "v2ray.com/core/common/net"
+import "github.com/v2fly/v2ray-core/v4/common/net"
 
 // PickPort returns an unused UDP port of the system.
 func PickPort() net.Port {

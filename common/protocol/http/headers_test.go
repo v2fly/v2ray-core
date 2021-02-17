@@ -8,9 +8,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/net"
-	. "v2ray.com/core/common/protocol/http"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	. "github.com/v2fly/v2ray-core/v4/common/protocol/http"
 )
 
 func TestParseXForwardedFor(t *testing.T) {
@@ -87,14 +87,14 @@ func TestParseHost(t *testing.T) {
 		Error       bool
 	}{
 		{
-			RawHost:     "v2ray.com:80",
+			RawHost:     "v2fly.org:80",
 			DefaultPort: 443,
-			Destination: net.TCPDestination(net.DomainAddress("v2ray.com"), 80),
+			Destination: net.TCPDestination(net.DomainAddress("v2fly.org"), 80),
 		},
 		{
-			RawHost:     "tls.v2ray.com",
+			RawHost:     "tls.v2fly.org",
 			DefaultPort: 443,
-			Destination: net.TCPDestination(net.DomainAddress("tls.v2ray.com"), 443),
+			Destination: net.TCPDestination(net.DomainAddress("tls.v2fly.org"), 443),
 		},
 		{
 			RawHost:     "[2401:1bc0:51f0:ec08::1]:80",

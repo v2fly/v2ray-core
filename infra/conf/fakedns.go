@@ -2,7 +2,8 @@ package conf
 
 import (
 	"google.golang.org/protobuf/proto"
-	"v2ray.com/core/app/dns/fakedns"
+
+	"github.com/v2fly/v2ray-core/v4/app/dns/fakedns"
 )
 
 type FakeDNSConfig struct {

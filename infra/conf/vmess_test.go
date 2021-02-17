@@ -3,13 +3,13 @@ package conf_test
 import (
 	"testing"
 
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/serial"
-	. "v2ray.com/core/infra/conf"
-	"v2ray.com/core/proxy/vmess"
-	"v2ray.com/core/proxy/vmess/inbound"
-	"v2ray.com/core/proxy/vmess/outbound"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/protocol"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
+	. "github.com/v2fly/v2ray-core/v4/infra/conf"
+	"github.com/v2fly/v2ray-core/v4/proxy/vmess"
+	"github.com/v2fly/v2ray-core/v4/proxy/vmess/inbound"
+	"github.com/v2fly/v2ray-core/v4/proxy/vmess/outbound"
 )
 
 func TestVMessOutbound(t *testing.T) {
@@ -26,7 +26,7 @@ func TestVMessOutbound(t *testing.T) {
 					"users": [
 						{
 							"id": "e641f5ad-9397-41e3-bf1a-e8740dfed019",
-							"email": "love@v2ray.com",
+							"email": "love@v2fly.org",
 							"level": 255
 						}
 					]
@@ -44,7 +44,7 @@ func TestVMessOutbound(t *testing.T) {
 						Port: 80,
 						User: []*protocol.User{
 							{
-								Email: "love@v2ray.com",
+								Email: "love@v2fly.org",
 								Level: 255,
 								Account: serial.ToTypedMessage(&vmess.Account{
 									Id:      "e641f5ad-9397-41e3-bf1a-e8740dfed019",
@@ -75,7 +75,7 @@ func TestVMessInbound(t *testing.T) {
 						"id": "27848739-7e62-4138-9fd3-098a63964b6b",
 						"level": 0,
 						"alterId": 16,
-						"email": "love@v2ray.com",
+						"email": "love@v2fly.org",
 						"security": "aes-128-gcm"
 					}
 				],
@@ -93,7 +93,7 @@ func TestVMessInbound(t *testing.T) {
 				User: []*protocol.User{
 					{
 						Level: 0,
-						Email: "love@v2ray.com",
+						Email: "love@v2fly.org",
 						Account: serial.ToTypedMessage(&vmess.Account{
 							Id:      "27848739-7e62-4138-9fd3-098a63964b6b",
 							AlterId: 16,

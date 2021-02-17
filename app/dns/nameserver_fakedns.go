@@ -3,9 +3,9 @@ package dns
 import (
 	"context"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/features/dns"
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/features/dns"
 )
 
 type FakeDNSServer struct {

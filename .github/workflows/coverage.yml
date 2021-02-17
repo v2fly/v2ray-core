@@ -10,7 +10,6 @@ on:
 
 jobs:
   coverage:
-    if: github.repository != 'v2ray/v2ray-core'
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.x
@@ -21,17 +20,7 @@ jobs:
       - name: Checkout codebase
         uses: actions/checkout@v2
 
-      - name: Cache go module
-        uses: actions/cache@v2.1.4
-        id: cache-gomodules
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
       - name: Get dependencies
-        if: steps.cache-gomodules.outputs.cache-hit != 'true'
         run: go get -v -t -d ./...
 
       - name: Run coverage

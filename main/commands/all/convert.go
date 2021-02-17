@@ -9,8 +9,9 @@ import (
 	"github.com/pelletier/go-toml"
 	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v2"
-	"v2ray.com/core/infra/conf/serial"
-	"v2ray.com/core/main/commands/base"
+
+	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
+	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 )
 
 var cmdConvert = &base.Command{
