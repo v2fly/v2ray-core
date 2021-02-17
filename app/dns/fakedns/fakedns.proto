@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package v2ray.core.app.dns.fakedns;
+option csharp_namespace = "V2Ray.Core.App.Dns.Fakedns";
+option go_package = "github.com/v2fly/v2ray-core/v4/app/dns/fakedns";
+option java_package = "com.v2ray.core.app.dns.fakedns";
+option java_multiple_files = true;
+
+message FakeDnsPool{
+  string ip_pool = 1; //CIDR of IP pool used as fake DNS IP
+  int64  lruSize = 2; //Size of Pool for remembering relationship between domain name and IP address
+}

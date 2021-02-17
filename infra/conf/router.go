@@ -6,10 +6,11 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/proto"
-	"v2ray.com/core/app/router"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/platform/filesystem"
-	"v2ray.com/core/common/serial"
+
+	"github.com/v2fly/v2ray-core/v4/app/router"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 )
 
 type RouterRulesConfig struct {

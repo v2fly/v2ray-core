@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"v2ray.com/core/common/dice"
-	"v2ray.com/core/features/routing"
+	"github.com/v2fly/v2ray-core/v4/common/dice"
+	"github.com/v2fly/v2ray-core/v4/features/routing"
 )
 
 const (

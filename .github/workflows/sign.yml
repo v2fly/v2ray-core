@@ -6,7 +6,6 @@ on:
 
 jobs:
   sign:
-    if: github.repository != 'v2ray/v2ray-core'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout default branch

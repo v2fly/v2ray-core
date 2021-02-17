@@ -3,17 +3,17 @@ package inbound
 import (
 	"context"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/dice"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/mux"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/features/policy"
-	"v2ray.com/core/features/stats"
-	"v2ray.com/core/proxy"
-	"v2ray.com/core/transport/internet"
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/app/proxyman"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/dice"
+	"github.com/v2fly/v2ray-core/v4/common/errors"
+	"github.com/v2fly/v2ray-core/v4/common/mux"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/features/policy"
+	"github.com/v2fly/v2ray-core/v4/features/stats"
+	"github.com/v2fly/v2ray-core/v4/proxy"
+	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
 func getStatCounter(v *core.Instance, tag string) (stats.Counter, stats.Counter) {
@@ -128,11 +128,13 @@ func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *
 
 			if net.HasNetwork(nl, net.Network_UDP) {
 				worker := &udpWorker{
+					ctx:             ctx,
 					tag:             tag,
 					proxy:           p,
 					address:         address,
 					port:            net.Port(port),
 					dispatcher:      h.mux,
+					sniffingConfig:  receiverConfig.GetEffectiveSniffingSettings(),
 					uplinkCounter:   uplinkCounter,
 					downlinkCounter: downlinkCounter,
 					stream:          mss,

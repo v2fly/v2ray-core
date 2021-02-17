@@ -8,17 +8,17 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	. "v2ray.com/core/app/router"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/platform"
-	"v2ray.com/core/common/platform/filesystem"
-	"v2ray.com/core/common/protocol"
-	"v2ray.com/core/common/protocol/http"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/features/routing"
-	routing_session "v2ray.com/core/features/routing/session"
+	. "github.com/v2fly/v2ray-core/v4/app/router"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/errors"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/platform"
+	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
+	"github.com/v2fly/v2ray-core/v4/common/protocol"
+	"github.com/v2fly/v2ray-core/v4/common/protocol/http"
+	"github.com/v2fly/v2ray-core/v4/common/session"
+	"github.com/v2fly/v2ray-core/v4/features/routing"
+	routing_session "github.com/v2fly/v2ray-core/v4/features/routing/session"
 )
 
 func init() {
@@ -63,7 +63,7 @@ func TestRoutingRule(t *testing.T) {
 			rule: &RoutingRule{
 				Domain: []*Domain{
 					{
-						Value: "v2ray.com",
+						Value: "v2fly.org",
 						Type:  Domain_Plain,
 					},
 					{
@@ -78,11 +78,11 @@ func TestRoutingRule(t *testing.T) {
 			},
 			test: []ruleTest{
 				{
-					input:  withOutbound(&session.Outbound{Target: net.TCPDestination(net.DomainAddress("v2ray.com"), 80)}),
+					input:  withOutbound(&session.Outbound{Target: net.TCPDestination(net.DomainAddress("v2fly.org"), 80)}),
 					output: true,
 				},
 				{
-					input:  withOutbound(&session.Outbound{Target: net.TCPDestination(net.DomainAddress("www.v2ray.com.www"), 80)}),
+					input:  withOutbound(&session.Outbound{Target: net.TCPDestination(net.DomainAddress("www.v2fly.org.www"), 80)}),
 					output: true,
 				},
 				{
@@ -206,16 +206,16 @@ func TestRoutingRule(t *testing.T) {
 		{
 			rule: &RoutingRule{
 				UserEmail: []string{
-					"admin@v2ray.com",
+					"admin@v2fly.org",
 				},
 			},
 			test: []ruleTest{
 				{
-					input:  withInbound(&session.Inbound{User: &protocol.MemoryUser{Email: "admin@v2ray.com"}}),
+					input:  withInbound(&session.Inbound{User: &protocol.MemoryUser{Email: "admin@v2fly.org"}}),
 					output: true,
 				},
 				{
-					input:  withInbound(&session.Inbound{User: &protocol.MemoryUser{Email: "love@v2ray.com"}}),
+					input:  withInbound(&session.Inbound{User: &protocol.MemoryUser{Email: "love@v2fly.org"}}),
 					output: false,
 				},
 				{
@@ -358,6 +358,8 @@ func TestChinaSites(t *testing.T) {
 
 	matcher, err := NewDomainMatcher(domains)
 	common.Must(err)
+	acMatcher, err := NewACAutomatonDomainMatcher(domains)
+	common.Must(err)
 
 	type TestCase struct {
 		Domain string
@@ -387,9 +389,96 @@ func TestChinaSites(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		r := matcher.ApplyDomain(testCase.Domain)
-		if r != testCase.Output {
-			t.Error("expected output ", testCase.Output, " for domain ", testCase.Domain, " but got ", r)
+		r1 := matcher.ApplyDomain(testCase.Domain)
+		r2 := acMatcher.ApplyDomain(testCase.Domain)
+		if r1 != testCase.Output {
+			t.Error("DomainMatcher expected output ", testCase.Output, " for domain ", testCase.Domain, " but got ", r1)
+		} else if r2 != testCase.Output {
+			t.Error("ACDomainMatcher expected output ", testCase.Output, " for domain ", testCase.Domain, " but got ", r2)
+		}
+	}
+}
+
+func BenchmarkACDomainMatcher(b *testing.B) {
+	domains, err := loadGeoSite("CN")
+	common.Must(err)
+
+	matcher, err := NewACAutomatonDomainMatcher(domains)
+	common.Must(err)
+
+	type TestCase struct {
+		Domain string
+		Output bool
+	}
+	testCases := []TestCase{
+		{
+			Domain: "163.com",
+			Output: true,
+		},
+		{
+			Domain: "163.com",
+			Output: true,
+		},
+		{
+			Domain: "164.com",
+			Output: false,
+		},
+		{
+			Domain: "164.com",
+			Output: false,
+		},
+	}
+
+	for i := 0; i < 1024; i++ {
+		testCases = append(testCases, TestCase{Domain: strconv.Itoa(i) + ".not-exists.com", Output: false})
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, testCase := range testCases {
+			_ = matcher.ApplyDomain(testCase.Domain)
+		}
+	}
+}
+
+func BenchmarkDomainMatcher(b *testing.B) {
+	domains, err := loadGeoSite("CN")
+	common.Must(err)
+
+	matcher, err := NewDomainMatcher(domains)
+	common.Must(err)
+
+	type TestCase struct {
+		Domain string
+		Output bool
+	}
+	testCases := []TestCase{
+		{
+			Domain: "163.com",
+			Output: true,
+		},
+		{
+			Domain: "163.com",
+			Output: true,
+		},
+		{
+			Domain: "164.com",
+			Output: false,
+		},
+		{
+			Domain: "164.com",
+			Output: false,
+		},
+	}
+
+	for i := 0; i < 1024; i++ {
+		testCases = append(testCases, TestCase{Domain: strconv.Itoa(i) + ".not-exists.com", Output: false})
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, testCase := range testCases {
+			_ = matcher.ApplyDomain(testCase.Domain)
 		}
 	}
 }

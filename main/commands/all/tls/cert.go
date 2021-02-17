@@ -8,15 +8,15 @@ import (
 	"strings"
 	"time"
 
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/protocol/tls/cert"
-	"v2ray.com/core/common/task"
-	"v2ray.com/core/main/commands/base"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/protocol/tls/cert"
+	"github.com/v2fly/v2ray-core/v4/common/task"
+	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 )
 
 // cmdCert is the tls cert command
 var cmdCert = &base.Command{
-	UsageLine: "{{.Exec}} tls cert [--ca] [--domain=v2ray.com] [--expire=240h]",
+	UsageLine: "{{.Exec}} tls cert [--ca] [--domain=v2fly.org] [--expire=240h]",
 	Short:     "Generate TLS certificates",
 	Long: `
 Generate TLS certificates.

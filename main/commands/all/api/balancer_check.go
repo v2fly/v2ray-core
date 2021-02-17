@@ -1,8 +1,8 @@
 package api
 
 import (
-	routerService "v2ray.com/core/app/router/command"
-	"v2ray.com/core/main/commands/base"
+	routerService "github.com/v2fly/v2ray-core/v4/app/router/command"
+	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 )
 
 var cmdBalancerCheck = &base.Command{

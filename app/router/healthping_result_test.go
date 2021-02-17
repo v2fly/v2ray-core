@@ -2,11 +2,11 @@ package router_test
 
 import (
 	"math"
-	reflect "reflect"
+	"reflect"
 	"testing"
 	"time"
 
-	"v2ray.com/core/app/router"
+	"github.com/v2fly/v2ray-core/v4/app/router"
 )
 
 func TestHealthPingResults(t *testing.T) {

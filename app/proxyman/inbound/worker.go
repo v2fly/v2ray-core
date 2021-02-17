@@ -6,21 +6,21 @@ import (
 	"sync/atomic"
 	"time"
 
-	"v2ray.com/core/app/proxyman"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/common/signal/done"
-	"v2ray.com/core/common/task"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/features/stats"
-	"v2ray.com/core/proxy"
-	"v2ray.com/core/transport/internet"
-	"v2ray.com/core/transport/internet/tcp"
-	"v2ray.com/core/transport/internet/udp"
-	"v2ray.com/core/transport/pipe"
+	"github.com/v2fly/v2ray-core/v4/app/proxyman"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/buf"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"github.com/v2fly/v2ray-core/v4/common/session"
+	"github.com/v2fly/v2ray-core/v4/common/signal/done"
+	"github.com/v2fly/v2ray-core/v4/common/task"
+	"github.com/v2fly/v2ray-core/v4/features/routing"
+	"github.com/v2fly/v2ray-core/v4/features/stats"
+	"github.com/v2fly/v2ray-core/v4/proxy"
+	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/tcp"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/udp"
+	"github.com/v2fly/v2ray-core/v4/transport/pipe"
 )
 
 type worker interface {
@@ -87,6 +87,7 @@ func (w *tcpWorker) callback(conn internet.Connection) {
 	if w.sniffingConfig != nil {
 		content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
 		content.SniffingRequest.OverrideDestinationForProtocol = w.sniffingConfig.DestinationOverride
+		content.SniffingRequest.MetadataOnly = w.sniffingConfig.MetadataOnly
 	}
 	ctx = session.ContextWithContent(ctx, content)
 	if w.uplinkCounter != nil || w.downlinkCounter != nil {
@@ -230,11 +231,14 @@ type udpWorker struct {
 	tag             string
 	stream          *internet.MemoryStreamConfig
 	dispatcher      routing.Dispatcher
+	sniffingConfig  *proxyman.SniffingConfig
 	uplinkCounter   stats.Counter
 	downlinkCounter stats.Counter
 
 	checker    *task.Periodic
 	activeConn map[connID]*udpConn
+
+	ctx context.Context
 }
 
 func (w *udpWorker) getConnection(id connID) (*udpConn, bool) {
@@ -286,7 +290,7 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 		common.Must(w.checker.Start())
 
 		go func() {
-			ctx := context.Background()
+			ctx := w.ctx
 			sid := session.NewID()
 			ctx = session.ContextWithID(ctx, sid)
 
@@ -300,6 +304,13 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 				Gateway: net.UDPDestination(w.address, w.port),
 				Tag:     w.tag,
 			})
+			content := new(session.Content)
+			if w.sniffingConfig != nil {
+				content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
+				content.SniffingRequest.OverrideDestinationForProtocol = w.sniffingConfig.DestinationOverride
+				content.SniffingRequest.MetadataOnly = w.sniffingConfig.MetadataOnly
+			}
+			ctx = session.ContextWithContent(ctx, content)
 			if err := w.proxy.Process(ctx, net.Network_UDP, conn, w.dispatcher); err != nil {
 				newError("connection ends").Base(err).WriteToLog(session.ExportIDToError(ctx))
 			}
@@ -428,6 +439,7 @@ func (w *dsWorker) callback(conn internet.Connection) {
 	if w.sniffingConfig != nil {
 		content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
 		content.SniffingRequest.OverrideDestinationForProtocol = w.sniffingConfig.DestinationOverride
+		content.SniffingRequest.MetadataOnly = w.sniffingConfig.MetadataOnly
 	}
 	ctx = session.ContextWithContent(ctx, content)
 	if w.uplinkCounter != nil || w.downlinkCounter != nil {

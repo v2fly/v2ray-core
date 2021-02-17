@@ -11,6 +11,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // RoutingServiceClient is the client API for RoutingService service.
@@ -33,7 +34,7 @@ func NewRoutingServiceClient(cc grpc.ClientConnInterface) RoutingServiceClient {
 }
 
 func (c *routingServiceClient) SubscribeRoutingStats(ctx context.Context, in *SubscribeRoutingStatsRequest, opts ...grpc.CallOption) (RoutingService_SubscribeRoutingStatsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_RoutingService_serviceDesc.Streams[0], "/v2ray.core.app.router.command.RoutingService/SubscribeRoutingStats", opts...)
+	stream, err := c.cc.NewStream(ctx, &RoutingService_ServiceDesc.Streams[0], "/v2ray.core.app.router.command.RoutingService/SubscribeRoutingStats", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +142,7 @@ type UnsafeRoutingServiceServer interface {
 }
 
 func RegisterRoutingServiceServer(s grpc.ServiceRegistrar, srv RoutingServiceServer) {
-	s.RegisterService(&_RoutingService_serviceDesc, srv)
+	s.RegisterService(&RoutingService_ServiceDesc, srv)
 }
 
 func _RoutingService_SubscribeRoutingStats_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -237,7 +238,10 @@ func _RoutingService_OverrideSelecting_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
-var _RoutingService_serviceDesc = grpc.ServiceDesc{
+// RoutingService_ServiceDesc is the grpc.ServiceDesc for RoutingService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var RoutingService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "v2ray.core.app.router.command.RoutingService",
 	HandlerType: (*RoutingServiceServer)(nil),
 	Methods: []grpc.MethodDesc{

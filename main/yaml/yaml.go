@@ -6,12 +6,12 @@ import (
 	"io"
 	"io/ioutil"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/cmdarg"
-	"v2ray.com/core/infra/conf/json"
-	"v2ray.com/core/infra/conf/merge"
-	"v2ray.com/core/infra/conf/serial"
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/json"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/merge"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
 )
 
 func init() {

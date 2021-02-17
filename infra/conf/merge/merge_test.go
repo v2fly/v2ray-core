@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"v2ray.com/core/infra/conf/merge"
-	"v2ray.com/core/infra/conf/serial"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/merge"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
 )
 
 func TestMergeV2Style(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"v2ray.com/core/common/buf"
+	"github.com/v2fly/v2ray-core/v4/common/buf"
 )
 
 // LoadArg loads one arg, maybe an remote url, or local file path
