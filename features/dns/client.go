@@ -1,10 +1,10 @@
 package dns
 
 import (
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/serial"
-	"v2ray.com/core/features"
+	"github.com/v2fly/v2ray-core/v4/common/errors"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"github.com/v2fly/v2ray-core/v4/features"
 )
 
 // Client is a V2Ray feature for querying DNS information.

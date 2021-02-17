@@ -7,10 +7,10 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"v2ray.com/core/app/router"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/serial"
-	. "v2ray.com/core/infra/conf"
+	"github.com/v2fly/v2ray-core/v4/app/router"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
+	. "github.com/v2fly/v2ray-core/v4/infra/conf"
 )
 
 func TestRouterConfig(t *testing.T) {

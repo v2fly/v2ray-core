@@ -1,18 +1,19 @@
 package command
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
 import (
 	"context"
 	"time"
 
 	"google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
-	"v2ray.com/core"
-	"v2ray.com/core/common"
-	"v2ray.com/core/features/routing"
-	"v2ray.com/core/features/stats"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/features/routing"
+	"github.com/v2fly/v2ray-core/v4/features/stats"
 )
 
 // routingServer is an implementation of RoutingService.

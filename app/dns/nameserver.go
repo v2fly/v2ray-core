@@ -5,12 +5,12 @@ import (
 	"net/url"
 	"time"
 
-	"v2ray.com/core"
-	"v2ray.com/core/app/router"
-	"v2ray.com/core/common/errors"
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/strmatcher"
-	"v2ray.com/core/features/routing"
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/app/router"
+	"github.com/v2fly/v2ray-core/v4/common/errors"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/strmatcher"
+	"github.com/v2fly/v2ray-core/v4/features/routing"
 )
 
 // IPOption is an object for IP query options.
@@ -53,6 +53,8 @@ func NewServer(dest net.Destination, dispatcher routing.Dispatcher) (Server, err
 			return NewDoHLocalNameServer(u), nil
 		case u.Scheme == "quic+local": // DNS-over-QUIC Local mode
 			return NewQUICNameServer(u)
+		case u.String() == "fakedns":
+			return NewFakeDNSServer(), nil
 		}
 	}
 	if dest.Network == net.Network_Unknown {

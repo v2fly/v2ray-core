@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"io"
 
-	"v2ray.com/core/common/cmdarg"
-	"v2ray.com/core/infra/conf/serial"
+	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
 )
 
 // FilesToJSON merges multiple jsons files into one json, accepts remote url, or local file path

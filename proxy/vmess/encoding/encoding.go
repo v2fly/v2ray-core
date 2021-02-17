@@ -1,11 +1,11 @@
 package encoding
 
 import (
-	"v2ray.com/core/common/net"
-	"v2ray.com/core/common/protocol"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/protocol"
 )
 
-//go:generate go run v2ray.com/core/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
 const (
 	Version = byte(1)

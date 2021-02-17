@@ -1,10 +1,10 @@
 package router
 
 import (
-	sync "sync"
+	"sync"
 	"time"
 
-	"v2ray.com/core/features/outbound"
+	"github.com/v2fly/v2ray-core/v4/features/outbound"
 )
 
 func (b *Balancer) overrideSelecting(selects []string, validity time.Duration) error {

@@ -3,8 +3,8 @@ package all
 import (
 	"fmt"
 
-	"v2ray.com/core/common/uuid"
-	"v2ray.com/core/main/commands/base"
+	"github.com/v2fly/v2ray-core/v4/common/uuid"
+	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 )
 
 var cmdUUID = &base.Command{

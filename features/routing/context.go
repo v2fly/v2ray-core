@@ -1,7 +1,7 @@
 package routing
 
 import (
-	"v2ray.com/core/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/net"
 )
 
 // Context is a feature to store connection information for routing.

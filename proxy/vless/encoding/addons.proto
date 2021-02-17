@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package v2ray.core.proxy.vless.encoding;
 option csharp_namespace = "V2Ray.Core.Proxy.Vless.Encoding";
-option go_package = "v2ray.com/core/proxy/vless/encoding";
+option go_package = "github.com/v2fly/v2ray-core/v4/proxy/vless/encoding";
 option java_package = "com.v2ray.core.proxy.vless.encoding";
 option java_multiple_files = true;
 

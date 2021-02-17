@@ -4,7 +4,8 @@ import (
 	"time"
 
 	"google.golang.org/protobuf/proto"
-	"v2ray.com/core/app/router"
+
+	"github.com/v2fly/v2ray-core/v4/app/router"
 )
 
 const (

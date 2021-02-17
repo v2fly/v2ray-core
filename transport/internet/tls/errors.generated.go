@@ -1,6 +1,6 @@
 package tls
 
-import "v2ray.com/core/common/errors"
+import "github.com/v2fly/v2ray-core/v4/common/errors"
 
 type errPathObjHolder struct{}
 

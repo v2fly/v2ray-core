@@ -7,16 +7,16 @@ import (
 
 	"golang.org/x/net/dns/dnsmessage"
 
-	"v2ray.com/core"
-	"v2ray.com/core/common"
-	"v2ray.com/core/common/buf"
-	"v2ray.com/core/common/net"
-	dns_proto "v2ray.com/core/common/protocol/dns"
-	"v2ray.com/core/common/session"
-	"v2ray.com/core/common/task"
-	"v2ray.com/core/features/dns"
-	"v2ray.com/core/transport"
-	"v2ray.com/core/transport/internet"
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/buf"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	dns_proto "github.com/v2fly/v2ray-core/v4/common/protocol/dns"
+	"github.com/v2fly/v2ray-core/v4/common/session"
+	"github.com/v2fly/v2ray-core/v4/common/task"
+	"github.com/v2fly/v2ray-core/v4/features/dns"
+	"github.com/v2fly/v2ray-core/v4/transport"
+	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
 func init() {
@@ -36,6 +36,7 @@ type ownLinkVerifier interface {
 }
 
 type Handler struct {
+	client          dns.Client
 	ipv4Lookup      dns.IPv4Lookup
 	ipv6Lookup      dns.IPv6Lookup
 	ownLinkVerifier ownLinkVerifier
@@ -43,6 +44,7 @@ type Handler struct {
 }
 
 func (h *Handler) Init(config *Config, dnsClient dns.Client) error {
+	h.client = dnsClient
 	ipv4lookup, ok := dnsClient.(dns.IPv4Lookup)
 	if !ok {
 		return newError("dns.Client doesn't implement IPv4Lookup")
@@ -209,6 +211,8 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 	var ips []net.IP
 	var err error
 
+	var ttl uint32 = 600
+
 	switch qType {
 	case dnsmessage.TypeA:
 		ips, err = h.ipv4Lookup.LookupIPv4(domain)
@@ -241,7 +245,7 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 	}))
 	common.Must(builder.StartAnswers())
 
-	rHeader := dnsmessage.ResourceHeader{Name: dnsmessage.MustNewName(domain), Class: dnsmessage.ClassINET, TTL: 600}
+	rHeader := dnsmessage.ResourceHeader{Name: dnsmessage.MustNewName(domain), Class: dnsmessage.ClassINET, TTL: ttl}
 	for _, ip := range ips {
 		if len(ip) == net.IPv4len {
 			var r dnsmessage.AResource

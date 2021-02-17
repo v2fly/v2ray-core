@@ -4,66 +4,67 @@ import (
 	// The following are necessary as they register handlers in their init functions.
 
 	// Required features. Can't remove unless there is replacements.
-	_ "v2ray.com/core/app/dispatcher"
-	_ "v2ray.com/core/app/proxyman/inbound"
-	_ "v2ray.com/core/app/proxyman/outbound"
+	_ "github.com/v2fly/v2ray-core/v4/app/dispatcher"
+	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/inbound"
+	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/outbound"
 
 	// Default commander and all its services. This is an optional feature.
-	_ "v2ray.com/core/app/commander"
-	_ "v2ray.com/core/app/log/command"
-	_ "v2ray.com/core/app/proxyman/command"
-	_ "v2ray.com/core/app/stats/command"
+	_ "github.com/v2fly/v2ray-core/v4/app/commander"
+	_ "github.com/v2fly/v2ray-core/v4/app/log/command"
+	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/command"
+	_ "github.com/v2fly/v2ray-core/v4/app/stats/command"
 
 	// Other optional features.
-	_ "v2ray.com/core/app/dns"
-	_ "v2ray.com/core/app/log"
-	_ "v2ray.com/core/app/policy"
-	_ "v2ray.com/core/app/reverse"
-	_ "v2ray.com/core/app/router"
-	_ "v2ray.com/core/app/stats"
+	_ "github.com/v2fly/v2ray-core/v4/app/dns"
+	_ "github.com/v2fly/v2ray-core/v4/app/dns/fakedns"
+	_ "github.com/v2fly/v2ray-core/v4/app/log"
+	_ "github.com/v2fly/v2ray-core/v4/app/policy"
+	_ "github.com/v2fly/v2ray-core/v4/app/reverse"
+	_ "github.com/v2fly/v2ray-core/v4/app/router"
+	_ "github.com/v2fly/v2ray-core/v4/app/stats"
 
 	// Inbound and outbound proxies.
-	_ "v2ray.com/core/proxy/blackhole"
-	_ "v2ray.com/core/proxy/dns"
-	_ "v2ray.com/core/proxy/dokodemo"
-	_ "v2ray.com/core/proxy/freedom"
-	_ "v2ray.com/core/proxy/http"
-	_ "v2ray.com/core/proxy/shadowsocks"
-	_ "v2ray.com/core/proxy/socks"
-	_ "v2ray.com/core/proxy/trojan"
-	_ "v2ray.com/core/proxy/vless/inbound"
-	_ "v2ray.com/core/proxy/vless/outbound"
-	_ "v2ray.com/core/proxy/vmess/inbound"
-	_ "v2ray.com/core/proxy/vmess/outbound"
+	_ "github.com/v2fly/v2ray-core/v4/proxy/blackhole"
+	_ "github.com/v2fly/v2ray-core/v4/proxy/dns"
+	_ "github.com/v2fly/v2ray-core/v4/proxy/dokodemo"
+	_ "github.com/v2fly/v2ray-core/v4/proxy/freedom"
+	_ "github.com/v2fly/v2ray-core/v4/proxy/http"
+	_ "github.com/v2fly/v2ray-core/v4/proxy/shadowsocks"
+	_ "github.com/v2fly/v2ray-core/v4/proxy/socks"
+	_ "github.com/v2fly/v2ray-core/v4/proxy/trojan"
+	_ "github.com/v2fly/v2ray-core/v4/proxy/vless/inbound"
+	_ "github.com/v2fly/v2ray-core/v4/proxy/vless/outbound"
+	_ "github.com/v2fly/v2ray-core/v4/proxy/vmess/inbound"
+	_ "github.com/v2fly/v2ray-core/v4/proxy/vmess/outbound"
 
 	// Transports
-	_ "v2ray.com/core/transport/internet/domainsocket"
-	_ "v2ray.com/core/transport/internet/http"
-	_ "v2ray.com/core/transport/internet/kcp"
-	_ "v2ray.com/core/transport/internet/quic"
-	_ "v2ray.com/core/transport/internet/tcp"
-	_ "v2ray.com/core/transport/internet/tls"
-	_ "v2ray.com/core/transport/internet/udp"
-	_ "v2ray.com/core/transport/internet/websocket"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/domainsocket"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/http"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/kcp"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/quic"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/tcp"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/tls"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/udp"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/websocket"
 
 	// Transport headers
-	_ "v2ray.com/core/transport/internet/headers/http"
-	_ "v2ray.com/core/transport/internet/headers/noop"
-	_ "v2ray.com/core/transport/internet/headers/srtp"
-	_ "v2ray.com/core/transport/internet/headers/tls"
-	_ "v2ray.com/core/transport/internet/headers/utp"
-	_ "v2ray.com/core/transport/internet/headers/wechat"
-	_ "v2ray.com/core/transport/internet/headers/wireguard"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/headers/http"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/headers/noop"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/headers/srtp"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/headers/tls"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/headers/utp"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/headers/wechat"
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/headers/wireguard"
 
 	// JSON config support.
-	_ "v2ray.com/core/main/json"
+	_ "github.com/v2fly/v2ray-core/v4/main/json"
 
 	// TOML config support.
-	_ "v2ray.com/core/main/toml"
+	_ "github.com/v2fly/v2ray-core/v4/main/toml"
 
 	// YAML config support.
-	_ "v2ray.com/core/main/yaml"
+	_ "github.com/v2fly/v2ray-core/v4/main/yaml"
 
 	// commands
-	_ "v2ray.com/core/main/commands/all"
+	_ "github.com/v2fly/v2ray-core/v4/main/commands/all"
 )

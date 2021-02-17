@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"v2ray.com/core/features/routing"
+	"github.com/v2fly/v2ray-core/v4/features/routing"
 )
 
 // CheckHanlders implements routing.RouterChecker.

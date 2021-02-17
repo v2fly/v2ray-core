@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	. "v2ray.com/core/app/stats"
-	"v2ray.com/core/common"
-	"v2ray.com/core/features/stats"
+	. "github.com/v2fly/v2ray-core/v4/app/stats"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/features/stats"
 )
 
 func TestInterface(t *testing.T) {
