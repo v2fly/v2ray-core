@@ -19,10 +19,10 @@ Add outbounds to V2Ray.
 
 Arguments:
 
-	-s, -server 
+	-s, -server <server:port>
 		The API server address. Default 127.0.0.1:8080
 
-	-t, -timeout
+	-t, -timeout <seconds>
 		Timeout seconds to call API. Default 3
 
 Example:

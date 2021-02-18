@@ -18,7 +18,7 @@ Ping the domain with TLS handshake.
 
 Arguments:
 
-	-ip
+	-ip <ip>
 		The IP address of the domain.
 `,
 }

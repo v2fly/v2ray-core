@@ -18,16 +18,16 @@ Test config files, without launching V2Ray server.
 
 Arguments:
 
-	-c, -config
+	-c, -config <file>
 		Config file for V2Ray. Multiple assign is accepted.
 
-	-d, -confdir
+	-d, -confdir <dir>
 		A dir with config files. Multiple assign is accepted.
 
 	-r
 		Load confdir recursively.
 
-	-format
+	-format <format>
 		Format of input files. (default "json")
 
 Examples:

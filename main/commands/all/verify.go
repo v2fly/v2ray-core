@@ -15,7 +15,7 @@ Verify if a binary is officially signed.
 
 Arguments:
 
-	-sig 
+	-sig <signature_file>
 		The path to the signature file
 `,
 }

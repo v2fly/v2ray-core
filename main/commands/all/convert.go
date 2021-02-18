@@ -27,12 +27,12 @@ before convert if multiple assigned.
 
 Arguments:
 
-	-i, -input
+	-i, -input <format>
 		Specify the input format.
 		Available values: "json", "toml", "yaml"
 		Default: "json"
 
-	-o, -output
+	-o, -output <format>
 		Specify the output format
 		Available values: "json", "toml", "yaml", "protobuf" / "pb"
 		Default: "json"
