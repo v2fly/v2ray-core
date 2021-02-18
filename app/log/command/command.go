@@ -35,7 +35,7 @@ func (s *LoggerServer) RestartLogger(ctx context.Context, request *RestartLogger
 }
 
 // FollowLog implements LoggerService.
-func (s *LoggerServer) FollowLog(r *FollowLogRequest, stream LoggerService_FollowLogServer) error {
+func (s *LoggerServer) FollowLog(_ *FollowLogRequest, stream LoggerService_FollowLogServer) error {
 	logger := s.V.GetFeature((*log.Instance)(nil))
 	if logger == nil {
 		return newError("unable to get logger instance")
