@@ -1,6 +1,6 @@
 module github.com/v2fly/v2ray-core/v4
 
-go 1.15
+go 1.16
 
 require (
 	github.com/golang/mock v1.4.4
@@ -17,7 +17,7 @@ require (
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
-	golang.org/x/sys v0.0.0-20210216163648-f7da38b97c65
+	golang.org/x/sys v0.0.0-20210217105451-b926d437f341
 	google.golang.org/grpc v1.35.0
 	google.golang.org/protobuf v1.25.0
 	h12.io/socks v1.0.2
