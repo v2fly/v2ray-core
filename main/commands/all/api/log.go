@@ -1,16 +1,21 @@
 package api
 
 import (
+	"io"
+	"log"
+
 	logService "github.com/v2fly/v2ray-core/v4/app/log/command"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 )
 
-var cmdRestartLogger = &base.Command{
+var cmdLog = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api log [--server=127.0.0.1:8080] --restart",
+	UsageLine:   "{{.Exec}} api log [--server=127.0.0.1:8080]",
 	Short:       "log operations",
 	Long: `
-Log operations, current supports only '-restart'.
+Follow and print logs from v2ray.
+
+> It ignores -timeout flag while following logs
 
 Arguments:
 
@@ -22,6 +27,11 @@ Arguments:
 
 	-t, -timeout
 		Timeout seconds to call API. Default 3
+
+Example:
+
+    {{.Exec}} {{.LongName}}
+    {{.Exec}} {{.LongName}} --restart
 `,
 	Run: executeRestartLogger,
 }
@@ -32,18 +42,42 @@ func executeRestartLogger(cmd *base.Command, args []string) {
 	setSharedFlags(cmd)
 	cmd.Flag.Parse(args)
 
-	if !restart {
-		cmd.Usage()
+	if restart {
+		restartLogger()
 		return
 	}
+	followLogger()
+}
 
+func restartLogger() {
 	conn, ctx, close := dialAPIServer()
 	defer close()
-
 	client := logService.NewLoggerServiceClient(conn)
 	r := &logService.RestartLoggerRequest{}
 	_, err := client.RestartLogger(ctx, r)
 	if err != nil {
 		base.Fatalf("failed to restart logger: %s", err)
+	}
+}
+
+func followLogger() {
+	conn, ctx, close := dialAPIServerWithoutTimeout()
+	defer close()
+	client := logService.NewLoggerServiceClient(conn)
+	r := &logService.FollowLogRequest{}
+	stream, err := client.FollowLog(ctx, r)
+	if err != nil {
+		base.Fatalf("failed to follow logger: %s", err)
+	}
+
+	for {
+		resp, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			base.Fatalf("failed to fetch log: %s", err)
+		}
+		log.Print(resp.Message)
 	}
 }

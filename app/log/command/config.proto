@@ -12,6 +12,13 @@ message RestartLoggerRequest {}
 
 message RestartLoggerResponse {}
 
+message FollowLogRequest {}
+
+message FollowLogResponse {
+  string message = 1;
+}
+
 service LoggerService {
   rpc RestartLogger(RestartLoggerRequest) returns (RestartLoggerResponse) {}
+  rpc FollowLog(FollowLogRequest) returns (stream FollowLogResponse) {};
 }

@@ -28,13 +28,27 @@ func setSharedFlags(cmd *base.Command) {
 
 func dialAPIServer() (conn *grpc.ClientConn, ctx context.Context, close func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(apiTimeout)*time.Second)
-	conn, err := grpc.DialContext(ctx, apiServerAddrPtr, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		base.Fatalf("failed to dial %s", apiServerAddrPtr)
-	}
+	conn = dialAPIServerWithContext(ctx)
 	close = func() {
 		cancel()
 		conn.Close()
+	}
+	return
+}
+
+func dialAPIServerWithoutTimeout() (conn *grpc.ClientConn, ctx context.Context, close func()) {
+	ctx = context.Background()
+	conn = dialAPIServerWithContext(ctx)
+	close = func() {
+		conn.Close()
+	}
+	return
+}
+
+func dialAPIServerWithContext(ctx context.Context) (conn *grpc.ClientConn) {
+	conn, err := grpc.DialContext(ctx, apiServerAddrPtr, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		base.Fatalf("failed to dial %s", apiServerAddrPtr)
 	}
 	return
 }
