@@ -17,7 +17,7 @@ type Instance struct {
 	config       *Config
 	accessLogger log.Handler
 	errorLogger  log.Handler
-	followers    map[uintptr]func(msg log.Message)
+	followers    map[reflect.Value]func(msg log.Message)
 	active       bool
 }
 
@@ -96,16 +96,16 @@ func (g *Instance) AddFollower(f func(msg log.Message)) {
 	g.Lock()
 	defer g.Unlock()
 	if g.followers == nil {
-		g.followers = make(map[uintptr]func(msg log.Message))
+		g.followers = make(map[reflect.Value]func(msg log.Message))
 	}
-	g.followers[reflect.ValueOf(f).Pointer()] = f
+	g.followers[reflect.ValueOf(f)] = f
 }
 
 // RemoveFollower implements log.Follower.
 func (g *Instance) RemoveFollower(f func(msg log.Message)) {
 	g.Lock()
 	defer g.Unlock()
-	delete(g.followers, reflect.ValueOf(f).Pointer())
+	delete(g.followers, reflect.ValueOf(f))
 }
 
 // Handle implements log.Handler.
