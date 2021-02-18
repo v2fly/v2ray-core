@@ -52,22 +52,20 @@ Example:
 func executeStats(cmd *base.Command, args []string) {
 	setSharedFlags(cmd)
 	var (
-		runtime    bool
-		regexp     bool
-		jsonOutput bool
-		reset      bool
+		runtime bool
+		regexp  bool
+		reset   bool
 	)
 	cmd.Flag.BoolVar(&runtime, "runtime", false, "")
 	cmd.Flag.BoolVar(&regexp, "regexp", false, "")
-	cmd.Flag.BoolVar(&jsonOutput, "json", false, "")
 	cmd.Flag.BoolVar(&reset, "reset", false, "")
 	cmd.Flag.Parse(args)
 	unnamed := cmd.Flag.Args()
 	if runtime {
-		getRuntimeStats(jsonOutput)
+		getRuntimeStats(apiJSON)
 		return
 	}
-	getStats(unnamed, regexp, reset, jsonOutput)
+	getStats(unnamed, regexp, reset, apiJSON)
 }
 
 func getRuntimeStats(jsonOutput bool) {

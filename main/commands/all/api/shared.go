@@ -17,6 +17,7 @@ import (
 var (
 	apiServerAddrPtr string
 	apiTimeout       int
+	apiJSON          bool
 )
 
 func setSharedFlags(cmd *base.Command) {
@@ -24,6 +25,7 @@ func setSharedFlags(cmd *base.Command) {
 	cmd.Flag.StringVar(&apiServerAddrPtr, "server", "127.0.0.1:8080", "")
 	cmd.Flag.IntVar(&apiTimeout, "t", 3, "")
 	cmd.Flag.IntVar(&apiTimeout, "timeout", 3, "")
+	cmd.Flag.BoolVar(&apiJSON, "json", false, "")
 }
 
 func dialAPIServer() (conn *grpc.ClientConn, ctx context.Context, close func()) {

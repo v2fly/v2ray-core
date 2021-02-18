@@ -42,8 +42,6 @@ Example:
 }
 
 func executeBalancerInfo(cmd *base.Command, args []string) {
-	var jsonOutput bool
-	cmd.Flag.BoolVar(&jsonOutput, "json", false, "")
 	setSharedFlags(cmd)
 	cmd.Flag.Parse(args)
 
@@ -59,7 +57,7 @@ func executeBalancerInfo(cmd *base.Command, args []string) {
 	sort.Slice(resp.Balancers, func(i, j int) bool {
 		return resp.Balancers[i].Tag < resp.Balancers[j].Tag
 	})
-	if jsonOutput {
+	if apiJSON {
 		showJSONResponse(resp)
 		return
 	}
