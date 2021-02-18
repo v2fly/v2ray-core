@@ -20,7 +20,7 @@ import (
 var CmdRun = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} run [-c config.json] [-d dir]",
-	Short:       "Run V2Ray with config",
+	Short:       "run V2Ray with config",
 	Long: `
 Run V2Ray with config.
 

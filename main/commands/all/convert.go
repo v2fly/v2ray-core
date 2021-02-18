@@ -20,7 +20,7 @@ import (
 var cmdConvert = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} convert [c1.json] [<url>.json] [dir1] ...",
-	Short:       "Convert config files",
+	Short:       "convert config files",
 	Long: `
 Convert config files between different formats. Files are merged 
 before convert if multiple assigned.

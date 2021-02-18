@@ -9,7 +9,7 @@ import (
 
 var cmdVerify = &base.Command{
 	UsageLine: "{{.Exec}} verify [--sig=sig-file] file",
-	Short:     "Verify if a binary is officially signed",
+	Short:     "verify if a binary is officially signed",
 	Long: `
 Verify if a binary is officially signed.
 

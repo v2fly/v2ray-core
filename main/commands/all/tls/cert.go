@@ -17,7 +17,7 @@ import (
 // cmdCert is the tls cert command
 var cmdCert = &base.Command{
 	UsageLine: "{{.Exec}} tls cert [--ca] [--domain=v2fly.org] [--expire=240h]",
-	Short:     "Generate TLS certificates",
+	Short:     "generate TLS certificates",
 	Long: `
 Generate TLS certificates.
 

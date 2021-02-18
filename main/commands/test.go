@@ -12,7 +12,7 @@ import (
 var CmdTest = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} test [-format=json] [-c config.json] [-d dir]",
-	Short:       "Test config files",
+	Short:       "test config files",
 	Long: `
 Test config files, without launching V2Ray server.
 
