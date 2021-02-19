@@ -7,7 +7,8 @@ package merge
 const priorityKey string = "_priority"
 const tagKey string = "_tag"
 
-func applyRules(m map[string]interface{}) error {
+// ApplyRules applies rules according  _tag, _priority fields, and remove them
+func ApplyRules(m map[string]interface{}) error {
 	err := sortMergeSlices(m)
 	if err != nil {
 		return err

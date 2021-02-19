@@ -5,7 +5,7 @@
 package merge_test
 
 import (
-	"encoding/json"
+	"bytes"
 	"reflect"
 	"strings"
 	"testing"
@@ -50,7 +50,7 @@ func TestMergeV2Style(t *testing.T) {
 	  ]}
 	}
 	`
-	m, err := merge.BytesToMap([][]byte{[]byte(json1), []byte(json2)})
+	m, err := merge.JSONs([][]byte{[]byte(json1), []byte(json2)})
 	if err != nil {
 		t.Error(err)
 	}
@@ -91,7 +91,7 @@ func TestMergeTag(t *testing.T) {
 	  	}
 	}
 	`
-	m, err := merge.BytesToMap([][]byte{[]byte(json1), []byte(json2)})
+	m, err := merge.JSONs([][]byte{[]byte(json1), []byte(json2)})
 	if err != nil {
 		t.Error(err)
 	}
@@ -147,7 +147,7 @@ func TestMergeTagValueTypes(t *testing.T) {
 	  }]
 	}
 	`
-	m, err := merge.BytesToMap([][]byte{[]byte(json1), []byte(json2)})
+	m, err := merge.JSONs([][]byte{[]byte(json1), []byte(json2)})
 	if err != nil {
 		t.Error(err)
 	}
@@ -187,20 +187,24 @@ func TestMergeTagDeep(t *testing.T) {
 		}]
 	}
 	`
-	m, err := merge.BytesToMap([][]byte{[]byte(json1), []byte(json2)})
+	m, err := merge.JSONs([][]byte{[]byte(json1), []byte(json2)})
 	if err != nil {
 		t.Error(err)
 	}
 	assertResult(t, m, expected)
 }
-func assertResult(t *testing.T, value map[string]interface{}, expected string) {
-	e := make(map[string]interface{})
-	err := serial.DecodeJSON(strings.NewReader(expected), &e)
+func assertResult(t *testing.T, value []byte, expected string) {
+	v := make(map[string]interface{})
+	err := serial.DecodeJSON(bytes.NewReader(value), &v)
 	if err != nil {
 		t.Error(err)
 	}
-	if !reflect.DeepEqual(value, e) {
-		bs, _ := json.Marshal(value)
-		t.Fatalf("expected:\n%s\n\nactual:\n%s", expected, string(bs))
+	e := make(map[string]interface{})
+	err = serial.DecodeJSON(strings.NewReader(expected), &e)
+	if err != nil {
+		t.Error(err)
+	}
+	if !reflect.DeepEqual(v, e) {
+		t.Fatalf("expected:\n%s\n\nactual:\n%s", expected, string(value))
 	}
 }

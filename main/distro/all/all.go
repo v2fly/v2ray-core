@@ -56,14 +56,8 @@ import (
 	_ "github.com/v2fly/v2ray-core/v4/transport/internet/headers/wechat"
 	_ "github.com/v2fly/v2ray-core/v4/transport/internet/headers/wireguard"
 
-	// JSON config support.
-	_ "github.com/v2fly/v2ray-core/v4/main/json"
-
-	// TOML config support.
-	_ "github.com/v2fly/v2ray-core/v4/main/toml"
-
-	// YAML config support.
-	_ "github.com/v2fly/v2ray-core/v4/main/yaml"
+	// JSON, TOML, YAML config support.
+	_ "github.com/v2fly/v2ray-core/v4/main/formats"
 
 	// commands
 	_ "github.com/v2fly/v2ray-core/v4/main/commands/all"
