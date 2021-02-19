@@ -11,13 +11,16 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 
+	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 )
 
 var (
-	apiServerAddrPtr string
-	apiTimeout       int
-	apiJSON          bool
+	apiServerAddrPtr     string
+	apiTimeout           int
+	apiJSON              bool
+	apiConfigFormat      string
+	apiConfigRecursively bool
 )
 
 func setSharedFlags(cmd *base.Command) {
@@ -26,6 +29,11 @@ func setSharedFlags(cmd *base.Command) {
 	cmd.Flag.IntVar(&apiTimeout, "t", 3, "")
 	cmd.Flag.IntVar(&apiTimeout, "timeout", 3, "")
 	cmd.Flag.BoolVar(&apiJSON, "json", false, "")
+}
+
+func setSharedConfigFlags(cmd *base.Command) {
+	cmd.Flag.StringVar(&apiConfigFormat, "format", core.FormatAuto, "")
+	cmd.Flag.BoolVar(&apiConfigRecursively, "r", false, "")
 }
 
 func dialAPIServer() (conn *grpc.ClientConn, ctx context.Context, close func()) {

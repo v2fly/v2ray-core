@@ -3,7 +3,6 @@ package all
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -13,9 +12,9 @@ import (
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/merge"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/mergers"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
+	"github.com/v2fly/v2ray-core/v4/main/commands/helpers"
 )
 
 var cmdConvert = &base.Command{
@@ -39,7 +38,7 @@ Arguments:
 		Default: "json"
 
 	-r
-		Load confdir recursively.
+		Load folders recursively.
 
 Examples:
 
@@ -77,41 +76,10 @@ func setConfArgs(cmd *base.Command) {
 func executeConvert(cmd *base.Command, args []string) {
 	setConfArgs(cmd)
 	cmd.Flag.Parse(args)
-	unnamed := cmd.Flag.Args()
 	inputFormat = strings.ToLower(inputFormat)
 	outputFormat = strings.ToLower(outputFormat)
 
-	var (
-		files []string
-		stdin []byte
-		err   error
-	)
-	if len(unnamed) > 0 {
-		var extensions []string
-		extensions, err = mergers.GetExtensions(inputFormat)
-		if err != nil {
-			base.Fatalf(err.Error())
-		}
-		files, err = resolveFolderToFiles(unnamed, extensions, confDirRecursively)
-		if err != nil {
-			base.Fatalf(err.Error())
-		}
-	}
-	if len(files) == 0 {
-		stat, _ := os.Stdin.Stat()
-		if stat.Size() > 0 {
-			stdin, err = ioutil.ReadAll(os.Stdin)
-		} else {
-			// no input found, exit
-			base.Exit()
-		}
-	}
-	m := make(map[string]interface{})
-	if stdin != nil {
-		err = mergers.MergeAs(inputFormat, stdin, m)
-	} else {
-		err = mergers.MergeAs(inputFormat, files, m)
-	}
+	m, err := helpers.LoadConfigToMap(cmd.Flag.Args(), inputFormat, confDirRecursively)
 	if err != nil {
 		base.Fatalf(err.Error())
 	}

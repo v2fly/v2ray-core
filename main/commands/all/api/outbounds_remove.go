@@ -4,9 +4,8 @@ import (
 	"fmt"
 
 	handlerService "github.com/v2fly/v2ray-core/v4/app/proxyman/command"
-	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
+	"github.com/v2fly/v2ray-core/v4/main/commands/helpers"
 )
 
 var cmdRemoveOutbounds = &base.Command{
@@ -17,6 +16,14 @@ var cmdRemoveOutbounds = &base.Command{
 Remove outbounds from V2Ray.
 
 Arguments:
+
+	-format <format>
+		Specify the input format.
+		Available values: "auto", "json", "toml", "yaml"
+		Default: "auto"
+
+	-r
+		Load folders recursively.
 
 	-s, -server <server:port>
 		The API server address. Default 127.0.0.1:8080
@@ -34,30 +41,12 @@ Example:
 func executeRemoveOutbounds(cmd *base.Command, args []string) {
 	setSharedFlags(cmd)
 	cmd.Flag.Parse(args)
-	unnamedArgs := cmd.Flag.Args()
-	if len(unnamedArgs) == 0 {
-		fmt.Println("reading from stdin:")
-		unnamedArgs = []string{"stdin:"}
+	setSharedConfigFlags(cmd)
+	c, err := helpers.LoadConfig(cmd.Flag.Args(), apiConfigFormat, apiConfigRecursively)
+	if err != nil {
+		base.Fatalf("%s", err)
 	}
-
-	tags := make([]string, 0)
-	for _, arg := range unnamedArgs {
-		if r, err := cmdarg.LoadArg(arg); err == nil {
-			conf, err := serial.DecodeJSONConfig(r)
-			if err != nil {
-				base.Fatalf("failed to decode %s: %s", arg, err)
-			}
-			outs := conf.OutboundConfigs
-			for _, o := range outs {
-				tags = append(tags, o.Tag)
-			}
-		} else {
-			// take request as tag
-			tags = append(tags, arg)
-		}
-	}
-
-	if len(tags) == 0 {
+	if len(c.OutboundConfigs) == 0 {
 		base.Fatalf("no outbound to remove")
 	}
 
@@ -65,10 +54,10 @@ func executeRemoveOutbounds(cmd *base.Command, args []string) {
 	defer close()
 
 	client := handlerService.NewHandlerServiceClient(conn)
-	for _, tag := range tags {
-		fmt.Println("removing:", tag)
+	for _, c := range c.OutboundConfigs {
+		fmt.Println("removing:", c.Tag)
 		r := &handlerService.RemoveOutboundRequest{
-			Tag: tag,
+			Tag: c.Tag,
 		}
 		_, err := client.RemoveOutbound(ctx, r)
 		if err != nil {
