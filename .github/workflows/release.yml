@@ -172,6 +172,7 @@ jobs:
 
       - name: Generate shasum
         run: |
+          export GO111MODULE="auto"
           cd build_artifacts || exit 1
           mkdir .temp
           mv ./*/*.zip ./.temp
