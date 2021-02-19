@@ -1,5 +1,6 @@
 package core
 
+//go:generate go get -v github.com/golang/mock/mockgen
 //go:generate go run github.com/golang/mock/mockgen -package mocks -destination testing/mocks/io.go -mock_names Reader=Reader,Writer=Writer io Reader,Writer
 //go:generate go run github.com/golang/mock/mockgen -package mocks -destination testing/mocks/log.go -mock_names Handler=LogHandler github.com/v2fly/v2ray-core/v4/common/log Handler
 //go:generate go run github.com/golang/mock/mockgen -package mocks -destination testing/mocks/mux.go -mock_names ClientWorkerFactory=MuxClientWorkerFactory github.com/v2fly/v2ray-core/v4/common/mux ClientWorkerFactory
