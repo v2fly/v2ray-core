@@ -51,6 +51,8 @@ jobs:
             goarch: arm
             goarm: 7
           # BEGIN Other architectures
+          - goos: darwin
+            goarch: arm64
           - goos: linux
             goarch: arm64
           - goos: linux
@@ -96,7 +98,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.15
+          go-version: ^1.16
 
       - name: Get project dependencies
         run: go mod download
@@ -162,7 +164,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.15
+          go-version: ^1.16
 
       - uses: actions/download-artifact@v2
         with:
@@ -170,6 +172,7 @@ jobs:
 
       - name: Generate shasum
         run: |
+          go get -v github.com/v2fly/V2BuildAssist/v2buildutil
           cd build_artifacts || exit 1
           mkdir .temp
           mv ./*/*.zip ./.temp

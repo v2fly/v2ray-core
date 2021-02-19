@@ -1,6 +1,6 @@
 module github.com/v2fly/v2ray-core/v4
 
-go 1.15
+go 1.16
 
 require (
 	github.com/golang/mock v1.4.4
@@ -14,10 +14,10 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/v2fly/VSign v0.0.0-20201108000810-e2adc24bf848
 	go.starlark.net v0.0.0-20210212215732-ebe61bd709bf
-	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
+	golang.org/x/crypto v0.0.0-20210218145215-b8e89b74b9df
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
-	golang.org/x/sys v0.0.0-20210216163648-f7da38b97c65
+	golang.org/x/sys v0.0.0-20210218155724-8ebf48af031b
 	google.golang.org/grpc v1.35.0
 	google.golang.org/protobuf v1.25.0
 	h12.io/socks v1.0.2
