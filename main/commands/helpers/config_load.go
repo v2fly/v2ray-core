@@ -2,8 +2,6 @@ package helpers
 
 import (
 	"bytes"
-	"errors"
-	"io/ioutil"
 	"os"
 
 	"github.com/v2fly/v2ray-core/v4/infra/conf"
@@ -32,13 +30,10 @@ func LoadConfig(files []string, format string, recursively bool) (*conf.Config, 
 // - resolve folder to files
 // - try to read stdin if no file specified
 func LoadConfigToMap(files []string, format string, recursively bool) (map[string]interface{}, error) {
-	var (
-		stdin []byte
-		err   error
-	)
+	var err error
 	if len(files) > 0 {
 		var extensions []string
-		extensions, err = mergers.GetExtensions(format)
+		extensions, err := mergers.GetExtensions(format)
 		if err != nil {
 			return nil, err
 		}
@@ -47,18 +42,9 @@ func LoadConfigToMap(files []string, format string, recursively bool) (map[strin
 			return nil, err
 		}
 	}
-	if len(files) == 0 {
-		stdin, err = readStdin()
-		if err != nil {
-			return nil, err
-		}
-		if len(stdin) == 0 {
-			return nil, errors.New("no config found")
-		}
-	}
 	m := make(map[string]interface{})
-	if stdin != nil {
-		err = mergers.MergeAs(format, stdin, m)
+	if len(files) == 0 {
+		err = mergers.MergeAs(format, os.Stdin, m)
 	} else {
 		err = mergers.MergeAs(format, files, m)
 	}
@@ -66,19 +52,4 @@ func LoadConfigToMap(files []string, format string, recursively bool) (map[strin
 		return nil, err
 	}
 	return m, nil
-}
-
-func readStdin() ([]byte, error) {
-	stat, err := os.Stdin.Stat()
-	if err != nil {
-		return nil, err
-	}
-	if stat.Size() == 0 {
-		return nil, nil
-	}
-	stdin, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
-		return nil, err
-	}
-	return stdin, nil
 }

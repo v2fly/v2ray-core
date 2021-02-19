@@ -61,7 +61,7 @@ func TestV2RayDial(t *testing.T) {
 	cfgBytes, err := proto.Marshal(config)
 	common.Must(err)
 
-	server, err := core.StartInstance("protobuf", cfgBytes)
+	server, err := core.StartInstance(core.FormatProtobuf, cfgBytes)
 	common.Must(err)
 	defer server.Close()
 
@@ -111,7 +111,7 @@ func TestV2RayDialUDPConn(t *testing.T) {
 	cfgBytes, err := proto.Marshal(config)
 	common.Must(err)
 
-	server, err := core.StartInstance("protobuf", cfgBytes)
+	server, err := core.StartInstance(core.FormatProtobuf, cfgBytes)
 	common.Must(err)
 	defer server.Close()
 
@@ -178,7 +178,7 @@ func TestV2RayDialUDP(t *testing.T) {
 	cfgBytes, err := proto.Marshal(config)
 	common.Must(err)
 
-	server, err := core.StartInstance("protobuf", cfgBytes)
+	server, err := core.StartInstance(core.FormatProtobuf, cfgBytes)
 	common.Must(err)
 	defer server.Close()
 

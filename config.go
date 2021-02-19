@@ -25,6 +25,8 @@ const (
 	FormatTOML = "toml"
 	// FormatYAML represents yaml format
 	FormatYAML = "yaml"
+	// FormatProtobuf represents protobuf format
+	FormatProtobuf = "protobuf"
 )
 
 // ConfigFormat is a configurable format of V2Ray config file.
@@ -96,14 +98,9 @@ func GetAllExtensions() []string {
 func LoadConfig(formatName string, input interface{}) (*Config, error) {
 	cnt := getInputCount(input)
 	if cnt == 0 {
-		stat, _ := os.Stdin.Stat()
-		if stat.Size() > 0 {
-			log.Println("Using config from STDIN")
-			input = os.Stdin
-			cnt = 1
-		} else {
-			return nil, newError("no config found").AtWarning()
-		}
+		log.Println("Using config from STDIN")
+		input = os.Stdin
+		cnt = 1
 	}
 	if formatName == FormatAuto && cnt == 1 {
 		// This ensures only to call auto loader for multiple files,
@@ -178,7 +175,7 @@ func loadProtobufConfig(data []byte) (*Config, error) {
 
 func init() {
 	common.Must(RegisterConfigLoader(&ConfigFormat{
-		Name:      []string{"Protobuf", "pb"},
+		Name:      []string{FormatProtobuf, "pb"},
 		Extension: []string{".pb"},
 		Loader: func(input interface{}) (*Config, error) {
 			switch v := input.(type) {
