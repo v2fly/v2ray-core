@@ -18,6 +18,7 @@ require (
 	golang.org/x/net v0.0.0-20210220033124-5f55cee0dc0d
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210220050731-9a76102bfb43
+	golang.org/x/text v0.3.3
 	google.golang.org/grpc v1.35.0
 	google.golang.org/protobuf v1.25.0
 	h12.io/socks v1.0.2

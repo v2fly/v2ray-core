@@ -115,7 +115,7 @@ func genEDNS0Options(clientIP net.IP) *dnsmessage.Resource {
 	return opt
 }
 
-func buildReqMsgs(domain string, option IPOption, reqIDGen func() uint16, reqOpts *dnsmessage.Resource) []*dnsRequest {
+func buildReqMsgs(domain string, option dns_feature.IPOption, reqIDGen func() uint16, reqOpts *dnsmessage.Resource) []*dnsRequest {
 	qA := dnsmessage.Question{
 		Name:  dnsmessage.MustNewName(domain),
 		Type:  dnsmessage.TypeA,

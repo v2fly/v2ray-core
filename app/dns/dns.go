@@ -141,30 +141,7 @@ func (s *DNS) IsOwnLink(ctx context.Context) bool {
 }
 
 // LookupIP implements dns.Client.
-func (s *DNS) LookupIP(domain string) ([]net.IP, error) {
-	return s.lookupIPInternal(domain, IPOption{
-		IPv4Enable: true,
-		IPv6Enable: true,
-	})
-}
-
-// LookupIPv4 implements dns.IPv4Lookup.
-func (s *DNS) LookupIPv4(domain string) ([]net.IP, error) {
-	return s.lookupIPInternal(domain, IPOption{
-		IPv4Enable: true,
-		IPv6Enable: false,
-	})
-}
-
-// LookupIPv6 implements dns.IPv6Lookup.
-func (s *DNS) LookupIPv6(domain string) ([]net.IP, error) {
-	return s.lookupIPInternal(domain, IPOption{
-		IPv4Enable: false,
-		IPv6Enable: true,
-	})
-}
-
-func (s *DNS) lookupIPInternal(domain string, option IPOption) ([]net.IP, error) {
+func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, error) {
 	if domain == "" {
 		return nil, newError("empty domain name")
 	}

@@ -184,7 +184,7 @@ func (s *ClassicNameServer) addPendingRequest(req *dnsRequest) {
 	s.requests[id] = *req
 }
 
-func (s *ClassicNameServer) sendQuery(ctx context.Context, domain string, clientIP net.IP, option IPOption) {
+func (s *ClassicNameServer) sendQuery(ctx context.Context, domain string, clientIP net.IP, option dns_feature.IPOption) {
 	newError(s.name, " querying DNS for: ", domain).AtDebug().WriteToLog(session.ExportIDToError(ctx))
 
 	reqs := buildReqMsgs(domain, option, s.newReqID, genEDNS0Options(clientIP))
@@ -203,7 +203,7 @@ func (s *ClassicNameServer) sendQuery(ctx context.Context, domain string, client
 	}
 }
 
-func (s *ClassicNameServer) findIPsForDomain(domain string, option IPOption) ([]net.IP, error) {
+func (s *ClassicNameServer) findIPsForDomain(domain string, option dns_feature.IPOption) ([]net.IP, error) {
 	s.RLock()
 	record, found := s.ips[domain]
 	s.RUnlock()
@@ -242,7 +242,7 @@ func (s *ClassicNameServer) findIPsForDomain(domain string, option IPOption) ([]
 }
 
 // QueryIP implements Server.
-func (s *ClassicNameServer) QueryIP(ctx context.Context, domain string, clientIP net.IP, option IPOption) ([]net.IP, error) {
+func (s *ClassicNameServer) QueryIP(ctx context.Context, domain string, clientIP net.IP, option dns_feature.IPOption) ([]net.IP, error) {
 	fqdn := Fqdn(domain)
 
 	ips, err := s.findIPsForDomain(fqdn, option)
