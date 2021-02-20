@@ -90,22 +90,22 @@ func executeConvert(cmd *base.Command, args []string) {
 
 	var out []byte
 	switch outputFormat {
-	case "json":
+	case core.FormatJSON:
 		out, err = json.Marshal(m)
 		if err != nil {
 			base.Fatalf("failed to marshal json: %s", err)
 		}
-	case "toml":
+	case core.FormatTOML:
 		out, err = toml.Marshal(m)
 		if err != nil {
 			base.Fatalf("failed to marshal json: %s", err)
 		}
-	case "yaml":
+	case core.FormatYAML:
 		out, err = yaml.Marshal(m)
 		if err != nil {
 			base.Fatalf("failed to marshal json: %s", err)
 		}
-	case "pb", "protobuf":
+	case core.FormatProtobuf, core.FormatProtobufShort:
 		data, err := json.Marshal(m)
 		if err != nil {
 			base.Fatalf("failed to marshal json: %s", err)

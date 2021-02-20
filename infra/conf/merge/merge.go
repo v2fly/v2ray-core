@@ -18,16 +18,17 @@ package merge
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 
 	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
 )
 
 // JSONs merges multiple json contents into one json.
 func JSONs(args [][]byte) ([]byte, error) {
-	m, err := bytesToMap(args)
-	if err != nil {
-		return nil, err
+	m := make(map[string]interface{})
+	for _, arg := range args {
+		if _, err := ToMap(arg, m); err != nil {
+			return nil, err
+		}
 	}
 	return FromMap(m)
 }
@@ -38,7 +39,8 @@ func ToMap(content []byte, target map[string]interface{}) (map[string]interface{
 		target = make(map[string]interface{})
 	}
 	r := bytes.NewReader(content)
-	n, err := decode(r)
+	n := make(map[string]interface{})
+	err := serial.DecodeJSON(r, &n)
 	if err != nil {
 		return nil, err
 	}
@@ -58,32 +60,4 @@ func FromMap(target map[string]interface{}) ([]byte, error) {
 		return nil, err
 	}
 	return json.Marshal(target)
-}
-
-func decode(r io.Reader) (map[string]interface{}, error) {
-	c := make(map[string]interface{})
-	err := serial.DecodeJSON(r, &c)
-	if err != nil {
-		return nil, err
-	}
-	return c, nil
-}
-
-// bytesToMap merges & applies rules for multiple json contents into one map.
-func bytesToMap(args [][]byte) (m map[string]interface{}, err error) {
-	m, err = loadBytes(args)
-	if err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func loadBytes(args [][]byte) (map[string]interface{}, error) {
-	conf := make(map[string]interface{})
-	for _, arg := range args {
-		if _, err := ToMap(arg, conf); err != nil {
-			return nil, err
-		}
-	}
-	return conf, nil
 }

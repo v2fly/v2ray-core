@@ -27,6 +27,8 @@ const (
 	FormatYAML = "yaml"
 	// FormatProtobuf represents protobuf format
 	FormatProtobuf = "protobuf"
+	// FormatProtobufShort is the short of FormatProtobuf
+	FormatProtobufShort = "pb"
 )
 
 // ConfigFormat is a configurable format of V2Ray config file.
@@ -175,7 +177,7 @@ func loadProtobufConfig(data []byte) (*Config, error) {
 
 func init() {
 	common.Must(RegisterConfigLoader(&ConfigFormat{
-		Name:      []string{FormatProtobuf, "pb"},
+		Name:      []string{FormatProtobuf, FormatProtobufShort},
 		Extension: []string{".pb"},
 		Loader: func(input interface{}) (*Config, error) {
 			switch v := input.(type) {
