@@ -5,35 +5,36 @@
 package mocks
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	net "net"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// DNSClient is a mock of Client interface
+// DNSClient is a mock of Client interface.
 type DNSClient struct {
 	ctrl     *gomock.Controller
 	recorder *DNSClientMockRecorder
 }
 
-// DNSClientMockRecorder is the mock recorder for DNSClient
+// DNSClientMockRecorder is the mock recorder for DNSClient.
 type DNSClientMockRecorder struct {
 	mock *DNSClient
 }
 
-// NewDNSClient creates a new mock instance
+// NewDNSClient creates a new mock instance.
 func NewDNSClient(ctrl *gomock.Controller) *DNSClient {
 	mock := &DNSClient{ctrl: ctrl}
 	mock.recorder = &DNSClientMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *DNSClient) EXPECT() *DNSClientMockRecorder {
 	return m.recorder
 }
 
-// Close mocks base method
+// Close mocks base method.
 func (m *DNSClient) Close() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Close")
@@ -41,13 +42,13 @@ func (m *DNSClient) Close() error {
 	return ret0
 }
 
-// Close indicates an expected call of Close
+// Close indicates an expected call of Close.
 func (mr *DNSClientMockRecorder) Close() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*DNSClient)(nil).Close))
 }
 
-// LookupIP mocks base method
+// LookupIP mocks base method.
 func (m *DNSClient) LookupIP(arg0 string) ([]net.IP, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LookupIP", arg0)
@@ -56,13 +57,13 @@ func (m *DNSClient) LookupIP(arg0 string) ([]net.IP, error) {
 	return ret0, ret1
 }
 
-// LookupIP indicates an expected call of LookupIP
+// LookupIP indicates an expected call of LookupIP.
 func (mr *DNSClientMockRecorder) LookupIP(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupIP", reflect.TypeOf((*DNSClient)(nil).LookupIP), arg0)
 }
 
-// Start mocks base method
+// Start mocks base method.
 func (m *DNSClient) Start() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Start")
@@ -70,13 +71,13 @@ func (m *DNSClient) Start() error {
 	return ret0
 }
 
-// Start indicates an expected call of Start
+// Start indicates an expected call of Start.
 func (mr *DNSClientMockRecorder) Start() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*DNSClient)(nil).Start))
 }
 
-// Type mocks base method
+// Type mocks base method.
 func (m *DNSClient) Type() interface{} {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Type")
@@ -84,7 +85,7 @@ func (m *DNSClient) Type() interface{} {
 	return ret0
 }
 
-// Type indicates an expected call of Type
+// Type indicates an expected call of Type.
 func (mr *DNSClientMockRecorder) Type() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Type", reflect.TypeOf((*DNSClient)(nil).Type))
