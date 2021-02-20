@@ -169,6 +169,9 @@ func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, error) {
 	errs := []error{}
 	ctx := session.ContextWithInbound(s.ctx, &session.Inbound{Tag: s.tag})
 	for _, client := range s.sortClients(domain) {
+		if !option.FakeEnable && client.Name() == "FakeDNS" {
+			continue
+		}
 		ips, err := client.QueryIP(ctx, domain, option)
 		if len(ips) > 0 {
 			return ips, nil

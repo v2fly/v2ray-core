@@ -104,10 +104,26 @@ func Test_buildReqMsgs(t *testing.T) {
 		args args
 		want int
 	}{
-		{"dual stack", args{"test.com", dns_feature.IPOption{true, true}, nil}, 2},
-		{"ipv4 only", args{"test.com", dns_feature.IPOption{true, false}, nil}, 1},
-		{"ipv6 only", args{"test.com", dns_feature.IPOption{false, true}, nil}, 1},
-		{"none/error", args{"test.com", dns_feature.IPOption{false, false}, nil}, 0},
+		{"dual stack", args{"test.com", dns_feature.IPOption{
+			IPv4Enable: true,
+			IPv6Enable: true,
+			FakeEnable: false,
+		}, nil}, 2},
+		{"ipv4 only", args{"test.com", dns_feature.IPOption{
+			IPv4Enable: true,
+			IPv6Enable: false,
+			FakeEnable: false,
+		}, nil}, 1},
+		{"ipv6 only", args{"test.com", dns_feature.IPOption{
+			IPv4Enable: false,
+			IPv6Enable: true,
+			FakeEnable: false,
+		}, nil}, 1},
+		{"none/error", args{"test.com", dns_feature.IPOption{
+			IPv4Enable: false,
+			IPv6Enable: false,
+			FakeEnable: false,
+		}, nil}, 0},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -206,11 +206,13 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 		ips, err = h.client.LookupIP(domain, dns.IPOption{
 			IPv4Enable: true,
 			IPv6Enable: false,
+			FakeEnable: true,
 		})
 	case dnsmessage.TypeAAAA:
 		ips, err = h.client.LookupIP(domain, dns.IPOption{
 			IPv4Enable: false,
 			IPv6Enable: true,
+			FakeEnable: true,
 		})
 	}
 

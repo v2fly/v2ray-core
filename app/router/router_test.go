@@ -120,6 +120,7 @@ func TestIPOnDemand(t *testing.T) {
 	mockDNS.EXPECT().LookupIP(gomock.Eq("v2fly.org"), dns.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: true,
+		FakeEnable: false,
 	}).Return([]net.IP{{192, 168, 0, 1}}, nil).AnyTimes()
 
 	r := new(Router)
@@ -158,6 +159,7 @@ func TestIPIfNonMatchDomain(t *testing.T) {
 	mockDNS.EXPECT().LookupIP(gomock.Eq("v2fly.org"), dns.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: true,
+		FakeEnable: false,
 	}).Return([]net.IP{{192, 168, 0, 1}}, nil).AnyTimes()
 
 	r := new(Router)
