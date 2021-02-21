@@ -5,6 +5,7 @@ package dns
 import (
 	"context"
 	"net/url"
+	"strings"
 	"time"
 
 	core "github.com/v2fly/v2ray-core/v4"
@@ -42,15 +43,15 @@ func NewServer(dest net.Destination, dispatcher routing.Dispatcher) (Server, err
 			return nil, err
 		}
 		switch {
-		case u.String() == "localhost":
+		case strings.EqualFold(u.String(), "localhost"):
 			return NewLocalNameServer(), nil
-		case u.Scheme == "https": // DOH Remote mode
+		case strings.EqualFold(u.Scheme, "https"): // DOH Remote mode
 			return NewDoHNameServer(u, dispatcher)
-		case u.Scheme == "https+local": // DOH Local mode
+		case strings.EqualFold(u.Scheme, "https+local"): // DOH Local mode
 			return NewDoHLocalNameServer(u), nil
-		case u.Scheme == "quic+local": // DNS-over-QUIC Local mode
+		case strings.EqualFold(u.Scheme, "quic+local"): // DNS-over-QUIC Local mode
 			return NewQUICNameServer(u)
-		case u.String() == "fakedns":
+		case strings.EqualFold(u.String(), "fakedns"):
 			return NewFakeDNSServer(), nil
 		}
 	}

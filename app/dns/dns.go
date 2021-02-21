@@ -8,6 +8,7 @@ package dns
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
@@ -105,6 +106,7 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 		clients = append(clients, client)
 	}
 
+	// If there is no DNS client in config, add a `localhost` DNS client
 	if len(clients) == 0 {
 		clients = append(clients, NewLocalDNSClient())
 	}
@@ -147,7 +149,7 @@ func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, error) {
 	}
 
 	// Normalize the FQDN form query
-	if domain[len(domain)-1] == '.' {
+	if strings.HasSuffix(domain, ".") {
 		domain = domain[:len(domain)-1]
 	}
 
@@ -169,7 +171,8 @@ func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, error) {
 	errs := []error{}
 	ctx := session.ContextWithInbound(s.ctx, &session.Inbound{Tag: s.tag})
 	for _, client := range s.sortClients(domain) {
-		if !option.FakeEnable && client.Name() == "FakeDNS" {
+		if !option.FakeEnable && strings.EqualFold(client.Name(), "FakeDNS") {
+			newError("skip DNS resolution for domain ", domain, " at server ", client.Name()).AtDebug().WriteToLog()
 			continue
 		}
 		ips, err := client.QueryIP(ctx, domain, option)

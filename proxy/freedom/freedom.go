@@ -130,7 +130,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 					Address: ip,
 					Port:    dialDest.Port,
 				}
-				newError("dialing to to ", dialDest).WriteToLog(session.ExportIDToError(ctx))
+				newError("dialing to ", dialDest).WriteToLog(session.ExportIDToError(ctx))
 			}
 		}
 

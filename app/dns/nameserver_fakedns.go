@@ -37,5 +37,7 @@ func (f *FakeDNSServer) QueryIP(ctx context.Context, domain string, _ net.IP, _ 
 		return nil, newError("Unable to convert IP to net ip").Base(err).AtError()
 	}
 
+	newError(f.Name(), " got answer: ", domain, " -> ", ips).AtInfo().WriteToLog()
+
 	return netIP, nil
 }
