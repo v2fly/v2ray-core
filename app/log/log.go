@@ -4,6 +4,7 @@ package log
 
 import (
 	"context"
+	"reflect"
 	"sync"
 
 	"github.com/v2fly/v2ray-core/v4/common"
@@ -16,6 +17,7 @@ type Instance struct {
 	config       *Config
 	accessLogger log.Handler
 	errorLogger  log.Handler
+	followers    map[reflect.Value]func(msg log.Message)
 	active       bool
 }
 
@@ -89,6 +91,23 @@ func (g *Instance) Start() error {
 	return g.startInternal()
 }
 
+// AddFollower implements log.Follower.
+func (g *Instance) AddFollower(f func(msg log.Message)) {
+	g.Lock()
+	defer g.Unlock()
+	if g.followers == nil {
+		g.followers = make(map[reflect.Value]func(msg log.Message))
+	}
+	g.followers[reflect.ValueOf(f)] = f
+}
+
+// RemoveFollower implements log.Follower.
+func (g *Instance) RemoveFollower(f func(msg log.Message)) {
+	g.Lock()
+	defer g.Unlock()
+	delete(g.followers, reflect.ValueOf(f))
+}
+
 // Handle implements log.Handler.
 func (g *Instance) Handle(msg log.Message) {
 	g.RLock()
@@ -96,6 +115,10 @@ func (g *Instance) Handle(msg log.Message) {
 
 	if !g.active {
 		return
+	}
+
+	for _, f := range g.followers {
+		f(msg)
 	}
 
 	switch msg := msg.(type) {

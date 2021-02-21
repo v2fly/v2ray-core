@@ -85,7 +85,7 @@ func TestV2RayClose(t *testing.T) {
 	cfgBytes, err := proto.Marshal(config)
 	common.Must(err)
 
-	server, err := StartInstance("protobuf", cfgBytes)
+	server, err := StartInstance(FormatProtobuf, cfgBytes)
 	common.Must(err)
 	server.Close()
 }

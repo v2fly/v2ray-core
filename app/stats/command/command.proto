@@ -23,8 +23,11 @@ message GetStatsResponse {
 }
 
 message QueryStatsRequest {
+  // Deprecated, use Patterns instead
   string pattern = 1;
   bool reset = 2;
+  repeated string patterns = 3;
+  bool regexp = 4;
 }
 
 message QueryStatsResponse {

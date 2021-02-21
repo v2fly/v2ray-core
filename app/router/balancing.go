@@ -21,7 +21,7 @@ type Balancer struct {
 	ohm         outbound.Manager
 	fallbackTag string
 
-	override overridden
+	override override
 }
 
 // PickOutbound picks the tag of a outbound

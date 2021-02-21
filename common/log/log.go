@@ -16,6 +16,12 @@ type Handler interface {
 	Handle(msg Message)
 }
 
+// Follower is the interface for following logs.
+type Follower interface {
+	AddFollower(func(msg Message))
+	RemoveFollower(func(msg Message))
+}
+
 // GeneralMessage is a general log message that can contain all kind of content.
 type GeneralMessage struct {
 	Severity Severity

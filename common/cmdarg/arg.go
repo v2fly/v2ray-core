@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
@@ -28,8 +27,6 @@ func LoadArgToBytes(arg string) (out []byte, err error) {
 	switch {
 	case strings.HasPrefix(arg, "http://"), strings.HasPrefix(arg, "https://"):
 		out, err = FetchHTTPContent(arg)
-	case (arg == "stdin:"):
-		out, err = ioutil.ReadAll(os.Stdin)
 	default:
 		out, err = ioutil.ReadFile(arg)
 	}

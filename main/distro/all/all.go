@@ -70,17 +70,8 @@ import (
 	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/memconservative"
 	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/standard"
 
-	// JSON config support. Choose only one from the two below.
-	// The following line loads JSON from v2ctl
-	// _ "github.com/v2fly/v2ray-core/v4/main/json"
-	// The following line loads JSON internally
-	_ "github.com/v2fly/v2ray-core/v4/main/json"
-
-	// TOML config support.
-	_ "github.com/v2fly/v2ray-core/v4/main/toml"
-
-	// YAML config support.
-	_ "github.com/v2fly/v2ray-core/v4/main/yaml"
+	// JSON, TOML, YAML config support.
+	_ "github.com/v2fly/v2ray-core/v4/main/formats"
 
 	// commands
 	_ "github.com/v2fly/v2ray-core/v4/main/commands/all"

@@ -16,30 +16,30 @@ import (
 
 // cmdCert is the tls cert command
 var cmdCert = &base.Command{
-	UsageLine: "{{.Exec}} tls cert [--ca] [--domain=v2ray.com] [--expire=240h]",
+	UsageLine: "{{.Exec}} tls cert [--ca] [--domain=v2fly.org] [--expire=240h]",
 	Short:     "Generate TLS certificates",
 	Long: `
 Generate TLS certificates.
 
 Arguments:
 
-	-domain=domain_name 
+	-domain <domain_name>
 		The domain name for the certificate.
 
-	-org=organization 
+	-org <organization>
 		The organization name for the certificate.
 
 	-ca 
-		Whether this certificate is a CA
+		The certificate is a CA
 
 	-json 
-		The output of certificate to JSON
+		To output certificate to JSON
 
-	-file 
+	-file <path>
 		The certificate path to save.
 
-	-expire 
-		Expire time of the certificate. Default value 3 months.
+	-expire <days>
+		Expire days of the certificate. Default 90 days.
 `,
 }
 
@@ -54,12 +54,12 @@ var (
 		return true
 	}()
 
-	certCommonName   = cmdCert.Flag.String("name", "V2Ray Inc", "The common name of this certificate")
-	certOrganization = cmdCert.Flag.String("org", "V2Ray Inc", "Organization of the certificate")
-	certIsCA         = cmdCert.Flag.Bool("ca", false, "Whether this certificate is a CA")
-	certJSONOutput   = cmdCert.Flag.Bool("json", true, "Print certificate in JSON format")
-	certFileOutput   = cmdCert.Flag.String("file", "", "Save certificate in file.")
-	certExpire       = cmdCert.Flag.Duration("expire", time.Hour*24*90 /* 90 days */, "Time until the certificate expires. Default value 3 months.")
+	certCommonName   = cmdCert.Flag.String("name", "V2Ray Inc", "")
+	certOrganization = cmdCert.Flag.String("org", "V2Ray Inc", "")
+	certIsCA         = cmdCert.Flag.Bool("ca", false, "")
+	certJSONOutput   = cmdCert.Flag.Bool("json", true, "")
+	certFileOutput   = cmdCert.Flag.String("file", "", "")
+	certExpire       = cmdCert.Flag.Uint("expire", 90, "")
 )
 
 func executeCert(cmd *base.Command, args []string) {
@@ -69,7 +69,7 @@ func executeCert(cmd *base.Command, args []string) {
 		opts = append(opts, cert.KeyUsage(x509.KeyUsageCertSign|x509.KeyUsageKeyEncipherment|x509.KeyUsageDigitalSignature))
 	}
 
-	opts = append(opts, cert.NotAfter(time.Now().Add(*certExpire)))
+	opts = append(opts, cert.NotAfter(time.Now().Add(time.Duration(*certExpire)*time.Hour*24)))
 	opts = append(opts, cert.CommonName(*certCommonName))
 	if len(certDomainNames) > 0 {
 		opts = append(opts, cert.DNSNames(certDomainNames...))

@@ -12,22 +12,22 @@ import (
 var CmdTest = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} test [-format=json] [-c config.json] [-d dir]",
-	Short:       "Test config files",
+	Short:       "test config files",
 	Long: `
 Test config files, without launching V2Ray server.
 
 Arguments:
 
-	-c, -config
+	-c, -config <file>
 		Config file for V2Ray. Multiple assign is accepted.
 
-	-d, -confdir
+	-d, -confdir <dir>
 		A dir with config files. Multiple assign is accepted.
 
 	-r
 		Load confdir recursively.
 
-	-format
+	-format <format>
 		Format of input files. (default "json")
 
 Examples:
@@ -44,7 +44,7 @@ func executeTest(cmd *base.Command, args []string) {
 	setConfigFlags(cmd)
 	cmd.Flag.Parse(args)
 
-	extension, err := getLoaderExtension()
+	extension, err := core.GetLoaderExtensions(*configFormat)
 	if err != nil {
 		base.Fatalf(err.Error())
 	}
@@ -59,32 +59,10 @@ func executeTest(cmd *base.Command, args []string) {
 			configFiles = append(configFiles, dirReader(d, extension)...)
 		}
 	}
-	if len(configFiles) == 0 {
-		if len(configDirs) == 0 {
-			cmd.Flag.Usage()
-			base.SetExitStatus(1)
-			base.Exit()
-		}
-		base.Fatalf("no config file found with extension: %s", extension)
-	}
 	printVersion()
-	_, err = startV2RayTesting()
+	_, err = startV2Ray()
 	if err != nil {
 		base.Fatalf("Test failed: %s", err)
 	}
 	fmt.Println("Configuration OK.")
-}
-
-func startV2RayTesting() (core.Server, error) {
-	config, err := core.LoadConfig(*configFormat, configFiles[0], configFiles)
-	if err != nil {
-		return nil, newError("failed to read config files: [", configFiles.String(), "]").Base(err)
-	}
-
-	server, err := core.New(config)
-	if err != nil {
-		return nil, newError("failed to create server").Base(err)
-	}
-
-	return server, nil
 }
