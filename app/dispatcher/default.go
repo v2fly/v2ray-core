@@ -17,6 +17,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
 	"github.com/v2fly/v2ray-core/v4/common/session"
+	"github.com/v2fly/v2ray-core/v4/features/dns"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
 	"github.com/v2fly/v2ray-core/v4/features/policy"
 	"github.com/v2fly/v2ray-core/v4/features/routing"
@@ -177,13 +178,22 @@ func (d *DefaultDispatcher) getLink(ctx context.Context) (*transport.Link, *tran
 	return inboundLink, outboundLink
 }
 
-func shouldOverride(result SniffResult, domainOverride []string) bool {
+func shouldOverride(ctx context.Context, result SniffResult, domainOverride []string, destination net.Destination) bool {
+	var fakeDNSEngine dns.FakeDNSEngine
+	core.RequireFeatures(ctx, func(fdns dns.FakeDNSEngine) {
+		fakeDNSEngine = fdns
+	})
 	protocolString := result.Protocol()
 	if resComp, ok := result.(SnifferResultComposite); ok {
 		protocolString = resComp.ProtocolForDomainResult()
 	}
 	for _, p := range domainOverride {
 		if strings.HasPrefix(protocolString, p) {
+			return true
+		}
+		if fakeDNSEngine != nil && protocolString != "bittorrent" && p == "fakedns" &&
+			fakeDNSEngine.GetFakeIPRange().Contains(destination.Address.IP()) {
+			newError("Using sniffer ", protocolString, " since the fake DNS missed").WriteToLog(session.ExportIDToError(ctx))
 			return true
 		}
 	}
@@ -215,7 +225,7 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 		result, err := sniffer(ctx, nil, true)
 		if err == nil {
 			content.Protocol = result.Protocol()
-			if shouldOverride(result, sniffingRequest.OverrideDestinationForProtocol) {
+			if shouldOverride(ctx, result, sniffingRequest.OverrideDestinationForProtocol, destination) {
 				domain := result.Domain()
 				newError("sniffed domain: ", domain).WriteToLog(session.ExportIDToError(ctx))
 				destination.Address = net.ParseAddress(domain)
@@ -233,7 +243,7 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 			if err == nil {
 				content.Protocol = result.Protocol()
 			}
-			if err == nil && shouldOverride(result, sniffingRequest.OverrideDestinationForProtocol) {
+			if err == nil && shouldOverride(ctx, result, sniffingRequest.OverrideDestinationForProtocol, destination) {
 				domain := result.Domain()
 				newError("sniffed domain: ", domain).WriteToLog(session.ExportIDToError(ctx))
 				destination.Address = net.ParseAddress(domain)
