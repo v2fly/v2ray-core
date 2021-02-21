@@ -4,24 +4,31 @@ import (
 	"fmt"
 
 	handlerService "github.com/v2fly/v2ray-core/v4/app/proxyman/command"
-	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
+	"github.com/v2fly/v2ray-core/v4/main/commands/helpers"
 )
 
 var cmdRemoveInbounds = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} api rmi [--server=127.0.0.1:8080] <json_file|tag> [json_file] [tag]...",
-	Short:       "Remove inbounds",
+	Short:       "remove inbounds",
 	Long: `
 Remove inbounds from V2Ray.
 
 Arguments:
 
-	-s, -server 
+	-format <format>
+		Specify the input format.
+		Available values: "auto", "json", "toml", "yaml"
+		Default: "auto"
+
+	-r
+		Load folders recursively.
+
+	-s, -server <server:port>
 		The API server address. Default 127.0.0.1:8080
 
-	-t, -timeout
+	-t, -timeout <seconds>
 		Timeout seconds to call API. Default 3
 
 Example:
@@ -33,48 +40,28 @@ Example:
 
 func executeRemoveInbounds(cmd *base.Command, args []string) {
 	setSharedFlags(cmd)
+	setSharedConfigFlags(cmd)
 	cmd.Flag.Parse(args)
-	unnamedArgs := cmd.Flag.Args()
-	if len(unnamedArgs) == 0 {
-		fmt.Println("reading from stdin:")
-		unnamedArgs = []string{"stdin:"}
+	c, err := helpers.LoadConfig(cmd.Flag.Args(), apiConfigFormat, apiConfigRecursively)
+	if err != nil {
+		base.Fatalf("%s", err)
 	}
-
-	tags := make([]string, 0)
-	for _, arg := range unnamedArgs {
-		if r, err := cmdarg.LoadArg(arg); err == nil {
-			conf, err := serial.DecodeJSONConfig(r)
-			if err != nil {
-				base.Fatalf("failed to decode %s: %s", arg, err)
-			}
-			ins := conf.InboundConfigs
-			for _, i := range ins {
-				tags = append(tags, i.Tag)
-			}
-		} else {
-			// take request as tag
-			tags = append(tags, arg)
-		}
-	}
-
-	if len(tags) == 0 {
+	if len(c.InboundConfigs) == 0 {
 		base.Fatalf("no inbound to remove")
 	}
-	fmt.Println("removing inbounds:", tags)
 
 	conn, ctx, close := dialAPIServer()
 	defer close()
 
 	client := handlerService.NewHandlerServiceClient(conn)
-	for _, tag := range tags {
-		fmt.Println("removing:", tag)
+	for _, c := range c.InboundConfigs {
+		fmt.Println("removing:", c.Tag)
 		r := &handlerService.RemoveInboundRequest{
-			Tag: tag,
+			Tag: c.Tag,
 		}
-		resp, err := client.RemoveInbound(ctx, r)
+		_, err := client.RemoveInbound(ctx, r)
 		if err != nil {
 			base.Fatalf("failed to remove inbound: %s", err)
 		}
-		showResponese(resp)
 	}
 }

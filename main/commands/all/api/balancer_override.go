@@ -10,14 +10,14 @@ import (
 var cmdBalancerOverride = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} api bo [--server=127.0.0.1:8080] <-b balancer> selectors...",
-	Short:       "balancer select override",
+	Short:       "balancer override",
 	Long: `
-Override a balancer's selecting in a duration of time.
+Override a balancer's selection in a duration of time.
 
 > Make sure you have "RoutingService" set in "config.api.services" 
 of server config.
 
-Once a balancer's selecting is overridden:
+Once a balancer's selection is overridden:
 
 - The selectors of the balancer won't apply.
 - The strategy of the balancer stops selecting qualified nodes 
@@ -25,19 +25,20 @@ Once a balancer's selecting is overridden:
 
 Arguments:
 
+	-b, -balancer <tag>
+		Tag of the target balancer. Required.
+
+	-v, -validity <duration>
+		Time duration of the validity of override, e.g.: 60s, 60m, 
+		24h, 1m30s. Default 1h.
+
 	-r, -remove
-		Remove the overridden
+		Remove the override
 
-	-b, -balancer
-		Tag of the balancer. Required
-
-	-v, -validity
-		Time minutes of the validity of overridden. Default 60
-
-	-s, -server 
+	-s, -server <server:port>
 		The API server address. Default 127.0.0.1:8080
 
-	-t, -timeout
+	-t, -timeout <seconds>
 		Timeout seconds to call API. Default 3
 
 Example:
@@ -51,13 +52,13 @@ Example:
 func executeBalancerOverride(cmd *base.Command, args []string) {
 	var (
 		balancer string
-		validity int64
+		validity time.Duration
 		remove   bool
 	)
 	cmd.Flag.StringVar(&balancer, "b", "", "")
 	cmd.Flag.StringVar(&balancer, "balancer", "", "")
-	cmd.Flag.Int64Var(&validity, "v", 60, "")
-	cmd.Flag.Int64Var(&validity, "validity", 60, "")
+	cmd.Flag.DurationVar(&validity, "v", time.Hour, "")
+	cmd.Flag.DurationVar(&validity, "validity", time.Hour, "")
 	cmd.Flag.BoolVar(&remove, "r", false, "")
 	cmd.Flag.BoolVar(&remove, "remove", false, "")
 	setSharedFlags(cmd)
@@ -72,7 +73,7 @@ func executeBalancerOverride(cmd *base.Command, args []string) {
 
 	v := int64(0)
 	if !remove {
-		v = int64(time.Duration(validity) * time.Minute)
+		v = int64(validity)
 	}
 	client := routerService.NewRoutingServiceClient(conn)
 	r := &routerService.OverrideSelectingRequest{
@@ -82,6 +83,6 @@ func executeBalancerOverride(cmd *base.Command, args []string) {
 	}
 	_, err := client.OverrideSelecting(ctx, r)
 	if err != nil {
-		base.Fatalf("failed to perform balancer health checks: %s", err)
+		base.Fatalf("failed to override balancer: %s", err)
 	}
 }

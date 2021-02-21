@@ -10,44 +10,41 @@ var docFormat = &base.Command{
 	Long: `
 {{.Exec}} supports different config formats:
 
+	* auto
+	  The default loader, supports all extensions below.
+	  It loads config by format detecting, with mixed 
+	  formats support.
+
 	* json (.json, .jsonc)
-	  The default loader, multiple config files support.	
+	  The json loader, multiple files support, mergeable.
 
 	* toml (.toml)
-	  The toml loader, multiple config files support.
+	  The toml loader, multiple files support, mergeable.
 
 	* yaml (.yml)
-	  The yaml loader, multiple config files support.
+	  The yaml loader, multiple files support, mergeable.
 
 	* protobuf / pb (.pb)
-	  Single conifg file support. If multiple files assigned, 
-	  only the first one is loaded.
+	  Single file support, unmergeable.
 
-If "-format" is not explicitly specified, {{.Exec}} will choose 
-a loader by detecting the extension of the first config file, or 
-use the default loader.
 
 The following explains how format loaders behave with examples.
 
 Examples:
 
-	{{.Exec}} run -d dir                                  (1)
-	{{.Exec}} run -format=protobuf -d dir                 (2)
-	{{.Exec}} test -c c1.yml -d dir                       (3)
-	{{.Exec}} test -format=pb -c c1.json                  (4)
+	{{.Exec}} run -d dir                        (1)
+	{{.Exec}} run -c c1.json -c c2.yaml         (2)
+	{{.Exec}} run -format=json -d dir           (3)
+	{{.Exec}} test -c c1.yml -c c2.pb           (4)
+	{{.Exec}} test -format=pb -d dir            (5)
+	{{.Exec}} test -format=protobuf -c c1.json  (6)
 
-(1) The default json loader is used, {{.Exec}} will try to load all 
-	json files in the "dir".
-
-(2) The protobuf loader is specified, {{.Exec}} will try to find 
-	all protobuf files in the "dir", but only the the first 
-	.pb file is loaded.
-
-(3) The yaml loader is selected because of the "c1.yml" file, 
-	{{.Exec}} will try to load "c1.yml" and all yaml files in 
-	the "dir".
-
-(4) The protobuf loader is specified, {{.Exec}} will load 
-	"c1.json" as protobuf, no matter its extension.
+(1) Load all supported files in the "dir".
+(2) JSON and YAML are merged and loaded.
+(3) Load all JSON files in the "dir".
+(4) Goes error since .pb is not mergeable to others
+(5) Works only when single .pb file found, if not, failed due to 
+	unmergeable.
+(6) Force load "c1.json" as protobuf, no matter its extension.
 `,
 }

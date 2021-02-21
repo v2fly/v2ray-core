@@ -10,6 +10,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 )
 
+// TODO: support "-json" flag for json output
 var cmdBalancerInfo = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} api bi [--server=127.0.0.1:8080] [balancer]...",
@@ -24,10 +25,13 @@ of server config.
 
 Arguments:
 
-	-s, -server 
+	-json
+		Use json output.
+
+	-s, -server <server:port>
 		The API server address. Default 127.0.0.1:8080
 
-	-t, -timeout
+	-t, -timeout <seconds>
 		Timeout seconds to call API. Default 3
 
 Example:
@@ -53,12 +57,17 @@ func executeBalancerInfo(cmd *base.Command, args []string) {
 	sort.Slice(resp.Balancers, func(i, j int) bool {
 		return resp.Balancers[i].Tag < resp.Balancers[j].Tag
 	})
+	if apiJSON {
+		showJSONResponse(resp)
+		return
+	}
 	for _, b := range resp.Balancers {
 		showBalancerInfo(b)
 	}
 }
 
 func showBalancerInfo(b *routerService.BalancerMsg) {
+	const tableIndent = 4
 	sb := new(strings.Builder)
 	// Balancer
 	sb.WriteString(fmt.Sprintf("Balancer: %s\n", b.Tag))
@@ -71,25 +80,28 @@ func showBalancerInfo(b *routerService.BalancerMsg) {
 	if b.Override != nil {
 		sb.WriteString("  - Selecting Override:\n")
 		until := fmt.Sprintf("until: %s", b.Override.Until)
-		writeRow(sb, 0, nil, nil, until)
+		writeRow(sb, tableIndent, 0, []string{until}, nil)
 		for i, s := range b.Override.Selects {
-			writeRow(sb, i+1, nil, nil, s)
+			writeRow(sb, tableIndent, i+1, []string{s}, nil)
 		}
 	}
+	b.Titles = append(b.Titles, "Tag")
 	formats := getColumnFormats(b.Titles)
 	// Selects
 	sb.WriteString("  - Selects:\n")
-	writeRow(sb, 0, b.Titles, formats, "Tag")
+	writeRow(sb, tableIndent, 0, b.Titles, formats)
 	for i, o := range b.Selects {
-		writeRow(sb, i+1, o.Values, formats, o.Tag)
+		o.Values = append(o.Values, o.Tag)
+		writeRow(sb, tableIndent, i+1, o.Values, formats)
 	}
 	// Others
 	scnt := len(b.Selects)
 	if len(b.Others) > 0 {
 		sb.WriteString("  - Others:\n")
-		writeRow(sb, 0, b.Titles, formats, "Tag")
+		writeRow(sb, tableIndent, 0, b.Titles, formats)
 		for i, o := range b.Others {
-			writeRow(sb, scnt+i+1, o.Values, formats, o.Tag)
+			o.Values = append(o.Values, o.Tag)
+			writeRow(sb, tableIndent, scnt+i+1, o.Values, formats)
 		}
 	}
 	os.Stdout.WriteString(sb.String())
@@ -103,12 +115,12 @@ func getColumnFormats(titles []string) []string {
 	return w
 }
 
-func writeRow(sb *strings.Builder, index int, values, formats []string, tag string) {
+func writeRow(sb *strings.Builder, indent, index int, values, formats []string) {
 	if index == 0 {
 		// title line
-		sb.WriteString("        ")
+		sb.WriteString(strings.Repeat(" ", indent+4))
 	} else {
-		sb.WriteString(fmt.Sprintf("    %-4d", index))
+		sb.WriteString(fmt.Sprintf("%s%-4d", strings.Repeat(" ", indent), index))
 	}
 	for i, v := range values {
 		format := "%-14s"
@@ -117,6 +129,5 @@ func writeRow(sb *strings.Builder, index int, values, formats []string, tag stri
 		}
 		sb.WriteString(fmt.Sprintf(format, v))
 	}
-	sb.WriteString(tag)
 	sb.WriteByte('\n')
 }

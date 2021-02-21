@@ -9,6 +9,7 @@ import (
 )
 
 // mergeMaps merges source map into target
+// it supports only map[string]interface{} type for any children of the map tree
 func mergeMaps(target map[string]interface{}, source map[string]interface{}) (err error) {
 	for key, value := range source {
 		target[key], err = mergeField(target[key], value)

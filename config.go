@@ -1,8 +1,12 @@
 package core
 
 import (
+	"fmt"
 	"io"
+	"log"
+	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"google.golang.org/protobuf/proto"
@@ -10,6 +14,21 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
+)
+
+const (
+	// FormatAuto represents all available formats by auto selecting
+	FormatAuto = "auto"
+	// FormatJSON represents json format
+	FormatJSON = "json"
+	// FormatTOML represents toml format
+	FormatTOML = "toml"
+	// FormatYAML represents yaml format
+	FormatYAML = "yaml"
+	// FormatProtobuf represents protobuf format
+	FormatProtobuf = "protobuf"
+	// FormatProtobufShort is the short of FormatProtobuf
+	FormatProtobufShort = "pb"
 )
 
 // ConfigFormat is a configurable format of V2Ray config file.
@@ -23,6 +42,7 @@ type ConfigFormat struct {
 type ConfigLoader func(input interface{}) (*Config, error)
 
 var (
+	configLoaders      = make([]*ConfigFormat, 0)
 	configLoaderByName = make(map[string]*ConfigFormat)
 	configLoaderByExt  = make(map[string]*ConfigFormat)
 )
@@ -30,11 +50,10 @@ var (
 // RegisterConfigLoader add a new ConfigLoader.
 func RegisterConfigLoader(format *ConfigFormat) error {
 	for _, name := range format.Name {
-		lname := strings.ToLower(name)
-		if _, found := configLoaderByName[lname]; found {
+		if _, found := configLoaderByName[name]; found {
 			return newError(name, " already registered.")
 		}
-		configLoaderByName[lname] = format
+		configLoaderByName[name] = format
 	}
 
 	for _, ext := range format.Extension {
@@ -44,7 +63,7 @@ func RegisterConfigLoader(format *ConfigFormat) error {
 		}
 		configLoaderByExt[lext] = format
 	}
-
+	configLoaders = append(configLoaders, format)
 	return nil
 }
 
@@ -53,41 +72,99 @@ func getExtension(filename string) string {
 	return strings.ToLower(ext)
 }
 
-// GetConfigLoader get config loader by name and filename.
-// Specify formatName to explicitly select a loader.
-// Specify filename to choose loader by detect its extension.
-// Leave formatName and filename blank for default loader
-func GetConfigLoader(formatName string, filename string) (*ConfigFormat, error) {
-	if formatName != "" {
-		// if explicitly specified, we can safely assume that user knows what they are
-		if f, found := configLoaderByName[formatName]; found {
-			return f, nil
-		}
-		return nil, newError("Unable to load config in ", formatName).AtWarning()
+// GetLoaderExtensions get config loader extensions.
+func GetLoaderExtensions(formatName string) ([]string, error) {
+	if formatName == FormatAuto {
+		return GetAllExtensions(), nil
 	}
-	// no explicitly specified loader, extenstion detect first
-	if ext := getExtension(filename); len(ext) > 0 {
-		if f, found := configLoaderByExt[ext]; found {
-			return f, nil
-		}
+	if f, found := configLoaderByName[formatName]; found {
+		return f.Extension, nil
 	}
-	// default loader
-	if f, found := configLoaderByName["json"]; found {
-		return f, nil
-	}
-	panic("default loader not found")
+	return nil, newError("config loader not found: ", formatName).AtWarning()
 }
 
-// LoadConfig loads config with given format from given source.
-// input accepts 2 different types:
+// GetAllExtensions get all extensions supported
+func GetAllExtensions() []string {
+	extensions := make([]string, 0)
+	for _, f := range configLoaderByName {
+		extensions = append(extensions, f.Extension...)
+	}
+	return extensions
+}
+
+// LoadConfig loads multiple config with given format from given source.
+// input accepts:
+// * string of a single filename/url(s) to open to read
 // * []string slice of multiple filename/url(s) to open to read
 // * io.Reader that reads a config content (the original way)
-func LoadConfig(formatName string, filename string, input interface{}) (*Config, error) {
-	f, err := GetConfigLoader(formatName, filename)
-	if err != nil {
-		return nil, err
+func LoadConfig(formatName string, input interface{}) (*Config, error) {
+	cnt := getInputCount(input)
+	if cnt == 0 {
+		log.Println("Using config from STDIN")
+		input = os.Stdin
+		cnt = 1
+	}
+	if formatName == FormatAuto && cnt == 1 {
+		// This ensures only to call auto loader for multiple files,
+		// so that it can only care about merging scenarios
+		return loadSingleConfigAutoFormat(input)
+	}
+	// if input is a slice with single element, extract it
+	// so that unmergeable loaders don't need to deal with
+	// slices
+	s := reflect.Indirect(reflect.ValueOf(input))
+	k := s.Kind()
+	if (k == reflect.Slice || k == reflect.Array) && s.Len() == 1 {
+		value := reflect.Indirect(s.Index(0))
+		if value.Kind() == reflect.String {
+			// string type alias
+			input = fmt.Sprint(value.Interface())
+		} else {
+			input = value.Interface()
+		}
+	}
+	f, found := configLoaderByName[formatName]
+	if !found {
+		return nil, newError("config loader not found: ", formatName).AtWarning()
 	}
 	return f.Loader(input)
+}
+
+// loadSingleConfigAutoFormat loads a single config with from given source.
+// input accepts:
+// * string of a single filename/url(s) to open to read
+// * io.Reader that reads a config content (the original way)
+func loadSingleConfigAutoFormat(input interface{}) (*Config, error) {
+	if file, ok := input.(string); ok {
+		extension := getExtension(file)
+		if extension != "" {
+			lowerName := strings.ToLower(extension)
+			if f, found := configLoaderByExt[lowerName]; found {
+				return f.Loader(file)
+			}
+			return nil, newError("config loader not found for: ", extension).AtWarning()
+		}
+	}
+	// no extension, try all loaders
+	for _, f := range configLoaders {
+		if f.Name[0] == FormatAuto {
+			continue
+		}
+		c, err := f.Loader(input)
+		if err == nil {
+			return c, nil
+		}
+	}
+	return nil, newError("tried all loaders but failed for: ", input).AtWarning()
+}
+
+func getInputCount(input interface{}) int {
+	s := reflect.Indirect(reflect.ValueOf(input))
+	k := s.Kind()
+	if k == reflect.Slice || k == reflect.Array {
+		return s.Len()
+	}
+	return 1
 }
 
 func loadProtobufConfig(data []byte) (*Config, error) {
@@ -100,12 +177,12 @@ func loadProtobufConfig(data []byte) (*Config, error) {
 
 func init() {
 	common.Must(RegisterConfigLoader(&ConfigFormat{
-		Name:      []string{"Protobuf", "pb"},
+		Name:      []string{FormatProtobuf, FormatProtobufShort},
 		Extension: []string{".pb"},
 		Loader: func(input interface{}) (*Config, error) {
 			switch v := input.(type) {
-			case cmdarg.Arg:
-				r, err := cmdarg.LoadArg(v[0])
+			case string:
+				r, err := cmdarg.LoadArg(v)
 				if err != nil {
 					return nil, err
 				}
