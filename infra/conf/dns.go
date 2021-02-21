@@ -120,10 +120,11 @@ var typeMap = map[router.Domain_Type]dns.DomainMatchingType{
 
 // DNSConfig is a JSON serializable object for dns.Config.
 type DNSConfig struct {
-	Servers  []*NameServerConfig `json:"servers"`
-	Hosts    map[string]*Address `json:"hosts"`
-	ClientIP *Address            `json:"clientIp"`
-	Tag      string              `json:"tag"`
+	Servers      []*NameServerConfig `json:"servers"`
+	Hosts        map[string]*Address `json:"hosts"`
+	ClientIP     *Address            `json:"clientIp"`
+	DisableCache bool                `json:"disableCache"`
+	Tag          string              `json:"tag"`
 }
 
 func getHostMapping(addr *Address) *dns.Config_HostMapping {
@@ -140,7 +141,8 @@ func getHostMapping(addr *Address) *dns.Config_HostMapping {
 // Build implements Buildable
 func (c *DNSConfig) Build() (*dns.Config, error) {
 	config := &dns.Config{
-		Tag: c.Tag,
+		Tag:          c.Tag,
+		DisableCache: c.DisableCache,
 	}
 
 	if c.ClientIP != nil {

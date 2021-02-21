@@ -24,6 +24,7 @@ import (
 type DNS struct {
 	sync.Mutex
 	tag           string
+	disableCache  bool
 	hosts         *StaticHosts
 	clients       []*Client
 	ctx           context.Context
@@ -116,6 +117,7 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 		ctx:           ctx,
 		domainMatcher: domainMatcher,
 		matcherInfos:  matcherInfos,
+		disableCache:  config.DisableCache,
 	}, nil
 }
 
@@ -192,7 +194,7 @@ func (s *DNS) lookupIPInternal(domain string, option IPOption) ([]net.IP, error)
 	errs := []error{}
 	ctx := session.ContextWithInbound(s.ctx, &session.Inbound{Tag: s.tag})
 	for _, client := range s.sortClients(domain) {
-		ips, err := client.QueryIP(ctx, domain, option)
+		ips, err := client.QueryIP(ctx, domain, option, s.disableCache)
 		if len(ips) > 0 {
 			return ips, nil
 		}

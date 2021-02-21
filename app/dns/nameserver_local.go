@@ -15,7 +15,7 @@ type LocalNameServer struct {
 }
 
 // QueryIP implements Server.
-func (s *LocalNameServer) QueryIP(ctx context.Context, domain string, clientIP net.IP, option IPOption) ([]net.IP, error) {
+func (s *LocalNameServer) QueryIP(ctx context.Context, domain string, clientIP net.IP, option IPOption, _ bool) ([]net.IP, error) {
 	if option.IPv4Enable && option.IPv6Enable {
 		return s.client.LookupIP(domain)
 	}

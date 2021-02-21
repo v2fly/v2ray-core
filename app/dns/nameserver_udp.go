@@ -242,13 +242,17 @@ func (s *ClassicNameServer) findIPsForDomain(domain string, option IPOption) ([]
 }
 
 // QueryIP implements Server.
-func (s *ClassicNameServer) QueryIP(ctx context.Context, domain string, clientIP net.IP, option IPOption) ([]net.IP, error) {
+func (s *ClassicNameServer) QueryIP(ctx context.Context, domain string, clientIP net.IP, option IPOption, disableCache bool) ([]net.IP, error) {
 	fqdn := Fqdn(domain)
 
-	ips, err := s.findIPsForDomain(fqdn, option)
-	if err != errRecordNotFound {
-		newError(s.name, " cache HIT ", domain, " -> ", ips).Base(err).AtDebug().WriteToLog()
-		return ips, err
+	if disableCache {
+		newError(s.name, " DNS cache is disabled ", domain).AtDebug().WriteToLog()
+	} else {
+		ips, err := s.findIPsForDomain(fqdn, option)
+		if err != errRecordNotFound {
+			newError(s.name, " cache HIT ", domain, " -> ", ips).Base(err).AtDebug().WriteToLog()
+			return ips, err
+		}
 	}
 
 	// ipv4 and ipv6 belong to different subscription groups
