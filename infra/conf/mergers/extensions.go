@@ -8,7 +8,7 @@ func GetExtensions(formatName string) ([]string, error) {
 	if lowerName == "auto" {
 		return GetAllExtensions(), nil
 	}
-	f, found := mergeLoaderByName[lowerName]
+	f, found := mergersByName[lowerName]
 	if !found {
 		return nil, newError(formatName+" not found", formatName).AtWarning()
 	}
@@ -18,7 +18,7 @@ func GetExtensions(formatName string) ([]string, error) {
 // GetAllExtensions get all extensions supported
 func GetAllExtensions() []string {
 	extensions := make([]string, 0)
-	for _, f := range mergeLoaderByName {
+	for _, f := range mergersByName {
 		extensions = append(extensions, f.Extensions...)
 	}
 	return extensions

@@ -12,15 +12,15 @@ import (
 
 // MergeAs load input and merge as specified format into m
 func MergeAs(formatName string, input interface{}, m map[string]interface{}) error {
-	f, found := mergeLoaderByName[formatName]
+	f, found := mergersByName[formatName]
 	if !found {
-		return newError("format loader not found for: ", formatName)
+		return newError("format merger not found for: ", formatName)
 	}
-	return f.Loader(input, m)
+	return f.Merge(input, m)
 }
 
 // Merge loads inputs and merges them into m
-// it detects extension for loader selecting, or try all loaders
+// it detects extension for merger selecting, or try all mergers
 // if no extension found
 func Merge(input interface{}, m map[string]interface{}) error {
 	switch v := input.(type) {
@@ -49,7 +49,7 @@ func Merge(input interface{}, m map[string]interface{}) error {
 			return err
 		}
 	case io.Reader:
-		// read to []byte incase it tries different loaders
+		// read to []byte incase it tries different mergers
 		bs, err := ioutil.ReadAll(v)
 		if err != nil {
 			return err
@@ -69,24 +69,24 @@ func mergeSingleFile(input interface{}, m map[string]interface{}) error {
 		ext := getExtension(file)
 		if ext != "" {
 			lext := strings.ToLower(ext)
-			f, found := mergeLoaderByExt[lext]
+			f, found := mergersByExt[lext]
 			if !found {
 				return newError("unmergeable format extension: ", ext)
 			}
-			return f.Loader(file, m)
+			return f.Merge(file, m)
 		}
 	}
-	// no extension, try all loaders
-	for _, f := range mergeLoaderByName {
+	// no extension, try all mergers
+	for _, f := range mergersByName {
 		if f.Name == core.FormatAuto {
 			continue
 		}
-		err := f.Loader(input, m)
+		err := f.Merge(input, m)
 		if err == nil {
 			return nil
 		}
 	}
-	return newError("tried all loaders but failed for: ", input).AtWarning()
+	return newError("tried all mergers but failed for: ", input).AtWarning()
 }
 
 func getExtension(filename string) string {
