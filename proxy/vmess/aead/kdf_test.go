@@ -3,8 +3,9 @@ package aead
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestKDFValue(t *testing.T) {
