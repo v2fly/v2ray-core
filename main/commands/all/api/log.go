@@ -3,6 +3,7 @@ package api
 import (
 	"io"
 	"log"
+	"os"
 
 	logService "github.com/v2fly/v2ray-core/v4/app/log/command"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
@@ -70,6 +71,7 @@ func followLogger() {
 		base.Fatalf("failed to follow logger: %s", err)
 	}
 
+	log.SetOutput(os.Stdout)
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
@@ -78,6 +80,6 @@ func followLogger() {
 		if err != nil {
 			base.Fatalf("failed to fetch log: %s", err)
 		}
-		log.Print(resp.Message)
+		log.Println(resp.Message)
 	}
 }
