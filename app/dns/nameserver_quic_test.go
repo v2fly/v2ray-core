@@ -9,6 +9,7 @@ import (
 	. "github.com/v2fly/v2ray-core/v4/app/dns"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
+	dns_feature "github.com/v2fly/v2ray-core/v4/features/dns"
 )
 
 func TestQUICNameServer(t *testing.T) {
@@ -17,7 +18,7 @@ func TestQUICNameServer(t *testing.T) {
 	s, err := NewQUICNameServer(url)
 	common.Must(err)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
-	ips, err := s.QueryIP(ctx, "google.com", net.IP(nil), IPOption{
+	ips, err := s.QueryIP(ctx, "google.com", net.IP(nil), dns_feature.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: true,
 	})
