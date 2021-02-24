@@ -14,12 +14,12 @@ import (
 	dns_feature "github.com/v2fly/v2ray-core/v4/features/dns"
 )
 
-func TestQUICNameServer(t *testing.T) {
-	url, err := url.Parse("quic://dns.adguard.com")
+func TestDOHNameServer(t *testing.T) {
+	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
-	s, err := NewQUICNameServer(url)
-	common.Must(err)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+
+	s := NewDoHLocalNameServer(url)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	ips, err := s.QueryIP(ctx, "google.com", net.IP(nil), dns_feature.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: true,
@@ -31,12 +31,12 @@ func TestQUICNameServer(t *testing.T) {
 	}
 }
 
-func TestQUICNameServerWithCache(t *testing.T) {
-	url, err := url.Parse("quic://dns.adguard.com")
+func TestDOHNameServerWithCache(t *testing.T) {
+	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
-	s, err := NewQUICNameServer(url)
-	common.Must(err)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+
+	s := NewDoHLocalNameServer(url)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	ips, err := s.QueryIP(ctx, "google.com", net.IP(nil), dns_feature.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: true,

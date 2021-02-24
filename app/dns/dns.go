@@ -25,6 +25,7 @@ import (
 type DNS struct {
 	sync.Mutex
 	tag           string
+	disableCache  bool
 	hosts         *StaticHosts
 	clients       []*Client
 	ctx           context.Context
@@ -118,6 +119,7 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 		ctx:           ctx,
 		domainMatcher: domainMatcher,
 		matcherInfos:  matcherInfos,
+		disableCache:  config.DisableCache,
 	}, nil
 }
 
@@ -175,7 +177,7 @@ func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, error) {
 			newError("skip DNS resolution for domain ", domain, " at server ", client.Name()).AtDebug().WriteToLog()
 			continue
 		}
-		ips, err := client.QueryIP(ctx, domain, option)
+		ips, err := client.QueryIP(ctx, domain, option, s.disableCache)
 		if len(ips) > 0 {
 			return ips, nil
 		}
