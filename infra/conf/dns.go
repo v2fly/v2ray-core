@@ -141,7 +141,7 @@ func getHostMapping(addr *Address) *dns.Config_HostMapping {
 // Build implements Buildable
 func (c *DNSConfig) Build() (*dns.Config, error) {
 	config := &dns.Config{
-		Tag: c.Tag,
+		Tag:          c.Tag,
 		DisableCache: c.DisableCache,
 	}
 
