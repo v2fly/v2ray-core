@@ -21,7 +21,7 @@ func TestQUICNameServer(t *testing.T) {
 	ips, err := s.QueryIP(ctx, "google.com", net.IP(nil), dns_feature.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: true,
-	})
+	}, false)
 	cancel()
 	common.Must(err)
 	if len(ips) == 0 {
