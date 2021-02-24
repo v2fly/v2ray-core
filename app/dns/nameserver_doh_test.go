@@ -14,7 +14,7 @@ import (
 	dns_feature "github.com/v2fly/v2ray-core/v4/features/dns"
 )
 
-func TestDOHNameServer(t *testing.T) {
+func TestDoHLocalNameServer(t *testing.T) {
 	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
 
@@ -31,7 +31,7 @@ func TestDOHNameServer(t *testing.T) {
 	}
 }
 
-func TestDOHNameServerWithCache(t *testing.T) {
+func TestDoHLocalNameServerWithCache(t *testing.T) {
 	url, err := url.Parse("https+local://1.1.1.1/dns-query")
 	common.Must(err)
 
