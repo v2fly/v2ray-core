@@ -10,7 +10,7 @@ import (
 
 var cmdRemoveInbounds = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api rmi [--server=127.0.0.1:8080] <json_file|tag> [json_file] [tag]...",
+	UsageLine:   "{{.Exec}} api rmi [--server=127.0.0.1:8080] [c1.json] [dir1]...",
 	Short:       "remove inbounds",
 	Long: `
 Remove inbounds from V2Ray.
@@ -25,6 +25,9 @@ Arguments:
 	-r
 		Load folders recursively.
 
+	-tags
+		The input are tags instead of config files
+
 	-s, -server <server:port>
 		The API server address. Default 127.0.0.1:8080
 
@@ -33,7 +36,9 @@ Arguments:
 
 Example:
 
-    {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 c1.json "tag name"
+    {{.Exec}} {{.LongName}} dir
+    {{.Exec}} {{.LongName}} c1.json c2.yaml
+    {{.Exec}} {{.LongName}} -tags tag1 tag2
 `,
 	Run: executeRemoveInbounds,
 }
@@ -41,12 +46,23 @@ Example:
 func executeRemoveInbounds(cmd *base.Command, args []string) {
 	setSharedFlags(cmd)
 	setSharedConfigFlags(cmd)
+	isTags := cmd.Flag.Bool("tags", false, "")
 	cmd.Flag.Parse(args)
-	c, err := helpers.LoadConfig(cmd.Flag.Args(), apiConfigFormat, apiConfigRecursively)
-	if err != nil {
-		base.Fatalf("%s", err)
+
+	var tags []string
+	if *isTags {
+		tags = cmd.Flag.Args()
+	} else {
+		c, err := helpers.LoadConfig(cmd.Flag.Args(), apiConfigFormat, apiConfigRecursively)
+		if err != nil {
+			base.Fatalf("failed to load: %s", err)
+		}
+		tags = make([]string, 0)
+		for _, c := range c.InboundConfigs {
+			tags = append(tags, c.Tag)
+		}
 	}
-	if len(c.InboundConfigs) == 0 {
+	if len(tags) == 0 {
 		base.Fatalf("no inbound to remove")
 	}
 
@@ -54,10 +70,10 @@ func executeRemoveInbounds(cmd *base.Command, args []string) {
 	defer close()
 
 	client := handlerService.NewHandlerServiceClient(conn)
-	for _, c := range c.InboundConfigs {
-		fmt.Println("removing:", c.Tag)
+	for _, tag := range tags {
+		fmt.Println("removing:", tag)
 		r := &handlerService.RemoveInboundRequest{
-			Tag: c.Tag,
+			Tag: tag,
 		}
 		_, err := client.RemoveInbound(ctx, r)
 		if err != nil {

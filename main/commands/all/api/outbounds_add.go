@@ -10,7 +10,7 @@ import (
 
 var cmdAddOutbounds = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api ado [--server=127.0.0.1:8080] <c1.json> [c2.json]...",
+	UsageLine:   "{{.Exec}} api ado [--server=127.0.0.1:8080] [c1.json] [dir1]...",
 	Short:       "add outbounds",
 	Long: `
 Add outbounds to V2Ray.
@@ -33,7 +33,8 @@ Arguments:
 
 Example:
 
-    {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 c1.json c2.json
+    {{.Exec}} {{.LongName}} dir
+    {{.Exec}} {{.LongName}} c1.json c2.yaml
 `,
 	Run: executeAddOutbounds,
 }
@@ -44,7 +45,7 @@ func executeAddOutbounds(cmd *base.Command, args []string) {
 	cmd.Flag.Parse(args)
 	c, err := helpers.LoadConfig(cmd.Flag.Args(), apiConfigFormat, apiConfigRecursively)
 	if err != nil {
-		base.Fatalf("%s", err)
+		base.Fatalf("failed to load: %s", err)
 	}
 	if len(c.OutboundConfigs) == 0 {
 		base.Fatalf("no valid outbound found")
