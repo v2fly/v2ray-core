@@ -246,7 +246,7 @@ func (s *ClassicNameServer) QueryIP(ctx context.Context, domain string, clientIP
 	fqdn := Fqdn(domain)
 
 	if disableCache {
-		newError(s.name, " DNS cache is disabled ", domain).AtDebug().WriteToLog()
+		newError("DNS cache is disabled. Querying IP for ", domain, " at ", s.name).AtDebug().WriteToLog()
 	} else {
 		ips, err := s.findIPsForDomain(fqdn, option)
 		if err != errRecordNotFound {
