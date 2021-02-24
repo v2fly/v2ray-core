@@ -11,6 +11,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	serial "github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/common/session"
+	"github.com/v2fly/v2ray-core/v4/features/dns"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
 	routing_session "github.com/v2fly/v2ray-core/v4/features/routing/session"
 	"github.com/v2fly/v2ray-core/v4/testing/mocks"
@@ -163,7 +164,11 @@ func TestIPOnDemand(t *testing.T) {
 	defer mockCtl.Finish()
 
 	mockDNS := mocks.NewDNSClient(mockCtl)
-	mockDNS.EXPECT().LookupIP(gomock.Eq("v2fly.org")).Return([]net.IP{{192, 168, 0, 1}}, nil).AnyTimes()
+	mockDNS.EXPECT().LookupIP(gomock.Eq("v2fly.org"), dns.IPOption{
+		IPv4Enable: true,
+		IPv6Enable: true,
+		FakeEnable: false,
+	}).Return([]net.IP{{192, 168, 0, 1}}, nil).AnyTimes()
 
 	r := new(Router)
 	common.Must(r.Init(config, mockDNS, nil, nil))
@@ -198,7 +203,11 @@ func TestIPIfNonMatchDomain(t *testing.T) {
 	defer mockCtl.Finish()
 
 	mockDNS := mocks.NewDNSClient(mockCtl)
-	mockDNS.EXPECT().LookupIP(gomock.Eq("v2fly.org")).Return([]net.IP{{192, 168, 0, 1}}, nil).AnyTimes()
+	mockDNS.EXPECT().LookupIP(gomock.Eq("v2fly.org"), dns.IPOption{
+		IPv4Enable: true,
+		IPv6Enable: true,
+		FakeEnable: false,
+	}).Return([]net.IP{{192, 168, 0, 1}}, nil).AnyTimes()
 
 	r := new(Router)
 	common.Must(r.Init(config, mockDNS, nil, nil))

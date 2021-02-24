@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	"net/url"
+	"strings"
 	"time"
 
 	core "github.com/v2fly/v2ray-core/v4"
@@ -10,21 +11,16 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/errors"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/strmatcher"
+	"github.com/v2fly/v2ray-core/v4/features/dns"
 	"github.com/v2fly/v2ray-core/v4/features/routing"
 )
-
-// IPOption is an object for IP query options.
-type IPOption struct {
-	IPv4Enable bool
-	IPv6Enable bool
-}
 
 // Server is the interface for Name Server.
 type Server interface {
 	// Name of the Client.
 	Name() string
 	// QueryIP sends IP queries to its configured server.
-	QueryIP(ctx context.Context, domain string, clientIP net.IP, option IPOption) ([]net.IP, error)
+	QueryIP(ctx context.Context, domain string, clientIP net.IP, option dns.IPOption, disableCache bool) ([]net.IP, error)
 }
 
 // Client is the interface for DNS client.
@@ -45,15 +41,15 @@ func NewServer(dest net.Destination, dispatcher routing.Dispatcher) (Server, err
 			return nil, err
 		}
 		switch {
-		case u.String() == "localhost":
+		case strings.EqualFold(u.String(), "localhost"):
 			return NewLocalNameServer(), nil
-		case u.Scheme == "https": // DOH Remote mode
+		case strings.EqualFold(u.Scheme, "https"): // DOH Remote mode
 			return NewDoHNameServer(u, dispatcher)
-		case u.Scheme == "https+local": // DOH Local mode
+		case strings.EqualFold(u.Scheme, "https+local"): // DOH Local mode
 			return NewDoHLocalNameServer(u), nil
-		case u.Scheme == "quic+local": // DNS-over-QUIC Local mode
+		case strings.EqualFold(u.Scheme, "quic+local"): // DNS-over-QUIC Local mode
 			return NewQUICNameServer(u)
-		case u.String() == "fakedns":
+		case strings.EqualFold(u.String(), "fakedns"):
 			return NewFakeDNSServer(), nil
 		}
 	}
@@ -171,9 +167,9 @@ func (c *Client) Name() string {
 }
 
 // QueryIP send DNS query to the name server with the client's IP.
-func (c *Client) QueryIP(ctx context.Context, domain string, option IPOption) ([]net.IP, error) {
+func (c *Client) QueryIP(ctx context.Context, domain string, option dns.IPOption, disableCache bool) ([]net.IP, error) {
 	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)
-	ips, err := c.server.QueryIP(ctx, domain, c.clientIP, option)
+	ips, err := c.server.QueryIP(ctx, domain, c.clientIP, option, disableCache)
 	cancel()
 
 	if err != nil {

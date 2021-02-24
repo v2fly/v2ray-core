@@ -7,15 +7,25 @@ import (
 )
 
 func KDF(key []byte, path ...string) []byte {
-	hmacf := hmac.New(sha256.New, []byte(KDFSaltConstVMessAEADKDF))
-
+	hmacCreator := &hMacCreator{value: []byte(KDFSaltConstVMessAEADKDF)}
 	for _, v := range path {
-		hmacf = hmac.New(func() hash.Hash {
-			return hmacf
-		}, []byte(v))
+		hmacCreator = &hMacCreator{value: []byte(v), parent: hmacCreator}
 	}
+	hmacf := hmacCreator.Create()
 	hmacf.Write(key)
 	return hmacf.Sum(nil)
+}
+
+type hMacCreator struct {
+	parent *hMacCreator
+	value  []byte
+}
+
+func (h *hMacCreator) Create() hash.Hash {
+	if h.parent == nil {
+		return hmac.New(sha256.New, h.value)
+	}
+	return hmac.New(h.parent.Create, h.value)
 }
 
 func KDF16(key []byte, path ...string) []byte {
