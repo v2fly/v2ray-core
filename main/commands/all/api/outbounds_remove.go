@@ -15,10 +15,13 @@ var cmdRemoveOutbounds = &base.Command{
 	Long: `
 Remove outbounds from V2Ray.
 
+> Make sure you have "HandlerService" set in "config.api.services" 
+of server config.
+
 Arguments:
 
 	-format <format>
-		Specify the input format.
+		The input format.
 		Available values: "auto", "json", "toml", "yaml"
 		Default: "auto"
 

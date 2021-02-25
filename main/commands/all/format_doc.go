@@ -8,12 +8,12 @@ var docFormat = &base.Command{
 	UsageLine: "{{.Exec}} format-loader",
 	Short:     "config formats and loading",
 	Long: `
-{{.Exec}} supports different config formats:
+{{.Exec}} is equipped with multiple loaders to support different 
+config formats:
 
 	* auto
-	  The default loader, supports all extensions below.
-	  It loads config by format detecting, with mixed 
-	  formats support.
+	  The default loader, supports all formats listed below, with 
+	  format detecting, and mixed fomats support.
 
 	* json (.json, .jsonc)
 	  The json loader, multiple files support, mergeable.
@@ -21,14 +21,14 @@ var docFormat = &base.Command{
 	* toml (.toml)
 	  The toml loader, multiple files support, mergeable.
 
-	* yaml (.yml)
+	* yaml (.yml, .yaml)
 	  The yaml loader, multiple files support, mergeable.
 
 	* protobuf / pb (.pb)
 	  Single file support, unmergeable.
 
 
-The following explains how format loaders behave with examples.
+The following explains how format loaders behaves.
 
 Examples:
 
