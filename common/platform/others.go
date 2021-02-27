@@ -30,6 +30,7 @@ func GetAssetLocation(file string) string {
 		defPath,
 		filepath.Join("/usr/local/share/v2ray/", file),
 		filepath.Join("/usr/share/v2ray/", file),
+		filepath.Join("/opt/share/v2ray/", file),
 	} {
 		if _, err := os.Stat(p); os.IsNotExist(err) {
 			continue
