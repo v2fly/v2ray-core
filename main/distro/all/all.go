@@ -23,6 +23,8 @@ import (
 	_ "github.com/v2fly/v2ray-core/v4/app/router"
 	_ "github.com/v2fly/v2ray-core/v4/app/stats"
 
+	_ "github.com/v2fly/v2ray-core/v4/transport/internet/tagged/taggedimpl"
+
 	// Inbound and outbound proxies.
 	_ "github.com/v2fly/v2ray-core/v4/proxy/blackhole"
 	_ "github.com/v2fly/v2ray-core/v4/proxy/dns"
