@@ -86,6 +86,9 @@ func SockoptFromContext(ctx context.Context) *Sockopt {
 }
 
 func GetTransportLayerProxyTagFromContext(ctx context.Context) string {
+	if ContentFromContext(ctx) == nil {
+		return ""
+	}
 	return ContentFromContext(ctx).Attribute("transportLayerOutgoingTag")
 }
 
@@ -94,6 +97,9 @@ func SetTransportLayerProxyTagToContext(ctx context.Context, tag string) {
 }
 
 func GetForcedOutboundTagFromContext(ctx context.Context) string {
+	if ContentFromContext(ctx) == nil {
+		return ""
+	}
 	return ContentFromContext(ctx).Attribute("forcedOutboundTag")
 }
 
