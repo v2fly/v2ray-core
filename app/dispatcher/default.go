@@ -294,6 +294,19 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool) (Sni
 func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.Link, destination net.Destination) {
 	var handler outbound.Handler
 
+	if forcedOutboundTag := session.GetForcedOutboundTagFromContext(ctx); forcedOutboundTag != "" {
+		session.SetForcedOutboundTagToContext(ctx, "")
+		if h := d.ohm.GetHandler(forcedOutboundTag); h != nil {
+			newError("taking platform initialized detour [", forcedOutboundTag, "] for [", destination, "]").WriteToLog(session.ExportIDToError(ctx))
+			handler = h
+		} else {
+			newError("non existing tag for platform initialized detour: ", forcedOutboundTag).AtError().WriteToLog(session.ExportIDToError(ctx))
+			common.Close(link.Writer)
+			common.Interrupt(link.Reader)
+			return
+		}
+	}
+
 	if d.router != nil {
 		if route, err := d.router.PickRoute(routing_session.AsRoutingContext(ctx)); err == nil {
 			tag := route.GetOutboundTag()

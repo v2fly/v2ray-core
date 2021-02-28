@@ -2,6 +2,8 @@ package internet
 
 import (
 	"context"
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/features/routing"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/session"
@@ -68,5 +70,37 @@ func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig
 	if outbound := session.OutboundFromContext(ctx); outbound != nil {
 		src = outbound.Gateway
 	}
+
+	if transportLayerOutgoingTag := session.GetTransportLayerProxyTagFromContext(ctx); transportLayerOutgoingTag != "" {
+		return DialTaggedOutbound(ctx, dest, transportLayerOutgoingTag)
+	}
+
 	return effectiveSystemDialer.Dial(ctx, src, dest, sockopt)
+}
+
+func DialTaggedOutbound(ctx context.Context, dest net.Destination, tag string) (net.Conn, error) {
+	var dispatcher routing.Dispatcher
+	if err := core.RequireFeatures(ctx, func(dispatcherInstance routing.Dispatcher) {
+		dispatcher = dispatcherInstance
+	}); err != nil {
+		return nil, newError("Required Feature dispatcher not resolved").Base(err)
+	}
+
+	content := new(session.Content)
+	content.SkipDNSResolve = true
+	session.SetForcedOutboundTagToContext(ctx, tag)
+
+	ctx = session.ContextWithContent(ctx, content)
+
+	r, err := dispatcher.Dispatch(ctx, dest)
+	if err != nil {
+		return nil, err
+	}
+	var readerOpt net.ConnectionOption
+	if dest.Network == net.Network_TCP {
+		readerOpt = net.ConnectionOutputMulti(r.Reader)
+	} else {
+		readerOpt = net.ConnectionOutputMultiUDP(r.Reader)
+	}
+	return net.NewConnection(net.ConnectionInputMulti(r.Writer), readerOpt), nil
 }

@@ -159,7 +159,7 @@ func (h *Handler) Address() net.Address {
 // Dial implements internet.Dialer.
 func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Connection, error) {
 	if h.senderSettings != nil {
-		if h.senderSettings.ProxySettings.HasTag() {
+		if h.senderSettings.ProxySettings.HasTag() && !h.senderSettings.ProxySettings.TransportLayerProxy {
 			tag := h.senderSettings.ProxySettings.Tag
 			handler := h.outboundManager.GetHandler(tag)
 			if handler != nil {
@@ -194,6 +194,12 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 			}
 			outbound.Gateway = h.senderSettings.Via.AsAddress()
 		}
+	}
+
+	if h.senderSettings.ProxySettings.HasTag() && h.senderSettings.ProxySettings.TransportLayerProxy {
+		tag := h.senderSettings.ProxySettings.Tag
+		newError("transport layer proxying to ", tag, " for dest ", dest).AtDebug().WriteToLog(session.ExportIDToError(ctx))
+		session.SetTransportLayerProxyTagToContext(ctx, tag)
 	}
 
 	conn, err := internet.Dial(ctx, dest, h.streamSettings)
