@@ -353,16 +353,26 @@ func (h *Handler) generateCommand(ctx context.Context, request *protocol.Request
 }
 
 var aeadForced = false
+var aeadForced2022 = false
 
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return New(ctx, config.(*Config))
 	}))
 
-	const defaultFlagValue = "NOT_DEFINED_AT_ALL"
+	var defaultFlagValue = "NOT_DEFINED_AT_ALL"
+
+	if time.Now().Year() >= 2022 {
+		defaultFlagValue = "true_by_default_2022"
+	}
 
 	isAeadForced := platform.NewEnvFlag("v2ray.vmess.aead.forced").GetValue(func() string { return defaultFlagValue })
 	if isAeadForced == "true" {
 		aeadForced = true
+	}
+
+	if isAeadForced == "true_by_default_2022" {
+		aeadForced = true
+		aeadForced2022 = true
 	}
 }
