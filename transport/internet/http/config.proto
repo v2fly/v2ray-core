@@ -11,6 +11,6 @@ import "transport/internet/headers/http/config.proto";
 message Config {
   repeated string host = 1;
   string path = 2;
-
+  string method = 3;
   repeated v2ray.core.transport.internet.headers.http.Header header = 4;
 }
