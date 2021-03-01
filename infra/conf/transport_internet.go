@@ -13,6 +13,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/domainsocket"
+	httpheader "github.com/v2fly/v2ray-core/v4/transport/internet/headers/http"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/http"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/kcp"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/quic"
@@ -171,8 +172,10 @@ func (c *WebSocketConfig) Build() (proto.Message, error) {
 }
 
 type HTTPConfig struct {
-	Host *cfgcommon.StringList `json:"host"`
-	Path string                `json:"path"`
+	Host    *cfgcommon.StringList            `json:"host"`
+	Path    string                           `json:"path"`
+	Method  string                           `json:"method"`
+	Headers map[string]*cfgcommon.StringList `json:"headers"`
 }
 
 // Build implements Buildable.
@@ -182,6 +185,23 @@ func (c *HTTPConfig) Build() (proto.Message, error) {
 	}
 	if c.Host != nil {
 		config.Host = []string(*c.Host)
+	}
+	if c.Method != "" {
+		config.Method = c.Method
+	}
+	if len(c.Headers) > 0 {
+		config.Header = make([]*httpheader.Header, 0, len(c.Headers))
+		headerNames := sortMapKeys(c.Headers)
+		for _, key := range headerNames {
+			value := c.Headers[key]
+			if value == nil {
+				return nil, newError("empty HTTP header value: " + key).AtError()
+			}
+			config.Header = append(config.Header, &httpheader.Header{
+				Name:  key,
+				Value: append([]string(nil), (*value)...),
+			})
+		}
 	}
 	return config, nil
 }
