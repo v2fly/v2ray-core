@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
+	gonet "net"
 	"sync"
 	"time"
 )
@@ -83,6 +84,21 @@ func getGrpcClient(dest net.Destination, dialOption grpc.DialOption) (*grpc.Clie
 				MaxDelay:   19 * time.Millisecond,
 			},
 			MinConnectTimeout: 5 * time.Second,
+		}),
+		grpc.WithContextDialer(func(ctx context.Context, s string) (gonet.Conn, error) {
+			rawHost, rawPort, err := net.SplitHostPort(s)
+			if err != nil {
+				return nil, err
+			}
+			if len(rawPort) == 0 {
+				rawPort = "443"
+			}
+			port, err := net.PortFromString(rawPort)
+			if err != nil {
+				return nil, err
+			}
+			address := net.ParseAddress(rawHost)
+			return internet.DialSystem(ctx, net.TCPDestination(address, port), nil)
 		}),
 	)
 	globalDialerMap[dest] = conn
