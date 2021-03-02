@@ -12,7 +12,9 @@ import (
 	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/backoff"
+	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
+	"sync"
 	"time"
 )
 
@@ -30,6 +32,11 @@ func init() {
 	common.Must(internet.RegisterTransportDialer(protocolName, Dial))
 }
 
+var (
+	globalDialerMap    map[net.Destination]*grpc.ClientConn
+	globalDialerAccess sync.Mutex
+)
+
 func dialgRPC(ctx context.Context, dest net.Destination, streamSettings *internet.MemoryStreamConfig) (net.Conn, error) {
 	grpcSettings := streamSettings.ProtocolSettings.(*Config)
 
@@ -38,6 +45,31 @@ func dialgRPC(ctx context.Context, dest net.Destination, streamSettings *interne
 
 	if config != nil {
 		dialOption = grpc.WithTransportCredentials(credentials.NewTLS(config.GetTLSConfig()))
+	}
+
+	conn, err := getGrpcClient(dest, dialOption)
+
+	if err != nil {
+		return nil, newError("Cannot dial grpc").Base(err)
+	}
+	client := encoding.NewGunServiceClient(conn)
+	gunservice, err := client.(encoding.GunServiceClientX).TunCustomName(ctx, grpcSettings.ServiceName)
+	if err != nil {
+		return nil, newError("Cannot dial grpc").Base(err)
+	}
+	return encoding.NewClientConn(gunservice), nil
+}
+
+func getGrpcClient(dest net.Destination, dialOption grpc.DialOption) (*grpc.ClientConn, error) {
+	globalDialerAccess.Lock()
+	defer globalDialerAccess.Unlock()
+
+	if globalDialerMap == nil {
+		globalDialerMap = make(map[net.Destination]*grpc.ClientConn)
+	}
+
+	if client, found := globalDialerMap[dest]; found && client.GetState() != connectivity.Shutdown {
+		return client, nil
 	}
 
 	conn, err := grpc.Dial(
@@ -53,14 +85,6 @@ func dialgRPC(ctx context.Context, dest net.Destination, streamSettings *interne
 			MinConnectTimeout: 5 * time.Second,
 		}),
 	)
-
-	if err != nil {
-		return nil, newError("Cannot dial grpc").Base(err)
-	}
-	client := encoding.NewGunServiceClient(conn)
-	gunservice, err := client.(encoding.GunServiceClientX).TunCustomName(ctx, grpcSettings.ServiceName)
-	if err != nil {
-		return nil, newError("Cannot dial grpc").Base(err)
-	}
-	return encoding.NewClientConn(gunservice), nil
+	globalDialerMap[dest] = conn
+	return conn, err
 }
