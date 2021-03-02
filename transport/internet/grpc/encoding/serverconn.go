@@ -26,9 +26,10 @@ func (s *ServerConn) Read(b []byte) (n int, err error) {
 	}
 	n, err = s.reader.Read(b)
 	if err == io.EOF {
-		return 0, nil
+		s.reader = nil
+		return n, nil
 	}
-	return 0, err
+	return n, err
 }
 
 func (s *ServerConn) Write(b []byte) (n int, err error) {
@@ -49,19 +50,23 @@ func (s ServerConn) LocalAddr() net.Addr {
 }
 
 func (s ServerConn) RemoteAddr() net.Addr {
-	panic("implement me")
+	newError("gun transport do not support get remote address").AtWarning().WriteToLog()
+	return &net.UnixAddr{
+		Name: "@placeholder",
+		Net:  "unix",
+	}
 }
 
 func (s ServerConn) SetDeadline(t time.Time) error {
-	panic("implement me")
+	return nil
 }
 
 func (s ServerConn) SetReadDeadline(t time.Time) error {
-	panic("implement me")
+	return nil
 }
 
 func (s ServerConn) SetWriteDeadline(t time.Time) error {
-	panic("implement me")
+	return nil
 }
 
 func NewServerConn(server GunService_TunServer, over context.CancelFunc) *ServerConn {

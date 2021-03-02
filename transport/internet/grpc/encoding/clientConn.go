@@ -26,9 +26,10 @@ func (s *ClientConn) Read(b []byte) (n int, err error) {
 	}
 	n, err = s.reader.Read(b)
 	if err == io.EOF {
-		return 0, nil
+		s.reader = nil
+		return n, nil
 	}
-	return 0, err
+	return n, err
 }
 
 func (s *ClientConn) Write(b []byte) (n int, err error) {
