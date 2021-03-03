@@ -88,7 +88,6 @@ func (g *ACAutomatonMatcherGroup) AddFullOrDomainPattern(pattern string, t Type)
 		g.nonSubstrMap[h] = pattern
 		g.nonSubstrMap[h*PrimeRK+uint32('.')] = "." + pattern
 	default:
-		break
 	}
 }
 
