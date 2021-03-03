@@ -294,17 +294,30 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool) (Sni
 func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.Link, destination net.Destination) {
 	var handler outbound.Handler
 
-	if d.router != nil {
-		if route, err := d.router.PickRoute(routing_session.AsRoutingContext(ctx)); err == nil {
-			tag := route.GetOutboundTag()
-			if h := d.ohm.GetHandler(tag); h != nil {
-				newError("taking detour [", tag, "] for [", destination, "]").WriteToLog(session.ExportIDToError(ctx))
-				handler = h
-			} else {
-				newError("non existing tag: ", tag).AtWarning().WriteToLog(session.ExportIDToError(ctx))
-			}
+	if forcedOutboundTag := session.GetForcedOutboundTagFromContext(ctx); forcedOutboundTag != "" {
+		session.SetForcedOutboundTagToContext(ctx, "")
+		if h := d.ohm.GetHandler(forcedOutboundTag); h != nil {
+			newError("taking platform initialized detour [", forcedOutboundTag, "] for [", destination, "]").WriteToLog(session.ExportIDToError(ctx))
+			handler = h
 		} else {
-			newError("default route for ", destination).WriteToLog(session.ExportIDToError(ctx))
+			newError("non existing tag for platform initialized detour: ", forcedOutboundTag).AtError().WriteToLog(session.ExportIDToError(ctx))
+			common.Close(link.Writer)
+			common.Interrupt(link.Reader)
+			return
+		}
+	} else {
+		if d.router != nil {
+			if route, err := d.router.PickRoute(routing_session.AsRoutingContext(ctx)); err == nil {
+				tag := route.GetOutboundTag()
+				if h := d.ohm.GetHandler(tag); h != nil {
+					newError("taking detour [", tag, "] for [", destination, "]").WriteToLog(session.ExportIDToError(ctx))
+					handler = h
+				} else {
+					newError("non existing tag: ", tag).AtWarning().WriteToLog(session.ExportIDToError(ctx))
+				}
+			} else {
+				newError("default route for ", destination).WriteToLog(session.ExportIDToError(ctx))
+			}
 		}
 	}
 

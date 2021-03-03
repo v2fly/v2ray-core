@@ -84,3 +84,25 @@ func SockoptFromContext(ctx context.Context) *Sockopt {
 	}
 	return nil
 }
+
+func GetTransportLayerProxyTagFromContext(ctx context.Context) string {
+	if ContentFromContext(ctx) == nil {
+		return ""
+	}
+	return ContentFromContext(ctx).Attribute("transportLayerOutgoingTag")
+}
+
+func SetTransportLayerProxyTagToContext(ctx context.Context, tag string) {
+	ContentFromContext(ctx).SetAttribute("transportLayerOutgoingTag", tag)
+}
+
+func GetForcedOutboundTagFromContext(ctx context.Context) string {
+	if ContentFromContext(ctx) == nil {
+		return ""
+	}
+	return ContentFromContext(ctx).Attribute("forcedOutboundTag")
+}
+
+func SetForcedOutboundTagToContext(ctx context.Context, tag string) {
+	ContentFromContext(ctx).SetAttribute("forcedOutboundTag", tag)
+}
