@@ -4,6 +4,7 @@ import (
 	"regexp"
 )
 
+// PrimeRK is the prime base used in Rabin-Karp algorithm.
 const PrimeRK = 16777619
 
 // Matcher is the interface to determine a string matches a pattern.
@@ -74,6 +75,7 @@ func NewACAutomatonMatcherGroup() *ACAutomatonMatcherGroup {
 	return g
 }
 
+// Add `full` or `domain` pattern to hashmap
 func (g *ACAutomatonMatcherGroup) AddFullOrDomainPattern(pattern string, t Type) {
 	h := uint32(0)
 	for i := len(pattern) - 1; i >= 0; i-- {
@@ -182,15 +184,20 @@ func (g *MatcherGroup) Add(m Matcher) uint32 {
 
 // Match implements IndexMatcher.Match.
 func (g *MatcherGroup) Match(pattern string) []uint32 {
-	result := []uint32{}
-	result = append(result, g.fullMatcher.Match(pattern)...)
-	result = append(result, g.domainMatcher.Match(pattern)...)
+	result := []uint32{1}
+	if len(g.fullMatcher.Match(pattern))>0{
+		return result
+	}
+	if len(g.domainMatcher.Match(pattern))>0{
+		return result
+	}
 	for _, e := range g.otherMatchers {
 		if e.m.Match(pattern) {
 			result = append(result, e.id)
+			return result
 		}
 	}
-	return result
+	return []uint32{}
 }
 
 // Size returns the number of matchers in the MatcherGroup.
