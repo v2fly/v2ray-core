@@ -73,8 +73,9 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 		case "ac":
 			matcher, err := NewACAutomatonDomainMatcher(rr.Domain)
 			if err != nil {
-				return nil, newError("failed to build domain condition").Base(err)
+				return nil, newError("failed to build domain condition with ACAutomatonDomainMatcher").Base(err)
 			}
+			newError("ACAutomatonDomainMatcher is enabled for ", len(rr.Domain), "domain rules(s)").AtDebug().WriteToLog()
 			conds.Add(matcher)
 		default:
 			matcher, err := NewDomainMatcher(rr.Domain)
