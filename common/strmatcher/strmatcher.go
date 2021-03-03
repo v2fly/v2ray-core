@@ -184,20 +184,15 @@ func (g *MatcherGroup) Add(m Matcher) uint32 {
 
 // Match implements IndexMatcher.Match.
 func (g *MatcherGroup) Match(pattern string) []uint32 {
-	result := []uint32{1}
-	if len(g.fullMatcher.Match(pattern)) > 0 {
-		return result
-	}
-	if len(g.domainMatcher.Match(pattern)) > 0 {
-		return result
-	}
+	result := []uint32{}
+	result = append(result, g.fullMatcher.Match(pattern)...)
+	result = append(result, g.domainMatcher.Match(pattern)...)
 	for _, e := range g.otherMatchers {
 		if e.m.Match(pattern) {
 			result = append(result, e.id)
-			return result
 		}
 	}
-	return []uint32{}
+	return result
 }
 
 // Size returns the number of matchers in the MatcherGroup.
