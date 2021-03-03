@@ -185,10 +185,10 @@ func (g *MatcherGroup) Add(m Matcher) uint32 {
 // Match implements IndexMatcher.Match.
 func (g *MatcherGroup) Match(pattern string) []uint32 {
 	result := []uint32{1}
-	if len(g.fullMatcher.Match(pattern))>0{
+	if len(g.fullMatcher.Match(pattern)) > 0 {
 		return result
 	}
-	if len(g.domainMatcher.Match(pattern))>0{
+	if len(g.domainMatcher.Match(pattern)) > 0 {
 		return result
 	}
 	for _, e := range g.otherMatchers {
