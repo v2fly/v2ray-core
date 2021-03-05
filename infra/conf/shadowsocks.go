@@ -32,6 +32,7 @@ type ShadowsocksServerConfig struct {
 	Level       byte         `json:"level"`
 	Email       string       `json:"email"`
 	NetworkList *NetworkList `json:"network"`
+	IVCheck     bool         `json:"ivCheck"`
 }
 
 func (v *ShadowsocksServerConfig) Build() (proto.Message, error) {
@@ -44,6 +45,7 @@ func (v *ShadowsocksServerConfig) Build() (proto.Message, error) {
 	}
 	account := &shadowsocks.Account{
 		Password: v.Password,
+		IvCheck:  v.IVCheck,
 	}
 	account.CipherType = cipherFromString(v.Cipher)
 	if account.CipherType == shadowsocks.CipherType_UNKNOWN {
@@ -67,6 +69,7 @@ type ShadowsocksServerTarget struct {
 	Email    string   `json:"email"`
 	Ota      bool     `json:"ota"`
 	Level    byte     `json:"level"`
+	IVCheck  bool     `json:"ivCheck"`
 }
 
 type ShadowsocksClientConfig struct {
@@ -98,6 +101,8 @@ func (v *ShadowsocksClientConfig) Build() (proto.Message, error) {
 		if account.CipherType == shadowsocks.CipherType_UNKNOWN {
 			return nil, newError("unknown cipher method: ", server.Cipher)
 		}
+
+		account.IvCheck = server.IVCheck
 
 		ss := &protocol.ServerEndpoint{
 			Address: server.Address.Build(),
