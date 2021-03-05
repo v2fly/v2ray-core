@@ -13,6 +13,9 @@ import (
 
 func DialTaggedOutbound(ctx context.Context, dest net.Destination, tag string) (net.Conn, error) {
 	var dispatcher routing.Dispatcher
+	if core.FromContext(ctx) == nil {
+		return nil, newError("Instance context variable is not in context, dial denied. ")
+	}
 	if err := core.RequireFeatures(ctx, func(dispatcherInstance routing.Dispatcher) {
 		dispatcher = dispatcherInstance
 	}); err != nil {
