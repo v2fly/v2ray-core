@@ -61,12 +61,6 @@ func ReadTCPSession(user *protocol.MemoryUser, reader io.Reader) (*protocol.Requ
 		iv = append([]byte(nil), buffer.BytesTo(ivLen)...)
 	}
 
-	if ivError := account.CheckIV(iv); ivError != nil {
-		readSizeRemain -= int(buffer.Len())
-		DrainConnN(reader, readSizeRemain)
-		return nil, nil, newError("failed iv check").Base(ivError)
-	}
-
 	r, err := account.Cipher.NewDecryptionReader(account.Key, iv, reader)
 	if err != nil {
 		readSizeRemain -= int(buffer.Len())
@@ -98,6 +92,12 @@ func ReadTCPSession(user *protocol.MemoryUser, reader io.Reader) (*protocol.Requ
 		readSizeRemain -= int(buffer.Len())
 		DrainConnN(reader, readSizeRemain)
 		return nil, nil, newError("invalid remote address.")
+	}
+
+	if ivError := account.CheckIV(iv); ivError != nil {
+		readSizeRemain -= int(buffer.Len())
+		DrainConnN(reader, readSizeRemain)
+		return nil, nil, newError("failed iv check").Base(ivError)
 	}
 
 	return request, br, nil
