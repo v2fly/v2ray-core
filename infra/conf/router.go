@@ -41,6 +41,8 @@ type RouterConfig struct {
 	RuleList       []json.RawMessage  `json:"rules"`
 	DomainStrategy *string            `json:"domainStrategy"`
 	Balancers      []*BalancingRule   `json:"balancers"`
+
+	DomainMatcher string `json:"domainMatcher"`
 }
 
 func (c *RouterConfig) getDomainStrategy() router.Config_DomainStrategy {
@@ -81,6 +83,11 @@ func (c *RouterConfig) Build() (*router.Config, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		if rule.DomainMatcher == "" {
+			rule.DomainMatcher = c.DomainMatcher
+		}
+
 		config.Rule = append(config.Rule, rule)
 	}
 	for _, rawBalancer := range c.Balancers {
