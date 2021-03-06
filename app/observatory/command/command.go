@@ -13,11 +13,11 @@ type service struct {
 	UnimplementedObservatoryServiceServer
 	v *core.Instance
 
-	Observatory extension.Observatory
+	observatory extension.Observatory
 }
 
 func (s *service) GetOutboundStatus(ctx context.Context, request *GetOutboundStatusRequest) (*GetOutboundStatusResponse, error) {
-	resp, err := s.Observatory.GetObservation(ctx)
+	resp, err := s.observatory.GetObservation(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +34,13 @@ func (s *service) Register(server *grpc.Server) {
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, cfg interface{}) (interface{}, error) {
 		s := core.MustFromContext(ctx)
-		return &service{v: s}, nil
+		sv := &service{v: s}
+		err := s.RequireFeatures(func(Observatory extension.Observatory) {
+			sv.observatory = Observatory
+		})
+		if err != nil {
+			return nil, err
+		}
+		return sv, nil
 	}))
 }

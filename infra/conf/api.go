@@ -37,7 +37,7 @@ func (c *APIConfig) Build() (*commander.Config, error) {
 			if !strings.HasPrefix(s, "#") {
 				continue
 			}
-			message, err := desc.LoadMessageDescriptor(s[:])
+			message, err := desc.LoadMessageDescriptor(s[1:])
 			if err != nil || message == nil {
 				return nil, newError("Cannot find API", s, "").Base(err)
 			}
