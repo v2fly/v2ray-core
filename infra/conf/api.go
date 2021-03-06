@@ -1,6 +1,8 @@
 package conf
 
 import (
+	"github.com/jhump/protoreflect/desc"
+	"github.com/jhump/protoreflect/dynamic"
 	"strings"
 
 	"github.com/v2fly/v2ray-core/v4/app/commander"
@@ -31,6 +33,16 @@ func (c *APIConfig) Build() (*commander.Config, error) {
 			services = append(services, serial.ToTypedMessage(&loggerservice.Config{}))
 		case "statsservice":
 			services = append(services, serial.ToTypedMessage(&statsservice.Config{}))
+		default:
+			if !strings.HasPrefix(s, "#") {
+				continue
+			}
+			message, err := desc.LoadMessageDescriptor(s[:])
+			if err != nil || message == nil {
+				return nil, newError("Cannot find API", s, "").Base(err)
+			}
+			serviceConfig := dynamic.NewMessage(message)
+			services = append(services, serial.ToTypedMessage(serviceConfig))
 		}
 	}
 
