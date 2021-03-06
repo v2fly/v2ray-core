@@ -170,6 +170,12 @@ jobs:
         with:
           path: build_artifacts
 
+      - name: Create extra package
+        run: |
+          pushd ./release/extra/
+          zip -9vr ../../build/v2ray-extra.zip .
+          popd
+
       - name: Generate shasum
         run: |
           go get -v github.com/v2fly/V2BuildAssist/v2buildutil
@@ -205,6 +211,11 @@ jobs:
           name: Release.unsigned.dgst
           path: build_artifacts/Release.unsigned.dgst
 
+      - uses: actions/upload-artifact@v2
+        with:
+          name: v2ray-extra.zip
+          path: build_artifacts/v2ray-extra.zip
+
       - name: Upload Release.unsigned related files
         uses: svenstaro/upload-release-action@v2
         if: github.event_name == 'release'
@@ -212,4 +223,13 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: build_artifacts/Release.unsigned*
+          tag: ${{ github.ref }}
+
+      - name: Upload extra package
+        uses: svenstaro/upload-release-action@v2
+        if: github.event_name == 'release'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          file: build_artifacts/v2ray-extra.zip
           tag: ${{ github.ref }}
