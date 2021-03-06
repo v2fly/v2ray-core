@@ -581,8 +581,6 @@ func (c *Config) Build() (*core.Config, error) {
 		protoregistry.GlobalTypes.RangeMessages(func(messageType protoreflect.MessageType) bool {
 			switch d := messageType.Descriptor().(type) {
 			case protoreflect.MessageDescriptor:
-				sb.WriteString(string(d.Name()))
-				sb.WriteString(":")
 				sb.WriteString(string(d.FullName()))
 				sb.WriteString("\n")
 			}
