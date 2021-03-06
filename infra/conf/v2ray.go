@@ -353,6 +353,8 @@ type Config struct {
 	Reverse          *ReverseConfig          `json:"reverse"`
 	FakeDNS          *FakeDNSConfig          `json:"fakeDns"`
 	BrowserForwarder *BrowserForwarderConfig `json:"browserForwarder"`
+
+	Services map[string]*json.RawMessage `json:"services"`
 }
 
 func (c *Config) findInboundTag(tag string) int {
@@ -565,6 +567,17 @@ func (c *Config) Build() (*core.Config, error) {
 			return nil, err
 		}
 		config.App = append(config.App, serial.ToTypedMessage(r))
+	}
+
+	//Load Additional Services that do not have a json translator
+
+	if msg, err := c.BuildServices(c.Services); err != nil {
+		developererr := newError("Loading a V2Ray Features as a service is intended for developers only. " +
+			"This is used for developers to prototype new features or for an advanced client to use special features in V2Ray," +
+			" instead of allowing end user to enable it without special tool and knowledge.")
+		return nil, newError("Cannot load service").Base(developererr).Base(err)
+	} else {
+		config.App = append(config.App, msg...)
 	}
 
 	var inbounds []InboundDetourConfig
