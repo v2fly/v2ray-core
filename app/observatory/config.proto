@@ -19,7 +19,7 @@ message OutboundStatus{
      @Type time.ms
      @Restriction ReadOnlyForUser
   */
-  uint32 delay = 2;
+  int64 delay = 2;
   /* @Document The last error caused this outbound failed to relay probe request
      @Restriction NotMachineReadable
   */
@@ -36,6 +36,22 @@ message OutboundStatus{
    @Type id.outboundTag
 */
   int64 last_try_time = 6;
+}
+
+message ProbeResult{
+  /* @Document Whether this outbound is usable
+     @Restriction ReadOnlyForUser
+  */
+  bool alive = 1;
+  /* @Document The time for probe request to finish.
+     @Type time.ms
+     @Restriction ReadOnlyForUser
+  */
+  int64 delay = 2;
+  /* @Document The error caused this outbound failed to relay probe request
+   @Restriction NotMachineReadable
+*/
+  string last_error_reason = 3;
 }
 
 message Intensity{
