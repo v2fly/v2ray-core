@@ -26,6 +26,9 @@ import (
 	// Fix dependency cycle caused by core import in internet package
 	_ "github.com/v2fly/v2ray-core/v4/transport/internet/tagged/taggedimpl"
 
+	// Developer preview features
+	_ "github.com/v2fly/v2ray-core/v4/app/observatory"
+
 	// Inbound and outbound proxies.
 	_ "github.com/v2fly/v2ray-core/v4/proxy/blackhole"
 	_ "github.com/v2fly/v2ray-core/v4/proxy/dns"

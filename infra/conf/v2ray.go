@@ -2,6 +2,8 @@ package conf
 
 import (
 	"encoding/json"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"log"
 	"os"
 	"strings"
@@ -575,7 +577,18 @@ func (c *Config) Build() (*core.Config, error) {
 		developererr := newError("Loading a V2Ray Features as a service is intended for developers only. " +
 			"This is used for developers to prototype new features or for an advanced client to use special features in V2Ray," +
 			" instead of allowing end user to enable it without special tool and knowledge.")
-		return nil, newError("Cannot load service").Base(developererr).Base(err)
+		sb := strings.Builder{}
+		protoregistry.GlobalTypes.RangeMessages(func(messageType protoreflect.MessageType) bool {
+			switch d := messageType.Descriptor().(type) {
+			case protoreflect.MessageDescriptor:
+				sb.WriteString(string(d.Name()))
+				sb.WriteString(":")
+				sb.WriteString(string(d.FullName()))
+				sb.WriteString("\n")
+			}
+			return true
+		})
+		return nil, newError("Cannot load service").Base(developererr).Base(err).Base(newError(sb.String()))
 	} else {
 		config.App = append(config.App, msg...)
 	}
