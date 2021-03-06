@@ -26,7 +26,7 @@ func DialTaggedOutbound(ctx context.Context, dest net.Destination, tag string) (
 	content.SkipDNSResolve = true
 
 	ctx = session.ContextWithContent(ctx, content)
-	session.SetForcedOutboundTagToContext(ctx, tag)
+	ctx = session.SetForcedOutboundTagToContext(ctx, tag)
 
 	r, err := dispatcher.Dispatch(ctx, dest)
 	if err != nil {

@@ -295,7 +295,7 @@ func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.
 	var handler outbound.Handler
 
 	if forcedOutboundTag := session.GetForcedOutboundTagFromContext(ctx); forcedOutboundTag != "" {
-		session.SetForcedOutboundTagToContext(ctx, "")
+		ctx = session.SetForcedOutboundTagToContext(ctx, "")
 		if h := d.ohm.GetHandler(forcedOutboundTag); h != nil {
 			newError("taking platform initialized detour [", forcedOutboundTag, "] for [", destination, "]").WriteToLog(session.ExportIDToError(ctx))
 			handler = h

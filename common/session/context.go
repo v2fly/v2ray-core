@@ -1,6 +1,8 @@
 package session
 
-import "context"
+import (
+	"context"
+)
 
 type sessionKey int
 
@@ -92,8 +94,12 @@ func GetTransportLayerProxyTagFromContext(ctx context.Context) string {
 	return ContentFromContext(ctx).Attribute("transportLayerOutgoingTag")
 }
 
-func SetTransportLayerProxyTagToContext(ctx context.Context, tag string) {
+func SetTransportLayerProxyTagToContext(ctx context.Context, tag string) context.Context {
+	if contentFromContext := ContentFromContext(ctx); contentFromContext == nil {
+		ctx = ContextWithContent(ctx, &Content{})
+	}
 	ContentFromContext(ctx).SetAttribute("transportLayerOutgoingTag", tag)
+	return ctx
 }
 
 func GetForcedOutboundTagFromContext(ctx context.Context) string {
@@ -103,6 +109,10 @@ func GetForcedOutboundTagFromContext(ctx context.Context) string {
 	return ContentFromContext(ctx).Attribute("forcedOutboundTag")
 }
 
-func SetForcedOutboundTagToContext(ctx context.Context, tag string) {
+func SetForcedOutboundTagToContext(ctx context.Context, tag string) context.Context {
+	if contentFromContext := ContentFromContext(ctx); contentFromContext == nil {
+		ctx = ContextWithContent(ctx, &Content{})
+	}
 	ContentFromContext(ctx).SetAttribute("forcedOutboundTag", tag)
+	return ctx
 }
