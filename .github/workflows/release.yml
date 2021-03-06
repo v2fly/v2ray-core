@@ -173,7 +173,7 @@ jobs:
       - name: Create extra package
         run: |
           pushd ./release/extra/
-          zip -9vr ../../build/v2ray-extra.zip .
+          zip -9vr ../../build_artifacts/v2ray-extra.zip .
           popd
 
       - name: Generate shasum
