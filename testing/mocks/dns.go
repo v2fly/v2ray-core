@@ -49,19 +49,57 @@ func (mr *DNSClientMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*DNSClient)(nil).Close))
 }
 
-// LookupIP mocks base method.
-func (m *DNSClient) LookupIP(arg0 string, arg1 dns.IPOption) ([]net.IP, error) {
+// GetIPOption mocks base method.
+func (m *DNSClient) GetIPOption() dns.IPOption {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LookupIP", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetIPOption")
+	ret0, _ := ret[0].(dns.IPOption)
+	return ret0
+}
+
+// GetIPOption indicates an expected call of GetIPOption.
+func (mr *DNSClientMockRecorder) GetIPOption() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIPOption", reflect.TypeOf((*DNSClient)(nil).GetIPOption))
+}
+
+// LookupIP mocks base method.
+func (m *DNSClient) LookupIP(arg0 string) ([]net.IP, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LookupIP", arg0)
 	ret0, _ := ret[0].([]net.IP)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // LookupIP indicates an expected call of LookupIP.
-func (mr *DNSClientMockRecorder) LookupIP(arg0, arg1 interface{}) *gomock.Call {
+func (mr *DNSClientMockRecorder) LookupIP(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupIP", reflect.TypeOf((*DNSClient)(nil).LookupIP), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupIP", reflect.TypeOf((*DNSClient)(nil).LookupIP), arg0)
+}
+
+// SetFakeDNSOption mocks base method.
+func (m *DNSClient) SetFakeDNSOption(arg0 bool) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetFakeDNSOption", arg0)
+}
+
+// SetFakeDNSOption indicates an expected call of SetFakeDNSOption.
+func (mr *DNSClientMockRecorder) SetFakeDNSOption(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFakeDNSOption", reflect.TypeOf((*DNSClient)(nil).SetFakeDNSOption), arg0)
+}
+
+// SetIPOption mocks base method.
+func (m *DNSClient) SetIPOption(arg0, arg1 bool) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetIPOption", arg0, arg1)
+}
+
+// SetIPOption indicates an expected call of SetIPOption.
+func (mr *DNSClientMockRecorder) SetIPOption(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetIPOption", reflect.TypeOf((*DNSClient)(nil).SetIPOption), arg0, arg1)
 }
 
 // Start mocks base method.
