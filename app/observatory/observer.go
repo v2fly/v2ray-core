@@ -8,6 +8,7 @@ import (
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
 	v2net "github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/session"
 	"github.com/v2fly/v2ray-core/v4/common/signal/done"
 	"github.com/v2fly/v2ray-core/v4/common/task"
 	"github.com/v2fly/v2ray-core/v4/features/extension"
@@ -81,6 +82,8 @@ func (o *Observer) updateStatus(outbounds []string) {
 }
 
 func (o *Observer) probe(outbound string) ProbeResult {
+	errorCollectorForRequest := newErrorCollector()
+
 	httpTransport := http.Transport{
 		Proxy: func(*http.Request) (*url.URL, error) {
 			return nil, nil
@@ -93,7 +96,8 @@ func (o *Observer) probe(outbound string) ProbeResult {
 				if err != nil {
 					return newError("cannot understand address").Base(err)
 				}
-				conn, err := tagged.Dialer(o.ctx, dest, outbound)
+				trackedCtx := session.TrackedConnectionError(o.ctx, errorCollectorForRequest)
+				conn, err := tagged.Dialer(trackedCtx, dest, outbound)
 				if err != nil {
 					return newError("cannot dial remote address", dest).Base(err)
 				}
@@ -130,8 +134,13 @@ func (o *Observer) probe(outbound string) ProbeResult {
 		return nil
 	})
 	if err != nil {
-		newError("the outbound ", outbound, "is dead:").Base(err).AtInfo().WriteToLog()
-		return ProbeResult{Alive: false, LastErrorReason: err.Error()}
+		fullerr := newError("underlying connection failed").Base(errorCollectorForRequest.UnderlyingError())
+		fullerr = newError("with outbound handler report").Base(fullerr)
+		fullerr = newError("GET request failed:", err).Base(fullerr)
+		fullerr = newError("the outbound ", outbound, "is dead:").Base(fullerr)
+		fullerr = fullerr.AtInfo()
+		fullerr.WriteToLog()
+		return ProbeResult{Alive: false, LastErrorReason: fullerr.Error()}
 	}
 	newError("the outbound ", outbound, "is alive:", GETTime.Seconds()).AtInfo().WriteToLog()
 	return ProbeResult{Alive: true, Delay: GETTime.Milliseconds()}
