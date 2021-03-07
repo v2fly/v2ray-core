@@ -37,13 +37,10 @@ func (t Type) New(pattern string) (Matcher, error) {
 	// 1. regex matching is case-sensitive
 	switch t {
 	case Full:
-		pattern = strings.ToLower(pattern)
 		return fullMatcher(pattern), nil
 	case Substr:
-		pattern = strings.ToLower(pattern)
 		return substrMatcher(pattern), nil
 	case Domain:
-		pattern = strings.ToLower(pattern)
 		return domainMatcher(pattern), nil
 	case Regex:
 		r, err := regexp.Compile(pattern)
@@ -219,7 +216,6 @@ func (g *MatcherGroup) Add(m Matcher) uint32 {
 
 // Match implements IndexMatcher.Match.
 func (g *MatcherGroup) Match(pattern string) []uint32 {
-	pattern = strings.ToLower(pattern)
 	result := []uint32{}
 	result = append(result, g.fullMatcher.Match(pattern)...)
 	result = append(result, g.domainMatcher.Match(pattern)...)
