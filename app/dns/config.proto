@@ -36,6 +36,12 @@ enum DomainMatchingType {
   Regex = 3;
 }
 
+enum QueryStrategy {
+  USE_IP = 0;
+  USE_IP4 = 1;
+  USE_IP6 = 2;
+}
+
 message Config {
   // Nameservers used by this DNS. Only traditional UDP servers are support at
   // the moment. A special value 'localhost' as a domain address can be set to
@@ -70,7 +76,7 @@ message Config {
   // Tag is the inbound tag of DNS client.
   string tag = 6;
 
-  reserved 7;
+  QueryStrategy query_strategy = 7;
 
   // DisableCache Disable DNS cache
   bool disableCache = 8;

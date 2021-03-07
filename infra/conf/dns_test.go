@@ -80,7 +80,9 @@ func TestDNSConfigParsing(t *testing.T) {
 					"keyword:google": "8.8.8.8",
 					"regexp:.*\\.com": "8.8.4.4"
 				},
-				"clientIp": "10.0.0.1"
+				"clientIp": "10.0.0.1",
+				"queryStrategy": "UseIPv4",
+				"disableCache": true,
 			}`,
 			Parser: parserCreator(),
 			Output: &dns.Config{
@@ -137,7 +139,9 @@ func TestDNSConfigParsing(t *testing.T) {
 						Ip:     [][]byte{{127, 0, 0, 1}},
 					},
 				},
-				ClientIp: []byte{10, 0, 0, 1},
+				ClientIp:      []byte{10, 0, 0, 1},
+				QueryStrategy: dns.QueryStrategy_USE_IP4,
+				DisableCache:  true,
 			},
 		},
 	})
