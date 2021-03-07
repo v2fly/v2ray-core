@@ -20,8 +20,17 @@ type IPOption struct {
 type Client interface {
 	features.Feature
 
+	// GetIPOption returns IPOption for the DNS client.
+	GetIPOption() IPOption
+
+	// SetIPOption sets IPOption for the DNS client.
+	SetIPOption(isIPv4Enable, isIPv6Enable bool)
+
+	// SetFakeDNSOption sets FakeEnable option for DNS client.
+	SetFakeDNSOption(isFakeEnable bool)
+
 	// LookupIP returns IP address for the given domain. IPs may contain IPv4 and/or IPv6 addresses.
-	LookupIP(domain string, option IPOption) ([]net.IP, error)
+	LookupIP(domain string) ([]net.IP, error)
 }
 
 // ClientType returns the type of Client interface. Can be used for implementing common.HasType.

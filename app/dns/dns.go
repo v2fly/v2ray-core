@@ -26,6 +26,7 @@ type DNS struct {
 	sync.Mutex
 	tag           string
 	disableCache  bool
+	ipOption      *dns.IPOption
 	hosts         *StaticHosts
 	clients       []*Client
 	ctx           context.Context
@@ -54,6 +55,28 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 		clientIP = net.IP(config.ClientIp)
 	default:
 		return nil, newError("unexpected client IP length ", len(config.ClientIp))
+	}
+
+	var ipOption *dns.IPOption
+	switch config.QueryStrategy {
+	case QueryStrategy_USE_IP:
+		ipOption = &dns.IPOption{
+			IPv4Enable: true,
+			IPv6Enable: true,
+			FakeEnable: false,
+		}
+	case QueryStrategy_USE_IP4:
+		ipOption = &dns.IPOption{
+			IPv4Enable: true,
+			IPv6Enable: false,
+			FakeEnable: false,
+		}
+	case QueryStrategy_USE_IP6:
+		ipOption = &dns.IPOption{
+			IPv4Enable: false,
+			IPv6Enable: true,
+			FakeEnable: false,
+		}
 	}
 
 	hosts, err := NewStaticHosts(config.StaticHosts, config.Hosts)
@@ -112,6 +135,7 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 	return &DNS{
 		tag:           tag,
 		hosts:         hosts,
+		ipOption:      ipOption,
 		clients:       clients,
 		ctx:           ctx,
 		domainMatcher: domainMatcher,
@@ -142,7 +166,7 @@ func (s *DNS) IsOwnLink(ctx context.Context) bool {
 }
 
 // LookupIP implements dns.Client.
-func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, error) {
+func (s *DNS) LookupIP(domain string) ([]net.IP, error) {
 	if domain == "" {
 		return nil, newError("empty domain name")
 	}
@@ -151,6 +175,8 @@ func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, error) {
 	if strings.HasSuffix(domain, ".") {
 		domain = domain[:len(domain)-1]
 	}
+
+	option := *s.GetIPOption()
 
 	// Static host lookup
 	switch addrs := s.hosts.Lookup(domain, option); {
@@ -188,6 +214,22 @@ func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, error) {
 	}
 
 	return nil, newError("returning nil for domain ", domain).Base(errors.Combine(errs...))
+}
+
+// GetIPOption implements dns.Client.
+func (s *DNS) GetIPOption() *dns.IPOption {
+	return s.ipOption
+}
+
+// SetIPOption implements dns.Client.
+func (s *DNS) SetIPOption(isIPv4Enable, isIPv6Enable bool) {
+	s.ipOption.IPv4Enable = isIPv4Enable
+	s.ipOption.IPv6Enable = isIPv6Enable
+}
+
+// SetFakeDNSOption implements dns.Client.
+func (s *DNS) SetFakeDNSOption(isFakeEnable bool) {
+	s.ipOption.FakeEnable = isFakeEnable
 }
 
 func (s *DNS) sortClients(domain string) []*Client {
