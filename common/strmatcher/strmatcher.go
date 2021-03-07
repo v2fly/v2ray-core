@@ -2,6 +2,7 @@ package strmatcher
 
 import (
 	"regexp"
+	"strings"
 )
 
 // PrimeRK is the prime base used in Rabin-Karp algorithm.
@@ -17,6 +18,9 @@ type Matcher interface {
 // Type is the type of the matcher.
 type Type byte
 
+// RollingHashType is the type of rolling hash used by Rabin-Karp.
+type RollingHashType uint32
+
 const (
 	// Full is the type of matcher that the input string must exactly equal to the pattern.
 	Full Type = iota
@@ -30,12 +34,16 @@ const (
 
 // New creates a new Matcher based on the given pattern.
 func (t Type) New(pattern string) (Matcher, error) {
+	// 1. regex matching is case-sensitive
 	switch t {
 	case Full:
+		pattern = strings.ToLower(pattern)
 		return fullMatcher(pattern), nil
 	case Substr:
+		pattern = strings.ToLower(pattern)
 		return substrMatcher(pattern), nil
 	case Domain:
+		pattern = strings.ToLower(pattern)
 		return domainMatcher(pattern), nil
 	case Regex:
 		r, err := regexp.Compile(pattern)
@@ -61,37 +69,63 @@ type matcherEntry struct {
 	id uint32
 }
 
-type ACAutomatonMatcherGroup struct {
-	count         uint32
-	ac            *ACAutomaton
-	nonSubstrMap  map[uint32]string
-	otherMatchers []matcherEntry
+// The HybridMatcherGroup is divided into three parts:
+// 1. `full` and `domain` patterns are matched by Rabin-Karp algorithm;
+// 2. `substr` patterns are matched by ac automaton;
+// 3. `regex` patterns are matched with the regex library.
+type HybridMatcherGroup struct {
+	count          uint32
+	ac             *ACAutomaton
+	rollingHashMap map[RollingHashType][]string
+	otherMatchers  []matcherEntry
 }
 
-func NewACAutomatonMatcherGroup() *ACAutomatonMatcherGroup {
-	var g = new(ACAutomatonMatcherGroup)
+func NewHybridMatcherGroup() *HybridMatcherGroup {
+	var g = new(HybridMatcherGroup)
 	g.count = 1
-	g.nonSubstrMap = map[uint32]string{}
+	g.rollingHashMap = map[RollingHashType][]string{}
 	return g
 }
 
+func contains(chain []string, pattern string) bool {
+	for _, v := range chain {
+		if v == pattern {
+			return true
+		}
+	}
+	return false
+}
+
+func (g *HybridMatcherGroup) insert(h RollingHashType, pattern string) {
+	if chain, ok := g.rollingHashMap[h]; ok {
+		if !contains(chain, pattern) {
+			chain = append(chain, pattern) // hash collision, open hashing
+		}
+	} else {
+		g.rollingHashMap[h] = []string{pattern}
+	}
+}
+
 // Add `full` or `domain` pattern to hashmap
-func (g *ACAutomatonMatcherGroup) AddFullOrDomainPattern(pattern string, t Type) {
-	h := uint32(0)
+func (g *HybridMatcherGroup) AddFullOrDomainPattern(pattern string, t Type) {
+	h := RollingHashType(0)
 	for i := len(pattern) - 1; i >= 0; i-- {
-		h = h*PrimeRK + uint32(pattern[i])
+		h = h*PrimeRK + RollingHashType(pattern[i])
 	}
 	switch t {
 	case Full:
-		g.nonSubstrMap[h] = pattern
+		g.insert(h, pattern)
 	case Domain:
-		g.nonSubstrMap[h] = pattern
-		g.nonSubstrMap[h*PrimeRK+uint32('.')] = "." + pattern
+		g.insert(h, pattern)
+		g.insert(h*PrimeRK+RollingHashType('.'), "."+pattern)
 	default:
 	}
 }
 
-func (g *ACAutomatonMatcherGroup) AddPattern(pattern string, t Type) (uint32, error) {
+func (g *HybridMatcherGroup) AddPattern(pattern string, t Type) (uint32, error) {
+	// 1. AC automaton is a case-insensitive matcher.
+	// 2. regex matching is case-sensitive.
+	// 3. Rabin-Karp algorithm is case-sensitive. (Full or Domain)
 	switch t {
 	case Substr:
 		if g.ac == nil {
@@ -99,6 +133,7 @@ func (g *ACAutomatonMatcherGroup) AddPattern(pattern string, t Type) (uint32, er
 		}
 		g.ac.Add(pattern, t)
 	case Full, Domain:
+		pattern = strings.ToLower(pattern)
 		g.AddFullOrDomainPattern(pattern, t)
 	case Regex:
 		g.count++
@@ -116,26 +151,26 @@ func (g *ACAutomatonMatcherGroup) AddPattern(pattern string, t Type) (uint32, er
 	return g.count, nil
 }
 
-func (g *ACAutomatonMatcherGroup) Build() {
+func (g *HybridMatcherGroup) Build() {
 	if g.ac != nil {
 		g.ac.Build()
 	}
 }
 
 // Match implements IndexMatcher.Match.
-func (g *ACAutomatonMatcherGroup) Match(pattern string) []uint32 {
+func (g *HybridMatcherGroup) Match(pattern string) []uint32 {
 	result := []uint32{}
-	hash := uint32(0)
+	hash := RollingHashType(0)
 	for i := len(pattern) - 1; i >= 0; i-- {
-		hash = hash*PrimeRK + uint32(pattern[i])
+		hash = hash*PrimeRK + RollingHashType(pattern[i])
 		if pattern[i] == '.' {
-			if v, ok := g.nonSubstrMap[hash]; ok && v == pattern[i:] {
+			if chain, ok := g.rollingHashMap[hash]; ok && contains(chain, pattern[i:]) {
 				result = append(result, 1)
 				return result
 			}
 		}
 	}
-	if v, ok := g.nonSubstrMap[hash]; ok && v == pattern {
+	if chain, ok := g.rollingHashMap[hash]; ok && contains(chain, pattern) {
 		result = append(result, 1)
 		return result
 	}
@@ -149,7 +184,7 @@ func (g *ACAutomatonMatcherGroup) Match(pattern string) []uint32 {
 			return result
 		}
 	}
-	return result
+	return nil
 }
 
 // MatcherGroup is an implementation of IndexMatcher.
