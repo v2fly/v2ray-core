@@ -146,7 +146,6 @@ func (s *DNS) LookupIP(domain string, option dns.IPOption) ([]net.IP, error) {
 	if domain == "" {
 		return nil, newError("empty domain name")
 	}
-	domain = strings.ToLower(domain)
 
 	// Normalize the FQDN form query
 	if strings.HasSuffix(domain, ".") {

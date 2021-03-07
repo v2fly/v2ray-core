@@ -159,6 +159,7 @@ func (g *HybridMatcherGroup) Build() {
 
 // Match implements IndexMatcher.Match.
 func (g *HybridMatcherGroup) Match(pattern string) []uint32 {
+	pattern = strings.ToLower(pattern)
 	result := []uint32{}
 	hash := RollingHashType(0)
 	for i := len(pattern) - 1; i >= 0; i-- {
@@ -218,6 +219,7 @@ func (g *MatcherGroup) Add(m Matcher) uint32 {
 
 // Match implements IndexMatcher.Match.
 func (g *MatcherGroup) Match(pattern string) []uint32 {
+	pattern = strings.ToLower(pattern)
 	result := []uint32{}
 	result = append(result, g.fullMatcher.Match(pattern)...)
 	result = append(result, g.domainMatcher.Match(pattern)...)
