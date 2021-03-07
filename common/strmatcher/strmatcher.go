@@ -99,7 +99,7 @@ func contains(chain []string, pattern string) bool {
 func (g *HybridMatcherGroup) insert(h RollingHashType, pattern string) {
 	if chain, ok := g.rollingHashMap[h]; ok {
 		if !contains(chain, pattern) {
-			chain = append(chain, pattern) // hash collision, open hashing
+			g.rollingHashMap[h] = append(chain, pattern) // hash collision, open hashing
 		}
 	} else {
 		g.rollingHashMap[h] = []string{pattern}
