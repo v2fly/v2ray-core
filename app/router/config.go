@@ -71,11 +71,11 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 	if len(rr.Domain) > 0 {
 		switch rr.DomainMatcher {
 		case "hybrid":
-			matcher, err := NewACAutomatonDomainMatcher(rr.Domain)
+			matcher, err := NewHybridDomainMatcher(rr.Domain)
 			if err != nil {
-				return nil, newError("failed to build domain condition with ACAutomatonDomainMatcher").Base(err)
+				return nil, newError("failed to build domain condition with HybridDomainMatcher").Base(err)
 			}
-			newError("ACAutomatonDomainMatcher is enabled for ", len(rr.Domain), "domain rules(s)").AtDebug().WriteToLog()
+			newError("HybridDomainMatcher is enabled for ", len(rr.Domain), "domain rules(s)").AtDebug().WriteToLog()
 			conds.Add(matcher)
 		default:
 			matcher, err := NewDomainMatcher(rr.Domain)

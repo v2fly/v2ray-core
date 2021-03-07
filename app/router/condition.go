@@ -68,8 +68,8 @@ type DomainMatcher struct {
 	matchers strmatcher.IndexMatcher
 }
 
-func NewACAutomatonDomainMatcher(domains []*Domain) (*DomainMatcher, error) {
-	g := strmatcher.NewACAutomatonMatcherGroup()
+func NewHybridDomainMatcher(domains []*Domain) (*DomainMatcher, error) {
+	g := strmatcher.NewHybridMatcherGroup()
 	for _, d := range domains {
 		matcherType, f := matcherTypeMap[d.Type]
 		if !f {
@@ -111,7 +111,7 @@ func (m *DomainMatcher) Apply(ctx routing.Context) bool {
 	if len(domain) == 0 {
 		return false
 	}
-	return m.ApplyDomain(domain)
+	return m.ApplyDomain(strings.ToLower(domain))
 }
 
 type MultiGeoIPMatcher struct {
