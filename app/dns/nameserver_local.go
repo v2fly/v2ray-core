@@ -18,7 +18,9 @@ type LocalNameServer struct {
 // QueryIP implements Server.
 func (s *LocalNameServer) QueryIP(_ context.Context, domain string, _ net.IP, option dns.IPOption, _ bool) ([]net.IP, error) {
 	if option.IPv4Enable || option.IPv6Enable {
-		return s.client.LookupIP(domain, option)
+		s.client.SetIPOption(option.IPv4Enable, option.IPv6Enable)
+		s.client.SetFakeDNSOption(option.FakeEnable)
+		return s.client.LookupIP(domain)
 	}
 
 	return nil, newError("neither IPv4 nor IPv6 is enabled")
@@ -32,8 +34,13 @@ func (s *LocalNameServer) Name() string {
 // NewLocalNameServer creates localdns server object for directly lookup in system DNS.
 func NewLocalNameServer() *LocalNameServer {
 	newError("DNS: created localhost client").AtInfo().WriteToLog()
+	option := &dns.IPOption{
+		IPv4Enable: true,
+		IPv6Enable: true,
+		FakeEnable: false,
+	}
 	return &LocalNameServer{
-		client: localdns.New(),
+		client: localdns.New(option),
 	}
 }
 

@@ -6,21 +6,39 @@ import (
 )
 
 // Client is an implementation of dns.Client, which queries localhost for DNS.
-type Client struct{}
+type Client struct {
+	ipOption *dns.IPOption
+}
 
 // Type implements common.HasType.
-func (*Client) Type() interface{} {
+func (c *Client) Type() interface{} {
 	return dns.ClientType()
 }
 
 // Start implements common.Runnable.
-func (*Client) Start() error { return nil }
+func (c *Client) Start() error { return nil }
 
 // Close implements common.Closable.
-func (*Client) Close() error { return nil }
+func (c *Client) Close() error { return nil }
+
+// GetIPOption implements Client.
+func (c *Client) GetIPOption() dns.IPOption {
+	return *c.ipOption
+}
+
+// SetIPOption implements Client.
+func (c *Client) SetIPOption(isIPv4Enable, isIPv6Enable bool) {
+	c.ipOption.IPv4Enable = isIPv4Enable
+	c.ipOption.IPv6Enable = isIPv6Enable
+}
+
+// SetFakeDNSOption implements Client.
+func (c *Client) SetFakeDNSOption(isFakeEnable bool) {
+	c.ipOption.FakeEnable = isFakeEnable
+}
 
 // LookupIP implements Client.
-func (*Client) LookupIP(host string, option dns.IPOption) ([]net.IP, error) {
+func (c *Client) LookupIP(host string) ([]net.IP, error) {
 	ips, err := net.LookupIP(host)
 	if err != nil {
 		return nil, err
@@ -41,15 +59,15 @@ func (*Client) LookupIP(host string, option dns.IPOption) ([]net.IP, error) {
 		}
 	}
 	switch {
-	case option.IPv4Enable && option.IPv6Enable:
+	case c.ipOption.IPv4Enable && c.ipOption.IPv6Enable:
 		if len(parsedIPs) > 0 {
 			return parsedIPs, nil
 		}
-	case option.IPv4Enable:
+	case c.ipOption.IPv4Enable:
 		if len(ipv4) > 0 {
 			return ipv4, nil
 		}
-	case option.IPv6Enable:
+	case c.ipOption.IPv6Enable:
 		if len(ipv6) > 0 {
 			return ipv6, nil
 		}
@@ -58,6 +76,8 @@ func (*Client) LookupIP(host string, option dns.IPOption) ([]net.IP, error) {
 }
 
 // New create a new dns.Client that queries localhost for DNS.
-func New() *Client {
-	return &Client{}
+func New(option *dns.IPOption) *Client {
+	return &Client{
+		ipOption: option,
+	}
 }

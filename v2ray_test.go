@@ -31,7 +31,11 @@ func TestV2RayDependency(t *testing.T) {
 		}
 		wait <- true
 	})
-	instance.AddFeature(localdns.New())
+	instance.AddFeature(localdns.New(&dns.IPOption{
+		IPv4Enable: true,
+		IPv6Enable: true,
+		FakeEnable: false,
+	}))
 	<-wait
 }
 
