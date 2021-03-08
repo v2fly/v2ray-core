@@ -21,7 +21,7 @@ type Client interface {
 	features.Feature
 
 	// GetIPOption returns IPOption for the DNS client.
-	GetIPOption() IPOption
+	GetIPOption() *IPOption
 
 	// SetIPOption sets IPOption for the DNS client.
 	SetIPOption(isIPv4Enable, isIPv6Enable bool)

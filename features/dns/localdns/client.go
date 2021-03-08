@@ -22,8 +22,8 @@ func (c *Client) Start() error { return nil }
 func (c *Client) Close() error { return nil }
 
 // GetIPOption implements Client.
-func (c *Client) GetIPOption() dns.IPOption {
-	return *c.ipOption
+func (c *Client) GetIPOption() *dns.IPOption {
+	return c.ipOption
 }
 
 // SetIPOption implements Client.

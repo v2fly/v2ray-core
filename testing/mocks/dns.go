@@ -50,10 +50,10 @@ func (mr *DNSClientMockRecorder) Close() *gomock.Call {
 }
 
 // GetIPOption mocks base method.
-func (m *DNSClient) GetIPOption() dns.IPOption {
+func (m *DNSClient) GetIPOption() *dns.IPOption {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetIPOption")
-	ret0, _ := ret[0].(dns.IPOption)
+	ret0, _ := ret[0].(*dns.IPOption)
 	return ret0
 }
 
