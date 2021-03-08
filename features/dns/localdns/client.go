@@ -11,15 +11,15 @@ type Client struct {
 }
 
 // Type implements common.HasType.
-func (c *Client) Type() interface{} {
+func (*Client) Type() interface{} {
 	return dns.ClientType()
 }
 
 // Start implements common.Runnable.
-func (c *Client) Start() error { return nil }
+func (*Client) Start() error { return nil }
 
 // Close implements common.Closable.
-func (c *Client) Close() error { return nil }
+func (*Client) Close() error { return nil }
 
 // GetIPOption implements Client.
 func (c *Client) GetIPOption() *dns.IPOption {
