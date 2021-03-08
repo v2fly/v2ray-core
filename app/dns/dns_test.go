@@ -209,6 +209,7 @@ func TestUDPServer(t *testing.T) {
 	client := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
 
 	{
+		client.SetIPOption(true, true)
 		ips, err := client.LookupIP("google.com")
 		if err != nil {
 			t.Fatal("unexpected error: ", err)
@@ -220,6 +221,7 @@ func TestUDPServer(t *testing.T) {
 	}
 
 	{
+		client.SetIPOption(true, true)
 		ips, err := client.LookupIP("facebook.com")
 		if err != nil {
 			t.Fatal("unexpected error: ", err)
@@ -231,6 +233,7 @@ func TestUDPServer(t *testing.T) {
 	}
 
 	{
+		client.SetIPOption(true, true)
 		_, err := client.LookupIP("notexist.google.com")
 		if err == nil {
 			t.Fatal("nil error")
@@ -254,6 +257,7 @@ func TestUDPServer(t *testing.T) {
 	dnsServer.Shutdown()
 
 	{
+		client.SetIPOption(true, true)
 		ips, err := client.LookupIP("google.com")
 		if err != nil {
 			t.Fatal("unexpected error: ", err)
