@@ -7,13 +7,13 @@ import (
 )
 
 type TransportConfig struct {
-	TCPConfig   *TCPConfig          `json:"tcpSettings"`
-	KCPConfig   *KCPConfig          `json:"kcpSettings"`
-	WSConfig    *WebSocketConfig    `json:"wsSettings"`
-	HTTPConfig  *HTTPConfig         `json:"httpSettings"`
-	DSConfig    *DomainSocketConfig `json:"dsSettings"`
-	QUICConfig  *QUICConfig         `json:"quicSettings"`
-	GunSettings *GunConfig          `json:"gunSettings"`
+	TCPConfig  *TCPConfig          `json:"tcpSettings"`
+	KCPConfig  *KCPConfig          `json:"kcpSettings"`
+	WSConfig   *WebSocketConfig    `json:"wsSettings"`
+	HTTPConfig *HTTPConfig         `json:"httpSettings"`
+	DSConfig   *DomainSocketConfig `json:"dsSettings"`
+	QUICConfig *QUICConfig         `json:"quicSettings"`
+	GunConfig  *GunConfig          `json:"gunSettings"`
 }
 
 // Build implements Buildable.
@@ -86,8 +86,8 @@ func (c *TransportConfig) Build() (*transport.Config, error) {
 		})
 	}
 
-	if c.GunSettings != nil {
-		gu, err := c.GunSettings.Build()
+	if c.GunConfig != nil {
+		gu, err := c.GunConfig.Build()
 		if err != nil {
 			return nil, newError("Failed to build Gun config.").Base(err)
 		}
