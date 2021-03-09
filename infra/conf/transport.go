@@ -87,13 +87,13 @@ func (c *TransportConfig) Build() (*transport.Config, error) {
 	}
 
 	if c.GunConfig != nil {
-		gu, err := c.GunConfig.Build()
+		gs, err := c.GunConfig.Build()
 		if err != nil {
 			return nil, newError("Failed to build Gun config.").Base(err)
 		}
 		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
 			ProtocolName: "gun",
-			Settings:     serial.ToTypedMessage(gu),
+			Settings:     serial.ToTypedMessage(gs),
 		})
 	}
 
