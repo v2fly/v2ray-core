@@ -37,11 +37,12 @@ jobs:
         with:
           go-version: ^1.16
 
+      - name: Checkout codebase5
+        uses: actions/checkout@v2
+
       - name: Get project dependencies
         run: go mod download
 
-      - name: Checkout codebase5
-        uses: actions/checkout@v2
       - name: Generate files
         shell: bash
         run: |
