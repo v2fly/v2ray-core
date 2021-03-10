@@ -160,10 +160,6 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 		config.NameServer = append(config.NameServer, ns)
 	}
 
-	if BootstrapDNS() {
-		newError("Bootstrap DNS: ", bootstrapDNS).AtWarning().WriteToLog()
-	}
-
 	if c.Hosts != nil && len(c.Hosts) > 0 {
 		domains := make([]string, 0, len(c.Hosts))
 		for domain := range c.Hosts {
