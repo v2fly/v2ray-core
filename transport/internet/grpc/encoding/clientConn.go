@@ -4,7 +4,6 @@ package encoding
 
 import (
 	"bytes"
-	"context"
 	"io"
 	"net"
 	"time"
@@ -13,7 +12,26 @@ import (
 type ClientConn struct {
 	client GunService_TunClient
 	reader io.Reader
-	over   context.CancelFunc
+}
+
+func (*ClientConn) LocalAddr() net.Addr {
+	return nil
+}
+
+func (*ClientConn) RemoteAddr() net.Addr {
+	return nil
+}
+
+func (*ClientConn) SetDeadline(time.Time) error {
+	return nil
+}
+
+func (*ClientConn) SetReadDeadline(time.Time) error {
+	return nil
+}
+
+func (*ClientConn) SetWriteDeadline(time.Time) error {
+	return nil
 }
 
 func (s *ClientConn) Read(b []byte) (n int, err error) {
@@ -33,7 +51,7 @@ func (s *ClientConn) Read(b []byte) (n int, err error) {
 }
 
 func (s *ClientConn) Write(b []byte) (n int, err error) {
-	err = s.client.Send(&Hunk{Data: b[:]})
+	err = s.client.Send(&Hunk{Data: b})
 	if err != nil {
 		return 0, newError("Unable to send data over gun").Base(err)
 	}
@@ -42,26 +60,6 @@ func (s *ClientConn) Write(b []byte) (n int, err error) {
 
 func (s *ClientConn) Close() error {
 	return s.client.CloseSend()
-}
-
-func (s ClientConn) LocalAddr() net.Addr {
-	panic("implement me")
-}
-
-func (s ClientConn) RemoteAddr() net.Addr {
-	panic("implement me")
-}
-
-func (s ClientConn) SetDeadline(t time.Time) error {
-	panic("implement me")
-}
-
-func (s ClientConn) SetReadDeadline(t time.Time) error {
-	panic("implement me")
-}
-
-func (s ClientConn) SetWriteDeadline(t time.Time) error {
-	panic("implement me")
 }
 
 func NewClientConn(client GunService_TunClient) *ClientConn {

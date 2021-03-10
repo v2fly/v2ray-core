@@ -33,7 +33,7 @@ func (s *ServerConn) Read(b []byte) (n int, err error) {
 }
 
 func (s *ServerConn) Write(b []byte) (n int, err error) {
-	err = s.server.Send(&Hunk{Data: b[:]})
+	err = s.server.Send(&Hunk{Data: b})
 	if err != nil {
 		return 0, newError("Unable to send data over gun").Base(err)
 	}
@@ -45,11 +45,11 @@ func (s *ServerConn) Close() error {
 	return nil
 }
 
-func (s ServerConn) LocalAddr() net.Addr {
-	panic("implement me")
+func (*ServerConn) LocalAddr() net.Addr {
+	return nil
 }
 
-func (s ServerConn) RemoteAddr() net.Addr {
+func (*ServerConn) RemoteAddr() net.Addr {
 	newError("gun transport do not support get remote address").AtWarning().WriteToLog()
 	return &net.UnixAddr{
 		Name: "@placeholder",
@@ -57,15 +57,15 @@ func (s ServerConn) RemoteAddr() net.Addr {
 	}
 }
 
-func (s ServerConn) SetDeadline(t time.Time) error {
+func (*ServerConn) SetDeadline(time.Time) error {
 	return nil
 }
 
-func (s ServerConn) SetReadDeadline(t time.Time) error {
+func (*ServerConn) SetReadDeadline(time.Time) error {
 	return nil
 }
 
-func (s ServerConn) SetWriteDeadline(t time.Time) error {
+func (*ServerConn) SetWriteDeadline(time.Time) error {
 	return nil
 }
 

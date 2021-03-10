@@ -338,6 +338,8 @@ func (p TransportProtocol) Build() (string, error) {
 		return "quic", nil
 	case "gun":
 		return "gun", nil
+	case "grpc": // gun alias
+		return "gun", nil
 	default:
 		return "", newError("Config: unknown transport protocol: ", p)
 	}

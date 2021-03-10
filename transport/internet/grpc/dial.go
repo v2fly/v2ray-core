@@ -4,6 +4,10 @@ package grpc
 
 import (
 	"context"
+	gonet "net"
+	"sync"
+	"time"
+
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/session"
@@ -14,9 +18,6 @@ import (
 	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
-	gonet "net"
-	"sync"
-	"time"
 )
 
 func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.MemoryStreamConfig) (internet.Connection, error) {
@@ -24,7 +25,7 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 
 	conn, err := dialgRPC(ctx, dest, streamSettings)
 	if err != nil {
-		return nil, newError("failed to dial WebSocket").Base(err)
+		return nil, newError("failed to dial Grpc").Base(err)
 	}
 	return internet.Connection(conn), nil
 }
@@ -54,11 +55,11 @@ func dialgRPC(ctx context.Context, dest net.Destination, streamSettings *interne
 		return nil, newError("Cannot dial grpc").Base(err)
 	}
 	client := encoding.NewGunServiceClient(conn)
-	gunservice, err := client.(encoding.GunServiceClientX).TunCustomName(ctx, grpcSettings.ServiceName)
+	gunService, err := client.(encoding.GunServiceClientX).TunCustomName(ctx, grpcSettings.ServiceName)
 	if err != nil {
 		return nil, newError("Cannot dial grpc").Base(err)
 	}
-	return encoding.NewClientConn(gunservice), nil
+	return encoding.NewClientConn(gunService), nil
 }
 
 func getGrpcClient(dest net.Destination, dialOption grpc.DialOption) (*grpc.ClientConn, error) {
