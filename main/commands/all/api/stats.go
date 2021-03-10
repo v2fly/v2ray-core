@@ -19,13 +19,16 @@ var cmdStats = &base.Command{
 	Long: `
 Query statistics from V2Ray.
 
+> Make sure you have "StatsService" set in "config.api.services" 
+of server config.
+
 Arguments:
 
 	-regexp
 		The patterns are using regexp.
 
 	-reset
-		Fetch values then reset statistics counters to 0.
+		Reset counters to 0 after fetching their values.
 
 	-runtime
 		Get runtime statistics.

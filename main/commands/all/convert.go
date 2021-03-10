@@ -23,17 +23,17 @@ var cmdConvert = &base.Command{
 	Short:       "convert config files",
 	Long: `
 Convert config files between different formats. Files are merged 
-before convert if multiple assigned.
+before convert.
 
 Arguments:
 
 	-i, -input <format>
-		Specify the input format.
+		The input format.
 		Available values: "auto", "json", "toml", "yaml"
 		Default: "auto"
 
 	-o, -output <format>
-		Specify the output format
+		The output format
 		Available values: "json", "toml", "yaml", "protobuf" / "pb"
 		Default: "json"
 
@@ -42,15 +42,15 @@ Arguments:
 
 Examples:
 
-	{{.Exec}} {{.LongName}} -output=protobuf config.json           (1)
-	{{.Exec}} {{.LongName}} -input=toml config.toml                (2)
-	{{.Exec}} {{.LongName}} "path/to/dir"                          (3)
-	{{.Exec}} {{.LongName}} -i yaml -o protobuf c1.yaml <url>.yaml (4)
+	{{.Exec}} {{.LongName}} -output=protobuf "path/to/dir"   (1)
+	{{.Exec}} {{.LongName}} -o=yaml config.toml              (2)
+	{{.Exec}} {{.LongName}} c1.json c2.json                  (3)
+	{{.Exec}} {{.LongName}} -output=yaml c1.yaml <url>.yaml  (4)
 
-(1) Convert json to protobuf
-(2) Convert toml to json
-(3) Merge json files in dir
-(4) Merge yaml files and convert to protobuf
+(1) Merge all supported files in dir and convert to protobuf
+(2) Convert toml to yaml
+(3) Merge json files
+(4) Merge yaml files
 
 Use "{{.Exec}} help config-merge" for more information about merge.
 `,
@@ -81,11 +81,11 @@ func executeConvert(cmd *base.Command, args []string) {
 
 	m, err := helpers.LoadConfigToMap(cmd.Flag.Args(), inputFormat, confDirRecursively)
 	if err != nil {
-		base.Fatalf(err.Error())
+		base.Fatalf("failed to merge: %s", err)
 	}
 	err = merge.ApplyRules(m)
 	if err != nil {
-		base.Fatalf(err.Error())
+		base.Fatalf("failed to apply merge rules: %s", err)
 	}
 
 	var out []byte
@@ -93,17 +93,17 @@ func executeConvert(cmd *base.Command, args []string) {
 	case core.FormatJSON:
 		out, err = json.Marshal(m)
 		if err != nil {
-			base.Fatalf("failed to marshal json: %s", err)
+			base.Fatalf("failed to convert to json: %s", err)
 		}
 	case core.FormatTOML:
 		out, err = toml.Marshal(m)
 		if err != nil {
-			base.Fatalf("failed to marshal json: %s", err)
+			base.Fatalf("failed to convert to toml: %s", err)
 		}
 	case core.FormatYAML:
 		out, err = yaml.Marshal(m)
 		if err != nil {
-			base.Fatalf("failed to marshal json: %s", err)
+			base.Fatalf("failed to convert to yaml: %s", err)
 		}
 	case core.FormatProtobuf, core.FormatProtobufShort:
 		data, err := json.Marshal(m)
@@ -121,7 +121,7 @@ func executeConvert(cmd *base.Command, args []string) {
 		}
 		out, err = proto.Marshal(pbConfig)
 		if err != nil {
-			base.Fatalf("failed to marshal proto config: %s", err)
+			base.Fatalf("failed to convert to protobuf: %s", err)
 		}
 	default:
 		base.Errorf("invalid output format: %s", outputFormat)
