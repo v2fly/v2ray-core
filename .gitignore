@@ -1,4 +1,6 @@
 # Binaries for programs and plugins
+errors.generated.go
+*.pb.go
 *.exe
 *.exe~
 *.dll

@@ -7,8 +7,6 @@ import (
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
-
 // Here is some modification needs to be done before update quic vendor.
 // * use bytespool in buffer_pool.go
 // * set MaxReceivePacketSize to 1452 - 32 (16 bytes auth, 16 bytes head)

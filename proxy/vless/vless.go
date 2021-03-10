@@ -4,5 +4,3 @@
 // together with 'freedom' to talk to final destination, while VLess outbound is usually used on
 // clients with 'socks' for proxying.
 package vless
-
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen

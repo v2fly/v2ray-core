@@ -103,6 +103,18 @@ jobs:
       - name: Get project dependencies
         run: go mod download
 
+      - name: Generate files
+        run: |
+          PB_REL="https://github.com/protocolbuffers/protobuf/releases"
+          curl -LO $PB_REL/download/v3.12.1/protoc-3.12.1-linux-x86_64.zip
+          unzip protoc-3.12.1-linux-x86_64.zip
+          unset GOOS
+          unset GOARCH
+          unset GOARM
+          unset CGO_ENABLED
+          export PATH=$PATH:$(pwd)/bin:~/go/bin
+          go generate proto.go
+
       - name: Build V2Ray
         run: |
           mkdir -p build_assets
