@@ -57,7 +57,6 @@ func generateError(path string) {
 	file, err := os.OpenFile(path+"/errors.generated.go", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
 		log.Fatalf("Failed to generate errors.generated.go: %v", err)
-		os.Exit(1)
 	}
 	defer file.Close()
 
