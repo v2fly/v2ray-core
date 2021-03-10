@@ -10,15 +10,18 @@ import (
 
 var cmdAddInbounds = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api adi [--server=127.0.0.1:8080] <c1.json> [c2.json]...",
+	UsageLine:   "{{.Exec}} api adi [--server=127.0.0.1:8080] [c1.json] [dir1]...",
 	Short:       "add inbounds",
 	Long: `
 Add inbounds to V2Ray.
 
+> Make sure you have "HandlerService" set in "config.api.services" 
+of server config.
+
 Arguments:
 
 	-format <format>
-		Specify the input format.
+		The input format.
 		Available values: "auto", "json", "toml", "yaml"
 		Default: "auto"
 
@@ -33,7 +36,8 @@ Arguments:
 
 Example:
 
-    {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 c1.json c2.json
+    {{.Exec}} {{.LongName}} dir
+    {{.Exec}} {{.LongName}} c1.json c2.yaml
 `,
 	Run: executeAddInbounds,
 }
@@ -44,7 +48,7 @@ func executeAddInbounds(cmd *base.Command, args []string) {
 	cmd.Flag.Parse(args)
 	c, err := helpers.LoadConfig(cmd.Flag.Args(), apiConfigFormat, apiConfigRecursively)
 	if err != nil {
-		base.Fatalf("%s", err)
+		base.Fatalf("failed to load: %s", err)
 	}
 	if len(c.InboundConfigs) == 0 {
 		base.Fatalf("no valid inbound found")

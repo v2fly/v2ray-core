@@ -11,15 +11,17 @@ import (
 
 type jsonConverter func(v []byte) ([]byte, error)
 
-func makeLoader(name string, extensions []string, converter jsonConverter) *MergeableFormat {
-	return &MergeableFormat{
+// makeMerger makes a merger who merge the format by converting it to JSON
+func makeMerger(name string, extensions []string, converter jsonConverter) *Merger {
+	return &Merger{
 		Name:       name,
 		Extensions: extensions,
-		Loader:     makeConvertToJSONLoader(converter),
+		Merge:      makeToJSONMergeFunc(converter),
 	}
 }
 
-func makeConvertToJSONLoader(converter func(v []byte) ([]byte, error)) MergeLoader {
+// makeToJSONMergeFunc makes a merge func who merge the format by converting it to JSON
+func makeToJSONMergeFunc(converter func(v []byte) ([]byte, error)) MergeFunc {
 	return func(input interface{}, target map[string]interface{}) error {
 		if target == nil {
 			panic("merge target is nil")

@@ -3,6 +3,7 @@ package api
 import (
 	"io"
 	"log"
+	"os"
 
 	logService "github.com/v2fly/v2ray-core/v4/app/log/command"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
@@ -14,6 +15,9 @@ var cmdLog = &base.Command{
 	Short:       "log operations",
 	Long: `
 Follow and print logs from v2ray.
+
+> Make sure you have "LoggerService" set in "config.api.services" 
+of server config.
 
 > It ignores -timeout flag while following logs
 
@@ -33,10 +37,10 @@ Example:
     {{.Exec}} {{.LongName}}
     {{.Exec}} {{.LongName}} --restart
 `,
-	Run: executeRestartLogger,
+	Run: executeLog,
 }
 
-func executeRestartLogger(cmd *base.Command, args []string) {
+func executeLog(cmd *base.Command, args []string) {
 	var restart bool
 	cmd.Flag.BoolVar(&restart, "restart", false, "")
 	setSharedFlags(cmd)
@@ -69,7 +73,8 @@ func followLogger() {
 	if err != nil {
 		base.Fatalf("failed to follow logger: %s", err)
 	}
-
+	// work with `v2ray api log | grep expr`
+	log.SetOutput(os.Stdout)
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
@@ -78,6 +83,6 @@ func followLogger() {
 		if err != nil {
 			base.Fatalf("failed to fetch log: %s", err)
 		}
-		log.Print(resp.Message)
+		log.Println(resp.Message)
 	}
 }
