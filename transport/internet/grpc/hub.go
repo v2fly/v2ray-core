@@ -43,7 +43,7 @@ func (l Listener) Addr() net.Addr {
 }
 
 func Listen(ctx context.Context, address net.Address, port net.Port, settings *internet.MemoryStreamConfig, handler internet.ConnHandler) (internet.Listener, error) {
-	httpSettings := settings.ProtocolSettings.(*Config)
+	grpcSettings := settings.ProtocolSettings.(*Config)
 	var listener *Listener
 	if port == net.Port(0) { // unix
 		listener = &Listener{
@@ -52,7 +52,7 @@ func Listen(ctx context.Context, address net.Address, port net.Port, settings *i
 				Name: address.Domain(),
 				Net:  "unix",
 			},
-			config: httpSettings,
+			config: grpcSettings,
 		}
 	} else { // tcp
 		listener = &Listener{
@@ -61,7 +61,7 @@ func Listen(ctx context.Context, address net.Address, port net.Port, settings *i
 				IP:   address.IP(),
 				Port: int(port),
 			},
-			config: httpSettings,
+			config: grpcSettings,
 		}
 	}
 
@@ -108,7 +108,7 @@ func Listen(ctx context.Context, address net.Address, port net.Port, settings *i
 			}
 		}
 
-		encoding.RegisterGunServiceServerX(s, listener, config.ServerName)
+		encoding.RegisterGunServiceServerX(s, listener, grpcSettings.ServiceName)
 
 		if err = s.Serve(streamListener); err != nil {
 			newError("Listener for grpc ended").Base(err).WriteToLog()
