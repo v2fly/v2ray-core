@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package v2ray.core.proxy.lo;
+option csharp_namespace = "V2Ray.Core.Proxy.Lo";
+option go_package = "github.com/v2fly/v2ray-core/v4/proxy/lo";
+option java_package = "com.v2ray.core.proxy.lo";
+option java_multiple_files = true;
+
+message Config {
+  string inbound_tag = 1;
+}
