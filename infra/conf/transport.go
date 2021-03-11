@@ -14,6 +14,7 @@ type TransportConfig struct {
 	DSConfig   *DomainSocketConfig `json:"dsSettings"`
 	QUICConfig *QUICConfig         `json:"quicSettings"`
 	GunConfig  *GunConfig          `json:"gunSettings"`
+	GRPCConfig *GunConfig          `json:"grpcSettings"`
 }
 
 // Build implements Buildable.
@@ -86,6 +87,9 @@ func (c *TransportConfig) Build() (*transport.Config, error) {
 		})
 	}
 
+	if c.GunConfig == nil {
+		c.GunConfig = c.GRPCConfig
+	}
 	if c.GunConfig != nil {
 		gs, err := c.GunConfig.Build()
 		if err != nil {
