@@ -48,11 +48,19 @@ func (l Lo) Process(ctx context.Context, link *transport.Link, dialer internet.D
 
 		ctx = session.ContextWithInbound(ctx, inbound)
 
-		rawConn, err := dialer.Dial(ctx, dialDest)
+		rawConn, err := l.dispatcherInstance.Dispatch(ctx, dialDest)
 		if err != nil {
 			return err
 		}
-		conn = rawConn
+
+		var readerOpt net.ConnectionOption
+		if dialDest.Network == net.Network_TCP {
+			readerOpt = net.ConnectionOutputMulti(rawConn.Reader)
+		} else {
+			readerOpt = net.ConnectionOutputMultiUDP(rawConn.Reader)
+		}
+
+		conn = net.NewConnection(net.ConnectionInputMulti(rawConn.Writer), readerOpt)
 		return nil
 	})
 	if err != nil {
