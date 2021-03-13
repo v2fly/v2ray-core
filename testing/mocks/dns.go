@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+
 	dns "github.com/v2fly/v2ray-core/v4/features/dns"
 )
 
