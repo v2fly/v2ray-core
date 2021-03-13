@@ -221,7 +221,7 @@ const (
 	m4 = 15839092249703872147
 )
 
-var hashkey [4]uintptr = [4]uintptr{1, 1, 1, 1}
+var hashkey = [4]uintptr{1, 1, 1, 1}
 
 func memhashFallback(p unsafe.Pointer, seed, s uintptr) uintptr {
 	h := uint64(seed + s*hashkey[0])
