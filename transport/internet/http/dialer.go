@@ -24,7 +24,7 @@ var (
 	globalDialerAccess sync.Mutex
 )
 
-func getHTTPClient(ctx context.Context, dest net.Destination, tlsSettings *tls.Config) *http.Client {
+func getHTTPClient(_ context.Context, dest net.Destination, tlsSettings *tls.Config) *http.Client {
 	globalDialerAccess.Lock()
 	defer globalDialerAccess.Unlock()
 
@@ -51,7 +51,7 @@ func getHTTPClient(ctx context.Context, dest net.Destination, tlsSettings *tls.C
 			}
 			address := net.ParseAddress(rawHost)
 
-			pconn, err := internet.DialSystem(ctx, net.TCPDestination(address, port), nil)
+			pconn, err := internet.DialSystem(context.Background(), net.TCPDestination(address, port), nil)
 			if err != nil {
 				return nil, err
 			}
@@ -68,6 +68,9 @@ func getHTTPClient(ctx context.Context, dest net.Destination, tlsSettings *tls.C
 			state := cn.ConnectionState()
 			if p := state.NegotiatedProtocol; p != http2.NextProtoTLS {
 				return nil, newError("http2: unexpected ALPN protocol " + p + "; want q" + http2.NextProtoTLS).AtError()
+			}
+			if !state.NegotiatedProtocolIsMutual {
+				return nil, newError("http2: could not negotiate protocol mutually").AtError()
 			}
 			return cn, nil
 		},
