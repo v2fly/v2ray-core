@@ -69,9 +69,6 @@ func getHTTPClient(_ context.Context, dest net.Destination, tlsSettings *tls.Con
 			if p := state.NegotiatedProtocol; p != http2.NextProtoTLS {
 				return nil, newError("http2: unexpected ALPN protocol " + p + "; want q" + http2.NextProtoTLS).AtError()
 			}
-			if !state.NegotiatedProtocolIsMutual {
-				return nil, newError("http2: could not negotiate protocol mutually").AtError()
-			}
 			return cn, nil
 		},
 		TLSClientConfig: tlsSettings.GetTLSConfig(tls.WithDestination(dest)),
