@@ -305,19 +305,17 @@ func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.
 			common.Interrupt(link.Reader)
 			return
 		}
-	} else {
-		if d.router != nil {
-			if route, err := d.router.PickRoute(routing_session.AsRoutingContext(ctx)); err == nil {
-				tag := route.GetOutboundTag()
-				if h := d.ohm.GetHandler(tag); h != nil {
-					newError("taking detour [", tag, "] for [", destination, "]").WriteToLog(session.ExportIDToError(ctx))
-					handler = h
-				} else {
-					newError("non existing tag: ", tag).AtWarning().WriteToLog(session.ExportIDToError(ctx))
-				}
+	} else if d.router != nil {
+		if route, err := d.router.PickRoute(routing_session.AsRoutingContext(ctx)); err == nil {
+			tag := route.GetOutboundTag()
+			if h := d.ohm.GetHandler(tag); h != nil {
+				newError("taking detour [", tag, "] for [", destination, "]").WriteToLog(session.ExportIDToError(ctx))
+				handler = h
 			} else {
-				newError("default route for ", destination).WriteToLog(session.ExportIDToError(ctx))
+				newError("non existing tag: ", tag).AtWarning().WriteToLog(session.ExportIDToError(ctx))
 			}
+		} else {
+			newError("default route for ", destination).WriteToLog(session.ExportIDToError(ctx))
 		}
 	}
 

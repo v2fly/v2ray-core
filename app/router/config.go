@@ -86,7 +86,6 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 			}
 			conds.Add(matcher)
 		}
-
 	}
 
 	if len(rr.UserEmail) > 0 {
