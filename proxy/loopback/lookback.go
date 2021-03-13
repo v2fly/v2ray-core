@@ -17,12 +17,12 @@ import (
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
-type Lo struct {
+type Loopback struct {
 	config             *Config
 	dispatcherInstance routing.Dispatcher
 }
 
-func (l Lo) Process(ctx context.Context, link *transport.Link, _ internet.Dialer) error {
+func (l *Loopback) Process(ctx context.Context, link *transport.Link, _ internet.Dialer) error {
 	outbound := session.OutboundFromContext(ctx)
 	if outbound == nil || !outbound.Target.IsValid() {
 		return newError("target not specified.")
@@ -105,7 +105,7 @@ func (l Lo) Process(ctx context.Context, link *transport.Link, _ internet.Dialer
 	return nil
 }
 
-func (l *Lo) init(config *Config, dispatcherInstance routing.Dispatcher) error {
+func (l *Loopback) init(config *Config, dispatcherInstance routing.Dispatcher) error {
 	l.dispatcherInstance = dispatcherInstance
 	l.config = config
 	return nil
@@ -113,7 +113,7 @@ func (l *Lo) init(config *Config, dispatcherInstance routing.Dispatcher) error {
 
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
-		l := new(Lo)
+		l := new(Loopback)
 		err := core.RequireFeatures(ctx, func(dispatcherInstance routing.Dispatcher) error {
 			return l.init(config.(*Config), dispatcherInstance)
 		})
