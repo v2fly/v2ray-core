@@ -4,7 +4,7 @@
 // 	protoc        v3.13.0
 // source: proxy/lo/config.proto
 
-package lo
+package loopback
 
 import (
 	proto "github.com/golang/protobuf/proto"

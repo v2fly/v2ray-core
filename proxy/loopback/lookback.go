@@ -1,9 +1,10 @@
 // +build !confonly
 
-package lo
+package loopback
 
 import (
 	"context"
+
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
@@ -11,7 +12,6 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/retry"
 	"github.com/v2fly/v2ray-core/v4/common/session"
 	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/features/policy"
 	"github.com/v2fly/v2ray-core/v4/features/routing"
 	"github.com/v2fly/v2ray-core/v4/transport"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
@@ -20,10 +20,9 @@ import (
 type Lo struct {
 	config             *Config
 	dispatcherInstance routing.Dispatcher
-	policyManager      policy.Manager
 }
 
-func (l Lo) Process(ctx context.Context, link *transport.Link, dialer internet.Dialer) error {
+func (l Lo) Process(ctx context.Context, link *transport.Link, _ internet.Dialer) error {
 	outbound := session.OutboundFromContext(ctx)
 	if outbound == nil || !outbound.Target.IsValid() {
 		return newError("target not specified.")
@@ -71,7 +70,6 @@ func (l Lo) Process(ctx context.Context, link *transport.Link, dialer internet.D
 	defer conn.Close()
 
 	requestDone := func() error {
-
 		var writer buf.Writer
 		if destination.Network == net.Network_TCP {
 			writer = buf.NewWriter(conn)
@@ -87,7 +85,6 @@ func (l Lo) Process(ctx context.Context, link *transport.Link, dialer internet.D
 	}
 
 	responseDone := func() error {
-
 		var reader buf.Reader
 		if destination.Network == net.Network_TCP {
 			reader = buf.NewReader(conn)
