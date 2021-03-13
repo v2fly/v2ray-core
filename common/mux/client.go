@@ -135,11 +135,11 @@ type DialingWorkerFactory struct {
 	ctx context.Context
 }
 
-func NewDialingWorkerFactory(ctx context.Context, Proxy proxy.Outbound, Dialer internet.Dialer, Strategy ClientStrategy) *DialingWorkerFactory {
+func NewDialingWorkerFactory(ctx context.Context, proxy proxy.Outbound, dialer internet.Dialer, strategy ClientStrategy) *DialingWorkerFactory {
 	return &DialingWorkerFactory{
-		Proxy:    Proxy,
-		Dialer:   Dialer,
-		Strategy: Strategy,
+		Proxy:    proxy,
+		Dialer:   dialer,
+		Strategy: strategy,
 		ctx:      ctx,
 	}
 }

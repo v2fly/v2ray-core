@@ -23,6 +23,7 @@ import (
 	_ "github.com/v2fly/v2ray-core/v4/app/router"
 	_ "github.com/v2fly/v2ray-core/v4/app/stats"
 
+	// Fix dependency cycle caused by core import in internet package
 	_ "github.com/v2fly/v2ray-core/v4/transport/internet/tagged/taggedimpl"
 
 	// Inbound and outbound proxies.
