@@ -70,12 +70,12 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 
 	if len(rr.Domain) > 0 {
 		switch rr.DomainMatcher {
-		case "hybrid":
-			matcher, err := NewHybridDomainMatcher(rr.Domain)
+		case "mph":
+			matcher, err := NewMphMatcherGroup(rr.Domain)
 			if err != nil {
-				return nil, newError("failed to build domain condition with HybridDomainMatcher").Base(err)
+				return nil, newError("failed to build domain condition with MphDomainMatcher").Base(err)
 			}
-			newError("HybridDomainMatcher is enabled for ", len(rr.Domain), "domain rules(s)").AtDebug().WriteToLog()
+			newError("MphDomainMatcher is enabled for ", len(rr.Domain), "domain rules(s)").AtDebug().WriteToLog()
 			conds.Add(matcher)
 		default:
 			matcher, err := NewDomainMatcher(rr.Domain)

@@ -68,8 +68,8 @@ type DomainMatcher struct {
 	matchers strmatcher.IndexMatcher
 }
 
-func NewHybridDomainMatcher(domains []*Domain) (*DomainMatcher, error) {
-	g := strmatcher.NewHybridMatcherGroup()
+func NewMphMatcherGroup(domains []*Domain) (*DomainMatcher, error) {
+	g := strmatcher.NewMphMatcherGroup()
 	for _, d := range domains {
 		matcherType, f := matcherTypeMap[d.Type]
 		if !f {
@@ -102,7 +102,7 @@ func NewDomainMatcher(domains []*Domain) (*DomainMatcher, error) {
 }
 
 func (m *DomainMatcher) ApplyDomain(domain string) bool {
-	return len(m.matchers.Match(domain)) > 0
+	return len(m.matchers.Match(strings.ToLower(domain))) > 0
 }
 
 // Apply implements Condition.
