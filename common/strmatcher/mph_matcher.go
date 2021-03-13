@@ -146,12 +146,11 @@ func (g *MphMatcherGroup) Build() {
 
 func nextPow2(v int) int {
 	if v <= 1 {
-		return 0 + 1
-	} else {
-		const MaxUInt = ^uint(0)
-		n := (MaxUInt >> bits.LeadingZeros(uint(v))) + 1
-		return int(n)
+		return 1
 	}
+	const MaxUInt = ^uint(0)
+	n := (MaxUInt >> bits.LeadingZeros(uint(v))) + 1
+	return int(n)
 }
 
 // Lookup searches for s in t and returns its index and whether it was found.
