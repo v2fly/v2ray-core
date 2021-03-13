@@ -14,6 +14,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/v2fly/BrowserBridge v0.0.0-20210327130545-c01e4317fadd
 	github.com/v2fly/VSign v0.0.0-20201108000810-e2adc24bf848
+	github.com/v2fly/ss-bloomring v0.0.0-20210312155135-28617310f63e
 	go.starlark.net v0.0.0-20210312235212-74c10e2c17dc
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/net v0.0.0-20210326220855-61e056675ecf
