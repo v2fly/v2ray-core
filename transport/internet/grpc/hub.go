@@ -29,7 +29,7 @@ type Listener struct {
 
 func (l Listener) Tun(server encoding.GunService_TunServer) error {
 	tunCtx, cancel := context.WithCancel(l.ctx)
-	l.handler(encoding.NewServerConn(server, cancel))
+	l.handler(encoding.NewGunConn(server, cancel))
 	<-tunCtx.Done()
 	return nil
 }
