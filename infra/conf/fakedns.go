@@ -37,7 +37,7 @@ func (FakeDNSPostProcessingStage) Process(conf *Config) error {
 		if conf.FakeDNS == nil {
 			// Add a Fake DNS Config if there is none
 			conf.FakeDNS = &FakeDNSConfig{
-				IPPool:  "240.0.0.0/8",
+				IPPool:  "198.18.0.0/15",
 				LruSize: 65535,
 			}
 		}
