@@ -4,9 +4,6 @@ import (
 	"regexp"
 )
 
-// PrimeRK is the prime base used in Rabin-Karp algorithm.
-const PrimeRK = 16777619
-
 // Matcher is the interface to determine a string matches a pattern.
 type Matcher interface {
 	// Match returns true if the given string matches a predefined pattern.
@@ -30,6 +27,7 @@ const (
 
 // New creates a new Matcher based on the given pattern.
 func (t Type) New(pattern string) (Matcher, error) {
+	// 1. regex matching is case-sensitive
 	switch t {
 	case Full:
 		return fullMatcher(pattern), nil
@@ -59,97 +57,6 @@ type IndexMatcher interface {
 type matcherEntry struct {
 	m  Matcher
 	id uint32
-}
-
-type ACAutomatonMatcherGroup struct {
-	count         uint32
-	ac            *ACAutomaton
-	nonSubstrMap  map[uint32]string
-	otherMatchers []matcherEntry
-}
-
-func NewACAutomatonMatcherGroup() *ACAutomatonMatcherGroup {
-	var g = new(ACAutomatonMatcherGroup)
-	g.count = 1
-	g.nonSubstrMap = map[uint32]string{}
-	return g
-}
-
-// Add `full` or `domain` pattern to hashmap
-func (g *ACAutomatonMatcherGroup) AddFullOrDomainPattern(pattern string, t Type) {
-	h := uint32(0)
-	for i := len(pattern) - 1; i >= 0; i-- {
-		h = h*PrimeRK + uint32(pattern[i])
-	}
-	switch t {
-	case Full:
-		g.nonSubstrMap[h] = pattern
-	case Domain:
-		g.nonSubstrMap[h] = pattern
-		g.nonSubstrMap[h*PrimeRK+uint32('.')] = "." + pattern
-	default:
-	}
-}
-
-func (g *ACAutomatonMatcherGroup) AddPattern(pattern string, t Type) (uint32, error) {
-	switch t {
-	case Substr:
-		if g.ac == nil {
-			g.ac = NewACAutomaton()
-		}
-		g.ac.Add(pattern, t)
-	case Full, Domain:
-		g.AddFullOrDomainPattern(pattern, t)
-	case Regex:
-		g.count++
-		r, err := regexp.Compile(pattern)
-		if err != nil {
-			return 0, err
-		}
-		g.otherMatchers = append(g.otherMatchers, matcherEntry{
-			m:  &regexMatcher{pattern: r},
-			id: g.count,
-		})
-	default:
-		panic("Unknown type")
-	}
-	return g.count, nil
-}
-
-func (g *ACAutomatonMatcherGroup) Build() {
-	if g.ac != nil {
-		g.ac.Build()
-	}
-}
-
-// Match implements IndexMatcher.Match.
-func (g *ACAutomatonMatcherGroup) Match(pattern string) []uint32 {
-	result := []uint32{}
-	hash := uint32(0)
-	for i := len(pattern) - 1; i >= 0; i-- {
-		hash = hash*PrimeRK + uint32(pattern[i])
-		if pattern[i] == '.' {
-			if v, ok := g.nonSubstrMap[hash]; ok && v == pattern[i:] {
-				result = append(result, 1)
-				return result
-			}
-		}
-	}
-	if v, ok := g.nonSubstrMap[hash]; ok && v == pattern {
-		result = append(result, 1)
-		return result
-	}
-	if g.ac != nil && g.ac.Match(pattern) {
-		result = append(result, 1)
-		return result
-	}
-	for _, e := range g.otherMatchers {
-		if e.m.Match(pattern) {
-			result = append(result, e.id)
-			return result
-		}
-	}
-	return result
 }
 
 // MatcherGroup is an implementation of IndexMatcher.
