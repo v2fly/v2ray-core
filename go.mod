@@ -12,6 +12,7 @@ require (
 	github.com/pires/go-proxyproto v0.5.0
 	github.com/seiflotfy/cuckoofilter v0.0.0-20201222105146-bc6005554a0c
 	github.com/stretchr/testify v1.7.0
+	github.com/v2fly/BrowserBridge v0.0.0-20210316223221-b4ab84595cdc // indirect
 	github.com/v2fly/VSign v0.0.0-20201108000810-e2adc24bf848
 	go.starlark.net v0.0.0-20210305151048-6a590ae7f4eb
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
