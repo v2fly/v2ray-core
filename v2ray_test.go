@@ -1,9 +1,8 @@
 package core_test
 
 import (
-	"testing"
-
 	"google.golang.org/protobuf/proto"
+	"testing"
 
 	. "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/dispatcher"

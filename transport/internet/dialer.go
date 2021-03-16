@@ -5,6 +5,7 @@ import (
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/session"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/tagged"
 )
 
 // Dialer is the interface for dialing outbound connections.
@@ -68,5 +69,17 @@ func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig
 	if outbound := session.OutboundFromContext(ctx); outbound != nil {
 		src = outbound.Gateway
 	}
+
+	if transportLayerOutgoingTag := session.GetTransportLayerProxyTagFromContext(ctx); transportLayerOutgoingTag != "" {
+		return DialTaggedOutbound(ctx, dest, transportLayerOutgoingTag)
+	}
+
 	return effectiveSystemDialer.Dial(ctx, src, dest, sockopt)
+}
+
+func DialTaggedOutbound(ctx context.Context, dest net.Destination, tag string) (net.Conn, error) {
+	if tagged.Dialer == nil {
+		return nil, newError("tagged dial not enabled")
+	}
+	return tagged.Dialer(ctx, dest, tag)
 }

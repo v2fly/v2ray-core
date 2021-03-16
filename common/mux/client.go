@@ -131,8 +131,18 @@ type DialingWorkerFactory struct {
 	Proxy    proxy.Outbound
 	Dialer   internet.Dialer
 	Strategy ClientStrategy
+
+	ctx context.Context
 }
 
+func NewDialingWorkerFactory(ctx context.Context, proxy proxy.Outbound, dialer internet.Dialer, strategy ClientStrategy) *DialingWorkerFactory {
+	return &DialingWorkerFactory{
+		Proxy:    proxy,
+		Dialer:   dialer,
+		Strategy: strategy,
+		ctx:      ctx,
+	}
+}
 func (f *DialingWorkerFactory) Create() (*ClientWorker, error) {
 	opts := []pipe.Option{pipe.WithSizeLimit(64 * 1024)}
 	uplinkReader, upLinkWriter := pipe.New(opts...)
@@ -148,7 +158,7 @@ func (f *DialingWorkerFactory) Create() (*ClientWorker, error) {
 	}
 
 	go func(p proxy.Outbound, d internet.Dialer, c common.Closable) {
-		ctx := session.ContextWithOutbound(context.Background(), &session.Outbound{
+		ctx := session.ContextWithOutbound(f.ctx, &session.Outbound{
 			Target: net.TCPDestination(muxCoolAddress, muxCoolPort),
 		})
 		ctx, cancel := context.WithCancel(ctx)

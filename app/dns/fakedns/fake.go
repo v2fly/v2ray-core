@@ -43,7 +43,7 @@ func NewFakeDNSHolder() (*Holder, error) {
 	if fkdns, err = NewFakeDNSHolderConfigOnly(nil); err != nil {
 		return nil, newError("Unable to create Fake Dns Engine").Base(err).AtError()
 	}
-	err = fkdns.initialize("240.0.0.0/8", 65535)
+	err = fkdns.initialize("198.18.0.0/15", 65535)
 	if err != nil {
 		return nil, err
 	}

@@ -336,6 +336,8 @@ func (p TransportProtocol) Build() (string, error) {
 		return "domainsocket", nil
 	case "quic":
 		return "quic", nil
+	case "gun", "grpc":
+		return "gun", nil
 	default:
 		return "", newError("Config: unknown transport protocol: ", p)
 	}
@@ -485,7 +487,8 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 }
 
 type ProxyConfig struct {
-	Tag string `json:"tag"`
+	Tag                 string `json:"tag"`
+	TransportLayerProxy bool   `json:"transportLayer"`
 }
 
 // Build implements Buildable.
@@ -494,6 +497,7 @@ func (v *ProxyConfig) Build() (*internet.ProxyConfig, error) {
 		return nil, newError("Proxy tag is not set.")
 	}
 	return &internet.ProxyConfig{
-		Tag: v.Tag,
+		Tag:                 v.Tag,
+		TransportLayerProxy: v.TransportLayerProxy,
 	}, nil
 }

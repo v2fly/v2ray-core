@@ -27,6 +27,7 @@ const (
 
 // New creates a new Matcher based on the given pattern.
 func (t Type) New(pattern string) (Matcher, error) {
+	// 1. regex matching is case-sensitive
 	switch t {
 	case Full:
 		return fullMatcher(pattern), nil
@@ -56,57 +57,6 @@ type IndexMatcher interface {
 type matcherEntry struct {
 	m  Matcher
 	id uint32
-}
-
-type ACAutomatonMatcherGroup struct {
-	count         uint32
-	ac            *ACAutomaton
-	otherMatchers []matcherEntry
-}
-
-func NewACAutomatonMatcherGroup() *ACAutomatonMatcherGroup {
-	var g = new(ACAutomatonMatcherGroup)
-	g.count = 1
-	g.ac = NewACAutomaton()
-	return g
-}
-
-func (g *ACAutomatonMatcherGroup) AddPattern(pattern string, t Type) (uint32, error) {
-	switch t {
-	case Full, Substr, Domain:
-		g.ac.Add(pattern, t)
-	case Regex:
-		g.count++
-		r, err := regexp.Compile(pattern)
-		if err != nil {
-			return 0, err
-		}
-		g.otherMatchers = append(g.otherMatchers, matcherEntry{
-			m:  &regexMatcher{pattern: r},
-			id: g.count,
-		})
-	default:
-		panic("Unknown type")
-	}
-	return g.count, nil
-}
-
-func (g *ACAutomatonMatcherGroup) Build() {
-	g.ac.Build()
-}
-
-// Match implements IndexMatcher.Match.
-func (g *ACAutomatonMatcherGroup) Match(pattern string) []uint32 {
-	result := []uint32{}
-	if g.ac.Match(pattern) {
-		result = append(result, 1)
-	}
-	for _, e := range g.otherMatchers {
-		if e.m.Match(pattern) {
-			result = append(result, e.id)
-		}
-	}
-	return result
 }
 
 // MatcherGroup is an implementation of IndexMatcher.
