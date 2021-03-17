@@ -388,6 +388,8 @@ type StreamConfig struct {
 	HTTPSettings   *HTTPConfig         `json:"httpSettings"`
 	DSSettings     *DomainSocketConfig `json:"dsSettings"`
 	QUICSettings   *QUICConfig         `json:"quicSettings"`
+	GunSettings    *GunConfig          `json:"gunSettings"`
+	GRPCSettings   *GunConfig          `json:"grpcSettings"`
 	SocketSettings *SocketConfig       `json:"sockopt"`
 }
 
@@ -469,17 +471,30 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 	if c.QUICSettings != nil {
 		qs, err := c.QUICSettings.Build()
 		if err != nil {
-			return nil, newError("Failed to build QUIC config").Base(err)
+			return nil, newError("Failed to build QUIC config.").Base(err)
 		}
 		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
 			ProtocolName: "quic",
 			Settings:     serial.ToTypedMessage(qs),
 		})
 	}
+	if c.GunSettings == nil {
+		c.GunSettings = c.GRPCSettings
+	}
+	if c.GunSettings != nil {
+		gs, err := c.GunSettings.Build()
+		if err != nil {
+			return nil, newError("Failed to build Gun config.").Base(err)
+		}
+		config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
+			ProtocolName: "gun",
+			Settings:     serial.ToTypedMessage(gs),
+		})
+	}
 	if c.SocketSettings != nil {
 		ss, err := c.SocketSettings.Build()
 		if err != nil {
-			return nil, newError("Failed to build sockopt").Base(err)
+			return nil, newError("Failed to build sockopt.").Base(err)
 		}
 		config.SocketSettings = ss
 	}
