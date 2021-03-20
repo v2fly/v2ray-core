@@ -135,10 +135,12 @@ func (c *TCPConfig) Build() (proto.Message, error) {
 }
 
 type WebSocketConfig struct {
-	Path                string            `json:"path"`
-	Path2               string            `json:"Path"` // The key was misspelled. For backward compatibility, we have to keep track the old key.
-	Headers             map[string]string `json:"headers"`
-	AcceptProxyProtocol bool              `json:"acceptProxyProtocol"`
+	Path                 string            `json:"path"`
+	Path2                string            `json:"Path"` // The key was misspelled. For backward compatibility, we have to keep track the old key.
+	Headers              map[string]string `json:"headers"`
+	AcceptProxyProtocol  bool              `json:"acceptProxyProtocol"`
+	MaxEarlyData         int32             `json:"maxEarlyData"`
+	UseBrowserForwarding bool              `json:"useBrowserForwarding"`
 }
 
 // Build implements Buildable.
@@ -155,8 +157,10 @@ func (c *WebSocketConfig) Build() (proto.Message, error) {
 		})
 	}
 	config := &websocket.Config{
-		Path:   path,
-		Header: header,
+		Path:                 path,
+		Header:               header,
+		MaxEarlyData:         c.MaxEarlyData,
+		UseBrowserForwarding: c.UseBrowserForwarding,
 	}
 	if c.AcceptProxyProtocol {
 		config.AcceptProxyProtocol = c.AcceptProxyProtocol
