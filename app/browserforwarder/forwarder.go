@@ -73,6 +73,9 @@ func (f *Forwarder) Close() error {
 
 func BridgeResource(rw http.ResponseWriter, r *http.Request, path string) {
 	content := path
+	if content == "" {
+		content = "index.html"
+	}
 	data, err := securedload.GetAssetSecured("browserforwarder/" + content)
 	if err != nil {
 		err = newError("cannot load necessary resources").Base(err)
