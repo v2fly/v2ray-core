@@ -218,8 +218,13 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 			if shouldOverride(result, sniffingRequest.OverrideDestinationForProtocol) {
 				domain := result.Domain()
 				newError("sniffed domain: ", domain).WriteToLog(session.ExportIDToError(ctx))
-				destination.Address = net.ParseAddress(domain)
-				ob.Target = destination
+				// Do NOT override domains with space or '*' or without any dot, eg "Mijia Cloud"
+				if strings.Contains(domain, " ") || strings.Contains(domain, "*") || !strings.Contains(domain, ".") {
+					newError("destination override ignores invalid domain [", domain, "]").WriteToLog(session.ExportIDToError(ctx))
+				} else {
+					destination.Address = net.ParseAddress(domain)
+					ob.Target = destination
+				}
 			}
 		}
 		go d.routedDispatch(ctx, outbound, destination)
@@ -236,8 +241,13 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 			if err == nil && shouldOverride(result, sniffingRequest.OverrideDestinationForProtocol) {
 				domain := result.Domain()
 				newError("sniffed domain: ", domain).WriteToLog(session.ExportIDToError(ctx))
-				destination.Address = net.ParseAddress(domain)
-				ob.Target = destination
+				// Do NOT override domains with space or '*' or without any dot, eg "Mijia Cloud"
+				if strings.Contains(domain, " ") || strings.Contains(domain, "*") || !strings.Contains(domain, ".") {
+					newError("destination override ignores invalid domain [", domain, "]").WriteToLog(session.ExportIDToError(ctx))
+				} else {
+					destination.Address = net.ParseAddress(domain)
+					ob.Target = destination
+				}
 			}
 			d.routedDispatch(ctx, outbound, destination)
 		}()
