@@ -7,7 +7,7 @@ require (
 	github.com/golang/protobuf v1.5.1
 	github.com/google/go-cmp v0.5.5
 	github.com/gorilla/websocket v1.4.2
-	github.com/lucas-clemente/quic-go v0.19.3
+	github.com/lucas-clemente/quic-go v0.20.0
 	github.com/miekg/dns v1.1.41
 	github.com/pires/go-proxyproto v0.5.0
 	github.com/seiflotfy/cuckoofilter v0.0.0-20201222105146-bc6005554a0c
