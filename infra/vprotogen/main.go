@@ -81,6 +81,21 @@ func GetGOBIN() string {
 	return GOBIN
 }
 
+func whichProtoc(suffix, targetedVersion string) (string, error) {
+	protoc := "protoc" + suffix
+
+	path, err := exec.LookPath(protoc)
+	if err != nil {
+		errStr := fmt.Sprintf(`
+Command "%s" not found.
+Make sure that %s is in your system path or current path.
+Download %s v%s or later from https://github.com/protocolbuffers/protobuf/releases
+`, protoc, protoc, protoc, targetedVersion)
+		return "", fmt.Errorf(errStr)
+	}
+	return path, nil
+}
+
 func getProjectProtocVersion(url string) (string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -126,19 +141,12 @@ func parseVersion(s string, width int) int64 {
 func needToUpdate(targetedVersion, installedVersion string) bool {
 	vt := parseVersion(targetedVersion, 4)
 	vi := parseVersion(installedVersion, 4)
-
 	return vt > vi
 }
 
 func main() {
-	targetedVersion, err := getProjectProtocVersion("https://raw.githubusercontent.com/v2fly/v2ray-core/HEAD/config.pb.go")
+	pwd, err := os.Getwd()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	pwd, wdErr := os.Getwd()
-	if wdErr != nil {
 		fmt.Println("Can not get current working directory.")
 		os.Exit(1)
 	}
@@ -153,13 +161,17 @@ func main() {
 	if runtime.GOOS == "windows" {
 		suffix = ".exe"
 	}
-	protoc := "protoc" + suffix
 
-	if path, err := exec.LookPath(protoc); err != nil {
-		fmt.Println("Make sure that you have `" + protoc + "` in your system path or current path. To download it, please visit https://github.com/protocolbuffers/protobuf/releases")
+	targetedVersion, err := getProjectProtocVersion("https://raw.githubusercontent.com/v2fly/v2ray-core/HEAD/config.pb.go")
+	if err != nil {
+		fmt.Println(err)
 		os.Exit(1)
-	} else {
-		protoc = path
+	}
+
+	protoc, err := whichProtoc(suffix, targetedVersion)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	installedVersion, err := getInstalledProtocVersion(protoc)
@@ -170,7 +182,7 @@ func main() {
 
 	if needToUpdate(targetedVersion, installedVersion) {
 		fmt.Printf(`
-You are using an old protobuf version. Please update to v%s or later.
+You are using an old protobuf version, please update to v%s or later.
 Download it from https://github.com/protocolbuffers/protobuf/releases
 
     * Protobuf version used in V2Ray project: v%s
