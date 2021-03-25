@@ -4,9 +4,10 @@
 package tcp
 
 import (
+	"syscall"
+
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"syscall"
 )
 
 const (
