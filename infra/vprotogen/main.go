@@ -3,11 +3,15 @@ package main
 import (
 	"fmt"
 	"go/build"
+	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -77,9 +81,72 @@ func GetGOBIN() string {
 	return GOBIN
 }
 
+func whichProtoc(suffix, targetedVersion string) (string, error) {
+	protoc := "protoc" + suffix
+
+	path, err := exec.LookPath(protoc)
+	if err != nil {
+		errStr := fmt.Sprintf(`
+Command "%s" not found.
+Make sure that %s is in your system path or current path.
+Download %s v%s or later from https://github.com/protocolbuffers/protobuf/releases
+`, protoc, protoc, protoc, targetedVersion)
+		return "", fmt.Errorf(errStr)
+	}
+	return path, nil
+}
+
+func getProjectProtocVersion(url string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("can not get the version of protobuf used in V2Ray project")
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("can not read from body")
+	}
+	versionRegexp := regexp.MustCompile(`\/\/\s*protoc\s*v(\d+\.\d+\.\d+)`)
+	matched := versionRegexp.FindStringSubmatch(string(body))
+	return matched[1], nil
+}
+
+func getInstalledProtocVersion(protocPath string) (string, error) {
+	cmd := exec.Command(protocPath, "--version")
+	cmd.Env = append(cmd.Env, os.Environ()...)
+	output, cmdErr := cmd.CombinedOutput()
+	if cmdErr != nil {
+		return "", cmdErr
+	}
+	versionRegexp := regexp.MustCompile(`protoc\s*(\d+\.\d+\.\d+)`)
+	matched := versionRegexp.FindStringSubmatch(string(output))
+	return matched[1], nil
+}
+
+func parseVersion(s string, width int) int64 {
+	strList := strings.Split(s, ".")
+	format := fmt.Sprintf("%%s%%0%ds", width)
+	v := ""
+	for _, value := range strList {
+		v = fmt.Sprintf(format, v, value)
+	}
+	var result int64
+	var err error
+	if result, err = strconv.ParseInt(v, 10, 64); err != nil {
+		return 0
+	}
+	return result
+}
+
+func needToUpdate(targetedVersion, installedVersion string) bool {
+	vt := parseVersion(targetedVersion, 4)
+	vi := parseVersion(installedVersion, 4)
+	return vt > vi
+}
+
 func main() {
-	pwd, wdErr := os.Getwd()
-	if wdErr != nil {
+	pwd, err := os.Getwd()
+	if err != nil {
 		fmt.Println("Can not get current working directory.")
 		os.Exit(1)
 	}
@@ -94,13 +161,35 @@ func main() {
 	if runtime.GOOS == "windows" {
 		suffix = ".exe"
 	}
-	protoc := "protoc" + suffix
 
-	if path, err := exec.LookPath(protoc); err != nil {
-		fmt.Println("Make sure that you have `" + protoc + "` in your system path or current path. To download it, please visit https://github.com/protocolbuffers/protobuf/releases")
+	targetedVersion, err := getProjectProtocVersion("https://raw.githubusercontent.com/v2fly/v2ray-core/HEAD/config.pb.go")
+	if err != nil {
+		fmt.Println(err)
 		os.Exit(1)
-	} else {
-		protoc = path
+	}
+
+	protoc, err := whichProtoc(suffix, targetedVersion)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	installedVersion, err := getInstalledProtocVersion(protoc)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	if needToUpdate(targetedVersion, installedVersion) {
+		fmt.Printf(`
+You are using an old protobuf version, please update to v%s or later.
+Download it from https://github.com/protocolbuffers/protobuf/releases
+
+    * Protobuf version used in V2Ray project: v%s
+    * Protobuf version you have installed: v%s
+
+`, targetedVersion, targetedVersion, installedVersion)
+		os.Exit(1)
 	}
 
 	protoFilesMap := make(map[string][]string)
