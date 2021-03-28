@@ -124,7 +124,7 @@ func (d dialerWithEarlyData) Dial(earlyData []byte) (*websocket.Conn, error) {
 		return nil, newError("websocket delayed dialer cannot encode early data tail").Base(errc)
 	}
 
-	conn, resp, err := d.dialer.Dial(d.uriBase+string(earlyDataBuf.Bytes()), d.config.GetRequestHeader())
+	conn, resp, err := d.dialer.Dial(d.uriBase+earlyDataBuf.String(), d.config.GetRequestHeader())
 	if err != nil {
 		var reason string
 		if resp != nil {
@@ -161,7 +161,7 @@ func (d dialerWithEarlyDataRelayed) Dial(earlyData []byte) (io.ReadWriteCloser, 
 		return nil, newError("websocket delayed dialer cannot encode early data tail").Base(errc)
 	}
 
-	conn, err := d.forwarder.DialWebsocket(d.uriBase+string(earlyDataBuf.Bytes()), d.config.GetRequestHeader())
+	conn, err := d.forwarder.DialWebsocket(d.uriBase+earlyDataBuf.String(), d.config.GetRequestHeader())
 	if err != nil {
 		var reason string
 		return nil, newError("failed to dial to (", d.uriBase, ") with early data: ", reason).Base(err)

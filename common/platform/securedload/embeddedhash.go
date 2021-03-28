@@ -30,7 +30,6 @@ func (e EmbeddedHashProtectedLoader) VerifyAndLoad(filename string) ([]byte, err
 				return filecontent, nil
 			}
 		}
-
 	}
 	return nil, newError("Unrecognized file at ", filename, " can not be loaded for execution")
 }

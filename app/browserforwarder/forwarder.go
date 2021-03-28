@@ -37,7 +37,6 @@ func (f *Forwarder) ServeHTTP(writer http.ResponseWriter, request *http.Request)
 		fallthrough
 	case "index.js":
 		BridgeResource(writer, request, requestPath)
-		break
 	case "link":
 		f.forwarder.ServeBridge(writer, request)
 	}
@@ -83,7 +82,7 @@ func BridgeResource(rw http.ResponseWriter, r *http.Request, path string) {
 	data, err := securedload.GetAssetSecured("browserforwarder/" + content)
 	if err != nil {
 		err = newError("cannot load necessary resources").Base(err)
-		http.Error(rw, err.Error(), 403)
+		http.Error(rw, err.Error(), http.StatusForbidden)
 		return
 	}
 
