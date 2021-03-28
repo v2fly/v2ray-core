@@ -5,15 +5,17 @@ package browserforwarder
 import (
 	"bytes"
 	"context"
+	"io"
+	"net/http"
+	"time"
+
 	"github.com/v2fly/BrowserBridge/handler"
+
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/platform/securedload"
 	"github.com/v2fly/v2ray-core/v4/features/ext"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"io"
-	"net/http"
-	"time"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen

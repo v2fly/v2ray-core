@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"strings"
+
 	"github.com/v2fly/VSign/insmgr"
 	"github.com/v2fly/VSign/signerVerify"
+
 	"github.com/v2fly/v2ray-core/v4/common/platform"
 	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
-	"strings"
 )
 
 type EmbeddedHashProtectedLoader struct {
