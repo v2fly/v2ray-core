@@ -1,0 +1,48 @@
+/*
+
+V2Fly Auto Generated Subscription Outbounds
+
+The output format is not stable, you may not rely on the configure file generate same tag for every servers each time.
+
+*/
+
+{
+"outbounds": [
+
+{{- if .IsJson -}}
+    {{- /* @Json File */ -}}
+    {{- with .AsJson -}}
+        {{- $SIP008Version := print .version -}}
+        {{- if eq $SIP008Version "1" -}}
+        {{- $user_uuid := .user_uuid -}}
+        {{- /* SIP008 */ -}}
+        {{- $totalServers := len .servers -}}
+
+        {{- range $seq , $server :=  .servers -}}
+        {
+            "protocol": "shadowsocks",
+            "settings": {
+                "servers": [
+                            {
+                                "address": "{{$server.server}}",
+                                "email": "",
+                                "level": 0,
+                                "method": "{{$server.method}}",
+                                "password": "{{$server.password}}",
+                                "port": {{$server.server_port}}
+                            }
+                            ]
+                        },
+            "tag": "{{shorthand $user_uuid}}:{{$server.server}}:{{$server.server_port}}"
+        }
+        {{- $lastseq := dec $totalServers -}}
+        {{- if ne $seq $lastseq -}}
+        ,
+        {{- end -}}
+
+        {{- end -}}{{/* - range $seq , $server :=  .servers -}} */}}
+        {{- end -}}{{/* {{- if eq $SIP008Version "1" -}} */}}
+    {{end}}{{/* {{- with .AsJson -}} */}}
+{{- end}}{{/* {{- if .IsJson -}} */}}
+]
+}
