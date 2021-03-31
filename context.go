@@ -9,6 +9,7 @@ import (
 // V2rayKey is the key type of Instance in Context, exported for test.
 type V2rayKey int
 
+// v2rayKey is the key value of Instance in Context, exported for test.
 const v2rayKey V2rayKey = 1
 
 // FromContext returns an Instance from the given context, or nil if the context doesn't contain one.
