@@ -16,7 +16,7 @@ import (
 func CreateObject(v *Instance, config interface{}) (interface{}, error) {
 	var ctx context.Context
 	if v != nil {
-		ctx = context.WithValue(v.ctx, v2rayKey, v)
+		ctx = context.WithValue(v.ctx, V2rayKeyValue, v)
 	}
 	return common.CreateObject(ctx, config)
 }
