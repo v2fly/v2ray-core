@@ -37,7 +37,11 @@ func (err *Error) pkgPath() string {
 	if err.pathObj == nil {
 		return ""
 	}
-	return reflect.TypeOf(err.pathObj).PkgPath()
+	path := reflect.TypeOf(err.pathObj).PkgPath()
+	if strings.HasPrefix(path, "github.com/v2fly/v2ray-core/v4/") {
+		return path[31:]
+	}
+	return path
 }
 
 // Error implements error.Error().
