@@ -121,7 +121,7 @@ func ReadClientHello(data []byte, h *SniffHeader) error {
 	return errNotTLS
 }
 
-func SniffTLS(b []byte) (*SniffHeader, error) {
+func SniffProtocolTLS(b []byte) (*SniffHeader, error) {
 	if len(b) < 5 {
 		return nil, common.ErrNoClue
 	}
@@ -138,9 +138,20 @@ func SniffTLS(b []byte) (*SniffHeader, error) {
 	}
 
 	h := &SniffHeader{}
-	err := ReadClientHello(b[5:5+headerLen], h)
-	if err == nil {
-		return h, nil
+
+	return h, nil
+}
+
+func SniffDomainTLS(b []byte) (*SniffHeader, error) {
+	h, err := SniffProtocolTLS(b)
+	if err != nil {
+		return nil, err
 	}
-	return nil, err
+
+	headerLen := int(binary.BigEndian.Uint16(b[3:5]))
+	err = ReadClientHello(b[5:5+headerLen], h)
+	if err != nil {
+		return nil, err
+	}
+	return h, nil
 }
