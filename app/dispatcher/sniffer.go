@@ -57,7 +57,7 @@ func (s *Sniffer) Sniff(c context.Context, payload []byte, shouldSniffDomain boo
 		if si.metadataSniffer {
 			continue
 		}
-		
+
 		var result SniffResult
 		var err error
 		if shouldSniffDomain {
