@@ -51,6 +51,11 @@ func Dial(ctx context.Context, v *Instance, dest net.Destination) (net.Conn, err
 	if dispatcher == nil {
 		return nil, newError("routing.Dispatcher is not registered in V2Ray core")
 	}
+
+	if ctx.Value(v2rayKey) == nil {
+		ctx = context.WithValue(ctx, v2rayKey, v)
+	}
+
 	r, err := dispatcher.(routing.Dispatcher).Dispatch(ctx, dest)
 	if err != nil {
 		return nil, err
