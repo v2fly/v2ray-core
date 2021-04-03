@@ -5,10 +5,6 @@ run:
 
 issues:
   new: true
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - scopelint
 
 linters:
   enable:
@@ -25,7 +21,6 @@ linters:
     - misspell
     - nakedret
     - rowserrcheck
-    - scopelint
     - staticcheck
     - structcheck
     - stylecheck
