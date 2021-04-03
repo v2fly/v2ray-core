@@ -12,6 +12,7 @@ import (
 	"golang.org/x/crypto/hkdf"
 
 	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/antireplay"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/crypto"
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
@@ -21,6 +22,8 @@ import (
 type MemoryAccount struct {
 	Cipher Cipher
 	Key    []byte
+
+	replayFilter antireplay.GeneralizedReplayFilter
 }
 
 // Equals implements protocol.Account.Equals().
@@ -29,6 +32,16 @@ func (a *MemoryAccount) Equals(another protocol.Account) bool {
 		return bytes.Equal(a.Key, account.Key)
 	}
 	return false
+}
+
+func (a *MemoryAccount) CheckIV(iv []byte) error {
+	if a.replayFilter == nil {
+		return nil
+	}
+	if a.replayFilter.Check(iv) {
+		return nil
+	}
+	return newError("IV is not unique")
 }
 
 func createAesGcm(key []byte) cipher.AEAD {
@@ -81,6 +94,12 @@ func (a *Account) AsAccount() (protocol.Account, error) {
 	return &MemoryAccount{
 		Cipher: Cipher,
 		Key:    passwordToCipherKey([]byte(a.Password), Cipher.KeySize()),
+		replayFilter: func() antireplay.GeneralizedReplayFilter {
+			if a.IvCheck {
+				return antireplay.NewBloomRing()
+			}
+			return nil
+		}(),
 	}, nil
 }
 

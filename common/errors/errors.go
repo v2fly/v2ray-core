@@ -37,9 +37,10 @@ func (err *Error) pkgPath() string {
 	if err.pathObj == nil {
 		return ""
 	}
-	// remove string "github.com/v2fly/v2ray-core/v4/"
-	oldPath := reflect.TypeOf(err.pathObj).PkgPath()
-	return strings.Join(strings.Split(oldPath, "/")[4:], "/")
+	path := reflect.TypeOf(err.pathObj).PkgPath()
+	path = strings.TrimPrefix(path, "github.com/v2fly/v2ray-core/v4/")
+	path = strings.TrimPrefix(path, "github.com/v2fly/v2ray-core/v4")
+	return path
 }
 
 // Error implements error.Error().

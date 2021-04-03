@@ -81,7 +81,7 @@ func getGrpcClient(dest net.Destination, dialOption grpc.DialOption) (*grpc.Clie
 				BaseDelay:  500 * time.Millisecond,
 				Multiplier: 1.5,
 				Jitter:     0.2,
-				MaxDelay:   19 * time.Millisecond,
+				MaxDelay:   19 * time.Second,
 			},
 			MinConnectTimeout: 5 * time.Second,
 		}),

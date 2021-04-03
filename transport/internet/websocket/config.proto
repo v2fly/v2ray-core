@@ -20,4 +20,8 @@ message Config {
   repeated Header header = 3;
 
   bool accept_proxy_protocol = 4;
+
+  int32 max_early_data = 5;
+
+  bool use_browser_forwarding = 6;
 }

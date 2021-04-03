@@ -9,7 +9,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
 	outbound "github.com/v2fly/v2ray-core/v4/features/outbound"
 )
 
