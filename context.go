@@ -38,7 +38,7 @@ func ToContext(ctx context.Context, v *Instance) context.Context {
 
 // MustToContext returns ctx from the given context, or panics if not found that.
 func MustToContext(ctx context.Context, v *Instance) context.Context {
-	if FromContext(ctx) != v {
+	if c := ToContext(ctx, v); c != ctx {
 		panic("V is not in context.")
 	}
 	return ctx
