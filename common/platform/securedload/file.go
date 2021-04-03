@@ -1,9 +1,6 @@
 package securedload
 
-import "path/filepath"
-
 func GetAssetSecured(name string) ([]byte, error) {
-	name = filepath.FromSlash(name)
 
 	var err error
 	for k, v := range knownProtectedLoader {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"path/filepath"
 	"strings"
 
 	"github.com/v2fly/VSign/insmgr"
@@ -18,7 +19,8 @@ type EmbeddedHashProtectedLoader struct {
 }
 
 func (e EmbeddedHashProtectedLoader) VerifyAndLoad(filename string) ([]byte, error) {
-	filecontent, err := filesystem.ReadFile(platform.GetAssetLocation(filename))
+	platformFileName := filepath.FromSlash(filename)
+	filecontent, err := filesystem.ReadFile(platform.GetAssetLocation(platformFileName))
 	if err != nil {
 		return nil, newError("Cannot find file", filename).Base(err)
 	}
