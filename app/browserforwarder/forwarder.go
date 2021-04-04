@@ -7,6 +7,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"github.com/v2fly/BrowserBridge/handler"
@@ -79,7 +80,7 @@ func BridgeResource(rw http.ResponseWriter, r *http.Request, path string) {
 	if content == "" {
 		content = "index.html"
 	}
-	data, err := securedload.GetAssetSecured("browserforwarder/" + content)
+	data, err := securedload.GetAssetSecured(filepath.Join("browserforwarder", content))
 	if err != nil {
 		err = newError("cannot load necessary resources").Base(err)
 		http.Error(rw, err.Error(), http.StatusForbidden)

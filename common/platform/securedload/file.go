@@ -1,7 +1,6 @@
 package securedload
 
 func GetAssetSecured(name string) ([]byte, error) {
-
 	var err error
 	for k, v := range knownProtectedLoader {
 		loadedData, errLoad := v.VerifyAndLoad(name)
