@@ -16,7 +16,7 @@ import (
 func CreateObject(v *Instance, config interface{}) (interface{}, error) {
 	var ctx context.Context
 	if v != nil {
-		ctx = ToContext(v.ctx, v)
+		ctx = toContext(v.ctx, v)
 	}
 	return common.CreateObject(ctx, config)
 }
@@ -47,7 +47,7 @@ func StartInstance(configFormat string, configBytes []byte) (*Instance, error) {
 //
 // v2ray:api:stable
 func Dial(ctx context.Context, v *Instance, dest net.Destination) (net.Conn, error) {
-	ctx = ToContext(ctx, v)
+	ctx = toContext(ctx, v)
 
 	dispatcher := v.GetFeature(routing.DispatcherType())
 	if dispatcher == nil {
@@ -74,7 +74,7 @@ func Dial(ctx context.Context, v *Instance, dest net.Destination) (net.Conn, err
 //
 // v2ray:api:beta
 func DialUDP(ctx context.Context, v *Instance) (net.PacketConn, error) {
-	ctx = ToContext(ctx, v)
+	ctx = toContext(ctx, v)
 
 	dispatcher := v.GetFeature(routing.DispatcherType())
 	if dispatcher == nil {
