@@ -74,7 +74,6 @@ func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 	} else {
 		h.ln.addConn(newConnectionWithEarlyData(conn, remoteAddr, earlyData))
 	}
-
 }
 
 type Listener struct {
