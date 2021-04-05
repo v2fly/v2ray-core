@@ -340,7 +340,6 @@ func (s *Instance) Start() error {
 	}
 
 	newError("V2Ray ", Version(), " started").AtWarning().WriteToLog()
-	newError("Starting 2022, non-VMessAEAD connections will be rejected by default.").AtWarning().WriteToLog()
 
 	return nil
 }
