@@ -5,6 +5,10 @@ run:
 
 issues:
   new: true
+  exclude-rules:
+    - linters:
+      - staticcheck
+      text: "SA1019:"
 
 linters:
   enable:
