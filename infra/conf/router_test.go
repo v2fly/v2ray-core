@@ -2,14 +2,55 @@ package conf_test
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
+	_ "unsafe"
 
 	"github.com/golang/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
+	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/platform"
+	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 	. "github.com/v2fly/v2ray-core/v4/infra/conf"
 )
+
+func init() {
+	wd, err := os.Getwd()
+	common.Must(err)
+
+	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && os.IsNotExist(err) {
+		common.Must(filesystem.CopyFile(platform.GetAssetLocation("geoip.dat"), filepath.Join(wd, "..", "..", "release", "config", "geoip.dat")))
+	}
+
+	os.Setenv("v2ray.location.asset", wd)
+}
+
+//go:linkname toCidrList github.com/v2fly/v2ray-core/v4/infra/conf.toCidrList
+func toCidrList(ips StringList) ([]*router.GeoIP, error)
+
+func TestToCidrList(t *testing.T) {
+	t.Log(os.Getenv("v2ray.location.asset"))
+
+	common.Must(filesystem.CopyFile(platform.GetAssetLocation("geoiptestrouter.dat"), "geoip.dat"))
+
+	ips := StringList([]string{
+		"geoip:us",
+		"geoip:cn",
+		"geoip:!cn",
+		"ext:geoiptestrouter.dat:!cn",
+		"ext:geoiptestrouter.dat:ca",
+		"ext-ip:geoiptestrouter.dat:!cn",
+		"ext-ip:geoiptestrouter.dat:!ca",
+	})
+
+	_, err := toCidrList(ips)
+	if err != nil {
+		t.Fatalf("Failed to parse geoip list, got %s", err)
+	}
+}
 
 func TestRouterConfig(t *testing.T) {
 	createParser := func() func(string) (proto.Message, error) {
