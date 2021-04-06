@@ -3,9 +3,9 @@ package core_test
 import (
 	"context"
 	"testing"
+	_ "unsafe"
 
 	. "github.com/v2fly/v2ray-core/v4"
-	_ "unsafe"
 )
 
 func TestFromContextPanic(t *testing.T) {
