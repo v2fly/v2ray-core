@@ -242,6 +242,10 @@ func parseAttrs(attrs []string) *AttributeList {
 	return al
 }
 
+func loadGeosite(list string) ([]*router.Domain, error) {
+	return loadGeositeWithAttr("geosite.dat", list)
+}
+
 func loadGeositeWithAttr(file string, siteWithAttr string) ([]*router.Domain, error) {
 	parts := strings.Split(siteWithAttr, "@")
 	if len(parts) == 0 {
@@ -288,7 +292,7 @@ func parseDomainRule(domain string) ([]*router.Domain, error) {
 		if len(list) == 0 {
 			return nil, newError("empty listname in rule: ", domain)
 		}
-		domains, err := loadGeositeWithAttr("geosite.dat", list)
+		domains, err := loadGeosite(list)
 		if err != nil {
 			return nil, newError("failed to load geosite: ", list).Base(err)
 		}

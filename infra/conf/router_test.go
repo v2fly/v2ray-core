@@ -2,6 +2,7 @@ package conf_test
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -21,11 +22,19 @@ func init() {
 	wd, err := os.Getwd()
 	common.Must(err)
 
-	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && os.IsNotExist(err) {
-		common.Must(filesystem.CopyFile(platform.GetAssetLocation("geoip.dat"), filepath.Join(wd, "..", "..", "release", "config", "geoip.dat")))
-	}
+	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
+	geoipPath := filepath.Join(tempPath, "geoip.dat")
 
-	os.Setenv("v2ray.location.asset", wd)
+	os.Setenv("v2ray.location.asset", tempPath)
+
+	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, os.ErrNotExist) {
+			common.Must(os.MkdirAll(tempPath, 0755))
+			geoipBytes, err := common.FetchHTTPContent(geoipURL)
+			common.Must(err)
+			common.Must(filesystem.WriteFile(geoipPath, geoipBytes))
+		}
+	}
 }
 
 //go:linkname toCidrList github.com/v2fly/v2ray-core/v4/infra/conf.toCidrList
@@ -34,7 +43,7 @@ func toCidrList(ips StringList) ([]*router.GeoIP, error)
 func TestToCidrList(t *testing.T) {
 	t.Log(os.Getenv("v2ray.location.asset"))
 
-	common.Must(filesystem.CopyFile(platform.GetAssetLocation("geoiptestrouter.dat"), "geoip.dat"))
+	common.Must(filesystem.CopyFile(platform.GetAssetLocation("geoiptestrouter.dat"), platform.GetAssetLocation("geoip.dat")))
 
 	ips := StringList([]string{
 		"geoip:us",

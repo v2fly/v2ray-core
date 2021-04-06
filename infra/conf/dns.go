@@ -197,7 +197,7 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 				if len(listName) == 0 {
 					return nil, newError("empty geosite rule: ", domain)
 				}
-				domains, err := loadGeositeWithAttr("geosite.dat", listName)
+				domains, err := loadGeosite(listName)
 				if err != nil {
 					return nil, newError("failed to load geosite: ", listName).Base(err)
 				}

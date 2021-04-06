@@ -2,61 +2,54 @@ package conf_test
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	"github.com/v2fly/v2ray-core/v4/app/dns"
-	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/platform"
 	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
-	. "github.com/v2fly/v2ray-core/v4/infra/conf"
+	"github.com/v2fly/v2ray-core/v4/infra/conf"
 )
 
 func init() {
 	wd, err := os.Getwd()
 	common.Must(err)
 
-	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && os.IsNotExist(err) {
-		common.Must(filesystem.CopyFile(platform.GetAssetLocation("geoip.dat"), filepath.Join(wd, "..", "..", "release", "config", "geoip.dat")))
+	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
+	geoipPath := filepath.Join(tempPath, "geoip.dat")
+	geositePath := filepath.Join(tempPath, "geosite.dat")
+
+	os.Setenv("v2ray.location.asset", tempPath)
+
+	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, os.ErrNotExist) {
+			common.Must(os.MkdirAll(tempPath, 0755))
+			geoipBytes, err := common.FetchHTTPContent(geoipURL)
+			common.Must(err)
+			common.Must(filesystem.WriteFile(geoipPath, geoipBytes))
+		}
 	}
 
-	geositeFilePath := filepath.Join(wd, "geosite.dat")
-	os.Setenv("v2ray.location.asset", wd)
-	geositeFile, err := os.OpenFile(geositeFilePath, os.O_CREATE|os.O_WRONLY, 0600)
-	common.Must(err)
-	defer geositeFile.Close()
-
-	list := &router.GeoSiteList{
-		Entry: []*router.GeoSite{
-			{
-				CountryCode: "TEST",
-				Domain: []*router.Domain{
-					{Type: router.Domain_Full, Value: "example.com"},
-				},
-			},
-		},
+	if _, err := os.Stat(platform.GetAssetLocation("geosite.dat")); err != nil && errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat(geositePath); err != nil && errors.Is(err, os.ErrNotExist) {
+			common.Must(os.MkdirAll(tempPath, 0755))
+			geositeBytes, err := common.FetchHTTPContent(geositeURL)
+			common.Must(err)
+			common.Must(filesystem.WriteFile(geositePath, geositeBytes))
+		}
 	}
-
-	listBytes, err := proto.Marshal(list)
-	common.Must(err)
-	common.Must2(geositeFile.Write(listBytes))
 }
 
 func TestDNSConfigParsing(t *testing.T) {
-	geositePath := platform.GetAssetLocation("geosite.dat")
-	defer func() {
-		os.Remove(geositePath)
-		os.Unsetenv("v2ray.location.asset")
-	}()
-
-	parserCreator := func() func(string) (proto.Message, error) {
-		return func(s string) (proto.Message, error) {
-			config := new(DNSConfig)
+	parserCreator := func() func(string) (protoiface.MessageV1, error) {
+		return func(s string) (protoiface.MessageV1, error) {
+			config := new(conf.DNSConfig)
 			if err := json.Unmarshal([]byte(s), config); err != nil {
 				return nil, err
 			}
@@ -120,7 +113,7 @@ func TestDNSConfigParsing(t *testing.T) {
 					},
 					{
 						Type:   dns.DomainMatchingType_Full,
-						Domain: "example.com",
+						Domain: "test.example.com",
 						Ip:     [][]byte{{10, 0, 0, 1}},
 					},
 					{

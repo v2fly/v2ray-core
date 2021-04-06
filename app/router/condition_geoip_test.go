@@ -1,11 +1,13 @@
 package router_test
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/common"
@@ -18,11 +20,18 @@ func init() {
 	wd, err := os.Getwd()
 	common.Must(err)
 
-	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && os.IsNotExist(err) {
-		common.Must(filesystem.CopyFile(platform.GetAssetLocation("geoip.dat"), filepath.Join(wd, "..", "..", "release", "config", "geoip.dat")))
-	}
-	if _, err := os.Stat(platform.GetAssetLocation("geosite.dat")); err != nil && os.IsNotExist(err) {
-		common.Must(filesystem.CopyFile(platform.GetAssetLocation("geosite.dat"), filepath.Join(wd, "..", "..", "release", "config", "geosite.dat")))
+	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
+	geoipPath := filepath.Join(tempPath, "geoip.dat")
+
+	os.Setenv("v2ray.location.asset", tempPath)
+
+	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && errors.Is(err, os.ErrNotExist) {
+		if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, os.ErrNotExist) {
+			common.Must(os.MkdirAll(tempPath, 0755))
+			geoipBytes, err := common.FetchHTTPContent(geoipURL)
+			common.Must(err)
+			common.Must(filesystem.WriteFile(geoipPath, geoipBytes))
+		}
 	}
 }
 
@@ -195,7 +204,7 @@ func loadGeoIP(country string) ([]*router.CIDR, error) {
 	}
 
 	for _, geoip := range geoipList.Entry {
-		if geoip.CountryCode == country {
+		if strings.EqualFold(geoip.CountryCode, country) {
 			return geoip.Cidr, nil
 		}
 	}
