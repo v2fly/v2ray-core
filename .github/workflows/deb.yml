@@ -5,6 +5,10 @@ on:
     branches:
       - master
       - v*
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - ".github/workflows/deb.yml"
   release:
     types: [prereleased]
 
@@ -18,7 +22,7 @@ jobs:
       - name: Install git
         run: |
           apt-get update
-          apt-get install -y git
+          apt-get install -y git wget
 
       - name: Checkout codebase
         uses: actions/checkout@v2
