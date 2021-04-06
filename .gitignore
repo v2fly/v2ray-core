@@ -25,4 +25,4 @@ vprotogen
 !infra/vprotogen/
 errorgen
 !common/errors/errorgen/
-infra/conf/*.dat
+*.dat

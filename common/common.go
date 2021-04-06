@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"go/build"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/v2fly/v2ray-core/v4/common/errors"
 )
@@ -122,4 +125,40 @@ func GetGOPATH() string {
 		return GOPATH
 	}
 	return GOPATH
+}
+
+// FetchHTTPContent dials http(s) for remote content
+func FetchHTTPContent(target string) ([]byte, error) {
+	parsedTarget, err := url.Parse(target)
+	if err != nil {
+		return nil, newError("invalid URL: ", target).Base(err)
+	}
+
+	if s := strings.ToLower(parsedTarget.Scheme); s != "http" && s != "https" {
+		return nil, newError("invalid scheme: ", parsedTarget.Scheme)
+	}
+
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+	resp, err := client.Do(&http.Request{
+		Method: "GET",
+		URL:    parsedTarget,
+		Close:  true,
+	})
+	if err != nil {
+		return nil, newError("failed to dial to ", target).Base(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, newError("unexpected HTTP status code: ", resp.StatusCode)
+	}
+
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, newError("failed to read HTTP response").Base(err)
+	}
+
+	return content, nil
 }
