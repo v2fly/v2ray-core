@@ -25,6 +25,11 @@ jobs:
         with:
           submodules: "recursive"
 
+      - name: Download geo files
+        run: |
+          wget -O release/config/geoip.dat "https://raw.githubusercontent.com/v2fly/geoip/release/geoip.dat"
+          wget -O release/config/geosite.dat "https://raw.githubusercontent.com/v2fly/domain-list-community/release/dlc.dat"
+
       - name: Install build dependencies
         run: |
           apt-get install -y build-essential dh-golang golang-any reprepro
