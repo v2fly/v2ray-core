@@ -6,9 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
-
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/dispatcher"
 	"github.com/v2fly/v2ray-core/v4/app/proxyman"
@@ -356,6 +353,7 @@ type Config struct {
 	Reverse          *ReverseConfig          `json:"reverse"`
 	FakeDNS          *FakeDNSConfig          `json:"fakeDns"`
 	BrowserForwarder *BrowserForwarderConfig `json:"browserForwarder"`
+	Observatory      *ObservatoryConfig      `json:"observatory"`
 
 	Services map[string]*json.RawMessage `json:"services"`
 }
@@ -572,6 +570,14 @@ func (c *Config) Build() (*core.Config, error) {
 		config.App = append(config.App, serial.ToTypedMessage(r))
 	}
 
+	if c.Observatory != nil {
+		r, err := c.Observatory.Build()
+		if err != nil {
+			return nil, err
+		}
+		config.App = append(config.App, serial.ToTypedMessage(r))
+	}
+
 	//Load Additional Services that do not have a json translator
 
 	if msg, err := c.BuildServices(c.Services); err != nil {
@@ -579,14 +585,6 @@ func (c *Config) Build() (*core.Config, error) {
 			"This is used for developers to prototype new features or for an advanced client to use special features in V2Ray," +
 			" instead of allowing end user to enable it without special tool and knowledge.")
 		sb := strings.Builder{}
-		protoregistry.GlobalTypes.RangeMessages(func(messageType protoreflect.MessageType) bool {
-			switch d := messageType.Descriptor().(type) {
-			case protoreflect.MessageDescriptor:
-				sb.WriteString(string(d.FullName()))
-				sb.WriteString("\n")
-			}
-			return true
-		})
 		return nil, newError("Cannot load service").Base(developererr).Base(err).Base(newError(sb.String()))
 	} else {
 		config.App = append(config.App, msg...)

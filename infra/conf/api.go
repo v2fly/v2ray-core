@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"github.com/v2fly/v2ray-core/v4/app/observatory"
 	"strings"
 
 	"github.com/jhump/protoreflect/desc"
@@ -34,6 +35,8 @@ func (c *APIConfig) Build() (*commander.Config, error) {
 			services = append(services, serial.ToTypedMessage(&loggerservice.Config{}))
 		case "statsservice":
 			services = append(services, serial.ToTypedMessage(&statsservice.Config{}))
+		case "observatoryservice":
+			services = append(services, serial.ToTypedMessage(&observatory.Config{}))
 		default:
 			if !strings.HasPrefix(s, "#") {
 				continue
