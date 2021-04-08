@@ -3,7 +3,10 @@
 package router
 
 import (
+	"context"
+
 	"github.com/v2fly/v2ray-core/v4/common/dice"
+	"github.com/v2fly/v2ray-core/v4/features/extension"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
 )
 
@@ -43,4 +46,9 @@ func (b *Balancer) PickOutbound() (string, error) {
 		return "", newError("balancing strategy returns empty tag")
 	}
 	return tag, nil
+}
+func (b *Balancer) InjectContext(ctx context.Context) {
+	if contextReceiver, ok := b.strategy.(extension.ContextReceiver); ok {
+		contextReceiver.InjectContext(ctx)
+	}
 }

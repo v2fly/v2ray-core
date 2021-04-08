@@ -31,7 +31,7 @@ type Route struct {
 }
 
 // Init initializes the Router.
-func (r *Router) Init(config *Config, d dns.Client, ohm outbound.Manager) error {
+func (r *Router) Init(ctx context.Context, config *Config, d dns.Client, ohm outbound.Manager) error {
 	r.domainStrategy = config.DomainStrategy
 	r.dns = d
 
@@ -142,7 +142,7 @@ func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		r := new(Router)
 		if err := core.RequireFeatures(ctx, func(d dns.Client, ohm outbound.Manager) error {
-			return r.Init(config.(*Config), d, ohm)
+			return r.Init(ctx, config.(*Config), d, ohm)
 		}); err != nil {
 			return nil, err
 		}
