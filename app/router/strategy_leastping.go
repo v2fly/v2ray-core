@@ -2,10 +2,10 @@ package router
 
 import (
 	"context"
-
 	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/observatory"
 	"github.com/v2fly/v2ray-core/v4/common"
+
+	"github.com/v2fly/v2ray-core/v4/app/observatory"
 	"github.com/v2fly/v2ray-core/v4/features/extension"
 )
 
@@ -15,14 +15,17 @@ type LeastPingStrategy struct {
 }
 
 func (l *LeastPingStrategy) InjectContext(ctx context.Context) {
-	common.Must(core.RequireFeatures(ctx, func(observatory extension.Observatory) error {
-		l.observatory = observatory
-		return nil
-	}))
 	l.ctx = ctx
 }
 
 func (l *LeastPingStrategy) PickOutbound(strings []string) string {
+	if l.observatory == nil {
+		common.Must(core.RequireFeatures(l.ctx, func(observatory extension.Observatory) error {
+			l.observatory = observatory
+			return nil
+		}))
+	}
+
 	observeReport, err := l.observatory.GetObservation(l.ctx)
 	if err != nil {
 		newError("cannot get observe report").Base(err).WriteToLog()

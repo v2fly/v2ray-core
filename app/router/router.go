@@ -6,7 +6,6 @@ package router
 
 import (
 	"context"
-
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/features/dns"
@@ -41,6 +40,7 @@ func (r *Router) Init(ctx context.Context, config *Config, d dns.Client, ohm out
 		if err != nil {
 			return err
 		}
+		balancer.InjectContext(ctx)
 		r.balancers[rule.Tag] = balancer
 	}
 
