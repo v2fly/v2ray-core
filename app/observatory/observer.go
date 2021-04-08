@@ -4,7 +4,14 @@ package observatory
 
 import (
 	"context"
+	"net"
+	"net/http"
+	"net/url"
+	"sync"
+	"time"
+
 	"github.com/golang/protobuf/proto"
+
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
 	v2net "github.com/v2fly/v2ray-core/v4/common/net"
@@ -14,11 +21,6 @@ import (
 	"github.com/v2fly/v2ray-core/v4/features/extension"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/tagged"
-	"net"
-	"net/http"
-	"net/url"
-	"sync"
-	"time"
 )
 
 type Observer struct {

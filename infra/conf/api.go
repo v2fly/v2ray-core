@@ -1,9 +1,10 @@
 package conf
 
 import (
+	"strings"
+
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
-	"strings"
 
 	"github.com/v2fly/v2ray-core/v4/app/commander"
 	loggerservice "github.com/v2fly/v2ray-core/v4/app/log/command"

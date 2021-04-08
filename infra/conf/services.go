@@ -2,9 +2,11 @@ package conf
 
 import (
 	"encoding/json"
+
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
+
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 )
 
