@@ -172,7 +172,7 @@ func (s *DNS) LookupIP(domain string) ([]net.IP, error) {
 	return s.lookupIPInternal(domain, dns.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: true,
-		FakeEnable: false,
+		FakeEnable: s.ipOption.FakeEnable,
 	})
 }
 
@@ -181,7 +181,7 @@ func (s *DNS) LookupIPv4(domain string) ([]net.IP, error) {
 	return s.lookupIPInternal(domain, dns.IPOption{
 		IPv4Enable: true,
 		IPv6Enable: false,
-		FakeEnable: false,
+		FakeEnable: s.ipOption.FakeEnable,
 	})
 }
 
@@ -190,7 +190,7 @@ func (s *DNS) LookupIPv6(domain string) ([]net.IP, error) {
 	return s.lookupIPInternal(domain, dns.IPOption{
 		IPv4Enable: false,
 		IPv6Enable: true,
-		FakeEnable: false,
+		FakeEnable: s.ipOption.FakeEnable,
 	})
 }
 
