@@ -69,9 +69,10 @@ func TestDNSConfigParsing(t *testing.T) {
 				}],
 				"hosts": {
 					"v2fly.org": "127.0.0.1",
+					"www.v2fly.org": ["1.2.3.4", "5.6.7.8"],
 					"domain:example.com": "google.com",
-					"geosite:test": "10.0.0.1",
-					"keyword:google": "8.8.8.8",
+					"geosite:test": ["127.0.0.1", "127.0.0.2"],
+					"keyword:google": ["8.8.8.8", "8.8.4.4"],
 					"regexp:.*\\.com": "8.8.4.4"
 				},
 				"clientIp": "10.0.0.1",
@@ -117,12 +118,12 @@ func TestDNSConfigParsing(t *testing.T) {
 					{
 						Type:   dns.DomainMatchingType_Full,
 						Domain: "test.example.com",
-						Ip:     [][]byte{{10, 0, 0, 1}},
+						Ip:     [][]byte{{127, 0, 0, 1}, {127, 0, 0, 2}},
 					},
 					{
 						Type:   dns.DomainMatchingType_Keyword,
 						Domain: "google",
-						Ip:     [][]byte{{8, 8, 8, 8}},
+						Ip:     [][]byte{{8, 8, 8, 8}, {8, 8, 4, 4}},
 					},
 					{
 						Type:   dns.DomainMatchingType_Regex,
@@ -133,6 +134,11 @@ func TestDNSConfigParsing(t *testing.T) {
 						Type:   dns.DomainMatchingType_Full,
 						Domain: "v2fly.org",
 						Ip:     [][]byte{{127, 0, 0, 1}},
+					},
+					{
+						Type:   dns.DomainMatchingType_Full,
+						Domain: "www.v2fly.org",
+						Ip:     [][]byte{{1, 2, 3, 4}, {5, 6, 7, 8}},
 					},
 				},
 				ClientIp:        []byte{10, 0, 0, 1},
