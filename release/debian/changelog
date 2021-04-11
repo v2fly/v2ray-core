@@ -1,3 +1,10 @@
+v2ray-core (4.37.2-1) unstable; urgency=medium
+
+  * Cumulative updates. See Github release page.
+
+  -- V2Fly <dev@v2fly.org>  Sun, 11 Apr 2021 22:00:51 +0800
+
+
 v2ray-core (4.34.0-1) unstable; urgency=medium
 
   * TLS Session Resumption is now disabled by default (#569).
