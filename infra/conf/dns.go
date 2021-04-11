@@ -124,13 +124,13 @@ var typeMap = map[router.Domain_Type]dns.DomainMatchingType{
 
 // DNSConfig is a JSON serializable object for dns.Config.
 type DNSConfig struct {
-	Servers         []*NameServerConfig `json:"servers"`
-	Hosts           *HostsWrapper       `json:"hosts"`
-	ClientIP        *Address            `json:"clientIp"`
-	Tag             string              `json:"tag"`
-	QueryStrategy   string              `json:"queryStrategy"`
-	DisableCache    bool                `json:"disableCache"`
-	DisableFallback bool                `json:"disableFallback"`
+	Servers         []*NameServerConfig     `json:"servers"`
+	Hosts           map[string]*HostAddress `json:"hosts"`
+	ClientIP        *Address                `json:"clientIp"`
+	Tag             string                  `json:"tag"`
+	QueryStrategy   string                  `json:"queryStrategy"`
+	DisableCache    bool                    `json:"disableCache"`
+	DisableFallback bool                    `json:"disableFallback"`
 }
 
 type HostAddress struct {
@@ -151,10 +151,6 @@ func (h *HostAddress) UnmarshalJSON(data []byte) error {
 		return newError("invalid address")
 	}
 	return nil
-}
-
-type HostsWrapper struct {
-	Hosts map[string]*HostAddress
 }
 
 func getHostMapping(ha *HostAddress) *dns.Config_HostMapping {
@@ -181,126 +177,6 @@ func getHostMapping(ha *HostAddress) *dns.Config_HostMapping {
 	return &dns.Config_HostMapping{
 		Ip: ips,
 	}
-}
-
-// UnmarshalJSON implements encoding/json.Unmarshaler.UnmarshalJSON
-func (m *HostsWrapper) UnmarshalJSON(data []byte) error {
-	hosts := make(map[string]*HostAddress)
-	err := json.Unmarshal(data, &hosts)
-	if err == nil {
-		m.Hosts = hosts
-		return nil
-	}
-	return newError("invalid DNS hosts").Base(err)
-}
-
-// Build implements Buildable
-func (m *HostsWrapper) Build() ([]*dns.Config_HostMapping, error) {
-	mappings := make([]*dns.Config_HostMapping, 0, 20)
-
-	domains := make([]string, 0, len(m.Hosts))
-	for domain := range m.Hosts {
-		domains = append(domains, domain)
-	}
-	sort.Strings(domains)
-
-	for _, domain := range domains {
-		switch {
-		case strings.HasPrefix(domain, "domain:"):
-			domainName := domain[7:]
-			if len(domainName) == 0 {
-				return nil, newError("empty domain type of rule: ", domain)
-			}
-			mapping := getHostMapping(m.Hosts[domain])
-			mapping.Type = dns.DomainMatchingType_Subdomain
-			mapping.Domain = domainName
-			mappings = append(mappings, mapping)
-
-		case strings.HasPrefix(domain, "geosite:"):
-			listName := domain[8:]
-			if len(listName) == 0 {
-				return nil, newError("empty geosite rule: ", domain)
-			}
-			geositeList, err := loadGeosite(listName)
-			if err != nil {
-				return nil, newError("failed to load geosite: ", listName).Base(err)
-			}
-			for _, d := range geositeList {
-				mapping := getHostMapping(m.Hosts[domain])
-				mapping.Type = typeMap[d.Type]
-				mapping.Domain = d.Value
-				mappings = append(mappings, mapping)
-			}
-
-		case strings.HasPrefix(domain, "regexp:"):
-			regexpVal := domain[7:]
-			if len(regexpVal) == 0 {
-				return nil, newError("empty regexp type of rule: ", domain)
-			}
-			mapping := getHostMapping(m.Hosts[domain])
-			mapping.Type = dns.DomainMatchingType_Regex
-			mapping.Domain = regexpVal
-			mappings = append(mappings, mapping)
-
-		case strings.HasPrefix(domain, "keyword:"):
-			keywordVal := domain[8:]
-			if len(keywordVal) == 0 {
-				return nil, newError("empty keyword type of rule: ", domain)
-			}
-			mapping := getHostMapping(m.Hosts[domain])
-			mapping.Type = dns.DomainMatchingType_Keyword
-			mapping.Domain = keywordVal
-			mappings = append(mappings, mapping)
-
-		case strings.HasPrefix(domain, "full:"):
-			fullVal := domain[5:]
-			if len(fullVal) == 0 {
-				return nil, newError("empty full domain type of rule: ", domain)
-			}
-			mapping := getHostMapping(m.Hosts[domain])
-			mapping.Type = dns.DomainMatchingType_Full
-			mapping.Domain = fullVal
-			mappings = append(mappings, mapping)
-
-		case strings.HasPrefix(domain, "dotless:"):
-			mapping := getHostMapping(m.Hosts[domain])
-			mapping.Type = dns.DomainMatchingType_Regex
-			switch substr := domain[8:]; {
-			case substr == "":
-				mapping.Domain = "^[^.]*$"
-			case !strings.Contains(substr, "."):
-				mapping.Domain = "^[^.]*" + substr + "[^.]*$"
-			default:
-				return nil, newError("substr in dotless rule should not contain a dot: ", substr)
-			}
-			mappings = append(mappings, mapping)
-
-		case strings.HasPrefix(domain, "ext:"):
-			kv := strings.Split(domain[4:], ":")
-			if len(kv) != 2 {
-				return nil, newError("invalid external resource: ", domain)
-			}
-			filename := kv[0]
-			list := kv[1]
-			geositeList, err := loadGeositeWithAttr(filename, list)
-			if err != nil {
-				return nil, newError("failed to load domain list: ", list, " from ", filename).Base(err)
-			}
-			for _, d := range geositeList {
-				mapping := getHostMapping(m.Hosts[domain])
-				mapping.Type = typeMap[d.Type]
-				mapping.Domain = d.Value
-				mappings = append(mappings, mapping)
-			}
-
-		default:
-			mapping := getHostMapping(m.Hosts[domain])
-			mapping.Type = dns.DomainMatchingType_Full
-			mapping.Domain = domain
-			mappings = append(mappings, mapping)
-		}
-	}
-	return mappings, nil
 }
 
 // Build implements Buildable
@@ -337,11 +213,112 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 	}
 
 	if c.Hosts != nil {
-		staticHosts, err := c.Hosts.Build()
-		if err != nil {
-			return nil, newError("failed to build hosts").Base(err)
+		mappings := make([]*dns.Config_HostMapping, 0, 20)
+
+		domains := make([]string, 0, len(c.Hosts))
+		for domain := range c.Hosts {
+			domains = append(domains, domain)
 		}
-		config.StaticHosts = append(config.StaticHosts, staticHosts...)
+		sort.Strings(domains)
+
+		for _, domain := range domains {
+			switch {
+			case strings.HasPrefix(domain, "domain:"):
+				domainName := domain[7:]
+				if len(domainName) == 0 {
+					return nil, newError("empty domain type of rule: ", domain)
+				}
+				mapping := getHostMapping(c.Hosts[domain])
+				mapping.Type = dns.DomainMatchingType_Subdomain
+				mapping.Domain = domainName
+				mappings = append(mappings, mapping)
+
+			case strings.HasPrefix(domain, "geosite:"):
+				listName := domain[8:]
+				if len(listName) == 0 {
+					return nil, newError("empty geosite rule: ", domain)
+				}
+				geositeList, err := loadGeosite(listName)
+				if err != nil {
+					return nil, newError("failed to load geosite: ", listName).Base(err)
+				}
+				for _, d := range geositeList {
+					mapping := getHostMapping(c.Hosts[domain])
+					mapping.Type = typeMap[d.Type]
+					mapping.Domain = d.Value
+					mappings = append(mappings, mapping)
+				}
+
+			case strings.HasPrefix(domain, "regexp:"):
+				regexpVal := domain[7:]
+				if len(regexpVal) == 0 {
+					return nil, newError("empty regexp type of rule: ", domain)
+				}
+				mapping := getHostMapping(c.Hosts[domain])
+				mapping.Type = dns.DomainMatchingType_Regex
+				mapping.Domain = regexpVal
+				mappings = append(mappings, mapping)
+
+			case strings.HasPrefix(domain, "keyword:"):
+				keywordVal := domain[8:]
+				if len(keywordVal) == 0 {
+					return nil, newError("empty keyword type of rule: ", domain)
+				}
+				mapping := getHostMapping(c.Hosts[domain])
+				mapping.Type = dns.DomainMatchingType_Keyword
+				mapping.Domain = keywordVal
+				mappings = append(mappings, mapping)
+
+			case strings.HasPrefix(domain, "full:"):
+				fullVal := domain[5:]
+				if len(fullVal) == 0 {
+					return nil, newError("empty full domain type of rule: ", domain)
+				}
+				mapping := getHostMapping(c.Hosts[domain])
+				mapping.Type = dns.DomainMatchingType_Full
+				mapping.Domain = fullVal
+				mappings = append(mappings, mapping)
+
+			case strings.HasPrefix(domain, "dotless:"):
+				mapping := getHostMapping(c.Hosts[domain])
+				mapping.Type = dns.DomainMatchingType_Regex
+				switch substr := domain[8:]; {
+				case substr == "":
+					mapping.Domain = "^[^.]*$"
+				case !strings.Contains(substr, "."):
+					mapping.Domain = "^[^.]*" + substr + "[^.]*$"
+				default:
+					return nil, newError("substr in dotless rule should not contain a dot: ", substr)
+				}
+				mappings = append(mappings, mapping)
+
+			case strings.HasPrefix(domain, "ext:"):
+				kv := strings.Split(domain[4:], ":")
+				if len(kv) != 2 {
+					return nil, newError("invalid external resource: ", domain)
+				}
+				filename := kv[0]
+				list := kv[1]
+				geositeList, err := loadGeositeWithAttr(filename, list)
+				if err != nil {
+					return nil, newError("failed to load domain list: ", list, " from ", filename).Base(err)
+				}
+				for _, d := range geositeList {
+					mapping := getHostMapping(c.Hosts[domain])
+					mapping.Type = typeMap[d.Type]
+					mapping.Domain = d.Value
+					mappings = append(mappings, mapping)
+				}
+
+			default:
+				mapping := getHostMapping(c.Hosts[domain])
+				mapping.Type = dns.DomainMatchingType_Full
+				mapping.Domain = domain
+				mappings = append(mappings, mapping)
+			}
+		}
+
+		config.StaticHosts = append(config.StaticHosts, mappings...)
 	}
 
 	return config, nil
