@@ -1,9 +1,13 @@
 v2ray-core (4.37.2-1) unstable; urgency=medium
 
-  * Cumulative updates. See Github release page.
+  * Websocket: support browser forwarder (#818)
+  * Websocket: support Websocket 0-RTT early data (#818)
+  * Shadowsocks: add replay protection for Shadowsocks proxy (#777)
+  * DNS: add queryStrategy option for DNS (#794)
+  * DNS: add disableFallback & skipFallback option for DNS client (#864)
+  * GeoIP: add inversed GeoIP matching (#860)
 
-  -- V2Fly <dev@v2fly.org>  Sun, 11 Apr 2021 22:00:51 +0800
-
+ -- V2Fly <dev@v2fly.org>  Sun, 11 Apr 2021 22:00:51 +0800
 
 v2ray-core (4.34.0-1) unstable; urgency=medium
 
