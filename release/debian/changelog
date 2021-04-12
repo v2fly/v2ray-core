@@ -1,3 +1,11 @@
+v2ray-core (4.37.3-1) unstable; urgency=medium
+
+  * DNS: hosts support multiple addresses (#884 #886 #888)
+  * Fix: cannot load geoip & geosite (#889)
+  * Chore: use Go v1.16 to build Debian package (#890)
+
+ -- V2Fly <dev@v2fly.org>  Mon, 12 Apr 2021 23:05:51 +0800
+
 v2ray-core (4.37.2-1) unstable; urgency=medium
 
   * Websocket: support browser forwarder (#818)

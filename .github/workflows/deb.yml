@@ -9,6 +9,7 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - ".github/workflows/deb.yml"
+      - "release/debian/*"
   release:
     types: [prereleased]
 
