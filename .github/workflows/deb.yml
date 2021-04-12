@@ -36,12 +36,17 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          apt-get install -y build-essential dh-golang golang-any reprepro
+          apt-get install -y build-essential dh-golang golang-1.16 reprepro
+
+      - name: Set environment variable
+        run: |
+          echo "PATH=/usr/lib/go-1.16/bin:${PATH}" >> $GITHUB_ENV
 
       - name: Build
         run: |
+          echo "PATH=${PATH}"
           cp -r release/debian .
-          dpkg-buildpackage -us -uc -i -b
+          dpkg-buildpackage -us -uc -i -b -d
 
       - name: Copy binary
         run: |
