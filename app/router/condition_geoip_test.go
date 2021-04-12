@@ -2,6 +2,7 @@ package router_test
 
 import (
 	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,8 +26,8 @@ func init() {
 
 	os.Setenv("v2ray.location.asset", tempPath)
 
-	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && errors.Is(err, os.ErrNotExist) {
-		if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && errors.Is(err, fs.ErrNotExist) {
+		if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, fs.ErrNotExist) {
 			common.Must(os.MkdirAll(tempPath, 0755))
 			geoipBytes, err := common.FetchHTTPContent(geoipURL)
 			common.Must(err)
