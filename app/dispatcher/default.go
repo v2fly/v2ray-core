@@ -186,6 +186,11 @@ func shouldOverride(result SniffResult, domainOverride []string) bool {
 		if strings.HasPrefix(protocolString, p) {
 			return true
 		}
+		if resultSubset, ok := result.(SnifferIsProtoSubsetOf); ok {
+			if resultSubset.IsProtoSubsetOf(p) {
+				return true
+			}
+		}
 	}
 	return false
 }
