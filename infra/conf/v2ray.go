@@ -588,7 +588,7 @@ func (c *Config) Build() (*core.Config, error) {
 			" instead of allowing end user to enable it without special tool and knowledge.")
 		sb := strings.Builder{}
 		return nil, newError("Cannot load service").Base(developererr).Base(err).Base(newError(sb.String()))
-	} else {
+	} else { // nolint: golint
 		// Using a else here is required to keep msg in scope
 		config.App = append(config.App, msg...)
 	}
