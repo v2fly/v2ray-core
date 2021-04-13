@@ -73,14 +73,14 @@ func (o *Observer) background() {
 			}
 			time.Sleep(time.Second * 10)
 		}
-
 	}
 }
 
 func (o *Observer) updateStatus(outbounds []string) {
 	o.statusLock.Lock()
 	defer o.statusLock.Unlock()
-	//TODO should remove old inbound that is removed
+	// TODO should remove old inbound that is removed
+	_ = outbounds
 }
 
 func (o *Observer) probe(outbound string) ProbeResult {
@@ -93,7 +93,7 @@ func (o *Observer) probe(outbound string) ProbeResult {
 		DialContext: func(ctx context.Context, network string, addr string) (net.Conn, error) {
 			var connection net.Conn
 			taskErr := task.Run(ctx, func() error {
-				//MUST use V2Fly's built in context system
+				// MUST use V2Fly's built in context system
 				dest, err := v2net.ParseDestination(network + ":" + addr)
 				if err != nil {
 					return newError("cannot understand address").Base(err)
@@ -111,7 +111,7 @@ func (o *Observer) probe(outbound string) ProbeResult {
 			}
 			return connection, nil
 		},
-		TLSHandshakeTimeout: time.Duration(time.Second * 5),
+		TLSHandshakeTimeout: time.Second * 5,
 	}
 	httpClient := &http.Client{
 		Transport: &httpTransport,
@@ -119,7 +119,7 @@ func (o *Observer) probe(outbound string) ProbeResult {
 			return http.ErrUseLastResponse
 		},
 		Jar:     nil,
-		Timeout: time.Duration(time.Second * 5),
+		Timeout: time.Second * 5,
 	}
 	var GETTime time.Duration
 	err := task.Run(o.ctx, func() error {

@@ -580,7 +580,7 @@ func (c *Config) Build() (*core.Config, error) {
 		config.App = append(config.App, serial.ToTypedMessage(r))
 	}
 
-	//Load Additional Services that do not have a json translator
+	// Load Additional Services that do not have a json translator
 
 	if msg, err := c.BuildServices(c.Services); err != nil {
 		developererr := newError("Loading a V2Ray Features as a service is intended for developers only. " +
