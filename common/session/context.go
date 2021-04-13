@@ -13,6 +13,7 @@ const (
 	contentSessionKey
 	muxPreferedSessionKey
 	sockoptSessionKey
+	trackedConnectionErrorKey
 )
 
 // ContextWithID returns a new context with the given ID.
@@ -115,4 +116,19 @@ func SetForcedOutboundTagToContext(ctx context.Context, tag string) context.Cont
 	}
 	ContentFromContext(ctx).SetAttribute("forcedOutboundTag", tag)
 	return ctx
+}
+
+type TrackedRequestErrorFeedback interface {
+	SubmitError(err error)
+}
+
+func SubmitOutboundErrorToOriginator(ctx context.Context, err error) {
+	if errorTracker := ctx.Value(trackedConnectionErrorKey); errorTracker != nil {
+		errorTracker := errorTracker.(TrackedRequestErrorFeedback)
+		errorTracker.SubmitError(err)
+	}
+}
+
+func TrackedConnectionError(ctx context.Context, tracker TrackedRequestErrorFeedback) context.Context {
+	return context.WithValue(ctx, trackedConnectionErrorKey, tracker)
 }
