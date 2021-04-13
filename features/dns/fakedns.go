@@ -12,6 +12,7 @@ type FakeDNSEngine interface {
 }
 
 type FakeDNSEngineRev0 interface {
+	FakeDNSEngine
 	IsIPInIPPool(ip net.Address) bool
 	GetFakeIPForDomain3(domain string, IPv4, IPv6 bool) []net.Address
 }
