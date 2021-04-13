@@ -98,7 +98,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.16.2
+          go-version: ^1.16.3
 
       - name: Get project dependencies
         run: go mod download
@@ -107,6 +107,11 @@ jobs:
         run: |
           mkdir -p build_assets
           go build -v -o build_assets/v2ray -trimpath -ldflags "-s -w -buildid=" ./main
+
+      - name: Download geo files
+        run: |
+          wget -O release/config/geoip.dat "https://raw.githubusercontent.com/v2fly/geoip/release/geoip.dat"
+          wget -O release/config/geosite.dat "https://raw.githubusercontent.com/v2fly/domain-list-community/release/dlc.dat"
 
       - name: Prepare package
         run: cp -v ./release/config/*.* ./build_assets
@@ -154,7 +159,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.16.2
+          go-version: ^1.16.3
 
       - uses: actions/download-artifact@v2
         with:

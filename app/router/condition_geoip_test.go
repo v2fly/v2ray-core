@@ -1,8 +1,11 @@
 package router_test
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"google.golang.org/protobuf/proto"
@@ -18,11 +21,18 @@ func init() {
 	wd, err := os.Getwd()
 	common.Must(err)
 
-	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && os.IsNotExist(err) {
-		common.Must(filesystem.CopyFile(platform.GetAssetLocation("geoip.dat"), filepath.Join(wd, "..", "..", "release", "config", "geoip.dat")))
-	}
-	if _, err := os.Stat(platform.GetAssetLocation("geosite.dat")); err != nil && os.IsNotExist(err) {
-		common.Must(filesystem.CopyFile(platform.GetAssetLocation("geosite.dat"), filepath.Join(wd, "..", "..", "release", "config", "geosite.dat")))
+	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
+	geoipPath := filepath.Join(tempPath, "geoip.dat")
+
+	os.Setenv("v2ray.location.asset", tempPath)
+
+	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && errors.Is(err, fs.ErrNotExist) {
+		if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, fs.ErrNotExist) {
+			common.Must(os.MkdirAll(tempPath, 0755))
+			geoipBytes, err := common.FetchHTTPContent(geoipURL)
+			common.Must(err)
+			common.Must(filesystem.WriteFile(geoipPath, geoipBytes))
+		}
 	}
 }
 
@@ -124,6 +134,42 @@ func TestGeoIPMatcher(t *testing.T) {
 	}
 }
 
+func TestGeoIPReverseMatcher(t *testing.T) {
+	cidrList := router.CIDRList{
+		{Ip: []byte{8, 8, 8, 8}, Prefix: 32},
+		{Ip: []byte{91, 108, 4, 0}, Prefix: 16},
+	}
+	matcher := &router.GeoIPMatcher{}
+	matcher.SetReverseMatch(true) // Reverse match
+	common.Must(matcher.Init(cidrList))
+
+	testCases := []struct {
+		Input  string
+		Output bool
+	}{
+		{
+			Input:  "8.8.8.8",
+			Output: false,
+		},
+		{
+			Input:  "2001:cdba::3257:9652",
+			Output: true,
+		},
+		{
+			Input:  "91.108.255.254",
+			Output: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		ip := net.ParseAddress(testCase.Input).IP()
+		actual := matcher.Match(ip)
+		if actual != testCase.Output {
+			t.Error("expect input", testCase.Input, "to be", testCase.Output, ", but actually", actual)
+		}
+	}
+}
+
 func TestGeoIPMatcher4CN(t *testing.T) {
 	ips, err := loadGeoIP("CN")
 	common.Must(err)
@@ -159,7 +205,7 @@ func loadGeoIP(country string) ([]*router.CIDR, error) {
 	}
 
 	for _, geoip := range geoipList.Entry {
-		if geoip.CountryCode == country {
+		if strings.EqualFold(geoip.CountryCode, country) {
 			return geoip.Cidr, nil
 		}
 	}

@@ -2,61 +2,55 @@ package conf_test
 
 import (
 	"encoding/json"
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/v2fly/v2ray-core/v4/app/dns"
-	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/platform"
 	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
-	. "github.com/v2fly/v2ray-core/v4/infra/conf"
+	"github.com/v2fly/v2ray-core/v4/infra/conf"
 )
 
 func init() {
 	wd, err := os.Getwd()
 	common.Must(err)
 
-	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && os.IsNotExist(err) {
-		common.Must(filesystem.CopyFile(platform.GetAssetLocation("geoip.dat"), filepath.Join(wd, "..", "..", "release", "config", "geoip.dat")))
+	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
+	geoipPath := filepath.Join(tempPath, "geoip.dat")
+	geositePath := filepath.Join(tempPath, "geosite.dat")
+
+	os.Setenv("v2ray.location.asset", tempPath)
+
+	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && errors.Is(err, fs.ErrNotExist) {
+		if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, fs.ErrNotExist) {
+			common.Must(os.MkdirAll(tempPath, 0755))
+			geoipBytes, err := common.FetchHTTPContent(geoipURL)
+			common.Must(err)
+			common.Must(filesystem.WriteFile(geoipPath, geoipBytes))
+		}
 	}
 
-	geositeFilePath := filepath.Join(wd, "geosite.dat")
-	os.Setenv("v2ray.location.asset", wd)
-	geositeFile, err := os.OpenFile(geositeFilePath, os.O_CREATE|os.O_WRONLY, 0600)
-	common.Must(err)
-	defer geositeFile.Close()
-
-	list := &router.GeoSiteList{
-		Entry: []*router.GeoSite{
-			{
-				CountryCode: "TEST",
-				Domain: []*router.Domain{
-					{Type: router.Domain_Full, Value: "example.com"},
-				},
-			},
-		},
+	if _, err := os.Stat(platform.GetAssetLocation("geosite.dat")); err != nil && errors.Is(err, fs.ErrNotExist) {
+		if _, err := os.Stat(geositePath); err != nil && errors.Is(err, fs.ErrNotExist) {
+			common.Must(os.MkdirAll(tempPath, 0755))
+			geositeBytes, err := common.FetchHTTPContent(geositeURL)
+			common.Must(err)
+			common.Must(filesystem.WriteFile(geositePath, geositeBytes))
+		}
 	}
-
-	listBytes, err := proto.Marshal(list)
-	common.Must(err)
-	common.Must2(geositeFile.Write(listBytes))
 }
 
 func TestDNSConfigParsing(t *testing.T) {
-	geositePath := platform.GetAssetLocation("geosite.dat")
-	defer func() {
-		os.Remove(geositePath)
-		os.Unsetenv("v2ray.location.asset")
-	}()
-
-	parserCreator := func() func(string) (proto.Message, error) {
-		return func(s string) (proto.Message, error) {
-			config := new(DNSConfig)
+	parserCreator := func() func(string) (protoreflect.ProtoMessage, error) {
+		return func(s string) (protoreflect.ProtoMessage, error) {
+			config := new(conf.DNSConfig)
 			if err := json.Unmarshal([]byte(s), config); err != nil {
 				return nil, err
 			}
@@ -71,18 +65,21 @@ func TestDNSConfigParsing(t *testing.T) {
 					"address": "8.8.8.8",
 					"clientIp": "10.0.0.1",
 					"port": 5353,
+					"skipFallback": true,
 					"domains": ["domain:v2fly.org"]
 				}],
 				"hosts": {
 					"v2fly.org": "127.0.0.1",
+					"www.v2fly.org": ["1.2.3.4", "5.6.7.8"],
 					"domain:example.com": "google.com",
-					"geosite:test": "10.0.0.1",
-					"keyword:google": "8.8.8.8",
+					"geosite:test": ["127.0.0.1", "127.0.0.2"],
+					"keyword:google": ["8.8.8.8", "8.8.4.4"],
 					"regexp:.*\\.com": "8.8.4.4"
 				},
 				"clientIp": "10.0.0.1",
 				"queryStrategy": "UseIPv4",
-				"disableCache": true
+				"disableCache": true,
+				"disableFallback": true
 			}`,
 			Parser: parserCreator(),
 			Output: &dns.Config{
@@ -97,7 +94,8 @@ func TestDNSConfigParsing(t *testing.T) {
 							Network: net.Network_UDP,
 							Port:    5353,
 						},
-						ClientIp: []byte{10, 0, 0, 1},
+						ClientIp:     []byte{10, 0, 0, 1},
+						SkipFallback: true,
 						PrioritizedDomain: []*dns.NameServer_PriorityDomain{
 							{
 								Type:   dns.DomainMatchingType_Subdomain,
@@ -120,13 +118,13 @@ func TestDNSConfigParsing(t *testing.T) {
 					},
 					{
 						Type:   dns.DomainMatchingType_Full,
-						Domain: "example.com",
-						Ip:     [][]byte{{10, 0, 0, 1}},
+						Domain: "test.example.com",
+						Ip:     [][]byte{{127, 0, 0, 1}, {127, 0, 0, 2}},
 					},
 					{
 						Type:   dns.DomainMatchingType_Keyword,
 						Domain: "google",
-						Ip:     [][]byte{{8, 8, 8, 8}},
+						Ip:     [][]byte{{8, 8, 8, 8}, {8, 8, 4, 4}},
 					},
 					{
 						Type:   dns.DomainMatchingType_Regex,
@@ -138,10 +136,16 @@ func TestDNSConfigParsing(t *testing.T) {
 						Domain: "v2fly.org",
 						Ip:     [][]byte{{127, 0, 0, 1}},
 					},
+					{
+						Type:   dns.DomainMatchingType_Full,
+						Domain: "www.v2fly.org",
+						Ip:     [][]byte{{1, 2, 3, 4}, {5, 6, 7, 8}},
+					},
 				},
-				ClientIp:      []byte{10, 0, 0, 1},
-				QueryStrategy: dns.QueryStrategy_USE_IP4,
-				DisableCache:  true,
+				ClientIp:        []byte{10, 0, 0, 1},
+				QueryStrategy:   dns.QueryStrategy_USE_IP4,
+				DisableCache:    true,
+				DisableFallback: true,
 			},
 		},
 	})

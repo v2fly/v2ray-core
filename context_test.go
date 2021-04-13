@@ -3,11 +3,12 @@ package core_test
 import (
 	"context"
 	"testing"
+	_ "unsafe"
 
 	. "github.com/v2fly/v2ray-core/v4"
 )
 
-func TestContextPanic(t *testing.T) {
+func TestFromContextPanic(t *testing.T) {
 	defer func() {
 		r := recover()
 		if r == nil {
@@ -16,4 +17,18 @@ func TestContextPanic(t *testing.T) {
 	}()
 
 	MustFromContext(context.Background())
+}
+
+//go:linkname mustToContextForced github.com/v2fly/v2ray-core/v4.mustToContext
+func mustToContextForced(ctx context.Context, v *Instance) context.Context
+
+func TestToContextPanic(t *testing.T) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Error("expect panic, but nil")
+		}
+	}()
+
+	mustToContextForced(context.Background(), &Instance{})
 }

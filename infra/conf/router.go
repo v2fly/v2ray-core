@@ -280,6 +280,10 @@ func parseAttrs(attrs []string) *AttributeList {
 	return al
 }
 
+func loadGeosite(list string) ([]*router.Domain, error) {
+	return loadGeositeWithAttr("geosite.dat", list)
+}
+
 func loadGeositeWithAttr(file string, siteWithAttr string) ([]*router.Domain, error) {
 	parts := strings.Split(siteWithAttr, "@")
 	if len(parts) == 0 {
@@ -326,7 +330,7 @@ func parseDomainRule(domain string) ([]*router.Domain, error) {
 		if len(list) == 0 {
 			return nil, newError("empty listname in rule: ", domain)
 		}
-		domains, err := loadGeositeWithAttr("geosite.dat", list)
+		domains, err := loadGeosite(list)
 		if err != nil {
 			return nil, newError("failed to load geosite: ", list).Base(err)
 		}
@@ -420,6 +424,11 @@ func toCidrList(ips StringList) ([]*router.GeoIP, error) {
 	for _, ip := range ips {
 		if strings.HasPrefix(ip, "geoip:") {
 			country := ip[6:]
+			isReverseMatch := false
+			if strings.HasPrefix(ip, "geoip:!") {
+				country = ip[7:]
+				isReverseMatch = true
+			}
 			if len(country) == 0 {
 				return nil, newError("empty country name in rule")
 			}
@@ -429,8 +438,9 @@ func toCidrList(ips StringList) ([]*router.GeoIP, error) {
 			}
 
 			geoipList = append(geoipList, &router.GeoIP{
-				CountryCode: strings.ToUpper(country),
-				Cidr:        geoip,
+				CountryCode:  strings.ToUpper(country),
+				Cidr:         geoip,
+				ReverseMatch: isReverseMatch,
 			})
 
 			continue
@@ -459,14 +469,21 @@ func toCidrList(ips StringList) ([]*router.GeoIP, error) {
 			if len(filename) == 0 || len(country) == 0 {
 				return nil, newError("empty filename or empty country in rule")
 			}
+
+			isReverseMatch := false
+			if strings.HasPrefix(country, "!") {
+				country = country[1:]
+				isReverseMatch = true
+			}
 			geoip, err := loadIP(filename, country)
 			if err != nil {
 				return nil, newError("failed to load geoip: ", country, " from ", filename).Base(err)
 			}
 
 			geoipList = append(geoipList, &router.GeoIP{
-				CountryCode: strings.ToUpper(filename + "_" + country),
-				Cidr:        geoip,
+				CountryCode:  strings.ToUpper(filename + "_" + country),
+				Cidr:         geoip,
+				ReverseMatch: isReverseMatch,
 			})
 
 			continue
