@@ -589,6 +589,7 @@ func (c *Config) Build() (*core.Config, error) {
 		sb := strings.Builder{}
 		return nil, newError("Cannot load service").Base(developererr).Base(err).Base(newError(sb.String()))
 	} else {
+		// Using a else here is required to keep msg in scope
 		config.App = append(config.App, msg...)
 	}
 
