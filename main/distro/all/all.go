@@ -3,7 +3,7 @@ package all
 import (
 	// The following are necessary as they register handlers in their init functions.
 
-	// Required features. Can't remove unless there is replacements.
+	// Mandatory features. Can't remove unless there are replacements.
 	_ "github.com/v2fly/v2ray-core/v4/app/dispatcher"
 	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/inbound"
 	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/outbound"
