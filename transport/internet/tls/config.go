@@ -4,7 +4,6 @@ package tls
 
 import (
 	"crypto/hmac"
-	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
@@ -184,20 +183,6 @@ func (c *Config) verifyPeerCert(rawCerts [][]byte, verifiedChains [][]*x509.Cert
 		return newError("peer cert is unrecognized: ", base64.StdEncoding.EncodeToString(hashValue))
 	}
 	return nil
-}
-
-func GenerateCertChainHash(rawCerts [][]byte) []byte {
-	var hashValue []byte
-	for _, certValue := range rawCerts {
-		out := sha256.Sum256(certValue)
-		if hashValue == nil {
-			hashValue = out[:]
-		} else {
-			newHashValue := sha256.Sum256(append(hashValue, out[:]...))
-			hashValue = newHashValue[:]
-		}
-	}
-	return hashValue
 }
 
 // GetTLSConfig converts this Config into tls.Config.
