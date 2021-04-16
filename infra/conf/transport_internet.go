@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"strings"
 
@@ -291,12 +292,13 @@ func (c *TLSCertConfig) Build() (*tls.Certificate, error) {
 }
 
 type TLSConfig struct {
-	Insecure                bool             `json:"allowInsecure"`
-	Certs                   []*TLSCertConfig `json:"certificates"`
-	ServerName              string           `json:"serverName"`
-	ALPN                    *StringList      `json:"alpn"`
-	EnableSessionResumption bool             `json:"enableSessionResumption"`
-	DisableSystemRoot       bool             `json:"disableSystemRoot"`
+	Insecure                         bool             `json:"allowInsecure"`
+	Certs                            []*TLSCertConfig `json:"certificates"`
+	ServerName                       string           `json:"serverName"`
+	ALPN                             *StringList      `json:"alpn"`
+	EnableSessionResumption          bool             `json:"enableSessionResumption"`
+	DisableSystemRoot                bool             `json:"disableSystemRoot"`
+	PinnedPeerCertificateChainSha256 *[]string        `json:"pinnedPeerCertificateChainSha256"`
 }
 
 // Build implements Buildable.
@@ -320,6 +322,18 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 	}
 	config.EnableSessionResumption = c.EnableSessionResumption
 	config.DisableSystemRoot = c.DisableSystemRoot
+
+	if c.PinnedPeerCertificateChainSha256 != nil {
+		config.PinnedPeerCertificateChainSha256 = [][]byte{}
+		for _, v := range *c.PinnedPeerCertificateChainSha256 {
+			hashValue, err := base64.StdEncoding.DecodeString(v)
+			if err != nil {
+				return nil, err
+			}
+			config.PinnedPeerCertificateChainSha256 = append(config.PinnedPeerCertificateChainSha256, hashValue)
+		}
+	}
+
 	return config, nil
 }
 
