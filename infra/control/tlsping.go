@@ -73,11 +73,12 @@ func (c *TLSPingCommand) Execute(args []string) error {
 			return newError("dial tcp").Base(err)
 		}
 		tlsConn := tls.Client(tcpConn, &tls.Config{
-			InsecureSkipVerify:    true,
-			NextProtos:            []string{"http/1.1"},
-			MaxVersion:            tls.VersionTLS12,
-			MinVersion:            tls.VersionTLS12,
-			VerifyPeerCertificate: showCert(),
+			InsecureSkipVerify: true,
+			NextProtos:         []string{"http/1.1"},
+			MaxVersion:         tls.VersionTLS12,
+			MinVersion:         tls.VersionTLS12,
+			// Do not release tool before v5's refactor
+			// VerifyPeerCertificate: showCert(),
 		})
 		err = tlsConn.Handshake()
 		if err != nil {
@@ -97,11 +98,12 @@ func (c *TLSPingCommand) Execute(args []string) error {
 			return newError("dial tcp").Base(err)
 		}
 		tlsConn := tls.Client(tcpConn, &tls.Config{
-			ServerName:            domain,
-			NextProtos:            []string{"http/1.1"},
-			MaxVersion:            tls.VersionTLS12,
-			MinVersion:            tls.VersionTLS12,
-			VerifyPeerCertificate: showCert(),
+			ServerName: domain,
+			NextProtos: []string{"http/1.1"},
+			MaxVersion: tls.VersionTLS12,
+			MinVersion: tls.VersionTLS12,
+			// Do not release tool before v5's refactor
+			// VerifyPeerCertificate: showCert(),
 		})
 		err = tlsConn.Handshake()
 		if err != nil {
