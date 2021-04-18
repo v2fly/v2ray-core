@@ -9,8 +9,8 @@ import (
 
 var cmdUUID = &base.Command{
 	UsageLine: "{{.Exec}} uuid",
-	Short:     "generate new UUIDs",
-	Long: `Generate new UUIDs.
+	Short:     "generate new UUID",
+	Long: `Generate new UUID.
 `,
 	Run: executeUUID,
 }
