@@ -24,6 +24,9 @@ type Holder struct {
 }
 
 func (fkdns *Holder) IsIPInIPPool(ip net.Address) bool {
+	if ip.Family().IsDomain() {
+		return false
+	}
 	return fkdns.ipRange.Contains(ip.IP())
 }
 
@@ -139,6 +142,9 @@ type HolderMulti struct {
 }
 
 func (h *HolderMulti) IsIPInIPPool(ip net.Address) bool {
+	if ip.Family().IsDomain() {
+		return false
+	}
 	for _, v := range h.holders {
 		if v.IsIPInIPPool(ip) {
 			return true
