@@ -8,6 +8,7 @@ import (
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/features/dns"
+	dns_feature "github.com/v2fly/v2ray-core/v4/features/dns"
 )
 
 type FakeDNSServer struct {
@@ -44,5 +45,8 @@ func (f *FakeDNSServer) QueryIP(ctx context.Context, domain string, _ net.IP, op
 
 	newError(f.Name(), " got answer: ", domain, " -> ", ips).AtInfo().WriteToLog()
 
-	return netIP, nil
+	if len(netIP) > 0 {
+		return netIP, nil
+	}
+	return nil, dns_feature.ErrEmptyResponse
 }
