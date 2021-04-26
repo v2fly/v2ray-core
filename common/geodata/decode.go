@@ -15,16 +15,24 @@ import (
 	"strings"
 
 	"google.golang.org/protobuf/encoding/protowire"
+
+	"github.com/v2fly/v2ray-core/v4/common/errors"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+
+var (
+	errFailedToReadBytes          = errors.New("failed to read bytes")
+	errInvalidGeodataFile         = errors.New("invalid geodata file")
+	errInvalidGeodataVarintLength = errors.New("invalid geodata varint length")
+)
 
 func emitBytes(f *os.File, code string) ([]byte, error) {
 	count := 1
 	isInner := false
 	tempContainer := make([]byte, 0, 5)
-	var result []byte
 
+	var result []byte
 	var advancedN uint64 = 1
 	var geoDataVarintLength, codeVarintLength, varintLenByteLen uint64 = 0, 0, 0
 
@@ -33,13 +41,13 @@ Loop:
 		container := make([]byte, advancedN)
 		_, err := f.Read(container)
 		if err != nil {
-			return nil, err
+			return nil, errFailedToReadBytes
 		}
 
 		switch count {
 		case 1, 3: // data type ((field_number << 3) | wire_type)
 			if container[0] != 10 { // byte `0A` equals to `10` in decimal
-				return nil, newError("invalid geodata file")
+				return nil, errInvalidGeodataFile
 			}
 			advancedN = 1
 			count++
@@ -51,7 +59,7 @@ Loop:
 			}
 			lenVarint, n := protowire.ConsumeVarint(tempContainer)
 			if n < 0 {
-				return nil, newError("invalid geodata varint length")
+				return nil, errInvalidGeodataVarintLength
 			}
 			tempContainer = nil
 			if !isInner {
@@ -92,7 +100,7 @@ Loop:
 func Decode(filename, code string) ([]byte, error) {
 	f, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		return nil, newError("failed to open file: ", filename).Base(err)
 	}
 	defer f.Close()
 

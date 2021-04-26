@@ -1,6 +1,8 @@
 package geodata
 
 import (
+	"io/ioutil"
+	"runtime"
 	"strings"
 
 	"google.golang.org/protobuf/proto"
@@ -37,17 +39,39 @@ func (g GeoIPCache) Unmarshal(filename, code string) (*router.GeoIP, error) {
 	}
 
 	geoipBytes, err := Decode(filename, code)
-	if err != nil {
-		return nil, err
-	}
-	var geoip router.GeoIP
-	if err := proto.Unmarshal(geoipBytes, &geoip); err != nil {
+	switch err {
+	case nil:
+		var geoip router.GeoIP
+		if err := proto.Unmarshal(geoipBytes, &geoip); err != nil {
+			return nil, err
+		}
+		g.Set(idx, &geoip)
+		return &geoip, nil
+
+	case errFailedToReadBytes, errInvalidGeodataFile, errInvalidGeodataVarintLength:
+		newError("failed to decode geodata file: ", filename, ". Fallback to the original ReadFile method.").AtWarning().WriteToLog()
+		geoipBytes, err = ioutil.ReadFile(filename)
+		if err != nil {
+			return nil, err
+		}
+		var geoipList router.GeoIPList
+		if err := proto.Unmarshal(geoipBytes, &geoipList); err != nil {
+			return nil, err
+		}
+		runtime.GC()
+		for _, geoip := range geoipList.GetEntry() {
+			if strings.EqualFold(code, geoip.GetCountryCode()) {
+				g.Set(idx, geoip)
+				return geoip, nil
+			}
+			runtime.GC()
+		}
+
+	default:
 		return nil, err
 	}
 
-	g.Set(idx, &geoip)
-
-	return &geoip, nil
+	return nil, nil
 }
 
 type GeoSiteCache map[string]*router.GeoSite
@@ -78,15 +102,37 @@ func (g GeoSiteCache) Unmarshal(filename, code string) (*router.GeoSite, error) 
 	}
 
 	geositeBytes, err := Decode(filename, code)
-	if err != nil {
-		return nil, err
-	}
-	var geosite router.GeoSite
-	if err := proto.Unmarshal(geositeBytes, &geosite); err != nil {
+	switch err {
+	case nil:
+		var geosite router.GeoSite
+		if err := proto.Unmarshal(geositeBytes, &geosite); err != nil {
+			return nil, err
+		}
+		g.Set(idx, &geosite)
+		return &geosite, nil
+
+	case errFailedToReadBytes, errInvalidGeodataFile, errInvalidGeodataVarintLength:
+		newError("failed to decode geodata file: ", filename, ". Fallback to the original ReadFile method.").AtWarning().WriteToLog()
+		geositeBytes, err = ioutil.ReadFile(filename)
+		if err != nil {
+			return nil, err
+		}
+		var geositeList router.GeoSiteList
+		if err := proto.Unmarshal(geositeBytes, &geositeList); err != nil {
+			return nil, err
+		}
+		runtime.GC()
+		for _, geosite := range geositeList.GetEntry() {
+			if strings.EqualFold(code, geosite.GetCountryCode()) {
+				g.Set(idx, geosite)
+				return geosite, nil
+			}
+			runtime.GC()
+		}
+
+	default:
 		return nil, err
 	}
 
-	g.Set(idx, &geosite)
-
-	return &geosite, nil
+	return nil, nil
 }
