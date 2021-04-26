@@ -326,7 +326,7 @@ func toCidrList(ips StringList) ([]*router.GeoIP, error) {
 			}
 			geoip, err := loadGeoIP(country)
 			if err != nil {
-				return nil, newError("failed to load geoip: ", country).Base(err)
+				return nil, newError("failed to load geoip:", country).Base(err)
 			}
 
 			geoipList = append(geoipList, &router.GeoIP{
@@ -369,7 +369,7 @@ func toCidrList(ips StringList) ([]*router.GeoIP, error) {
 			}
 			geoip, err := geodata.LoadIP(filename, country)
 			if err != nil {
-				return nil, newError("failed to load geoip: ", country, " from ", filename).Base(err)
+				return nil, newError("failed to load geoip:", country, " from ", filename).Base(err)
 			}
 
 			geoipList = append(geoipList, &router.GeoIP{

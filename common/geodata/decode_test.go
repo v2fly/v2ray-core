@@ -56,9 +56,9 @@ func TestDecodeGeoIP(t *testing.T) {
 		t.Error(err)
 	}
 
-	wanted := []byte{10, 4, 84, 69, 83, 84, 18, 8, 10, 4, 127, 0, 0, 0, 16, 8}
-	if cmp.Diff(result, wanted) != "" {
-		t.Errorf("failed to load geoip:test, expected: %v, got: %v", wanted, result)
+	expected := []byte{10, 4, 84, 69, 83, 84, 18, 8, 10, 4, 127, 0, 0, 0, 16, 8}
+	if cmp.Diff(result, expected) != "" {
+		t.Errorf("failed to load geoip:test, expected: %v, got: %v", expected, result)
 	}
 }
 
@@ -69,8 +69,8 @@ func TestDecodeGeoSite(t *testing.T) {
 		t.Error(err)
 	}
 
-	wanted := []byte{10, 4, 84, 69, 83, 84, 18, 20, 8, 3, 18, 16, 116, 101, 115, 116, 46, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109}
-	if cmp.Diff(result, wanted) != "" {
-		t.Errorf("failed to load geosite:test, expected: %v, got: %v", wanted, result)
+	expected := []byte{10, 4, 84, 69, 83, 84, 18, 20, 8, 3, 18, 16, 116, 101, 115, 116, 46, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109}
+	if cmp.Diff(result, expected) != "" {
+		t.Errorf("failed to load geosite:test, expected: %v, got: %v", expected, result)
 	}
 }
