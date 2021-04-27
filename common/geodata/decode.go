@@ -22,9 +22,10 @@ import (
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
 var (
-	errFailedToReadBytes          = errors.New("failed to read bytes")
-	errInvalidGeodataFile         = errors.New("invalid geodata file")
-	errInvalidGeodataVarintLength = errors.New("invalid geodata varint length")
+	errFailedToReadBytes            = errors.New("failed to read bytes")
+	errFailedToReadExpectedLenBytes = errors.New("failed to read expected length of bytes")
+	errInvalidGeodataFile           = errors.New("invalid geodata file")
+	errInvalidGeodataVarintLength   = errors.New("invalid geodata varint length")
 )
 
 func emitBytes(f *os.File, code string) ([]byte, error) {
@@ -39,9 +40,12 @@ func emitBytes(f *os.File, code string) ([]byte, error) {
 Loop:
 	for {
 		container := make([]byte, advancedN)
-		_, err := f.Read(container)
+		bytesRead, err := f.Read(container)
 		if err != nil {
 			return nil, errFailedToReadBytes
+		}
+		if bytesRead != len(container) {
+			return nil, errFailedToReadExpectedLenBytes
 		}
 
 		switch count {
