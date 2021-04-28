@@ -9,6 +9,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	core "github.com/v2fly/v2ray-core/v4"
+
 	"golang.org/x/net/dns/dnsmessage"
 
 	"github.com/v2fly/v2ray-core/v4/common"
@@ -192,7 +194,7 @@ func (s *ClassicNameServer) sendQuery(ctx context.Context, domain string, client
 	for _, req := range reqs {
 		s.addPendingRequest(req)
 		b, _ := dns.PackMessage(req.msg)
-		udpCtx := ctx
+		udpCtx := core.ToBackgroundDetachedContext(ctx)
 		if inbound := session.InboundFromContext(ctx); inbound != nil {
 			udpCtx = session.ContextWithInbound(udpCtx, inbound)
 		}

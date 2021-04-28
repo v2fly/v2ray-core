@@ -9,6 +9,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	core "github.com/v2fly/v2ray-core/v4"
+
 	"github.com/lucas-clemente/quic-go"
 	"golang.org/x/net/dns/dnsmessage"
 	"golang.org/x/net/http2"
@@ -370,7 +372,7 @@ func (s *QUICNameServer) openSession(ctx context.Context) (quic.Session, error) 
 		HandshakeIdleTimeout: handshakeIdleTimeout,
 	}
 
-	session, err := quic.DialAddrContext(ctx, s.destination.NetAddr(), tlsConfig.GetTLSConfig(tls.WithNextProto("http/1.1", http2.NextProtoTLS, NextProtoDQ)), quicConfig)
+	session, err := quic.DialAddrContext(core.ToBackgroundDetachedContext(ctx), s.destination.NetAddr(), tlsConfig.GetTLSConfig(tls.WithNextProto("http/1.1", http2.NextProtoTLS, NextProtoDQ)), quicConfig)
 	if err != nil {
 		return nil, err
 	}
