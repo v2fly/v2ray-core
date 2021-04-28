@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"hash/fnv"
 
+	"github.com/v2fly/v2ray-core/v4/common/crypto"
+
 	"golang.org/x/crypto/sha3"
 
 	"github.com/v2fly/v2ray-core/v4/common"
@@ -116,4 +118,12 @@ func (s *ShakeSizeParser) NextPaddingLen() uint16 {
 
 func (s *ShakeSizeParser) MaxPaddingLen() uint16 {
 	return 64
+}
+
+type AEADSizeParser struct {
+	crypto.AEADChunkSizeParser
+}
+
+func NewAEADSizeParser(auth *crypto.AEADAuthenticator) *AEADSizeParser {
+	return &AEADSizeParser{crypto.AEADChunkSizeParser{Auth: auth}}
 }
