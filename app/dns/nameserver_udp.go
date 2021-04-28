@@ -192,7 +192,7 @@ func (s *ClassicNameServer) sendQuery(ctx context.Context, domain string, client
 	for _, req := range reqs {
 		s.addPendingRequest(req)
 		b, _ := dns.PackMessage(req.msg)
-		udpCtx := context.Background()
+		udpCtx := ctx
 		if inbound := session.InboundFromContext(ctx); inbound != nil {
 			udpCtx = session.ContextWithInbound(udpCtx, inbound)
 		}
