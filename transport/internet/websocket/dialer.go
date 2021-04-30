@@ -6,9 +6,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"github.com/v2fly/v2ray-core/v4/features/extension"
 	"io"
 	"time"
+
+	"github.com/v2fly/v2ray-core/v4/features/extension"
 
 	"github.com/gorilla/websocket"
 	core "github.com/v2fly/v2ray-core/v4"
