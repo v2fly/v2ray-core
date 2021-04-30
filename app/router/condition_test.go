@@ -6,13 +6,11 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"testing"
-
-	"google.golang.org/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/geodata"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/platform"
 	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
@@ -352,26 +350,8 @@ func TestRoutingRule(t *testing.T) {
 	}
 }
 
-func loadGeoSite(country string) ([]*router.Domain, error) {
-	geositeBytes, err := filesystem.ReadAsset("geosite.dat")
-	if err != nil {
-		return nil, err
-	}
-	var geositeList router.GeoSiteList
-	if err := proto.Unmarshal(geositeBytes, &geositeList); err != nil {
-		return nil, err
-	}
-
-	for _, site := range geositeList.Entry {
-		if strings.EqualFold(site.CountryCode, country) {
-			return site.Domain, nil
-		}
-	}
-
-	return nil, errors.New("country not found: " + country)
-}
 func TestChinaSites(t *testing.T) {
-	domains, err := loadGeoSite("CN")
+	domains, err := geodata.LoadSite("geosite.dat", "CN")
 	common.Must(err)
 
 	matcher, err := router.NewDomainMatcher(domains)
@@ -418,7 +398,7 @@ func TestChinaSites(t *testing.T) {
 }
 
 func BenchmarkMphDomainMatcher(b *testing.B) {
-	domains, err := loadGeoSite("CN")
+	domains, err := geodata.LoadSite("geosite.dat", "CN")
 	common.Must(err)
 
 	matcher, err := router.NewMphMatcherGroup(domains)
@@ -460,7 +440,7 @@ func BenchmarkMphDomainMatcher(b *testing.B) {
 }
 
 func BenchmarkDomainMatcher(b *testing.B) {
-	domains, err := loadGeoSite("CN")
+	domains, err := geodata.LoadSite("geosite.dat", "CN")
 	common.Must(err)
 
 	matcher, err := router.NewDomainMatcher(domains)
@@ -505,7 +485,7 @@ func BenchmarkMultiGeoIPMatcher(b *testing.B) {
 	var geoips []*router.GeoIP
 
 	{
-		ips, err := loadGeoIP("CN")
+		ips, err := geodata.LoadIP("geoip.dat", "CN")
 		common.Must(err)
 		geoips = append(geoips, &router.GeoIP{
 			CountryCode: "CN",
@@ -514,7 +494,7 @@ func BenchmarkMultiGeoIPMatcher(b *testing.B) {
 	}
 
 	{
-		ips, err := loadGeoIP("JP")
+		ips, err := geodata.LoadIP("geoip.dat", "JP")
 		common.Must(err)
 		geoips = append(geoips, &router.GeoIP{
 			CountryCode: "JP",
@@ -523,7 +503,7 @@ func BenchmarkMultiGeoIPMatcher(b *testing.B) {
 	}
 
 	{
-		ips, err := loadGeoIP("CA")
+		ips, err := geodata.LoadIP("geoip.dat", "CA")
 		common.Must(err)
 		geoips = append(geoips, &router.GeoIP{
 			CountryCode: "CA",
@@ -532,7 +512,7 @@ func BenchmarkMultiGeoIPMatcher(b *testing.B) {
 	}
 
 	{
-		ips, err := loadGeoIP("US")
+		ips, err := geodata.LoadIP("geoip.dat", "US")
 		common.Must(err)
 		geoips = append(geoips, &router.GeoIP{
 			CountryCode: "US",
