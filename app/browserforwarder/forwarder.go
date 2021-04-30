@@ -5,6 +5,7 @@ package browserforwarder
 import (
 	"bytes"
 	"context"
+	"github.com/v2fly/v2ray-core/v4/features/extension"
 	"io"
 	"net/http"
 	"time"
@@ -14,7 +15,6 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/platform/securedload"
-	"github.com/v2fly/v2ray-core/v4/features/ext"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
@@ -47,7 +47,7 @@ func (f *Forwarder) DialWebsocket(url string, header http.Header) (io.ReadWriteC
 }
 
 func (f *Forwarder) Type() interface{} {
-	return ext.BrowserForwarderType()
+	return extension.BrowserForwarderType()
 }
 
 func (f *Forwarder) Start() error {
