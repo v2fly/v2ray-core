@@ -9,9 +9,10 @@ import (
 	"encoding/binary"
 	"hash/fnv"
 	"io"
-	"io/ioutil"
 	"sync"
 	"time"
+
+	"github.com/v2fly/v2ray-core/v4/common/drain"
 
 	"golang.org/x/crypto/chacha20poly1305"
 
@@ -19,7 +20,6 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/bitmask"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/crypto"
-	"github.com/v2fly/v2ray-core/v4/common/dice"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
 	"github.com/v2fly/v2ray-core/v4/common/task"
@@ -139,24 +139,17 @@ func parseSecurityType(b byte) protocol.SecurityType {
 // DecodeRequestHeader decodes and returns (if successful) a RequestHeader from an input stream.
 func (s *ServerSession) DecodeRequestHeader(reader io.Reader) (*protocol.RequestHeader, error) {
 	buffer := buf.New()
-	behaviorRand := dice.NewDeterministicDice(int64(s.userValidator.GetBehaviorSeed()))
-	BaseDrainSize := behaviorRand.Roll(3266)
-	RandDrainMax := behaviorRand.Roll(64) + 1
-	RandDrainRolled := dice.Roll(RandDrainMax)
-	DrainSize := BaseDrainSize + 16 + 38 + RandDrainRolled
-	readSizeRemain := DrainSize
+
+	drainer, err := drain.NewBehaviorSeedLimitedDrainer(int64(s.userValidator.GetBehaviorSeed()), 16+38, 3266, 64)
+
+	if err != nil {
+		return nil, newError("failed to initialize drainer").Base(err)
+	}
 
 	drainConnection := func(e error) error {
 		// We read a deterministic generated length of data before closing the connection to offset padding read pattern
-		readSizeRemain -= int(buffer.Len())
-		if readSizeRemain > 0 {
-			err := s.DrainConnN(reader, readSizeRemain)
-			if err != nil {
-				return newError("failed to drain connection DrainSize = ", BaseDrainSize, " ", RandDrainMax, " ", RandDrainRolled).Base(err).Base(e)
-			}
-			return newError("connection drained DrainSize = ", BaseDrainSize, " ", RandDrainMax, " ", RandDrainRolled).Base(e)
-		}
-		return e
+		drainer.AcknowledgeReceive(int(buffer.Len()))
+		return drain.WithError(drainer, reader, e)
 	}
 
 	defer func() {
@@ -183,7 +176,7 @@ func (s *ServerSession) DecodeRequestHeader(reader io.Reader) (*protocol.Request
 		aeadData, shouldDrain, bytesRead, errorReason := vmessaead.OpenVMessAEADHeader(fixedSizeCmdKey, fixedSizeAuthID, reader)
 		if errorReason != nil {
 			if shouldDrain {
-				readSizeRemain -= bytesRead
+				drainer.AcknowledgeReceive(bytesRead)
 				return nil, drainConnection(newError("AEAD read failed").Base(errorReason))
 			}
 			return nil, drainConnection(newError("AEAD read failed, drain skipped").Base(errorReason))
@@ -213,7 +206,7 @@ func (s *ServerSession) DecodeRequestHeader(reader io.Reader) (*protocol.Request
 		return nil, drainConnection(newError("invalid user").Base(errorAEAD))
 	}
 
-	readSizeRemain -= int(buffer.Len())
+	drainer.AcknowledgeReceive(int(buffer.Len()))
 	buffer.Clear()
 	if _, err := buffer.ReadFullFrom(decryptor, 38); err != nil {
 		return nil, newError("failed to read request header").Base(err)
@@ -539,9 +532,4 @@ func (s *ServerSession) EncodeResponseBody(request *protocol.RequestHeader, writ
 	default:
 		panic("Unknown security type.")
 	}
-}
-
-func (s *ServerSession) DrainConnN(reader io.Reader, n int) error {
-	_, err := io.CopyN(ioutil.Discard, reader, int64(n))
-	return err
 }
