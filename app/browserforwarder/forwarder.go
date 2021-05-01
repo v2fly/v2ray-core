@@ -64,7 +64,7 @@ func (f *Forwarder) Start() error {
 		} else if address.Domain() == "localhost" {
 			listener, err = internet.ListenSystem(f.ctx, &net.TCPAddr{IP: net.IP{127, 0, 0, 1}, Port: int(f.config.ListenPort)}, nil)
 		} else {
-			return newError("cannot listen on the address")
+			return newError("forwarder cannot listen on the address")
 		}
 
 		if err != nil {
