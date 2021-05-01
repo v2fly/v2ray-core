@@ -44,7 +44,24 @@ func (f *Forwarder) ServeHTTP(writer http.ResponseWriter, request *http.Request)
 }
 
 func (f *Forwarder) DialWebsocket(url string, header http.Header) (io.ReadWriteCloser, error) {
-	return f.forwarder.Dial(url)
+	protocolHeader := false
+	protocolHeaderValue := ""
+	unsupportedHeader := false
+	for k, v := range header {
+		if k == "Sec-WebSocket-Protocol" {
+			protocolHeader = true
+			protocolHeaderValue = v[0]
+		} else {
+			unsupportedHeader = true
+		}
+	}
+	if unsupportedHeader {
+		return nil, newError("unsupported header used, only Sec-WebSocket-Protocol is supported for forwarder")
+	}
+	if !protocolHeader {
+		return f.forwarder.Dial(url)
+	}
+	return f.forwarder.Dial2(url, protocolHeaderValue)
 }
 
 func (f *Forwarder) Type() interface{} {
