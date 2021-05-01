@@ -10,6 +10,7 @@
 package geodata
 
 import (
+	"io"
 	"os"
 	"runtime"
 	"strings"
@@ -26,6 +27,7 @@ var (
 	errFailedToReadExpectedLenBytes = errors.New("failed to read expected length of bytes")
 	errInvalidGeodataFile           = errors.New("invalid geodata file")
 	errInvalidGeodataVarintLength   = errors.New("invalid geodata varint length")
+	errCodeNotFound                 = errors.New("code not found")
 )
 
 func emitBytes(f *os.File, code string) ([]byte, error) {
@@ -41,6 +43,9 @@ Loop:
 	for {
 		container := make([]byte, advancedN)
 		bytesRead, err := f.Read(container)
+		if err == io.EOF {
+			return nil, errCodeNotFound
+		}
 		if err != nil {
 			return nil, errFailedToReadBytes
 		}
