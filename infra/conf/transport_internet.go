@@ -142,6 +142,7 @@ type WebSocketConfig struct {
 	AcceptProxyProtocol  bool              `json:"acceptProxyProtocol"`
 	MaxEarlyData         int32             `json:"maxEarlyData"`
 	UseBrowserForwarding bool              `json:"useBrowserForwarding"`
+	EarlyDataHeaderName  string            `json:"earlyDataHeaderName"`
 }
 
 // Build implements Buildable.
@@ -162,6 +163,7 @@ func (c *WebSocketConfig) Build() (proto.Message, error) {
 		Header:               header,
 		MaxEarlyData:         c.MaxEarlyData,
 		UseBrowserForwarding: c.UseBrowserForwarding,
+		EarlyDataHeaderName:  c.EarlyDataHeaderName,
 	}
 	if c.AcceptProxyProtocol {
 		config.AcceptProxyProtocol = c.AcceptProxyProtocol
