@@ -48,7 +48,7 @@ func (f *Forwarder) DialWebsocket(url string, header http.Header) (io.ReadWriteC
 	protocolHeaderValue := ""
 	unsupportedHeader := false
 	for k, v := range header {
-		if k == "Sec-WebSocket-Protocol" {
+		if k == "Sec-Websocket-Protocol" {
 			protocolHeader = true
 			protocolHeaderValue = v[0]
 		} else {
