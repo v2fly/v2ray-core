@@ -6,7 +6,6 @@ import (
 	"os"
 
 	commlog "github.com/v2fly/v2ray-core/v4/common/log"
-	// _ "github.com/v2fly/v2ray-core/v4/infra/conf/command"
 	"github.com/v2fly/v2ray-core/v4/infra/control"
 )
 

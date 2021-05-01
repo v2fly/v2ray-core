@@ -9,10 +9,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	core "github.com/v2fly/v2ray-core/v4"
-
 	"golang.org/x/net/dns/dnsmessage"
 
+	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/protocol/dns"
