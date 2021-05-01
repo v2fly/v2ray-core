@@ -44,13 +44,18 @@ func (o *Observer) Type() interface{} {
 }
 
 func (o *Observer) Start() error {
-	o.finished = done.New()
-	go o.background()
+	if o.config != nil && len(o.config.SubjectSelector) != 0 {
+		o.finished = done.New()
+		go o.background()
+	}
 	return nil
 }
 
 func (o *Observer) Close() error {
-	return o.finished.Close()
+	if o.finished != nil {
+		return o.finished.Close()
+	}
+	return nil
 }
 
 func (o *Observer) background() {

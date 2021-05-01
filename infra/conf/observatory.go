@@ -10,6 +10,6 @@ type ObservatoryConfig struct {
 	SubjectSelector []string `json:"subjectSelector"`
 }
 
-func (o ObservatoryConfig) Build() (proto.Message, error) {
+func (o *ObservatoryConfig) Build() (proto.Message, error) {
 	return &observatory.Config{SubjectSelector: o.SubjectSelector}, nil
 }
