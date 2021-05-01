@@ -51,19 +51,21 @@ func (f *Forwarder) Type() interface{} {
 }
 
 func (f *Forwarder) Start() error {
-	f.forwarder = handler.NewHttpHandle()
-	f.httpserver = &http.Server{Handler: f}
-	address := net.ParseAddress(f.config.ListenAddr)
-	listener, err := internet.ListenSystem(f.ctx, &net.TCPAddr{IP: address.IP(), Port: int(f.config.ListenPort)}, nil)
-	if err != nil {
-		return newError("forwarder cannot listen on the port").Base(err)
-	}
-	go func() {
-		err = f.httpserver.Serve(listener)
+	if f.config.ListenAddr != "" {
+		f.forwarder = handler.NewHttpHandle()
+		f.httpserver = &http.Server{Handler: f}
+		address := net.ParseAddress(f.config.ListenAddr)
+		listener, err := internet.ListenSystem(f.ctx, &net.TCPAddr{IP: address.IP(), Port: int(f.config.ListenPort)}, nil)
 		if err != nil {
-			newError("cannot serve http forward server").Base(err).WriteToLog()
+			return newError("forwarder cannot listen on the port").Base(err)
 		}
-	}()
+		go func() {
+			err = f.httpserver.Serve(listener)
+			if err != nil {
+				newError("cannot serve http forward server").Base(err).WriteToLog()
+			}
+		}()
+	}
 	return nil
 }
 
