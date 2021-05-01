@@ -59,11 +59,12 @@ func (f *Forwarder) Start() error {
 		var err error
 		address := net.ParseAddress(f.config.ListenAddr)
 
-		if address.Family().IsIP() {
+		switch {
+		case address.Family().IsIP():
 			listener, err = internet.ListenSystem(f.ctx, &net.TCPAddr{IP: address.IP(), Port: int(f.config.ListenPort)}, nil)
-		} else if address.Domain() == "localhost" {
+		case address.Domain() == "localhost":
 			listener, err = internet.ListenSystem(f.ctx, &net.TCPAddr{IP: net.IP{127, 0, 0, 1}, Port: int(f.config.ListenPort)}, nil)
-		} else {
+		default:
 			return newError("forwarder cannot listen on the address")
 		}
 
