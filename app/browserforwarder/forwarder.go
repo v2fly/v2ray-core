@@ -9,13 +9,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/features/extension"
-
 	"github.com/v2fly/BrowserBridge/handler"
 
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/platform/securedload"
+	"github.com/v2fly/v2ray-core/v4/features/extension"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
