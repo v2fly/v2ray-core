@@ -32,13 +32,13 @@ func (g GeoIPCache) Set(key string, value *router.GeoIP) {
 }
 
 func (g GeoIPCache) Unmarshal(filename, code string) (*router.GeoIP, error) {
-	filename = platform.GetAssetLocation(filename)
-	idx := strings.ToUpper(filename + "|" + code)
+	asset := platform.GetAssetLocation(filename)
+	idx := strings.ToUpper(asset + "|" + code)
 	if g.Has(idx) {
 		return g.Get(idx), nil
 	}
 
-	geoipBytes, err := Decode(filename, code)
+	geoipBytes, err := Decode(asset, code)
 	switch err {
 	case nil:
 		var geoip router.GeoIP
@@ -48,10 +48,13 @@ func (g GeoIPCache) Unmarshal(filename, code string) (*router.GeoIP, error) {
 		g.Set(idx, &geoip)
 		return &geoip, nil
 
+	case errCodeNotFound:
+		return nil, newError(code, " not found in ", filename)
+
 	case errFailedToReadBytes, errFailedToReadExpectedLenBytes,
 		errInvalidGeodataFile, errInvalidGeodataVarintLength:
 		newError("failed to decode geodata file: ", filename, ". Fallback to the original ReadFile method.").AtWarning().WriteToLog()
-		geoipBytes, err = ioutil.ReadFile(filename)
+		geoipBytes, err = ioutil.ReadFile(asset)
 		if err != nil {
 			return nil, err
 		}
@@ -72,7 +75,7 @@ func (g GeoIPCache) Unmarshal(filename, code string) (*router.GeoIP, error) {
 		return nil, err
 	}
 
-	return nil, nil
+	return nil, newError(code, " not found in ", filename)
 }
 
 type GeoSiteCache map[string]*router.GeoSite
@@ -96,13 +99,13 @@ func (g GeoSiteCache) Set(key string, value *router.GeoSite) {
 }
 
 func (g GeoSiteCache) Unmarshal(filename, code string) (*router.GeoSite, error) {
-	filename = platform.GetAssetLocation(filename)
-	idx := strings.ToUpper(filename + "|" + code)
+	asset := platform.GetAssetLocation(filename)
+	idx := strings.ToUpper(asset + "|" + code)
 	if g.Has(idx) {
 		return g.Get(idx), nil
 	}
 
-	geositeBytes, err := Decode(filename, code)
+	geositeBytes, err := Decode(asset, code)
 	switch err {
 	case nil:
 		var geosite router.GeoSite
@@ -112,10 +115,13 @@ func (g GeoSiteCache) Unmarshal(filename, code string) (*router.GeoSite, error) 
 		g.Set(idx, &geosite)
 		return &geosite, nil
 
+	case errCodeNotFound:
+		return nil, newError(code, " not found in ", filename)
+
 	case errFailedToReadBytes, errFailedToReadExpectedLenBytes,
 		errInvalidGeodataFile, errInvalidGeodataVarintLength:
 		newError("failed to decode geodata file: ", filename, ". Fallback to the original ReadFile method.").AtWarning().WriteToLog()
-		geositeBytes, err = ioutil.ReadFile(filename)
+		geositeBytes, err = ioutil.ReadFile(asset)
 		if err != nil {
 			return nil, err
 		}
@@ -136,5 +142,5 @@ func (g GeoSiteCache) Unmarshal(filename, code string) (*router.GeoSite, error) 
 		return nil, err
 	}
 
-	return nil, nil
+	return nil, newError(code, " not found in ", filename)
 }
