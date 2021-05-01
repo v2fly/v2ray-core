@@ -154,7 +154,8 @@ func main() {
 		filename := filepath.Base(path)
 		if strings.HasSuffix(filename, ".go") &&
 			!strings.HasSuffix(filename, ".pb.go") &&
-			!strings.Contains(dir, filepath.Join("testing", "mocks")) {
+			!strings.Contains(dir, filepath.Join("testing", "mocks")) &&
+			!strings.Contains(path, filepath.Join("main", "distro", "all", "all.go")) {
 			rawFilesSlice = append(rawFilesSlice, path)
 		}
 
@@ -171,6 +172,7 @@ func main() {
 
 	goimportsArgs := []string{
 		"-w",
+		"-r",
 		"-local", "github.com/v2fly/v2ray-core",
 	}
 
