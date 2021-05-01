@@ -41,7 +41,7 @@ var upgrader = &websocket.Upgrader{
 
 func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	var earlyData io.Reader
-	if !h.earlyDataEnabled {
+	if !h.earlyDataEnabled { // nolint: gocritic
 		if request.URL.Path != h.path {
 			writer.WriteHeader(http.StatusNotFound)
 			return
