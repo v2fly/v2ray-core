@@ -7,6 +7,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/v2fly/BrowserBridge/handler"
@@ -62,18 +63,17 @@ func (f *Forwarder) Start() error {
 		switch {
 		case address.Family().IsIP():
 			listener, err = internet.ListenSystem(f.ctx, &net.TCPAddr{IP: address.IP(), Port: int(f.config.ListenPort)}, nil)
-		case address.Domain() == "localhost":
+		case strings.EqualFold(address.Domain(), "localhost"):
 			listener, err = internet.ListenSystem(f.ctx, &net.TCPAddr{IP: net.IP{127, 0, 0, 1}, Port: int(f.config.ListenPort)}, nil)
 		default:
-			return newError("forwarder cannot listen on the address")
+			return newError("forwarder cannot listen on the address: ", address)
+		}
+		if err != nil {
+			return newError("forwarder cannot listen on the port ", f.config.ListenPort).Base(err)
 		}
 
-		if err != nil {
-			return newError("forwarder cannot listen on the port").Base(err)
-		}
 		go func() {
-			err = f.httpserver.Serve(listener)
-			if err != nil {
+			if err := f.httpserver.Serve(listener); err != nil {
 				newError("cannot serve http forward server").Base(err).WriteToLog()
 			}
 		}()
