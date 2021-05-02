@@ -60,9 +60,13 @@ import (
 	_ "github.com/v2fly/v2ray-core/v4/transport/internet/headers/wechat"
 	_ "github.com/v2fly/v2ray-core/v4/transport/internet/headers/wireguard"
 
-	// JSON, TOML, YAML config support.
+	// JSON, TOML, YAML config support. (jsonv4) This disable selective compile
 	_ "github.com/v2fly/v2ray-core/v4/main/formats"
 
 	// commands
 	_ "github.com/v2fly/v2ray-core/v4/main/commands/all"
+
+	// Commands that rely on jsonv4 format This disable selective compile
+	_ "github.com/v2fly/v2ray-core/v4/main/commands/all/api/jsonv4"
+	_ "github.com/v2fly/v2ray-core/v4/main/commands/all/jsonv4"
 )
