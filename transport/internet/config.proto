@@ -91,4 +91,6 @@ message SocketConfig {
   uint32 bind_port = 6;
 
   bool accept_proxy_protocol = 7;
+
+  uint32 keep_alive_duration = 8;
 }
