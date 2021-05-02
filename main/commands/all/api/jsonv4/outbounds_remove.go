@@ -1,7 +1,8 @@
-package api
+package jsonv4
 
 import (
 	"fmt"
+	"github.com/v2fly/v2ray-core/v4/main/commands/all/api"
 
 	handlerService "github.com/v2fly/v2ray-core/v4/app/proxyman/command"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
@@ -47,8 +48,8 @@ Example:
 }
 
 func executeRemoveOutbounds(cmd *base.Command, args []string) {
-	setSharedFlags(cmd)
-	setSharedConfigFlags(cmd)
+	api.SetSharedFlags(cmd)
+	api.SetSharedConfigFlags(cmd)
 	isTags := cmd.Flag.Bool("tags", false, "")
 	cmd.Flag.Parse(args)
 
@@ -56,7 +57,7 @@ func executeRemoveOutbounds(cmd *base.Command, args []string) {
 	if *isTags {
 		tags = cmd.Flag.Args()
 	} else {
-		c, err := helpers.LoadConfig(cmd.Flag.Args(), apiConfigFormat, apiConfigRecursively)
+		c, err := helpers.LoadConfig(cmd.Flag.Args(), api.ApiConfigFormat, api.ApiConfigRecursively)
 		if err != nil {
 			base.Fatalf("failed to load: %s", err)
 		}
@@ -69,7 +70,7 @@ func executeRemoveOutbounds(cmd *base.Command, args []string) {
 		base.Fatalf("no outbound to remove")
 	}
 
-	conn, ctx, close := dialAPIServer()
+	conn, ctx, close := api.DialAPIServer()
 	defer close()
 
 	client := handlerService.NewHandlerServiceClient(conn)

@@ -1,12 +1,12 @@
-package all
+package jsonv4
 
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/pelletier/go-toml"
 	"os"
 	"strings"
 
-	"github.com/pelletier/go-toml"
 	"google.golang.org/protobuf/proto"
 
 	core "github.com/v2fly/v2ray-core/v4"

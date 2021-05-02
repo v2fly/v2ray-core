@@ -1,7 +1,8 @@
-package api
+package jsonv4
 
 import (
 	"fmt"
+	"github.com/v2fly/v2ray-core/v4/main/commands/all/api"
 
 	handlerService "github.com/v2fly/v2ray-core/v4/app/proxyman/command"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
@@ -43,10 +44,10 @@ Example:
 }
 
 func executeAddInbounds(cmd *base.Command, args []string) {
-	setSharedFlags(cmd)
-	setSharedConfigFlags(cmd)
+	api.SetSharedFlags(cmd)
+	api.SetSharedConfigFlags(cmd)
 	cmd.Flag.Parse(args)
-	c, err := helpers.LoadConfig(cmd.Flag.Args(), apiConfigFormat, apiConfigRecursively)
+	c, err := helpers.LoadConfig(cmd.Flag.Args(), api.ApiConfigFormat, api.ApiConfigRecursively)
 	if err != nil {
 		base.Fatalf("failed to load: %s", err)
 	}
@@ -54,7 +55,7 @@ func executeAddInbounds(cmd *base.Command, args []string) {
 		base.Fatalf("no valid inbound found")
 	}
 
-	conn, ctx, close := dialAPIServer()
+	conn, ctx, close := api.DialAPIServer()
 	defer close()
 
 	client := handlerService.NewHandlerServiceClient(conn)
