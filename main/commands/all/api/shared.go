@@ -16,12 +16,19 @@ import (
 )
 
 var (
-	apiServerAddrPtr     string
-	apiTimeout           int
-	apiJSON              bool
-	apiConfigFormat      string
-	apiConfigRecursively bool
+	apiServerAddrPtr string
+	apiTimeout       int
+	apiJSON          bool
+	// ApiConfigFormat is an internal variable
+	ApiConfigFormat string
+	// ApiConfigRecursively is an internal variable
+	ApiConfigRecursively bool
 )
+
+// SetSharedFlags is an internal API
+func SetSharedFlags(cmd *base.Command) {
+	setSharedFlags(cmd)
+}
 
 func setSharedFlags(cmd *base.Command) {
 	cmd.Flag.StringVar(&apiServerAddrPtr, "s", "127.0.0.1:8080", "")
@@ -31,9 +38,19 @@ func setSharedFlags(cmd *base.Command) {
 	cmd.Flag.BoolVar(&apiJSON, "json", false, "")
 }
 
+// SetSharedConfigFlags is an internal API
+func SetSharedConfigFlags(cmd *base.Command) {
+	setSharedConfigFlags(cmd)
+}
+
 func setSharedConfigFlags(cmd *base.Command) {
-	cmd.Flag.StringVar(&apiConfigFormat, "format", core.FormatAuto, "")
-	cmd.Flag.BoolVar(&apiConfigRecursively, "r", false, "")
+	cmd.Flag.StringVar(&ApiConfigFormat, "format", core.FormatAuto, "")
+	cmd.Flag.BoolVar(&ApiConfigRecursively, "r", false, "")
+}
+
+// SetSharedFlags is an internal API
+func DialAPIServer() (conn *grpc.ClientConn, ctx context.Context, close func()) {
+	return dialAPIServer()
 }
 
 func dialAPIServer() (conn *grpc.ClientConn, ctx context.Context, close func()) {
