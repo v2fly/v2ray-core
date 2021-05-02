@@ -1,19 +1,21 @@
-package api
+package jsonv4
 
 import (
 	"fmt"
+
+	"github.com/v2fly/v2ray-core/v4/main/commands/all/api"
 
 	handlerService "github.com/v2fly/v2ray-core/v4/app/proxyman/command"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 	"github.com/v2fly/v2ray-core/v4/main/commands/helpers"
 )
 
-var cmdAddOutbounds = &base.Command{
+var cmdAddInbounds = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api ado [--server=127.0.0.1:8080] [c1.json] [dir1]...",
-	Short:       "add outbounds",
+	UsageLine:   "{{.Exec}} api adi [--server=127.0.0.1:8080] [c1.json] [dir1]...",
+	Short:       "add inbounds",
 	Long: `
-Add outbounds to V2Ray.
+Add inbounds to V2Ray.
 
 > Make sure you have "HandlerService" set in "config.api.services" 
 of server config.
@@ -39,37 +41,37 @@ Example:
     {{.Exec}} {{.LongName}} dir
     {{.Exec}} {{.LongName}} c1.json c2.yaml
 `,
-	Run: executeAddOutbounds,
+	Run: executeAddInbounds,
 }
 
-func executeAddOutbounds(cmd *base.Command, args []string) {
-	setSharedFlags(cmd)
-	setSharedConfigFlags(cmd)
+func executeAddInbounds(cmd *base.Command, args []string) {
+	api.SetSharedFlags(cmd)
+	api.SetSharedConfigFlags(cmd)
 	cmd.Flag.Parse(args)
-	c, err := helpers.LoadConfig(cmd.Flag.Args(), apiConfigFormat, apiConfigRecursively)
+	c, err := helpers.LoadConfig(cmd.Flag.Args(), api.ApiConfigFormat, api.ApiConfigRecursively)
 	if err != nil {
 		base.Fatalf("failed to load: %s", err)
 	}
-	if len(c.OutboundConfigs) == 0 {
-		base.Fatalf("no valid outbound found")
+	if len(c.InboundConfigs) == 0 {
+		base.Fatalf("no valid inbound found")
 	}
 
-	conn, ctx, close := dialAPIServer()
+	conn, ctx, close := api.DialAPIServer()
 	defer close()
 
 	client := handlerService.NewHandlerServiceClient(conn)
-	for _, out := range c.OutboundConfigs {
-		fmt.Println("adding:", out.Tag)
-		o, err := out.Build()
+	for _, in := range c.InboundConfigs {
+		fmt.Println("adding:", in.Tag)
+		i, err := in.Build()
 		if err != nil {
 			base.Fatalf("failed to build conf: %s", err)
 		}
-		r := &handlerService.AddOutboundRequest{
-			Outbound: o,
+		r := &handlerService.AddInboundRequest{
+			Inbound: i,
 		}
-		_, err = client.AddOutbound(ctx, r)
+		_, err = client.AddInbound(ctx, r)
 		if err != nil {
-			base.Fatalf("failed to add outbound: %s", err)
+			base.Fatalf("failed to add inbound: %s", err)
 		}
 	}
 }

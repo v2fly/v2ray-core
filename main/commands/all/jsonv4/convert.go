@@ -1,4 +1,4 @@
-package all
+package jsonv4
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/pelletier/go-toml"
+
 	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v2"
 
