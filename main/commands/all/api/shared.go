@@ -20,9 +20,9 @@ var (
 	apiTimeout       int
 	apiJSON          bool
 	// ApiConfigFormat is an internal variable
-	ApiConfigFormat string
+	ApiConfigFormat string // nolint:golint, stylecheck
 	// ApiConfigRecursively is an internal variable
-	ApiConfigRecursively bool
+	ApiConfigRecursively bool // nolint:golint, stylecheck
 )
 
 // SetSharedFlags is an internal API

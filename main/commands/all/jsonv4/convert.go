@@ -3,9 +3,10 @@ package jsonv4
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/pelletier/go-toml"
 	"os"
 	"strings"
+
+	"github.com/pelletier/go-toml"
 
 	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v2"

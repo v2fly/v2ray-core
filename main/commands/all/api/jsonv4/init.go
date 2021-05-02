@@ -8,5 +8,4 @@ func init() {
 		cmdAddOutbounds,
 		cmdRemoveInbounds,
 		cmdRemoveOutbounds)
-
 }
