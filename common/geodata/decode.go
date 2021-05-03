@@ -11,6 +11,7 @@ package geodata
 
 import (
 	"io"
+	"runtime"
 	"strings"
 
 	"google.golang.org/protobuf/encoding/protowire"
@@ -22,14 +23,14 @@ import (
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
 var (
-	ErrFailedToReadBytes            = errors.New("failed to read bytes")
-	ErrFailedToReadExpectedLenBytes = errors.New("failed to read expected length of bytes")
-	ErrInvalidGeodataFile           = errors.New("invalid geodata file")
-	ErrInvalidGeodataVarintLength   = errors.New("invalid geodata varint length")
-	ErrCodeNotFound                 = errors.New("code not found")
+	errFailedToReadBytes            = errors.New("failed to read bytes")
+	errFailedToReadExpectedLenBytes = errors.New("failed to read expected length of bytes")
+	errInvalidGeodataFile           = errors.New("invalid geodata file")
+	errInvalidGeodataVarintLength   = errors.New("invalid geodata varint length")
+	errCodeNotFound                 = errors.New("code not found")
 )
 
-func EmitBytes(f io.ReadSeeker, code string) ([]byte, error) {
+func emitBytes(f io.ReadSeeker, code string) ([]byte, error) {
 	count := 1
 	isInner := false
 	tempContainer := make([]byte, 0, 5)
@@ -43,19 +44,19 @@ Loop:
 		container := make([]byte, advancedN)
 		bytesRead, err := f.Read(container)
 		if err == io.EOF {
-			return nil, ErrCodeNotFound
+			return nil, errCodeNotFound
 		}
 		if err != nil {
-			return nil, ErrFailedToReadBytes
+			return nil, errFailedToReadBytes
 		}
 		if bytesRead != len(container) {
-			return nil, ErrFailedToReadExpectedLenBytes
+			return nil, errFailedToReadExpectedLenBytes
 		}
 
 		switch count {
 		case 1, 3: // data type ((field_number << 3) | wire_type)
 			if container[0] != 10 { // byte `0A` equals to `10` in decimal
-				return nil, ErrInvalidGeodataFile
+				return nil, errInvalidGeodataFile
 			}
 			advancedN = 1
 			count++
@@ -67,7 +68,7 @@ Loop:
 			}
 			lenVarint, n := protowire.ConsumeVarint(tempContainer)
 			if n < 0 {
-				return nil, ErrInvalidGeodataVarintLength
+				return nil, errInvalidGeodataVarintLength
 			}
 			tempContainer = nil
 			if !isInner {
@@ -97,8 +98,11 @@ Loop:
 			result = container
 			break Loop
 		}
+
+		runtime.GC() // run GC every round to save memory
 	}
 
+	runtime.GC() // run GC at the end to save memory
 	return result, nil
 }
 
@@ -109,7 +113,7 @@ func Decode(filename, code string) ([]byte, error) {
 	}
 	defer f.Close()
 
-	geoBytes, err := EmitBytes(f, code)
+	geoBytes, err := emitBytes(f, code)
 	if err != nil {
 		return nil, err
 	}
