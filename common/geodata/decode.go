@@ -30,7 +30,7 @@ var (
 	errCodeNotFound                 = errors.New("code not found")
 )
 
-func emitBytes(f io.ReadSeekCloser, code string) ([]byte, error) {
+func emitBytes(f io.ReadSeeker, code string) ([]byte, error) {
 	count := 1
 	isInner := false
 	tempContainer := make([]byte, 0, 5)
