@@ -2,7 +2,6 @@ package geodata
 
 import (
 	"io/ioutil"
-	"runtime"
 	"strings"
 
 	"google.golang.org/protobuf/proto"
@@ -33,7 +32,7 @@ func (g GeoIPCache) Set(key string, value *router.GeoIP) {
 
 func (g GeoIPCache) Unmarshal(filename, code string) (*router.GeoIP, error) {
 	asset := platform.GetAssetLocation(filename)
-	idx := strings.ToUpper(asset + "|" + code)
+	idx := strings.ToUpper(asset + "_" + code)
 	if g.Has(idx) {
 		return g.Get(idx), nil
 	}
@@ -48,11 +47,11 @@ func (g GeoIPCache) Unmarshal(filename, code string) (*router.GeoIP, error) {
 		g.Set(idx, &geoip)
 		return &geoip, nil
 
-	case errCodeNotFound:
+	case ErrCodeNotFound:
 		return nil, newError(code, " not found in ", filename)
 
-	case errFailedToReadBytes, errFailedToReadExpectedLenBytes,
-		errInvalidGeodataFile, errInvalidGeodataVarintLength:
+	case ErrFailedToReadBytes, ErrFailedToReadExpectedLenBytes,
+		ErrInvalidGeodataFile, ErrInvalidGeodataVarintLength:
 		newError("failed to decode geodata file: ", filename, ". Fallback to the original ReadFile method.").AtWarning().WriteToLog()
 		geoipBytes, err = ioutil.ReadFile(asset)
 		if err != nil {
@@ -62,13 +61,11 @@ func (g GeoIPCache) Unmarshal(filename, code string) (*router.GeoIP, error) {
 		if err := proto.Unmarshal(geoipBytes, &geoipList); err != nil {
 			return nil, err
 		}
-		runtime.GC()
 		for _, geoip := range geoipList.GetEntry() {
 			if strings.EqualFold(code, geoip.GetCountryCode()) {
 				g.Set(idx, geoip)
 				return geoip, nil
 			}
-			runtime.GC()
 		}
 
 	default:
@@ -100,7 +97,7 @@ func (g GeoSiteCache) Set(key string, value *router.GeoSite) {
 
 func (g GeoSiteCache) Unmarshal(filename, code string) (*router.GeoSite, error) {
 	asset := platform.GetAssetLocation(filename)
-	idx := strings.ToUpper(asset + "|" + code)
+	idx := strings.ToUpper(asset + "_" + code)
 	if g.Has(idx) {
 		return g.Get(idx), nil
 	}
@@ -115,11 +112,11 @@ func (g GeoSiteCache) Unmarshal(filename, code string) (*router.GeoSite, error) 
 		g.Set(idx, &geosite)
 		return &geosite, nil
 
-	case errCodeNotFound:
+	case ErrCodeNotFound:
 		return nil, newError(code, " not found in ", filename)
 
-	case errFailedToReadBytes, errFailedToReadExpectedLenBytes,
-		errInvalidGeodataFile, errInvalidGeodataVarintLength:
+	case ErrFailedToReadBytes, ErrFailedToReadExpectedLenBytes,
+		ErrInvalidGeodataFile, ErrInvalidGeodataVarintLength:
 		newError("failed to decode geodata file: ", filename, ". Fallback to the original ReadFile method.").AtWarning().WriteToLog()
 		geositeBytes, err = ioutil.ReadFile(asset)
 		if err != nil {
@@ -129,13 +126,11 @@ func (g GeoSiteCache) Unmarshal(filename, code string) (*router.GeoSite, error) 
 		if err := proto.Unmarshal(geositeBytes, &geositeList); err != nil {
 			return nil, err
 		}
-		runtime.GC()
 		for _, geosite := range geositeList.GetEntry() {
 			if strings.EqualFold(code, geosite.GetCountryCode()) {
 				g.Set(idx, geosite)
 				return geosite, nil
 			}
-			runtime.GC()
 		}
 
 	default:
