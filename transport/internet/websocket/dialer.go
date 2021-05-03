@@ -9,14 +9,13 @@ import (
 	"io"
 	"time"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/features/ext"
-
 	"github.com/gorilla/websocket"
 
+	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/session"
+	"github.com/v2fly/v2ray-core/v4/features/extension"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
 )
@@ -62,8 +61,8 @@ func dialWebsocket(ctx context.Context, dest net.Destination, streamSettings *in
 	uri := protocol + "://" + host + wsSettings.GetNormalizedPath()
 
 	if wsSettings.UseBrowserForwarding {
-		var forwarder ext.BrowserForwarder
-		err := core.RequireFeatures(ctx, func(Forwarder ext.BrowserForwarder) {
+		var forwarder extension.BrowserForwarder
+		err := core.RequireFeatures(ctx, func(Forwarder extension.BrowserForwarder) {
 			forwarder = Forwarder
 		})
 		if err != nil {
@@ -141,7 +140,7 @@ func (d dialerWithEarlyData) Dial(earlyData []byte) (*websocket.Conn, error) {
 }
 
 type dialerWithEarlyDataRelayed struct {
-	forwarder ext.BrowserForwarder
+	forwarder extension.BrowserForwarder
 	uriBase   string
 	config    *Config
 }

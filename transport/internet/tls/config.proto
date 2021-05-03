@@ -41,4 +41,11 @@ message Config {
   // If true, root certificates on the system will not be loaded for
   // verification.
   bool disable_system_root = 6;
+
+  /* @Document A pinned certificate chain sha256 hash.
+     @Document If the server's hash does not match this value, the connection will be aborted.
+     @Document This value replace allow_insecure.
+     @Critical
+  */
+  repeated bytes pinned_peer_certificate_chain_sha256 = 7;
 }

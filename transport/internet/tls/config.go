@@ -3,8 +3,10 @@
 package tls
 
 import (
+	"crypto/hmac"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"strings"
 	"sync"
 	"time"
@@ -170,6 +172,19 @@ func (c *Config) parseServerName() string {
 	return c.ServerName
 }
 
+func (c *Config) verifyPeerCert(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+	if c.PinnedPeerCertificateChainSha256 != nil {
+		hashValue := GenerateCertChainHash(rawCerts)
+		for _, v := range c.PinnedPeerCertificateChainSha256 {
+			if hmac.Equal(hashValue, v) {
+				return nil
+			}
+		}
+		return newError("peer cert is unrecognized: ", base64.StdEncoding.EncodeToString(hashValue))
+	}
+	return nil
+}
+
 // GetTLSConfig converts this Config into tls.Config.
 func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 	root, err := c.getCertPool()
@@ -193,6 +208,7 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 		InsecureSkipVerify:     c.AllowInsecure,
 		NextProtos:             c.NextProtocol,
 		SessionTicketsDisabled: !c.EnableSessionResumption,
+		VerifyPeerCertificate:  c.verifyPeerCert,
 	}
 
 	for _, opt := range opts {

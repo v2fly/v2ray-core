@@ -5,11 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
-
 	"github.com/v2fly/v2ray-core/v4/app/router"
+	"github.com/v2fly/v2ray-core/v4/common/geodata"
 	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 )
 
 type RouterRulesConfig struct {
@@ -17,9 +15,16 @@ type RouterRulesConfig struct {
 	DomainStrategy string            `json:"domainStrategy"`
 }
 
+// StrategyConfig represents a strategy config
+type StrategyConfig struct {
+	Type     string           `json:"type"`
+	Settings *json.RawMessage `json:"settings"`
+}
+
 type BalancingRule struct {
-	Tag       string     `json:"tag"`
-	Selectors StringList `json:"selector"`
+	Tag       string         `json:"tag"`
+	Selectors StringList     `json:"selector"`
+	Strategy  StrategyConfig `json:"strategy"`
 }
 
 func (r *BalancingRule) Build() (*router.BalancingRule, error) {
@@ -30,9 +35,20 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 		return nil, newError("empty selector list")
 	}
 
+	var strategy string
+	switch strings.ToLower(r.Strategy.Type) {
+	case strategyRandom, "":
+		strategy = strategyRandom
+	case strategyLeastPing:
+		strategy = "leastPing"
+	default:
+		return nil, newError("unknown balancing strategy: " + r.Strategy.Type)
+	}
+
 	return &router.BalancingRule{
 		Tag:              r.Tag,
 		OutboundSelector: []string(r.Selectors),
+		Strategy:         strategy,
 	}, nil
 }
 
@@ -156,48 +172,6 @@ func ParseIP(s string) (*router.CIDR, error) {
 	}
 }
 
-func loadGeoIP(country string) ([]*router.CIDR, error) {
-	return loadIP("geoip.dat", country)
-}
-
-func loadIP(filename, country string) ([]*router.CIDR, error) {
-	geoipBytes, err := filesystem.ReadAsset(filename)
-	if err != nil {
-		return nil, newError("failed to open file: ", filename).Base(err)
-	}
-	var geoipList router.GeoIPList
-	if err := proto.Unmarshal(geoipBytes, &geoipList); err != nil {
-		return nil, err
-	}
-
-	for _, geoip := range geoipList.Entry {
-		if strings.EqualFold(geoip.CountryCode, country) {
-			return geoip.Cidr, nil
-		}
-	}
-
-	return nil, newError("country not found in ", filename, ": ", country)
-}
-
-func loadSite(filename, list string) ([]*router.Domain, error) {
-	geositeBytes, err := filesystem.ReadAsset(filename)
-	if err != nil {
-		return nil, newError("failed to open file: ", filename).Base(err)
-	}
-	var geositeList router.GeoSiteList
-	if err := proto.Unmarshal(geositeBytes, &geositeList); err != nil {
-		return nil, err
-	}
-
-	for _, site := range geositeList.Entry {
-		if strings.EqualFold(site.CountryCode, list) {
-			return site.Domain, nil
-		}
-	}
-
-	return nil, newError("list not found in ", filename, ": ", list)
-}
-
 type AttributeMatcher interface {
 	Match(*router.Domain) bool
 }
@@ -242,53 +216,13 @@ func parseAttrs(attrs []string) *AttributeList {
 	return al
 }
 
-func loadGeositeWithAttr(file string, siteWithAttr string) ([]*router.Domain, error) {
-	parts := strings.Split(siteWithAttr, "@")
-	if len(parts) == 0 {
-		return nil, newError("empty rule")
-	}
-	list := strings.TrimSpace(parts[0])
-	attrVal := parts[1:]
-
-	if len(list) == 0 {
-		return nil, newError("empty listname in rule: ", siteWithAttr)
-	}
-
-	domains, err := loadSite(file, list)
-	if err != nil {
-		return nil, err
-	}
-
-	attrs := parseAttrs(attrVal)
-	if attrs.IsEmpty() {
-		if strings.Contains(siteWithAttr, "@") {
-			newError("empty attribute list: ", siteWithAttr)
-		}
-		return domains, nil
-	}
-
-	filteredDomains := make([]*router.Domain, 0, len(domains))
-	hasAttrMatched := false
-	for _, domain := range domains {
-		if attrs.Match(domain) {
-			hasAttrMatched = true
-			filteredDomains = append(filteredDomains, domain)
-		}
-	}
-	if !hasAttrMatched {
-		newError("attribute match no rule: geosite:", siteWithAttr)
-	}
-
-	return filteredDomains, nil
-}
-
 func parseDomainRule(domain string) ([]*router.Domain, error) {
 	if strings.HasPrefix(domain, "geosite:") {
 		list := domain[8:]
 		if len(list) == 0 {
 			return nil, newError("empty listname in rule: ", domain)
 		}
-		domains, err := loadGeositeWithAttr("geosite.dat", list)
+		domains, err := loadGeosite(list)
 		if err != nil {
 			return nil, newError("failed to load geosite: ", list).Base(err)
 		}
@@ -382,17 +316,23 @@ func toCidrList(ips StringList) ([]*router.GeoIP, error) {
 	for _, ip := range ips {
 		if strings.HasPrefix(ip, "geoip:") {
 			country := ip[6:]
+			isReverseMatch := false
+			if strings.HasPrefix(ip, "geoip:!") {
+				country = ip[7:]
+				isReverseMatch = true
+			}
 			if len(country) == 0 {
 				return nil, newError("empty country name in rule")
 			}
 			geoip, err := loadGeoIP(country)
 			if err != nil {
-				return nil, newError("failed to load geoip: ", country).Base(err)
+				return nil, newError("failed to load geoip:", country).Base(err)
 			}
 
 			geoipList = append(geoipList, &router.GeoIP{
-				CountryCode: strings.ToUpper(country),
-				Cidr:        geoip,
+				CountryCode:  strings.ToUpper(country),
+				Cidr:         geoip,
+				ReverseMatch: isReverseMatch,
 			})
 
 			continue
@@ -421,14 +361,21 @@ func toCidrList(ips StringList) ([]*router.GeoIP, error) {
 			if len(filename) == 0 || len(country) == 0 {
 				return nil, newError("empty filename or empty country in rule")
 			}
-			geoip, err := loadIP(filename, country)
+
+			isReverseMatch := false
+			if strings.HasPrefix(country, "!") {
+				country = country[1:]
+				isReverseMatch = true
+			}
+			geoip, err := geodata.LoadIP(filename, country)
 			if err != nil {
-				return nil, newError("failed to load geoip: ", country, " from ", filename).Base(err)
+				return nil, newError("failed to load geoip:", country, " from ", filename).Base(err)
 			}
 
 			geoipList = append(geoipList, &router.GeoIP{
-				CountryCode: strings.ToUpper(filename + "_" + country),
-				Cidr:        geoip,
+				CountryCode:  strings.ToUpper(filename + "_" + country),
+				Cidr:         geoip,
+				ReverseMatch: isReverseMatch,
 			})
 
 			continue

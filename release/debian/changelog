@@ -1,3 +1,22 @@
+v2ray-core (4.37.3-1) unstable; urgency=medium
+
+  * DNS: hosts support multiple addresses (#884 #886 #888)
+  * Fix: cannot load geoip & geosite (#889)
+  * Chore: use Go v1.16 to build Debian package (#890)
+
+ -- V2Fly <dev@v2fly.org>  Mon, 12 Apr 2021 23:05:51 +0800
+
+v2ray-core (4.37.2-1) unstable; urgency=medium
+
+  * Websocket: support browser forwarder (#818)
+  * Websocket: support Websocket 0-RTT early data (#818)
+  * Shadowsocks: add replay protection for Shadowsocks proxy (#777)
+  * DNS: add queryStrategy option for DNS (#794)
+  * DNS: add disableFallback & skipFallback option for DNS client (#864)
+  * GeoIP: add inversed GeoIP matching (#860)
+
+ -- V2Fly <dev@v2fly.org>  Sun, 11 Apr 2021 22:00:51 +0800
+
 v2ray-core (4.34.0-1) unstable; urgency=medium
 
   * TLS Session Resumption is now disabled by default (#569).

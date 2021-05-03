@@ -16,7 +16,7 @@ import (
 func CreateObject(v *Instance, config interface{}) (interface{}, error) {
 	var ctx context.Context
 	if v != nil {
-		ctx = context.WithValue(v.ctx, v2rayKey, v)
+		ctx = toContext(v.ctx, v)
 	}
 	return common.CreateObject(ctx, config)
 }
@@ -47,13 +47,11 @@ func StartInstance(configFormat string, configBytes []byte) (*Instance, error) {
 //
 // v2ray:api:stable
 func Dial(ctx context.Context, v *Instance, dest net.Destination) (net.Conn, error) {
+	ctx = toContext(ctx, v)
+
 	dispatcher := v.GetFeature(routing.DispatcherType())
 	if dispatcher == nil {
 		return nil, newError("routing.Dispatcher is not registered in V2Ray core")
-	}
-
-	if ctx.Value(v2rayKey) == nil {
-		ctx = context.WithValue(ctx, v2rayKey, v)
 	}
 
 	r, err := dispatcher.(routing.Dispatcher).Dispatch(ctx, dest)
@@ -76,6 +74,8 @@ func Dial(ctx context.Context, v *Instance, dest net.Destination) (net.Conn, err
 //
 // v2ray:api:beta
 func DialUDP(ctx context.Context, v *Instance) (net.PacketConn, error) {
+	ctx = toContext(ctx, v)
+
 	dispatcher := v.GetFeature(routing.DispatcherType())
 	if dispatcher == nil {
 		return nil, newError("routing.Dispatcher is not registered in V2Ray core")

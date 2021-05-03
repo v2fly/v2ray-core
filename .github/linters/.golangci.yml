@@ -6,9 +6,9 @@ run:
 issues:
   new: true
   exclude-rules:
-    - path: _test\.go
-      linters:
-        - scopelint
+    - linters:
+      - staticcheck
+      text: "SA1019:"
 
 linters:
   enable:
@@ -25,7 +25,6 @@ linters:
     - misspell
     - nakedret
     - rowserrcheck
-    - scopelint
     - staticcheck
     - structcheck
     - stylecheck

@@ -3,7 +3,7 @@ package all
 import (
 	// The following are necessary as they register handlers in their init functions.
 
-	// Required features. Can't remove unless there is replacements.
+	// Mandatory features. Can't remove unless there are replacements.
 	_ "github.com/v2fly/v2ray-core/v4/app/dispatcher"
 	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/inbound"
 	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/outbound"
@@ -13,6 +13,9 @@ import (
 	_ "github.com/v2fly/v2ray-core/v4/app/log/command"
 	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/command"
 	_ "github.com/v2fly/v2ray-core/v4/app/stats/command"
+
+	// Developer preview services
+	_ "github.com/v2fly/v2ray-core/v4/app/observatory/command"
 
 	// Other optional features.
 	_ "github.com/v2fly/v2ray-core/v4/app/dns"
@@ -25,6 +28,9 @@ import (
 
 	// Fix dependency cycle caused by core import in internet package
 	_ "github.com/v2fly/v2ray-core/v4/transport/internet/tagged/taggedimpl"
+
+	// Developer preview features
+	_ "github.com/v2fly/v2ray-core/v4/app/observatory"
 
 	// Inbound and outbound proxies.
 	_ "github.com/v2fly/v2ray-core/v4/proxy/blackhole"

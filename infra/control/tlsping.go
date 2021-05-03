@@ -3,11 +3,13 @@ package control
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"net"
 
 	"github.com/v2fly/v2ray-core/v4/common"
+	v2tls "github.com/v2fly/v2ray-core/v4/transport/internet/tls"
 )
 
 type TLSPingCommand struct{}
@@ -75,6 +77,8 @@ func (c *TLSPingCommand) Execute(args []string) error {
 			NextProtos:         []string{"http/1.1"},
 			MaxVersion:         tls.VersionTLS12,
 			MinVersion:         tls.VersionTLS12,
+			// Do not release tool before v5's refactor
+			// VerifyPeerCertificate: showCert(),
 		})
 		err = tlsConn.Handshake()
 		if err != nil {
@@ -98,6 +102,8 @@ func (c *TLSPingCommand) Execute(args []string) error {
 			NextProtos: []string{"http/1.1"},
 			MaxVersion: tls.VersionTLS12,
 			MinVersion: tls.VersionTLS12,
+			// Do not release tool before v5's refactor
+			// VerifyPeerCertificate: showCert(),
 		})
 		err = tlsConn.Handshake()
 		if err != nil {
@@ -112,6 +118,14 @@ func (c *TLSPingCommand) Execute(args []string) error {
 	fmt.Println("Tls ping finished")
 
 	return nil
+}
+
+func showCert() func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+	return func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+		hash := v2tls.GenerateCertChainHash(rawCerts)
+		fmt.Println("Certificate Chain Hash: ", base64.StdEncoding.EncodeToString(hash))
+		return nil
+	}
 }
 
 func init() {
