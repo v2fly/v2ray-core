@@ -5,9 +5,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/golang/protobuf/proto"
+
 	"github.com/v2fly/v2ray-core/v4/app/router"
-	"github.com/v2fly/v2ray-core/v4/common/geodata"
 	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 )
 
 type RouterRulesConfig struct {
@@ -172,6 +174,48 @@ func ParseIP(s string) (*router.CIDR, error) {
 	}
 }
 
+func loadGeoIP(country string) ([]*router.CIDR, error) {
+	return loadIP("geoip.dat", country)
+}
+
+func loadIP(filename, country string) ([]*router.CIDR, error) {
+	geoipBytes, err := filesystem.ReadAsset(filename)
+	if err != nil {
+		return nil, newError("failed to open file: ", filename).Base(err)
+	}
+	var geoipList router.GeoIPList
+	if err := proto.Unmarshal(geoipBytes, &geoipList); err != nil {
+		return nil, err
+	}
+
+	for _, geoip := range geoipList.Entry {
+		if strings.EqualFold(geoip.CountryCode, country) {
+			return geoip.Cidr, nil
+		}
+	}
+
+	return nil, newError("country not found in ", filename, ": ", country)
+}
+
+func loadSite(filename, list string) ([]*router.Domain, error) {
+	geositeBytes, err := filesystem.ReadAsset(filename)
+	if err != nil {
+		return nil, newError("failed to open file: ", filename).Base(err)
+	}
+	var geositeList router.GeoSiteList
+	if err := proto.Unmarshal(geositeBytes, &geositeList); err != nil {
+		return nil, err
+	}
+
+	for _, site := range geositeList.Entry {
+		if strings.EqualFold(site.CountryCode, list) {
+			return site.Domain, nil
+		}
+	}
+
+	return nil, newError("list not found in ", filename, ": ", list)
+}
+
 type AttributeMatcher interface {
 	Match(*router.Domain) bool
 }
@@ -214,6 +258,50 @@ func parseAttrs(attrs []string) *AttributeList {
 		al.matcher = append(al.matcher, BooleanMatcher(trimmedAttr))
 	}
 	return al
+}
+
+func loadGeosite(list string) ([]*router.Domain, error) {
+	return loadGeositeWithAttr("geosite.dat", list)
+}
+
+func loadGeositeWithAttr(file string, siteWithAttr string) ([]*router.Domain, error) {
+	parts := strings.Split(siteWithAttr, "@")
+	if len(parts) == 0 {
+		return nil, newError("empty rule")
+	}
+	list := strings.TrimSpace(parts[0])
+	attrVal := parts[1:]
+
+	if len(list) == 0 {
+		return nil, newError("empty listname in rule: ", siteWithAttr)
+	}
+
+	domains, err := loadSite(file, list)
+	if err != nil {
+		return nil, err
+	}
+
+	attrs := parseAttrs(attrVal)
+	if attrs.IsEmpty() {
+		if strings.Contains(siteWithAttr, "@") {
+			newError("empty attribute list: ", siteWithAttr)
+		}
+		return domains, nil
+	}
+
+	filteredDomains := make([]*router.Domain, 0, len(domains))
+	hasAttrMatched := false
+	for _, domain := range domains {
+		if attrs.Match(domain) {
+			hasAttrMatched = true
+			filteredDomains = append(filteredDomains, domain)
+		}
+	}
+	if !hasAttrMatched {
+		newError("attribute match no rule: geosite:", siteWithAttr)
+	}
+
+	return filteredDomains, nil
 }
 
 func parseDomainRule(domain string) ([]*router.Domain, error) {
@@ -326,7 +414,7 @@ func toCidrList(ips StringList) ([]*router.GeoIP, error) {
 			}
 			geoip, err := loadGeoIP(country)
 			if err != nil {
-				return nil, newError("failed to load geoip:", country).Base(err)
+				return nil, newError("failed to load geoip: ", country).Base(err)
 			}
 
 			geoipList = append(geoipList, &router.GeoIP{
@@ -367,9 +455,9 @@ func toCidrList(ips StringList) ([]*router.GeoIP, error) {
 				country = country[1:]
 				isReverseMatch = true
 			}
-			geoip, err := geodata.LoadIP(filename, country)
+			geoip, err := loadIP(filename, country)
 			if err != nil {
-				return nil, newError("failed to load geoip:", country, " from ", filename).Base(err)
+				return nil, newError("failed to load geoip: ", country, " from ", filename).Base(err)
 			}
 
 			geoipList = append(geoipList, &router.GeoIP{

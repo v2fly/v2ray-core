@@ -5,11 +5,13 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"google.golang.org/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/geodata"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/platform"
 	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
@@ -169,7 +171,7 @@ func TestGeoIPReverseMatcher(t *testing.T) {
 }
 
 func TestGeoIPMatcher4CN(t *testing.T) {
-	ips, err := geodata.LoadIP("geoip.dat", "CN")
+	ips, err := loadGeoIP("CN")
 	common.Must(err)
 
 	matcher := &router.GeoIPMatcher{}
@@ -181,7 +183,7 @@ func TestGeoIPMatcher4CN(t *testing.T) {
 }
 
 func TestGeoIPMatcher6US(t *testing.T) {
-	ips, err := geodata.LoadIP("geoip.dat", "US")
+	ips, err := loadGeoIP("US")
 	common.Must(err)
 
 	matcher := &router.GeoIPMatcher{}
@@ -192,8 +194,27 @@ func TestGeoIPMatcher6US(t *testing.T) {
 	}
 }
 
+func loadGeoIP(country string) ([]*router.CIDR, error) {
+	geoipBytes, err := filesystem.ReadAsset("geoip.dat")
+	if err != nil {
+		return nil, err
+	}
+	var geoipList router.GeoIPList
+	if err := proto.Unmarshal(geoipBytes, &geoipList); err != nil {
+		return nil, err
+	}
+
+	for _, geoip := range geoipList.Entry {
+		if strings.EqualFold(geoip.CountryCode, country) {
+			return geoip.Cidr, nil
+		}
+	}
+
+	panic("country not found: " + country)
+}
+
 func BenchmarkGeoIPMatcher4CN(b *testing.B) {
-	ips, err := geodata.LoadIP("geoip.dat", "CN")
+	ips, err := loadGeoIP("CN")
 	common.Must(err)
 
 	matcher := &router.GeoIPMatcher{}
@@ -207,7 +228,7 @@ func BenchmarkGeoIPMatcher4CN(b *testing.B) {
 }
 
 func BenchmarkGeoIPMatcher6US(b *testing.B) {
-	ips, err := geodata.LoadIP("geoip.dat", "US")
+	ips, err := loadGeoIP("US")
 	common.Must(err)
 
 	matcher := &router.GeoIPMatcher{}
