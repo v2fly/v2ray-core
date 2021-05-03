@@ -11,13 +11,13 @@ package geodata
 
 import (
 	"io"
-	"os"
 	"runtime"
 	"strings"
 
 	"google.golang.org/protobuf/encoding/protowire"
 
 	"github.com/v2fly/v2ray-core/v4/common/errors"
+	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
@@ -30,7 +30,7 @@ var (
 	errCodeNotFound                 = errors.New("code not found")
 )
 
-func emitBytes(f *os.File, code string) ([]byte, error) {
+func emitBytes(f io.ReadSeeker, code string) ([]byte, error) {
 	count := 1
 	isInner := false
 	tempContainer := make([]byte, 0, 5)
@@ -107,7 +107,7 @@ Loop:
 }
 
 func Decode(filename, code string) ([]byte, error) {
-	f, err := os.Open(filename)
+	f, err := filesystem.NewFileSeeker(filename)
 	if err != nil {
 		return nil, newError("failed to open file: ", filename).Base(err)
 	}
