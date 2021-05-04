@@ -19,14 +19,15 @@ func TestBootstrapDNS(t *testing.T) {
 }
 
 func TestBootstrapDNSWithV2raySystemDialer(t *testing.T) {
-	BootstrapDialer := func(ctx context.Context, network, _ string) (gonet.Conn, error) {
-		dest, err := net.ParseDestination(fmt.Sprintf("%s:%s", network, BootstrapDNS))
+	const bootstrapDNS = "8.8.4.4:53"
+	bootstrapDialer := func(ctx context.Context, network, _ string) (gonet.Conn, error) {
+		dest, err := net.ParseDestination(fmt.Sprintf("%s:%s", network, bootstrapDNS))
 		if err != nil {
 			return nil, err
 		}
 		return internet.DialSystem(ctx, dest, nil)
 	}
-	UseAlternativeBootstrapDNS(BootstrapDialer)
+	UseAlternativeBootstrapDNS(bootstrapDialer)
 
 	TestBootstrapDNS(t)
 }
