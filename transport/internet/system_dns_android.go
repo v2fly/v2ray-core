@@ -22,8 +22,5 @@ var NewDNSResolver DNSResolverFunc = func() *net.Resolver {
 }
 
 func init() {
-	net.DefaultResolver = &net.Resolver{
-		PreferGo: true,
-		Dial: NewDNSResolver(),
-	}
+	net.DefaultResolver = NewDNSResolver()
 }
