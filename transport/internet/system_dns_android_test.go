@@ -1,3 +1,5 @@
+// +build android
+
 package internet
 
 import (
