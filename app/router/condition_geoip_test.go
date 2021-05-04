@@ -20,17 +20,15 @@ func init() {
 	common.Must(err)
 
 	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
-	geoipPath := filepath.Join(tempPath, "geoip.dat")
-
 	os.Setenv("v2ray.location.asset", tempPath)
 
-	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && errors.Is(err, fs.ErrNotExist) {
-		if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, fs.ErrNotExist) {
-			common.Must(os.MkdirAll(tempPath, 0755))
-			geoipBytes, err := common.FetchHTTPContent(geoipURL)
-			common.Must(err)
-			common.Must(filesystem.WriteFile(geoipPath, geoipBytes))
-		}
+	geoipPath := platform.GetAssetLocation("geoip.dat")
+
+	if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, fs.ErrNotExist) {
+		common.Must(os.MkdirAll(tempPath, 0755))
+		geoipBytes, err := common.FetchHTTPContent(geoipURL)
+		common.Must(err)
+		common.Must(filesystem.WriteFile(geoipPath, geoipBytes))
 	}
 }
 
