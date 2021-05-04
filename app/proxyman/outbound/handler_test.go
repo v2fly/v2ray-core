@@ -3,6 +3,7 @@ package outbound_test
 import (
 	"context"
 	"testing"
+	_ "unsafe"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/policy"
@@ -13,8 +14,6 @@ import (
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
 	"github.com/v2fly/v2ray-core/v4/proxy/freedom"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
-
-	_ "unsafe"
 )
 
 func TestInterfaces(t *testing.T) {

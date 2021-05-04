@@ -11,7 +11,7 @@ type LoaderImplementation interface {
 
 type Loader interface {
 	LoaderImplementation
-	LoadGeosite(list string) ([]*router.Domain, error)
-	LoadGeositeWithAttr(file string, siteWithAttr string) ([]*router.Domain, error)
+	LoadGeoSite(list string) ([]*router.Domain, error)
+	LoadGeoSiteWithAttr(file string, siteWithAttr string) ([]*router.Domain, error)
 	LoadGeoIP(country string) ([]*router.CIDR, error)
 }
