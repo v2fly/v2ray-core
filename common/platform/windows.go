@@ -2,12 +2,7 @@
 
 package platform
 
-import (
-	"errors"
-	"io/fs"
-	"os"
-	"path/filepath"
-)
+import "path/filepath"
 
 func ExpandEnv(s string) string {
 	// TODO
@@ -28,19 +23,5 @@ func GetToolLocation(file string) string {
 func GetAssetLocation(file string) string {
 	const name = "v2ray.location.asset"
 	assetPath := NewEnvFlag(name).GetValue(getExecutableDir)
-	defPath := filepath.Join(assetPath, file)
-	for _, p := range []string{
-		defPath,
-		file,
-	} {
-		if _, err := os.Stat(p); err != nil && errors.Is(err, fs.ErrNotExist) {
-			continue
-		}
-
-		// asset found
-		return p
-	}
-
-	// asset not found, let the caller throw out the error
-	return defPath
+	return filepath.Join(assetPath, file)
 }
