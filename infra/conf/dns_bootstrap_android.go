@@ -7,8 +7,6 @@ import (
 	"net"
 )
 
-const bootstrapDNS = "8.8.8.8:53"
-
 type DialerFunc func(context.Context, string, string) (net.Conn, error)
 
 func UseAlternativeBootstrapDNS(dialer DialerFunc) {
@@ -19,6 +17,7 @@ func UseAlternativeBootstrapDNS(dialer DialerFunc) {
 }
 
 func init() {
+	const bootstrapDNS = "8.8.8.8:53"
 	net.DefaultResolver = &net.Resolver{
 		PreferGo: true,
 		Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
