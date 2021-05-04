@@ -75,9 +75,9 @@ func getGeoDataLoaderImplementation(name string) (LoaderImplementation, error) {
 }
 
 func GetGeoDataLoader(name string) (Loader, error) {
-	if loadImpl, err := getGeoDataLoaderImplementation(name); err == nil {
+	loadImpl, err := getGeoDataLoaderImplementation(name)
+	if err == nil {
 		return &loader{loadImpl}, nil
-	} else { // nolint:golint
-		return nil, err
 	}
+	return nil, err
 }
