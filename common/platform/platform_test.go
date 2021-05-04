@@ -10,25 +10,7 @@ import (
 
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/platform"
-	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 )
-
-func init() {
-	const geoipURL = "https://raw.githubusercontent.com/v2fly/geoip/release/geoip.dat"
-
-	wd, err := os.Getwd()
-	common.Must(err)
-
-	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
-	geoipPath := filepath.Join(tempPath, "geoip.dat")
-
-	if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, fs.ErrNotExist) {
-		common.Must(os.MkdirAll(tempPath, 0755))
-		geoipBytes, err := common.FetchHTTPContent(geoipURL)
-		common.Must(err)
-		common.Must(filesystem.WriteFile(geoipPath, geoipBytes))
-	}
-}
 
 func TestNormalizeEnvName(t *testing.T) {
 	cases := []struct {
@@ -91,16 +73,6 @@ func TestWrongErrorCheckOnOSStat(t *testing.T) {
 }
 
 func TestGetAssetLocation(t *testing.T) {
-	// Test for external geo files
-	wd, err := os.Getwd()
-	common.Must(err)
-	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
-	geoipPath := filepath.Join(tempPath, "geoip.dat")
-	asset := platform.GetAssetLocation(geoipPath)
-	if _, err := os.Stat(asset); err != nil && errors.Is(err, fs.ErrNotExist) {
-		t.Error("cannot find external geo file:", asset)
-	}
-
 	exec, err := os.Executable()
 	common.Must(err)
 	loc := platform.GetAssetLocation("t")
