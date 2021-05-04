@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/v2fly/v2ray-core/v4/common/platform"
+
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
 	rule2 "github.com/v2fly/v2ray-core/v4/infra/conf/rule"
@@ -61,7 +63,6 @@ type RouterConfig struct {
 	Balancers      []*BalancingRule   `json:"balancers"`
 
 	DomainMatcher string `json:"domainMatcher"`
-	GeoLoader     string `json:"geoLoader"`
 }
 
 func (c *RouterConfig) getDomainStrategy() router.Config_DomainStrategy {
@@ -90,11 +91,11 @@ func (c *RouterConfig) Build() (*router.Config, error) {
 
 	cfgctx := cfgcommon.NewConfigureLoadingContext(context.Background())
 
-	if c.GeoLoader == "" {
-		c.GeoLoader = "standard"
-	}
+	geoloadername := platform.NewEnvFlag("v2ray.conf.geoloader").GetValue(func() string {
+		return "standard"
+	})
 
-	if loader, err := geodata.GetGeoDataLoader(c.GeoLoader); err == nil {
+	if loader, err := geodata.GetGeoDataLoader(geoloadername); err == nil {
 		cfgcommon.SetGeoDataLoader(cfgctx, loader)
 	} else {
 		return nil, newError("unable to create geo data loader ").Base(err)
