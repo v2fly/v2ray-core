@@ -68,7 +68,6 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 
 	dialer := &net.Dialer{
 		Timeout:   time.Second * 16,
-		DualStack: true,
 		LocalAddr: resolveSrcAddr(dest.Network, src),
 	}
 
