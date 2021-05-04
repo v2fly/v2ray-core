@@ -19,7 +19,7 @@ func TestBootstrapDNS(t *testing.T) {
 
 func TestBootstrapDNSWithV2raySystemDialer(t *testing.T) {
 	const bootstrapDNS = "8.8.4.4:53"
-	bootstrapDialer := func(ctx context.Context, network, _ string) (gonet.Conn, error) {
+	var bootstrapDialer BootstrapDialerFunc = func(ctx context.Context, network, _ string) (gonet.Conn, error) {
 		dest, err := net.ParseDestination(fmt.Sprintf("%s:%s", network, bootstrapDNS))
 		if err != nil {
 			return nil, err
