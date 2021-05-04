@@ -3,12 +3,11 @@ package standard
 import (
 	"strings"
 
-	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
-
 	"github.com/golang/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen

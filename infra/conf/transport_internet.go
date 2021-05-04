@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
-
 	"github.com/golang/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/domainsocket"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/http"

@@ -6,15 +6,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/v2fly/v2ray-core/v4/common/platform"
-
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
-	rule2 "github.com/v2fly/v2ray-core/v4/infra/conf/rule"
-
 	"github.com/v2fly/v2ray-core/v4/app/dns"
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/platform"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
+	rule2 "github.com/v2fly/v2ray-core/v4/infra/conf/rule"
 )
 
 type NameServerConfig struct {

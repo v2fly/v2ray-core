@@ -3,10 +3,9 @@ package conf
 import (
 	"sort"
 
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
-
 	"github.com/golang/protobuf/proto"
 
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/headers/http"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/headers/noop"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/headers/srtp"
