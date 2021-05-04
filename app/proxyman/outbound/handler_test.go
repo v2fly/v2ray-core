@@ -13,6 +13,8 @@ import (
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
 	"github.com/v2fly/v2ray-core/v4/proxy/freedom"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
+
+	_ "unsafe"
 )
 
 func TestInterfaces(t *testing.T) {
@@ -20,7 +22,8 @@ func TestInterfaces(t *testing.T) {
 	_ = (outbound.Manager)(new(Manager))
 }
 
-const v2rayKey core.V2rayKey = 1
+//go:linkname mustToContextForced github.com/v2fly/v2ray-core/v4.mustToContext
+func mustToContextForced(ctx context.Context, v *core.Instance) context.Context
 
 func TestOutboundWithoutStatCounter(t *testing.T) {
 	config := &core.Config{
@@ -38,7 +41,7 @@ func TestOutboundWithoutStatCounter(t *testing.T) {
 
 	v, _ := core.New(config)
 	v.AddFeature((outbound.Manager)(new(Manager)))
-	ctx := context.WithValue(context.Background(), v2rayKey, v)
+	ctx := mustToContextForced(context.Background(), v)
 	h, _ := NewHandler(ctx, &core.OutboundHandlerConfig{
 		Tag:           "tag",
 		ProxySettings: serial.ToTypedMessage(&freedom.Config{}),
