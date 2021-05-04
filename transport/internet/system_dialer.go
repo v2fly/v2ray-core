@@ -73,7 +73,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 
 	if resolver := NewDNSResolver(); resolver != nil {
 		dialer.Resolver = resolver
- 	}
+	}
 
 	if sockopt != nil || len(d.controllers) > 0 {
 		dialer.Control = func(network, address string, c syscall.RawConn) error {
