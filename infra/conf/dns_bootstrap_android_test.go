@@ -28,5 +28,5 @@ func TestBootstrapDNSWithV2raySystemDialer(t *testing.T) {
 	}
 	UseAlternativeBootstrapDNS(BootstrapDialer)
 
-	TestBootstrapDNS(t *testing.T)
+	TestBootstrapDNS(t)
 }
