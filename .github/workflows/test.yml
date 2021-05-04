@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - v*
+      - dev-*
     paths:
       - "**/*.go"
       - "go.mod"
