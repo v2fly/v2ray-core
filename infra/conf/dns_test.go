@@ -23,22 +23,27 @@ func init() {
 	common.Must(err)
 
 	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
+	geoipPath := filepath.Join(tempPath, "geoip.dat")
+	geositePath := filepath.Join(tempPath, "geosite.dat")
+
 	os.Setenv("v2ray.location.asset", tempPath)
 
-	geoipPath := platform.GetAssetLocation("geoip.dat")
-	geositePath := platform.GetAssetLocation("geosite.dat")
-
-	if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, fs.ErrNotExist) {
-		common.Must(os.MkdirAll(tempPath, 0755))
-		geoipBytes, err := common.FetchHTTPContent(geoipURL)
-		common.Must(err)
-		common.Must(filesystem.WriteFile(geoipPath, geoipBytes))
+	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && errors.Is(err, fs.ErrNotExist) {
+		if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, fs.ErrNotExist) {
+			common.Must(os.MkdirAll(tempPath, 0755))
+			geoipBytes, err := common.FetchHTTPContent(geoipURL)
+			common.Must(err)
+			common.Must(filesystem.WriteFile(geoipPath, geoipBytes))
+		}
 	}
-	if _, err := os.Stat(geositePath); err != nil && errors.Is(err, fs.ErrNotExist) {
-		common.Must(os.MkdirAll(tempPath, 0755))
-		geositeBytes, err := common.FetchHTTPContent(geositeURL)
-		common.Must(err)
-		common.Must(filesystem.WriteFile(geositePath, geositeBytes))
+
+	if _, err := os.Stat(platform.GetAssetLocation("geosite.dat")); err != nil && errors.Is(err, fs.ErrNotExist) {
+		if _, err := os.Stat(geositePath); err != nil && errors.Is(err, fs.ErrNotExist) {
+			common.Must(os.MkdirAll(tempPath, 0755))
+			geositeBytes, err := common.FetchHTTPContent(geositeURL)
+			common.Must(err)
+			common.Must(filesystem.WriteFile(geositePath, geositeBytes))
+		}
 	}
 }
 
