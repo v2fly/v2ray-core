@@ -1,9 +1,14 @@
 package conf
 
 import (
+	"context"
 	"encoding/json"
 	"sort"
 	"strings"
+
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
+	rule2 "github.com/v2fly/v2ray-core/v4/infra/conf/rule"
 
 	"github.com/v2fly/v2ray-core/v4/app/dns"
 	"github.com/v2fly/v2ray-core/v4/app/router"
@@ -11,28 +16,30 @@ import (
 )
 
 type NameServerConfig struct {
-	Address      *Address
-	ClientIP     *Address
+	Address      *cfgcommon.Address
+	ClientIP     *cfgcommon.Address
 	Port         uint16
 	SkipFallback bool
 	Domains      []string
-	ExpectIPs    StringList
+	ExpectIPs    cfgcommon.StringList
+
+	cfgctx context.Context
 }
 
 func (c *NameServerConfig) UnmarshalJSON(data []byte) error {
-	var address Address
+	var address cfgcommon.Address
 	if err := json.Unmarshal(data, &address); err == nil {
 		c.Address = &address
 		return nil
 	}
 
 	var advanced struct {
-		Address      *Address   `json:"address"`
-		ClientIP     *Address   `json:"clientIp"`
-		Port         uint16     `json:"port"`
-		SkipFallback bool       `json:"skipFallback"`
-		Domains      []string   `json:"domains"`
-		ExpectIPs    StringList `json:"expectIps"`
+		Address      *cfgcommon.Address   `json:"address"`
+		ClientIP     *cfgcommon.Address   `json:"clientIp"`
+		Port         uint16               `json:"port"`
+		SkipFallback bool                 `json:"skipFallback"`
+		Domains      []string             `json:"domains"`
+		ExpectIPs    cfgcommon.StringList `json:"expectIps"`
 	}
 	if err := json.Unmarshal(data, &advanced); err == nil {
 		c.Address = advanced.Address
@@ -63,6 +70,8 @@ func toDomainMatchingType(t router.Domain_Type) dns.DomainMatchingType {
 }
 
 func (c *NameServerConfig) Build() (*dns.NameServer, error) {
+	cfgctx := c.cfgctx
+
 	if c.Address == nil {
 		return nil, newError("NameServer address is not specified.")
 	}
@@ -71,7 +80,7 @@ func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 	var originalRules []*dns.NameServer_OriginalRule
 
 	for _, rule := range c.Domains {
-		parsedDomain, err := parseDomainRule(rule)
+		parsedDomain, err := rule2.ParseDomainRule(cfgctx, rule)
 		if err != nil {
 			return nil, newError("invalid domain rule: ", rule).Base(err)
 		}
@@ -88,7 +97,7 @@ func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 		})
 	}
 
-	geoipList, err := toCidrList(c.ExpectIPs)
+	geoipList, err := rule2.ToCidrList(cfgctx, c.ExpectIPs)
 	if err != nil {
 		return nil, newError("invalid IP rule: ", c.ExpectIPs).Base(err)
 	}
@@ -126,22 +135,24 @@ var typeMap = map[router.Domain_Type]dns.DomainMatchingType{
 type DNSConfig struct {
 	Servers         []*NameServerConfig     `json:"servers"`
 	Hosts           map[string]*HostAddress `json:"hosts"`
-	ClientIP        *Address                `json:"clientIp"`
+	ClientIP        *cfgcommon.Address      `json:"clientIp"`
 	Tag             string                  `json:"tag"`
 	QueryStrategy   string                  `json:"queryStrategy"`
 	DisableCache    bool                    `json:"disableCache"`
 	DisableFallback bool                    `json:"disableFallback"`
+
+	GeoLoader string `json:"geoLoader"`
 }
 
 type HostAddress struct {
-	addr  *Address
-	addrs []*Address
+	addr  *cfgcommon.Address
+	addrs []*cfgcommon.Address
 }
 
 // UnmarshalJSON implements encoding/json.Unmarshaler.UnmarshalJSON
 func (h *HostAddress) UnmarshalJSON(data []byte) error {
-	addr := new(Address)
-	var addrs []*Address
+	addr := new(cfgcommon.Address)
+	var addrs []*cfgcommon.Address
 	switch {
 	case json.Unmarshal(data, &addr) == nil:
 		h.addr = addr
@@ -181,6 +192,21 @@ func getHostMapping(ha *HostAddress) *dns.Config_HostMapping {
 
 // Build implements Buildable
 func (c *DNSConfig) Build() (*dns.Config, error) {
+	cfgctx := cfgcommon.NewConfigureLoadingContext(context.Background())
+
+	if c.GeoLoader == "" {
+		c.GeoLoader = "standard"
+	}
+
+	if loader, err := geodata.GetGeoDataLoader(c.GeoLoader); err == nil {
+		cfgcommon.SetGeoDataLoader(cfgctx, loader)
+	} else {
+		return nil, newError("unable to create geo data loader ").Base(err)
+	}
+
+	cfgEnv := cfgcommon.GetConfigureLoadingEnvironment(cfgctx)
+	geoLoader := cfgEnv.GetGeoLoader()
+
 	config := &dns.Config{
 		Tag:             c.Tag,
 		DisableCache:    c.DisableCache,
@@ -205,6 +231,7 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 	}
 
 	for _, server := range c.Servers {
+		server.cfgctx = cfgctx
 		ns, err := server.Build()
 		if err != nil {
 			return nil, newError("failed to build nameserver").Base(err)
@@ -238,7 +265,7 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 				if len(listName) == 0 {
 					return nil, newError("empty geosite rule: ", domain)
 				}
-				geositeList, err := loadGeosite(listName)
+				geositeList, err := geoLoader.LoadGeosite(listName)
 				if err != nil {
 					return nil, newError("failed to load geosite: ", listName).Base(err)
 				}
@@ -299,7 +326,7 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 				}
 				filename := kv[0]
 				list := kv[1]
-				geositeList, err := loadGeositeWithAttr(filename, list)
+				geositeList, err := geoLoader.LoadGeositeWithAttr(filename, list)
 				if err != nil {
 					return nil, newError("failed to load domain list: ", list, " from ", filename).Base(err)
 				}

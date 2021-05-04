@@ -2,17 +2,18 @@ package conf
 
 import (
 	"github.com/golang/protobuf/proto"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 
 	"github.com/v2fly/v2ray-core/v4/proxy/dokodemo"
 )
 
 type DokodemoConfig struct {
-	Host         *Address     `json:"address"`
-	PortValue    uint16       `json:"port"`
-	NetworkList  *NetworkList `json:"network"`
-	TimeoutValue uint32       `json:"timeout"`
-	Redirect     bool         `json:"followRedirect"`
-	UserLevel    uint32       `json:"userLevel"`
+	Host         *cfgcommon.Address     `json:"address"`
+	PortValue    uint16                 `json:"port"`
+	NetworkList  *cfgcommon.NetworkList `json:"network"`
+	TimeoutValue uint32                 `json:"timeout"`
+	Redirect     bool                   `json:"followRedirect"`
+	UserLevel    uint32                 `json:"userLevel"`
 }
 
 func (v *DokodemoConfig) Build() (proto.Message, error) {

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+
 	"github.com/golang/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
@@ -170,8 +172,8 @@ func (c *WebSocketConfig) Build() (proto.Message, error) {
 }
 
 type HTTPConfig struct {
-	Host *StringList `json:"host"`
-	Path string      `json:"path"`
+	Host *cfgcommon.StringList `json:"host"`
+	Path string                `json:"path"`
 }
 
 // Build implements Buildable.
@@ -292,13 +294,13 @@ func (c *TLSCertConfig) Build() (*tls.Certificate, error) {
 }
 
 type TLSConfig struct {
-	Insecure                         bool             `json:"allowInsecure"`
-	Certs                            []*TLSCertConfig `json:"certificates"`
-	ServerName                       string           `json:"serverName"`
-	ALPN                             *StringList      `json:"alpn"`
-	EnableSessionResumption          bool             `json:"enableSessionResumption"`
-	DisableSystemRoot                bool             `json:"disableSystemRoot"`
-	PinnedPeerCertificateChainSha256 *[]string        `json:"pinnedPeerCertificateChainSha256"`
+	Insecure                         bool                  `json:"allowInsecure"`
+	Certs                            []*TLSCertConfig      `json:"certificates"`
+	ServerName                       string                `json:"serverName"`
+	ALPN                             *cfgcommon.StringList `json:"alpn"`
+	EnableSessionResumption          bool                  `json:"enableSessionResumption"`
+	DisableSystemRoot                bool                  `json:"disableSystemRoot"`
+	PinnedPeerCertificateChainSha256 *[]string             `json:"pinnedPeerCertificateChainSha256"`
 }
 
 // Build implements Buildable.
