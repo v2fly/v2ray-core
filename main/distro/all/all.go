@@ -68,6 +68,7 @@ import (
 	_ "github.com/v2fly/v2ray-core/v4/transport/internet/headers/wireguard"
 
 	// Geo loaders
+	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/memconservative"
 	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/standard"
 
 	// JSON config support. Choose only one from the two below.
