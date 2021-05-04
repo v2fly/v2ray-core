@@ -71,8 +71,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 		LocalAddr: resolveSrcAddr(dest.Network, src),
 	}
 
-	resolver := NewDNSResolver()
-	if resolver != nil {
+	if resolver := NewDNSResolver(); resolver != nil {
 		dialer.Resolver = resolver
  	}
 
