@@ -263,7 +263,7 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 				if len(listName) == 0 {
 					return nil, newError("empty geosite rule: ", domain)
 				}
-				geositeList, err := geoLoader.LoadGeosite(listName)
+				geositeList, err := geoLoader.LoadGeoSite(listName)
 				if err != nil {
 					return nil, newError("failed to load geosite: ", listName).Base(err)
 				}
@@ -324,7 +324,7 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 				}
 				filename := kv[0]
 				list := kv[1]
-				geositeList, err := geoLoader.LoadGeositeWithAttr(filename, list)
+				geositeList, err := geoLoader.LoadGeoSiteWithAttr(filename, list)
 				if err != nil {
 					return nil, newError("failed to load domain list: ", list, " from ", filename).Base(err)
 				}

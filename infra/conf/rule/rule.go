@@ -22,7 +22,7 @@ func parseDomainRule(ctx context.Context, domain string) ([]*router.Domain, erro
 		if len(list) == 0 {
 			return nil, newError("empty listname in rule: ", domain)
 		}
-		domains, err := geoLoader.LoadGeosite(list)
+		domains, err := geoLoader.LoadGeoSite(list)
 		if err != nil {
 			return nil, newError("failed to load geosite: ", list).Base(err)
 		}
@@ -49,7 +49,7 @@ func parseDomainRule(ctx context.Context, domain string) ([]*router.Domain, erro
 		}
 		filename := kv[0]
 		list := kv[1]
-		domains, err := geoLoader.LoadGeositeWithAttr(filename, list)
+		domains, err := geoLoader.LoadGeoSiteWithAttr(filename, list)
 		if err != nil {
 			return nil, newError("failed to load external geosite: ", list, " from ", filename).Base(err)
 		}

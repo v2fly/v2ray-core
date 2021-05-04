@@ -10,11 +10,11 @@ type loader struct {
 	LoaderImplementation
 }
 
-func (l *loader) LoadGeosite(list string) ([]*router.Domain, error) {
-	return l.LoadGeositeWithAttr("geosite.dat", list)
+func (l *loader) LoadGeoSite(list string) ([]*router.Domain, error) {
+	return l.LoadGeoSiteWithAttr("geosite.dat", list)
 }
 
-func (l *loader) LoadGeositeWithAttr(file string, siteWithAttr string) ([]*router.Domain, error) {
+func (l *loader) LoadGeoSiteWithAttr(file string, siteWithAttr string) ([]*router.Domain, error) {
 	parts := strings.Split(siteWithAttr, "@")
 	if len(parts) == 0 {
 		return nil, newError("empty rule")
