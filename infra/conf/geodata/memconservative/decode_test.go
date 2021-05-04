@@ -13,20 +13,20 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 )
 
-const (
-	geoipURL   = "https://raw.githubusercontent.com/v2fly/geoip/release/geoip.dat"
-	geositeURL = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/dlc.dat"
-)
-
 func init() {
+	const (
+		geoipURL   = "https://raw.githubusercontent.com/v2fly/geoip/release/geoip.dat"
+		geositeURL = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/dlc.dat"
+	)
+
 	wd, err := os.Getwd()
 	common.Must(err)
 
-	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
-	os.Setenv("v2ray.location.asset", tempPath)
+	tempPath := filepath.Join(wd, "..", "..", "..", "..", "testing", "temp")
+	geoipPath := filepath.Join(tempPath, "geoip.dat")
+	geositePath := filepath.Join(tempPath, "geosite.dat")
 
-	geoipPath := platform.GetAssetLocation("geoip.dat")
-	geositePath := platform.GetAssetLocation("geosite.dat")
+	os.Setenv("v2ray.location.asset", tempPath)
 
 	if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, fs.ErrNotExist) {
 		common.Must(os.MkdirAll(tempPath, 0755))
