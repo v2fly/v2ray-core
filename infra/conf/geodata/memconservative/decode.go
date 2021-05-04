@@ -5,8 +5,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 	"google.golang.org/protobuf/encoding/protowire"
+
+	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 )
 
 var (

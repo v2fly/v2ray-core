@@ -13,9 +13,8 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/rule"
-
 	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/standard"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/rule"
 )
 
 func init() {
