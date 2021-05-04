@@ -10,7 +10,6 @@ import (
 const bootstrapDNS = "8.8.8.8:53"
 
 func init() {
-	const bootstrapDNS = "8.8.8.8:53"
 	net.DefaultResolver = &net.Resolver{
 		PreferGo: true,
 		Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
