@@ -3,6 +3,8 @@ package conf
 import (
 	"encoding/json"
 
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+
 	"github.com/golang/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
@@ -28,12 +30,12 @@ const (
 )
 
 type SocksServerConfig struct {
-	AuthMethod string          `json:"auth"`
-	Accounts   []*SocksAccount `json:"accounts"`
-	UDP        bool            `json:"udp"`
-	Host       *Address        `json:"ip"`
-	Timeout    uint32          `json:"timeout"`
-	UserLevel  uint32          `json:"userLevel"`
+	AuthMethod string             `json:"auth"`
+	Accounts   []*SocksAccount    `json:"accounts"`
+	UDP        bool               `json:"udp"`
+	Host       *cfgcommon.Address `json:"ip"`
+	Timeout    uint32             `json:"timeout"`
+	UserLevel  uint32             `json:"userLevel"`
 }
 
 func (v *SocksServerConfig) Build() (proto.Message, error) {
@@ -66,9 +68,9 @@ func (v *SocksServerConfig) Build() (proto.Message, error) {
 }
 
 type SocksRemoteConfig struct {
-	Address *Address          `json:"address"`
-	Port    uint16            `json:"port"`
-	Users   []json.RawMessage `json:"users"`
+	Address *cfgcommon.Address `json:"address"`
+	Port    uint16             `json:"port"`
+	Users   []json.RawMessage  `json:"users"`
 }
 type SocksClientConfig struct {
 	Servers []*SocksRemoteConfig `json:"servers"`

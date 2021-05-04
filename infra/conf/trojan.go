@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"syscall"
 
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+
 	"github.com/golang/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
@@ -16,11 +18,11 @@ import (
 
 // TrojanServerTarget is configuration of a single trojan server
 type TrojanServerTarget struct {
-	Address  *Address `json:"address"`
-	Port     uint16   `json:"port"`
-	Password string   `json:"password"`
-	Email    string   `json:"email"`
-	Level    byte     `json:"level"`
+	Address  *cfgcommon.Address `json:"address"`
+	Port     uint16             `json:"port"`
+	Password string             `json:"password"`
+	Email    string             `json:"email"`
+	Level    byte               `json:"level"`
 }
 
 // TrojanClientConfig is configuration of trojan servers
