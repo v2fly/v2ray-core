@@ -1,6 +1,6 @@
 // +build android
 
-package conf
+package internet
 
 import (
 	"context"
