@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
 func TestBootstrapDNS(t *testing.T) {
@@ -25,7 +24,7 @@ func TestBootstrapDNSWithV2raySystemDialer(t *testing.T) {
 		if err != nil {
 			return nil, err
 		}
-		return internet.DialSystem(ctx, dest, nil)
+		return DialSystem(ctx, dest, nil)
 	}
 	UseAlternativeBootstrapDNS(bootstrapDialer)
 
