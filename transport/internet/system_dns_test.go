@@ -11,7 +11,7 @@ import (
 
 func TestDNSResolver(t *testing.T) {
 	resolver := NewDNSResolver()
-	if ips, err := resolver.LookupIP("www.google.com"); err != nil {
+	if ips, err := resolver.LookupIP(context.Background(), "tcp", "www.google.com"); err != nil {
 		t.Errorf("failed to lookupIP with BootstrapDNS, %v, %v", ips, err)
 	}
 }
