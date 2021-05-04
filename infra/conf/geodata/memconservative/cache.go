@@ -1,11 +1,12 @@
 package memconservative
 
 import (
+	"io/ioutil"
+	"strings"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/common/platform"
-	"io/ioutil"
-	"strings"
 )
 
 type GeoIPCache map[string]*router.GeoIP

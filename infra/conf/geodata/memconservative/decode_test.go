@@ -2,14 +2,15 @@ package memconservative
 
 import (
 	"errors"
-	"github.com/google/go-cmp/cmp"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/platform"
-	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/platform"
+	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 )
 
 const (

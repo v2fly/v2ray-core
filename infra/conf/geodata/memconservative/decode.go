@@ -2,10 +2,11 @@ package memconservative
 
 import (
 	"errors"
-	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
-	"google.golang.org/protobuf/encoding/protowire"
 	"io"
 	"strings"
+
+	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
+	"google.golang.org/protobuf/encoding/protowire"
 )
 
 var (
@@ -84,7 +85,6 @@ Loop:
 			result = container
 			break Loop
 		}
-
 	}
 	return result, nil
 }

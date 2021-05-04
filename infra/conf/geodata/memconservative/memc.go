@@ -1,9 +1,10 @@
 package memconservative
 
 import (
+	"runtime"
+
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
-	"runtime"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
@@ -36,7 +37,5 @@ func newMemConservativeLoader() geodata.LoaderImplementation {
 }
 
 func init() {
-	geodata.RegisterGeoDataLoaderImplementationCreator("memconservative", func() geodata.LoaderImplementation {
-		return newMemConservativeLoader()
-	})
+	geodata.RegisterGeoDataLoaderImplementationCreator("memconservative", newMemConservativeLoader)
 }
