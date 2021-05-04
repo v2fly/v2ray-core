@@ -9,8 +9,29 @@ import (
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/common"
-	. "github.com/v2fly/v2ray-core/v4/common/platform"
+	"github.com/v2fly/v2ray-core/v4/common/platform"
+	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 )
+
+func init() {
+	const (
+		geoipURL   = "https://raw.githubusercontent.com/v2fly/geoip/release/geoip.dat"
+		geositeURL = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/dlc.dat"
+	)
+
+	wd, err := os.Getwd()
+	common.Must(err)
+
+	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
+	geoipPath := filepath.Join(tempPath, "geoip.dat")
+
+	if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, fs.ErrNotExist) {
+		common.Must(os.MkdirAll(tempPath, 0755))
+		geoipBytes, err := common.FetchHTTPContent(geoipURL)
+		common.Must(err)
+		common.Must(filesystem.WriteFile(geoipPath, geoipBytes))
+	}
+}
 
 func TestNormalizeEnvName(t *testing.T) {
 	cases := []struct {
@@ -31,14 +52,14 @@ func TestNormalizeEnvName(t *testing.T) {
 		},
 	}
 	for _, test := range cases {
-		if v := NormalizeEnvName(test.input); v != test.output {
+		if v := platform.NormalizeEnvName(test.input); v != test.output {
 			t.Error("unexpected output: ", v, " want ", test.output)
 		}
 	}
 }
 
 func TestEnvFlag(t *testing.T) {
-	if v := (EnvFlag{
+	if v := (platform.EnvFlag{
 		Name: "xxxxx.y",
 	}.GetValueAsInt(10)); v != 10 {
 		t.Error("env value: ", v)
@@ -73,21 +94,30 @@ func TestWrongErrorCheckOnOSStat(t *testing.T) {
 }
 
 func TestGetAssetLocation(t *testing.T) {
+	// Test for external geo files
+	wd, err := os.Getwd()
+	common.Must(err)
+	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
+	geoipPath := filepath.Join(tempPath, "geoip.dat")
+	asset := platform.GetAssetLocation(geoipPath)
+	if _, err := os.Stat(asset); err != nil && errors.Is(err, fs.ErrNotExist) {
+		t.Error("cannot find external geo file:", asset)
+	}
+
 	exec, err := os.Executable()
 	common.Must(err)
-
-	loc := GetAssetLocation("t")
+	loc := platform.GetAssetLocation("t")
 	if filepath.Dir(loc) != filepath.Dir(exec) {
 		t.Error("asset dir: ", loc, " not in ", exec)
 	}
 
 	os.Setenv("v2ray.location.asset", "/v2ray")
 	if runtime.GOOS == "windows" {
-		if v := GetAssetLocation("t"); v != "\\v2ray\\t" {
+		if v := platform.GetAssetLocation("t"); v != "\\v2ray\\t" {
 			t.Error("asset loc: ", v)
 		}
 	} else {
-		if v := GetAssetLocation("t"); v != "/v2ray/t" {
+		if v := platform.GetAssetLocation("t"); v != "/v2ray/t" {
 			t.Error("asset loc: ", v)
 		}
 	}
