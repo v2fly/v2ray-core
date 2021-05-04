@@ -24,9 +24,10 @@ import (
 )
 
 type requestHandler struct {
-	path             string
-	ln               *Listener
-	earlyDataEnabled bool
+	path                string
+	ln                  *Listener
+	earlyDataEnabled    bool
+	earlyDataHeaderName string
 }
 
 var upgrader = &websocket.Upgrader{
@@ -40,11 +41,18 @@ var upgrader = &websocket.Upgrader{
 
 func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	var earlyData io.Reader
-	if !h.earlyDataEnabled {
+	if !h.earlyDataEnabled { // nolint: gocritic
 		if request.URL.Path != h.path {
 			writer.WriteHeader(http.StatusNotFound)
 			return
 		}
+	} else if h.earlyDataHeaderName != "" {
+		if request.URL.Path != h.path {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
+		earlyDataStr := request.Header.Get(h.earlyDataHeaderName)
+		earlyData = base64.NewDecoder(base64.RawURLEncoding, bytes.NewReader([]byte(earlyDataStr)))
 	} else {
 		if strings.HasPrefix(request.URL.RequestURI(), h.path) {
 			earlyDataStr := request.URL.RequestURI()[len(h.path):]
@@ -135,18 +143,21 @@ func ListenWS(ctx context.Context, address net.Address, port net.Port, streamSet
 
 	l.listener = listener
 	var useEarlyData = false
+	var earlyDataHeaderName = ""
 	if wsSettings.MaxEarlyData != 0 {
 		useEarlyData = true
+		earlyDataHeaderName = wsSettings.EarlyDataHeaderName
 	}
 
 	l.server = http.Server{
 		Handler: &requestHandler{
-			path:             wsSettings.GetNormalizedPath(),
-			ln:               l,
-			earlyDataEnabled: useEarlyData,
+			path:                wsSettings.GetNormalizedPath(),
+			ln:                  l,
+			earlyDataEnabled:    useEarlyData,
+			earlyDataHeaderName: earlyDataHeaderName,
 		},
 		ReadHeaderTimeout: time.Second * 4,
-		MaxHeaderBytes:    2048,
+		MaxHeaderBytes:    http.DefaultMaxHeaderBytes,
 	}
 
 	go func() {

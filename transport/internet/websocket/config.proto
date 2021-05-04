@@ -24,4 +24,6 @@ message Config {
   int32 max_early_data = 5;
 
   bool use_browser_forwarding = 6;
+
+  string early_data_header_name = 7;
 }
