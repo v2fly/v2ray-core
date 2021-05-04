@@ -7,18 +7,16 @@ import (
 	"net"
 )
 
+const bootstrapDNS = "8.8.8.8:53"
+
 func init() {
 	const bootstrapDNS = "8.8.8.8:53"
-	var dialer net.Dialer
 	net.DefaultResolver = &net.Resolver{
 		PreferGo: true,
-		Dial: func(context context.Context, _, _ string) (net.Conn, error) {
-			conn, err := dialer.DialContext(context, "udp", bootstrapDNS)
-			if err != nil {
-				return nil, err
-			}
-			return conn, nil
+		Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
+			var dialer net.Dialer
+			return dialer.DialContext(ctx, network, bootstrapDNS)
 		},
 	}
-	newError("Bootstrap DNS: ", bootstrapDNS).AtWarning().WriteToLog()
+	newError("Android Bootstrap DNS: ", bootstrapDNS).AtWarning().WriteToLog()
 }
