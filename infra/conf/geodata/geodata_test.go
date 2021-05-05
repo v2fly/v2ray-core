@@ -107,3 +107,52 @@ func BenchmarkMemconservativeLoaderGeoSite(b *testing.B) {
 	b.ReportMetric(float64(m4.Alloc-m3.Alloc)/1024, "KiB(GeoSite-Alloc)")
 	b.ReportMetric(float64(m4.TotalAlloc-m3.TotalAlloc)/1024/1024, "MiB(GeoSite-TotalAlloc)")
 }
+
+func BenchmarkAllLoader(b *testing.B) {
+	type testingProfileForLoader struct {
+		name string
+	}
+	testCase := []testingProfileForLoader{
+		{"standard"},
+		{"memconservative"},
+	}
+	for _, v := range testCase {
+		b.Run(v.name, func(b *testing.B) {
+			b.Run("Geosite", func(b *testing.B) {
+				loader, err := geodata.GetGeoDataLoader(v.name)
+				if err != nil {
+					b.Fatal(err)
+				}
+
+				m3 := runtime.MemStats{}
+				m4 := runtime.MemStats{}
+				runtime.ReadMemStats(&m3)
+				loader.LoadGeoSite("cn")
+				loader.LoadGeoSite("geolocation-!cn")
+				loader.LoadGeoSite("private")
+				runtime.ReadMemStats(&m4)
+
+				b.ReportMetric(float64(m4.Alloc-m3.Alloc)/1024, "KiB(GeoSite-Alloc)")
+				b.ReportMetric(float64(m4.TotalAlloc-m3.TotalAlloc)/1024/1024, "MiB(GeoSite-TotalAlloc)")
+			})
+
+			b.Run("GeoIP", func(b *testing.B) {
+				loader, err := geodata.GetGeoDataLoader(v.name)
+				if err != nil {
+					b.Fatal(err)
+				}
+
+				m1 := runtime.MemStats{}
+				m2 := runtime.MemStats{}
+				runtime.ReadMemStats(&m1)
+				loader.LoadGeoIP("cn")
+				loader.LoadGeoIP("us")
+				loader.LoadGeoIP("private")
+				runtime.ReadMemStats(&m2)
+
+				b.ReportMetric(float64(m2.Alloc-m1.Alloc)/1024/1024, "MiB(GeoIP-Alloc)")
+				b.ReportMetric(float64(m2.TotalAlloc-m1.TotalAlloc)/1024/1024, "MiB(GeoIP-TotalAlloc)")
+			})
+		})
+	}
+}
