@@ -19,12 +19,8 @@ func GetToolLocation(file string) string {
 	return filepath.Join(toolPath, file+".exe")
 }
 
-// GetAssetLocation search for `file` in the executable dir
+// GetAssetLocation search for `file` in the excutable dir
 func GetAssetLocation(file string) string {
-	filepathCleaned := filepath.Clean(file)
-	if strings.HasPrefix("..", filepathCleaned) {
-		newError("directory transversal is not allowed for assets. This will be forbidden in v5.").AtWarning().WriteToLog()
-	}
 	const name = "v2ray.location.asset"
 	assetPath := NewEnvFlag(name).GetValue(getExecutableDir)
 	return filepath.Join(assetPath, file)
