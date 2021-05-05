@@ -1,6 +1,7 @@
 name: Build debian packages
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -60,7 +61,7 @@ jobs:
           path: ./*.deb
 
       - name: Setup Repository
-        if: github.event_name == 'release'
+        if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
         run: |
           git clone https://github.com/v2fly/debian.git archive
           echo ${{ secrets.DEBIAN_GPG_PRIVATE }} | base64 -d > private.key

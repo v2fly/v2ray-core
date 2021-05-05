@@ -1,3 +1,17 @@
+v2ray-core (4.38.3-1) unstable; urgency=medium
+
+  * FakeDNS: add fakedns+others sniffer
+  * FakeDNS: support dual stack IP pool by default
+  * Observatory: A component that measures the connectivity of selected outbounds
+  * Multi-JSON support for Observatory & BrowserForwarder
+  * Routing: add leastPing balancing strategy
+  * Fix: FakeDNS crash
+  * Fix: FakeDNS return ErrEmptyResponse when no FakeIP found
+  * Fix: UDP DNS connection crash
+  * More details in https://github.com/v2fly/v2ray-core/releases/tag/v4.38.3
+
+ -- V2Fly <dev@v2fly.org>  Wed, 5 May 2021 10:00:00 +0800
+
 v2ray-core (4.37.3-1) unstable; urgency=medium
 
   * DNS: hosts support multiple addresses (#884 #886 #888)
