@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func ExpandEnv(s string) string {
@@ -25,6 +26,10 @@ func GetToolLocation(file string) string {
 
 // GetAssetLocation search for `file` in certain locations
 func GetAssetLocation(file string) string {
+	filepathCleaned := filepath.Clean(file)
+	if strings.HasPrefix("..", filepathCleaned) {
+		newError("directory transversal is not allowed for assets. This will be forbidden in v5.").AtWarning().WriteToLog()
+	}
 	const name = "v2ray.location.asset"
 	assetPath := NewEnvFlag(name).GetValue(getExecutableDir)
 	defPath := filepath.Join(assetPath, file)
