@@ -390,7 +390,7 @@ type SocketConfig struct {
 	TProxy              string `json:"tproxy"`
 	AcceptProxyProtocol bool   `json:"acceptProxyProtocol"`
 
-	TCPKeepAliveInterval uint32 `json:"tcpKeepAliveInterval"`
+	TCPKeepAliveInterval int32 `json:"tcpKeepAliveInterval"`
 }
 
 // Build implements Buildable.
