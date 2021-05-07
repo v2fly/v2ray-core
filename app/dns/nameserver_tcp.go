@@ -1,4 +1,5 @@
 // +build !confonly
+
 package dns
 
 import (
