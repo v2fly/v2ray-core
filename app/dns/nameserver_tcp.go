@@ -2,7 +2,9 @@
 package dns
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"net/url"
 	"sync"
 	"sync/atomic"
@@ -216,17 +218,35 @@ func (s *TCPNameServer) sendQuery(ctx context.Context, domain string, clientIP n
 				return
 			}
 			defer conn.Close()
-			_, err = conn.Write(b.Bytes())
+			dnsReqBuf := buf.New()
+			binary.Write(dnsReqBuf, binary.BigEndian, uint16(b.Len()))
+			dnsReqBuf.Write(b.Bytes())
+			b.Release()
+
+			_, err = conn.Write(dnsReqBuf.Bytes())
 			if err != nil {
 				newError("failed to send query").Base(err).AtError().WriteToLog()
 				return
 			}
+			dnsReqBuf.Release()
 
 			respBuf := buf.New()
 			defer respBuf.Release()
-			n, err := respBuf.ReadFrom(conn)
+			n, err := respBuf.ReadFullFrom(conn, 2)
 			if err != nil && n == 0 {
-				newError("failed to read response").Base(err).AtError().WriteToLog()
+				newError("failed to read response length").Base(err).AtError().WriteToLog()
+				return
+			}
+			var length int16
+			err = binary.Read(bytes.NewReader(respBuf.Bytes()), binary.BigEndian, &length)
+			if err != nil {
+				newError("failed to parse response length").Base(err).AtError().WriteToLog()
+				return
+			}
+			respBuf.Clear()
+			n, err = respBuf.ReadFullFrom(conn, int32(length))
+			if err != nil && n == 0 {
+				newError("failed to read response length").Base(err).AtError().WriteToLog()
 				return
 			}
 
