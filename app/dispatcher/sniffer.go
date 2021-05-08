@@ -7,6 +7,7 @@ import (
 
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/protocol/bittorrent"
+	dns_proto "github.com/v2fly/v2ray-core/v4/common/protocol/dns"
 	"github.com/v2fly/v2ray-core/v4/common/protocol/http"
 	"github.com/v2fly/v2ray-core/v4/common/protocol/tls"
 )
@@ -36,6 +37,7 @@ func NewSniffer(ctx context.Context) *Sniffer {
 			{func(c context.Context, b []byte) (SniffResult, error) { return http.SniffHTTP(b) }, false},
 			{func(c context.Context, b []byte) (SniffResult, error) { return tls.SniffTLS(b) }, false},
 			{func(c context.Context, b []byte) (SniffResult, error) { return bittorrent.SniffBittorrent(b) }, false},
+			{func(c context.Context, b []byte) (SniffResult, error) { return dns_proto.SniffDNS(b) }, false},
 		},
 	}
 	if sniffer, err := newFakeDNSSniffer(ctx); err == nil {
