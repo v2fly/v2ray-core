@@ -74,30 +74,6 @@ func (h *Handler) isOwnLink(ctx context.Context) bool {
 	return h.ownLinkVerifier != nil && h.ownLinkVerifier.IsOwnLink(ctx)
 }
 
-func parseIPQuery(b []byte) (r bool, domain string, id uint16, qType dnsmessage.Type) {
-	var parser dnsmessage.Parser
-	header, err := parser.Start(b)
-	if err != nil {
-		newError("parser start").Base(err).WriteToLog()
-		return
-	}
-
-	id = header.ID
-	q, err := parser.Question()
-	if err != nil {
-		newError("question").Base(err).WriteToLog()
-		return
-	}
-	qType = q.Type
-	if qType != dnsmessage.TypeA && qType != dnsmessage.TypeAAAA {
-		return
-	}
-
-	domain = q.Name.String()
-	r = true
-	return
-}
-
 // Process implements proxy.Outbound.
 func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.Dialer) error {
 	outbound := session.OutboundFromContext(ctx)
@@ -173,7 +149,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 			}
 
 			if !h.isOwnLink(ctx) {
-				isIPQuery, domain, id, qType := parseIPQuery(b.Bytes())
+				isIPQuery, domain, id, qType := dns_proto.ParseIPQuery(b.Bytes())
 				if isIPQuery {
 					go h.handleIPQuery(id, qType, domain, writer)
 					continue
