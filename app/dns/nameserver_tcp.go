@@ -24,7 +24,7 @@ import (
 	"golang.org/x/net/dns/dnsmessage"
 )
 
-// TCPNameServer implemented DNS over TCP.
+// TCPNameServer implemented DNS over TCP (RFC7766).
 type TCPNameServer struct {
 	sync.RWMutex
 	name        string
@@ -36,6 +36,7 @@ type TCPNameServer struct {
 	dial        func(context.Context) (net.Conn, error)
 }
 
+// NewTCPNameServer creates DNS over TCP server object for remote resolving.
 func NewTCPNameServer(url *url.URL, dispatcher routing.Dispatcher) (*TCPNameServer, error) {
 	s, err := baseTCPNameServer(url, "TCP")
 	if err != nil {
@@ -57,6 +58,7 @@ func NewTCPNameServer(url *url.URL, dispatcher routing.Dispatcher) (*TCPNameServ
 	return s, nil
 }
 
+// NewTCPLocalNameServer creates DNS over TCP client object for local resolving
 func NewTCPLocalNameServer(url *url.URL) (*TCPNameServer, error) {
 	s, err := baseTCPNameServer(url, "TCPL")
 	if err != nil {
