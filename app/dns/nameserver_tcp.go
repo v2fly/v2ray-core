@@ -57,7 +57,7 @@ func NewTCPNameServer(url *url.URL, dispatcher routing.Dispatcher) (*TCPNameServ
 	return s, nil
 }
 
-func NewTCPLNameServer(url *url.URL) (*TCPNameServer, error) {
+func NewTCPLocalNameServer(url *url.URL) (*TCPNameServer, error) {
 	s, err := baseTCPNameServer(url, "TCPL")
 	if err != nil {
 		return nil, err

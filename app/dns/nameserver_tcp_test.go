@@ -16,7 +16,7 @@ import (
 func TestTCPLocalNameServer(t *testing.T) {
 	url, err := url.Parse("tcp+local://8.8.8.8")
 	common.Must(err)
-	s, err := NewTCPLNameServer(url)
+	s, err := NewTCPLocalNameServer(url)
 	common.Must(err)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	ips, err := s.QueryIP(ctx, "google.com", net.IP(nil), dns_feature.IPOption{
@@ -33,7 +33,7 @@ func TestTCPLocalNameServer(t *testing.T) {
 func TestTCPLocalNameServerWithCache(t *testing.T) {
 	url, err := url.Parse("tcp+local://8.8.8.8")
 	common.Must(err)
-	s, err := NewTCPLNameServer(url)
+	s, err := NewTCPLocalNameServer(url)
 	common.Must(err)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	ips, err := s.QueryIP(ctx, "google.com", net.IP(nil), dns_feature.IPOption{
