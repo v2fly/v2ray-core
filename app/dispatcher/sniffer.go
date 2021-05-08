@@ -34,10 +34,10 @@ type Sniffer struct {
 func NewSniffer(ctx context.Context) *Sniffer {
 	ret := &Sniffer{
 		sniffer: []protocolSnifferWithMetadata{
+			{func(c context.Context, b []byte) (SniffResult, error) { return dns_proto.SniffDNS(b) }, false},
 			{func(c context.Context, b []byte) (SniffResult, error) { return http.SniffHTTP(b) }, false},
 			{func(c context.Context, b []byte) (SniffResult, error) { return tls.SniffTLS(b) }, false},
 			{func(c context.Context, b []byte) (SniffResult, error) { return bittorrent.SniffBittorrent(b) }, false},
-			{func(c context.Context, b []byte) (SniffResult, error) { return dns_proto.SniffDNS(b) }, false},
 		},
 	}
 	if sniffer, err := newFakeDNSSniffer(ctx); err == nil {
