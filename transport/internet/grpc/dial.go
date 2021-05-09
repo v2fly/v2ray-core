@@ -71,7 +71,7 @@ func getGrpcClient(ctx context.Context, dest net.Destination, dialOption grpc.Di
 		globalDialerMap = make(map[net.Destination]*grpc.ClientConn)
 	}
 
-	//TODO Should support chain proxy to the same destination
+	// TODO Should support chain proxy to the same destination
 	if client, found := globalDialerMap[dest]; found && client.GetState() != connectivity.Shutdown {
 		return client, nil
 	}
