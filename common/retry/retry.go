@@ -23,9 +23,9 @@ type retryer struct {
 
 // On implements Strategy.On.
 func (r *retryer) On(method func() error) error {
-	attempt := 0
+	attempt := 1
 	accumulatedError := make([]error, 0, r.totalAttempt)
-	for attempt < r.totalAttempt {
+	for r.totalAttempt > 0 {
 		err := method()
 		if err == nil {
 			return nil
@@ -33,6 +33,10 @@ func (r *retryer) On(method func() error) error {
 		numErrors := len(accumulatedError)
 		if numErrors == 0 || err.Error() != accumulatedError[numErrors-1].Error() {
 			accumulatedError = append(accumulatedError, err)
+		}
+
+		if attempt >= r.totalAttempt {
+			break
 		}
 		delay := r.nextDelay()
 		time.Sleep(time.Duration(delay) * time.Millisecond)
@@ -51,8 +55,9 @@ func Timed(attempts int, delay uint32) Strategy {
 	}
 }
 
+// ExponentialBackoff returns a retry strategy with exponential interval.
 func ExponentialBackoff(attempts int, delay uint32) Strategy {
-	nextDelay := uint32(0)
+	nextDelay := uint32(delay)
 	return &retryer{
 		totalAttempt: attempts,
 		nextDelay: func() uint32 {
