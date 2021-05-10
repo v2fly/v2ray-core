@@ -6,6 +6,9 @@ on:
     branches:
       - master
       - v*
+    paths:
+      - ".github/workflows/deb.yml"
+      - "release/debian/*"
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
