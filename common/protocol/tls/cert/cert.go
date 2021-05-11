@@ -142,7 +142,7 @@ func Generate(parent *Certificate, opts ...Option) (*Certificate, error) {
 	template := &x509.Certificate{
 		SerialNumber:          serialNumber,
 		NotBefore:             time.Now().Add(time.Hour * -1),
-		NotAfter:              time.Now().Add(time.Hour + time.Minute * 2),
+		NotAfter:              time.Now().Add(time.Hour + time.Minute*2),
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
