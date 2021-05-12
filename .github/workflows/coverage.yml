@@ -29,7 +29,7 @@ jobs:
           ./testing/coverage/coverall.sh
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v1.5.0
         with:
           file: ./coverage.txt
           fail_ci_if_error: true
