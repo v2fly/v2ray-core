@@ -33,7 +33,7 @@ jobs:
           go-version: ^1.16.4
 
       - name: Checkout codebase
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Test
         run: go test -v -timeout 1h ./...
