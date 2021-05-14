@@ -89,7 +89,7 @@ func parseDomainRule(ctx context.Context, domain string) ([]*router.Domain, erro
 			return nil, newError("empty keyword type of rule: ", domain)
 		}
 		domainRule.Type = router.Domain_Plain
-		domainRule.Value = keywordVal
+		domainRule.Value = strings.ToLower(keywordVal)
 
 	case strings.HasPrefix(domain, "dotless:"):
 		domainRule.Type = router.Domain_Regex
