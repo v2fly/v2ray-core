@@ -73,7 +73,7 @@ func parseDomainRule(ctx context.Context, domain string) ([]*router.Domain, erro
 			return nil, newError("empty domain type of rule: ", domain)
 		}
 		domainRule.Type = router.Domain_Domain
-		domainRule.Value = domainName
+		domainRule.Value = strings.ToLower(domainName)
 
 	case strings.HasPrefix(domain, "full:"):
 		fullVal := domain[5:]
@@ -81,7 +81,7 @@ func parseDomainRule(ctx context.Context, domain string) ([]*router.Domain, erro
 			return nil, newError("empty full domain type of rule: ", domain)
 		}
 		domainRule.Type = router.Domain_Full
-		domainRule.Value = fullVal
+		domainRule.Value = strings.ToLower(fullVal)
 
 	case strings.HasPrefix(domain, "keyword:"):
 		keywordVal := domain[8:]
