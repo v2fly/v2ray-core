@@ -7,6 +7,9 @@ import (
 
 	commlog "github.com/v2fly/v2ray-core/v4/common/log"
 	"github.com/v2fly/v2ray-core/v4/infra/control"
+
+	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/memconservative"
+	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/standard"
 )
 
 func getCommandName() string {
