@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	commlog "github.com/v2fly/v2ray-core/v4/common/log"
-	"github.com/v2fly/v2ray-core/v4/infra/control"
-
+	"github.com/v2fly/v2ray-core/v4/common/log"
 	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/memconservative"
 	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/standard"
+	"github.com/v2fly/v2ray-core/v4/infra/control"
 )
 
 func getCommandName() string {
@@ -21,7 +20,7 @@ func getCommandName() string {
 
 func main() {
 	// let the v2ctl prints log at stderr
-	commlog.RegisterHandler(commlog.NewLogger(commlog.CreateStderrLogWriter()))
+	log.RegisterHandler(log.NewLogger(log.CreateStderrLogWriter()))
 	name := getCommandName()
 	cmd := control.GetCommand(name)
 	if cmd == nil {
