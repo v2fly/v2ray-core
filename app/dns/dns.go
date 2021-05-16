@@ -281,13 +281,15 @@ func (s *DNS) sortClients(domain string) []*Client {
 	switch {
 	case s.expectDomains:
 		// the client with no domains_object
-		for idx, client := range s.clients {
-			if clientUsed[idx] || len(client.domains) > 0 {
-				continue
+		if len(clients) == 0 {
+			for idx, client := range s.clients {
+				if clientUsed[idx] || len(client.domains) > 0 {
+					continue
+				}
+				clientUsed[idx] = true
+				clients = append(clients, client)
+				clientNames = append(clientNames, client.Name())
 			}
-			clientUsed[idx] = true
-			clients = append(clients, client)
-			clientNames = append(clientNames, client.Name())
 		}
 	default:
 		// the client with low priority
