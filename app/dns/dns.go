@@ -283,7 +283,7 @@ func (s *DNS) sortClients(domain string) []*Client {
 		// the client with no domains_object
 		if len(clients) == 0 {
 			for idx, client := range s.clients {
-				if clientUsed[idx] || len(client.domains) > 0 {
+				if clientUsed[idx] || client.skipFallback || len(client.domains) > 0 {
 					continue
 				}
 				clientUsed[idx] = true
@@ -294,7 +294,7 @@ func (s *DNS) sortClients(domain string) []*Client {
 	default:
 		// the client with low priority
 		for idx, client := range s.clients {
-			if clientUsed[idx] {
+			if clientUsed[idx] || client.skipFallback {
 				continue
 			}
 			clientUsed[idx] = true
