@@ -264,7 +264,7 @@ func (s *DNS) sortClients(domain string) []*Client {
 	clientNames := make([]string, 0, len(s.clients))
 	domainRules := []string{}
 
-	// domain matching
+	// domain matching with Prior or Expect
 	for _, match := range s.domainMatcher.Match(domain) {
 		info := s.matcherInfos[match]
 		client := s.clients[info.clientIdx]
@@ -278,11 +278,21 @@ func (s *DNS) sortClients(domain string) []*Client {
 		clientNames = append(clientNames, client.Name())
 	}
 
-	// where no matched
-	if len(clients) == 0 {
+	switch {
+	case s.expectDomains:
 		// the client with no domains_object
 		for idx, client := range s.clients {
 			if clientUsed[idx] || len(client.domains) > 0 {
+				continue
+			}
+			clientUsed[idx] = true
+			clients = append(clients, client)
+			clientNames = append(clientNames, client.Name())
+		}
+	default:
+		// the client with low priority
+		for idx, client := range s.clients {
+			if clientUsed[idx] {
 				continue
 			}
 			clientUsed[idx] = true
@@ -298,11 +308,11 @@ func (s *DNS) sortClients(domain string) []*Client {
 		newError("domain ", domain, " will use DNS in order: ", clientNames).AtDebug().WriteToLog()
 	}
 
-	/* if len(clients) == 0 {
+	if len(clients) == 0 {
 		clients = append(clients, s.clients[0])
 		clientNames = append(clientNames, s.clients[0].Name())
 		newError("domain ", domain, " will use the first DNS: ", clientNames).AtDebug().WriteToLog()
-	} */
+	}
 
 	return clients
 }
