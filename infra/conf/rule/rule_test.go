@@ -29,7 +29,7 @@ func init() {
 	os.Setenv("v2ray.location.asset", tempPath)
 
 	if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, fs.ErrNotExist) {
-		common.Must(os.MkdirAll(tempPath, 0755))
+		common.Must(os.MkdirAll(tempPath, 0o755))
 		geoipBytes, err := common.FetchHTTPContent(geoipURL)
 		common.Must(err)
 		common.Must(filesystem.WriteFile(geoipPath, geoipBytes))

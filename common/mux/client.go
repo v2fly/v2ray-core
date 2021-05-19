@@ -143,6 +143,7 @@ func NewDialingWorkerFactory(ctx context.Context, proxy proxy.Outbound, dialer i
 		ctx:      ctx,
 	}
 }
+
 func (f *DialingWorkerFactory) Create() (*ClientWorker, error) {
 	opts := []pipe.Option{pipe.WithSizeLimit(64 * 1024)}
 	uplinkReader, upLinkWriter := pipe.New(opts...)
@@ -152,7 +153,6 @@ func (f *DialingWorkerFactory) Create() (*ClientWorker, error) {
 		Reader: downlinkReader,
 		Writer: upLinkWriter,
 	}, f.Strategy)
-
 	if err != nil {
 		return nil, err
 	}
@@ -185,8 +185,10 @@ type ClientWorker struct {
 	strategy       ClientStrategy
 }
 
-var muxCoolAddress = net.DomainAddress("v1.mux.cool")
-var muxCoolPort = net.Port(9527)
+var (
+	muxCoolAddress = net.DomainAddress("v1.mux.cool")
+	muxCoolPort    = net.Port(9527)
+)
 
 // NewClientWorker creates a new mux.Client.
 func NewClientWorker(stream transport.Link, s ClientStrategy) (*ClientWorker, error) {

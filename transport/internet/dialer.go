@@ -20,9 +20,7 @@ type Dialer interface {
 // dialFunc is an interface to dial network connection to a specific destination.
 type dialFunc func(ctx context.Context, dest net.Destination, streamSettings *MemoryStreamConfig) (Connection, error)
 
-var (
-	transportDialerCache = make(map[string]dialFunc)
-)
+var transportDialerCache = make(map[string]dialFunc)
 
 // RegisterTransportDialer registers a Dialer with given name.
 func RegisterTransportDialer(protocol string, dialer dialFunc) error {

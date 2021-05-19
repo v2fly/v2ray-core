@@ -16,9 +16,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
-var (
-	globalSessionCache = tls.NewLRUClientSessionCache(128)
-)
+var globalSessionCache = tls.NewLRUClientSessionCache(128)
 
 const exp8357 = "experiment:8357"
 
