@@ -38,13 +38,13 @@ func init() {
 	os.Setenv("v2ray.location.asset", tempPath)
 
 	if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, fs.ErrNotExist) {
-		common.Must(os.MkdirAll(tempPath, 0755))
+		common.Must(os.MkdirAll(tempPath, 0o755))
 		geoipBytes, err := common.FetchHTTPContent(geoipURL)
 		common.Must(err)
 		common.Must(filesystem.WriteFile(geoipPath, geoipBytes))
 	}
 	if _, err := os.Stat(geositePath); err != nil && errors.Is(err, fs.ErrNotExist) {
-		common.Must(os.MkdirAll(tempPath, 0755))
+		common.Must(os.MkdirAll(tempPath, 0o755))
 		geositeBytes, err := common.FetchHTTPContent(geositeURL)
 		common.Must(err)
 		common.Must(filesystem.WriteFile(geositePath, geositeBytes))
@@ -369,6 +369,7 @@ func loadGeoSite(country string) ([]*router.Domain, error) {
 
 	return nil, errors.New("country not found: " + country)
 }
+
 func TestChinaSites(t *testing.T) {
 	domains, err := loadGeoSite("CN")
 	common.Must(err)

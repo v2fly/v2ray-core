@@ -71,6 +71,7 @@ type SocksRemoteConfig struct {
 	Port    uint16             `json:"port"`
 	Users   []json.RawMessage  `json:"users"`
 }
+
 type SocksClientConfig struct {
 	Servers []*SocksRemoteConfig `json:"servers"`
 }

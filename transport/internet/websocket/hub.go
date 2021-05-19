@@ -142,8 +142,8 @@ func ListenWS(ctx context.Context, address net.Address, port net.Port, streamSet
 	}
 
 	l.listener = listener
-	var useEarlyData = false
-	var earlyDataHeaderName = ""
+	useEarlyData := false
+	earlyDataHeaderName := ""
 	if wsSettings.MaxEarlyData != 0 {
 		useEarlyData = true
 		earlyDataHeaderName = wsSettings.EarlyDataHeaderName

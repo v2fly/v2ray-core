@@ -50,8 +50,7 @@ func loadSite(filename, list string) ([]*router.Domain, error) {
 	return nil, newError("list not found in ", filename, ": ", list)
 }
 
-type standardLoader struct {
-}
+type standardLoader struct{}
 
 func (d standardLoader) LoadSite(filename, list string) ([]*router.Domain, error) {
 	return loadSite(filename, list)

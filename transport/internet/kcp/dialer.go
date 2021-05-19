@@ -15,9 +15,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
 )
 
-var (
-	globalConv = uint32(dice.RollUint16())
-)
+var globalConv = uint32(dice.RollUint16())
 
 func fetchInput(_ context.Context, input io.Reader, reader PacketReader, conn *Connection) {
 	cache := make(chan *buf.Buffer, 1024)

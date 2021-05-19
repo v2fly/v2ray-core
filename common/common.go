@@ -18,10 +18,8 @@ import (
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
-var (
-	// ErrNoClue is for the situation that existing information is not enough to make a decision. For example, Router may return this error when there is no suitable route.
-	ErrNoClue = errors.New("not enough information for making a decision")
-)
+// ErrNoClue is for the situation that existing information is not enough to make a decision. For example, Router may return this error when there is no suitable route.
+var ErrNoClue = errors.New("not enough information for making a decision")
 
 // Must panics if err is not nil.
 func Must(err error) {

@@ -22,8 +22,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/testing/servers/udp"
 )
 
-type staticHandler struct {
-}
+type staticHandler struct{}
 
 func (*staticHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	ans := new(dns.Msg)

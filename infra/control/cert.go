@@ -33,8 +33,7 @@ type jsonCert struct {
 	Key         []string `json:"key"`
 }
 
-type CertificateCommand struct {
-}
+type CertificateCommand struct{}
 
 func (c *CertificateCommand) Name() string {
 	return "cert"

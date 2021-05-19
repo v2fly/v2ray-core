@@ -8,8 +8,7 @@ import (
 	v2tls "github.com/v2fly/v2ray-core/v4/transport/internet/tls"
 )
 
-type CertificateChainHashCommand struct {
-}
+type CertificateChainHashCommand struct{}
 
 func (c CertificateChainHashCommand) Name() string {
 	return "certChainHash"

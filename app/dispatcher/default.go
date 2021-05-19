@@ -26,9 +26,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/transport/pipe"
 )
 
-var (
-	errSniffingTimeout = newError("timeout on sniffing")
-)
+var errSniffingTimeout = newError("timeout on sniffing")
 
 type cachedReader struct {
 	sync.Mutex

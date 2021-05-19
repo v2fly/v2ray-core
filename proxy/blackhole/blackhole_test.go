@@ -20,7 +20,7 @@ func TestBlackHoleHTTPResponse(t *testing.T) {
 
 	reader, writer := pipe.New(pipe.WithoutSizeLimit())
 
-	var readerError = make(chan error)
+	readerError := make(chan error)
 	var mb buf.MultiBuffer
 	go func() {
 		b, e := reader.ReadMultiBuffer()

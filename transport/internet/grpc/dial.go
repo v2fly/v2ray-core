@@ -44,14 +44,13 @@ func dialgRPC(ctx context.Context, dest net.Destination, streamSettings *interne
 	grpcSettings := streamSettings.ProtocolSettings.(*Config)
 
 	config := tls.ConfigFromStreamSettings(streamSettings)
-	var dialOption = grpc.WithInsecure()
+	dialOption := grpc.WithInsecure()
 
 	if config != nil {
 		dialOption = grpc.WithTransportCredentials(credentials.NewTLS(config.GetTLSConfig()))
 	}
 
 	conn, err := getGrpcClient(ctx, dest, dialOption)
-
 	if err != nil {
 		return nil, newError("Cannot dial grpc").Base(err)
 	}

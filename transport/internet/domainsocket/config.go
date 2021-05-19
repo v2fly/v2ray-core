@@ -8,8 +8,10 @@ import (
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
-const protocolName = "domainsocket"
-const sizeofSunPath = 108
+const (
+	protocolName  = "domainsocket"
+	sizeofSunPath = 108
+)
 
 func (c *Config) GetUnixAddr() (*net.UnixAddr, error) {
 	path := c.Path
