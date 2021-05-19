@@ -3,6 +3,8 @@ package http
 import (
 	"bufio"
 	"net/http"
+
+	// required to use go:linkname
 	_ "unsafe"
 )
 
