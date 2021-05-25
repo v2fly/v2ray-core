@@ -16,12 +16,12 @@ require (
 	github.com/v2fly/BrowserBridge v0.0.0-20210430233438-0570fc1d7d08
 	github.com/v2fly/VSign v0.0.0-20201108000810-e2adc24bf848
 	github.com/v2fly/ss-bloomring v0.0.0-20210312155135-28617310f63e
-	go.starlark.net v0.0.0-20210507152841-e9428d69d599
-	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf
-	golang.org/x/net v0.0.0-20210510120150-4163338589ed
+	go.starlark.net v0.0.0-20210511153848-cca21e7857d4
+	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
+	golang.org/x/net v0.0.0-20210525063256-abc453219eb5
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20210510120138-977fb7262007
-	google.golang.org/grpc v1.37.1
+	golang.org/x/sys v0.0.0-20210525143221-35b2ab0089ea
+	google.golang.org/grpc v1.38.0
 	google.golang.org/protobuf v1.26.0
 	h12.io/socks v1.0.2
 )
