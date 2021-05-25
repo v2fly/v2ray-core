@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/golang/mock v1.5.0
 	github.com/golang/protobuf v1.5.2
-	github.com/google/go-cmp v0.5.5
+	github.com/google/go-cmp v0.5.6
 	github.com/gorilla/websocket v1.4.2
 	github.com/jhump/protoreflect v1.8.2
 	github.com/lucas-clemente/quic-go v0.20.1
