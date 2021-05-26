@@ -1,3 +1,21 @@
+v2ray-core (4.39.2-1) unstable; urgency=medium
+
+  * Websocket: support header based Websocket early data & its partial browser forwarder support
+  * GeoData: add a memory efficient geodata decoder called `memconservative` for memory-limited devices
+  * HTTP/2 Transport: support to set method and headers for outgoing connections
+  * TCP Socket Option: support to set keepalive interval on Linux operating system
+  * Fixed BrowserForwarder panics with empty config
+  * Fixed FakeDNS prints error with empty config
+  * Fixed dual stack FakeDNS Close method
+  * Fixed Observatory starts with empty config & fails to close
+  * Fixed null check on alternative system dialer
+  * Fixed the chain proxy support for gRPC and HTTP/2 transport
+  * Fixed leastping logic
+  * Fixed v2ctl unable to create geodata loaders
+  * More details in https://github.com/v2fly/v2ray-core/releases/tag/v4.39.2
+
+ -- V2Fly <dev@v2fly.org>  Wed, 26 May 2021 08:00:00 +0800
+
 v2ray-core (4.38.3-1) unstable; urgency=medium
 
   * FakeDNS: add fakedns+others sniffer
