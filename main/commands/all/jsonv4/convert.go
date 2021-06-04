@@ -3,18 +3,18 @@ package jsonv4
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/pelletier/go-toml"
 	"os"
 	"strings"
 
+	"github.com/pelletier/go-toml"
 	"google.golang.org/protobuf/proto"
+	"gopkg.in/yaml.v2"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/merge"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 	"github.com/v2fly/v2ray-core/v4/main/commands/helpers"
-	"gopkg.in/yaml.v2"
 )
 
 var cmdConvert = &base.Command{

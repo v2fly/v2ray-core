@@ -11,7 +11,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/v2fly/v2ray-core/v4"
+	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
 	"github.com/v2fly/v2ray-core/v4/common/platform"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"

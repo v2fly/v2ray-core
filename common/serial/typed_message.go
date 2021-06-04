@@ -2,8 +2,9 @@ package serial
 
 import (
 	"errors"
-	"github.com/golang/protobuf/proto"
 	"reflect"
+
+	"github.com/golang/protobuf/proto"
 )
 
 // ToTypedMessage converts a proto Message into TypedMessage.

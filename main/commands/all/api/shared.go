@@ -8,21 +8,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 
 	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 )
 
 var (
 	apiServerAddrPtr string
 	apiTimeout       int
 	apiJSON          bool
-	// ApiConfigFormat is an internal variable
-	ApiConfigFormat string
-	// ApiConfigRecursively is an internal variable
-	ApiConfigRecursively bool
+	// APIConfigFormat is an internal variable
+	APIConfigFormat string
+	// APIConfigRecursively is an internal variable
+	APIConfigRecursively bool
 )
 
 // SetSharedFlags is an internal API
@@ -44,8 +44,8 @@ func SetSharedConfigFlags(cmd *base.Command) {
 }
 
 func setSharedConfigFlags(cmd *base.Command) {
-	cmd.Flag.StringVar(&ApiConfigFormat, "format", core.FormatAuto, "")
-	cmd.Flag.BoolVar(&ApiConfigRecursively, "r", false, "")
+	cmd.Flag.StringVar(&APIConfigFormat, "format", core.FormatAuto, "")
+	cmd.Flag.BoolVar(&APIConfigRecursively, "r", false, "")
 }
 
 // SetSharedFlags is an internal API

@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 
-	"github.com/v2fly/v2ray-core/v4"
+	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 )
 

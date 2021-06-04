@@ -2,9 +2,9 @@ package jsonv4
 
 import (
 	"fmt"
-	"github.com/v2fly/v2ray-core/v4/main/commands/all/api"
 
 	handlerService "github.com/v2fly/v2ray-core/v4/app/proxyman/command"
+	"github.com/v2fly/v2ray-core/v4/main/commands/all/api"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 	"github.com/v2fly/v2ray-core/v4/main/commands/helpers"
 )
@@ -47,7 +47,7 @@ func executeAddInbounds(cmd *base.Command, args []string) {
 	api.SetSharedFlags(cmd)
 	api.SetSharedConfigFlags(cmd)
 	cmd.Flag.Parse(args)
-	c, err := helpers.LoadConfig(cmd.Flag.Args(), api.ApiConfigFormat, api.ApiConfigRecursively)
+	c, err := helpers.LoadConfig(cmd.Flag.Args(), api.APIConfigFormat, api.APIConfigRecursively)
 	if err != nil {
 		base.Fatalf("failed to load: %s", err)
 	}

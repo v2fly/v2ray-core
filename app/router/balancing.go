@@ -5,10 +5,10 @@ package router
 
 import (
 	"context"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
 
 	"github.com/v2fly/v2ray-core/v4/features/extension"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
+	"github.com/v2fly/v2ray-core/v4/features/routing"
 )
 
 type BalancingStrategy interface {

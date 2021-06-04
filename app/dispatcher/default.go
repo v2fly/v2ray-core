@@ -302,7 +302,7 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool) (Sni
 	return contentResult, contentErr
 }
 
-//TODO Pending removal for tagged connection
+// TODO Pending removal for tagged connection
 func (d *DefaultDispatcher) targetedDispatch(ctx context.Context, link *transport.Link, tag string) {
 	handler := d.ohm.GetHandler(tag)
 	if handler == nil {
