@@ -122,7 +122,7 @@ func getGetCertificateFunc(c *tls.Config, ca []*Certificate) func(hello *tls.Cli
 					newCerts = append(newCerts, cert)
 				} else if cert.Leaf != nil {
 					expTime := cert.Leaf.NotAfter.Format(time.RFC3339)
-					newError("old certificate for ", domain, " (expire on ", expTime, ") revoked").AtInfo().WriteToLog()
+					newError("old certificate for ", domain, " (expire on ", expTime, ") discard").AtInfo().WriteToLog()
 				}
 			}
 
