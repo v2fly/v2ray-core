@@ -46,6 +46,7 @@ func NewDoHNameServer(url *url.URL, dispatcher routing.Dispatcher) (*DoHNameServ
 	newError("DNS: created Remote DOH client for ", url.String()).AtInfo().WriteToLog()
 	s := baseDOHNameServer(url, "DOH")
 
+	//TODO: keep alive
 	// Dispatched connection will be closed (interrupted) after each request
 	// This makes DOH inefficient without a keep-alived connection
 	// See: core/app/proxyman/outbound/handler.go:113
@@ -221,8 +222,6 @@ func (s *DoHNameServer) sendQuery(ctx context.Context, domain string, clientIP n
 
 	for _, req := range reqs {
 		go func(r *dnsRequest) {
-			// generate new context for each req, using same context
-			// may cause reqs all aborted if any one encounter an error
 			dnsCtx := ctx
 
 			// reserve internal dns server requested Inbound
@@ -240,7 +239,6 @@ func (s *DoHNameServer) sendQuery(ctx context.Context, domain string, clientIP n
 
 			var cancel context.CancelFunc
 			dnsCtx, cancel = context.WithDeadline(dnsCtx, deadline)
-			defer cancel()
 
 			b, err := dns.PackMessage(r.msg)
 			if err != nil {
@@ -249,6 +247,7 @@ func (s *DoHNameServer) sendQuery(ctx context.Context, domain string, clientIP n
 			}
 			resp, err := s.dohHTTPSContext(dnsCtx, b.Bytes())
 			if err != nil {
+				cancel()
 				newError("failed to retrieve response").Base(err).AtError().WriteToLog()
 				return
 			}
