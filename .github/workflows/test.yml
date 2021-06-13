@@ -34,6 +34,16 @@ jobs:
 
       - name: Checkout codebase
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Test
-        run: go test -v -timeout 1h ./...
+        run: |
+          export PATH=$(go env GOPATH)/bin:${PATH}
+          go install -v github.com/ory/go-acc@latest
+          go-acc --covermode=atomic -o=coverage.txt ./...
+        shell: bash
+
+      - name: Upload codecov
+        run: bash <(curl -s https://codecov.io/bash)
+        shell: bash
