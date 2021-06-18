@@ -20,9 +20,8 @@ const _ = grpc.SupportPackageIsVersion7
 type RoutingServiceClient interface {
 	SubscribeRoutingStats(ctx context.Context, in *SubscribeRoutingStatsRequest, opts ...grpc.CallOption) (RoutingService_SubscribeRoutingStatsClient, error)
 	TestRoute(ctx context.Context, in *TestRouteRequest, opts ...grpc.CallOption) (*RoutingContext, error)
-	GetBalancers(ctx context.Context, in *GetBalancersRequest, opts ...grpc.CallOption) (*GetBalancersResponse, error)
-	CheckBalancers(ctx context.Context, in *CheckBalancersRequest, opts ...grpc.CallOption) (*CheckBalancersResponse, error)
-	OverrideSelecting(ctx context.Context, in *OverrideSelectingRequest, opts ...grpc.CallOption) (*OverrideSelectingResponse, error)
+	GetBalancerInfo(ctx context.Context, in *GetBalancerInfoRequest, opts ...grpc.CallOption) (*GetBalancerInfoResponse, error)
+	OverrideBalancerTarget(ctx context.Context, in *OverrideBalancerTargetRequest, opts ...grpc.CallOption) (*OverrideBalancerTargetResponse, error)
 }
 
 type routingServiceClient struct {
@@ -74,27 +73,18 @@ func (c *routingServiceClient) TestRoute(ctx context.Context, in *TestRouteReque
 	return out, nil
 }
 
-func (c *routingServiceClient) GetBalancers(ctx context.Context, in *GetBalancersRequest, opts ...grpc.CallOption) (*GetBalancersResponse, error) {
-	out := new(GetBalancersResponse)
-	err := c.cc.Invoke(ctx, "/v2ray.core.app.router.command.RoutingService/GetBalancers", in, out, opts...)
+func (c *routingServiceClient) GetBalancerInfo(ctx context.Context, in *GetBalancerInfoRequest, opts ...grpc.CallOption) (*GetBalancerInfoResponse, error) {
+	out := new(GetBalancerInfoResponse)
+	err := c.cc.Invoke(ctx, "/v2ray.core.app.router.command.RoutingService/GetBalancerInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *routingServiceClient) CheckBalancers(ctx context.Context, in *CheckBalancersRequest, opts ...grpc.CallOption) (*CheckBalancersResponse, error) {
-	out := new(CheckBalancersResponse)
-	err := c.cc.Invoke(ctx, "/v2ray.core.app.router.command.RoutingService/CheckBalancers", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *routingServiceClient) OverrideSelecting(ctx context.Context, in *OverrideSelectingRequest, opts ...grpc.CallOption) (*OverrideSelectingResponse, error) {
-	out := new(OverrideSelectingResponse)
-	err := c.cc.Invoke(ctx, "/v2ray.core.app.router.command.RoutingService/OverrideSelecting", in, out, opts...)
+func (c *routingServiceClient) OverrideBalancerTarget(ctx context.Context, in *OverrideBalancerTargetRequest, opts ...grpc.CallOption) (*OverrideBalancerTargetResponse, error) {
+	out := new(OverrideBalancerTargetResponse)
+	err := c.cc.Invoke(ctx, "/v2ray.core.app.router.command.RoutingService/OverrideBalancerTarget", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -107,9 +97,8 @@ func (c *routingServiceClient) OverrideSelecting(ctx context.Context, in *Overri
 type RoutingServiceServer interface {
 	SubscribeRoutingStats(*SubscribeRoutingStatsRequest, RoutingService_SubscribeRoutingStatsServer) error
 	TestRoute(context.Context, *TestRouteRequest) (*RoutingContext, error)
-	GetBalancers(context.Context, *GetBalancersRequest) (*GetBalancersResponse, error)
-	CheckBalancers(context.Context, *CheckBalancersRequest) (*CheckBalancersResponse, error)
-	OverrideSelecting(context.Context, *OverrideSelectingRequest) (*OverrideSelectingResponse, error)
+	GetBalancerInfo(context.Context, *GetBalancerInfoRequest) (*GetBalancerInfoResponse, error)
+	OverrideBalancerTarget(context.Context, *OverrideBalancerTargetRequest) (*OverrideBalancerTargetResponse, error)
 	mustEmbedUnimplementedRoutingServiceServer()
 }
 
@@ -123,14 +112,11 @@ func (UnimplementedRoutingServiceServer) SubscribeRoutingStats(*SubscribeRouting
 func (UnimplementedRoutingServiceServer) TestRoute(context.Context, *TestRouteRequest) (*RoutingContext, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TestRoute not implemented")
 }
-func (UnimplementedRoutingServiceServer) GetBalancers(context.Context, *GetBalancersRequest) (*GetBalancersResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetBalancers not implemented")
+func (UnimplementedRoutingServiceServer) GetBalancerInfo(context.Context, *GetBalancerInfoRequest) (*GetBalancerInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBalancerInfo not implemented")
 }
-func (UnimplementedRoutingServiceServer) CheckBalancers(context.Context, *CheckBalancersRequest) (*CheckBalancersResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CheckBalancers not implemented")
-}
-func (UnimplementedRoutingServiceServer) OverrideSelecting(context.Context, *OverrideSelectingRequest) (*OverrideSelectingResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method OverrideSelecting not implemented")
+func (UnimplementedRoutingServiceServer) OverrideBalancerTarget(context.Context, *OverrideBalancerTargetRequest) (*OverrideBalancerTargetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OverrideBalancerTarget not implemented")
 }
 func (UnimplementedRoutingServiceServer) mustEmbedUnimplementedRoutingServiceServer() {}
 
@@ -184,56 +170,38 @@ func _RoutingService_TestRoute_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RoutingService_GetBalancers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetBalancersRequest)
+func _RoutingService_GetBalancerInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBalancerInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RoutingServiceServer).GetBalancers(ctx, in)
+		return srv.(RoutingServiceServer).GetBalancerInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v2ray.core.app.router.command.RoutingService/GetBalancers",
+		FullMethod: "/v2ray.core.app.router.command.RoutingService/GetBalancerInfo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RoutingServiceServer).GetBalancers(ctx, req.(*GetBalancersRequest))
+		return srv.(RoutingServiceServer).GetBalancerInfo(ctx, req.(*GetBalancerInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RoutingService_CheckBalancers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CheckBalancersRequest)
+func _RoutingService_OverrideBalancerTarget_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OverrideBalancerTargetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RoutingServiceServer).CheckBalancers(ctx, in)
+		return srv.(RoutingServiceServer).OverrideBalancerTarget(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v2ray.core.app.router.command.RoutingService/CheckBalancers",
+		FullMethod: "/v2ray.core.app.router.command.RoutingService/OverrideBalancerTarget",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RoutingServiceServer).CheckBalancers(ctx, req.(*CheckBalancersRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _RoutingService_OverrideSelecting_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OverrideSelectingRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RoutingServiceServer).OverrideSelecting(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/v2ray.core.app.router.command.RoutingService/OverrideSelecting",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RoutingServiceServer).OverrideSelecting(ctx, req.(*OverrideSelectingRequest))
+		return srv.(RoutingServiceServer).OverrideBalancerTarget(ctx, req.(*OverrideBalancerTargetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -250,16 +218,12 @@ var RoutingService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RoutingService_TestRoute_Handler,
 		},
 		{
-			MethodName: "GetBalancers",
-			Handler:    _RoutingService_GetBalancers_Handler,
+			MethodName: "GetBalancerInfo",
+			Handler:    _RoutingService_GetBalancerInfo_Handler,
 		},
 		{
-			MethodName: "CheckBalancers",
-			Handler:    _RoutingService_CheckBalancers_Handler,
-		},
-		{
-			MethodName: "OverrideSelecting",
-			Handler:    _RoutingService_OverrideSelecting_Handler,
+			MethodName: "OverrideBalancerTarget",
+			Handler:    _RoutingService_OverrideBalancerTarget_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
