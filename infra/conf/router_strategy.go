@@ -2,6 +2,7 @@ package conf
 
 import (
 	"github.com/golang/protobuf/proto"
+	"github.com/v2fly/v2ray-core/v4/app/observatory/burst"
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
 )
@@ -27,8 +28,6 @@ func (v *strategyEmptyConfig) Build() (proto.Message, error) {
 }
 
 type strategyLeastLoadConfig struct {
-	// health check settings
-	HealthCheck *healthCheckSettings `json:"healthCheck,omitempty"`
 	// weight settings
 	Costs []*router.StrategyWeight `json:"costs,omitempty"`
 	// ping rtt baselines
@@ -50,20 +49,19 @@ type healthCheckSettings struct {
 	Timeout       Duration `json:"timeout"`
 }
 
+func (h healthCheckSettings) Build() (proto.Message, error) {
+	return &burst.HealthPingConfig{
+		Destination:   h.Destination,
+		Connectivity:  h.Connectivity,
+		Interval:      int64(h.Interval),
+		Timeout:       int64(h.Timeout),
+		SamplingCount: int32(h.SamplingCount),
+	}, nil
+}
+
 // Build implements Buildable.
 func (v *strategyLeastLoadConfig) Build() (proto.Message, error) {
-	config := &router.StrategyLeastLoadConfig{
-		HealthCheck: &router.HealthPingConfig{},
-	}
-	if v.HealthCheck != nil {
-		config.HealthCheck = &router.HealthPingConfig{
-			Destination:   v.HealthCheck.Destination,
-			Connectivity:  v.HealthCheck.Connectivity,
-			Interval:      int64(v.HealthCheck.Interval),
-			Timeout:       int64(v.HealthCheck.Timeout),
-			SamplingCount: int32(v.HealthCheck.SamplingCount),
-		}
-	}
+	config := &router.StrategyLeastLoadConfig{}
 	config.Costs = v.Costs
 	config.Tolerance = float32(v.Tolerance)
 	if config.Tolerance < 0 {
