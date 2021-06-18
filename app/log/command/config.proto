@@ -20,5 +20,7 @@ message FollowLogResponse {
 
 service LoggerService {
   rpc RestartLogger(RestartLoggerRequest) returns (RestartLoggerResponse) {}
+
+  //Unstable interface
   rpc FollowLog(FollowLogRequest) returns (stream FollowLogResponse) {};
 }
