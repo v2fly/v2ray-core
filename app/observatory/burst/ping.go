@@ -1,13 +1,12 @@
-package router
+package burst
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/tagged"
 	"net/http"
 	"time"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
 )
 
 type pingClient struct {
@@ -15,10 +14,10 @@ type pingClient struct {
 	httpClient  *http.Client
 }
 
-func newPingClient(destination string, timeout time.Duration, handler string, dispatcher routing.Dispatcher) *pingClient {
+func newPingClient(ctx context.Context, destination string, timeout time.Duration, handler string) *pingClient {
 	return &pingClient{
 		destination: destination,
-		httpClient:  newHTTPClient(handler, dispatcher, timeout),
+		httpClient:  newHTTPClient(ctx, handler, timeout),
 	}
 }
 
@@ -29,7 +28,7 @@ func newDirectPingClient(destination string, timeout time.Duration) *pingClient 
 	}
 }
 
-func newHTTPClient(handler string, dispatcher routing.Dispatcher, timeout time.Duration) *http.Client {
+func newHTTPClient(ctxv context.Context, handler string, timeout time.Duration) *http.Client {
 	tr := &http.Transport{
 		DisableKeepAlives: true,
 		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -37,18 +36,7 @@ func newHTTPClient(handler string, dispatcher routing.Dispatcher, timeout time.D
 			if err != nil {
 				return nil, err
 			}
-			h := &session.Handler{
-				Tag: handler,
-			}
-			ctx = session.ContextWithHandler(ctx, h)
-			link, err := dispatcher.Dispatch(ctx, dest)
-			if err != nil {
-				return nil, err
-			}
-			return net.NewConnection(
-				net.ConnectionInputMulti(link.Writer),
-				net.ConnectionOutputMulti(link.Reader),
-			), nil
+			return tagged.Dialer(ctxv, dest, handler)
 		},
 	}
 	return &http.Client{
