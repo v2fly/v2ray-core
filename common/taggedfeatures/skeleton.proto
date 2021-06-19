@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package v2ray.core.common.taggedfeatures;
+option csharp_namespace = "V2Ray.Core.Common.Taggedfeatures";
+option go_package = "github.com/v2fly/v2ray-core/v4/common/taggedfeatures";
+option java_package = "com.v2ray.core.common.taggedfeatures";
+option java_multiple_files = true;
+
+import "common/serial/typed_message.proto";
+
+message Config {
+  map<string, v2ray.core.common.serial.TypedMessage> features = 1;
+}
