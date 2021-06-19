@@ -3,6 +3,7 @@ package taggedfeatures
 import (
 	"context"
 	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/features"
 )
 
@@ -10,7 +11,7 @@ func NewHolderFromConfig(ctx context.Context, config *Config, memberType interfa
 	holder := NewHolder(ctx, memberType)
 	for k, v := range config.Features {
 		var err error
-		instance, err := v.GetInstance()
+		instance, err := serial.GetInstanceOf(v)
 		if err != nil {
 			return nil, newError("unable to get instance").Base(err)
 		}

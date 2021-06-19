@@ -2,6 +2,7 @@ package outbound_test
 
 import (
 	"context"
+	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 	_ "unsafe"
 
@@ -26,7 +27,7 @@ func toContext(ctx context.Context, v *core.Instance) context.Context
 
 func TestOutboundWithoutStatCounter(t *testing.T) {
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&stats.Config{}),
 			serial.ToTypedMessage(&policy.Config{
 				System: &policy.SystemPolicy{
@@ -54,7 +55,7 @@ func TestOutboundWithoutStatCounter(t *testing.T) {
 
 func TestOutboundWithStatCounter(t *testing.T) {
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&stats.Config{}),
 			serial.ToTypedMessage(&policy.Config{
 				System: &policy.SystemPolicy{

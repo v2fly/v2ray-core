@@ -2,6 +2,7 @@ package outbound
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/proxyman"
@@ -68,7 +69,7 @@ func NewHandler(ctx context.Context, config *core.OutboundHandlerConfig) (outbou
 	}
 
 	if config.SenderSettings != nil {
-		senderSettings, err := config.SenderSettings.GetInstance()
+		senderSettings, err := serial.GetInstanceOf(config.SenderSettings)
 		if err != nil {
 			return nil, err
 		}
@@ -85,7 +86,7 @@ func NewHandler(ctx context.Context, config *core.OutboundHandlerConfig) (outbou
 		}
 	}
 
-	proxyConfig, err := config.ProxySettings.GetInstance()
+	proxyConfig, err := serial.GetInstanceOf(config.ProxySettings)
 	if err != nil {
 		return nil, err
 	}

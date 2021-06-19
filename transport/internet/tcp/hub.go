@@ -3,6 +3,7 @@ package tcp
 import (
 	"context"
 	gotls "crypto/tls"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"strings"
 	"time"
 
@@ -73,7 +74,7 @@ func ListenTCP(ctx context.Context, address net.Address, port net.Port, streamSe
 	}
 
 	if tcpSettings.HeaderSettings != nil {
-		headerConfig, err := tcpSettings.HeaderSettings.GetInstance()
+		headerConfig, err := serial.GetInstanceOf(tcpSettings.HeaderSettings)
 		if err != nil {
 			return nil, newError("invalid header settings").Base(err).AtError()
 		}

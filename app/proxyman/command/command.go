@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 
 	grpc "google.golang.org/grpc"
 
@@ -81,7 +82,7 @@ func (s *handlerServer) RemoveInbound(ctx context.Context, request *RemoveInboun
 }
 
 func (s *handlerServer) AlterInbound(ctx context.Context, request *AlterInboundRequest) (*AlterInboundResponse, error) {
-	rawOperation, err := request.Operation.GetInstance()
+	rawOperation, err := serial.GetInstanceOf(request.Operation)
 	if err != nil {
 		return nil, newError("unknown operation").Base(err)
 	}
@@ -110,7 +111,7 @@ func (s *handlerServer) RemoveOutbound(ctx context.Context, request *RemoveOutbo
 }
 
 func (s *handlerServer) AlterOutbound(ctx context.Context, request *AlterOutboundRequest) (*AlterOutboundResponse, error) {
-	rawOperation, err := request.Operation.GetInstance()
+	rawOperation, err := serial.GetInstanceOf(request.Operation)
 	if err != nil {
 		return nil, newError("unknown operation").Base(err)
 	}

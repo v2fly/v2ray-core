@@ -32,7 +32,7 @@ message RemoveInboundResponse {}
 
 message AlterInboundRequest {
   string tag = 1;
-  v2ray.core.common.serial.TypedMessage operation = 2;
+  google.protobuf.Any operation = 2;
 }
 
 message AlterInboundResponse {}
@@ -51,7 +51,7 @@ message RemoveOutboundResponse {}
 
 message AlterOutboundRequest {
   string tag = 1;
-  v2ray.core.common.serial.TypedMessage operation = 2;
+  google.protobuf.Any operation = 2;
 }
 
 message AlterOutboundResponse {}

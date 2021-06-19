@@ -50,7 +50,7 @@ func CreateTransportConfig(name string) (interface{}, error) {
 }
 
 func (c *TransportConfig) GetTypedSettings() (interface{}, error) {
-	return c.Settings.GetInstance()
+	return serial.GetInstanceOf(c.Settings)
 }
 
 func (c *TransportConfig) GetUnifiedProtocolName() string {
@@ -98,8 +98,8 @@ func (c *StreamConfig) GetTransportSettingsFor(protocol string) (interface{}, er
 
 func (c *StreamConfig) GetEffectiveSecuritySettings() (interface{}, error) {
 	for _, settings := range c.SecuritySettings {
-		if settings.Type == c.SecurityType {
-			return settings.GetInstance()
+		if serial.V2Type(settings) == c.SecurityType {
+			return serial.GetInstanceOf(settings)
 		}
 	}
 	return serial.GetInstance(c.SecurityType)

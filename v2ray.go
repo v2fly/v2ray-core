@@ -187,7 +187,7 @@ func initInstanceWithConfig(config *Config, server *Instance) (bool, error) {
 	}
 
 	for _, appSettings := range config.App {
-		settings, err := appSettings.GetInstance()
+		settings, err := serial.GetInstanceOf(appSettings)
 		if err != nil {
 			return true, err
 		}

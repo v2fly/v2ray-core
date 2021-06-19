@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
 	"github.com/v2fly/v2ray-core/v4/features/routing"
 )
@@ -161,7 +162,7 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatcher) (*Balancer, error) {
 	switch br.Strategy {
 	case "leastping":
-		i, err := br.StrategySettings.GetInstance()
+		i, err := serial.GetInstanceOf(br.StrategySettings)
 		if err != nil {
 			return nil, err
 		}
@@ -175,7 +176,7 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 			ohm:       ohm,
 		}, nil
 	case "leastload":
-		i, err := br.StrategySettings.GetInstance()
+		i, err := serial.GetInstanceOf(br.StrategySettings)
 		if err != nil {
 			return nil, err
 		}

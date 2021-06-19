@@ -3,6 +3,7 @@ package core_test
 import (
 	"context"
 	"crypto/rand"
+	"google.golang.org/protobuf/types/known/anypb"
 	"io"
 	"testing"
 	"time"
@@ -46,7 +47,7 @@ func TestV2RayDial(t *testing.T) {
 	defer tcpServer.Close()
 
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&dispatcher.Config{}),
 			serial.ToTypedMessage(&proxyman.InboundConfig{}),
 			serial.ToTypedMessage(&proxyman.OutboundConfig{}),
@@ -96,7 +97,7 @@ func TestV2RayDialUDPConn(t *testing.T) {
 	defer udpServer.Close()
 
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&dispatcher.Config{}),
 			serial.ToTypedMessage(&proxyman.InboundConfig{}),
 			serial.ToTypedMessage(&proxyman.OutboundConfig{}),
@@ -163,7 +164,7 @@ func TestV2RayDialUDP(t *testing.T) {
 	defer udpServer2.Close()
 
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&dispatcher.Config{}),
 			serial.ToTypedMessage(&proxyman.InboundConfig{}),
 			serial.ToTypedMessage(&proxyman.OutboundConfig{}),

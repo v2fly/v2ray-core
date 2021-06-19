@@ -460,7 +460,7 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 		}
 		tm := serial.ToTypedMessage(ts)
 		config.SecuritySettings = append(config.SecuritySettings, tm)
-		config.SecurityType = tm.Type
+		config.SecurityType = serial.V2Type(tm)
 	}
 	if c.TCPSettings != nil {
 		ts, err := c.TCPSettings.Build()

@@ -14,7 +14,7 @@ message Config {
   string tag = 1;
   // Services that supported by this server. All services must implement Service
   // interface.
-  repeated v2ray.core.common.serial.TypedMessage service = 2;
+  repeated google.protobuf.Any service = 2;
 }
 
 // ReflectionConfig is the placeholder config for ReflectionService.

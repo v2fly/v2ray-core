@@ -3,6 +3,7 @@ package scenarios
 import (
 	"context"
 	"fmt"
+	"google.golang.org/protobuf/types/known/anypb"
 	"io"
 	"strings"
 	"testing"
@@ -44,10 +45,10 @@ func TestCommanderRemoveHandler(t *testing.T) {
 	clientPort := tcp.PickPort()
 	cmdPort := tcp.PickPort()
 	clientConfig := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&commander.Config{
 				Tag: "api",
-				Service: []*serial.TypedMessage{
+				Service: []*anypb.Any{
 					serial.ToTypedMessage(&command.Config{}),
 				},
 			}),
@@ -142,10 +143,10 @@ func TestCommanderAddRemoveUser(t *testing.T) {
 	cmdPort := tcp.PickPort()
 	serverPort := tcp.PickPort()
 	serverConfig := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&commander.Config{
 				Tag: "api",
-				Service: []*serial.TypedMessage{
+				Service: []*anypb.Any{
 					serial.ToTypedMessage(&command.Config{}),
 				},
 			}),
@@ -210,7 +211,7 @@ func TestCommanderAddRemoveUser(t *testing.T) {
 
 	clientPort := tcp.PickPort()
 	clientConfig := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&policy.Config{
 				Level: map[uint32]*policy.Policy{
 					0: {
@@ -323,11 +324,11 @@ func TestCommanderStats(t *testing.T) {
 	cmdPort := tcp.PickPort()
 
 	serverConfig := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&stats.Config{}),
 			serial.ToTypedMessage(&commander.Config{
 				Tag: "api",
-				Service: []*serial.TypedMessage{
+				Service: []*anypb.Any{
 					serial.ToTypedMessage(&statscmd.Config{}),
 				},
 			}),

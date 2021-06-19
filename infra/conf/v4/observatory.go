@@ -8,6 +8,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/common/taggedfeatures"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/v2fly/v2ray-core/v4/app/observatory"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/duration"
@@ -48,7 +49,7 @@ type MultiObservatoryConfig struct {
 }
 
 func (o *MultiObservatoryConfig) Build() (proto.Message, error) {
-	ret := &multiObservatory.Config{Holders: &taggedfeatures.Config{Features: make(map[string]*serial.TypedMessage)}}
+	ret := &multiObservatory.Config{Holders: &taggedfeatures.Config{Features: make(map[string]*anypb.Any)}}
 	for _, v := range o.Observers {
 		switch v.MemberType {
 		case "burst":

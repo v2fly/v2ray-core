@@ -1,11 +1,13 @@
 package protocol
 
+import "github.com/v2fly/v2ray-core/v4/common/serial"
+
 func (u *User) GetTypedAccount() (Account, error) {
 	if u.GetAccount() == nil {
 		return nil, newError("Account missing").AtWarning()
 	}
 
-	rawAccount, err := u.Account.GetInstance()
+	rawAccount, err := serial.GetInstanceOf(u.Account)
 	if err != nil {
 		return nil, err
 	}
@@ -15,7 +17,7 @@ func (u *User) GetTypedAccount() (Account, error) {
 	if account, ok := rawAccount.(Account); ok {
 		return account, nil
 	}
-	return nil, newError("Unknown account type: ", u.Account.Type)
+	return nil, newError("Unknown account type: ", serial.V2Type(u.Account))
 }
 
 func (u *User) ToMemoryUser() (*MemoryUser, error) {

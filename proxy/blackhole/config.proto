@@ -13,5 +13,5 @@ message NoneResponse {}
 message HTTPResponse {}
 
 message Config {
-  v2ray.core.common.serial.TypedMessage response = 1;
+  google.protobuf.Any response = 1;
 }

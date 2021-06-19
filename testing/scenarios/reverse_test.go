@@ -1,6 +1,7 @@
 package scenarios
 
 import (
+	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 	"time"
 
@@ -41,7 +42,7 @@ func TestReverseProxy(t *testing.T) {
 	reversePort := tcp.PickPort()
 
 	serverConfig := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&reverse.Config{
 				PortalConfig: []*reverse.PortalConfig{
 					{
@@ -110,7 +111,7 @@ func TestReverseProxy(t *testing.T) {
 
 	clientPort := tcp.PickPort()
 	clientConfig := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&reverse.Config{
 				BridgeConfig: []*reverse.BridgeConfig{
 					{
@@ -212,7 +213,7 @@ func TestReverseProxyLongRunning(t *testing.T) {
 	reversePort := tcp.PickPort()
 
 	serverConfig := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&log.Config{
 				ErrorLogLevel: clog.Severity_Warning,
 				ErrorLogType:  log.LogType_Console,
@@ -295,7 +296,7 @@ func TestReverseProxyLongRunning(t *testing.T) {
 
 	clientPort := tcp.PickPort()
 	clientConfig := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&log.Config{
 				ErrorLogLevel: clog.Severity_Warning,
 				ErrorLogType:  log.LogType_Console,

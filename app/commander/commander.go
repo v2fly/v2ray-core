@@ -4,6 +4,7 @@ package commander
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"net"
 	"sync"
 
@@ -35,7 +36,7 @@ func NewCommander(ctx context.Context, config *Config) (*Commander, error) {
 	}))
 
 	for _, rawConfig := range config.Service {
-		config, err := rawConfig.GetInstance()
+		config, err := serial.GetInstanceOf(rawConfig)
 		if err != nil {
 			return nil, err
 		}

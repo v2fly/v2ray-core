@@ -9,5 +9,5 @@ option java_multiple_files = true;
 import "common/serial/typed_message.proto";
 
 message Config {
-  map<string, v2ray.core.common.serial.TypedMessage> features = 1;
+  map<string, google.protobuf.Any> features = 1;
 }

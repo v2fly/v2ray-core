@@ -6,6 +6,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/dns"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/log"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
+	"google.golang.org/protobuf/types/known/anypb"
 	"strings"
 
 	core "github.com/v2fly/v2ray-core/v4"
@@ -408,7 +409,7 @@ func (c *Config) Build() (*core.Config, error) {
 	}
 
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&dispatcher.Config{}),
 			serial.ToTypedMessage(&proxyman.InboundConfig{}),
 			serial.ToTypedMessage(&proxyman.OutboundConfig{}),
@@ -431,7 +432,7 @@ func (c *Config) Build() (*core.Config, error) {
 		config.App = append(config.App, serial.ToTypedMessage(statsConf))
 	}
 
-	var logConfMsg *serial.TypedMessage
+	var logConfMsg *anypb.Any
 	if c.LogConfig != nil {
 		logConfMsg = serial.ToTypedMessage(c.LogConfig.Build())
 	} else {
@@ -439,7 +440,7 @@ func (c *Config) Build() (*core.Config, error) {
 	}
 	// let logger module be the first App to start,
 	// so that other modules could print log during initiating
-	config.App = append([]*serial.TypedMessage{logConfMsg}, config.App...)
+	config.App = append([]*anypb.Any{logConfMsg}, config.App...)
 
 	if c.RouterConfig != nil {
 		routerConfig, err := c.RouterConfig.Build()

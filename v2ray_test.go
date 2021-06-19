@@ -1,6 +1,7 @@
 package core_test
 
 import (
+	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 
 	"google.golang.org/protobuf/proto"
@@ -41,7 +42,7 @@ func TestV2RayClose(t *testing.T) {
 
 	userID := uuid.New()
 	config := &Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&dispatcher.Config{}),
 			serial.ToTypedMessage(&proxyman.InboundConfig{}),
 			serial.ToTypedMessage(&proxyman.OutboundConfig{}),

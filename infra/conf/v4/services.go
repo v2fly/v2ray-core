@@ -2,6 +2,7 @@ package v4
 
 import (
 	"encoding/json"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/jhump/protoreflect/desc"
@@ -10,8 +11,8 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 )
 
-func (c *Config) BuildServices(service map[string]*json.RawMessage) ([]*serial.TypedMessage, error) {
-	var ret []*serial.TypedMessage
+func (c *Config) BuildServices(service map[string]*json.RawMessage) ([]*anypb.Any, error) {
+	var ret []*anypb.Any
 	for k, v := range service {
 		message, err := desc.LoadMessageDescriptor(k)
 		if err != nil || message == nil {

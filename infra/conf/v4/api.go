@@ -1,6 +1,7 @@
 package v4
 
 import (
+	"google.golang.org/protobuf/types/known/anypb"
 	"strings"
 
 	"github.com/jhump/protoreflect/desc"
@@ -25,7 +26,7 @@ func (c *APIConfig) Build() (*commander.Config, error) {
 		return nil, newError("API tag can't be empty.")
 	}
 
-	services := make([]*serial.TypedMessage, 0, 16)
+	services := make([]*anypb.Any, 0, 16)
 	for _, s := range c.Services {
 		switch strings.ToLower(s) {
 		case "reflectionservice":

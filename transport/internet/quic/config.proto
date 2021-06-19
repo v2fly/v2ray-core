@@ -12,5 +12,5 @@ import "common/protocol/headers.proto";
 message Config {
   string key = 1;
   v2ray.core.common.protocol.SecurityConfig security = 2;
-  v2ray.core.common.serial.TypedMessage header = 3;
+  google.protobuf.Any header = 3;
 }

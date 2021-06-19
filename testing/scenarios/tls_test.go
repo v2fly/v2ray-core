@@ -2,6 +2,7 @@ package scenarios
 
 import (
 	"crypto/x509"
+	"google.golang.org/protobuf/types/known/anypb"
 	"runtime"
 	"testing"
 	"time"
@@ -47,7 +48,7 @@ func TestSimpleTLSConnection(t *testing.T) {
 					Listen:    net.NewIPOrDomain(net.LocalHostIP),
 					StreamSettings: &internet.StreamConfig{
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								Certificate: []*tls.Certificate{tls.ParseCertificate(cert.MustGenerate(nil))},
 							}),
@@ -109,7 +110,7 @@ func TestSimpleTLSConnection(t *testing.T) {
 				SenderSettings: serial.ToTypedMessage(&proxyman.SenderConfig{
 					StreamSettings: &internet.StreamConfig{
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								AllowInsecure: true,
 							}),
@@ -160,7 +161,7 @@ func TestAutoIssuingCertificate(t *testing.T) {
 					Listen:    net.NewIPOrDomain(net.LocalHostIP),
 					StreamSettings: &internet.StreamConfig{
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								Certificate: []*tls.Certificate{{
 									Certificate: certPEM,
@@ -226,7 +227,7 @@ func TestAutoIssuingCertificate(t *testing.T) {
 				SenderSettings: serial.ToTypedMessage(&proxyman.SenderConfig{
 					StreamSettings: &internet.StreamConfig{
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								ServerName: "v2fly.org",
 								Certificate: []*tls.Certificate{{
@@ -271,7 +272,7 @@ func TestTLSOverKCP(t *testing.T) {
 					StreamSettings: &internet.StreamConfig{
 						Protocol:     internet.TransportProtocol_MKCP,
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								Certificate: []*tls.Certificate{tls.ParseCertificate(cert.MustGenerate(nil))},
 							}),
@@ -334,7 +335,7 @@ func TestTLSOverKCP(t *testing.T) {
 					StreamSettings: &internet.StreamConfig{
 						Protocol:     internet.TransportProtocol_MKCP,
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								AllowInsecure: true,
 							}),
@@ -373,7 +374,7 @@ func TestTLSOverWebSocket(t *testing.T) {
 					StreamSettings: &internet.StreamConfig{
 						Protocol:     internet.TransportProtocol_WebSocket,
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								Certificate: []*tls.Certificate{tls.ParseCertificate(cert.MustGenerate(nil))},
 							}),
@@ -442,7 +443,7 @@ func TestTLSOverWebSocket(t *testing.T) {
 							},
 						},
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								AllowInsecure: true,
 							}),
@@ -494,7 +495,7 @@ func TestHTTP2(t *testing.T) {
 							},
 						},
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								Certificate: []*tls.Certificate{tls.ParseCertificate(cert.MustGenerate(nil))},
 							}),
@@ -566,7 +567,7 @@ func TestHTTP2(t *testing.T) {
 							},
 						},
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								AllowInsecure: true,
 							}),
@@ -610,7 +611,7 @@ func TestSimpleTLSConnectionPinned(t *testing.T) {
 					Listen:    net.NewIPOrDomain(net.LocalHostIP),
 					StreamSettings: &internet.StreamConfig{
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								Certificate: []*tls.Certificate{certificate},
 							}),
@@ -672,7 +673,7 @@ func TestSimpleTLSConnectionPinned(t *testing.T) {
 				SenderSettings: serial.ToTypedMessage(&proxyman.SenderConfig{
 					StreamSettings: &internet.StreamConfig{
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								AllowInsecure:                    true,
 								PinnedPeerCertificateChainSha256: [][]byte{certHash},

@@ -2,6 +2,7 @@ package scenarios
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 	"time"
 
@@ -30,7 +31,7 @@ func TestResolveIP(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	serverConfig := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&dns.Config{
 				Hosts: map[string]*net.IPOrDomain{
 					"google.com": net.NewIPOrDomain(dest.Address),

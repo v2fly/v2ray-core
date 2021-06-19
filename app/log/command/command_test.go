@@ -2,6 +2,7 @@ package command_test
 
 import (
 	"context"
+	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 
 	core "github.com/v2fly/v2ray-core/v4"
@@ -17,7 +18,7 @@ import (
 
 func TestLoggerRestart(t *testing.T) {
 	v, err := core.New(&core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&log.Config{}),
 			serial.ToTypedMessage(&dispatcher.Config{}),
 			serial.ToTypedMessage(&proxyman.InboundConfig{}),

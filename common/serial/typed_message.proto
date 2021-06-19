@@ -1,15 +1,18 @@
 syntax = "proto3";
 
-package v2ray.core.common.serial;
-option csharp_namespace = "V2Ray.Core.Common.Serial";
-option go_package = "github.com/v2fly/v2ray-core/v4/common/serial";
-option java_package = "com.v2ray.core.common.serial";
+// Use Well-Known Identifier to make use of library assisted parsing
+package google.protobuf;
+option csharp_namespace = "Google.Protobuf.WellKnownTypes";
+option go_package = "google.golang.org/protobuf/types/known/anypb";
+option java_package = "com.google.protobuf";
+option java_outer_classname = "AnyProto";
 option java_multiple_files = true;
+option objc_class_prefix = "GPB";
 
 // TypedMessage is a serialized proto message along with its type name.
-message TypedMessage {
+message Any {
   // The name of the message type, retrieved from protobuf API.
-  string type = 1;
+  string type_url = 1;
   // Serialized proto message.
   bytes value = 2;
 }

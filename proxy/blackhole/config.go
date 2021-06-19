@@ -3,6 +3,7 @@ package blackhole
 import (
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 )
 
 const (
@@ -39,7 +40,7 @@ func (c *Config) GetInternalResponse() (ResponseConfig, error) {
 		return new(NoneResponse), nil
 	}
 
-	config, err := c.GetResponse().GetInstance()
+	config, err := serial.GetInstanceOf(c.GetResponse())
 	if err != nil {
 		return nil, err
 	}

@@ -15,5 +15,5 @@ message User {
 
   // Protocol specific account information. Must be the account proto in one of
   // the proxies.
-  v2ray.core.common.serial.TypedMessage account = 3;
+  google.protobuf.Any account = 3;
 }

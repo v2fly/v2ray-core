@@ -1,6 +1,7 @@
 package dns_test
 
 import (
+	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 	"time"
 
@@ -122,7 +123,7 @@ func TestUDPServerSubnet(t *testing.T) {
 	time.Sleep(time.Second)
 
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&Config{
 				NameServers: []*net.Endpoint{
 					{
@@ -177,7 +178,7 @@ func TestUDPServer(t *testing.T) {
 	time.Sleep(time.Second)
 
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&Config{
 				NameServers: []*net.Endpoint{
 					{
@@ -278,7 +279,7 @@ func TestPrioritizedDomain(t *testing.T) {
 	time.Sleep(time.Second)
 
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&Config{
 				NameServers: []*net.Endpoint{
 					{
@@ -360,7 +361,7 @@ func TestUDPServerIPv6(t *testing.T) {
 	time.Sleep(time.Second)
 
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&Config{
 				NameServers: []*net.Endpoint{
 					{
@@ -416,7 +417,7 @@ func TestStaticHostDomain(t *testing.T) {
 	time.Sleep(time.Second)
 
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&Config{
 				NameServers: []*net.Endpoint{
 					{
@@ -481,7 +482,7 @@ func TestIPMatch(t *testing.T) {
 	time.Sleep(time.Second)
 
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&Config{
 				NameServer: []*NameServer{
 					// private dns, not match
@@ -591,7 +592,7 @@ func TestLocalDomain(t *testing.T) {
 	time.Sleep(time.Second)
 
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&Config{
 				NameServers: []*net.Endpoint{
 					{
@@ -787,7 +788,7 @@ func TestMultiMatchPrioritizedDomain(t *testing.T) {
 	time.Sleep(time.Second)
 
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&Config{
 				NameServers: []*net.Endpoint{
 					{

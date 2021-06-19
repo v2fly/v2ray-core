@@ -135,11 +135,11 @@ func (m *Manager) Close() error {
 
 // NewHandler creates a new inbound.Handler based on the given config.
 func NewHandler(ctx context.Context, config *core.InboundHandlerConfig) (inbound.Handler, error) {
-	rawReceiverSettings, err := config.ReceiverSettings.GetInstance()
+	rawReceiverSettings, err := serial.GetInstanceOf(config.ReceiverSettings)
 	if err != nil {
 		return nil, err
 	}
-	proxySettings, err := config.ProxySettings.GetInstance()
+	proxySettings, err := serial.GetInstanceOf(config.ProxySettings)
 	if err != nil {
 		return nil, err
 	}

@@ -79,8 +79,8 @@ message ReceiverConfig {
 
 message InboundHandlerConfig {
   string tag = 1;
-  v2ray.core.common.serial.TypedMessage receiver_settings = 2;
-  v2ray.core.common.serial.TypedMessage proxy_settings = 3;
+  google.protobuf.Any receiver_settings = 2;
+  google.protobuf.Any proxy_settings = 3;
 }
 
 message OutboundConfig {}

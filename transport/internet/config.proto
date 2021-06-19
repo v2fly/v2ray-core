@@ -26,7 +26,7 @@ message TransportConfig {
   string protocol_name = 3;
 
   // Specific settings. Must be of the transports.
-  v2ray.core.common.serial.TypedMessage settings = 2;
+  google.protobuf.Any settings = 2;
 }
 
 message StreamConfig {
@@ -42,7 +42,7 @@ message StreamConfig {
   string security_type = 3;
 
   // Settings for transport security. For now the only choice is TLS.
-  repeated v2ray.core.common.serial.TypedMessage security_settings = 4;
+  repeated google.protobuf.Any security_settings = 4;
 
   SocketConfig socket_settings = 6;
 }

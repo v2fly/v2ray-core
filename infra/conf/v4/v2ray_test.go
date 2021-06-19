@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
+	"google.golang.org/protobuf/types/known/anypb"
 	"reflect"
 	"testing"
 
@@ -28,6 +29,10 @@ import (
 	"github.com/v2fly/v2ray-core/v4/transport/internet/http"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/websocket"
+
+	// Geo loaders
+	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/memconservative"
+	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/standard"
 )
 
 func TestV2RayConfig(t *testing.T) {
@@ -140,7 +145,7 @@ func TestV2RayConfig(t *testing.T) {
 			}`,
 			Parser: createParser(),
 			Output: &core.Config{
-				App: []*serial.TypedMessage{
+				App: []*anypb.Any{
 					serial.ToTypedMessage(&log.Config{
 						ErrorLogType:  log.LogType_File,
 						ErrorLogPath:  "/var/log/v2ray/error.log",
@@ -257,7 +262,7 @@ func TestV2RayConfig(t *testing.T) {
 									},
 								},
 								SecurityType: "v2ray.core.transport.internet.tls.Config",
-								SecuritySettings: []*serial.TypedMessage{
+								SecuritySettings: []*anypb.Any{
 									serial.ToTypedMessage(&tls.Config{
 										NextProtocol: []string{"h2"},
 									}),
@@ -313,7 +318,7 @@ func TestV2RayConfig(t *testing.T) {
 									},
 								},
 								SecurityType: "v2ray.core.transport.internet.tls.Config",
-								SecuritySettings: []*serial.TypedMessage{
+								SecuritySettings: []*anypb.Any{
 									serial.ToTypedMessage(&tls.Config{
 										NextProtocol: []string{"h2"},
 									}),

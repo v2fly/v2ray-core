@@ -2,6 +2,7 @@ package kcp
 
 import (
 	"crypto/cipher"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
@@ -67,7 +68,7 @@ func (c *Config) GetSecurity() (cipher.AEAD, error) {
 
 func (c *Config) GetPackerHeader() (internet.PacketHeader, error) {
 	if c.HeaderConfig != nil {
-		rawConfig, err := c.HeaderConfig.GetInstance()
+		rawConfig, err := serial.GetInstanceOf(c.HeaderConfig)
 		if err != nil {
 			return nil, err
 		}

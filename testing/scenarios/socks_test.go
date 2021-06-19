@@ -1,6 +1,7 @@
 package scenarios
 
 import (
+	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 	"time"
 
@@ -194,7 +195,7 @@ func TestSocksBridageUDPWithRouting(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	serverConfig := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&router.Config{
 				Rule: []*router.RoutingRule{
 					{
