@@ -76,6 +76,9 @@ import (
 	// commands
 	_ "github.com/v2fly/v2ray-core/v4/main/commands/all"
 
+	//engineering commands
+	_ "github.com/v2fly/v2ray-core/v4/main/commands/all/engineering"
+
 	// Commands that rely on jsonv4 format This disable selective compile
 	_ "github.com/v2fly/v2ray-core/v4/main/commands/all/api/jsonv4"
 	_ "github.com/v2fly/v2ray-core/v4/main/commands/all/jsonv4"
