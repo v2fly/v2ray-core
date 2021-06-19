@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/jsonpb"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/v2jsonpb"
 	"os"
 	"strings"
 
@@ -144,6 +145,24 @@ func executeConvert(cmd *base.Command, args []string) {
 			base.Fatalf(err.Error())
 		}
 		out = w.Bytes()
+	case v2jsonpb.FormatProtobufV2JSONPB:
+		data, err := json.Marshal(m)
+		if err != nil {
+			base.Fatalf("failed to marshal json: %s", err)
+		}
+		r := bytes.NewReader(data)
+		cf, err := serial.DecodeJSONConfig(r)
+		if err != nil {
+			base.Fatalf("failed to decode json: %s", err)
+		}
+		pbConfig, err := cf.Build()
+		if err != nil {
+			base.Fatalf(err.Error())
+		}
+		out, err = v2jsonpb.DumpV2JsonPb(pbConfig)
+		if err != nil {
+			base.Fatalf(err.Error())
+		}
 	default:
 		base.Errorf("invalid output format: %s", outputFormat)
 		base.Errorf("Run '%s help %s' for details.", base.CommandEnv.Exec, cmd.LongName())

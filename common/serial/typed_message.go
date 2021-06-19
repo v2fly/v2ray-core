@@ -47,5 +47,15 @@ func GetInstanceOf(v *anypb.Any) (proto.Message, error) {
 }
 
 func V2Type(v *anypb.Any) string {
+	return V2TypeFromURL(v.TypeUrl)
+}
+func V2TypeFromURL(string2 string) string {
+	return string2
+}
+func V2TypeHumanReadable(v *anypb.Any) string {
 	return v.TypeUrl
+}
+
+func V2URLFromV2Type(readableType string) string {
+	return readableType
 }
