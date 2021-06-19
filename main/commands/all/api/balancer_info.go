@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"os"
-	"sort"
 	"strings"
 
 	routerService "github.com/v2fly/v2ray-core/v4/app/router/command"
@@ -49,60 +48,36 @@ func executeBalancerInfo(cmd *base.Command, args []string) {
 	defer close()
 
 	client := routerService.NewRoutingServiceClient(conn)
-	r := &routerService.GetBalancersRequest{BalancerTags: cmd.Flag.Args()}
-	resp, err := client.GetBalancers(ctx, r)
+	r := &routerService.GetBalancerInfoRequest{Tag: args[0]}
+	resp, err := client.GetBalancerInfo(ctx, r)
 	if err != nil {
 		base.Fatalf("failed to get health information: %s", err)
 	}
-	sort.Slice(resp.Balancers, func(i, j int) bool {
-		return resp.Balancers[i].Tag < resp.Balancers[j].Tag
-	})
+
 	if apiJSON {
 		showJSONResponse(resp)
 		return
 	}
-	for _, b := range resp.Balancers {
-		showBalancerInfo(b)
-	}
+
+	showBalancerInfo(resp.Balancer)
+
 }
 
 func showBalancerInfo(b *routerService.BalancerMsg) {
 	const tableIndent = 4
 	sb := new(strings.Builder)
-	// Balancer
-	sb.WriteString(fmt.Sprintf("Balancer: %s\n", b.Tag))
-	// Strategy
-	sb.WriteString("  - Strategy:\n")
-	for _, v := range b.StrategySettings {
-		sb.WriteString(fmt.Sprintf("    %s\n", v))
-	}
 	// Override
 	if b.Override != nil {
 		sb.WriteString("  - Selecting Override:\n")
-		until := fmt.Sprintf("until: %s", b.Override.Until)
-		writeRow(sb, tableIndent, 0, []string{until}, nil)
-		for i, s := range b.Override.Selects {
+		for i, s := range []string{b.Override.Target} {
 			writeRow(sb, tableIndent, i+1, []string{s}, nil)
 		}
 	}
-	b.Titles = append(b.Titles, "Tag")
-	formats := getColumnFormats(b.Titles)
 	// Selects
 	sb.WriteString("  - Selects:\n")
-	writeRow(sb, tableIndent, 0, b.Titles, formats)
-	for i, o := range b.Selects {
-		o.Values = append(o.Values, o.Tag)
-		writeRow(sb, tableIndent, i+1, o.Values, formats)
-	}
-	// Others
-	scnt := len(b.Selects)
-	if len(b.Others) > 0 {
-		sb.WriteString("  - Others:\n")
-		writeRow(sb, tableIndent, 0, b.Titles, formats)
-		for i, o := range b.Others {
-			o.Values = append(o.Values, o.Tag)
-			writeRow(sb, tableIndent, scnt+i+1, o.Values, formats)
-		}
+
+	for i, o := range b.PrincipleTarget.Tag {
+		writeRow(sb, tableIndent, i+1, []string{o}, nil)
 	}
 	os.Stdout.WriteString(sb.String())
 }

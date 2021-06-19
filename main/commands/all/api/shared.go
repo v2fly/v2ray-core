@@ -2,8 +2,8 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"google.golang.org/protobuf/encoding/protojson"
 	"os"
 	"strings"
 	"time"
@@ -81,15 +81,7 @@ func dialAPIServerWithContext(ctx context.Context) (conn *grpc.ClientConn) {
 }
 
 func protoToJSONString(m proto.Message, prefix, indent string) (string, error) {
-	b := new(strings.Builder)
-	e := json.NewEncoder(b)
-	e.SetIndent(prefix, indent)
-	e.SetEscapeHTML(false)
-	err := e.Encode(m)
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(b.String()), nil
+	return strings.TrimSpace(protojson.MarshalOptions{Indent: indent}.Format(m)), nil
 }
 
 func showJSONResponse(m proto.Message) {

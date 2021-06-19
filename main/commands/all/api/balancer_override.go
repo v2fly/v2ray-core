@@ -1,36 +1,28 @@
 package api
 
 import (
-	"time"
-
 	routerService "github.com/v2fly/v2ray-core/v4/app/router/command"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 )
 
 var cmdBalancerOverride = &base.Command{
 	CustomFlags: true,
-	UsageLine:   "{{.Exec}} api bo [--server=127.0.0.1:8080] <-b balancer> selectors...",
+	UsageLine:   "{{.Exec}} api bo [--server=127.0.0.1:8080] <-b balancer> outboundTag",
 	Short:       "balancer override",
 	Long: `
-Override a balancer's selection in a duration of time.
+Override a balancer's selection.
 
 > Make sure you have "RoutingService" set in "config.api.services" 
 of server config.
 
 Once a balancer's selection is overridden:
 
-- The selectors of the balancer won't apply.
-- The strategy of the balancer stops selecting qualified nodes 
-  according to its settings, doing only the final pick.
+- The balancer's selection result will always be outboundTag
 
 Arguments:
 
 	-b, -balancer <tag>
 		Tag of the target balancer. Required.
-
-	-v, -validity <duration>
-		Time duration of the validity of override, e.g.: 60s, 60m, 
-		24h, 1m30s. Default 1h.
 
 	-r, -remove
 		Remove the override
@@ -43,7 +35,7 @@ Arguments:
 
 Example:
 
-    {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 -b balancer selector1 selector2
+    {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 -b balancer tag
     {{.Exec}} {{.LongName}} --server=127.0.0.1:8080 -b balancer -r
 `,
 	Run: executeBalancerOverride,
@@ -52,13 +44,10 @@ Example:
 func executeBalancerOverride(cmd *base.Command, args []string) {
 	var (
 		balancer string
-		validity time.Duration
 		remove   bool
 	)
 	cmd.Flag.StringVar(&balancer, "b", "", "")
 	cmd.Flag.StringVar(&balancer, "balancer", "", "")
-	cmd.Flag.DurationVar(&validity, "v", time.Hour, "")
-	cmd.Flag.DurationVar(&validity, "validity", time.Hour, "")
 	cmd.Flag.BoolVar(&remove, "r", false, "")
 	cmd.Flag.BoolVar(&remove, "remove", false, "")
 	setSharedFlags(cmd)
@@ -71,17 +60,17 @@ func executeBalancerOverride(cmd *base.Command, args []string) {
 	conn, ctx, close := dialAPIServer()
 	defer close()
 
-	v := int64(0)
-	if !remove {
-		v = int64(validity)
-	}
 	client := routerService.NewRoutingServiceClient(conn)
-	r := &routerService.OverrideSelectingRequest{
-		BalancerTag: balancer,
-		Selectors:   cmd.Flag.Args(),
-		Validity:    v,
+	target := ""
+	if !remove {
+		target = cmd.Flag.Args()[0]
 	}
-	_, err := client.OverrideSelecting(ctx, r)
+	r := &routerService.OverrideBalancerTargetRequest{
+		BalancerTag: balancer,
+		Target:      target,
+	}
+
+	_, err := client.OverrideBalancerTarget(ctx, r)
 	if err != nil {
 		base.Fatalf("failed to override balancer: %s", err)
 	}
