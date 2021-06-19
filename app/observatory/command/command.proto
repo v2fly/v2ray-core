@@ -9,6 +9,7 @@ option java_multiple_files = true;
 import "app/observatory/config.proto";
 
 message GetOutboundStatusRequest {
+  string Tag = 1;
 }
 
 message GetOutboundStatusResponse {
