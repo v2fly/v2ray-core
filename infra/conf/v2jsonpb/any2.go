@@ -2,6 +2,7 @@ package v2jsonpb
 
 import (
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
@@ -143,6 +144,7 @@ func (v V2JsonProtobufListFollower) IsValid() bool {
 
 type V2JsonProtobufMapFollower struct {
 	protoreflect.Map
+	ValueKind protoreflect.FieldDescriptor
 }
 
 func (v V2JsonProtobufMapFollower) Len() int {
@@ -150,7 +152,9 @@ func (v V2JsonProtobufMapFollower) Len() int {
 }
 
 func (v V2JsonProtobufMapFollower) Range(f func(protoreflect.MapKey, protoreflect.Value) bool) {
-	panic("implement me")
+	v.Map.Range(func(key protoreflect.MapKey, value protoreflect.Value) bool {
+		return followMapValue(v.ValueKind, value, key, f)
+	})
 }
 
 func (v V2JsonProtobufMapFollower) Has(key protoreflect.MapKey) bool {
@@ -206,8 +210,20 @@ func (v *V2JsonProtobufFollower) Range(f func(protoreflect.FieldDescriptor, prot
 			case "google.protobuf.Any.value":
 				url := v.Message.Get(v.Message.Descriptor().Fields().ByName("type_url")).String()
 				fd := &V2JsonProtobufAnyValueField{descriptor, url}
-				follow := &V2JsonProtobufAnyFollower{v.Message}
-				return f(fd, protoreflect.ValueOfMessage(follow))
+
+				bytesout := v.Message.Get(v.Message.Descriptor().Fields().Get(1)).Bytes()
+				v2type := serial.V2TypeFromURL(url)
+				instance, err := serial.GetInstance(v2type)
+				if err != nil {
+					panic(err)
+				}
+				unmarshaler := proto.UnmarshalOptions{AllowPartial: true, Resolver: resolver2{backgroundResolver: serial.GetResolver()}}
+				err = unmarshaler.Unmarshal(bytesout, instance.(proto.Message))
+				if err != nil {
+					panic(err)
+				}
+
+				return f(fd, protoreflect.ValueOfMessage(&V2JsonProtobufFollower{instance.(proto.Message).ProtoReflect()}))
 			default:
 				panic("unexpected any value")
 			}
@@ -225,7 +241,7 @@ func followValue(descriptor protoreflect.FieldDescriptor, value protoreflect.Val
 			return f(fd, value2)
 		}
 		if descriptor.IsMap() {
-			value2 := protoreflect.ValueOfMap(V2JsonProtobufMapFollower{value.Map()})
+			value2 := protoreflect.ValueOfMap(V2JsonProtobufMapFollower{value.Map(), descriptor.MapValue()})
 			return f(fd, value2)
 		}
 		value2 := protoreflect.ValueOfMessage(&V2JsonProtobufFollower{value.Message()})
@@ -233,6 +249,23 @@ func followValue(descriptor protoreflect.FieldDescriptor, value protoreflect.Val
 	}
 
 	return f(fd, value)
+}
+
+func followMapValue(descriptor protoreflect.FieldDescriptor, value protoreflect.Value, mapkey protoreflect.MapKey, f func(protoreflect.MapKey, protoreflect.Value) bool) bool {
+	if descriptor.Kind() == protoreflect.MessageKind {
+		if descriptor.IsList() {
+			value2 := protoreflect.ValueOfList(V2JsonProtobufListFollower{value.List()})
+			return f(mapkey, value2)
+		}
+		if descriptor.IsMap() {
+			value2 := protoreflect.ValueOfMap(V2JsonProtobufMapFollower{value.Map(), descriptor.MapValue()})
+			return f(mapkey, value2)
+		}
+		value2 := protoreflect.ValueOfMessage(&V2JsonProtobufFollower{value.Message()})
+		return f(mapkey, value2)
+	}
+
+	return f(mapkey, value)
 }
 
 func (v *V2JsonProtobufFollower) Has(descriptor protoreflect.FieldDescriptor) bool {
