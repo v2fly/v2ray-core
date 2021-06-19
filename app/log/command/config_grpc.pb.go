@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LoggerServiceClient interface {
 	RestartLogger(ctx context.Context, in *RestartLoggerRequest, opts ...grpc.CallOption) (*RestartLoggerResponse, error)
+	//Unstable interface
 	FollowLog(ctx context.Context, in *FollowLogRequest, opts ...grpc.CallOption) (LoggerService_FollowLogClient, error)
 }
 
@@ -76,6 +77,7 @@ func (x *loggerServiceFollowLogClient) Recv() (*FollowLogResponse, error) {
 // for forward compatibility
 type LoggerServiceServer interface {
 	RestartLogger(context.Context, *RestartLoggerRequest) (*RestartLoggerResponse, error)
+	//Unstable interface
 	FollowLog(*FollowLogRequest, LoggerService_FollowLogServer) error
 	mustEmbedUnimplementedLoggerServiceServer()
 }
