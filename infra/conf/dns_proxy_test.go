@@ -2,6 +2,7 @@ package conf_test
 
 import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
@@ -14,14 +15,14 @@ func TestDnsProxyConfig(t *testing.T) {
 		return new(DNSOutboundConfig)
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"address": "8.8.8.8",
 				"port": 53,
 				"network": "tcp"
 			}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &dns.Config{
 				Server: &net.Endpoint{
 					Network: net.Network_TCP,

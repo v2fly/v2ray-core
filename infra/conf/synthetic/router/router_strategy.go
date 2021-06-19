@@ -1,8 +1,10 @@
-package conf
+package router
 
 import (
 	"github.com/golang/protobuf/proto"
 	"github.com/v2fly/v2ray-core/v4/app/observatory/burst"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/duration"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/loader"
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
 )
@@ -14,7 +16,7 @@ const (
 )
 
 var (
-	strategyConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
+	strategyConfigLoader = loader.NewJSONConfigLoader(loader.ConfigCreatorCache{
 		strategyRandom:    func() interface{} { return new(strategyEmptyConfig) },
 		strategyLeastLoad: func() interface{} { return new(strategyLeastLoadConfig) },
 		strategyLeastPing: func() interface{} { return new(strategyLeastPingConfig) },
@@ -32,27 +34,27 @@ type strategyLeastLoadConfig struct {
 	// weight settings
 	Costs []*router.StrategyWeight `json:"costs,omitempty"`
 	// ping rtt baselines
-	Baselines []Duration `json:"baselines,omitempty"`
+	Baselines []duration.Duration `json:"baselines,omitempty"`
 	// expected nodes count to select
 	Expected int32 `json:"expected,omitempty"`
 	// max acceptable rtt, filter away high delay nodes. defalut 0
-	MaxRTT Duration `json:"maxRTT,omitempty"`
+	MaxRTT duration.Duration `json:"maxRTT,omitempty"`
 	// acceptable failure rate
 	Tolerance float64 `json:"tolerance,omitempty"`
 
 	ObserverTag string `json:"observerTag,omitempty"`
 }
 
-// healthCheckSettings holds settings for health Checker
-type healthCheckSettings struct {
-	Destination   string   `json:"destination"`
-	Connectivity  string   `json:"connectivity"`
-	Interval      Duration `json:"interval"`
-	SamplingCount int      `json:"sampling"`
-	Timeout       Duration `json:"timeout"`
+// HealthCheckSettings holds settings for health Checker
+type HealthCheckSettings struct {
+	Destination   string            `json:"destination"`
+	Connectivity  string            `json:"connectivity"`
+	Interval      duration.Duration `json:"interval"`
+	SamplingCount int               `json:"sampling"`
+	Timeout       duration.Duration `json:"timeout"`
 }
 
-func (h healthCheckSettings) Build() (proto.Message, error) {
+func (h HealthCheckSettings) Build() (proto.Message, error) {
 	return &burst.HealthPingConfig{
 		Destination:   h.Destination,
 		Connectivity:  h.Connectivity,

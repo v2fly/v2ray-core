@@ -3,6 +3,7 @@ package conf
 import (
 	"encoding/base64"
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/loader"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
@@ -23,7 +24,7 @@ import (
 )
 
 var (
-	kcpHeaderLoader = NewJSONConfigLoader(ConfigCreatorCache{
+	kcpHeaderLoader = loader.NewJSONConfigLoader(loader.ConfigCreatorCache{
 		"none":         func() interface{} { return new(NoOpAuthenticator) },
 		"srtp":         func() interface{} { return new(SRTPAuthenticator) },
 		"utp":          func() interface{} { return new(UTPAuthenticator) },
@@ -32,7 +33,7 @@ var (
 		"wireguard":    func() interface{} { return new(WireguardAuthenticator) },
 	}, "type", "")
 
-	tcpHeaderLoader = NewJSONConfigLoader(ConfigCreatorCache{
+	tcpHeaderLoader = loader.NewJSONConfigLoader(loader.ConfigCreatorCache{
 		"none": func() interface{} { return new(NoOpConnectionAuthenticator) },
 		"http": func() interface{} { return new(Authenticator) },
 	}, "type", "")

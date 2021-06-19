@@ -1,4 +1,4 @@
-package conf_test
+package testassist
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common"
 )
 
-func loadJSON(creator func() cfgcommon.Buildable) func(string) (proto.Message, error) {
+func LoadJSON(creator func() cfgcommon.Buildable) func(string) (proto.Message, error) {
 	return func(s string) (proto.Message, error) {
 		instance := creator()
 		if err := json.Unmarshal([]byte(s), instance); err != nil {
@@ -26,7 +26,7 @@ type TestCase struct {
 	Output proto.Message
 }
 
-func runMultiTestCase(t *testing.T, testCases []TestCase) {
+func RunMultiTestCase(t *testing.T, testCases []TestCase) {
 	for _, testCase := range testCases {
 		actual, err := testCase.Parser(testCase.Input)
 		common.Must(err)

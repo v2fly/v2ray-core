@@ -3,6 +3,7 @@ package conf_test
 import (
 	"encoding/json"
 	"errors"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -58,7 +59,7 @@ func TestDNSConfigParsing(t *testing.T) {
 		}
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"servers": [{

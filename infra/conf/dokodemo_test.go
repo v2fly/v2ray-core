@@ -2,6 +2,7 @@ package conf_test
 
 import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
@@ -14,7 +15,7 @@ func TestDokodemoConfig(t *testing.T) {
 		return new(DokodemoConfig)
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"address": "8.8.8.8",
@@ -24,7 +25,7 @@ func TestDokodemoConfig(t *testing.T) {
 				"followRedirect": true,
 				"userLevel": 1
 			}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &dokodemo.Config{
 				Address: &net.IPOrDomain{
 					Address: &net.IPOrDomain_Ip{

@@ -2,6 +2,7 @@ package conf_test
 
 import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
@@ -16,13 +17,13 @@ func TestShadowsocksServerConfigParsing(t *testing.T) {
 		return new(ShadowsocksServerConfig)
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"method": "aes-256-GCM",
 				"password": "v2ray-password"
 			}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &shadowsocks.ServerConfig{
 				User: &protocol.User{
 					Account: serial.ToTypedMessage(&shadowsocks.Account{

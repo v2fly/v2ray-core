@@ -3,6 +3,7 @@ package conf
 import (
 	"encoding/json"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/loader"
 
 	"github.com/golang/protobuf/proto"
 
@@ -43,8 +44,8 @@ func (v *BlackholeConfig) Build() (proto.Message, error) {
 	return config, nil
 }
 
-var configLoader = NewJSONConfigLoader(
-	ConfigCreatorCache{
+var configLoader = loader.NewJSONConfigLoader(
+	loader.ConfigCreatorCache{
 		"none": func() interface{} { return new(NoneResponse) },
 		"http": func() interface{} { return new(HTTPResponse) },
 	},

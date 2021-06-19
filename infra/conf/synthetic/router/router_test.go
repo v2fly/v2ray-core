@@ -1,7 +1,9 @@
-package conf_test
+package router_test
 
 import (
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
+	router2 "github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
 	"testing"
 	"time"
 	_ "unsafe"
@@ -11,13 +13,16 @@ import (
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
-	. "github.com/v2fly/v2ray-core/v4/infra/conf"
+
+	// Geo loaders
+	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/memconservative"
+	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/standard"
 )
 
 func TestRouterConfig(t *testing.T) {
 	createParser := func() func(string) (proto.Message, error) {
 		return func(s string) (proto.Message, error) {
-			config := new(RouterConfig)
+			config := new(router2.RouterConfig)
 			if err := json.Unmarshal([]byte(s), config); err != nil {
 				return nil, err
 			}
@@ -25,7 +30,7 @@ func TestRouterConfig(t *testing.T) {
 		}
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"strategy": "rules",

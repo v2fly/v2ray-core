@@ -2,6 +2,7 @@ package conf_test
 
 import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
@@ -18,7 +19,7 @@ func TestVLessOutbound(t *testing.T) {
 		return new(VLessOutboundConfig)
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"vnext": [{
@@ -33,7 +34,7 @@ func TestVLessOutbound(t *testing.T) {
 					]
 				}]
 			}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &outbound.Config{
 				Vnext: []*protocol.ServerEndpoint{
 					{
@@ -64,7 +65,7 @@ func TestVLessInbound(t *testing.T) {
 		return new(VLessInboundConfig)
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"clients": [
@@ -90,7 +91,7 @@ func TestVLessInbound(t *testing.T) {
 					}
 				]
 			}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &inbound.Config{
 				Clients: []*protocol.User{
 					{

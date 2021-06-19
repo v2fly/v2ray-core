@@ -2,6 +2,7 @@ package conf_test
 
 import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
@@ -15,7 +16,7 @@ func TestFreedomConfig(t *testing.T) {
 		return new(FreedomConfig)
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"domainStrategy": "AsIs",
@@ -23,7 +24,7 @@ func TestFreedomConfig(t *testing.T) {
 				"redirect": "127.0.0.1:3366",
 				"userLevel": 1
 			}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &freedom.Config{
 				DomainStrategy: freedom.Config_AS_IS,
 				Timeout:        10,

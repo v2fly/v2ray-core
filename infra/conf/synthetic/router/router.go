@@ -1,4 +1,6 @@
-package conf
+package router
+
+//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
 import (
 	"context"
@@ -50,7 +52,7 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 	case strategyLeastLoad:
 		strategy = strategyLeastLoad
 	case strategyLeastPing:
-		strategy = "leastPing"
+		strategy = "leastping"
 	default:
 		return nil, newError("unknown balancing strategy: " + r.Strategy.Type)
 	}

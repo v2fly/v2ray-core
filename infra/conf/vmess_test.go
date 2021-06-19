@@ -2,6 +2,7 @@ package conf_test
 
 import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
@@ -18,7 +19,7 @@ func TestVMessOutbound(t *testing.T) {
 		return new(VMessOutboundConfig)
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"vnext": [{
@@ -33,7 +34,7 @@ func TestVMessOutbound(t *testing.T) {
 					]
 				}]
 			}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &outbound.Config{
 				Receiver: []*protocol.ServerEndpoint{
 					{
@@ -68,7 +69,7 @@ func TestVMessInbound(t *testing.T) {
 		return new(VMessInboundConfig)
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"clients": [
@@ -89,7 +90,7 @@ func TestVMessInbound(t *testing.T) {
 				},
 				"disableInsecureEncryption": true
 			}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &inbound.Config{
 				User: []*protocol.User{
 					{

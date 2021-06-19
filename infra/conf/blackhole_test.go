@@ -2,6 +2,7 @@ package conf_test
 
 import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/common/serial"
@@ -14,21 +15,21 @@ func TestHTTPResponseJSON(t *testing.T) {
 		return new(BlackholeConfig)
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"response": {
 					"type": "http"
 				}
 			}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &blackhole.Config{
 				Response: serial.ToTypedMessage(&blackhole.HTTPResponse{}),
 			},
 		},
 		{
 			Input:  `{}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &blackhole.Config{},
 		},
 	})

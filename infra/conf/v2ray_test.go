@@ -2,6 +2,7 @@ package conf_test
 
 import (
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"reflect"
 	"testing"
 
@@ -40,7 +41,7 @@ func TestV2RayConfig(t *testing.T) {
 		}
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"outbound": {

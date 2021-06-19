@@ -2,6 +2,7 @@ package conf_test
 
 import (
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -31,7 +32,7 @@ func TestSocketConfig(t *testing.T) {
 		}
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"mark": 1,
@@ -57,7 +58,7 @@ func TestTransportConfig(t *testing.T) {
 		}
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"tcpSettings": {

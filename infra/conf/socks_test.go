@@ -2,6 +2,7 @@ package conf_test
 
 import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
@@ -16,7 +17,7 @@ func TestSocksInboundConfig(t *testing.T) {
 		return new(SocksServerConfig)
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"auth": "password",
@@ -31,7 +32,7 @@ func TestSocksInboundConfig(t *testing.T) {
 				"timeout": 5,
 				"userLevel": 1
 			}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &socks.ServerConfig{
 				AuthType: socks.AuthType_PASSWORD,
 				Accounts: map[string]string{
@@ -55,7 +56,7 @@ func TestSocksOutboundConfig(t *testing.T) {
 		return new(SocksClientConfig)
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"servers": [{
@@ -66,7 +67,7 @@ func TestSocksOutboundConfig(t *testing.T) {
 					]
 				}]
 			}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &socks.ClientConfig{
 				Server: []*protocol.ServerEndpoint{
 					{

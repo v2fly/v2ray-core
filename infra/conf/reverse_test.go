@@ -2,6 +2,7 @@ package conf_test
 
 import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/app/reverse"
@@ -13,7 +14,7 @@ func TestReverseConfig(t *testing.T) {
 		return new(conf.ReverseConfig)
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"bridges": [{
@@ -21,7 +22,7 @@ func TestReverseConfig(t *testing.T) {
 					"domain": "test.v2fly.org"
 				}]
 			}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &reverse.Config{
 				BridgeConfig: []*reverse.BridgeConfig{
 					{Tag: "test", Domain: "test.v2fly.org"},
@@ -35,7 +36,7 @@ func TestReverseConfig(t *testing.T) {
 					"domain": "test.v2fly.org"
 				}]
 			}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &reverse.Config{
 				PortalConfig: []*reverse.PortalConfig{
 					{Tag: "test", Domain: "test.v2fly.org"},

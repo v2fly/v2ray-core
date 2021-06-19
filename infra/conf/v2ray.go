@@ -2,6 +2,8 @@ package conf
 
 import (
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/loader"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
 	"strings"
 
 	core "github.com/v2fly/v2ray-core/v4"
@@ -13,7 +15,7 @@ import (
 )
 
 var (
-	inboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
+	inboundConfigLoader = loader.NewJSONConfigLoader(loader.ConfigCreatorCache{
 		"dokodemo-door": func() interface{} { return new(DokodemoConfig) },
 		"http":          func() interface{} { return new(HTTPServerConfig) },
 		"shadowsocks":   func() interface{} { return new(ShadowsocksServerConfig) },
@@ -23,7 +25,7 @@ var (
 		"trojan":        func() interface{} { return new(TrojanServerConfig) },
 	}, "protocol", "settings")
 
-	outboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
+	outboundConfigLoader = loader.NewJSONConfigLoader(loader.ConfigCreatorCache{
 		"blackhole":   func() interface{} { return new(BlackholeConfig) },
 		"freedom":     func() interface{} { return new(FreedomConfig) },
 		"http":        func() interface{} { return new(HTTPClientConfig) },
@@ -339,7 +341,7 @@ type Config struct {
 	OutboundDetours []OutboundDetourConfig `json:"outboundDetour"`
 
 	LogConfig        *LogConfig              `json:"log"`
-	RouterConfig     *RouterConfig           `json:"routing"`
+	RouterConfig     *router.RouterConfig    `json:"routing"`
 	DNSConfig        *DNSConfig              `json:"dns"`
 	InboundConfigs   []InboundDetourConfig   `json:"inbounds"`
 	OutboundConfigs  []OutboundDetourConfig  `json:"outbounds"`

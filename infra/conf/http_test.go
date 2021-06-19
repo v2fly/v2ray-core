@@ -2,6 +2,7 @@ package conf_test
 
 import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"testing"
 
 	. "github.com/v2fly/v2ray-core/v4/infra/conf"
@@ -13,7 +14,7 @@ func TestHTTPServerConfig(t *testing.T) {
 		return new(HTTPServerConfig)
 	}
 
-	runMultiTestCase(t, []TestCase{
+	testassist.RunMultiTestCase(t, []testassist.TestCase{
 		{
 			Input: `{
 				"timeout": 10,
@@ -26,7 +27,7 @@ func TestHTTPServerConfig(t *testing.T) {
 				"allowTransparent": true,
 				"userLevel": 1
 			}`,
-			Parser: loadJSON(creator),
+			Parser: testassist.LoadJSON(creator),
 			Output: &http.ServerConfig{
 				Accounts: map[string]string{
 					"my-username": "my-password",

@@ -7,6 +7,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/app/observatory/multiObservatory"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/common/taggedfeatures"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
 
 	"github.com/v2fly/v2ray-core/v4/app/observatory"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/duration"
@@ -25,7 +26,7 @@ func (o *ObservatoryConfig) Build() (proto.Message, error) {
 type BurstObservatoryConfig struct {
 	SubjectSelector []string `json:"subjectSelector"`
 	// health check settings
-	HealthCheck *healthCheckSettings `json:"pingConfig,omitempty"`
+	HealthCheck *router.HealthCheckSettings `json:"pingConfig,omitempty"`
 }
 
 func (b BurstObservatoryConfig) Build() (proto.Message, error) {
