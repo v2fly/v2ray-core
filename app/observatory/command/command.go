@@ -30,13 +30,13 @@ func (s *service) GetOutboundStatus(ctx context.Context, request *GetOutboundSta
 	if request.Tag == "" {
 		observeResult, err := s.observatory.GetObservation(ctx)
 		if err != nil {
-			newError("cannot get observation").Base(err)
+			return nil, newError("cannot get observation").Base(err)
 		}
 		result = observeResult
 	} else {
-		observeResult, err := common.Must2(s.observatory.(features.TaggedFeatures).GetFeaturesByTag(request.Tag)).(extension.Observatory).GetObservation(s.ctx)
+		observeResult, err := common.Must2(s.observatory.(features.TaggedFeatures).GetFeaturesByTag(request.Tag)).(extension.Observatory).GetObservation(ctx)
 		if err != nil {
-			newError("cannot get observation").Base(err)
+			return nil, newError("cannot get observation").Base(err)
 		}
 		result = observeResult
 	}
