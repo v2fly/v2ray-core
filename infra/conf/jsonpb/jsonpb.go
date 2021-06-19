@@ -37,11 +37,11 @@ func DumpJsonPb(config proto.Message, w io.Writer) error {
 	return dumpJsonPb(config, w)
 }
 
-const FormatProtobufJSON = "jsonpb"
+const FormatProtobufJSONPB = "jsonpb"
 
 func init() {
 	common.Must(core.RegisterConfigLoader(&core.ConfigFormat{
-		Name:      []string{FormatProtobufJSON},
+		Name:      []string{FormatProtobufJSONPB},
 		Extension: []string{".pb.json", ".pbjson"},
 		Loader: func(input interface{}) (*core.Config, error) {
 			switch v := input.(type) {

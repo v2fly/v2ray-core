@@ -3,6 +3,7 @@ package jsonv4
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/jsonpb"
 	"os"
 	"strings"
 
@@ -123,6 +124,26 @@ func executeConvert(cmd *base.Command, args []string) {
 		if err != nil {
 			base.Fatalf("failed to convert to protobuf: %s", err)
 		}
+	case jsonpb.FormatProtobufJSONPB:
+		data, err := json.Marshal(m)
+		if err != nil {
+			base.Fatalf("failed to marshal json: %s", err)
+		}
+		r := bytes.NewReader(data)
+		cf, err := serial.DecodeJSONConfig(r)
+		if err != nil {
+			base.Fatalf("failed to decode json: %s", err)
+		}
+		pbConfig, err := cf.Build()
+		if err != nil {
+			base.Fatalf(err.Error())
+		}
+		w := bytes.NewBuffer(nil)
+		err = jsonpb.DumpJsonPb(pbConfig, w)
+		if err != nil {
+			base.Fatalf(err.Error())
+		}
+		out = w.Bytes()
 	default:
 		base.Errorf("invalid output format: %s", outputFormat)
 		base.Errorf("Run '%s help %s' for details.", base.CommandEnv.Exec, cmd.LongName())
