@@ -136,7 +136,11 @@ message BalancingRule {
 message StrategyWeight {
   bool regexp = 1;
   string match = 2;
-  float value =3;
+  float value = 3;
+}
+
+message StrategyLeastPingConfig {
+  string observer_tag = 7;
 }
 
 message StrategyLeastLoadConfig {
@@ -150,6 +154,8 @@ message StrategyLeastLoadConfig {
   int64 maxRTT = 5;
   // acceptable failure rate
   float tolerance = 6;
+
+  string observer_tag = 7;
 }
 
 message Config {

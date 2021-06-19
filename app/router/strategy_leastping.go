@@ -5,6 +5,7 @@ package router
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v4/features"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/observatory"
@@ -15,6 +16,8 @@ import (
 type LeastPingStrategy struct {
 	ctx         context.Context
 	observatory extension.Observatory
+
+	config *StrategyLeastPingConfig
 }
 
 func (l *LeastPingStrategy) GetPrincipleTarget(strings []string) []string {
@@ -28,7 +31,11 @@ func (l *LeastPingStrategy) InjectContext(ctx context.Context) {
 func (l *LeastPingStrategy) PickOutbound(strings []string) string {
 	if l.observatory == nil {
 		common.Must(core.RequireFeatures(l.ctx, func(observatory extension.Observatory) error {
-			l.observatory = observatory
+			if l.config.ObserverTag != "" {
+				l.observatory = common.Must2(observatory.(features.TaggedFeatures).GetFeaturesByTag(l.config.ObserverTag)).(extension.Observatory)
+			} else {
+				l.observatory = observatory
+			}
 			return nil
 		}))
 	}

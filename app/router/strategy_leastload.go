@@ -2,9 +2,12 @@ package router
 
 import (
 	"context"
+	"github.com/golang/protobuf/proto"
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/observatory"
 	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/features"
+	"github.com/v2fly/v2ray-core/v4/features/extension"
 	"math"
 	"sort"
 	"time"
@@ -17,7 +20,7 @@ type LeastLoadStrategy struct {
 	settings *StrategyLeastLoadConfig
 	costs    *WeightManager
 
-	observer *observatory.Observer
+	observer extension.Observatory
 
 	ctx context.Context
 }
@@ -137,12 +140,22 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 }
 
 func (s *LeastLoadStrategy) getNodes(candidates []string, maxRTT time.Duration) []*node {
-	observeResult, err := s.observer.GetObservation(s.ctx)
-	if err != nil {
-		newError("cannot get observation").Base(err)
+	var result proto.Message
+	if s.settings.ObserverTag == "" {
+		observeResult, err := s.observer.GetObservation(s.ctx)
+		if err != nil {
+			newError("cannot get observation").Base(err)
+		}
+		result = observeResult
+	} else {
+		observeResult, err := common.Must2(s.observer.(features.TaggedFeatures).GetFeaturesByTag(s.settings.ObserverTag)).(extension.Observatory).GetObservation(s.ctx)
+		if err != nil {
+			newError("cannot get observation").Base(err)
+		}
+		result = observeResult
 	}
 
-	results := observeResult.(*observatory.ObservationResult)
+	results := result.(*observatory.ObservationResult)
 
 	outboundlist := outboundList(candidates)
 
