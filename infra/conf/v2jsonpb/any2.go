@@ -42,6 +42,39 @@ func (v V2JsonProtobufAnyTypeDescriptor) FullName() protoreflect.FullName {
 }
 
 func (v V2JsonProtobufAnyTypeDescriptor) Fields() protoreflect.FieldDescriptors {
+	return V2JsonProtobufAnyTypeFields{v.MessageDescriptor.Fields()}
+}
+
+type V2JsonProtobufAnyTypeFields struct {
+	protoreflect.FieldDescriptors
+}
+
+func (v V2JsonProtobufAnyTypeFields) Len() int {
+	panic("implement me")
+}
+
+func (v V2JsonProtobufAnyTypeFields) Get(i int) protoreflect.FieldDescriptor {
+	panic("implement me")
+}
+
+func (v V2JsonProtobufAnyTypeFields) ByName(s protoreflect.Name) protoreflect.FieldDescriptor {
+	panic("implement me")
+}
+
+func (v V2JsonProtobufAnyTypeFields) ByJSONName(s string) protoreflect.FieldDescriptor {
+	switch s {
+	case "type":
+		return &V2JsonProtobufFollowerFieldDescriptor{v.FieldDescriptors.ByName("type_url")}
+	default:
+		return &V2JsonProtobufAnyValueField{v.FieldDescriptors.ByName("value"), "value"}
+	}
+}
+
+func (v V2JsonProtobufAnyTypeFields) ByTextName(s string) protoreflect.FieldDescriptor {
+	panic("implement me")
+}
+
+func (v V2JsonProtobufAnyTypeFields) ByNumber(n protoreflect.FieldNumber) protoreflect.FieldDescriptor {
 	panic("implement me")
 }
 
@@ -123,7 +156,7 @@ func (v V2JsonProtobufListFollower) Set(i int, value protoreflect.Value) {
 }
 
 func (v V2JsonProtobufListFollower) Append(value protoreflect.Value) {
-	panic("implement me")
+	v.List.Append(value)
 }
 
 func (v V2JsonProtobufListFollower) AppendMutable() protoreflect.Value {
@@ -135,7 +168,8 @@ func (v V2JsonProtobufListFollower) Truncate(i int) {
 }
 
 func (v V2JsonProtobufListFollower) NewElement() protoreflect.Value {
-	panic("implement me")
+	newelement := v.List.NewElement()
+	return protoreflect.ValueOfMessage(&V2JsonProtobufFollower{newelement.Message()})
 }
 
 func (v V2JsonProtobufListFollower) IsValid() bool {
@@ -158,7 +192,7 @@ func (v V2JsonProtobufMapFollower) Range(f func(protoreflect.MapKey, protoreflec
 }
 
 func (v V2JsonProtobufMapFollower) Has(key protoreflect.MapKey) bool {
-	panic("implement me")
+	return v.Map.Has(key)
 }
 
 func (v V2JsonProtobufMapFollower) Clear(key protoreflect.MapKey) {
@@ -170,7 +204,7 @@ func (v V2JsonProtobufMapFollower) Get(key protoreflect.MapKey) protoreflect.Val
 }
 
 func (v V2JsonProtobufMapFollower) Set(key protoreflect.MapKey, value protoreflect.Value) {
-	panic("implement me")
+	v.Map.Set(key, value)
 }
 
 func (v V2JsonProtobufMapFollower) Mutable(key protoreflect.MapKey) protoreflect.Value {
@@ -178,7 +212,8 @@ func (v V2JsonProtobufMapFollower) Mutable(key protoreflect.MapKey) protoreflect
 }
 
 func (v V2JsonProtobufMapFollower) NewValue() protoreflect.Value {
-	panic("implement me")
+	newelement := v.Map.NewValue()
+	return protoreflect.ValueOfMessage(&V2JsonProtobufFollower{newelement.Message()})
 }
 
 func (v V2JsonProtobufMapFollower) IsValid() bool {
@@ -194,7 +229,7 @@ func (v *V2JsonProtobufFollower) New() protoreflect.Message {
 }
 
 func (v *V2JsonProtobufFollower) Interface() protoreflect.ProtoMessage {
-	panic("implement me")
+	return v.Message.Interface()
 }
 
 func (v *V2JsonProtobufFollower) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
@@ -273,19 +308,71 @@ func (v *V2JsonProtobufFollower) Has(descriptor protoreflect.FieldDescriptor) bo
 }
 
 func (v *V2JsonProtobufFollower) Clear(descriptor protoreflect.FieldDescriptor) {
-	panic("implement me")
+	v.Message.Clear(descriptor)
 }
 
 func (v *V2JsonProtobufFollower) Set(descriptor protoreflect.FieldDescriptor, value protoreflect.Value) {
-	panic("implement me")
+	switch descriptor.(type) {
+	case V2JsonProtobufFollowerFieldDescriptor:
+		v.Message.Set(descriptor.(V2JsonProtobufFollowerFieldDescriptor).FieldDescriptor, value)
+	case *V2JsonProtobufFollowerFieldDescriptor:
+		v.Message.Set(descriptor.(*V2JsonProtobufFollowerFieldDescriptor).FieldDescriptor, value)
+	case *V2JsonProtobufAnyValueField:
+		protodata := value.Message()
+		bytesw, err := proto.MarshalOptions{AllowPartial: true}.Marshal(&V2JsonProtobufAnyValueFieldReturn{protodata})
+		if err != nil {
+			panic(err)
+		}
+		v.Message.Set(descriptor.(*V2JsonProtobufAnyValueField).FieldDescriptor, protoreflect.ValueOfBytes(bytesw))
+	default:
+		v.Message.Set(descriptor, value)
+	}
+
+}
+
+type V2JsonProtobufAnyValueFieldReturn struct {
+	protoreflect.Message
+}
+
+func (v *V2JsonProtobufAnyValueFieldReturn) ProtoReflect() protoreflect.Message {
+	if bufFollow, ok := v.Message.(*V2JsonProtobufFollower); ok {
+		return bufFollow.Message
+	}
+	return v.Message
 }
 
 func (v *V2JsonProtobufFollower) Mutable(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	panic("implement me")
+	value := v.Message.Mutable(descriptor.(V2JsonProtobufFollowerFieldDescriptor).FieldDescriptor)
+	if descriptor.IsList() {
+		return protoreflect.ValueOfList(&V2JsonProtobufListFollower{value.List()})
+	}
+	if descriptor.IsMap() {
+		return protoreflect.ValueOfMap(&V2JsonProtobufMapFollower{value.Map(), descriptor})
+	}
+	if descriptor.Kind() == protoreflect.MessageKind {
+		return protoreflect.ValueOfMessage(&V2JsonProtobufFollower{value.Message()})
+	}
+	return value
 }
 
 func (v *V2JsonProtobufFollower) NewField(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	panic("implement me")
+
+	if _, ok := descriptor.(*V2JsonProtobufAnyValueField); ok {
+
+		url := v.Message.Get(v.Message.Descriptor().Fields().ByName("type_url")).String()
+
+		v2type := serial.V2TypeFromURL(url)
+		instance, err := serial.GetInstance(v2type)
+		if err != nil {
+			panic(err)
+		}
+		newvalue := protoreflect.ValueOfMessage(&V2JsonProtobufFollower{instance.(proto.Message).ProtoReflect()})
+		return newvalue
+	}
+
+	value := v.Message.NewField(descriptor.(V2JsonProtobufFollowerFieldDescriptor).FieldDescriptor)
+	newvalue := protoreflect.ValueOfMessage(&V2JsonProtobufFollower{value.Message()})
+	return newvalue
 }
 
 func (v *V2JsonProtobufFollower) WhichOneof(descriptor protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
@@ -297,11 +384,11 @@ func (v *V2JsonProtobufFollower) GetUnknown() protoreflect.RawFields {
 }
 
 func (v *V2JsonProtobufFollower) SetUnknown(fields protoreflect.RawFields) {
-	panic("implement me")
+	v.Message.SetUnknown(fields)
 }
 
 func (v *V2JsonProtobufFollower) IsValid() bool {
-	panic("implement me")
+	return v.Message.IsValid()
 }
 
 func (v *V2JsonProtobufFollower) ProtoReflect() protoreflect.Message {
@@ -315,9 +402,29 @@ func (v *V2JsonProtobufFollower) Descriptor() protoreflect.MessageDescriptor {
 		desc := &V2JsonProtobufAnyTypeDescriptor{(&anypb.Any{}).ProtoReflect().Descriptor()}
 		return desc
 	}
-	return v.Message.Descriptor()
+	return &V2JsonProtobufFollowerDescriptor{v.Message.Descriptor()}
 }
 
 func (v *V2JsonProtobufFollower) Get(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	panic("implement me")
+}
+
+type V2JsonProtobufFollowerDescriptor struct {
+	protoreflect.MessageDescriptor
+}
+
+func (v *V2JsonProtobufFollowerDescriptor) Fields() protoreflect.FieldDescriptors {
+	return &V2JsonProtobufFollowerFields{v.MessageDescriptor.Fields()}
+}
+
+type V2JsonProtobufFollowerFields struct {
+	protoreflect.FieldDescriptors
+}
+
+func (v *V2JsonProtobufFollowerFields) ByJSONName(s string) protoreflect.FieldDescriptor {
+	return V2JsonProtobufFollowerFieldDescriptor{v.FieldDescriptors.ByJSONName(s)}
+}
+
+func (v *V2JsonProtobufFollowerFields) ByTextName(s string) protoreflect.FieldDescriptor {
+	return V2JsonProtobufFollowerFieldDescriptor{v.FieldDescriptors.ByTextName(s)}
 }
