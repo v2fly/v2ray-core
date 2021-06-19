@@ -1,8 +1,11 @@
 package conf
 
 import (
+	"encoding/json"
 	"github.com/golang/protobuf/proto"
 	"github.com/v2fly/v2ray-core/v4/app/observatory/burst"
+	"github.com/v2fly/v2ray-core/v4/app/observatory/multiObservatory"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 
 	"github.com/v2fly/v2ray-core/v4/app/observatory"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/duration"
@@ -30,4 +33,48 @@ func (b BurstObservatoryConfig) Build() (proto.Message, error) {
 	} else {
 		return nil, err
 	}
+}
+
+type MultiObservatoryItem struct {
+	MemberType string          `json:"type"`
+	Tag        string          `json:"tag"`
+	Value      json.RawMessage `json:"settings"`
+}
+
+type MultiObservatoryConfig struct {
+	Observers []MultiObservatoryItem `json:"observers"`
+}
+
+func (o *MultiObservatoryConfig) Build() (proto.Message, error) {
+	ret := &multiObservatory.Config{}
+	for _, v := range o.Observers {
+		switch v.MemberType {
+		case "burst":
+			var burstObservatoryConfig BurstObservatoryConfig
+			err := json.Unmarshal(v.Value, &burstObservatoryConfig)
+			if err != nil {
+				return nil, err
+			}
+			burstObservatoryConfigPb, err := burstObservatoryConfig.Build()
+			if err != nil {
+				return nil, err
+			}
+			ret.Holders.Features[v.Tag] = serial.ToTypedMessage(burstObservatoryConfigPb)
+			break
+		case "default":
+			fallthrough
+		default:
+			var observatoryConfig ObservatoryConfig
+			err := json.Unmarshal(v.Value, &observatoryConfig)
+			if err != nil {
+				return nil, err
+			}
+			observatoryConfigPb, err := observatoryConfig.Build()
+			if err != nil {
+				return nil, err
+			}
+			ret.Holders.Features[v.Tag] = serial.ToTypedMessage(observatoryConfigPb)
+		}
+	}
+	return ret, nil
 }

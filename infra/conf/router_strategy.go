@@ -17,6 +17,7 @@ var (
 	strategyConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
 		strategyRandom:    func() interface{} { return new(strategyEmptyConfig) },
 		strategyLeastLoad: func() interface{} { return new(strategyLeastLoadConfig) },
+		strategyLeastPing: func() interface{} { return new(strategyLeastPingConfig) },
 	}, "type", "settings")
 )
 
@@ -38,6 +39,8 @@ type strategyLeastLoadConfig struct {
 	MaxRTT Duration `json:"maxRTT,omitempty"`
 	// acceptable failure rate
 	Tolerance float64 `json:"tolerance,omitempty"`
+
+	ObserverTag string `json:"observerTag,omitempty"`
 }
 
 // healthCheckSettings holds settings for health Checker
@@ -64,6 +67,7 @@ func (v *strategyLeastLoadConfig) Build() (proto.Message, error) {
 	config := &router.StrategyLeastLoadConfig{}
 	config.Costs = v.Costs
 	config.Tolerance = float32(v.Tolerance)
+	config.ObserverTag = v.ObserverTag
 	if config.Tolerance < 0 {
 		config.Tolerance = 0
 	}
@@ -86,4 +90,12 @@ func (v *strategyLeastLoadConfig) Build() (proto.Message, error) {
 		config.Baselines = append(config.Baselines, int64(b))
 	}
 	return config, nil
+}
+
+type strategyLeastPingConfig struct {
+	ObserverTag string `json:"observerTag,omitempty"`
+}
+
+func (s strategyLeastPingConfig) Build() (proto.Message, error) {
+	return &router.StrategyLeastPingConfig{ObserverTag: s.ObserverTag}, nil
 }

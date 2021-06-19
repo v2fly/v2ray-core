@@ -352,6 +352,7 @@ type Config struct {
 	BrowserForwarder *BrowserForwarderConfig `json:"browserForwarder"`
 	Observatory      *ObservatoryConfig      `json:"observatory"`
 	BurstObservatory *BurstObservatoryConfig `json:"burstObservatory"`
+	MultiObservatory *MultiObservatoryConfig `json:"multiObservatory"`
 
 	Services map[string]*json.RawMessage `json:"services"`
 }
@@ -494,6 +495,14 @@ func (c *Config) Build() (*core.Config, error) {
 
 	if c.BurstObservatory != nil {
 		r, err := c.BurstObservatory.Build()
+		if err != nil {
+			return nil, err
+		}
+		config.App = append(config.App, serial.ToTypedMessage(r))
+	}
+
+	if c.MultiObservatory != nil {
+		r, err := c.MultiObservatory.Build()
 		if err != nil {
 			return nil, err
 		}
