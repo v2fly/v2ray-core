@@ -2,13 +2,13 @@ package burst
 
 import (
 	"context"
+	"github.com/golang/protobuf/proto"
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/observatory"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/signal/done"
 	"github.com/v2fly/v2ray-core/v4/features/extension"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
-	"google.golang.org/protobuf/proto"
 	"sync"
 )
 
@@ -34,7 +34,7 @@ func (o *Observer) createResult() []*observatory.OutboundStatus {
 	defer o.hp.access.Unlock()
 	for name, value := range o.hp.Results {
 		status := observatory.OutboundStatus{
-			Alive:           value.getStatistics().All == value.getStatistics().Fail,
+			Alive:           value.getStatistics().All != value.getStatistics().Fail,
 			Delay:           value.getStatistics().Average.Milliseconds(),
 			LastErrorReason: "",
 			OutboundTag:     name,
