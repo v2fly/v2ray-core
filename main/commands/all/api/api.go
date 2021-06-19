@@ -13,7 +13,6 @@ var CmdAPI = &base.Command{
 	Commands: []*base.Command{
 		cmdLog,
 		cmdStats,
-		cmdBalancerCheck,
 		cmdBalancerInfo,
 		cmdBalancerOverride,
 	},
