@@ -6,6 +6,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/app/observatory/burst"
 	"github.com/v2fly/v2ray-core/v4/app/observatory/multiObservatory"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"github.com/v2fly/v2ray-core/v4/common/taggedfeatures"
 
 	"github.com/v2fly/v2ray-core/v4/app/observatory"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/duration"
@@ -46,7 +47,7 @@ type MultiObservatoryConfig struct {
 }
 
 func (o *MultiObservatoryConfig) Build() (proto.Message, error) {
-	ret := &multiObservatory.Config{}
+	ret := &multiObservatory.Config{Holders: &taggedfeatures.Config{Features: make(map[string]*serial.TypedMessage)}}
 	for _, v := range o.Observers {
 		switch v.MemberType {
 		case "burst":
