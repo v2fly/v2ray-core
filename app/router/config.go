@@ -161,9 +161,17 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatcher) (*Balancer, error) {
 	switch br.Strategy {
 	case "leastPing":
+		i, err := br.StrategySettings.GetInstance()
+		if err != nil {
+			return nil, err
+		}
+		s, ok := i.(*StrategyLeastPingConfig)
+		if !ok {
+			return nil, newError("not a StrategyLeastPingConfig").AtError()
+		}
 		return &Balancer{
 			selectors: br.OutboundSelector,
-			strategy:  &LeastPingStrategy{},
+			strategy:  &LeastPingStrategy{config: s},
 			ohm:       ohm,
 		}, nil
 	case "leastLoad":
