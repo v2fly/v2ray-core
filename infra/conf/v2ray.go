@@ -235,7 +235,7 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 	if dokodemoConfig, ok := rawConfig.(*DokodemoConfig); ok {
 		receiverSettings.ReceiveOriginalDestination = dokodemoConfig.Redirect
 	}
-	ts, err := rawConfig.(Buildable).Build()
+	ts, err := rawConfig.(cfgcommon.Buildable).Build()
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +297,7 @@ func (c *OutboundDetourConfig) Build() (*core.OutboundHandlerConfig, error) {
 	if err != nil {
 		return nil, newError("failed to parse to outbound detour config.").Base(err)
 	}
-	ts, err := rawConfig.(Buildable).Build()
+	ts, err := rawConfig.(cfgcommon.Buildable).Build()
 	if err != nil {
 		return nil, err
 	}

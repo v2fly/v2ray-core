@@ -1,4 +1,4 @@
-package conf
+package cfgcommon
 
 import "github.com/golang/protobuf/proto"
 

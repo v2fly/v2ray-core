@@ -1,6 +1,7 @@
 package conf_test
 
 import (
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestDnsProxyConfig(t *testing.T) {
-	creator := func() Buildable {
+	creator := func() cfgcommon.Buildable {
 		return new(DNSOutboundConfig)
 	}
 

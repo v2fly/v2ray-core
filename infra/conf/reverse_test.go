@@ -1,6 +1,7 @@
 package conf_test
 
 import (
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/app/reverse"
@@ -8,7 +9,7 @@ import (
 )
 
 func TestReverseConfig(t *testing.T) {
-	creator := func() conf.Buildable {
+	creator := func() cfgcommon.Buildable {
 		return new(conf.ReverseConfig)
 	}
 

@@ -1,6 +1,7 @@
 package conf_test
 
 import (
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
@@ -11,7 +12,7 @@ import (
 )
 
 func TestSocksInboundConfig(t *testing.T) {
-	creator := func() Buildable {
+	creator := func() cfgcommon.Buildable {
 		return new(SocksServerConfig)
 	}
 
@@ -50,7 +51,7 @@ func TestSocksInboundConfig(t *testing.T) {
 }
 
 func TestSocksOutboundConfig(t *testing.T) {
-	creator := func() Buildable {
+	creator := func() cfgcommon.Buildable {
 		return new(SocksClientConfig)
 	}
 

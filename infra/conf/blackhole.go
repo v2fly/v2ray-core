@@ -2,6 +2,7 @@ package conf
 
 import (
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 
 	"github.com/golang/protobuf/proto"
 
@@ -32,7 +33,7 @@ func (v *BlackholeConfig) Build() (proto.Message, error) {
 		if err != nil {
 			return nil, newError("Config: Failed to parse Blackhole response config.").Base(err)
 		}
-		responseSettings, err := response.(Buildable).Build()
+		responseSettings, err := response.(cfgcommon.Buildable).Build()
 		if err != nil {
 			return nil, err
 		}

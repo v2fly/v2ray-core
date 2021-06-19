@@ -98,7 +98,7 @@ func (c *KCPConfig) Build() (proto.Message, error) {
 		if err != nil {
 			return nil, newError("invalid mKCP header config.").Base(err).AtError()
 		}
-		ts, err := headerConfig.(Buildable).Build()
+		ts, err := headerConfig.(cfgcommon.Buildable).Build()
 		if err != nil {
 			return nil, newError("invalid mKCP header config").Base(err).AtError()
 		}
@@ -125,7 +125,7 @@ func (c *TCPConfig) Build() (proto.Message, error) {
 		if err != nil {
 			return nil, newError("invalid TCP header config").Base(err).AtError()
 		}
-		ts, err := headerConfig.(Buildable).Build()
+		ts, err := headerConfig.(cfgcommon.Buildable).Build()
 		if err != nil {
 			return nil, newError("invalid TCP header config").Base(err).AtError()
 		}
@@ -221,7 +221,7 @@ func (c *QUICConfig) Build() (proto.Message, error) {
 		if err != nil {
 			return nil, newError("invalid QUIC header config.").Base(err).AtError()
 		}
-		ts, err := headerConfig.(Buildable).Build()
+		ts, err := headerConfig.(cfgcommon.Buildable).Build()
 		if err != nil {
 			return nil, newError("invalid QUIC header config").Base(err).AtError()
 		}

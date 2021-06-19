@@ -64,7 +64,7 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 		return nil, newError("failed to parse to strategy config.").Base(err)
 	}
 	var ts proto.Message
-	if builder, ok := rawConfig.(Buildable); ok {
+	if builder, ok := rawConfig.(cfgcommon.Buildable); ok {
 		ts, err = builder.Build()
 		if err != nil {
 			return nil, err

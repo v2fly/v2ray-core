@@ -1,6 +1,7 @@
 package conf_test
 
 import (
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"testing"
 
 	. "github.com/v2fly/v2ray-core/v4/infra/conf"
@@ -8,7 +9,7 @@ import (
 )
 
 func TestHTTPServerConfig(t *testing.T) {
-	creator := func() Buildable {
+	creator := func() cfgcommon.Buildable {
 		return new(HTTPServerConfig)
 	}
 

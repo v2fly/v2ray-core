@@ -2,15 +2,15 @@ package conf_test
 
 import (
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/common"
-	. "github.com/v2fly/v2ray-core/v4/infra/conf"
 )
 
-func loadJSON(creator func() Buildable) func(string) (proto.Message, error) {
+func loadJSON(creator func() cfgcommon.Buildable) func(string) (proto.Message, error) {
 	return func(s string) (proto.Message, error) {
 		instance := creator()
 		if err := json.Unmarshal([]byte(s), instance); err != nil {

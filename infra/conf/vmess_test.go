@@ -1,6 +1,7 @@
 package conf_test
 
 import (
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
@@ -13,7 +14,7 @@ import (
 )
 
 func TestVMessOutbound(t *testing.T) {
-	creator := func() Buildable {
+	creator := func() cfgcommon.Buildable {
 		return new(VMessOutboundConfig)
 	}
 
@@ -63,7 +64,7 @@ func TestVMessOutbound(t *testing.T) {
 }
 
 func TestVMessInbound(t *testing.T) {
-	creator := func() Buildable {
+	creator := func() cfgcommon.Buildable {
 		return new(VMessInboundConfig)
 	}
 
