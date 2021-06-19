@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package v2ray.core.app.observatory.multiObservatory;
+option csharp_namespace = "V2Ray.Core.App.Observatory.MultiObservatory";
+option go_package = "github.com/v2fly/v2ray-core/v4/app/observatory/multiObservatory";
+option java_package = "com.v2ray.core.app.observatory.multiObservatory";
+option java_multiple_files = true;
+
+import "common/taggedfeatures/skeleton.proto";
+
+message Config{
+  v2ray.core.common.taggedfeatures.Config holders = 1 ;
+}
