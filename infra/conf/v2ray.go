@@ -3,6 +3,7 @@ package conf
 import (
 	"encoding/json"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/loader"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/dns"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/log"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
 	"strings"
@@ -343,7 +344,7 @@ type Config struct {
 
 	LogConfig        *log.LogConfig          `json:"log"`
 	RouterConfig     *router.RouterConfig    `json:"routing"`
-	DNSConfig        *DNSConfig              `json:"dns"`
+	DNSConfig        *dns.DNSConfig          `json:"dns"`
 	InboundConfigs   []InboundDetourConfig   `json:"inbounds"`
 	OutboundConfigs  []OutboundDetourConfig  `json:"outbounds"`
 	Transport        *TransportConfig        `json:"transport"`

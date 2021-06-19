@@ -1,4 +1,4 @@
-package conf_test
+package dns_test
 
 import (
 	"encoding/json"
@@ -15,8 +15,9 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
-	"github.com/v2fly/v2ray-core/v4/infra/conf"
 	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/standard"
+
+	dns2 "github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/dns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func init() {
 	wd, err := os.Getwd()
 	common.Must(err)
 
-	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
+	tempPath := filepath.Join(wd, "..", "..", "..", "..", "testing", "temp")
 	geoipPath := filepath.Join(tempPath, "geoip.dat")
 	geositePath := filepath.Join(tempPath, "geosite.dat")
 
@@ -51,7 +52,7 @@ func init() {
 func TestDNSConfigParsing(t *testing.T) {
 	parserCreator := func() func(string) (protoiface.MessageV1, error) {
 		return func(s string) (protoiface.MessageV1, error) {
-			config := new(conf.DNSConfig)
+			config := new(dns2.DNSConfig)
 			if err := json.Unmarshal([]byte(s), config); err != nil {
 				return nil, err
 			}
