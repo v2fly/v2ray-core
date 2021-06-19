@@ -3,6 +3,7 @@ package conf
 import (
 	"encoding/json"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/loader"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/log"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
 	"strings"
 
@@ -340,7 +341,7 @@ type Config struct {
 	// and should not be used.
 	OutboundDetours []OutboundDetourConfig `json:"outboundDetour"`
 
-	LogConfig        *LogConfig              `json:"log"`
+	LogConfig        *log.LogConfig          `json:"log"`
 	RouterConfig     *router.RouterConfig    `json:"routing"`
 	DNSConfig        *DNSConfig              `json:"dns"`
 	InboundConfigs   []InboundDetourConfig   `json:"inbounds"`
@@ -433,7 +434,7 @@ func (c *Config) Build() (*core.Config, error) {
 	if c.LogConfig != nil {
 		logConfMsg = serial.ToTypedMessage(c.LogConfig.Build())
 	} else {
-		logConfMsg = serial.ToTypedMessage(DefaultLogConfig())
+		logConfMsg = serial.ToTypedMessage(log.DefaultLogConfig())
 	}
 	// let logger module be the first App to start,
 	// so that other modules could print log during initiating
