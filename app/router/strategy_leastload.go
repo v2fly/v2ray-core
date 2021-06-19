@@ -61,10 +61,6 @@ type node struct {
 
 func (l *LeastLoadStrategy) InjectContext(ctx context.Context) {
 	l.ctx = ctx
-
-	common.Must(core.RequireFeatures(ctx, func(observerInstance *observatory.Observer) {
-		l.observer = observerInstance
-	}))
 }
 
 func (s *LeastLoadStrategy) PickOutbound(candidates []string) string {
@@ -140,6 +136,13 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 }
 
 func (s *LeastLoadStrategy) getNodes(candidates []string, maxRTT time.Duration) []*node {
+	if s.observer == nil {
+		common.Must(core.RequireFeatures(s.ctx, func(observatory extension.Observatory) error {
+			s.observer = observatory
+			return nil
+		}))
+	}
+
 	var result proto.Message
 	if s.settings.ObserverTag == "" {
 		observeResult, err := s.observer.GetObservation(s.ctx)
@@ -164,7 +167,7 @@ func (s *LeastLoadStrategy) getNodes(candidates []string, maxRTT time.Duration) 
 	var ret []*node
 
 	for _, v := range results.Status {
-		if v.Alive && v.Delay < maxRTT.Milliseconds() && outboundlist.contains(v.OutboundTag) {
+		if v.Alive && (v.Delay < maxRTT.Milliseconds() || maxRTT == 0) && outboundlist.contains(v.OutboundTag) {
 			record := &node{
 				Tag:              v.OutboundTag,
 				CountAll:         1,
