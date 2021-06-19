@@ -16,7 +16,7 @@ import (
 
 func loadV2JsonPb(data []byte) (*core.Config, error) {
 	coreconf := &core.Config{}
-	jsonpbloader := &protojson.UnmarshalOptions{Resolver: resolver2{serial.GetResolver()}, AllowPartial: true}
+	jsonpbloader := &protojson.UnmarshalOptions{Resolver: anyresolverv2{serial.GetResolver()}, AllowPartial: true}
 	err := jsonpbloader.Unmarshal(data, &V2JsonProtobufFollower{coreconf.ProtoReflect()})
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func loadV2JsonPb(data []byte) (*core.Config, error) {
 }
 
 func dumpV2JsonPb(config proto.Message) ([]byte, error) {
-	jsonpbdumper := &protojson.MarshalOptions{Resolver: resolver2{serial.GetResolver()}, AllowPartial: true}
+	jsonpbdumper := &protojson.MarshalOptions{Resolver: anyresolverv2{serial.GetResolver()}, AllowPartial: true}
 	bytew, err := jsonpbdumper.Marshal(&V2JsonProtobufFollower{config.ProtoReflect()})
 	if err != nil {
 		return nil, err
