@@ -2,9 +2,9 @@ package helpers
 
 import (
 	"bytes"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
 	"os"
 
-	"github.com/v2fly/v2ray-core/v4/infra/conf"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/merge"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/mergers"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
@@ -13,7 +13,7 @@ import (
 // LoadConfig load config files to *conf.Config, it will:
 // - resolve folder to files
 // - try to read stdin if no file specified
-func LoadConfig(files []string, format string, recursively bool) (*conf.Config, error) {
+func LoadConfig(files []string, format string, recursively bool) (*v4.Config, error) {
 	m, err := LoadConfigToMap(files, format, recursively)
 	if err != nil {
 		return nil, err

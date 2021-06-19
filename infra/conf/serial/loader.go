@@ -3,11 +3,11 @@ package serial
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
 	"io"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common/errors"
-	"github.com/v2fly/v2ray-core/v4/infra/conf"
 	json_reader "github.com/v2fly/v2ray-core/v4/infra/conf/json"
 )
 
@@ -40,8 +40,8 @@ func findOffset(b []byte, o int) *offset {
 
 // DecodeJSONConfig reads from reader and decode the config into *conf.Config
 // syntax error could be detected.
-func DecodeJSONConfig(reader io.Reader) (*conf.Config, error) {
-	jsonConfig := &conf.Config{}
+func DecodeJSONConfig(reader io.Reader) (*v4.Config, error) {
+	jsonConfig := &v4.Config{}
 	err := DecodeJSON(reader, jsonConfig)
 	if err != nil {
 		return nil, err
