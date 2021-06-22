@@ -154,7 +154,7 @@ func (p *StaticMuxPicker) PickAvailable() (*mux.ClientWorker, error) {
 		return nil, newError("empty worker list")
 	}
 
-	var minIdx int = -1
+	var minIdx = -1
 	var minConn uint32 = 9999
 	for i, w := range p.workers {
 		if w.draining {
