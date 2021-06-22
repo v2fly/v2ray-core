@@ -205,7 +205,9 @@ Download it from https://github.com/protocolbuffers/protobuf/releases
 
 		dir := filepath.Dir(path)
 		filename := filepath.Base(path)
-		if strings.HasSuffix(filename, ".proto") && filename != "typed_message.proto" {
+		if strings.HasSuffix(filename, ".proto") &&
+			filename != "typed_message.proto" &&
+			filename != "descriptor.proto" {
 			protoFilesMap[dir] = append(protoFilesMap[dir], path)
 		}
 
