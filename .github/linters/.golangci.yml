@@ -12,10 +12,12 @@ issues:
 
 linters:
   enable:
+    - asciicheck
     - bodyclose
     - depguard
     - gocritic
     - gofmt
+    - gofumpt
     - goimports
     - golint
     - goprintffuncname
@@ -37,3 +39,7 @@ linters:
     - deadcode
     - errcheck
     - unused
+
+linters-settings:
+  goimports:
+    local-prefixes: github.com/v2fly/v2ray-core
