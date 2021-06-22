@@ -26,7 +26,7 @@ func (ctx *ResolvableContext) GetTargetIPs() []net.IP {
 	}
 
 	if domain := ctx.GetTargetDomain(); len(domain) != 0 {
-		var lookupFunc = ctx.dnsClient.LookupIP
+		lookupFunc := ctx.dnsClient.LookupIP
 		ipOption := &dns.IPOption{
 			IPv4Enable: true,
 			IPv6Enable: true,
