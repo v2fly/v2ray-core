@@ -4,10 +4,11 @@ package grpc
 
 import (
 	"context"
-	core "github.com/v2fly/v2ray-core/v4"
 	gonet "net"
 	"sync"
 	"time"
+
+	core "github.com/v2fly/v2ray-core/v4"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/backoff"

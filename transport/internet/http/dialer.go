@@ -5,10 +5,11 @@ package http
 import (
 	"context"
 	gotls "crypto/tls"
-	core "github.com/v2fly/v2ray-core/v4"
 	"net/http"
 	"net/url"
 	"sync"
+
+	core "github.com/v2fly/v2ray-core/v4"
 
 	"golang.org/x/net/http2"
 
