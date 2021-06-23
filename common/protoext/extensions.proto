@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package v2ray.core.common.protoext;
+option csharp_namespace = "V2Ray.Core.Common.ProtoExt";
+option go_package = "github.com/v2fly/v2ray-core/v4/common/protoext";
+option java_package = "com.v2ray.core.common.protoext";
+option java_multiple_files = true;
+
+import "common/protoext/descriptor.proto";
+
+extend google.protobuf.MessageOptions {
+  MessageOpt message_opt = 50000;
+}
+
+extend google.protobuf.FieldOptions {
+  FieldOpt field_opt = 50000;
+}
+
+message MessageOpt{
+  repeated string type = 1;
+  repeated string short_name = 2;
+}
+
+message FieldOpt{
+  repeated string any_wants = 1;
+  repeated string allowed_values = 2;
+  repeated string allowed_value_types = 3;
+}
