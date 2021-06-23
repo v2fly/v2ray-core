@@ -6,7 +6,7 @@ option go_package = "github.com/v2fly/v2ray-core/v4/app/router";
 option java_package = "com.v2ray.core.app.router";
 option java_multiple_files = true;
 
-import "common/serial/typed_message.proto";
+import "google/protobuf/any.proto";
 import "common/net/port.proto";
 import "common/net/network.proto";
 

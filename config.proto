@@ -6,7 +6,7 @@ option go_package = "github.com/v2fly/v2ray-core/v4;core";
 option java_package = "com.v2ray.core";
 option java_multiple_files = true;
 
-import "common/serial/typed_message.proto";
+import "google/protobuf/any.proto";
 import "transport/config.proto";
 
 // Config is the master config of V2Ray. V2Ray takes this config as input and

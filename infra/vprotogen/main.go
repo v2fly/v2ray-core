@@ -174,6 +174,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	if linkPath, err := os.Readlink(protoc); err == nil {
+		protoc = linkPath
+	}
+
 	installedVersion, err := getInstalledProtocVersion(protoc)
 	if err != nil {
 		fmt.Println(err)
@@ -221,6 +225,8 @@ Download it from https://github.com/protocolbuffers/protobuf/releases
 	for _, files := range protoFilesMap {
 		for _, relProtoFile := range files {
 			args := []string{
+				"-I", fmt.Sprintf("%v/../include", filepath.Dir(protoc)),
+				"-I", fmt.Sprintf("."),
 				"--go_out", pwd,
 				"--go_opt", "paths=source_relative",
 				"--go-grpc_out", pwd,

@@ -9,7 +9,7 @@ option java_multiple_files = true;
 import "common/net/address.proto";
 import "common/net/port.proto";
 import "transport/internet/config.proto";
-import "common/serial/typed_message.proto";
+import "google/protobuf/any.proto";
 
 message InboundConfig {}
 

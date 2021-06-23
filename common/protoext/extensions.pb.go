@@ -7,9 +7,9 @@
 package protoext
 
 import (
-	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
 	reflect "reflect"
 	sync "sync"
 )
@@ -141,7 +141,7 @@ func (x *FieldOpt) GetAllowedValueTypes() []string {
 
 var file_common_protoext_extensions_proto_extTypes = []protoimpl.ExtensionInfo{
 	{
-		ExtendedType:  (*descriptor.MessageOptions)(nil),
+		ExtendedType:  (*descriptorpb.MessageOptions)(nil),
 		ExtensionType: (*MessageOpt)(nil),
 		Field:         50000,
 		Name:          "v2ray.core.common.protoext.message_opt",
@@ -149,7 +149,7 @@ var file_common_protoext_extensions_proto_extTypes = []protoimpl.ExtensionInfo{
 		Filename:      "common/protoext/extensions.proto",
 	},
 	{
-		ExtendedType:  (*descriptor.FieldOptions)(nil),
+		ExtendedType:  (*descriptorpb.FieldOptions)(nil),
 		ExtensionType: (*FieldOpt)(nil),
 		Field:         50000,
 		Name:          "v2ray.core.common.protoext.field_opt",
@@ -158,13 +158,13 @@ var file_common_protoext_extensions_proto_extTypes = []protoimpl.ExtensionInfo{
 	},
 }
 
-// Extension fields to descriptor.MessageOptions.
+// Extension fields to descriptorpb.MessageOptions.
 var (
 	// optional v2ray.core.common.protoext.MessageOpt message_opt = 50000;
 	E_MessageOpt = &file_common_protoext_extensions_proto_extTypes[0]
 )
 
-// Extension fields to descriptor.FieldOptions.
+// Extension fields to descriptorpb.FieldOptions.
 var (
 	// optional v2ray.core.common.protoext.FieldOpt field_opt = 50000;
 	E_FieldOpt = &file_common_protoext_extensions_proto_extTypes[1]
@@ -177,7 +177,7 @@ var file_common_protoext_extensions_proto_rawDesc = []byte{
 	0x74, 0x2f, 0x65, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x12, 0x1a, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x63,
 	0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x65, 0x78, 0x74, 0x1a, 0x20,
-	0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x65, 0x78, 0x74, 0x2f,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f,
 	0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x22, 0x3f, 0x0a, 0x0a, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x4f, 0x70, 0x74, 0x12, 0x12,
 	0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x04, 0x74, 0x79,
@@ -228,10 +228,10 @@ func file_common_protoext_extensions_proto_rawDescGZIP() []byte {
 
 var file_common_protoext_extensions_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_common_protoext_extensions_proto_goTypes = []interface{}{
-	(*MessageOpt)(nil),                // 0: v2ray.core.common.protoext.MessageOpt
-	(*FieldOpt)(nil),                  // 1: v2ray.core.common.protoext.FieldOpt
-	(*descriptor.MessageOptions)(nil), // 2: google.protobuf.MessageOptions
-	(*descriptor.FieldOptions)(nil),   // 3: google.protobuf.FieldOptions
+	(*MessageOpt)(nil),                  // 0: v2ray.core.common.protoext.MessageOpt
+	(*FieldOpt)(nil),                    // 1: v2ray.core.common.protoext.FieldOpt
+	(*descriptorpb.MessageOptions)(nil), // 2: google.protobuf.MessageOptions
+	(*descriptorpb.FieldOptions)(nil),   // 3: google.protobuf.FieldOptions
 }
 var file_common_protoext_extensions_proto_depIdxs = []int32{
 	2, // 0: v2ray.core.common.protoext.message_opt:extendee -> google.protobuf.MessageOptions

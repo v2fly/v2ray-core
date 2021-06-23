@@ -7,7 +7,7 @@ option java_package = "com.v2ray.core.app.proxyman.command";
 option java_multiple_files = true;
 
 import "common/protocol/user.proto";
-import "common/serial/typed_message.proto";
+import "google/protobuf/any.proto";
 import "config.proto";
 
 message AddUserOperation {

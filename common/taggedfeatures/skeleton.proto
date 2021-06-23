@@ -6,7 +6,7 @@ option go_package = "github.com/v2fly/v2ray-core/v4/common/taggedfeatures";
 option java_package = "com.v2ray.core.common.taggedfeatures";
 option java_multiple_files = true;
 
-import "common/serial/typed_message.proto";
+import "google/protobuf/any.proto";
 
 message Config {
   map<string, google.protobuf.Any> features = 1;
