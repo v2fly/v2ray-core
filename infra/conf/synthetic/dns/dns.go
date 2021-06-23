@@ -58,7 +58,7 @@ func (c *NameServerConfig) UnmarshalJSON(data []byte) error {
 
 func toDomainMatchingType(t router.Domain_Type) dns.DomainMatchingType {
 	switch t {
-	case router.Domain_Domain:
+	case router.Domain_RootDomain:
 		return dns.DomainMatchingType_Subdomain
 	case router.Domain_Full:
 		return dns.DomainMatchingType_Full
@@ -127,10 +127,10 @@ func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 }
 
 var typeMap = map[router.Domain_Type]dns.DomainMatchingType{
-	router.Domain_Full:   dns.DomainMatchingType_Full,
-	router.Domain_Domain: dns.DomainMatchingType_Subdomain,
-	router.Domain_Plain:  dns.DomainMatchingType_Keyword,
-	router.Domain_Regex:  dns.DomainMatchingType_Regex,
+	router.Domain_Full:       dns.DomainMatchingType_Full,
+	router.Domain_RootDomain: dns.DomainMatchingType_Subdomain,
+	router.Domain_Plain:      dns.DomainMatchingType_Keyword,
+	router.Domain_Regex:      dns.DomainMatchingType_Regex,
 }
 
 // DNSConfig is a JSON serializable object for dns.Config.

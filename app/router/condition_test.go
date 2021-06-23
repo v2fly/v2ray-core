@@ -86,7 +86,7 @@ func TestRoutingRule(t *testing.T) {
 					},
 					{
 						Value: "google.com",
-						Type:  router.Domain_Domain,
+						Type:  router.Domain_RootDomain,
 					},
 					{
 						Value: "^facebook\\.com$",

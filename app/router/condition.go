@@ -42,10 +42,10 @@ func (v *ConditionChan) Len() int {
 }
 
 var matcherTypeMap = map[Domain_Type]strmatcher.Type{
-	Domain_Plain:  strmatcher.Substr,
-	Domain_Regex:  strmatcher.Regex,
-	Domain_Domain: strmatcher.Domain,
-	Domain_Full:   strmatcher.Full,
+	Domain_Plain:      strmatcher.Substr,
+	Domain_Regex:      strmatcher.Regex,
+	Domain_RootDomain: strmatcher.Domain,
+	Domain_Full:       strmatcher.Full,
 }
 
 func domainToMatcher(domain *Domain) (strmatcher.Matcher, error) {

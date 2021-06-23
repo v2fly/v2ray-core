@@ -232,7 +232,7 @@ func TestSerivceTestRoute(t *testing.T) {
 				TargetTag:      &router.RoutingRule_Tag{Tag: "out"},
 			},
 			{
-				Domain:    []*router.Domain{{Type: router.Domain_Domain, Value: "com"}},
+				Domain:    []*router.Domain{{Type: router.Domain_RootDomain, Value: "com"}},
 				TargetTag: &router.RoutingRule_Tag{Tag: "out"},
 			},
 			{

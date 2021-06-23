@@ -19,7 +19,7 @@ message Domain {
     // The value is used as a regular expression.
     Regex = 1;
     // The value is a root domain.
-    Domain = 2;
+    RootDomain = 2;
     // The value is a domain.
     Full = 3;
   }
