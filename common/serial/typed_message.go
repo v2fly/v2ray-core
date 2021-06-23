@@ -4,9 +4,12 @@ import (
 	"errors"
 	"google.golang.org/protobuf/types/known/anypb"
 	"reflect"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 )
+
+const V2RayTypeURLHeader = "types.v2fly.org/"
 
 // ToTypedMessage converts a proto Message into TypedMessage.
 func ToTypedMessage(message proto.Message) *anypb.Any {
@@ -15,7 +18,7 @@ func ToTypedMessage(message proto.Message) *anypb.Any {
 	}
 	settings, _ := proto.Marshal(message)
 	return &anypb.Any{
-		TypeUrl: GetMessageType(message),
+		TypeUrl: V2RayTypeURLHeader + GetMessageType(message),
 		Value:   settings,
 	}
 }
@@ -35,7 +38,7 @@ func GetInstance(messageType string) (interface{}, error) {
 }
 
 func GetInstanceOf(v *anypb.Any) (proto.Message, error) {
-	instance, err := GetInstance(v.TypeUrl)
+	instance, err := GetInstance(V2TypeFromURL(v.TypeUrl))
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +53,7 @@ func V2Type(v *anypb.Any) string {
 	return V2TypeFromURL(v.TypeUrl)
 }
 func V2TypeFromURL(string2 string) string {
-	return string2
+	return strings.TrimPrefix(string2, V2RayTypeURLHeader)
 }
 func V2TypeHumanReadable(v *anypb.Any) string {
 	return v.TypeUrl
