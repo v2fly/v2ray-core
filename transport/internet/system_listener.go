@@ -102,3 +102,8 @@ func RegisterListenerController(controller func(network, address string, fd uint
 	effectiveListener.controllers = append(effectiveListener.controllers, controller)
 	return nil
 }
+
+type SystemListener interface {
+	Listen(ctx context.Context, addr net.Addr, sockopt *SocketConfig) (net.Listener, error)
+	ListenPacket(ctx context.Context, addr net.Addr, sockopt *SocketConfig) (net.PacketConn, error)
+}
