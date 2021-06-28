@@ -15,6 +15,7 @@ import (
 	_ "github.com/v2fly/v2ray-core/v4/app/stats/command"
 
 	// Developer preview services
+	_ "github.com/v2fly/v2ray-core/v4/app/instman/command"
 	_ "github.com/v2fly/v2ray-core/v4/app/observatory/command"
 
 	// Other optional features.
@@ -30,6 +31,7 @@ import (
 	_ "github.com/v2fly/v2ray-core/v4/transport/internet/tagged/taggedimpl"
 
 	// Developer preview features
+	_ "github.com/v2fly/v2ray-core/v4/app/instman"
 	_ "github.com/v2fly/v2ray-core/v4/app/observatory"
 
 	// Inbound and outbound proxies.
