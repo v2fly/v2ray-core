@@ -76,7 +76,11 @@ func (o *Observer) background() {
 			if o.finished.Done() {
 				return
 			}
-			time.Sleep(time.Second * 10)
+			sleepTime := time.Second * 10
+			if o.config.ProbeInterval != 0 {
+				sleepTime = time.Duration(o.config.ProbeInterval)
+			}
+			time.Sleep(sleepTime)
 		}
 	}
 }
