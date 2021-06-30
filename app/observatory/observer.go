@@ -129,7 +129,11 @@ func (o *Observer) probe(outbound string) ProbeResult {
 	var GETTime time.Duration
 	err := task.Run(o.ctx, func() error {
 		startTime := time.Now()
-		response, err := httpClient.Get("https://api.v2fly.org/checkConnection.svgz")
+		probeURL := "https://api.v2fly.org/checkConnection.svgz"
+		if o.config.ProbeUrl != "" {
+			probeURL = o.config.ProbeUrl
+		}
+		response, err := httpClient.Get(probeURL)
 		if err != nil {
 			return newError("outbound failed to relay connection").Base(err)
 		}

@@ -64,4 +64,6 @@ message Config {
   /* @Document The selectors for outbound under observation
   */
   repeated string subject_selector = 2;
+
+  string probe_url = 3;
 }
