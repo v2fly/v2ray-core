@@ -2,9 +2,10 @@ package duration_test
 
 import (
 	"encoding/json"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/duration"
 	"testing"
 	"time"
+
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/duration"
 )
 
 type testWithDuration struct {
