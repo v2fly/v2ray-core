@@ -390,9 +390,6 @@ func (c *Config) Override(o *Config, fn string) {
 	if o.LogConfig != nil {
 		c.LogConfig = o.LogConfig
 	}
-	if o.RouterConfig != nil {
-		c.RouterConfig = o.RouterConfig
-	}
 	if o.DNSConfig != nil {
 		c.DNSConfig = o.DNSConfig
 	}
@@ -471,6 +468,25 @@ func (c *Config) Override(o *Config, fn string) {
 			}
 		} else {
 			c.OutboundConfigs = o.OutboundConfigs
+		}
+	}
+
+	if o.RouterConfig != nil {
+		if c.RouterConfig != nil {
+			if len(o.RouterConfig.RuleList) > 0 {
+				c.RouterConfig.RuleList = append(c.RouterConfig.RuleList, o.RouterConfig.RuleList...)
+			}
+			if o.RouterConfig.DomainStrategy != nil {
+				c.RouterConfig.DomainStrategy = o.RouterConfig.DomainStrategy
+			}
+			if len(o.RouterConfig.Balancers) > 0 {
+				c.RouterConfig.Balancers = append(c.RouterConfig.Balancers, o.RouterConfig.Balancers...)
+			}
+			if o.RouterConfig.DomainMatcher != "" {
+				c.RouterConfig.DomainMatcher = o.RouterConfig.DomainMatcher
+			}
+		} else {
+			c.RouterConfig = o.RouterConfig
 		}
 	}
 }
