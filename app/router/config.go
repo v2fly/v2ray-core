@@ -39,7 +39,7 @@ func (l *CIDRList) Less(i int, j int) bool {
 		}
 	}
 
-	return ci.Prefix < cj.Prefix
+	return ci.Prefix > cj.Prefix
 }
 
 // Swap implements sort.Interface.
