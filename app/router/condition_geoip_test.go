@@ -63,7 +63,7 @@ func TestGeoIPMatcherContainer(t *testing.T) {
 }
 
 func TestGeoIPMatcher(t *testing.T) {
-	cidrList := router.CIDRList{
+	cidrList := []*router.CIDR{
 		{Ip: []byte{0, 0, 0, 0}, Prefix: 8},
 		{Ip: []byte{10, 0, 0, 0}, Prefix: 8},
 		{Ip: []byte{100, 64, 0, 0}, Prefix: 10},
@@ -135,7 +135,7 @@ func TestGeoIPMatcher(t *testing.T) {
 }
 
 func TestGeoIPReverseMatcher(t *testing.T) {
-	cidrList := router.CIDRList{
+	cidrList := []*router.CIDR{
 		{Ip: []byte{8, 8, 8, 8}, Prefix: 32},
 		{Ip: []byte{91, 108, 4, 0}, Prefix: 16},
 	}
