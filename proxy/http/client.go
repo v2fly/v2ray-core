@@ -6,6 +6,8 @@ import (
 	"bufio"
 	"context"
 	"encoding/base64"
+	"github.com/v2fly/v2ray-core/v4/common/dice"
+	"github.com/v2fly/v2ray-core/v4/features/dns"
 	"io"
 	"net/http"
 	"net/url"
@@ -32,6 +34,7 @@ import (
 type Client struct {
 	serverPicker  protocol.ServerPicker
 	policyManager policy.Manager
+	dns           dns.Client
 }
 
 type h2Conn struct {
@@ -82,10 +85,10 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	var conn internet.Connection
 
 	mbuf, _ := link.Reader.ReadMultiBuffer()
-	len := mbuf.Len()
-	firstPayload := bytespool.Alloc(len)
+	mlen := mbuf.Len()
+	firstPayload := bytespool.Alloc(mlen)
 	mbuf, _ = buf.SplitBytes(mbuf, firstPayload)
-	firstPayload = firstPayload[:len]
+	firstPayload = firstPayload[:mlen]
 
 	buf.ReleaseMulti(mbuf)
 	defer bytespool.Free(firstPayload)
@@ -94,6 +97,16 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		server := c.serverPicker.PickServer()
 		dest := server.Destination()
 		user = server.PickUser()
+
+		ip := resolveIP(ctx, c.dns, dest.Address.String())
+		if ip != nil {
+			dest = net.Destination{
+				Network: dest.Network,
+				Address: ip,
+				Port:    dest.Port,
+			}
+			newError("dialing to ", dest).WriteToLog(session.ExportIDToError(ctx))
+		}
 
 		netConn, err := setUpHTTPTunnel(ctx, dest, targetAddr, user, dialer, firstPayload)
 		if netConn != nil {
@@ -280,6 +293,25 @@ func setUpHTTPTunnel(ctx context.Context, dest net.Destination, target string, u
 	}
 }
 
+func resolveIP(ctx context.Context, d dns.Client, domain string) net.Address {
+	if c, ok := d.(dns.ClientWithIPOption); ok {
+		c.SetFakeDNSOption(false) // Skip FakeDNS
+	} else {
+		newError("DNS client doesn't implement ClientWithIPOption")
+	}
+
+	var lookupFunc func(string) ([]net.IP, error) = d.LookupIP
+
+	ips, err := lookupFunc(domain)
+	if err != nil {
+		newError("failed to get IP address for domain ", domain).Base(err).WriteToLog(session.ExportIDToError(ctx))
+	}
+	if len(ips) == 0 {
+		return nil
+	}
+	return net.IPAddress(ips[dice.Roll(len(ips))])
+}
+
 func newHTTP2Conn(c net.Conn, pipedReqBody *io.PipeWriter, respBody io.ReadCloser) net.Conn {
 	return &http2Conn{Conn: c, in: pipedReqBody, out: respBody}
 }
@@ -305,6 +337,18 @@ func (h *http2Conn) Close() error {
 
 func init() {
 	common.Must(common.RegisterConfig((*ClientConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
-		return NewClient(ctx, config.(*ClientConfig))
+		h, err := NewClient(ctx, config.(*ClientConfig))
+		if err != nil {
+			return nil, err
+		}
+		err = core.RequireFeatures(ctx, func(d dns.Client) error {
+			h.dns = d
+			return nil
+		})
+
+		if err != nil {
+			return nil, err
+		}
+		return h, nil
 	}))
 }
