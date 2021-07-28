@@ -322,6 +322,7 @@ type TLSConfig struct {
 	EnableSessionResumption          bool                  `json:"enableSessionResumption"`
 	DisableSystemRoot                bool                  `json:"disableSystemRoot"`
 	PinnedPeerCertificateChainSha256 *[]string             `json:"pinnedPeerCertificateChainSha256"`
+	ClientVerify                     bool                  `json:"clientVerify"`
 }
 
 // Build implements Buildable.
@@ -337,6 +338,7 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 	}
 	serverName := c.ServerName
 	config.AllowInsecure = c.Insecure
+	config.ClientVerify = c.ClientVerify
 	if len(c.ServerName) > 0 {
 		config.ServerName = serverName
 	}

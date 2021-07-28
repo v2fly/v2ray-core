@@ -48,4 +48,7 @@ message Config {
      @Critical
   */
   repeated bytes pinned_peer_certificate_chain_sha256 = 7;
+
+  // Whether or not server verify client cert
+  bool client_verify = 8;
 }

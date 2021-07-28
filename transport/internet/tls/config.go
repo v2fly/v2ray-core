@@ -210,7 +210,6 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 			SessionTicketsDisabled: true,
 		}
 	}
-
 	config := &tls.Config{
 		ClientSessionCache:     globalSessionCache,
 		RootCAs:                root,
@@ -218,12 +217,15 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 		NextProtos:             c.NextProtocol,
 		SessionTicketsDisabled: !c.EnableSessionResumption,
 		VerifyPeerCertificate:  c.verifyPeerCert,
+		ClientCAs:              root,
 	}
 
 	for _, opt := range opts {
 		opt(config)
 	}
-
+	if c.ClientVerify {
+		config.ClientAuth = tls.RequireAndVerifyClientCert
+	}
 	config.Certificates = c.BuildCertificates()
 	config.BuildNameToCertificate()
 
