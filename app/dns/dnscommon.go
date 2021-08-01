@@ -193,13 +193,9 @@ L:
 			break
 		}
 
-		ttl := ah.TTL
-		if ttl == 0 {
-			ttl = 600
-		}
-		expire := now.Add(time.Duration(ttl) * time.Second)
-		if ipRecord.Expire.After(expire) {
-			ipRecord.Expire = expire
+		// keeps ttl preferred
+		if ttl := ah.TTL; ttl > 0 {
+			ipRecord.Expire = now.Add(time.Duration(ttl) * time.Second)
 		}
 
 		switch ah.Type {
