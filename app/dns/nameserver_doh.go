@@ -140,6 +140,13 @@ func (s *DoHNameServer) Cleanup() error {
 	}
 
 	for domain, record := range s.ips {
+		if len(record.A.IP) == 0 {
+			record.A = nil
+		}
+		if len(record.AAAA.IP) == 0 {
+			record.AAAA = nil
+		}
+
 		if record.A != nil && record.A.Expire.Before(now) {
 			record.A = nil
 		}
