@@ -177,7 +177,7 @@ func (s *DoHNameServer) updateIP(req *dnsRequest, ipRec *IPRecord) {
 
 	switch req.reqType {
 	case dnsmessage.TypeA:
-		if isNewer(rec.A, ipRec) {
+		if rec.A == nil || isNewer(rec.A, ipRec) {
 			rec.A = ipRec
 			updated = true
 		}
@@ -189,7 +189,7 @@ func (s *DoHNameServer) updateIP(req *dnsRequest, ipRec *IPRecord) {
 			}
 		}
 		ipRec.IP = addr
-		if isNewer(rec.AAAA, ipRec) {
+		if rec.AAAA == nil || isNewer(rec.AAAA, ipRec) {
 			rec.AAAA = ipRec
 			updated = true
 		}
