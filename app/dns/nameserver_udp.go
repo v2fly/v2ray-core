@@ -149,7 +149,6 @@ func (s *ClassicNameServer) HandleResponse(ctx context.Context, packet *udp_prot
 func (s *ClassicNameServer) updateIP(domain string, newRec record) {
 	s.Lock()
 
-	newError(s.name, " updating IP records for domain:", domain).AtDebug().WriteToLog()
 	rec, found := s.ips[domain]
 	if !found {
 		rec = record{}
@@ -166,6 +165,7 @@ func (s *ClassicNameServer) updateIP(domain string, newRec record) {
 	}
 
 	if updated && ((newRec.A != nil && len(newRec.A.IP) > 0) || (newRec.AAAA != nil && len(newRec.AAAA.IP) > 0)) {
+		newError(s.name, " updating IP records for domain:", domain).AtDebug().WriteToLog()
 		s.ips[domain] = rec
 	}
 	if newRec.A != nil {
