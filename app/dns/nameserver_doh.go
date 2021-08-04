@@ -196,7 +196,7 @@ func (s *DoHNameServer) updateIP(req *dnsRequest, ipRec *IPRecord) {
 	}
 	newError(s.name, " got answer: ", req.domain, " ", req.reqType, " -> ", ipRec.IP, " ", elapsed).AtInfo().WriteToLog()
 
-	if updated {
+	if updated && len(ipRec.IP) > 0 {
 		s.ips[req.domain] = rec
 	}
 	switch req.reqType {
