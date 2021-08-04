@@ -205,14 +205,14 @@ L:
 		switch ah.Type {
 		case dnsmessage.TypeA:
 			ans, err := parser.AResource()
-			if err != nil {
+			if err != nil || len(ans.A) == 0 {
 				newError("failed to parse A record for domain: ", ah.Name).Base(err).WriteToLog()
 				break L
 			}
 			ipRecord.IP = append(ipRecord.IP, net.IPAddress(ans.A[:]))
 		case dnsmessage.TypeAAAA:
 			ans, err := parser.AAAAResource()
-			if err != nil {
+			if err != nil || len(ans.AAAA) == 0 {
 				newError("failed to parse AAAA record for domain: ", ah.Name).Base(err).WriteToLog()
 				break L
 			}
