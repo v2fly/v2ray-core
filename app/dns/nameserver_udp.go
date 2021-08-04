@@ -165,7 +165,7 @@ func (s *ClassicNameServer) updateIP(domain string, newRec record) {
 		updated = true
 	}
 
-	if updated && len(newRec.IP) > 0 {
+	if updated && (len(newRec.A.IP) > 0 || len(newRec.AAAA.IP) > 0) {
 		s.ips[domain] = rec
 	}
 	if newRec.A != nil {
