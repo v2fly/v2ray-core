@@ -162,10 +162,6 @@ func (s *DoHNameServer) Cleanup() error {
 		}
 	}
 
-	if len(s.ips) == 0 {
-		s.ips = make(map[string]record)
-	}
-
 	return nil
 }
 
