@@ -33,12 +33,12 @@ const handshakeIdleTimeout = time.Second * 8
 // QUICNameServer implemented DNS over QUIC
 type QUICNameServer struct {
 	sync.RWMutex
-	ips         map[string]record
+	ips         map[string]*record
 	pub         *pubsub.Service
 	cleanup     *task.Periodic
 	reqID       uint32
 	name        string
-	destination net.Destination
+	destination *net.Destination
 	session     quic.Session
 }
 
@@ -57,10 +57,10 @@ func NewQUICNameServer(url *url.URL) (*QUICNameServer, error) {
 	dest := net.UDPDestination(net.DomainAddress(url.Hostname()), port)
 
 	s := &QUICNameServer{
-		ips:         make(map[string]record),
+		ips:         make(map[string]*record),
 		pub:         pubsub.NewService(),
 		name:        url.String(),
-		destination: dest,
+		destination: &dest,
 	}
 	s.cleanup = &task.Periodic{
 		Interval: time.Minute,
@@ -86,13 +86,6 @@ func (s *QUICNameServer) Cleanup() error {
 	}
 
 	for domain, record := range s.ips {
-		if record.A != nil && len(record.A.IP) == 0 {
-			record.A = nil
-		}
-		if record.AAAA != nil && len(record.AAAA.IP) == 0 {
-			record.AAAA = nil
-		}
-
 		if record.A != nil && record.A.Expire.Before(now) {
 			record.A = nil
 		}
@@ -108,6 +101,10 @@ func (s *QUICNameServer) Cleanup() error {
 		}
 	}
 
+	if len(s.ips) == 0 {
+		s.ips = make(map[string]*record)
+	}
+
 	return nil
 }
 
@@ -117,7 +114,7 @@ func (s *QUICNameServer) updateIP(req *dnsRequest, ipRec *IPRecord) {
 	s.Lock()
 	rec, found := s.ips[req.domain]
 	if !found {
-		rec = record{}
+		rec = &record{}
 	}
 	updated := false
 
@@ -142,7 +139,7 @@ func (s *QUICNameServer) updateIP(req *dnsRequest, ipRec *IPRecord) {
 	}
 	newError(s.name, " got answer: ", req.domain, " ", req.reqType, " -> ", ipRec.IP, " ", elapsed).AtInfo().WriteToLog()
 
-	if updated && len(ipRec.IP) > 0 {
+	if updated {
 		s.ips[req.domain] = rec
 	}
 	switch req.reqType {
@@ -238,34 +235,30 @@ func (s *QUICNameServer) findIPsForDomain(domain string, option dns_feature.IPOp
 		return nil, errRecordNotFound
 	}
 
+	var err4 error
+	var err6 error
 	var ips []net.Address
-	var lastErr error
-	if option.IPv6Enable && record.AAAA != nil && record.AAAA.RCode == dnsmessage.RCodeSuccess {
-		aaaa, err := record.AAAA.getIPs()
-		if err != nil {
-			lastErr = err
-		}
-		ips = append(ips, aaaa...)
-	}
+	var ip6 []net.Address
 
-	if option.IPv4Enable && record.A != nil && record.A.RCode == dnsmessage.RCodeSuccess {
-		a, err := record.A.getIPs()
-		if err != nil {
-			lastErr = err
-		}
-		ips = append(ips, a...)
+	switch {
+	case option.IPv4Enable:
+		ips, err4 = record.A.getIPs()
+		fallthrough
+	case option.IPv6Enable:
+		ip6, err6 = record.AAAA.getIPs()
+		ips = append(ips, ip6...)
 	}
 
 	if len(ips) > 0 {
 		return toNetIP(ips)
 	}
 
-	if lastErr != nil {
-		return nil, lastErr
+	if err4 != nil {
+		return nil, err4
 	}
 
-	if (option.IPv4Enable && record.A != nil) || (option.IPv6Enable && record.AAAA != nil) {
-		return nil, dns_feature.ErrEmptyResponse
+	if err6 != nil {
+		return nil, err6
 	}
 
 	return nil, errRecordNotFound
