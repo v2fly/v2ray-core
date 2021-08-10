@@ -28,9 +28,9 @@ import (
 type ClassicNameServer struct {
 	sync.RWMutex
 	name      string
-	address   net.Destination
-	ips       map[string]record
-	requests  map[uint16]dnsRequest
+	address   *net.Destination
+	ips       map[string]*record
+	requests  map[uint16]*dnsRequest
 	pub       *pubsub.Service
 	udpServer *udp.Dispatcher
 	cleanup   *task.Periodic
@@ -45,9 +45,9 @@ func NewClassicNameServer(address net.Destination, dispatcher routing.Dispatcher
 	}
 
 	s := &ClassicNameServer{
-		address:  address,
-		ips:      make(map[string]record),
-		requests: make(map[uint16]dnsRequest),
+		address:  &address,
+		ips:      make(map[string]*record),
+		requests: make(map[uint16]*dnsRequest),
 		pub:      pubsub.NewService(),
 		name:     strings.ToUpper(address.String()),
 	}
@@ -84,6 +84,7 @@ func (s *ClassicNameServer) Cleanup() error {
 		}
 
 		if record.A == nil && record.AAAA == nil {
+			newError(s.name, " cleanup ", domain).AtDebug().WriteToLog()
 			delete(s.ips, domain)
 		} else {
 			s.ips[domain] = record
@@ -91,7 +92,7 @@ func (s *ClassicNameServer) Cleanup() error {
 	}
 
 	if len(s.ips) == 0 {
-		s.ips = make(map[string]record)
+		s.ips = make(map[string]*record)
 	}
 
 	for id, req := range s.requests {
@@ -101,7 +102,7 @@ func (s *ClassicNameServer) Cleanup() error {
 	}
 
 	if len(s.requests) == 0 {
-		s.requests = make(map[uint16]dnsRequest)
+		s.requests = make(map[uint16]*dnsRequest)
 	}
 
 	return nil
@@ -139,15 +140,17 @@ func (s *ClassicNameServer) HandleResponse(ctx context.Context, packet *udp_prot
 	elapsed := time.Since(req.start)
 	newError(s.name, " got answer: ", req.domain, " ", req.reqType, " -> ", ipRec.IP, " ", elapsed).AtInfo().WriteToLog()
 	if len(req.domain) > 0 && (rec.A != nil || rec.AAAA != nil) {
-		s.updateIP(req.domain, rec)
+		s.updateIP(req.domain, &rec)
 	}
 }
 
-func (s *ClassicNameServer) updateIP(domain string, newRec record) {
+func (s *ClassicNameServer) updateIP(domain string, newRec *record) {
 	s.Lock()
 
-	newError(s.name, " updating IP records for domain:", domain).AtDebug().WriteToLog()
-	rec := s.ips[domain]
+	rec, found := s.ips[domain]
+	if !found {
+		rec = &record{}
+	}
 
 	updated := false
 	if isNewer(rec.A, newRec.A) {
@@ -160,6 +163,7 @@ func (s *ClassicNameServer) updateIP(domain string, newRec record) {
 	}
 
 	if updated {
+		newError(s.name, " updating IP records for domain:", domain).AtDebug().WriteToLog()
 		s.ips[domain] = rec
 	}
 	if newRec.A != nil {
@@ -182,7 +186,7 @@ func (s *ClassicNameServer) addPendingRequest(req *dnsRequest) {
 
 	id := req.msg.ID
 	req.expire = time.Now().Add(time.Second * 8)
-	s.requests[id] = *req
+	s.requests[id] = req
 }
 
 func (s *ClassicNameServer) sendQuery(ctx context.Context, domain string, clientIP net.IP, option dns_feature.IPOption) {
@@ -200,7 +204,7 @@ func (s *ClassicNameServer) sendQuery(ctx context.Context, domain string, client
 		udpCtx = session.ContextWithContent(udpCtx, &session.Content{
 			Protocol: "dns",
 		})
-		s.udpServer.Dispatch(udpCtx, s.address, b)
+		s.udpServer.Dispatch(udpCtx, *s.address, b)
 	}
 }
 
@@ -213,30 +217,30 @@ func (s *ClassicNameServer) findIPsForDomain(domain string, option dns_feature.I
 		return nil, errRecordNotFound
 	}
 
+	var err4 error
+	var err6 error
 	var ips []net.Address
-	var lastErr error
-	if option.IPv4Enable {
-		a, err := record.A.getIPs()
-		if err != nil {
-			lastErr = err
-		}
-		ips = append(ips, a...)
-	}
+	var ip6 []net.Address
 
-	if option.IPv6Enable {
-		aaaa, err := record.AAAA.getIPs()
-		if err != nil {
-			lastErr = err
-		}
-		ips = append(ips, aaaa...)
+	switch {
+	case option.IPv4Enable:
+		ips, err4 = record.A.getIPs()
+		fallthrough
+	case option.IPv6Enable:
+		ip6, err6 = record.AAAA.getIPs()
+		ips = append(ips, ip6...)
 	}
 
 	if len(ips) > 0 {
 		return toNetIP(ips)
 	}
 
-	if lastErr != nil {
-		return nil, lastErr
+	if err4 != nil {
+		return nil, err4
+	}
+
+	if err6 != nil {
+		return nil, err6
 	}
 
 	return nil, dns_feature.ErrEmptyResponse
