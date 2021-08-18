@@ -1,3 +1,13 @@
+v2ray-core (4.41.1-1) unstable; urgency=medium
+
+  * VMess: added two VMess experiments: AuthenticatedLength & NoTerminationSignal
+  * Draining connection at client side when receiving invalid data
+  * Observatory: support custom probe interval and probe URL
+  * Fix: connection stability issue in HTTP/2 & gRPC transport
+  * More details in https://github.com/v2fly/v2ray-core/releases/tag/v4.41.1
+
+ -- V2Fly <dev@v2fly.org>  Wed, 18 Aug 2021 10:00:00 +0800
+
 v2ray-core (4.40.1-1) unstable; urgency=medium
 
   * DNS: support DNS over TCP
