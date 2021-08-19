@@ -152,7 +152,7 @@ func (o *Observer) probe(outbound string) ProbeResult {
 		fullerr := newError("underlying connection failed").Base(errorCollectorForRequest.UnderlyingError())
 		fullerr = newError("with outbound handler report").Base(fullerr)
 		fullerr = newError("GET request failed:", err).Base(fullerr)
-		fullerr = newError("the outbound ", outbound, "is dead:").Base(fullerr)
+		fullerr = newError("the outbound ", outbound, " is dead:").Base(fullerr)
 		fullerr = fullerr.AtInfo()
 		fullerr.WriteToLog()
 		return ProbeResult{Alive: false, LastErrorReason: fullerr.Error()}
