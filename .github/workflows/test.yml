@@ -37,6 +37,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Check Go modules
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+          go mod verify
+
       - name: Test
         run: |
           export PATH=$(go env GOPATH)/bin:${PATH}
