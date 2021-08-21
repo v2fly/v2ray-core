@@ -110,11 +110,13 @@ func (w *fileLogWriter) Close() error {
 	return w.file.Close()
 }
 
+var LogFlag = log.LstdFlags
+
 // CreateStdoutLogWriter returns a LogWriterCreator that creates LogWriter for stdout.
 func CreateStdoutLogWriter() WriterCreator {
 	return func() Writer {
 		return &consoleLogWriter{
-			logger: log.New(os.Stdout, "", log.Ldate|log.Ltime),
+			logger: log.New(os.Stdout, "", LogFlag),
 		}
 	}
 }
@@ -123,7 +125,7 @@ func CreateStdoutLogWriter() WriterCreator {
 func CreateStderrLogWriter() WriterCreator {
 	return func() Writer {
 		return &consoleLogWriter{
-			logger: log.New(os.Stderr, "", log.Ldate|log.Ltime),
+			logger: log.New(os.Stderr, "", LogFlag),
 		}
 	}
 }
@@ -142,7 +144,7 @@ func CreateFileLogWriter(path string) (WriterCreator, error) {
 		}
 		return &fileLogWriter{
 			file:   file,
-			logger: log.New(file, "", log.Ldate|log.Ltime),
+			logger: log.New(file, "", LogFlag),
 		}
 	}, nil
 }

@@ -17,16 +17,18 @@ import (
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
+	logger "github.com/v2fly/v2ray-core/v4/common/log"
 	"github.com/v2fly/v2ray-core/v4/common/platform"
 	_ "github.com/v2fly/v2ray-core/v4/main/distro/all"
 )
 
 var (
-	configFiles cmdarg.Arg // "Config file for V2Ray.", the option is customed type, parse in main
-	configDir   string
-	version     = flag.Bool("version", false, "Show current version of V2Ray.")
-	test        = flag.Bool("test", false, "Test config file only, without launching V2Ray server.")
-	format      = flag.String("format", "json", "Format of input file.")
+	configFiles        cmdarg.Arg // "Config file for V2Ray.", the option is customed type, parse in main
+	configDir          string
+	version            = flag.Bool("version", false, "Show current version of V2Ray.")
+	test               = flag.Bool("test", false, "Test config file only, without launching V2Ray server.")
+	suppressTimestamps = flag.Bool("suppressTimestamps", false, "Specify this flag to omit timestamps in logs.")
+	format             = flag.String("format", "json", "Format of input file.")
 
 	/* We have to do this here because Golang's Test will also need to parse flag, before
 	 * main func in this file is run.
@@ -134,6 +136,11 @@ func main() {
 
 	if *version {
 		return
+	}
+
+	if *suppressTimestamps {
+		log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
+		logger.LogFlag &^= (log.Ldate | log.Ltime)
 	}
 
 	server, err := startV2Ray()
