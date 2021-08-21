@@ -1,3 +1,4 @@
+//go:build !confonly
 // +build !confonly
 
 // Package blackhole is an outbound handler that blocks all connections.
