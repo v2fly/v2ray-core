@@ -66,18 +66,28 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 			IPv4Enable: true,
 			IPv6Enable: true,
 			FakeEnable: false,
+			FailFast:   false,
 		}
 	case QueryStrategy_USE_IP4:
 		ipOption = &dns.IPOption{
 			IPv4Enable: true,
 			IPv6Enable: false,
 			FakeEnable: false,
+			FailFast:   false,
 		}
 	case QueryStrategy_USE_IP6:
 		ipOption = &dns.IPOption{
 			IPv4Enable: false,
 			IPv6Enable: true,
 			FakeEnable: false,
+			FailFast:   false,
+		}
+	case QueryStrategy_USE_IP_FAILFAST:
+		ipOption = &dns.IPOption{
+			IPv4Enable: true,
+			IPv6Enable: true,
+			FakeEnable: false,
+			FailFast:   true,
 		}
 	}
 
@@ -174,6 +184,7 @@ func (s *DNS) LookupIP(domain string) ([]net.IP, error) {
 		IPv4Enable: true,
 		IPv6Enable: true,
 		FakeEnable: s.ipOption.FakeEnable,
+		FailFast:   s.ipOption.FailFast,
 	})
 }
 
@@ -183,6 +194,7 @@ func (s *DNS) LookupIPv4(domain string) ([]net.IP, error) {
 		IPv4Enable: true,
 		IPv6Enable: false,
 		FakeEnable: s.ipOption.FakeEnable,
+		FailFast:   s.ipOption.FailFast,
 	})
 }
 
@@ -192,6 +204,7 @@ func (s *DNS) LookupIPv6(domain string) ([]net.IP, error) {
 		IPv4Enable: false,
 		IPv6Enable: true,
 		FakeEnable: s.ipOption.FakeEnable,
+		FailFast:   s.ipOption.FailFast,
 	})
 }
 
@@ -255,6 +268,10 @@ func (s *DNS) SetQueryOption(isIPv4Enable, isIPv6Enable bool) {
 // SetFakeDNSOption implements ClientWithIPOption.
 func (s *DNS) SetFakeDNSOption(isFakeEnable bool) {
 	s.ipOption.FakeEnable = isFakeEnable
+}
+
+func (s *DNS) SetFailFastOption(isFailFast bool) {
+	s.ipOption.FailFast = isFailFast
 }
 
 func (s *DNS) sortClients(domain string) []*Client {

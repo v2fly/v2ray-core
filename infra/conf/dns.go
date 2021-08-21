@@ -226,6 +226,8 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 		config.QueryStrategy = dns.QueryStrategy_USE_IP4
 	case "useip6", "useipv6", "use_ip6", "use_ipv6", "use_ip_v6", "use-ip6", "use-ipv6", "use-ip-v6":
 		config.QueryStrategy = dns.QueryStrategy_USE_IP6
+	case "useipfailfast", "use_ip_failfast", "use_ip_fail_fast", "use-ip-failfast", "use-ip-fail-fast":
+		config.QueryStrategy = dns.QueryStrategy_USE_IP_FAILFAST
 	}
 
 	for _, server := range c.Servers {

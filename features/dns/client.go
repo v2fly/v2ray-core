@@ -12,6 +12,7 @@ type IPOption struct {
 	IPv4Enable bool
 	IPv6Enable bool
 	FakeEnable bool
+	FailFast   bool
 }
 
 // Client is a V2Ray feature for querying DNS information.
@@ -50,6 +51,9 @@ type ClientWithIPOption interface {
 
 	// SetFakeDNSOption sets FakeEnable option for DNS client.
 	SetFakeDNSOption(isFakeEnable bool)
+
+	// SetFailFastOption sets FailFast option for the DNS client.
+	SetFailFastOption(isFailFast bool)
 }
 
 // ClientType returns the type of Client interface. Can be used for implementing common.HasType.
