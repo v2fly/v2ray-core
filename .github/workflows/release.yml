@@ -126,11 +126,16 @@ jobs:
           wget -O release/config/geosite.dat "https://raw.githubusercontent.com/v2fly/domain-list-community/release/dlc.dat"
 
       - name: Prepare package
-        run: cp -v ./release/config/*.* ./build_assets
+        run: |
+          cp -v ./release/config/*.dat ./build_assets
+          cp -v ./release/config/*.json ./build_assets
 
       - name: Prepare package for Linux
         if: matrix.goos == 'linux'
-        run: cp -rv ./release/config/systemd ./build_assets/
+        run: |
+          cp -rv ./release/config/systemd ./build_assets/
+          cp -rv ./release/config/sysusers.d ./build_assets/
+          cp -rv ./release/config/tmpfiles.d ./build_assets/
 
       - name: Create ZIP archive
         run: |
