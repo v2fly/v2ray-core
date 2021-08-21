@@ -1,3 +1,4 @@
+//go:build !confonly
 // +build !confonly
 
 // Package dns is an implementation of core.DNS feature.
