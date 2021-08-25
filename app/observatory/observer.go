@@ -112,7 +112,7 @@ func (o *Observer) probe(outbound string) ProbeResult {
 				trackedCtx := session.TrackedConnectionError(o.ctx, errorCollectorForRequest)
 				conn, err := tagged.Dialer(trackedCtx, dest, outbound)
 				if err != nil {
-					return newError("cannot dial remote address", dest).Base(err)
+					return newError("cannot dial remote address ", dest).Base(err)
 				}
 				connection = conn
 				return nil
@@ -154,12 +154,12 @@ func (o *Observer) probe(outbound string) ProbeResult {
 		fullerr := newError("underlying connection failed").Base(errorCollectorForRequest.UnderlyingError())
 		fullerr = newError("with outbound handler report").Base(fullerr)
 		fullerr = newError("GET request failed:", err).Base(fullerr)
-		fullerr = newError("the outbound ", outbound, "is dead:").Base(fullerr)
+		fullerr = newError("the outbound ", outbound, " is dead:").Base(fullerr)
 		fullerr = fullerr.AtInfo()
 		fullerr.WriteToLog()
 		return ProbeResult{Alive: false, LastErrorReason: fullerr.Error()}
 	}
-	newError("the outbound ", outbound, "is alive:", GETTime.Seconds()).AtInfo().WriteToLog()
+	newError("the outbound ", outbound, " is alive:", GETTime.Seconds()).AtInfo().WriteToLog()
 	return ProbeResult{Alive: true, Delay: GETTime.Milliseconds()}
 }
 
