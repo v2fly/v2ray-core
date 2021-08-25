@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"sort"
 	"sync"
 	"time"
 
@@ -67,6 +68,7 @@ func (o *Observer) background() {
 		}
 
 		outbounds := hs.Select(o.config.SubjectSelector)
+		sort.Strings(outbounds)
 
 		o.updateStatus(outbounds)
 
