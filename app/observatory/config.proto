@@ -68,4 +68,6 @@ message Config {
   string probe_url = 3;
 
   int64 probe_interval = 4;
+
+  bool enable_concurrency = 5;
 }
