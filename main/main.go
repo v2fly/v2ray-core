@@ -97,6 +97,8 @@ func getConfigFilePath() cmdarg.Arg {
 
 func GetConfigFormat() string {
 	switch strings.ToLower(*format) {
+	case "yaml", "yml":
+		return "yaml"
 	case "pb", "protobuf":
 		return "protobuf"
 	default:
