@@ -36,6 +36,31 @@ func ParseCertificate(c *cert.Certificate) *Certificate {
 func (c *Config) loadSelfCertPool() (*x509.CertPool, error) {
 	root := x509.NewCertPool()
 	for _, cert := range c.Certificate {
+		/* Do not treat client certificate authority as a peer certificate authority.
+		   This is designed to prevent a client certificate with a permissive key usage from being used to attacker server.
+		   In next release, the certificate usage will be enforced strictly.
+		   Only a certificate with AUTHORITY_VERIFY usage will be accepted.
+		*/
+		if cert.Usage == Certificate_AUTHORITY_VERIFY_CLIENT {
+			continue
+		}
+		if !root.AppendCertsFromPEM(cert.Certificate) {
+			return nil, newError("failed to append cert").AtWarning()
+		}
+	}
+	return root, nil
+}
+func (c *Config) loadSelfCertPoolClientCA() (*x509.CertPool, error) {
+	root := x509.NewCertPool()
+	for _, cert := range c.Certificate {
+		/* Do not treat client certificate authority as a peer certificate authority.
+		   This is designed to prevent a client certificate with a permissive key usage from being used to attacker server.
+		   In next release, the certificate usage will be enforced strictly.
+		   Only a certificate with AUTHORITY_VERIFY usage will be accepted.
+		*/
+		if cert.Usage != Certificate_AUTHORITY_VERIFY_CLIENT {
+			continue
+		}
 		if !root.AppendCertsFromPEM(cert.Certificate) {
 			return nil, newError("failed to append cert").AtWarning()
 		}
@@ -202,6 +227,11 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 		newError("failed to load system root certificate").AtError().Base(err).WriteToLog()
 	}
 
+	clientRoot, err := c.loadSelfCertPoolClientCA()
+	if err != nil {
+		newError("failed to load client root certificate").AtError().Base(err).WriteToLog()
+	}
+
 	if c == nil {
 		return &tls.Config{
 			ClientSessionCache:     globalSessionCache,
@@ -218,13 +248,13 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 		NextProtos:             c.NextProtocol,
 		SessionTicketsDisabled: !c.EnableSessionResumption,
 		VerifyPeerCertificate:  c.verifyPeerCert,
-		ClientCAs:              root,
+		ClientCAs:              clientRoot,
 	}
 
 	for _, opt := range opts {
 		opt(config)
 	}
-	if c.ClientVerify {
+	if c.VerifyClientCertificate {
 		config.ClientAuth = tls.RequireAndVerifyClientCert
 	}
 	config.Certificates = c.BuildCertificates()

@@ -17,6 +17,7 @@ message Certificate {
     ENCIPHERMENT = 0;
     AUTHORITY_VERIFY = 1;
     AUTHORITY_ISSUE = 2;
+    AUTHORITY_VERIFY_CLIENT = 3;
   }
 
   Usage usage = 3;
@@ -49,6 +50,6 @@ message Config {
   */
   repeated bytes pinned_peer_certificate_chain_sha256 = 7;
 
-  // Whether or not server verify client cert
-  bool client_verify = 8;
+  // If true, the client is required to present a certificate.
+  bool verify_client_certificate = 8;
 }

@@ -301,6 +301,8 @@ func (c *TLSCertConfig) Build() (*tls.Certificate, error) {
 		certificate.Usage = tls.Certificate_ENCIPHERMENT
 	case "verify":
 		certificate.Usage = tls.Certificate_AUTHORITY_VERIFY
+	case "verifyclient":
+		certificate.Usage = tls.Certificate_AUTHORITY_VERIFY_CLIENT
 	case "issue":
 		certificate.Usage = tls.Certificate_AUTHORITY_ISSUE
 	default:
@@ -318,7 +320,7 @@ type TLSConfig struct {
 	EnableSessionResumption          bool                  `json:"enableSessionResumption"`
 	DisableSystemRoot                bool                  `json:"disableSystemRoot"`
 	PinnedPeerCertificateChainSha256 *[]string             `json:"pinnedPeerCertificateChainSha256"`
-	ClientVerify                     bool                  `json:"clientVerify"`
+	VerifyClientCertificate          bool                  `json:"verifyClientCertificate"`
 }
 
 // Build implements Buildable.
@@ -334,7 +336,7 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 	}
 	serverName := c.ServerName
 	config.AllowInsecure = c.Insecure
-	config.ClientVerify = c.ClientVerify
+	config.VerifyClientCertificate = c.VerifyClientCertificate
 	if len(c.ServerName) > 0 {
 		config.ServerName = serverName
 	}
