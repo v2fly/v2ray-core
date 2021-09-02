@@ -50,6 +50,7 @@ func (c *Config) loadSelfCertPool() (*x509.CertPool, error) {
 	}
 	return root, nil
 }
+
 func (c *Config) loadSelfCertPoolClientCA() (*x509.CertPool, error) {
 	root := x509.NewCertPool()
 	for _, cert := range c.Certificate {
