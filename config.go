@@ -198,7 +198,7 @@ func init() {
 				}
 				return loadProtobufConfig(data)
 			default:
-				return nil, newError("unknow type")
+				return nil, newError("unknown type")
 			}
 		},
 	}))
