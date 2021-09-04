@@ -1,0 +1,44 @@
+package v5cfg
+
+import (
+	"context"
+	"github.com/golang/protobuf/proto"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"github.com/v2fly/v2ray-core/v4/transport/internet"
+)
+
+func (s StreamConfig) BuildV5(ctx context.Context) (proto.Message, error) {
+	config := &internet.StreamConfig{}
+
+	if s.Transport == "" {
+		s.Transport = "tcp"
+	}
+	if s.Security == "" {
+		s.Security = "none"
+	}
+
+	transportConfigPack, err := loadHeterogeneousConfigFromRawJson("transport", s.Transport, s.TransportSettings)
+	if err != nil {
+		return nil, newError("unable to load transport config").Base(err)
+	}
+
+	config.ProtocolName = s.Transport
+	config.TransportSettings = append(config.TransportSettings, &internet.TransportConfig{
+		ProtocolName: s.Transport,
+		Settings:     serial.ToTypedMessage(transportConfigPack),
+	})
+
+	securityConfigPack, err := loadHeterogeneousConfigFromRawJson("security", s.Security, s.SecuritySettings)
+	if err != nil {
+		return nil, newError("unable to load security config").Base(err)
+	}
+	config.SecurityType = s.Security
+	config.SecuritySettings = append(config.SecuritySettings, serial.ToTypedMessage(securityConfigPack))
+
+	config.SocketSettings, err = s.SocketSettings.Build()
+	if err != nil {
+		return nil, newError("unable to build socket config").Base(err)
+	}
+
+	return config, nil
+}
