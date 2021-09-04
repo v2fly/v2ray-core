@@ -7,7 +7,10 @@ import (
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/dispatcher"
 	"github.com/v2fly/v2ray-core/v4/app/proxyman"
+	"github.com/v2fly/v2ray-core/v4/common/platform"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/log"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -81,7 +84,19 @@ func loadJsonConfig(data []byte) (*core.Config, error) {
 		return nil, newError("unable to load json").Base(err)
 	}
 
-	message, err := rootConfig.BuildV5(context.TODO())
+	buildctx := cfgcommon.NewConfigureLoadingContext(context.Background())
+
+	geoloadername := platform.NewEnvFlag("v2ray.conf.geoloader").GetValue(func() string {
+		return "standard"
+	})
+
+	if loader, err := geodata.GetGeoDataLoader(geoloadername); err == nil {
+		cfgcommon.SetGeoDataLoader(buildctx, loader)
+	} else {
+		return nil, newError("unable to create geo data loader ").Base(err)
+	}
+
+	message, err := rootConfig.BuildV5(buildctx)
 	if err != nil {
 		return nil, newError("unable to build config").Base(err)
 	}
