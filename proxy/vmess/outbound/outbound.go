@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"hash/crc64"
 	"time"
 
@@ -205,6 +206,23 @@ func shouldEnablePadding(s protocol.SecurityType) bool {
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return New(ctx, config.(*Config))
+	}))
+
+	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
+		simplifiedClient := config.(*SimplifiedConfig)
+		fullClient := &Config{Receiver: []*protocol.ServerEndpoint{
+			{
+				Address: simplifiedClient.Address,
+				Port:    simplifiedClient.Port,
+				User: []*protocol.User{
+					{
+						Account: serial.ToTypedMessage(&vmess.Account{Id: simplifiedClient.Uuid}),
+					},
+				},
+			},
+		}}
+
+		return New(ctx, fullClient)
 	}))
 
 	const defaultFlagValue = "NOT_DEFINED_AT_ALL"
