@@ -3,6 +3,7 @@ package v4
 import (
 	"encoding/json"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/loader"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/socketcfg"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/tlscfg"
 	"strings"
 
@@ -283,56 +284,19 @@ func (p TransportProtocol) Build() (string, error) {
 	}
 }
 
-type SocketConfig struct {
-	Mark                 int32  `json:"mark"`
-	TFO                  *bool  `json:"tcpFastOpen"`
-	TProxy               string `json:"tproxy"`
-	AcceptProxyProtocol  bool   `json:"acceptProxyProtocol"`
-	TCPKeepAliveInterval int32  `json:"tcpKeepAliveInterval"`
-}
-
-// Build implements Buildable.
-func (c *SocketConfig) Build() (*internet.SocketConfig, error) {
-	var tfoSettings internet.SocketConfig_TCPFastOpenState
-	if c.TFO != nil {
-		if *c.TFO {
-			tfoSettings = internet.SocketConfig_Enable
-		} else {
-			tfoSettings = internet.SocketConfig_Disable
-		}
-	}
-	var tproxy internet.SocketConfig_TProxyMode
-	switch strings.ToLower(c.TProxy) {
-	case "tproxy":
-		tproxy = internet.SocketConfig_TProxy
-	case "redirect":
-		tproxy = internet.SocketConfig_Redirect
-	default:
-		tproxy = internet.SocketConfig_Off
-	}
-
-	return &internet.SocketConfig{
-		Mark:                 c.Mark,
-		Tfo:                  tfoSettings,
-		Tproxy:               tproxy,
-		AcceptProxyProtocol:  c.AcceptProxyProtocol,
-		TcpKeepAliveInterval: c.TCPKeepAliveInterval,
-	}, nil
-}
-
 type StreamConfig struct {
-	Network        *TransportProtocol  `json:"network"`
-	Security       string              `json:"security"`
-	TLSSettings    *tlscfg.TLSConfig   `json:"tlsSettings"`
-	TCPSettings    *TCPConfig          `json:"tcpSettings"`
-	KCPSettings    *KCPConfig          `json:"kcpSettings"`
-	WSSettings     *WebSocketConfig    `json:"wsSettings"`
-	HTTPSettings   *HTTPConfig         `json:"httpSettings"`
-	DSSettings     *DomainSocketConfig `json:"dsSettings"`
-	QUICSettings   *QUICConfig         `json:"quicSettings"`
-	GunSettings    *GunConfig          `json:"gunSettings"`
-	GRPCSettings   *GunConfig          `json:"grpcSettings"`
-	SocketSettings *SocketConfig       `json:"sockopt"`
+	Network        *TransportProtocol      `json:"network"`
+	Security       string                  `json:"security"`
+	TLSSettings    *tlscfg.TLSConfig       `json:"tlsSettings"`
+	TCPSettings    *TCPConfig              `json:"tcpSettings"`
+	KCPSettings    *KCPConfig              `json:"kcpSettings"`
+	WSSettings     *WebSocketConfig        `json:"wsSettings"`
+	HTTPSettings   *HTTPConfig             `json:"httpSettings"`
+	DSSettings     *DomainSocketConfig     `json:"dsSettings"`
+	QUICSettings   *QUICConfig             `json:"quicSettings"`
+	GunSettings    *GunConfig              `json:"gunSettings"`
+	GRPCSettings   *GunConfig              `json:"grpcSettings"`
+	SocketSettings *socketcfg.SocketConfig `json:"sockopt"`
 }
 
 // Build implements Buildable.
