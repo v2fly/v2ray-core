@@ -2,6 +2,7 @@ package v5cfg
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/golang/protobuf/proto"
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/dispatcher"
@@ -70,4 +71,19 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 		config.App = append(config.App, serial.ToTypedMessage(servicePackedConfig))
 	}
 	return config, nil
+}
+
+func loadJsonConfig(data []byte) (*core.Config, error) {
+	rootConfig := &RootConfig{}
+
+	err := json.Unmarshal(data, rootConfig)
+	if err != nil {
+		return nil, newError("unable to load json").Base(err)
+	}
+
+	message, err := rootConfig.BuildV5(context.TODO())
+	if err != nil {
+		return nil, newError("unable to build config").Base(err)
+	}
+	return message.(*core.Config), nil
 }
