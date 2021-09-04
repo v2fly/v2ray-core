@@ -25,9 +25,8 @@ type InboundConfig struct {
 	Protocol       string                  `json:"protocol"`
 	PortRange      *cfgcommon.PortRange    `json:"port"`
 	ListenOn       *cfgcommon.Address      `json:"listen"`
-	Settings       *json.RawMessage        `json:"settings"`
+	Settings       json.RawMessage         `json:"settings"`
 	Tag            string                  `json:"tag"`
-	DomainOverride *cfgcommon.StringList   `json:"domainOverride"`
 	SniffingConfig *sniffer.SniffingConfig `json:"sniffing"`
 	StreamSetting  *StreamConfig           `json:"streamSettings"`
 }
