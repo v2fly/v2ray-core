@@ -217,6 +217,7 @@ func (d *IPOrDomain) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []by
 	if err := json.Unmarshal(bytes, &ipOrDomain); err != nil {
 		return err
 	}
-	d = NewIPOrDomain(ParseAddress(ipOrDomain))
+	result := NewIPOrDomain(ParseAddress(ipOrDomain))
+	d.Address = result.Address
 	return nil
 }
