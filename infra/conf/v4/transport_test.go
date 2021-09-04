@@ -2,6 +2,7 @@ package v4_test
 
 import (
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/socketcfg"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
 	"testing"
@@ -24,7 +25,7 @@ import (
 func TestSocketConfig(t *testing.T) {
 	createParser := func() func(string) (proto.Message, error) {
 		return func(s string) (proto.Message, error) {
-			config := new(v4.SocketConfig)
+			config := new(socketcfg.SocketConfig)
 			if err := json.Unmarshal([]byte(s), config); err != nil {
 				return nil, err
 			}

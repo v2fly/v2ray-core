@@ -2,6 +2,7 @@ package v4_test
 
 import (
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/muxcfg"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -368,7 +369,7 @@ func TestMuxConfig_Build(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := &v4.MuxConfig{}
+			m := &muxcfg.MuxConfig{}
 			common.Must(json.Unmarshal([]byte(tt.fields), m))
 			if got := m.Build(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("MuxConfig.Build() = %v, want %v", got, tt.want)
