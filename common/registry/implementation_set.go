@@ -11,7 +11,7 @@ type implementationSet struct {
 	AliasLookup map[string]*implementation
 }
 
-type CustomLoader func(data []byte, dataType string) (proto.Message, error)
+type CustomLoader func(data []byte, loader LoadByAlias) (proto.Message, error)
 
 type implementation struct {
 	FullName string
@@ -32,7 +32,7 @@ func (i *implementationSet) RegisterImplementation(name string, opt *protoext.Me
 	}
 }
 
-func (i *implementationSet) FindImplementationByAlias(alias string) (string, CustomLoader, error) {
+func (i *implementationSet) findImplementationByAlias(alias string) (string, CustomLoader, error) {
 	impl, found := i.AliasLookup[alias]
 	if found {
 		return impl.FullName, impl.Loader, nil
