@@ -377,7 +377,7 @@ func init() {
 			}(),
 		}
 
-		return New(ctx, fullConfig)
+		return common.CreateObject(ctx, fullConfig)
 	}))
 
 	defaultFlagValue := "NOT_DEFINED_AT_ALL"

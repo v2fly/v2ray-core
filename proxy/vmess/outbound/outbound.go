@@ -222,7 +222,7 @@ func init() {
 			},
 		}}
 
-		return New(ctx, fullClient)
+		return common.CreateObject(ctx, fullClient)
 	}))
 
 	const defaultFlagValue = "NOT_DEFINED_AT_ALL"
