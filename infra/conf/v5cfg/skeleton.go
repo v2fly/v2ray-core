@@ -35,7 +35,7 @@ type OutboundConfig struct {
 	Protocol      string                `json:"protocol"`
 	SendThrough   *cfgcommon.Address    `json:"sendThrough"`
 	Tag           string                `json:"tag"`
-	Settings      *json.RawMessage      `json:"settings"`
+	Settings      json.RawMessage       `json:"settings"`
 	StreamSetting *StreamConfig         `json:"streamSettings"`
 	ProxySettings *proxycfg.ProxyConfig `json:"proxySettings"`
 	MuxSettings   *muxcfg.MuxConfig     `json:"mux"`
