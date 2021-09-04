@@ -13,7 +13,7 @@ const jsonV5 = "jsonv5"
 func init() {
 	common.Must(core.RegisterConfigLoader(&core.ConfigFormat{
 		Name:      []string{jsonV5},
-		Extension: []string{".json"},
+		Extension: []string{".v5.json"},
 		Loader: func(input interface{}) (*core.Config, error) {
 			switch v := input.(type) {
 			case string:
