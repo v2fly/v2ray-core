@@ -1,0 +1,73 @@
+package v5cfg
+
+import (
+	"context"
+	"github.com/golang/protobuf/proto"
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/app/dispatcher"
+	"github.com/v2fly/v2ray-core/v4/app/proxyman"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/log"
+	"google.golang.org/protobuf/types/known/anypb"
+)
+
+func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
+	config := &core.Config{
+		App: []*anypb.Any{
+			serial.ToTypedMessage(&dispatcher.Config{}),
+			serial.ToTypedMessage(&proxyman.InboundConfig{}),
+			serial.ToTypedMessage(&proxyman.OutboundConfig{}),
+		},
+	}
+
+	var logConfMsg *anypb.Any
+	if c.LogConfig != nil {
+		logConfMsg = serial.ToTypedMessage(c.LogConfig.Build())
+	} else {
+		logConfMsg = serial.ToTypedMessage(log.DefaultLogConfig())
+	}
+	// let logger module be the first App to start,
+	// so that other modules could print log during initiating
+	config.App = append([]*anypb.Any{logConfMsg}, config.App...)
+
+	if c.RouterConfig != nil {
+		routerConfig, err := c.RouterConfig.Build()
+		if err != nil {
+			return nil, err
+		}
+		config.App = append(config.App, serial.ToTypedMessage(routerConfig))
+	}
+
+	if c.DNSConfig != nil {
+		dnsApp, err := c.DNSConfig.Build()
+		if err != nil {
+			return nil, newError("failed to parse DNS config").Base(err)
+		}
+		config.App = append(config.App, serial.ToTypedMessage(dnsApp))
+	}
+
+	for _, rawInboundConfig := range c.Inbounds {
+		ic, err := rawInboundConfig.BuildV5(ctx)
+		if err != nil {
+			return nil, err
+		}
+		config.Inbound = append(config.Inbound, ic.(*core.InboundHandlerConfig))
+	}
+
+	for _, rawOutboundConfig := range c.Outbounds {
+		ic, err := rawOutboundConfig.BuildV5(ctx)
+		if err != nil {
+			return nil, err
+		}
+		config.Outbound = append(config.Outbound, ic.(*core.OutboundHandlerConfig))
+	}
+
+	for serviceName, service := range c.Services {
+		servicePackedConfig, err := loadHeterogeneousConfigFromRawJson("inbound", serviceName, service)
+		if err != nil {
+			return nil, err
+		}
+		config.App = append(config.App, serial.ToTypedMessage(servicePackedConfig))
+	}
+	return config, nil
+}
