@@ -3,6 +3,7 @@ package v4
 import (
 	"encoding/json"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/loader"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/sniffer"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/dns"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/log"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
@@ -55,39 +56,6 @@ func toProtocolList(s []string) ([]proxyman.KnownProtocols, error) {
 		}
 	}
 	return kp, nil
-}
-
-type SniffingConfig struct {
-	Enabled      bool                  `json:"enabled"`
-	DestOverride *cfgcommon.StringList `json:"destOverride"`
-	MetadataOnly bool                  `json:"metadataOnly"`
-}
-
-// Build implements Buildable.
-func (c *SniffingConfig) Build() (*proxyman.SniffingConfig, error) {
-	var p []string
-	if c.DestOverride != nil {
-		for _, domainOverride := range *c.DestOverride {
-			switch strings.ToLower(domainOverride) {
-			case "http":
-				p = append(p, "http")
-			case "tls", "https", "ssl":
-				p = append(p, "tls")
-			case "fakedns":
-				p = append(p, "fakedns")
-			case "fakedns+others":
-				p = append(p, "fakedns+others")
-			default:
-				return nil, newError("unknown protocol: ", domainOverride)
-			}
-		}
-	}
-
-	return &proxyman.SniffingConfig{
-		Enabled:             c.Enabled,
-		DestinationOverride: p,
-		MetadataOnly:        c.MetadataOnly,
-	}, nil
 }
 
 type MuxConfig struct {
@@ -155,7 +123,7 @@ type InboundDetourConfig struct {
 	Allocation     *InboundDetourAllocationConfig `json:"allocate"`
 	StreamSetting  *StreamConfig                  `json:"streamSettings"`
 	DomainOverride *cfgcommon.StringList          `json:"domainOverride"`
-	SniffingConfig *SniffingConfig                `json:"sniffing"`
+	SniffingConfig *sniffer.SniffingConfig        `json:"sniffing"`
 }
 
 // Build implements Buildable.
