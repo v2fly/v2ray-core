@@ -70,6 +70,7 @@ func toDomainMatchingType(t router.Domain_Type) dns.DomainMatchingType {
 		panic("unknown domain type")
 	}
 }
+
 func (c *NameServerConfig) BuildV5(ctx context.Context) (*dns.NameServer, error) {
 	c.cfgctx = ctx
 	return c.Build()
@@ -146,6 +147,8 @@ type DNSConfig struct {
 	QueryStrategy   string                  `json:"queryStrategy"`
 	DisableCache    bool                    `json:"disableCache"`
 	DisableFallback bool                    `json:"disableFallback"`
+
+	cfgctx context.Context
 }
 
 type HostAddress struct {
@@ -194,21 +197,30 @@ func getHostMapping(ha *HostAddress) *dns.Config_HostMapping {
 	}
 }
 
+func (c *DNSConfig) BuildV5(ctx context.Context) (*dns.Config, error) {
+	c.cfgctx = ctx
+	return c.Build()
+}
+
 // Build implements Buildable
 func (c *DNSConfig) Build() (*dns.Config, error) {
-	cfgctx := cfgcommon.NewConfigureLoadingContext(context.Background())
 
-	geoloadername := platform.NewEnvFlag("v2ray.conf.geoloader").GetValue(func() string {
-		return "standard"
-	})
+	if c.cfgctx == nil {
+		c.cfgctx = cfgcommon.NewConfigureLoadingContext(context.Background())
 
-	if loader, err := geodata.GetGeoDataLoader(geoloadername); err == nil {
-		cfgcommon.SetGeoDataLoader(cfgctx, loader)
-	} else {
-		return nil, newError("unable to create geo data loader ").Base(err)
+		geoloadername := platform.NewEnvFlag("v2ray.conf.geoloader").GetValue(func() string {
+			return "standard"
+		})
+
+		if loader, err := geodata.GetGeoDataLoader(geoloadername); err == nil {
+			cfgcommon.SetGeoDataLoader(c.cfgctx, loader)
+		} else {
+			return nil, newError("unable to create geo data loader ").Base(err)
+		}
+
 	}
 
-	cfgEnv := cfgcommon.GetConfigureLoadingEnvironment(cfgctx)
+	cfgEnv := cfgcommon.GetConfigureLoadingEnvironment(c.cfgctx)
 	geoLoader := cfgEnv.GetGeoLoader()
 
 	config := &dns.Config{
@@ -235,7 +247,7 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 	}
 
 	for _, server := range c.Servers {
-		server.cfgctx = cfgctx
+		server.cfgctx = c.cfgctx
 		ns, err := server.Build()
 		if err != nil {
 			return nil, newError("failed to build nameserver").Base(err)

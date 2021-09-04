@@ -35,7 +35,7 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	config.App = append([]*anypb.Any{logConfMsg}, config.App...)
 
 	if c.RouterConfig != nil {
-		routerConfig, err := c.RouterConfig.Build()
+		routerConfig, err := c.RouterConfig.BuildV5(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -43,7 +43,7 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	}
 
 	if c.DNSConfig != nil {
-		dnsApp, err := c.DNSConfig.Build()
+		dnsApp, err := c.DNSConfig.BuildV5(ctx)
 		if err != nil {
 			return nil, newError("failed to parse DNS config").Base(err)
 		}
