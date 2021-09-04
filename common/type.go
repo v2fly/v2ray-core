@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v4/common/registry"
 	"reflect"
 )
 
@@ -17,6 +18,8 @@ func RegisterConfig(config interface{}, configCreator ConfigCreator) error {
 		return newError(configType.Name() + " is already registered").AtError()
 	}
 	typeCreatorRegistry[configType] = configCreator
+
+	registry.RegisterImplementation(config, nil)
 	return nil
 }
 
