@@ -1,6 +1,9 @@
 package registry
 
-import "github.com/v2fly/v2ray-core/v4/common/protoext"
+import (
+	"github.com/golang/protobuf/proto"
+	"github.com/v2fly/v2ray-core/v4/common/protoext"
+)
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
@@ -8,12 +11,15 @@ type implementationSet struct {
 	AliasLookup map[string]*implementation
 }
 
+type CustomLoader func(data []byte, dataType string) (proto.Message, error)
+
 type implementation struct {
 	FullName string
 	Alias    []string
+	Loader   CustomLoader
 }
 
-func (i *implementationSet) RegisterImplementation(name string, opt *protoext.MessageOpt) {
+func (i *implementationSet) RegisterImplementation(name string, opt *protoext.MessageOpt, loader CustomLoader) {
 	alias := opt.GetShortName()
 
 	impl := &implementation{
@@ -26,12 +32,12 @@ func (i *implementationSet) RegisterImplementation(name string, opt *protoext.Me
 	}
 }
 
-func (i *implementationSet) FindImplementationByAlias(alias string) (string, error) {
+func (i *implementationSet) FindImplementationByAlias(alias string) (string, CustomLoader, error) {
 	impl, found := i.AliasLookup[alias]
 	if found {
-		return impl.FullName, nil
+		return impl.FullName, impl.Loader, nil
 	}
-	return "", newError("cannot find implementation by alias")
+	return "", nil, newError("cannot find implementation by alias")
 }
 
 func newImplementationSet() *implementationSet {
