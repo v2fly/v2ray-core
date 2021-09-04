@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
+	"github.com/v2fly/v2ray-core/v4/common/registry"
 	"github.com/v2fly/v2ray-core/v4/proxy/socks"
 )
 
@@ -17,6 +18,7 @@ func init() {
 		}
 		return common.CreateObject(ctx, fullServer)
 	}))
+	common.Must(registry.RegisterImplementation(new(ServerConfig).ProtoReflect().Descriptor(), nil))
 
 	common.Must(common.RegisterConfig((*ClientConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		simplifiedClient := config.(*ClientConfig)
@@ -30,4 +32,5 @@ func init() {
 		}
 		return common.CreateObject(ctx, fullClient)
 	}))
+	common.Must(registry.RegisterImplementation(new(ClientConfig).ProtoReflect().Descriptor(), nil))
 }

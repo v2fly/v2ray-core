@@ -6,7 +6,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/v2fly/v2ray-core/v4/common/protoext"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
-	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"strings"
 )
 
@@ -71,8 +71,8 @@ var globalImplementationRegistry = newImplementationRegistry()
 
 // RegisterImplementation register an implementation of a type of interface
 // loader(CustomLoader) is a private API, its interface is subject to breaking changes
-func RegisterImplementation(proto interface{}, loader CustomLoader) error {
-	msgDesc := proto.(protov2.Message).ProtoReflect().Type().Descriptor()
+func RegisterImplementation(proto protoreflect.MessageDescriptor, loader CustomLoader) error {
+	msgDesc := proto
 	fullName := string(msgDesc.FullName())
 	msgOpts, err := protoext.GetMessageOptions(msgDesc)
 	if err != nil {

@@ -4,6 +4,7 @@ package freedom
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v4/common/registry"
 	"time"
 
 	core "github.com/v2fly/v2ray-core/v4"
@@ -38,6 +39,8 @@ func init() {
 		fullConfig := &Config{}
 		return common.CreateObject(ctx, fullConfig)
 	}))
+
+	common.Must(registry.RegisterImplementation(new(SimplifiedConfig).ProtoReflect().Descriptor(), nil))
 }
 
 // Handler handles Freedom connections.
