@@ -3,6 +3,8 @@ package v4
 import (
 	"encoding/json"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/loader"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/muxcfg"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/proxycfg"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/sniffer"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/dns"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/log"
@@ -56,28 +58,6 @@ func toProtocolList(s []string) ([]proxyman.KnownProtocols, error) {
 		}
 	}
 	return kp, nil
-}
-
-type MuxConfig struct {
-	Enabled     bool  `json:"enabled"`
-	Concurrency int16 `json:"concurrency"`
-}
-
-// Build creates MultiplexingConfig, Concurrency < 0 completely disables mux.
-func (m *MuxConfig) Build() *proxyman.MultiplexingConfig {
-	if m.Concurrency < 0 {
-		return nil
-	}
-
-	var con uint32 = 8
-	if m.Concurrency > 0 {
-		con = uint32(m.Concurrency)
-	}
-
-	return &proxyman.MultiplexingConfig{
-		Enabled:     m.Enabled,
-		Concurrency: con,
-	}
 }
 
 type InboundDetourAllocationConfig struct {
@@ -221,13 +201,13 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 }
 
 type OutboundDetourConfig struct {
-	Protocol      string             `json:"protocol"`
-	SendThrough   *cfgcommon.Address `json:"sendThrough"`
-	Tag           string             `json:"tag"`
-	Settings      *json.RawMessage   `json:"settings"`
-	StreamSetting *StreamConfig      `json:"streamSettings"`
-	ProxySettings *ProxyConfig       `json:"proxySettings"`
-	MuxSettings   *MuxConfig         `json:"mux"`
+	Protocol      string                `json:"protocol"`
+	SendThrough   *cfgcommon.Address    `json:"sendThrough"`
+	Tag           string                `json:"tag"`
+	Settings      *json.RawMessage      `json:"settings"`
+	StreamSetting *StreamConfig         `json:"streamSettings"`
+	ProxySettings *proxycfg.ProxyConfig `json:"proxySettings"`
+	MuxSettings   *muxcfg.MuxConfig     `json:"mux"`
 }
 
 // Build implements Buildable.

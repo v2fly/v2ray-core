@@ -406,19 +406,3 @@ func (c *StreamConfig) Build() (*internet.StreamConfig, error) {
 	}
 	return config, nil
 }
-
-type ProxyConfig struct {
-	Tag                 string `json:"tag"`
-	TransportLayerProxy bool   `json:"transportLayer"`
-}
-
-// Build implements Buildable.
-func (v *ProxyConfig) Build() (*internet.ProxyConfig, error) {
-	if v.Tag == "" {
-		return nil, newError("Proxy tag is not set.")
-	}
-	return &internet.ProxyConfig{
-		Tag:                 v.Tag,
-		TransportLayerProxy: v.TransportLayerProxy,
-	}, nil
-}
