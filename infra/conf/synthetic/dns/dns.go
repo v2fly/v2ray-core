@@ -70,6 +70,10 @@ func toDomainMatchingType(t router.Domain_Type) dns.DomainMatchingType {
 		panic("unknown domain type")
 	}
 }
+func (c *NameServerConfig) BuildV5(ctx context.Context) (*dns.NameServer, error) {
+	c.cfgctx = ctx
+	return c.Build()
+}
 
 func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 	cfgctx := c.cfgctx

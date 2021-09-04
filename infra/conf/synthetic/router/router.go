@@ -89,6 +89,8 @@ type RouterConfig struct {
 	Balancers      []*BalancingRule   `json:"balancers"`
 
 	DomainMatcher string `json:"domainMatcher"`
+
+	cfgctx context.Context
 }
 
 func (c *RouterConfig) getDomainStrategy() router.Config_DomainStrategy {
@@ -111,20 +113,27 @@ func (c *RouterConfig) getDomainStrategy() router.Config_DomainStrategy {
 	}
 }
 
+func (c *RouterConfig) BuildV5(ctx context.Context) (*router.Config, error) {
+	c.cfgctx = ctx
+	return c.Build()
+}
+
 func (c *RouterConfig) Build() (*router.Config, error) {
 	config := new(router.Config)
 	config.DomainStrategy = c.getDomainStrategy()
 
-	cfgctx := cfgcommon.NewConfigureLoadingContext(context.Background())
+	if c.cfgctx == nil {
+		c.cfgctx = cfgcommon.NewConfigureLoadingContext(context.Background())
 
-	geoloadername := platform.NewEnvFlag("v2ray.conf.geoloader").GetValue(func() string {
-		return "standard"
-	})
+		geoloadername := platform.NewEnvFlag("v2ray.conf.geoloader").GetValue(func() string {
+			return "standard"
+		})
 
-	if loader, err := geodata.GetGeoDataLoader(geoloadername); err == nil {
-		cfgcommon.SetGeoDataLoader(cfgctx, loader)
-	} else {
-		return nil, newError("unable to create geo data loader ").Base(err)
+		if loader, err := geodata.GetGeoDataLoader(geoloadername); err == nil {
+			cfgcommon.SetGeoDataLoader(c.cfgctx, loader)
+		} else {
+			return nil, newError("unable to create geo data loader ").Base(err)
+		}
 	}
 
 	var rawRuleList []json.RawMessage
@@ -137,7 +146,7 @@ func (c *RouterConfig) Build() (*router.Config, error) {
 	}
 
 	for _, rawRule := range rawRuleList {
-		rule, err := rule2.ParseRule(cfgctx, rawRule)
+		rule, err := rule2.ParseRule(c.cfgctx, rawRule)
 		if err != nil {
 			return nil, err
 		}
