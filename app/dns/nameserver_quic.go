@@ -31,12 +31,12 @@ const handshakeIdleTimeout = time.Second * 8
 // QUICNameServer implemented DNS over QUIC
 type QUICNameServer struct {
 	sync.RWMutex
-	ips         map[string]*record
+	ips         map[string]record
 	pub         *pubsub.Service
 	cleanup     *task.Periodic
 	reqID       uint32
 	name        string
-	destination *net.Destination
+	destination net.Destination
 	session     quic.Session
 }
 
@@ -55,10 +55,10 @@ func NewQUICNameServer(url *url.URL) (*QUICNameServer, error) {
 	dest := net.UDPDestination(net.ParseAddress(url.Hostname()), port)
 
 	s := &QUICNameServer{
-		ips:         make(map[string]*record),
+		ips:         make(map[string]record),
 		pub:         pubsub.NewService(),
 		name:        url.String(),
-		destination: &dest,
+		destination: dest,
 	}
 	s.cleanup = &task.Periodic{
 		Interval: time.Minute,
@@ -100,7 +100,7 @@ func (s *QUICNameServer) Cleanup() error {
 	}
 
 	if len(s.ips) == 0 {
-		s.ips = make(map[string]*record)
+		s.ips = make(map[string]record)
 	}
 
 	return nil
@@ -110,10 +110,7 @@ func (s *QUICNameServer) updateIP(req *dnsRequest, ipRec *IPRecord) {
 	elapsed := time.Since(req.start)
 
 	s.Lock()
-	rec, found := s.ips[req.domain]
-	if !found {
-		rec = &record{}
-	}
+	rec := s.ips[req.domain]
 	updated := false
 
 	switch req.reqType {
@@ -233,30 +230,34 @@ func (s *QUICNameServer) findIPsForDomain(domain string, option dns_feature.IPOp
 		return nil, errRecordNotFound
 	}
 
-	var err4 error
-	var err6 error
 	var ips []net.Address
-	var ip6 []net.Address
+	var lastErr error
+	if option.IPv6Enable && record.AAAA != nil && record.AAAA.RCode == dnsmessage.RCodeSuccess {
+		aaaa, err := record.AAAA.getIPs()
+		if err != nil {
+			lastErr = err
+		}
+		ips = append(ips, aaaa...)
+	}
 
-	switch {
-	case option.IPv4Enable:
-		ips, err4 = record.A.getIPs()
-		fallthrough
-	case option.IPv6Enable:
-		ip6, err6 = record.AAAA.getIPs()
-		ips = append(ips, ip6...)
+	if option.IPv4Enable && record.A != nil && record.A.RCode == dnsmessage.RCodeSuccess {
+		a, err := record.A.getIPs()
+		if err != nil {
+			lastErr = err
+		}
+		ips = append(ips, a...)
 	}
 
 	if len(ips) > 0 {
 		return toNetIP(ips)
 	}
 
-	if err4 != nil {
-		return nil, err4
+	if lastErr != nil {
+		return nil, lastErr
 	}
 
-	if err6 != nil {
-		return nil, err6
+	if (option.IPv4Enable && record.A != nil) || (option.IPv6Enable && record.AAAA != nil) {
+		return nil, dns_feature.ErrEmptyResponse
 	}
 
 	return nil, errRecordNotFound
