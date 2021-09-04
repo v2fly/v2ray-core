@@ -283,11 +283,11 @@ func (s *TCPNameServer) findIPsForDomain(domain string, option dns_feature.IPOpt
 	var ips []net.Address
 	var ip6 []net.Address
 
-	if option.IPv4Enable {
+	switch {
+	case option.IPv4Enable:
 		ips, err4 = record.A.getIPs()
-	}
-
-	if option.IPv6Enable {
+		fallthrough
+	case option.IPv6Enable:
 		ip6, err6 = record.AAAA.getIPs()
 		ips = append(ips, ip6...)
 	}
