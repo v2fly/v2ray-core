@@ -1,11 +1,16 @@
 package v5cfg
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/golang/protobuf/proto"
+	"github.com/v2fly/v2ray-core/v4/common/environment/envctx"
+	"github.com/v2fly/v2ray-core/v4/common/environment/envimpl"
 	"github.com/v2fly/v2ray-core/v4/common/registry"
 )
 
 func loadHeterogeneousConfigFromRawJson(interfaceType, name string, rawJson json.RawMessage) (proto.Message, error) {
-	return registry.LoadImplementationByAlias(interfaceType, name, []byte(rawJson))
+	fsdef := envimpl.NewDefaultFileSystemDefaultImpl()
+	ctx := envctx.ContextWithEnvironment(context.TODO(), fsdef)
+	return registry.LoadImplementationByAlias(ctx, interfaceType, name, []byte(rawJson))
 }
