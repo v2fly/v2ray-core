@@ -128,3 +128,9 @@ func (c *ProxyConfig) HasTag() bool {
 func (m SocketConfig_TProxyMode) IsEnabled() bool {
 	return m != SocketConfig_Off
 }
+
+func init() {
+	common.Must(common.RegisterConfig((*NoneSecurity)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
+		return nil, newError("none security is a placeholder")
+	}))
+}

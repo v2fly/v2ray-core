@@ -8,6 +8,8 @@ option java_multiple_files = true;
 
 import "google/protobuf/any.proto";
 
+import "common/protoext/extensions.proto";
+
 enum TransportProtocol {
   TCP = 0;
   UDP = 1;
@@ -93,4 +95,9 @@ message SocketConfig {
   bool accept_proxy_protocol = 7;
 
   int32 tcp_keep_alive_interval = 8;
+}
+
+message NoneSecurity {
+  option (v2ray.core.common.protoext.message_opt).type = "security";
+  option (v2ray.core.common.protoext.message_opt).short_name = "none";
 }
