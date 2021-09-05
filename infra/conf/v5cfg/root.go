@@ -67,7 +67,7 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	}
 
 	for serviceName, service := range c.Services {
-		servicePackedConfig, err := loadHeterogeneousConfigFromRawJson("inbound", serviceName, service)
+		servicePackedConfig, err := loadHeterogeneousConfigFromRawJson("service", serviceName, service)
 		if err != nil {
 			return nil, err
 		}
