@@ -1,6 +1,7 @@
 package protofilter
 
 import (
+	"context"
 	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 	"github.com/v2fly/v2ray-core/v4/common/protoext"
 	"google.golang.org/protobuf/proto"
@@ -9,12 +10,12 @@ import (
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
-func FilterProtoConfig(config proto.Message) error {
+func FilterProtoConfig(ctx context.Context, config proto.Message) error {
 	messageProtoReflect := config.ProtoReflect()
-	return filterMessage(messageProtoReflect)
+	return filterMessage(ctx, messageProtoReflect)
 }
 
-func filterMessage(message protoreflect.Message) error {
+func filterMessage(ctx context.Context, message protoreflect.Message) error {
 	var err error
 	type fileRead struct {
 		filename string
@@ -42,14 +43,14 @@ func filterMessage(message protoreflect.Message) error {
 		switch descriptor.Kind() {
 		case protoreflect.MessageKind:
 			if descriptor.IsMap() {
-				err = filterMap(value.Map())
+				err = filterMap(ctx, value.Map())
 				break
 			}
 			if descriptor.IsList() {
-				err = filterList(value.List())
+				err = filterList(ctx, value.List())
 				break
 			}
-			err = filterMessage(value.Message())
+			err = filterMessage(ctx, value.Message())
 		}
 		return true
 	})
@@ -65,10 +66,10 @@ func filterMessage(message protoreflect.Message) error {
 	return nil
 }
 
-func filterMap(mapValue protoreflect.Map) error {
+func filterMap(ctx context.Context, mapValue protoreflect.Map) error {
 	var err error
 	mapValue.Range(func(key protoreflect.MapKey, value protoreflect.Value) bool {
-		err = filterMessage(value.Message())
+		err = filterMessage(ctx, value.Message())
 		if err != nil {
 			return false
 		}
@@ -77,11 +78,11 @@ func filterMap(mapValue protoreflect.Map) error {
 	return err
 }
 
-func filterList(listValue protoreflect.List) error {
+func filterList(ctx context.Context, listValue protoreflect.List) error {
 	var err error
 	size := listValue.Len()
 	for i := 0; i < size; i++ {
-		err = filterMessage(listValue.Get(i).Message())
+		err = filterMessage(ctx, listValue.Get(i).Message())
 		if err != nil {
 			return err
 		}
