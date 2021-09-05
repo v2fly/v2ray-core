@@ -64,6 +64,15 @@ func filterMessage(ctx context.Context, message protoreflect.Message) error {
 	fsenvironment := envctx.EnvironmentFromContext(ctx)
 	fsifce := fsenvironment.(filesystemcap.FileSystemCapabilitySet)
 	for _, v := range fileReadingQueue {
+		field := message.Descriptor().Fields().ByTextName(v.field)
+		if v.filename == "" {
+			continue
+		}
+
+		if len(message.Get(field).Bytes()) > 0 {
+			continue
+		}
+
 		file, err := fsifce.OpenFileForRead()(v.filename)
 		if err != nil {
 			return newError("unable to open file").Base(err)
@@ -73,7 +82,6 @@ func filterMessage(ctx context.Context, message protoreflect.Message) error {
 			return newError("unable to read file").Base(err)
 		}
 		file.Close()
-		field := message.Descriptor().Fields().ByTextName(v.field)
 		message.Set(field, protoreflect.ValueOf(fileContent))
 	}
 	return nil
