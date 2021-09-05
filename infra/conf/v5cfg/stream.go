@@ -31,7 +31,7 @@ func (s StreamConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 		Settings:     serial.ToTypedMessage(transportConfigPack),
 	})
 
-	if s.Security != "none" && s.Security != "" {
+	if s.Security != "none" {
 		if s.SecuritySettings == nil {
 			s.SecuritySettings = []byte("{}")
 		}
