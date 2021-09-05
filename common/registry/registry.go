@@ -2,9 +2,11 @@ package registry
 
 import (
 	"bytes"
+	"context"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/v2fly/v2ray-core/v4/common/protoext"
+	"github.com/v2fly/v2ray-core/v4/common/protofilter"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 	protov2 "google.golang.org/protobuf/proto"
 	"reflect"
@@ -34,7 +36,7 @@ func (i *implementationRegistry) findImplementationByAlias(interfaceType, alias 
 	return implSet.findImplementationByAlias(alias)
 }
 
-func (i *implementationRegistry) LoadImplementationByAlias(interfaceType, alias string, data []byte) (proto.Message, error) {
+func (i *implementationRegistry) LoadImplementationByAlias(ctx context.Context, interfaceType, alias string, data []byte) (proto.Message, error) {
 	var implementationFullName string
 
 	if strings.HasPrefix(alias, "#") {
@@ -59,6 +61,11 @@ func (i *implementationRegistry) LoadImplementationByAlias(interfaceType, alias 
 	err = unmarshaler.Unmarshal(bytes.NewReader(data), implementationConfigInstance.(proto.Message))
 	if err != nil {
 		return nil, newError("unable to parse json content").Base(err)
+	}
+
+	implementationConfigInstancev2 := proto.MessageV2(implementationConfigInstance)
+	if err := protofilter.FilterProtoConfig(ctx, implementationConfigInstancev2); err != nil {
+		return nil, err
 	}
 
 	return implementationConfigInstance.(proto.Message), nil
@@ -108,14 +115,14 @@ func registerImplementation(proto interface{}, loader CustomLoader) error {
 }
 
 type LoadByAlias interface {
-	LoadImplementationByAlias(interfaceType, alias string, data []byte) (proto.Message, error)
+	LoadImplementationByAlias(ctx context.Context, interfaceType, alias string, data []byte) (proto.Message, error)
 }
 
-func LoadImplementationByAlias(interfaceType, alias string, data []byte) (proto.Message, error) {
+func LoadImplementationByAlias(ctx context.Context, interfaceType, alias string, data []byte) (proto.Message, error) {
 	initialized.Do(func() {
 		for _, v := range registerRequests {
 			registerImplementation(v.proto, v.loader)
 		}
 	})
-	return globalImplementationRegistry.LoadImplementationByAlias(interfaceType, alias, data)
+	return globalImplementationRegistry.LoadImplementationByAlias(ctx, interfaceType, alias, data)
 }

@@ -15,6 +15,7 @@ const (
 	sockoptSessionKey
 	trackedConnectionErrorKey
 	handlerSessionKey
+	environmentKey
 )
 
 // ContextWithID returns a new context with the given ID.
@@ -132,4 +133,15 @@ func SubmitOutboundErrorToOriginator(ctx context.Context, err error) {
 
 func TrackedConnectionError(ctx context.Context, tracker TrackedRequestErrorFeedback) context.Context {
 	return context.WithValue(ctx, trackedConnectionErrorKey, tracker)
+}
+
+func ContextWithEnvironment(ctx context.Context, environment interface{}) context.Context {
+	return context.WithValue(ctx, environmentKey, environment)
+}
+
+func EnvironmentFromContext(ctx context.Context) interface{} {
+	if environment, ok := ctx.Value(environmentKey).(interface{}); ok {
+		return environment
+	}
+	return nil
 }
