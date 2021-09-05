@@ -2,10 +2,12 @@ package protofilter
 
 import (
 	"context"
-	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
+	"github.com/v2fly/v2ray-core/v4/common/environment/envctx"
+	"github.com/v2fly/v2ray-core/v4/common/environment/filesystemcap"
 	"github.com/v2fly/v2ray-core/v4/common/protoext"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"io"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
@@ -55,13 +57,24 @@ func filterMessage(ctx context.Context, message protoreflect.Message) error {
 		return true
 	})
 
+	if err != nil {
+		return err
+	}
+
+	fsenvironment := envctx.EnvironmentFromContext(ctx)
+	fsifce := fsenvironment.(filesystemcap.FileSystemCapabilitySet)
 	for _, v := range fileReadingQueue {
-		file, err := filesystem.ReadFile(v.filename)
+		file, err := fsifce.OpenFileForRead()(v.filename)
+		if err != nil {
+			return newError("unable to open file").Base(err)
+		}
+		fileContent, err := io.ReadAll(file)
 		if err != nil {
 			return newError("unable to read file").Base(err)
 		}
+		file.Close()
 		field := message.Descriptor().Fields().ByTextName(v.field)
-		message.Set(field, protoreflect.ValueOf(file))
+		message.Set(field, protoreflect.ValueOf(fileContent))
 	}
 	return nil
 }
