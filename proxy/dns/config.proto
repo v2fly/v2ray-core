@@ -7,9 +7,15 @@ option java_package = "com.v2ray.core.proxy.dns";
 option java_multiple_files = true;
 
 import "common/net/destination.proto";
+import "common/protoext/extensions.proto";
 
 message Config {
   // Server is the DNS server address. If specified, this address overrides the
   // original one.
   v2ray.core.common.net.Endpoint server = 1;
+}
+
+message SimplifiedConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "outbound";
+  option (v2ray.core.common.protoext.message_opt).short_name = "dns";
 }

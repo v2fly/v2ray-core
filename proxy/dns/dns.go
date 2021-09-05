@@ -29,6 +29,13 @@ func init() {
 		}
 		return h, nil
 	}))
+
+	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
+		simplifiedServer := config.(*SimplifiedConfig)
+		_ = simplifiedServer
+		fullConfig := &Config{}
+		return common.CreateObject(ctx, fullConfig)
+	}))
 }
 
 type ownLinkVerifier interface {
