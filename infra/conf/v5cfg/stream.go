@@ -39,8 +39,9 @@ func (s StreamConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 		if err != nil {
 			return nil, newError("unable to load security config").Base(err)
 		}
-		config.SecurityType = s.Security
-		config.SecuritySettings = append(config.SecuritySettings, serial.ToTypedMessage(securityConfigPack))
+		securityConfigPackTypedMessage := serial.ToTypedMessage(securityConfigPack)
+		config.SecurityType = serial.V2Type(securityConfigPackTypedMessage)
+		config.SecuritySettings = append(config.SecuritySettings, securityConfigPackTypedMessage)
 	}
 
 	config.SocketSettings, err = s.SocketSettings.Build()
