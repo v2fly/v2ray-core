@@ -31,15 +31,17 @@ func (s StreamConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 		Settings:     serial.ToTypedMessage(transportConfigPack),
 	})
 
-	if s.SecuritySettings == nil {
-		s.SecuritySettings = []byte("{}")
+	if s.Security != "none" && s.Security != "" {
+		if s.SecuritySettings == nil {
+			s.SecuritySettings = []byte("{}")
+		}
+		securityConfigPack, err := loadHeterogeneousConfigFromRawJson("security", s.Security, s.SecuritySettings)
+		if err != nil {
+			return nil, newError("unable to load security config").Base(err)
+		}
+		config.SecurityType = s.Security
+		config.SecuritySettings = append(config.SecuritySettings, serial.ToTypedMessage(securityConfigPack))
 	}
-	securityConfigPack, err := loadHeterogeneousConfigFromRawJson("security", s.Security, s.SecuritySettings)
-	if err != nil {
-		return nil, newError("unable to load security config").Base(err)
-	}
-	config.SecurityType = s.Security
-	config.SecuritySettings = append(config.SecuritySettings, serial.ToTypedMessage(securityConfigPack))
 
 	config.SocketSettings, err = s.SocketSettings.Build()
 	if err != nil {
