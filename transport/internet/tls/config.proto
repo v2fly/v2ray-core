@@ -23,6 +23,9 @@ message Certificate {
   }
 
   Usage usage = 3;
+
+  string certificate_file = 96001 [(v2ray.core.common.protoext.field_opt).convert_time_read_file_into = "Certificate"];
+  string key_file = 96002 [(v2ray.core.common.protoext.field_opt).convert_time_read_file_into = "Key"];
 }
 
 message Config {
@@ -30,7 +33,7 @@ message Config {
   option (v2ray.core.common.protoext.message_opt).short_name = "tls";
 
   // Whether or not to allow self-signed certificates.
-  bool allow_insecure = 1;
+  bool allow_insecure = 1 [(v2ray.core.common.protoext.field_opt).forbidden = true];
 
   // List of certificates to be served on server.
   repeated Certificate certificate = 2;
