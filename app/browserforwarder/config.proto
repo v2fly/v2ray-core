@@ -7,8 +7,12 @@ option go_package = "github.com/v2fly/v2ray-core/v4/app/browserforwarder";
 option java_package = "com.v2ray.core.app.browserforwarder";
 option java_multiple_files = true;
 
+import "common/protoext/extensions.proto";
+
 // Config is the settings for BrowserForwarder.
 message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "transport";
+  option (v2ray.core.common.protoext.message_opt).short_name = "ws";
   string listen_addr = 1;
   int32 listen_port = 2;
 }

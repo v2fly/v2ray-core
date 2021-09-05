@@ -14,7 +14,6 @@ import (
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/merge"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
 	"github.com/v2fly/v2ray-core/v4/main/commands/base"
 	"github.com/v2fly/v2ray-core/v4/main/commands/helpers"
 )
@@ -81,7 +80,11 @@ func executeConvert(cmd *base.Command, args []string) {
 	inputFormat = strings.ToLower(inputFormat)
 	outputFormat = strings.ToLower(outputFormat)
 
-	m, err := helpers.LoadConfigToMap(cmd.Flag.Args(), inputFormat, confDirRecursively)
+	inputFormatMerge := inputFormat
+	if inputFormat == "jsonv5" {
+		inputFormatMerge = "json"
+	}
+	m, err := helpers.LoadConfigToMap(cmd.Flag.Args(), inputFormatMerge, confDirRecursively)
 	if err != nil {
 		base.Fatalf("failed to merge: %s", err)
 	}
@@ -113,11 +116,7 @@ func executeConvert(cmd *base.Command, args []string) {
 			base.Fatalf("failed to marshal json: %s", err)
 		}
 		r := bytes.NewReader(data)
-		cf, err := serial.DecodeJSONConfig(r)
-		if err != nil {
-			base.Fatalf("failed to decode json: %s", err)
-		}
-		pbConfig, err := cf.Build()
+		pbConfig, err := core.LoadConfig(inputFormat, r)
 		if err != nil {
 			base.Fatalf(err.Error())
 		}
@@ -131,11 +130,7 @@ func executeConvert(cmd *base.Command, args []string) {
 			base.Fatalf("failed to marshal json: %s", err)
 		}
 		r := bytes.NewReader(data)
-		cf, err := serial.DecodeJSONConfig(r)
-		if err != nil {
-			base.Fatalf("failed to decode json: %s", err)
-		}
-		pbConfig, err := cf.Build()
+		pbConfig, err := core.LoadConfig(inputFormat, r)
 		if err != nil {
 			base.Fatalf(err.Error())
 		}
@@ -151,11 +146,7 @@ func executeConvert(cmd *base.Command, args []string) {
 			base.Fatalf("failed to marshal json: %s", err)
 		}
 		r := bytes.NewReader(data)
-		cf, err := serial.DecodeJSONConfig(r)
-		if err != nil {
-			base.Fatalf("failed to decode json: %s", err)
-		}
-		pbConfig, err := cf.Build()
+		pbConfig, err := core.LoadConfig(inputFormat, r)
 		if err != nil {
 			base.Fatalf(err.Error())
 		}
