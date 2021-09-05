@@ -1,6 +1,8 @@
 package internet
 
 import (
+	"context"
+	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/features"
 )
@@ -38,6 +40,10 @@ func RegisterProtocolConfigCreator(name string, creator ConfigCreator) error {
 		return newError("protocol ", name, " is already registered").AtError()
 	}
 	globalTransportConfigCreatorCache[name] = creator
+
+	common.RegisterConfig(creator(), func(ctx context.Context, config interface{}) (interface{}, error) {
+		return nil, newError("transport config should use CreateTransportConfig instead")
+	})
 	return nil
 }
 
