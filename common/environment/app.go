@@ -1,7 +1,7 @@
 package environment
 
 import (
-	"github.com/v2fly/v2ray-core/v4/features/extension"
+	"github.com/v2fly/v2ray-core/v4/features/extension/storage"
 )
 
 type AppEnvironmentCapabilitySet interface {
@@ -10,8 +10,8 @@ type AppEnvironmentCapabilitySet interface {
 	InstanceNetworkCapabilitySet
 	FileSystemCapabilitySet
 
-	PersistentStorage() extension.ScopedPersistentStorage
-	TransientStorage() extension.ScopedTransientStorage
+	PersistentStorage() storage.ScopedPersistentStorage
+	TransientStorage() storage.ScopedTransientStorage
 }
 
 type AppEnvironment interface {

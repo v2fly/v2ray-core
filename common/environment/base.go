@@ -1,8 +1,8 @@
 package environment
 
 import (
+	"github.com/v2fly/v2ray-core/v4/common/environment/filesystemcap"
 	"github.com/v2fly/v2ray-core/v4/common/log"
-	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem/fsifce"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/tagged"
 )
@@ -35,7 +35,5 @@ type LogCapabilitySet interface {
 }
 
 type FileSystemCapabilitySet interface {
-	OpenFileForReadSeek() fsifce.FileSeekerFunc
-	OpenFileForRead() fsifce.FileReaderFunc
-	OpenFileForWrite() fsifce.FileWriterFunc
+	filesystemcap.FileSystemCapabilitySet
 }
