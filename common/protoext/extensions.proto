@@ -25,4 +25,9 @@ message FieldOpt{
   repeated string any_wants = 1;
   repeated string allowed_values = 2;
   repeated string allowed_value_types = 3;
+
+  // convert_time_read_file_into read a file into another field, and clear this field during input parsing
+  string convert_time_read_file_into = 4;
+  // forbidden marks a boolean to be inaccessible to user
+  bool forbidden = 5;
 }
