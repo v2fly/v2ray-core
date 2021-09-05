@@ -1,7 +1,9 @@
 package tls
 
 import (
+	"context"
 	"crypto/tls"
+	"github.com/v2fly/v2ray-core/v4/common"
 
 	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/net"
@@ -60,4 +62,10 @@ func UClient(c net.Conn, config *tls.Config) net.Conn {
 func Server(c net.Conn, config *tls.Config) net.Conn {
 	tlsConn := tls.Server(c, config)
 	return &Conn{Conn: tlsConn}
+}
+
+func init() {
+	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
+		return nil, newError("tls should be used with v2tls")
+	}))
 }
