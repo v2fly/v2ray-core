@@ -7,7 +7,18 @@ option java_package = "com.v2ray.core.proxy.vless.outbound";
 option java_multiple_files = true;
 
 import "common/protocol/server_spec.proto";
+import "common/net/address.proto";
+import "common/protoext/extensions.proto";
 
 message Config {
   repeated v2ray.core.common.protocol.ServerEndpoint vnext = 1;
+}
+
+message SimplifiedConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "outbound";
+  option (v2ray.core.common.protoext.message_opt).short_name = "vless";
+
+  v2ray.core.common.net.IPOrDomain address = 1;
+  uint32 port = 2;
+  string uuid = 3;
 }

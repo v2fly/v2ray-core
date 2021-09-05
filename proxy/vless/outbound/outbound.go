@@ -12,12 +12,14 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
 	"github.com/v2fly/v2ray-core/v4/common/retry"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/common/session"
 	"github.com/v2fly/v2ray-core/v4/common/signal"
 	"github.com/v2fly/v2ray-core/v4/common/task"
 	"github.com/v2fly/v2ray-core/v4/features/policy"
 	"github.com/v2fly/v2ray-core/v4/proxy/vless"
 	"github.com/v2fly/v2ray-core/v4/proxy/vless/encoding"
+	"github.com/v2fly/v2ray-core/v4/proxy/vmess"
 	"github.com/v2fly/v2ray-core/v4/transport"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
@@ -25,6 +27,23 @@ import (
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return New(ctx, config.(*Config))
+	}))
+
+	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
+		simplifiedClient := config.(*SimplifiedConfig)
+		fullClient := &Config{Vnext: []*protocol.ServerEndpoint{
+			{
+				Address: simplifiedClient.Address,
+				Port:    simplifiedClient.Port,
+				User: []*protocol.User{
+					{
+						Account: serial.ToTypedMessage(&vmess.Account{Id: simplifiedClient.Uuid}),
+					},
+				},
+			},
+		}}
+
+		return New(ctx, fullClient)
 	}))
 }
 
