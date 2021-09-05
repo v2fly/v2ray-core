@@ -7,6 +7,7 @@ option java_package = "com.v2ray.core.proxy.blackhole";
 option java_multiple_files = true;
 
 import "google/protobuf/any.proto";
+import "common/protoext/extensions.proto";
 
 message NoneResponse {}
 
@@ -14,4 +15,10 @@ message HTTPResponse {}
 
 message Config {
   google.protobuf.Any response = 1;
+}
+
+
+message SimplifiedConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "outbound";
+  option (v2ray.core.common.protoext.message_opt).short_name = "blackhole";
 }
