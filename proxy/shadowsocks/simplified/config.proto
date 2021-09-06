@@ -15,6 +15,7 @@ message ServerConfig{
 
   string method = 1;
   string password = 2;
+  string network = 3;
 }
 
 message ClientConfig {

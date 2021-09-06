@@ -59,16 +59,7 @@ func (v *Address) Build() *net.IPOrDomain {
 type Network string
 
 func (v Network) Build() net.Network {
-	switch strings.ToLower(string(v)) {
-	case "tcp":
-		return net.Network_TCP
-	case "udp":
-		return net.Network_UDP
-	case "unix":
-		return net.Network_UNIX
-	default:
-		return net.Network_Unknown
-	}
+	return net.ParseNetwork(string(v))
 }
 
 type NetworkList []Network
