@@ -13,7 +13,7 @@ type StatsUser struct {
 	email string `form:"email" binging:"required_without=uuid,email"`
 }
 
-func statsUser(c *gin.Context) {
+func (r *restfulService) statsUser(c *gin.Context) {
 	var statsUser StatsUser
 	if err := c.BindQuery(&statsUser); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -39,7 +39,7 @@ type StatsResponse struct {
 	Outbound StatsBound `json:"outbound"`
 }
 
-func stats(c *gin.Context) {
+func (r *restfulService) statsRequest(c *gin.Context) {
 	var stats Stats
 	if err := c.BindQuery(&stats); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -58,14 +58,20 @@ func stats(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func loggerReboot(c *gin.Context) {
+func (r *restfulService) loggerReboot(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
-func TokenAuthMiddleware() gin.HandlerFunc {
+func (r *restfulService) TokenAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		auth := c.GetHeader("Authorization")
-		if auth[6:] != "token123" { // tip: Bearer: token123
+		const prefix = "Bearer "
+		if !strings.HasPrefix(auth, prefix) {
+			c.JSON(http.StatusUnauthorized, "unauthorized")
+			c.Abort()
+		}
+		auth = strings.TrimPrefix(auth, prefix)
+		if auth != r.config.AuthToken { // tip: Bearer: token123
 			c.JSON(http.StatusUnauthorized, "unauthorized")
 			c.Abort()
 			return
@@ -84,11 +90,11 @@ func (r *restfulService) start() error {
 	})
 
 	v1 := r.Group("/v1")
-	v1.Use(TokenAuthMiddleware())
+	v1.Use(r.TokenAuthMiddleware())
 	{
-		v1.GET("/stats/user", statsUser)
-		v1.GET("/stats", stats)
-		v1.POST("/logger/reboot", loggerReboot)
+		v1.GET("/stats/user", r.statsUser)
+		v1.GET("/stats", r.statsRequest)
+		v1.POST("/logger/reboot", r.loggerReboot)
 	}
 
 	var listener net.Listener
