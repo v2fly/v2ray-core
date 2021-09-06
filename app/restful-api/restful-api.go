@@ -2,7 +2,10 @@ package restful_api
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/transport/internet"
 	"net/http"
+	"strings"
 )
 
 type StatsUser struct {
@@ -55,7 +58,7 @@ func stats(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func loggerReboot(c *gin.Context)  {
+func loggerReboot(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
@@ -71,8 +74,9 @@ func TokenAuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-func Start() error {
-	r := gin.New()
+func (r *restfulService) start() error {
+	r.Engine = gin.New()
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
@@ -87,9 +91,28 @@ func Start() error {
 		v1.POST("/logger/reboot", loggerReboot)
 	}
 
-	if err := r.Run(":3000"); err != nil {
-		return err
+	var listener net.Listener
+	var err error
+	address := net.ParseAddress(r.config.ListenAddr)
+
+	switch {
+	case address.Family().IsIP():
+		listener, err = internet.ListenSystem(r.ctx, &net.TCPAddr{IP: address.IP(), Port: int(r.config.ListenPort)}, nil)
+	case strings.EqualFold(address.Domain(), "localhost"):
+		listener, err = internet.ListenSystem(r.ctx, &net.TCPAddr{IP: net.IP{127, 0, 0, 1}, Port: int(r.config.ListenPort)}, nil)
+	default:
+		return newError("restful api cannot listen on the address: ", address)
 	}
+	if err != nil {
+		return newError("restful api cannot listen on the port ", r.config.ListenPort).Base(err)
+	}
+
+	r.listener = listener
+	go func() {
+		if err := r.RunListener(listener); err != nil {
+			newError("unable to serve restful api").WriteToLog()
+		}
+	}()
 
 	return nil
 }
