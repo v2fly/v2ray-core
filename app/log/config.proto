@@ -7,6 +7,7 @@ option java_package = "com.v2ray.core.app.log";
 option java_multiple_files = true;
 
 import "common/log/log.proto";
+import "common/protoext/extensions.proto";
 
 enum LogType {
   None = 0;
@@ -16,6 +17,9 @@ enum LogType {
 }
 
 message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "service";
+  option (v2ray.core.common.protoext.message_opt).short_name = "log";
+
   LogType error_log_type = 1;
   v2ray.core.common.log.Severity error_log_level = 2;
   string error_log_path = 3;
