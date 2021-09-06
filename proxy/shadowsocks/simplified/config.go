@@ -20,7 +20,7 @@ func init() {
 					CipherType: shadowsocks.CipherFromString(simplifiedServer.Method),
 				}),
 			},
-			Network: net.ParseNetworkList(simplifiedServer.Network),
+			Network: net.ParseNetworks(simplifiedServer.Network),
 		}
 
 		return common.CreateObject(ctx, fullServer)

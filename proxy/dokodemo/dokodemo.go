@@ -29,6 +29,18 @@ func init() {
 		})
 		return d, err
 	}))
+
+	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
+		simplifiedServer := config.(*SimplifiedConfig)
+		fullConfig := &Config{
+			Address:        simplifiedServer.Address,
+			Port:           simplifiedServer.Port,
+			Networks:       net.ParseNetworks(simplifiedServer.Network),
+			FollowRedirect: simplifiedServer.FollowRedirect,
+		}
+
+		return common.CreateObject(ctx, fullConfig)
+	}))
 }
 
 type Door struct {

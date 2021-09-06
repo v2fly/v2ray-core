@@ -40,7 +40,7 @@ func ParseNetwork(net string) Network {
 	}
 }
 
-func ParseNetworkList(netlist string) []Network {
+func ParseNetworks(netlist string) []Network {
 	strlist := strings.Split(string(netlist), ",")
 	nl := make([]Network, len(strlist))
 	for idx, network := range strlist {

@@ -8,6 +8,7 @@ option java_multiple_files = true;
 
 import "common/net/address.proto";
 import "common/net/network.proto";
+import "common/protoext/extensions.proto";
 
 message Config {
   v2ray.core.common.net.IPOrDomain address = 1;
@@ -22,4 +23,14 @@ message Config {
   uint32 timeout = 4 [deprecated = true];
   bool follow_redirect = 5;
   uint32 user_level = 6;
+}
+
+message SimplifiedConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "inbound";
+  option (v2ray.core.common.protoext.message_opt).short_name = "dokodemo";
+
+  v2ray.core.common.net.IPOrDomain address = 1;
+  uint32 port = 2;
+  string network = 3;
+  bool follow_redirect = 4;
 }
