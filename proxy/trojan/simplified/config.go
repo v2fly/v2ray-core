@@ -23,7 +23,7 @@ func init() {
 				return
 			}(),
 		}
-		return trojan.NewServer(ctx, fullServer)
+		return common.CreateObject(ctx, fullServer)
 	}))
 
 	common.Must(common.RegisterConfig((*ClientConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
@@ -40,6 +40,6 @@ func init() {
 			},
 		},
 		}
-		return trojan.NewClient(ctx, fullClient)
+		return common.CreateObject(ctx, fullClient)
 	}))
 }
