@@ -89,5 +89,8 @@ import (
 	// V5 version of json configure file parser
 	_ "github.com/v2fly/v2ray-core/v4/infra/conf/v5cfg"
 
+	_ "github.com/v2fly/v2ray-core/v4/proxy/http/simplified"
+	_ "github.com/v2fly/v2ray-core/v4/proxy/shadowsocks/simplified"
 	_ "github.com/v2fly/v2ray-core/v4/proxy/socks/simplified"
+	_ "github.com/v2fly/v2ray-core/v4/proxy/trojan/simplified"
 )
