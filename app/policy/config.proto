@@ -6,6 +6,8 @@ option go_package = "github.com/v2fly/v2ray-core/v4/app/policy";
 option java_package = "com.v2ray.core.app.policy";
 option java_multiple_files = true;
 
+import "common/protoext/extensions.proto";
+
 message Second {
   uint32 value = 1;
 }
@@ -46,6 +48,9 @@ message SystemPolicy {
 }
 
 message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "service";
+  option (v2ray.core.common.protoext.message_opt).short_name = "policy";
+
   map<uint32, Policy> level = 1;
   SystemPolicy system = 2;
 }
