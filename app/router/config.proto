@@ -9,6 +9,7 @@ option java_multiple_files = true;
 import "google/protobuf/any.proto";
 import "common/net/port.proto";
 import "common/net/network.proto";
+import "common/protoext/extensions.proto";
 
 // Domain for routing decision.
 message Domain {
@@ -56,6 +57,12 @@ message GeoIP {
   string country_code = 1;
   repeated CIDR cidr = 2;
   bool inverse_match = 3;
+
+  // resource_hash instruct simplified config converter to load domain from geo file.
+  bytes resource_hash = 4;
+  string code = 5;
+
+  string file_path = 68000[(v2ray.core.common.protoext.field_opt).convert_time_resource_loading = "resource_hash"];
 }
 
 message GeoIPList {
@@ -65,6 +72,12 @@ message GeoIPList {
 message GeoSite {
   string country_code = 1;
   repeated Domain domain = 2;
+
+  // resource_hash instruct simplified config converter to load domain from geo file.
+  bytes resource_hash = 3;
+  string code = 4;
+
+  string file_path = 68000[(v2ray.core.common.protoext.field_opt).convert_time_resource_loading = "resource_hash"];
 }
 
 message GeoSiteList {
@@ -158,20 +171,30 @@ message StrategyLeastLoadConfig {
   string observer_tag = 7;
 }
 
+enum DomainStrategy {
+  // Use domain as is.
+  AsIs = 0;
+
+  // Always resolve IP for domains.
+  UseIp = 1;
+
+  // Resolve to IP if the domain doesn't match any rules.
+  IpIfNonMatch = 2;
+
+  // Resolve to IP if any rule requires IP matching.
+  IpOnDemand = 3;
+}
+
 message Config {
-  enum DomainStrategy {
-    // Use domain as is.
-    AsIs = 0;
+  DomainStrategy domain_strategy = 1;
+  repeated RoutingRule rule = 2;
+  repeated BalancingRule balancing_rule = 3;
+}
 
-    // Always resolve IP for domains.
-    UseIp = 1;
+message SimplifiedConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "service";
+  option (v2ray.core.common.protoext.message_opt).short_name = "router";
 
-    // Resolve to IP if the domain doesn't match any rules.
-    IpIfNonMatch = 2;
-
-    // Resolve to IP if any rule requires IP matching.
-    IpOnDemand = 3;
-  }
   DomainStrategy domain_strategy = 1;
   repeated RoutingRule rule = 2;
   repeated BalancingRule balancing_rule = 3;
