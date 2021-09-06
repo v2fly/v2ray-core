@@ -7,6 +7,7 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"io"
+	"strings"
 
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/hkdf"
@@ -204,6 +205,21 @@ func (NoneCipher) EncodePacket(key []byte, b *buf.Buffer) error {
 
 func (NoneCipher) DecodePacket(key []byte, b *buf.Buffer) error {
 	return nil
+}
+
+func CipherFromString(c string) CipherType {
+	switch strings.ToLower(c) {
+	case "aes-128-gcm", "aead_aes_128_gcm":
+		return CipherType_AES_128_GCM
+	case "aes-256-gcm", "aead_aes_256_gcm":
+		return CipherType_AES_256_GCM
+	case "chacha20-poly1305", "aead_chacha20_poly1305", "chacha20-ietf-poly1305":
+		return CipherType_CHACHA20_POLY1305
+	case "none", "plain":
+		return CipherType_NONE
+	default:
+		return CipherType_UNKNOWN
+	}
 }
 
 func passwordToCipherKey(password []byte, keySize int32) []byte {

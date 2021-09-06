@@ -1,8 +1,6 @@
 package v4
 
 import (
-	"strings"
-
 	"github.com/golang/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
@@ -10,21 +8,6 @@ import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v4/proxy/shadowsocks"
 )
-
-func cipherFromString(c string) shadowsocks.CipherType {
-	switch strings.ToLower(c) {
-	case "aes-128-gcm", "aead_aes_128_gcm":
-		return shadowsocks.CipherType_AES_128_GCM
-	case "aes-256-gcm", "aead_aes_256_gcm":
-		return shadowsocks.CipherType_AES_256_GCM
-	case "chacha20-poly1305", "aead_chacha20_poly1305", "chacha20-ietf-poly1305":
-		return shadowsocks.CipherType_CHACHA20_POLY1305
-	case "none", "plain":
-		return shadowsocks.CipherType_NONE
-	default:
-		return shadowsocks.CipherType_UNKNOWN
-	}
-}
 
 type ShadowsocksServerConfig struct {
 	Cipher      string                 `json:"method"`
@@ -48,7 +31,7 @@ func (v *ShadowsocksServerConfig) Build() (proto.Message, error) {
 		Password: v.Password,
 		IvCheck:  v.IVCheck,
 	}
-	account.CipherType = cipherFromString(v.Cipher)
+	account.CipherType = shadowsocks.CipherFromString(v.Cipher)
 	if account.CipherType == shadowsocks.CipherType_UNKNOWN {
 		return nil, newError("unknown cipher method: ", v.Cipher)
 	}
@@ -98,7 +81,7 @@ func (v *ShadowsocksClientConfig) Build() (proto.Message, error) {
 		account := &shadowsocks.Account{
 			Password: server.Password,
 		}
-		account.CipherType = cipherFromString(server.Cipher)
+		account.CipherType = shadowsocks.CipherFromString(server.Cipher)
 		if account.CipherType == shadowsocks.CipherType_UNKNOWN {
 			return nil, newError("unknown cipher method: ", server.Cipher)
 		}
