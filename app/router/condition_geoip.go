@@ -14,7 +14,7 @@ type ipv6 struct {
 
 type GeoIPMatcher struct {
 	countryCode  string
-	reverseMatch bool
+	inverseMatch bool
 	ip4          []uint32
 	prefix4      []uint8
 	ip6          []ipv6
@@ -82,7 +82,7 @@ func (m *GeoIPMatcher) Init(cidrs []*CIDR) error {
 }
 
 func (m *GeoIPMatcher) SetReverseMatch(isReverseMatch bool) {
-	m.reverseMatch = isReverseMatch
+	m.inverseMatch = isReverseMatch
 }
 
 func (m *GeoIPMatcher) match4(ip uint32) bool {
@@ -152,12 +152,12 @@ func (m *GeoIPMatcher) match6(ip ipv6) bool {
 func (m *GeoIPMatcher) Match(ip net.IP) bool {
 	switch len(ip) {
 	case 4:
-		if m.reverseMatch {
+		if m.inverseMatch {
 			return !m.match4(binary.BigEndian.Uint32(ip))
 		}
 		return m.match4(binary.BigEndian.Uint32(ip))
 	case 16:
-		if m.reverseMatch {
+		if m.inverseMatch {
 			return !m.match6(ipv6{
 				a: binary.BigEndian.Uint64(ip[0:8]),
 				b: binary.BigEndian.Uint64(ip[8:16]),
@@ -182,7 +182,7 @@ type GeoIPMatcherContainer struct {
 func (c *GeoIPMatcherContainer) Add(geoip *GeoIP) (*GeoIPMatcher, error) {
 	if len(geoip.CountryCode) > 0 {
 		for _, m := range c.matchers {
-			if m.countryCode == geoip.CountryCode && m.reverseMatch == geoip.ReverseMatch {
+			if m.countryCode == geoip.CountryCode && m.inverseMatch == geoip.InverseMatch {
 				return m, nil
 			}
 		}
@@ -190,7 +190,7 @@ func (c *GeoIPMatcherContainer) Add(geoip *GeoIP) (*GeoIPMatcher, error) {
 
 	m := &GeoIPMatcher{
 		countryCode:  geoip.CountryCode,
-		reverseMatch: geoip.ReverseMatch,
+		inverseMatch: geoip.InverseMatch,
 	}
 	if err := m.Init(geoip.Cidr); err != nil {
 		return nil, err

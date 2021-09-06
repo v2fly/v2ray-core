@@ -135,7 +135,7 @@ func toCidrList(ctx context.Context, ips cfgcommon.StringList) ([]*router.GeoIP,
 			geoipList = append(geoipList, &router.GeoIP{
 				CountryCode:  strings.ToUpper(country),
 				Cidr:         geoip,
-				ReverseMatch: isReverseMatch,
+				InverseMatch: isReverseMatch,
 			})
 
 			continue
@@ -165,10 +165,10 @@ func toCidrList(ctx context.Context, ips cfgcommon.StringList) ([]*router.GeoIP,
 				return nil, newError("empty filename or empty country in rule")
 			}
 
-			isReverseMatch := false
+			isInverseMatch := false
 			if strings.HasPrefix(country, "!") {
 				country = country[1:]
-				isReverseMatch = true
+				isInverseMatch = true
 			}
 			geoip, err := geoLoader.LoadIP(filename, country)
 			if err != nil {
@@ -178,7 +178,7 @@ func toCidrList(ctx context.Context, ips cfgcommon.StringList) ([]*router.GeoIP,
 			geoipList = append(geoipList, &router.GeoIP{
 				CountryCode:  strings.ToUpper(filename + "_" + country),
 				Cidr:         geoip,
-				ReverseMatch: isReverseMatch,
+				InverseMatch: isInverseMatch,
 			})
 
 			continue
