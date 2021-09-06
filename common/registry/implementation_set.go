@@ -37,7 +37,7 @@ func (i *implementationSet) findImplementationByAlias(alias string) (string, Cus
 	if found {
 		return impl.FullName, impl.Loader, nil
 	}
-	return "", nil, newError("cannot find implementation by alias")
+	return "", nil, newError("cannot find implementation by alias: ", alias)
 }
 
 func newImplementationSet() *implementationSet {
