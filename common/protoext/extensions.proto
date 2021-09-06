@@ -30,4 +30,6 @@ message FieldOpt{
   string convert_time_read_file_into = 4;
   // forbidden marks a boolean to be inaccessible to user
   bool forbidden = 5;
+  // convert_time_resource_loading read a file, and place its resource hash into another field
+  string convert_time_resource_loading = 6;
 }
