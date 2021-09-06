@@ -69,6 +69,7 @@ func (r *restfulService) TokenAuthMiddleware() gin.HandlerFunc {
 		if !strings.HasPrefix(auth, prefix) {
 			c.JSON(http.StatusUnauthorized, "unauthorized")
 			c.Abort()
+			return
 		}
 		auth = strings.TrimPrefix(auth, prefix)
 		if auth != r.config.AuthToken { // tip: Bearer: token123
