@@ -7,18 +7,16 @@ import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/proxycfg"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/sniffer"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/socketcfg"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/dns"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/log"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
 )
 
 type RootConfig struct {
-	LogConfig    *log.LogConfig             `json:"log"`
-	DNSConfig    *dns.DNSConfig             `json:"dns"`
-	RouterConfig *router.RouterConfig       `json:"router"`
+	LogConfig    json.RawMessage            `json:"log"`
+	DNSConfig    json.RawMessage            `json:"dns"`
+	RouterConfig json.RawMessage            `json:"router"`
 	Inbounds     []InboundConfig            `json:"inbounds"`
 	Outbounds    []OutboundConfig           `json:"outbounds"`
 	Services     map[string]json.RawMessage `json:"services"`
+	Extensions   []json.RawMessage          `json:"extension"`
 }
 
 type InboundConfig struct {

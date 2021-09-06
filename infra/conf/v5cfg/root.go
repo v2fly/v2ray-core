@@ -26,7 +26,11 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 
 	var logConfMsg *anypb.Any
 	if c.LogConfig != nil {
-		logConfMsg = serial.ToTypedMessage(c.LogConfig.Build())
+		logConfMsgUnpacked, err := loadHeterogeneousConfigFromRawJson("service", "log", c.LogConfig)
+		if err != nil {
+			return nil, err
+		}
+		logConfMsg = serial.ToTypedMessage(logConfMsgUnpacked)
 	} else {
 		logConfMsg = serial.ToTypedMessage(log.DefaultLogConfig())
 	}
@@ -35,7 +39,7 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	config.App = append([]*anypb.Any{logConfMsg}, config.App...)
 
 	if c.RouterConfig != nil {
-		routerConfig, err := c.RouterConfig.BuildV5(ctx)
+		routerConfig, err := loadHeterogeneousConfigFromRawJson("service", "router", c.RouterConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -43,7 +47,7 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	}
 
 	if c.DNSConfig != nil {
-		dnsApp, err := c.DNSConfig.BuildV5(ctx)
+		dnsApp, err := loadHeterogeneousConfigFromRawJson("service", "dns", c.DNSConfig)
 		if err != nil {
 			return nil, newError("failed to parse DNS config").Base(err)
 		}
