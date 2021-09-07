@@ -12,6 +12,9 @@ import (
 func loadHeterogeneousConfigFromRawJson(interfaceType, name string, rawJson json.RawMessage) (proto.Message, error) {
 	fsdef := envimpl.NewDefaultFileSystemDefaultImpl()
 	ctx := envctx.ContextWithEnvironment(context.TODO(), fsdef)
+	if rawJson == nil || len(rawJson) == 0 {
+		rawJson = []byte("{}")
+	}
 	return registry.LoadImplementationByAlias(ctx, interfaceType, name, []byte(rawJson))
 }
 
