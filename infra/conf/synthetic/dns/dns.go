@@ -171,14 +171,14 @@ func (h *HostAddress) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func getHostMapping(ha *HostAddress) *dns.Config_HostMapping {
+func getHostMapping(ha *HostAddress) *dns.HostMapping {
 	if ha.addr != nil {
 		if ha.addr.Family().IsDomain() {
-			return &dns.Config_HostMapping{
+			return &dns.HostMapping{
 				ProxiedDomain: ha.addr.Domain(),
 			}
 		}
-		return &dns.Config_HostMapping{
+		return &dns.HostMapping{
 			Ip: [][]byte{ha.addr.IP()},
 		}
 	}
@@ -186,13 +186,13 @@ func getHostMapping(ha *HostAddress) *dns.Config_HostMapping {
 	ips := make([][]byte, 0, len(ha.addrs))
 	for _, addr := range ha.addrs {
 		if addr.Family().IsDomain() {
-			return &dns.Config_HostMapping{
+			return &dns.HostMapping{
 				ProxiedDomain: addr.Domain(),
 			}
 		}
 		ips = append(ips, []byte(addr.IP()))
 	}
-	return &dns.Config_HostMapping{
+	return &dns.HostMapping{
 		Ip: ips,
 	}
 }
@@ -256,7 +256,7 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 	}
 
 	if c.Hosts != nil {
-		mappings := make([]*dns.Config_HostMapping, 0, 20)
+		mappings := make([]*dns.HostMapping, 0, 20)
 
 		domains := make([]string, 0, len(c.Hosts))
 		for domain := range c.Hosts {
