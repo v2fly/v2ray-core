@@ -212,3 +212,7 @@ func leastloadSort(nodes []*node) {
 		return left.Tag < right.Tag
 	})
 }
+
+func init() {
+	common.Must(common.RegisterConfig((*StrategyLeastLoadConfig)(nil), nil))
+}

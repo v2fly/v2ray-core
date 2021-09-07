@@ -84,11 +84,22 @@ message StrategyWeight {
   float value = 3;
 }
 
+message StrategyRandomConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "balancer";
+  option (v2ray.core.common.protoext.message_opt).short_name = "random";
+}
+
 message StrategyLeastPingConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "balancer";
+  option (v2ray.core.common.protoext.message_opt).short_name = "leastping";
+
   string observer_tag = 7;
 }
 
 message StrategyLeastLoadConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "balancer";
+  option (v2ray.core.common.protoext.message_opt).short_name = "leastload";
+
   // weight settings
   repeated StrategyWeight costs = 2;
   // RTT baselines for selecting, int64 values of time.Duration

@@ -73,3 +73,7 @@ func (o outboundList) contains(name string) bool {
 	}
 	return false
 }
+
+func init() {
+	common.Must(common.RegisterConfig((*StrategyLeastPingConfig)(nil), nil))
+}

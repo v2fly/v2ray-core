@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/dice"
 )
 
@@ -18,4 +19,8 @@ func (s *RandomStrategy) PickOutbound(candidates []string) string {
 		return ""
 	}
 	return candidates[dice.Roll(count)]
+}
+
+func init() {
+	common.Must(common.RegisterConfig((*StrategyRandomConfig)(nil), nil))
 }
