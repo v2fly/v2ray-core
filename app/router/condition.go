@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"strings"
 
 	"go.starlark.net/starlark"
@@ -41,14 +42,14 @@ func (v *ConditionChan) Len() int {
 	return len(*v)
 }
 
-var matcherTypeMap = map[Domain_Type]strmatcher.Type{
-	Domain_Plain:      strmatcher.Substr,
-	Domain_Regex:      strmatcher.Regex,
-	Domain_RootDomain: strmatcher.Domain,
-	Domain_Full:       strmatcher.Full,
+var matcherTypeMap = map[routercommon.Domain_Type]strmatcher.Type{
+	routercommon.Domain_Plain:      strmatcher.Substr,
+	routercommon.Domain_Regex:      strmatcher.Regex,
+	routercommon.Domain_RootDomain: strmatcher.Domain,
+	routercommon.Domain_Full:       strmatcher.Full,
 }
 
-func domainToMatcher(domain *Domain) (strmatcher.Matcher, error) {
+func domainToMatcher(domain *routercommon.Domain) (strmatcher.Matcher, error) {
 	matcherType, f := matcherTypeMap[domain.Type]
 	if !f {
 		return nil, newError("unsupported domain type", domain.Type)
@@ -66,7 +67,7 @@ type DomainMatcher struct {
 	matchers strmatcher.IndexMatcher
 }
 
-func NewMphMatcherGroup(domains []*Domain) (*DomainMatcher, error) {
+func NewMphMatcherGroup(domains []*routercommon.Domain) (*DomainMatcher, error) {
 	g := strmatcher.NewMphMatcherGroup()
 	for _, d := range domains {
 		matcherType, f := matcherTypeMap[d.Type]
@@ -84,7 +85,7 @@ func NewMphMatcherGroup(domains []*Domain) (*DomainMatcher, error) {
 	}, nil
 }
 
-func NewDomainMatcher(domains []*Domain) (*DomainMatcher, error) {
+func NewDomainMatcher(domains []*routercommon.Domain) (*DomainMatcher, error) {
 	g := new(strmatcher.MatcherGroup)
 	for _, d := range domains {
 		m, err := domainToMatcher(d)
@@ -117,7 +118,7 @@ type MultiGeoIPMatcher struct {
 	onSource bool
 }
 
-func NewMultiGeoIPMatcher(geoips []*GeoIP, onSource bool) (*MultiGeoIPMatcher, error) {
+func NewMultiGeoIPMatcher(geoips []*routercommon.GeoIP, onSource bool) (*MultiGeoIPMatcher, error) {
 	var matchers []*GeoIPMatcher
 	for _, geoip := range geoips {
 		matcher, err := globalGeoIPContainer.Add(geoip)

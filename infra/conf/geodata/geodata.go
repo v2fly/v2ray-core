@@ -1,20 +1,19 @@
 package geodata
 
 import (
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"strings"
-
-	"github.com/v2fly/v2ray-core/v4/app/router"
 )
 
 type loader struct {
 	LoaderImplementation
 }
 
-func (l *loader) LoadGeoSite(list string) ([]*router.Domain, error) {
+func (l *loader) LoadGeoSite(list string) ([]*routercommon.Domain, error) {
 	return l.LoadGeoSiteWithAttr("geosite.dat", list)
 }
 
-func (l *loader) LoadGeoSiteWithAttr(file string, siteWithAttr string) ([]*router.Domain, error) {
+func (l *loader) LoadGeoSiteWithAttr(file string, siteWithAttr string) ([]*routercommon.Domain, error) {
 	parts := strings.Split(siteWithAttr, "@")
 	if len(parts) == 0 {
 		return nil, newError("empty rule")
@@ -39,7 +38,7 @@ func (l *loader) LoadGeoSiteWithAttr(file string, siteWithAttr string) ([]*route
 		return domains, nil
 	}
 
-	filteredDomains := make([]*router.Domain, 0, len(domains))
+	filteredDomains := make([]*routercommon.Domain, 0, len(domains))
 	hasAttrMatched := false
 	for _, domain := range domains {
 		if attrs.Match(domain) {
@@ -54,7 +53,7 @@ func (l *loader) LoadGeoSiteWithAttr(file string, siteWithAttr string) ([]*route
 	return filteredDomains, nil
 }
 
-func (l *loader) LoadGeoIP(country string) ([]*router.CIDR, error) {
+func (l *loader) LoadGeoIP(country string) ([]*routercommon.CIDR, error) {
 	return l.LoadIP("geoip.dat", country)
 }
 

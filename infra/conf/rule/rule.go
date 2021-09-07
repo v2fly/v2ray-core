@@ -3,6 +3,7 @@ package rule
 import (
 	"context"
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"strconv"
 	"strings"
 
@@ -13,7 +14,7 @@ import (
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
-func parseDomainRule(ctx context.Context, domain string) ([]*router.Domain, error) {
+func parseDomainRule(ctx context.Context, domain string) ([]*routercommon.Domain, error) {
 	cfgEnv := cfgcommon.GetConfigureLoadingEnvironment(ctx)
 	geoLoader := cfgEnv.GetGeoLoader()
 
@@ -57,14 +58,14 @@ func parseDomainRule(ctx context.Context, domain string) ([]*router.Domain, erro
 		return domains, nil
 	}
 
-	domainRule := new(router.Domain)
+	domainRule := new(routercommon.Domain)
 	switch {
 	case strings.HasPrefix(domain, "regexp:"):
 		regexpVal := domain[7:]
 		if len(regexpVal) == 0 {
 			return nil, newError("empty regexp type of rule: ", domain)
 		}
-		domainRule.Type = router.Domain_Regex
+		domainRule.Type = routercommon.Domain_Regex
 		domainRule.Value = regexpVal
 
 	case strings.HasPrefix(domain, "domain:"):
@@ -72,7 +73,7 @@ func parseDomainRule(ctx context.Context, domain string) ([]*router.Domain, erro
 		if len(domainName) == 0 {
 			return nil, newError("empty domain type of rule: ", domain)
 		}
-		domainRule.Type = router.Domain_RootDomain
+		domainRule.Type = routercommon.Domain_RootDomain
 		domainRule.Value = domainName
 
 	case strings.HasPrefix(domain, "full:"):
@@ -80,7 +81,7 @@ func parseDomainRule(ctx context.Context, domain string) ([]*router.Domain, erro
 		if len(fullVal) == 0 {
 			return nil, newError("empty full domain type of rule: ", domain)
 		}
-		domainRule.Type = router.Domain_Full
+		domainRule.Type = routercommon.Domain_Full
 		domainRule.Value = fullVal
 
 	case strings.HasPrefix(domain, "keyword:"):
@@ -88,11 +89,11 @@ func parseDomainRule(ctx context.Context, domain string) ([]*router.Domain, erro
 		if len(keywordVal) == 0 {
 			return nil, newError("empty keyword type of rule: ", domain)
 		}
-		domainRule.Type = router.Domain_Plain
+		domainRule.Type = routercommon.Domain_Plain
 		domainRule.Value = keywordVal
 
 	case strings.HasPrefix(domain, "dotless:"):
-		domainRule.Type = router.Domain_Regex
+		domainRule.Type = routercommon.Domain_Regex
 		switch substr := domain[8:]; {
 		case substr == "":
 			domainRule.Value = "^[^.]*$"
@@ -103,18 +104,18 @@ func parseDomainRule(ctx context.Context, domain string) ([]*router.Domain, erro
 		}
 
 	default:
-		domainRule.Type = router.Domain_Plain
+		domainRule.Type = routercommon.Domain_Plain
 		domainRule.Value = domain
 	}
-	return []*router.Domain{domainRule}, nil
+	return []*routercommon.Domain{domainRule}, nil
 }
 
-func toCidrList(ctx context.Context, ips cfgcommon.StringList) ([]*router.GeoIP, error) {
+func toCidrList(ctx context.Context, ips cfgcommon.StringList) ([]*routercommon.GeoIP, error) {
 	cfgEnv := cfgcommon.GetConfigureLoadingEnvironment(ctx)
 	geoLoader := cfgEnv.GetGeoLoader()
 
-	var geoipList []*router.GeoIP
-	var customCidrs []*router.CIDR
+	var geoipList []*routercommon.GeoIP
+	var customCidrs []*routercommon.CIDR
 
 	for _, ip := range ips {
 		if strings.HasPrefix(ip, "geoip:") {
@@ -132,7 +133,7 @@ func toCidrList(ctx context.Context, ips cfgcommon.StringList) ([]*router.GeoIP,
 				return nil, newError("failed to load geoip: ", country).Base(err)
 			}
 
-			geoipList = append(geoipList, &router.GeoIP{
+			geoipList = append(geoipList, &routercommon.GeoIP{
 				CountryCode:  strings.ToUpper(country),
 				Cidr:         geoip,
 				InverseMatch: isReverseMatch,
@@ -175,7 +176,7 @@ func toCidrList(ctx context.Context, ips cfgcommon.StringList) ([]*router.GeoIP,
 				return nil, newError("failed to load geoip: ", country, " from ", filename).Base(err)
 			}
 
-			geoipList = append(geoipList, &router.GeoIP{
+			geoipList = append(geoipList, &routercommon.GeoIP{
 				CountryCode:  strings.ToUpper(filename + "_" + country),
 				Cidr:         geoip,
 				InverseMatch: isInverseMatch,
@@ -192,7 +193,7 @@ func toCidrList(ctx context.Context, ips cfgcommon.StringList) ([]*router.GeoIP,
 	}
 
 	if len(customCidrs) > 0 {
-		geoipList = append(geoipList, &router.GeoIP{
+		geoipList = append(geoipList, &routercommon.GeoIP{
 			Cidr: customCidrs,
 		})
 	}
@@ -329,7 +330,7 @@ func ParseRule(ctx context.Context, msg json.RawMessage) (*router.RoutingRule, e
 	return nil, newError("unknown router rule type: ", rawRule.Type)
 }
 
-func ParseIP(s string) (*router.CIDR, error) {
+func ParseIP(s string) (*routercommon.CIDR, error) {
 	var addr, mask string
 	i := strings.Index(s, "/")
 	if i < 0 {
@@ -352,7 +353,7 @@ func ParseIP(s string) (*router.CIDR, error) {
 		if bits > 32 {
 			return nil, newError("invalid network mask for router: ", bits)
 		}
-		return &router.CIDR{
+		return &routercommon.CIDR{
 			Ip:     []byte(ip.IP()),
 			Prefix: bits,
 		}, nil
@@ -368,7 +369,7 @@ func ParseIP(s string) (*router.CIDR, error) {
 		if bits > 128 {
 			return nil, newError("invalid network mask for router: ", bits)
 		}
-		return &router.CIDR{
+		return &routercommon.CIDR{
 			Ip:     []byte(ip.IP()),
 			Prefix: bits,
 		}, nil
@@ -377,11 +378,11 @@ func ParseIP(s string) (*router.CIDR, error) {
 	}
 }
 
-func ParseDomainRule(ctx context.Context, domain string) ([]*router.Domain, error) {
+func ParseDomainRule(ctx context.Context, domain string) ([]*routercommon.Domain, error) {
 	return parseDomainRule(ctx, domain)
 }
 
-func ToCidrList(ctx context.Context, ips cfgcommon.StringList) ([]*router.GeoIP, error) {
+func ToCidrList(ctx context.Context, ips cfgcommon.StringList) ([]*routercommon.GeoIP, error) {
 	return toCidrList(ctx, ips)
 }
 

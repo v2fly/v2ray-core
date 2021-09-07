@@ -8,7 +8,7 @@ option java_multiple_files = true;
 
 import "common/net/address.proto";
 import "common/net/destination.proto";
-import "app/router/config.proto";
+import "app/router/routercommon/common.proto";
 
 import "common/protoext/extensions.proto";
 
@@ -28,7 +28,7 @@ message NameServer {
   }
 
   repeated PriorityDomain prioritized_domain = 2;
-  repeated v2ray.core.app.router.GeoIP geoip = 3;
+  repeated v2ray.core.app.router.routercommon.GeoIP geoip = 3;
   repeated OriginalRule original_rules = 4;
 }
 

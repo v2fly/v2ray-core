@@ -1,9 +1,9 @@
 package memconservative
 
 import (
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"runtime"
 
-	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
 )
 
@@ -14,7 +14,7 @@ type memConservativeLoader struct {
 	geositecache GeoSiteCache
 }
 
-func (m *memConservativeLoader) LoadIP(filename, country string) ([]*router.CIDR, error) {
+func (m *memConservativeLoader) LoadIP(filename, country string) ([]*routercommon.CIDR, error) {
 	defer runtime.GC()
 	geoip, err := m.geoipcache.Unmarshal(filename, country)
 	if err != nil {
@@ -23,7 +23,7 @@ func (m *memConservativeLoader) LoadIP(filename, country string) ([]*router.CIDR
 	return geoip.Cidr, nil
 }
 
-func (m *memConservativeLoader) LoadSite(filename, list string) ([]*router.Domain, error) {
+func (m *memConservativeLoader) LoadSite(filename, list string) ([]*routercommon.Domain, error) {
 	defer runtime.GC()
 	geosite, err := m.geositecache.Unmarshal(filename, list)
 	if err != nil {
@@ -33,7 +33,7 @@ func (m *memConservativeLoader) LoadSite(filename, list string) ([]*router.Domai
 }
 
 func newMemConservativeLoader() geodata.LoaderImplementation {
-	return &memConservativeLoader{make(map[string]*router.GeoIP), make(map[string]*router.GeoSite)}
+	return &memConservativeLoader{make(map[string]*routercommon.GeoIP), make(map[string]*routercommon.GeoSite)}
 }
 
 func init() {

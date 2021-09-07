@@ -5,11 +5,11 @@ package dns
 import (
 	"context"
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"sort"
 	"strings"
 
 	"github.com/v2fly/v2ray-core/v4/app/dns"
-	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/platform"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
@@ -56,15 +56,15 @@ func (c *NameServerConfig) UnmarshalJSON(data []byte) error {
 	return newError("failed to parse name server: ", string(data))
 }
 
-func toDomainMatchingType(t router.Domain_Type) dns.DomainMatchingType {
+func toDomainMatchingType(t routercommon.Domain_Type) dns.DomainMatchingType {
 	switch t {
-	case router.Domain_RootDomain:
+	case routercommon.Domain_RootDomain:
 		return dns.DomainMatchingType_Subdomain
-	case router.Domain_Full:
+	case routercommon.Domain_Full:
 		return dns.DomainMatchingType_Full
-	case router.Domain_Plain:
+	case routercommon.Domain_Plain:
 		return dns.DomainMatchingType_Keyword
-	case router.Domain_Regex:
+	case routercommon.Domain_Regex:
 		return dns.DomainMatchingType_Regex
 	default:
 		panic("unknown domain type")
@@ -131,11 +131,11 @@ func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 	}, nil
 }
 
-var typeMap = map[router.Domain_Type]dns.DomainMatchingType{
-	router.Domain_Full:       dns.DomainMatchingType_Full,
-	router.Domain_RootDomain: dns.DomainMatchingType_Subdomain,
-	router.Domain_Plain:      dns.DomainMatchingType_Keyword,
-	router.Domain_Regex:      dns.DomainMatchingType_Regex,
+var typeMap = map[routercommon.Domain_Type]dns.DomainMatchingType{
+	routercommon.Domain_Full:       dns.DomainMatchingType_Full,
+	routercommon.Domain_RootDomain: dns.DomainMatchingType_Subdomain,
+	routercommon.Domain_Plain:      dns.DomainMatchingType_Keyword,
+	routercommon.Domain_Regex:      dns.DomainMatchingType_Regex,
 }
 
 // DNSConfig is a JSON serializable object for dns.Config.

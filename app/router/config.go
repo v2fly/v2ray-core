@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
@@ -8,7 +9,7 @@ import (
 )
 
 // CIDRList is an alias of []*CIDR to provide sort.Interface.
-type CIDRList []*CIDR
+type CIDRList []*routercommon.CIDR
 
 // Len implements sort.Interface.
 func (l *CIDRList) Len() int {
@@ -118,7 +119,7 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 		}
 		conds.Add(cond)
 	} else if len(rr.Cidr) > 0 {
-		cond, err := NewMultiGeoIPMatcher([]*GeoIP{{Cidr: rr.Cidr}}, false)
+		cond, err := NewMultiGeoIPMatcher([]*routercommon.GeoIP{{Cidr: rr.Cidr}}, false)
 		if err != nil {
 			return nil, err
 		}
@@ -132,7 +133,7 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 		}
 		conds.Add(cond)
 	} else if len(rr.SourceCidr) > 0 {
-		cond, err := NewMultiGeoIPMatcher([]*GeoIP{{Cidr: rr.SourceCidr}}, true)
+		cond, err := NewMultiGeoIPMatcher([]*routercommon.GeoIP{{Cidr: rr.SourceCidr}}, true)
 		if err != nil {
 			return nil, err
 		}

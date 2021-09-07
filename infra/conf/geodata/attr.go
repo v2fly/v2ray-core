@@ -3,14 +3,14 @@ package geodata
 import (
 	"strings"
 
-	"github.com/v2fly/v2ray-core/v4/app/router"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 )
 
 type AttributeList struct {
 	matcher []AttributeMatcher
 }
 
-func (al *AttributeList) Match(domain *router.Domain) bool {
+func (al *AttributeList) Match(domain *routercommon.Domain) bool {
 	for _, matcher := range al.matcher {
 		if !matcher.Match(domain) {
 			return false
@@ -36,12 +36,12 @@ func parseAttrs(attrs []string) *AttributeList {
 }
 
 type AttributeMatcher interface {
-	Match(*router.Domain) bool
+	Match(*routercommon.Domain) bool
 }
 
 type BooleanMatcher string
 
-func (m BooleanMatcher) Match(domain *router.Domain) bool {
+func (m BooleanMatcher) Match(domain *routercommon.Domain) bool {
 	for _, attr := range domain.Attribute {
 		if strings.EqualFold(attr.GetKey(), string(m)) {
 			return true

@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/binary"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"sort"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
@@ -35,7 +36,7 @@ func normalize6(ip ipv6, prefix uint8) ipv6 {
 	return ip
 }
 
-func (m *GeoIPMatcher) Init(cidrs []*CIDR) error {
+func (m *GeoIPMatcher) Init(cidrs []*routercommon.CIDR) error {
 	ip4Count := 0
 	ip6Count := 0
 
@@ -179,7 +180,7 @@ type GeoIPMatcherContainer struct {
 
 // Add adds a new GeoIP set into the container.
 // If the country code of GeoIP is not empty, GeoIPMatcherContainer will try to find an existing one, instead of adding a new one.
-func (c *GeoIPMatcherContainer) Add(geoip *GeoIP) (*GeoIPMatcher, error) {
+func (c *GeoIPMatcherContainer) Add(geoip *routercommon.GeoIP) (*GeoIPMatcher, error) {
 	if len(geoip.CountryCode) > 0 {
 		for _, m := range c.matchers {
 			if m.countryCode == geoip.CountryCode && m.inverseMatch == geoip.InverseMatch {
