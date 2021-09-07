@@ -15,7 +15,7 @@ type StaticHosts struct {
 }
 
 // NewStaticHosts creates a new StaticHosts instance.
-func NewStaticHosts(hosts []*Config_HostMapping, legacy map[string]*net.IPOrDomain) (*StaticHosts, error) {
+func NewStaticHosts(hosts []*HostMapping, legacy map[string]*net.IPOrDomain) (*StaticHosts, error) {
 	g := new(strmatcher.MatcherGroup)
 	sh := &StaticHosts{
 		ips:      make([][]net.Address, len(hosts)+len(legacy)+16),
