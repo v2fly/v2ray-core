@@ -7,7 +7,11 @@ option java_package = "com.v2ray.core.app.observatory.multiObservatory";
 option java_multiple_files = true;
 
 import "common/taggedfeatures/skeleton.proto";
+import "common/protoext/extensions.proto";
 
 message Config{
+  option (v2ray.core.common.protoext.message_opt).type = "service";
+  option (v2ray.core.common.protoext.message_opt).short_name = "multiObservatory";
+
   v2ray.core.common.taggedfeatures.Config holders = 1 ;
 }
