@@ -24,28 +24,28 @@ type restfulService struct {
 	ctx context.Context
 }
 
-func (r *restfulService) Type() interface{} {
+func (rs *restfulService) Type() interface{} {
 	return (*struct{})(nil)
 }
 
-func (r *restfulService) Start() error {
-	defer r.access.Unlock()
-	r.access.Lock()
-	return r.start()
+func (rs *restfulService) Start() error {
+	defer rs.access.Unlock()
+	rs.access.Lock()
+	return rs.start()
 }
 
-func (r *restfulService) Close() error {
-	defer r.access.Unlock()
-	r.access.Lock()
-	if r.listener != nil {
-		return r.listener.Close()
+func (rs *restfulService) Close() error {
+	defer rs.access.Unlock()
+	rs.access.Lock()
+	if rs.listener != nil {
+		return rs.listener.Close()
 	}
 	return nil
 }
 
-func (r *restfulService) init(config *Config, stats feature_stats.Manager) {
-	r.stats = stats
-	r.config = config
+func (rs *restfulService) init(config *Config, stats feature_stats.Manager) {
+	rs.stats = stats
+	rs.config = config
 }
 
 func newRestfulService(ctx context.Context, config *Config) (features.Feature, error) {
