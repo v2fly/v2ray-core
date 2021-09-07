@@ -2,7 +2,6 @@ package restful_api
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/features"
 	feature_stats "github.com/v2fly/v2ray-core/v4/features/stats"
@@ -13,8 +12,6 @@ import (
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
 type restfulService struct {
-	*gin.Engine
-
 	listener net.Listener
 	config   *Config
 	access   sync.Mutex

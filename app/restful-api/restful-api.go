@@ -5,7 +5,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-playground/validator/v10"
-	"net"
+	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/transport/internet"
+
 	"net/http"
 	"strings"
 )
@@ -110,8 +112,24 @@ func (rs *restfulService) start() error {
 		r.Get("/stats", rs.statsRequest)
 	})
 
+	var listener net.Listener
+	var err error
+	address := net.ParseAddress(rs.config.ListenAddr)
+
+	switch {
+	case address.Family().IsIP():
+		listener, err = internet.ListenSystem(rs.ctx, &net.TCPAddr{IP: address.IP(), Port: int(rs.config.ListenPort)}, nil)
+	case strings.EqualFold(address.Domain(), "localhost"):
+		listener, err = internet.ListenSystem(rs.ctx, &net.TCPAddr{IP: net.IP{127, 0, 0, 1}, Port: int(rs.config.ListenPort)}, nil)
+	default:
+		return newError("restful api cannot listen on the address: ", address)
+	}
+	if err != nil {
+		return newError("restful api cannot listen on the port ", rs.config.ListenPort).Base(err)
+	}
+
 	go func() {
-		err := http.ListenAndServe(net.JoinHostPort(rs.config.ListenAddr, string(rs.config.ListenPort)), r)
+		err := http.Serve(listener, r)
 		if err != nil {
 			newError("unable to serve restful api").WriteToLog()
 		}
