@@ -19,7 +19,13 @@ type implementationRegistry struct {
 }
 
 func (i *implementationRegistry) RegisterImplementation(name string, opt *protoext.MessageOpt, loader CustomLoader) {
-	interfaceType := opt.GetType()[0]
+	interfaceType := opt.GetType()
+	for _, v := range interfaceType {
+		i.registerSingleImplementation(v, name, opt, loader)
+	}
+}
+
+func (i *implementationRegistry) registerSingleImplementation(interfaceType, name string, opt *protoext.MessageOpt, loader CustomLoader) {
 	implSet, found := i.implSet[interfaceType]
 	if !found {
 		implSet = newImplementationSet()
