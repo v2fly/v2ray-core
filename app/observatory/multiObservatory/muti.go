@@ -2,6 +2,7 @@ package multiObservatory
 
 import (
 	"context"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/taggedfeatures"
@@ -29,6 +30,12 @@ func New(ctx context.Context, config *Config) (*Observer, error) {
 		return nil, err
 	}
 	return &Observer{config: config, ctx: ctx, TaggedFeatures: holder}, nil
+}
+
+func (x *Config) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {
+	var err error
+	x.Holders, err = taggedfeatures.LoadJsonConfig(context.TODO(), "service", "background", bytes)
+	return err
 }
 
 func init() {
