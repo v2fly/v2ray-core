@@ -12,7 +12,7 @@ import (
 )
 
 func TestStaticHosts(t *testing.T) {
-	pb := []*Config_HostMapping{
+	pb := []*HostMapping{
 		{
 			Type:   DomainMatchingType_Full,
 			Domain: "v2fly.org",

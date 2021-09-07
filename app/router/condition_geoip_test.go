@@ -2,6 +2,7 @@ package router_test
 
 import (
 	"errors"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -38,17 +39,17 @@ func init() {
 func TestGeoIPMatcherContainer(t *testing.T) {
 	container := &router.GeoIPMatcherContainer{}
 
-	m1, err := container.Add(&router.GeoIP{
+	m1, err := container.Add(&routercommon.GeoIP{
 		CountryCode: "CN",
 	})
 	common.Must(err)
 
-	m2, err := container.Add(&router.GeoIP{
+	m2, err := container.Add(&routercommon.GeoIP{
 		CountryCode: "US",
 	})
 	common.Must(err)
 
-	m3, err := container.Add(&router.GeoIP{
+	m3, err := container.Add(&routercommon.GeoIP{
 		CountryCode: "CN",
 	})
 	common.Must(err)
@@ -194,12 +195,12 @@ func TestGeoIPMatcher6US(t *testing.T) {
 	}
 }
 
-func loadGeoIP(country string) ([]*router.CIDR, error) {
+func loadGeoIP(country string) ([]*routercommon.CIDR, error) {
 	geoipBytes, err := filesystem.ReadAsset("geoip.dat")
 	if err != nil {
 		return nil, err
 	}
-	var geoipList router.GeoIPList
+	var geoipList routercommon.GeoIPList
 	if err := proto.Unmarshal(geoipBytes, &geoipList); err != nil {
 		return nil, err
 	}

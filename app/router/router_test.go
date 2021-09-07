@@ -2,6 +2,7 @@ package router_test
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -145,13 +146,13 @@ func TestLeastLoadBalancer(t *testing.T) {
 
 func TestIPOnDemand(t *testing.T) {
 	config := &Config{
-		DomainStrategy: Config_IpOnDemand,
+		DomainStrategy: DomainStrategy_IpOnDemand,
 		Rule: []*RoutingRule{
 			{
 				TargetTag: &RoutingRule_Tag{
 					Tag: "test",
 				},
-				Cidr: []*CIDR{
+				Cidr: []*routercommon.CIDR{
 					{
 						Ip:     []byte{192, 168, 0, 0},
 						Prefix: 16,
@@ -180,13 +181,13 @@ func TestIPOnDemand(t *testing.T) {
 
 func TestIPIfNonMatchDomain(t *testing.T) {
 	config := &Config{
-		DomainStrategy: Config_IpIfNonMatch,
+		DomainStrategy: DomainStrategy_IpIfNonMatch,
 		Rule: []*RoutingRule{
 			{
 				TargetTag: &RoutingRule_Tag{
 					Tag: "test",
 				},
-				Cidr: []*CIDR{
+				Cidr: []*routercommon.CIDR{
 					{
 						Ip:     []byte{192, 168, 0, 0},
 						Prefix: 16,
@@ -215,13 +216,13 @@ func TestIPIfNonMatchDomain(t *testing.T) {
 
 func TestIPIfNonMatchIP(t *testing.T) {
 	config := &Config{
-		DomainStrategy: Config_IpIfNonMatch,
+		DomainStrategy: DomainStrategy_IpIfNonMatch,
 		Rule: []*RoutingRule{
 			{
 				TargetTag: &RoutingRule_Tag{
 					Tag: "test",
 				},
-				Cidr: []*CIDR{
+				Cidr: []*routercommon.CIDR{
 					{
 						Ip:     []byte{127, 0, 0, 0},
 						Prefix: 8,

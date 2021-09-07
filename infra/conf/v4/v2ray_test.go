@@ -2,6 +2,7 @@ package v4_test
 
 import (
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/muxcfg"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
@@ -158,12 +159,12 @@ func TestV2RayConfig(t *testing.T) {
 					serial.ToTypedMessage(&proxyman.InboundConfig{}),
 					serial.ToTypedMessage(&proxyman.OutboundConfig{}),
 					serial.ToTypedMessage(&router.Config{
-						DomainStrategy: router.Config_AsIs,
+						DomainStrategy: router.DomainStrategy_AsIs,
 						Rule: []*router.RoutingRule{
 							{
-								Geoip: []*router.GeoIP{
+								Geoip: []*routercommon.GeoIP{
 									{
-										Cidr: []*router.CIDR{
+										Cidr: []*routercommon.CIDR{
 											{
 												Ip:     []byte{10, 0, 0, 0},
 												Prefix: 8,

@@ -1,6 +1,7 @@
 package scenarios
 
 import (
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 	"time"
@@ -54,8 +55,8 @@ func TestReverseProxy(t *testing.T) {
 			serial.ToTypedMessage(&router.Config{
 				Rule: []*router.RoutingRule{
 					{
-						Domain: []*router.Domain{
-							{Type: router.Domain_Full, Value: "test.v2fly.org"},
+						Domain: []*routercommon.Domain{
+							{Type: routercommon.Domain_Full, Value: "test.v2fly.org"},
 						},
 						TargetTag: &router.RoutingRule_Tag{
 							Tag: "portal",
@@ -123,8 +124,8 @@ func TestReverseProxy(t *testing.T) {
 			serial.ToTypedMessage(&router.Config{
 				Rule: []*router.RoutingRule{
 					{
-						Domain: []*router.Domain{
-							{Type: router.Domain_Full, Value: "test.v2fly.org"},
+						Domain: []*routercommon.Domain{
+							{Type: routercommon.Domain_Full, Value: "test.v2fly.org"},
 						},
 						TargetTag: &router.RoutingRule_Tag{
 							Tag: "reverse",
@@ -239,8 +240,8 @@ func TestReverseProxyLongRunning(t *testing.T) {
 			serial.ToTypedMessage(&router.Config{
 				Rule: []*router.RoutingRule{
 					{
-						Domain: []*router.Domain{
-							{Type: router.Domain_Full, Value: "test.v2fly.org"},
+						Domain: []*routercommon.Domain{
+							{Type: routercommon.Domain_Full, Value: "test.v2fly.org"},
 						},
 						TargetTag: &router.RoutingRule_Tag{
 							Tag: "portal",
@@ -322,8 +323,8 @@ func TestReverseProxyLongRunning(t *testing.T) {
 			serial.ToTypedMessage(&router.Config{
 				Rule: []*router.RoutingRule{
 					{
-						Domain: []*router.Domain{
-							{Type: router.Domain_Full, Value: "test.v2fly.org"},
+						Domain: []*routercommon.Domain{
+							{Type: routercommon.Domain_Full, Value: "test.v2fly.org"},
 						},
 						TargetTag: &router.RoutingRule_Tag{
 							Tag: "reverse",

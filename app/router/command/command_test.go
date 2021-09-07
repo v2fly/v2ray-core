@@ -2,6 +2,7 @@ package command_test
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"testing"
 	"time"
 
@@ -232,11 +233,11 @@ func TestSerivceTestRoute(t *testing.T) {
 				TargetTag:      &router.RoutingRule_Tag{Tag: "out"},
 			},
 			{
-				Domain:    []*router.Domain{{Type: router.Domain_RootDomain, Value: "com"}},
+				Domain:    []*routercommon.Domain{{Type: routercommon.Domain_RootDomain, Value: "com"}},
 				TargetTag: &router.RoutingRule_Tag{Tag: "out"},
 			},
 			{
-				SourceGeoip: []*router.GeoIP{{CountryCode: "private", Cidr: []*router.CIDR{{Ip: []byte{127, 0, 0, 0}, Prefix: 8}}}},
+				SourceGeoip: []*routercommon.GeoIP{{CountryCode: "private", Cidr: []*routercommon.CIDR{{Ip: []byte{127, 0, 0, 0}, Prefix: 8}}}},
 				TargetTag:   &router.RoutingRule_Tag{Tag: "out"},
 			},
 			{

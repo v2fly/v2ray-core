@@ -2,6 +2,7 @@ package scenarios
 
 import (
 	"fmt"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 	"time"
@@ -38,10 +39,10 @@ func TestResolveIP(t *testing.T) {
 				},
 			}),
 			serial.ToTypedMessage(&router.Config{
-				DomainStrategy: router.Config_IpIfNonMatch,
+				DomainStrategy: router.DomainStrategy_IpIfNonMatch,
 				Rule: []*router.RoutingRule{
 					{
-						Cidr: []*router.CIDR{
+						Cidr: []*routercommon.CIDR{
 							{
 								Ip:     []byte{127, 0, 0, 0},
 								Prefix: 8,

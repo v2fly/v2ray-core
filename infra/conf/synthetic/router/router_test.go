@@ -2,6 +2,7 @@ package router_test
 
 import (
 	"encoding/json"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 	router2 "github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
 	"testing"
@@ -108,7 +109,7 @@ func TestRouterConfig(t *testing.T) {
 			}`,
 			Parser: createParser(),
 			Output: &router.Config{
-				DomainStrategy: router.Config_AsIs,
+				DomainStrategy: router.DomainStrategy_AsIs,
 				BalancingRule: []*router.BalancingRule{
 					{
 						Tag:              "b1",
@@ -140,13 +141,13 @@ func TestRouterConfig(t *testing.T) {
 				},
 				Rule: []*router.RoutingRule{
 					{
-						Domain: []*router.Domain{
+						Domain: []*routercommon.Domain{
 							{
-								Type:  router.Domain_Plain,
+								Type:  routercommon.Domain_Plain,
 								Value: "baidu.com",
 							},
 							{
-								Type:  router.Domain_Plain,
+								Type:  routercommon.Domain_Plain,
 								Value: "qq.com",
 							},
 						},
@@ -155,13 +156,13 @@ func TestRouterConfig(t *testing.T) {
 						},
 					},
 					{
-						Domain: []*router.Domain{
+						Domain: []*routercommon.Domain{
 							{
-								Type:  router.Domain_Plain,
+								Type:  routercommon.Domain_Plain,
 								Value: "v2fly.org",
 							},
 							{
-								Type:  router.Domain_Plain,
+								Type:  routercommon.Domain_Plain,
 								Value: "github.com",
 							},
 						},
@@ -170,9 +171,9 @@ func TestRouterConfig(t *testing.T) {
 						},
 					},
 					{
-						Geoip: []*router.GeoIP{
+						Geoip: []*routercommon.GeoIP{
 							{
-								Cidr: []*router.CIDR{
+								Cidr: []*routercommon.CIDR{
 									{
 										Ip:     []byte{10, 0, 0, 0},
 										Prefix: 8,
@@ -248,16 +249,16 @@ func TestRouterConfig(t *testing.T) {
 			}`,
 			Parser: createParser(),
 			Output: &router.Config{
-				DomainStrategy: router.Config_IpIfNonMatch,
+				DomainStrategy: router.DomainStrategy_IpIfNonMatch,
 				Rule: []*router.RoutingRule{
 					{
-						Domain: []*router.Domain{
+						Domain: []*routercommon.Domain{
 							{
-								Type:  router.Domain_Plain,
+								Type:  routercommon.Domain_Plain,
 								Value: "baidu.com",
 							},
 							{
-								Type:  router.Domain_Plain,
+								Type:  routercommon.Domain_Plain,
 								Value: "qq.com",
 							},
 						},
@@ -266,13 +267,13 @@ func TestRouterConfig(t *testing.T) {
 						},
 					},
 					{
-						Domain: []*router.Domain{
+						Domain: []*routercommon.Domain{
 							{
-								Type:  router.Domain_Plain,
+								Type:  routercommon.Domain_Plain,
 								Value: "v2fly.org",
 							},
 							{
-								Type:  router.Domain_Plain,
+								Type:  routercommon.Domain_Plain,
 								Value: "github.com",
 							},
 						},
@@ -281,9 +282,9 @@ func TestRouterConfig(t *testing.T) {
 						},
 					},
 					{
-						Geoip: []*router.GeoIP{
+						Geoip: []*routercommon.GeoIP{
 							{
-								Cidr: []*router.CIDR{
+								Cidr: []*routercommon.CIDR{
 									{
 										Ip:     []byte{10, 0, 0, 0},
 										Prefix: 8,
@@ -334,16 +335,16 @@ func TestRouterConfig(t *testing.T) {
 			}`,
 			Parser: createParser(),
 			Output: &router.Config{
-				DomainStrategy: router.Config_AsIs,
+				DomainStrategy: router.DomainStrategy_AsIs,
 				Rule: []*router.RoutingRule{
 					{
-						Domain: []*router.Domain{
+						Domain: []*routercommon.Domain{
 							{
-								Type:  router.Domain_Plain,
+								Type:  routercommon.Domain_Plain,
 								Value: "baidu.com",
 							},
 							{
-								Type:  router.Domain_Plain,
+								Type:  routercommon.Domain_Plain,
 								Value: "qq.com",
 							},
 						},
@@ -352,13 +353,13 @@ func TestRouterConfig(t *testing.T) {
 						},
 					},
 					{
-						Domain: []*router.Domain{
+						Domain: []*routercommon.Domain{
 							{
-								Type:  router.Domain_Plain,
+								Type:  routercommon.Domain_Plain,
 								Value: "v2fly.org",
 							},
 							{
-								Type:  router.Domain_Plain,
+								Type:  routercommon.Domain_Plain,
 								Value: "github.com",
 							},
 						},
@@ -367,9 +368,9 @@ func TestRouterConfig(t *testing.T) {
 						},
 					},
 					{
-						Geoip: []*router.GeoIP{
+						Geoip: []*routercommon.GeoIP{
 							{
-								Cidr: []*router.CIDR{
+								Cidr: []*routercommon.CIDR{
 									{
 										Ip:     []byte{10, 0, 0, 0},
 										Prefix: 8,

@@ -112,7 +112,7 @@ func TestDNSConfigParsing(t *testing.T) {
 						},
 					},
 				},
-				StaticHosts: []*dns.Config_HostMapping{
+				StaticHosts: []*dns.HostMapping{
 					{
 						Type:          dns.DomainMatchingType_Subdomain,
 						Domain:        "example.com",
