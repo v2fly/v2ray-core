@@ -5,6 +5,7 @@ package commander
 import (
 	"context"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/v5cfg"
 	"net"
 	"sync"
 
@@ -105,5 +106,23 @@ func (c *Commander) Close() error {
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, cfg interface{}) (interface{}, error) {
 		return NewCommander(ctx, cfg.(*Config))
+	}))
+}
+
+func init() {
+	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, cfg interface{}) (interface{}, error) {
+		simplifiedConfig := cfg.(*SimplifiedConfig)
+		fullConfig := &Config{
+			Tag:     simplifiedConfig.Tag,
+			Service: nil,
+		}
+		for _, v := range simplifiedConfig.Name {
+			pack, err := v5cfg.LoadHeterogeneousConfigFromRawJson(ctx, "grpcservice", v, []byte("{}"))
+			if err != nil {
+				return nil, err
+			}
+			fullConfig.Service = append(fullConfig.Service, serial.ToTypedMessage(pack))
+		}
+		return common.CreateObject(ctx, fullConfig)
 	}))
 }
