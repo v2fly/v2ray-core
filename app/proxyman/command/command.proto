@@ -8,6 +8,7 @@ option java_multiple_files = true;
 
 import "common/protocol/user.proto";
 import "google/protobuf/any.proto";
+import "common/protoext/extensions.proto";
 import "config.proto";
 
 message AddUserOperation {
@@ -70,4 +71,7 @@ service HandlerService {
   rpc AlterOutbound(AlterOutboundRequest) returns (AlterOutboundResponse) {}
 }
 
-message Config {}
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "grpcservice";
+  option (v2ray.core.common.protoext.message_opt).short_name = "proxyman";
+}

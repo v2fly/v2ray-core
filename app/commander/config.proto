@@ -19,7 +19,10 @@ message Config {
 }
 
 // ReflectionConfig is the placeholder config for ReflectionService.
-message ReflectionConfig {}
+message ReflectionConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "grpcservice";
+  option (v2ray.core.common.protoext.message_opt).short_name = "reflection";
+}
 
 
 message SimplifiedConfig {
