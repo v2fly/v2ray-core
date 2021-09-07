@@ -99,11 +99,7 @@ func RegisterImplementation(proto interface{}, loader CustomLoader) error {
 
 func registerImplementation(proto interface{}, loader CustomLoader) error {
 	protoReflect := reflect.New(reflect.TypeOf(proto).Elem())
-	var proto2 protov2.Message
-	assignMessage := func(msg protov2.Message) {
-		proto2 = msg
-	}
-	reflect.ValueOf(assignMessage).Call([]reflect.Value{protoReflect})
+	var proto2 = protoReflect.Interface().(protov2.Message)
 	msgDesc := proto2.ProtoReflect().Descriptor()
 	fullName := string(msgDesc.FullName())
 	msgOpts, err := protoext.GetMessageOptions(msgDesc)
