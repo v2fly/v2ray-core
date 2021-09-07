@@ -9,6 +9,9 @@ package dns
 import (
 	"context"
 	"fmt"
+	"github.com/v2fly/v2ray-core/v4/common/platform"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
 	"strings"
 	"sync"
 
@@ -308,5 +311,51 @@ func (s *DNS) sortClients(domain string) []*Client {
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return New(ctx, config.(*Config))
+	}))
+
+	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
+
+		ctx = cfgcommon.NewConfigureLoadingContext(context.Background())
+
+		geoloadername := platform.NewEnvFlag("v2ray.conf.geoloader").GetValue(func() string {
+			return "standard"
+		})
+
+		if loader, err := geodata.GetGeoDataLoader(geoloadername); err == nil {
+			cfgcommon.SetGeoDataLoader(ctx, loader)
+		} else {
+			return nil, newError("unable to create geo data loader ").Base(err)
+		}
+
+		cfgEnv := cfgcommon.GetConfigureLoadingEnvironment(ctx)
+		geoLoader := cfgEnv.GetGeoLoader()
+
+		simplifiedConfig := config.(*SimplifiedConfig)
+		for _, v := range simplifiedConfig.NameServer {
+			for _, geo := range v.Geoip {
+				if geo.Code != "" {
+					filepath := "geoip.dat"
+					if geo.FilePath != "" {
+						filepath = geo.FilePath
+					}
+					var err error
+					geo.Cidr, err = geoLoader.LoadIP(filepath, geo.Code)
+					if err != nil {
+						return nil, newError("unable to load geoip").Base(err)
+					}
+				}
+			}
+		}
+
+		fullConfig := &Config{
+			NameServer:      simplifiedConfig.NameServer,
+			ClientIp:        simplifiedConfig.ClientIp,
+			StaticHosts:     simplifiedConfig.StaticHosts,
+			Tag:             simplifiedConfig.Tag,
+			DisableCache:    simplifiedConfig.DisableCache,
+			QueryStrategy:   simplifiedConfig.QueryStrategy,
+			DisableFallback: simplifiedConfig.DisableFallback,
+		}
+		return common.CreateObject(ctx, fullConfig)
 	}))
 }
