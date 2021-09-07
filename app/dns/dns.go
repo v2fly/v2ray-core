@@ -337,6 +337,8 @@ func init() {
 					filepath := "geoip.dat"
 					if geo.FilePath != "" {
 						filepath = geo.FilePath
+					} else {
+						geo.CountryCode = geo.Code
 					}
 					var err error
 					geo.Cidr, err = geoLoader.LoadIP(filepath, geo.Code)

@@ -151,7 +151,7 @@ func init() {
 	}))
 
 	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
-		ctx = cfgcommon.NewConfigureLoadingContext(context.Background())
+		ctx = cfgcommon.NewConfigureLoadingContext(ctx)
 
 		geoloadername := platform.NewEnvFlag("v2ray.conf.geoloader").GetValue(func() string {
 			return "standard"
@@ -174,6 +174,8 @@ func init() {
 					filepath := "geoip.dat"
 					if geo.FilePath != "" {
 						filepath = geo.FilePath
+					} else {
+						geo.CountryCode = geo.Code
 					}
 					var err error
 					geo.Cidr, err = geoLoader.LoadIP(filepath, geo.Code)
@@ -184,7 +186,7 @@ func init() {
 			}
 			for _, geo := range v.GeoDomain {
 				if geo.Code != "" {
-					filepath := "geodomain.dat"
+					filepath := "geosite.dat"
 					if geo.FilePath != "" {
 						filepath = geo.FilePath
 					}
@@ -198,7 +200,7 @@ func init() {
 			}
 		}
 
-		fullConfig := Config{
+		fullConfig := &Config{
 			DomainStrategy: simplifiedConfig.DomainStrategy,
 			Rule:           simplifiedConfig.Rule,
 			BalancingRule:  simplifiedConfig.BalancingRule,
