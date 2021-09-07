@@ -65,6 +65,11 @@ func ListenTCP(ctx context.Context, address net.Address, port net.Port, settings
 	}
 
 	protocol := settings.ProtocolName
+
+	if originalProtocolName := getOriginalMessageName(settings); originalProtocolName != "" {
+		protocol = originalProtocolName
+	}
+
 	listenFunc := transportListenerCache[protocol]
 	if listenFunc == nil {
 		return nil, newError(protocol, " listener not registered.").AtError()

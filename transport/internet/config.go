@@ -2,7 +2,9 @@ package internet
 
 import (
 	"context"
+	"github.com/golang/protobuf/proto"
 	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/protoext"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/features"
 )
@@ -127,4 +129,14 @@ func (c *ProxyConfig) HasTag() bool {
 
 func (m SocketConfig_TProxyMode) IsEnabled() bool {
 	return m != SocketConfig_Off
+}
+
+func getOriginalMessageName(streamSettings *MemoryStreamConfig) string {
+	msgOpts, err := protoext.GetMessageOptions(proto.MessageV2(streamSettings.ProtocolSettings).ProtoReflect().Descriptor())
+	if err == nil {
+		if msgOpts.TransportOriginalName != "" {
+			return msgOpts.TransportOriginalName
+		}
+	}
+	return ""
 }

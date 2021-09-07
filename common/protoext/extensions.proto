@@ -19,6 +19,8 @@ extend google.protobuf.FieldOptions {
 message MessageOpt{
   repeated string type = 1;
   repeated string short_name = 2;
+
+  string transport_original_name = 86001;
 }
 
 message FieldOpt{
