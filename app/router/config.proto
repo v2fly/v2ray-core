@@ -136,6 +136,9 @@ message RoutingRule {
   string attributes = 15;
 
   string domain_matcher = 17;
+
+  // geo_domain instruct simplified config loader to load geo domain rule and fill in domain field.
+  repeated GeoSite geo_domain = 68001;
 }
 
 message BalancingRule {

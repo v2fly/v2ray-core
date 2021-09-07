@@ -4,13 +4,15 @@ package router
 
 import (
 	"context"
-
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/platform"
 	"github.com/v2fly/v2ray-core/v4/features/dns"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
 	"github.com/v2fly/v2ray-core/v4/features/routing"
 	routing_dns "github.com/v2fly/v2ray-core/v4/features/routing/dns"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
 )
 
 // Router is an implementation of routing.Router.
@@ -146,5 +148,61 @@ func init() {
 			return nil, err
 		}
 		return r, nil
+	}))
+
+	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
+		ctx = cfgcommon.NewConfigureLoadingContext(context.Background())
+
+		geoloadername := platform.NewEnvFlag("v2ray.conf.geoloader").GetValue(func() string {
+			return "standard"
+		})
+
+		if loader, err := geodata.GetGeoDataLoader(geoloadername); err == nil {
+			cfgcommon.SetGeoDataLoader(ctx, loader)
+		} else {
+			return nil, newError("unable to create geo data loader ").Base(err)
+		}
+
+		cfgEnv := cfgcommon.GetConfigureLoadingEnvironment(ctx)
+		geoLoader := cfgEnv.GetGeoLoader()
+
+		simplifiedConfig := config.(*SimplifiedConfig)
+
+		for _, v := range simplifiedConfig.Rule {
+			for _, geo := range v.Geoip {
+				if geo.Code != "" {
+					filepath := "geoip.dat"
+					if geo.FilePath != "" {
+						filepath = geo.FilePath
+					}
+					var err error
+					geo.Cidr, err = geoLoader.LoadIP(filepath, geo.Code)
+					if err != nil {
+						return nil, newError("unable to load geoip").Base(err)
+					}
+				}
+			}
+			for _, geo := range v.GeoDomain {
+				if geo.Code != "" {
+					filepath := "geodomain.dat"
+					if geo.FilePath != "" {
+						filepath = geo.FilePath
+					}
+					var err error
+					geo.Domain, err = geoLoader.LoadGeoSiteWithAttr(filepath, geo.Code)
+					if err != nil {
+						return nil, newError("unable to load geodomain").Base(err)
+					}
+					v.Domain = append(v.Domain, geo.Domain...)
+				}
+			}
+		}
+
+		fullConfig := Config{
+			DomainStrategy: simplifiedConfig.DomainStrategy,
+			Rule:           simplifiedConfig.Rule,
+			BalancingRule:  simplifiedConfig.BalancingRule,
+		}
+		return common.CreateObject(ctx, fullConfig)
 	}))
 }
