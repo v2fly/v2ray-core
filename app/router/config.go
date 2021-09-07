@@ -1,11 +1,15 @@
 package router
 
 import (
+	"context"
+	"encoding/json"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
 	"github.com/v2fly/v2ray-core/v4/features/routing"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/v5cfg"
 )
 
 // CIDRList is an alias of []*CIDR to provide sort.Interface.
@@ -202,4 +206,34 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 	default:
 		return nil, newError("unrecognized balancer type")
 	}
+}
+
+func (br *BalancingRule) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {
+	type BalancingRuleStub struct {
+		Tag              string          `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+		OutboundSelector []string        `protobuf:"bytes,2,rep,name=outbound_selector,json=outboundSelector,proto3" json:"outbound_selector,omitempty"`
+		Strategy         string          `protobuf:"bytes,3,opt,name=strategy,proto3" json:"strategy,omitempty"`
+		StrategySettings json.RawMessage `protobuf:"bytes,4,opt,name=strategy_settings,json=strategySettings,proto3" json:"strategy_settings,omitempty"`
+		FallbackTag      string          `protobuf:"bytes,5,opt,name=fallback_tag,json=fallbackTag,proto3" json:"fallback_tag,omitempty"`
+	}
+
+	var stub BalancingRuleStub
+	if err := json.Unmarshal(bytes, &stub); err != nil {
+		return err
+	}
+	if stub.Strategy == "" {
+		stub.Strategy = "random"
+	}
+	settingsPack, err := v5cfg.LoadHeterogeneousConfigFromRawJson(context.TODO(), "balancer", stub.Strategy, stub.StrategySettings)
+	if err != nil {
+		return err
+	}
+	br.StrategySettings = serial.ToTypedMessage(settingsPack)
+
+	br.Tag = stub.Tag
+	br.Strategy = stub.Strategy
+	br.OutboundSelector = stub.OutboundSelector
+	br.FallbackTag = stub.FallbackTag
+
+	return nil
 }

@@ -14,3 +14,8 @@ func loadHeterogeneousConfigFromRawJson(interfaceType, name string, rawJson json
 	ctx := envctx.ContextWithEnvironment(context.TODO(), fsdef)
 	return registry.LoadImplementationByAlias(ctx, interfaceType, name, []byte(rawJson))
 }
+
+// LoadHeterogeneousConfigFromRawJson private API
+func LoadHeterogeneousConfigFromRawJson(ctx context.Context, interfaceType, name string, rawJson json.RawMessage) (proto.Message, error) {
+	return loadHeterogeneousConfigFromRawJson(interfaceType, name, rawJson)
+}
