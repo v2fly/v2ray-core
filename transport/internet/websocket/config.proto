@@ -15,7 +15,7 @@ message Header {
 
 message Config {
   option (v2ray.core.common.protoext.message_opt).type = "transport";
-  option (v2ray.core.common.protoext.message_opt).short_name = "websocket";
+  option (v2ray.core.common.protoext.message_opt).short_name = "ws";
 
   reserved 1;
 

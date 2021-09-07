@@ -5,7 +5,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
-const protocolName = "grpc"
+const protocolName = "gun"
 
 func init() {
 	common.Must(internet.RegisterProtocolConfigCreator(protocolName, func() interface{} {
