@@ -2,6 +2,7 @@ package internet
 
 import (
 	"context"
+	"os"
 	"runtime"
 	"syscall"
 
@@ -75,6 +76,9 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 	}
 
 	l, err = lc.Listen(ctx, network, address)
+	if err == nil && address[0] == '/' {
+		err = os.Chmod(address, 0666)
+	}
 	if sockopt != nil && sockopt.AcceptProxyProtocol {
 		policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
 		l = &proxyproto.Listener{Listener: l, Policy: policyFunc}
