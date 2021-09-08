@@ -77,7 +77,7 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 
 	l, err = lc.Listen(ctx, network, address)
 	if err == nil && address[0] == '/' {
-		err = os.Chmod(address, 0666)
+		err = os.Chmod(address, 0o666)
 	}
 	if sockopt != nil && sockopt.AcceptProxyProtocol {
 		policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
