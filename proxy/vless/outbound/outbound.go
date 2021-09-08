@@ -17,9 +17,8 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/signal"
 	"github.com/v2fly/v2ray-core/v4/common/task"
 	"github.com/v2fly/v2ray-core/v4/features/policy"
-	"github.com/v2fly/v2ray-core/v4/proxy/vless"
-	"github.com/v2fly/v2ray-core/v4/proxy/vless/encoding"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess"
+	"github.com/v2fly/v2ray-core/v4/protocol/vless"
+	"github.com/v2fly/v2ray-core/v4/protocol/vless/encoding"
 	"github.com/v2fly/v2ray-core/v4/transport"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
@@ -37,13 +36,13 @@ func init() {
 				Port:    simplifiedClient.Port,
 				User: []*protocol.User{
 					{
-						Account: serial.ToTypedMessage(&vmess.Account{Id: simplifiedClient.Uuid}),
+						Account: serial.ToTypedMessage(&vless.Account{Id: simplifiedClient.Uuid, Encryption: "none"}),
 					},
 				},
 			},
 		}}
 
-		return New(ctx, fullClient)
+		return common.CreateObject(ctx, fullClient)
 	}))
 }
 

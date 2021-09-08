@@ -25,7 +25,7 @@ message Config {
   repeated Fallback fallbacks = 3;
 }
 
-message SimplifiedConfig{
+message SimplifiedConfig {
   option (v2ray.core.common.protoext.message_opt).type = "inbound";
   option (v2ray.core.common.protoext.message_opt).short_name = "vless";
 
