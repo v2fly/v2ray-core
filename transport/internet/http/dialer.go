@@ -28,7 +28,7 @@ var (
 
 type dialerCanceller func()
 
-func getHTTPClient(ctx context.Context, dest net.Destination, tlsSettings *tls.Config) (*http.Client, dialerCanceller) {
+func getHTTPClient(ctx context.Context, dest net.Destination, tlsSettings *tls.Config, streamSettings *internet.MemoryStreamConfig) (*http.Client, dialerCanceller) {
 	globalDialerAccess.Lock()
 	defer globalDialerAccess.Unlock()
 
@@ -62,7 +62,7 @@ func getHTTPClient(ctx context.Context, dest net.Destination, tlsSettings *tls.C
 			address := net.ParseAddress(rawHost)
 
 			detachedContext := core.ToBackgroundDetachedContext(ctx)
-			pconn, err := internet.DialSystem(detachedContext, net.TCPDestination(address, port), nil)
+			pconn, err := internet.DialSystem(detachedContext, net.TCPDestination(address, port), streamSettings.SocketSettings)
 			if err != nil {
 				return nil, err
 			}
@@ -100,7 +100,7 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 	if tlsConfig == nil {
 		return nil, newError("TLS must be enabled for http transport.").AtWarning()
 	}
-	client, canceller := getHTTPClient(ctx, dest, tlsConfig)
+	client, canceller := getHTTPClient(ctx, dest, tlsConfig, streamSettings)
 
 	opts := pipe.OptionsFromContext(ctx)
 	preader, pwriter := pipe.New(opts...)
