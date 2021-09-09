@@ -75,7 +75,7 @@ type Content struct {
 // Sockopt is the settings for socket connection.
 type Sockopt struct {
 	// Mark of the socket connection.
-	Mark int32
+	Mark uint32
 }
 
 // SetAttribute attachs additional string attributes to content.
