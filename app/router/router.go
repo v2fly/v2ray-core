@@ -6,6 +6,7 @@ import (
 	"context"
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/platform"
 	"github.com/v2fly/v2ray-core/v4/features/dns"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
@@ -168,7 +169,12 @@ func init() {
 
 		simplifiedConfig := config.(*SimplifiedConfig)
 
+		var routingRules []*RoutingRule
+
 		for _, v := range simplifiedConfig.Rule {
+
+			rule := new(RoutingRule)
+
 			for _, geo := range v.Geoip {
 				if geo.Code != "" {
 					filepath := "geoip.dat"
@@ -184,6 +190,25 @@ func init() {
 					}
 				}
 			}
+			rule.Geoip = v.Geoip
+
+			for _, geo := range v.SourceGeoip {
+				if geo.Code != "" {
+					filepath := "geoip.dat"
+					if geo.FilePath != "" {
+						filepath = geo.FilePath
+					} else {
+						geo.CountryCode = geo.Code
+					}
+					var err error
+					geo.Cidr, err = geoLoader.LoadIP(filepath, geo.Code)
+					if err != nil {
+						return nil, newError("unable to load geoip").Base(err)
+					}
+				}
+			}
+			rule.SourceGeoip = v.SourceGeoip
+
 			for _, geo := range v.GeoDomain {
 				if geo.Code != "" {
 					filepath := "geosite.dat"
@@ -195,14 +220,37 @@ func init() {
 					if err != nil {
 						return nil, newError("unable to load geodomain").Base(err)
 					}
-					v.Domain = append(v.Domain, geo.Domain...)
+					rule.Domain = append(rule.Domain, geo.Domain...)
 				}
 			}
+			{
+				portList := &cfgcommon.PortList{}
+				err := portList.UnmarshalText(v.PortList)
+				if err != nil {
+					return nil, err
+				}
+				rule.PortList = portList.Build()
+			}
+			{
+				portList := &cfgcommon.PortList{}
+				err := portList.UnmarshalText(v.SourcePortList)
+				if err != nil {
+					return nil, err
+				}
+				rule.SourcePortList = portList.Build()
+			}
+			rule.Domain = v.Domain
+			rule.Networks = net.ParseNetworks(v.Networks)
+			rule.Protocol = v.Protocol
+			rule.Attributes = v.Attributes
+			rule.UserEmail = v.UserEmail
+			rule.InboundTag = v.InboundTag
+			rule.DomainMatcher = v.DomainMatcher
 		}
 
 		fullConfig := &Config{
 			DomainStrategy: simplifiedConfig.DomainStrategy,
-			Rule:           simplifiedConfig.Rule,
+			Rule:           routingRules,
 			BalancingRule:  simplifiedConfig.BalancingRule,
 		}
 		return common.CreateObject(ctx, fullConfig)

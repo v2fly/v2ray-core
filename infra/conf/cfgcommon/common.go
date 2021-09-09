@@ -196,6 +196,17 @@ func (list *PortList) UnmarshalJSON(data []byte) error {
 			return newError("invalid port: ", string(data)).Base(err2)
 		}
 	}
+	err := list.UnmarshalText(listStr)
+	if err != nil {
+		return err
+	}
+	if number != 0 {
+		list.Range = append(list.Range, PortRange{From: number, To: number})
+	}
+	return nil
+}
+
+func (list *PortList) UnmarshalText(listStr string) error {
 	rangelist := strings.Split(listStr, ",")
 	for _, rangeStr := range rangelist {
 		trimmed := strings.TrimSpace(rangeStr)
@@ -214,9 +225,6 @@ func (list *PortList) UnmarshalJSON(data []byte) error {
 				list.Range = append(list.Range, PortRange{From: uint32(port), To: uint32(port)})
 			}
 		}
-	}
-	if number != 0 {
-		list.Range = append(list.Range, PortRange{From: number, To: number})
 	}
 	return nil
 }

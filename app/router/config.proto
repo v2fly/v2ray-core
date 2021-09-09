@@ -134,11 +134,54 @@ message Config {
   repeated BalancingRule balancing_rule = 3;
 }
 
+message SimplifiedRoutingRule {
+  oneof target_tag {
+    // Tag of outbound that this rule is pointing to.
+    string tag = 1;
+
+    // Tag of routing balancer.
+    string balancing_tag = 12;
+  }
+
+  // List of domains for target domain matching.
+  repeated v2ray.core.app.router.routercommon.Domain domain = 2;
+
+  // List of GeoIPs for target IP address matching. If this entry exists, the
+  // cidr above will have no effect. GeoIP fields with the same country code are
+  // supposed to contain exactly same content. They will be merged during
+  // runtime. For customized GeoIPs, please leave country code empty.
+  repeated v2ray.core.app.router.routercommon.GeoIP geoip = 10;
+
+  // List of ports.
+  string port_list = 14;
+
+  // List of networks for matching.
+  string networks = 13;
+
+  // List of GeoIPs for source IP address matching. If this entry exists, the
+  // source_cidr above will have no effect.
+  repeated v2ray.core.app.router.routercommon.GeoIP source_geoip = 11;
+
+  // List of ports for source port matching.
+  string source_port_list = 16;
+
+  repeated string user_email = 7;
+  repeated string inbound_tag = 8;
+  repeated string protocol = 9;
+
+  string attributes = 15;
+
+  string domain_matcher = 17;
+
+  // geo_domain instruct simplified config loader to load geo domain rule and fill in domain field.
+  repeated v2ray.core.app.router.routercommon.GeoSite geo_domain = 68001;
+}
+
 message SimplifiedConfig {
   option (v2ray.core.common.protoext.message_opt).type = "service";
   option (v2ray.core.common.protoext.message_opt).short_name = "router";
 
   DomainStrategy domain_strategy = 1;
-  repeated RoutingRule rule = 2;
+  repeated SimplifiedRoutingRule rule = 2;
   repeated BalancingRule balancing_rule = 3;
 }
