@@ -16,14 +16,15 @@ require (
 	github.com/v2fly/BrowserBridge v0.0.0-20210430233438-0570fc1d7d08
 	github.com/v2fly/VSign v0.0.0-20201108000810-e2adc24bf848
 	github.com/v2fly/ss-bloomring v0.0.0-20210312155135-28617310f63e
-	go.starlark.net v0.0.0-20210602144842-1cdb82c9e17a
+	go.starlark.net v0.0.0-20210901212718-87f333178d59
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
-	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
+	golang.org/x/net v0.0.0-20210903162142-ad29c8ab022f
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20210820121016-41cdb8703e55
+	golang.org/x/sys v0.0.0-20210903071746-97244b99971b
 	google.golang.org/grpc v1.40.0
 	google.golang.org/protobuf v1.27.1
 	h12.io/socks v1.0.3
+	inet.af/netaddr v0.0.0-20210903134321-85fa6c94624e
 )
 
 require (
@@ -41,6 +42,8 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
 	github.com/xtaci/smux v1.5.15 // indirect
+	go4.org/intern v0.0.0-20210108033219-3eb7198706b2 // indirect
+	go4.org/unsafe/assume-no-moving-gc v0.0.0-20201222180813-1025295fd063 // indirect
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/tools v0.1.1 // indirect
