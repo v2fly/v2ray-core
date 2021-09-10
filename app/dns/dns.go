@@ -349,9 +349,27 @@ func init() {
 			}
 		}
 
+		var nameservers []*NameServer
+
+		for _, v := range simplifiedConfig.NameServer {
+			nameserver := &NameServer{
+				Address:      v.Address,
+				ClientIp:     net.ParseIP(v.ClientIp),
+				SkipFallback: v.SkipFallback,
+				Geoip:        v.Geoip,
+			}
+			for _, prioritizedDomain := range v.PrioritizedDomain {
+				nameserver.PrioritizedDomain = append(nameserver.PrioritizedDomain, &NameServer_PriorityDomain{
+					Type:   prioritizedDomain.Type,
+					Domain: prioritizedDomain.Domain,
+				})
+			}
+			nameservers = append(nameservers, nameserver)
+		}
+
 		fullConfig := &Config{
-			NameServer:      simplifiedConfig.NameServer,
-			ClientIp:        simplifiedConfig.ClientIp,
+			NameServer:      nameservers,
+			ClientIp:        net.ParseIP(simplifiedConfig.ClientIp),
 			StaticHosts:     simplifiedConfig.StaticHosts,
 			Tag:             simplifiedConfig.Tag,
 			DisableCache:    simplifiedConfig.DisableCache,
