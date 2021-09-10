@@ -1,55 +1,14 @@
+//go:build !confonly
+// +build !confonly
+
 package router
 
 import (
-	"context"
-	"encoding/json"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
 	"github.com/v2fly/v2ray-core/v4/features/routing"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/v5cfg"
 )
-
-// CIDRList is an alias of []*CIDR to provide sort.Interface.
-type CIDRList []*routercommon.CIDR
-
-// Len implements sort.Interface.
-func (l *CIDRList) Len() int {
-	return len(*l)
-}
-
-// Less implements sort.Interface.
-func (l *CIDRList) Less(i int, j int) bool {
-	ci := (*l)[i]
-	cj := (*l)[j]
-
-	if len(ci.Ip) < len(cj.Ip) {
-		return true
-	}
-
-	if len(ci.Ip) > len(cj.Ip) {
-		return false
-	}
-
-	for k := 0; k < len(ci.Ip); k++ {
-		if ci.Ip[k] < cj.Ip[k] {
-			return true
-		}
-
-		if ci.Ip[k] > cj.Ip[k] {
-			return false
-		}
-	}
-
-	return ci.Prefix < cj.Prefix
-}
-
-// Swap implements sort.Interface.
-func (l *CIDRList) Swap(i int, j int) {
-	(*l)[i], (*l)[j] = (*l)[j], (*l)[i]
-}
 
 type Rule struct {
 	Tag       string
@@ -163,77 +122,21 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 	return conds, nil
 }
 
-// Build builds the balancing rule
-func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatcher) (*Balancer, error) {
+func (br *BalancingRule) Build(ohm outbound.Manager) (*Balancer, error) {
 	switch br.Strategy {
-	case "leastping":
-		i, err := serial.GetInstanceOf(br.StrategySettings)
-		if err != nil {
-			return nil, err
-		}
-		s, ok := i.(*StrategyLeastPingConfig)
-		if !ok {
-			return nil, newError("not a StrategyLeastPingConfig").AtError()
-		}
+	case "leastPing":
 		return &Balancer{
 			selectors: br.OutboundSelector,
-			strategy:  &LeastPingStrategy{config: s},
+			strategy:  &LeastPingStrategy{},
 			ohm:       ohm,
-		}, nil
-	case "leastload":
-		i, err := serial.GetInstanceOf(br.StrategySettings)
-		if err != nil {
-			return nil, err
-		}
-		s, ok := i.(*StrategyLeastLoadConfig)
-		if !ok {
-			return nil, newError("not a StrategyLeastLoadConfig").AtError()
-		}
-		leastLoadStrategy := NewLeastLoadStrategy(s)
-		return &Balancer{
-			selectors: br.OutboundSelector,
-			ohm:       ohm, fallbackTag: br.FallbackTag,
-			strategy: leastLoadStrategy,
 		}, nil
 	case "random":
 		fallthrough
-	case "":
+	default:
 		return &Balancer{
 			selectors: br.OutboundSelector,
-			ohm:       ohm, fallbackTag: br.FallbackTag,
-			strategy: &RandomStrategy{},
+			strategy:  &RandomStrategy{},
+			ohm:       ohm,
 		}, nil
-	default:
-		return nil, newError("unrecognized balancer type")
 	}
-}
-
-func (br *BalancingRule) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {
-	type BalancingRuleStub struct {
-		Tag              string          `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
-		OutboundSelector []string        `protobuf:"bytes,2,rep,name=outbound_selector,json=outboundSelector,proto3" json:"outbound_selector,omitempty"`
-		Strategy         string          `protobuf:"bytes,3,opt,name=strategy,proto3" json:"strategy,omitempty"`
-		StrategySettings json.RawMessage `protobuf:"bytes,4,opt,name=strategy_settings,json=strategySettings,proto3" json:"strategy_settings,omitempty"`
-		FallbackTag      string          `protobuf:"bytes,5,opt,name=fallback_tag,json=fallbackTag,proto3" json:"fallback_tag,omitempty"`
-	}
-
-	var stub BalancingRuleStub
-	if err := json.Unmarshal(bytes, &stub); err != nil {
-		return err
-	}
-	if stub.Strategy == "" {
-		stub.Strategy = "random"
-	}
-	settingsPack, err := v5cfg.LoadHeterogeneousConfigFromRawJson(context.TODO(), "balancer", stub.Strategy, stub.StrategySettings)
-	if err != nil {
-		return err
-	}
-	br.StrategySettings = serial.ToTypedMessage(settingsPack)
-
-	br.Tag = stub.Tag
-	br.Strategy = stub.Strategy
-	br.OutboundSelector = stub.OutboundSelector
-	br.FallbackTag = stub.FallbackTag
-
-	return nil
 }
