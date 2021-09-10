@@ -24,16 +24,24 @@ var (
 	globalDialerAccess sync.Mutex
 )
 
-func getHTTPClient(ctx context.Context, dest net.Destination, tlsSettings *tls.Config) *http.Client {
+type dialerCanceller func()
+
+func getHTTPClient(ctx context.Context, dest net.Destination, tlsSettings *tls.Config, streamSettings *internet.MemoryStreamConfig) (*http.Client, dialerCanceller) {
 	globalDialerAccess.Lock()
 	defer globalDialerAccess.Unlock()
+
+	canceller := func() {
+		globalDialerAccess.Lock()
+		defer globalDialerAccess.Unlock()
+		delete(globalDialerMap, dest)
+	}
 
 	if globalDialerMap == nil {
 		globalDialerMap = make(map[net.Destination]*http.Client)
 	}
 
 	if client, found := globalDialerMap[dest]; found {
-		return client
+		return client, canceller
 	}
 
 	transport := &http2.Transport{
@@ -52,7 +60,7 @@ func getHTTPClient(ctx context.Context, dest net.Destination, tlsSettings *tls.C
 			address := net.ParseAddress(rawHost)
 
 			detachedContext := core.ToBackgroundDetachedContext(ctx)
-			pconn, err := internet.DialSystem(detachedContext, net.TCPDestination(address, port), nil)
+			pconn, err := internet.DialSystem(detachedContext, net.TCPDestination(address, port), streamSettings.SocketSettings)
 			if err != nil {
 				return nil, err
 			}
@@ -80,7 +88,7 @@ func getHTTPClient(ctx context.Context, dest net.Destination, tlsSettings *tls.C
 	}
 
 	globalDialerMap[dest] = client
-	return client
+	return client, canceller
 }
 
 // Dial dials a new TCP connection to the given destination.
@@ -90,7 +98,7 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 	if tlsConfig == nil {
 		return nil, newError("TLS must be enabled for http transport.").AtWarning()
 	}
-	client := getHTTPClient(ctx, dest, tlsConfig)
+	client, canceller := getHTTPClient(ctx, dest, tlsConfig, streamSettings)
 
 	opts := pipe.OptionsFromContext(ctx)
 	preader, pwriter := pipe.New(opts...)
@@ -128,6 +136,7 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 
 	response, err := client.Do(request) // nolint: bodyclose
 	if err != nil {
+		canceller()
 		return nil, newError("failed to dial to ", dest).Base(err).AtWarning()
 	}
 	if response.StatusCode != 200 {
