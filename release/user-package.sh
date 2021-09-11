@@ -40,10 +40,13 @@ build_v2() {
 }
 
 build_dat() {
-	echo ">>> Download latest geoip..."
+	echo ">>> Download latest geoip.dat"
 	curl -s -L -o "$TMP"/geoip.dat "https://github.com/v2fly/geoip/raw/release/geoip.dat"
 
-	echo ">>> Download latest geosite..."
+	echo ">>> Download latest geoip-only-cn-private.dat"
+	curl -s -L -o "$TMP"/geoip-only-cn-private.dat "https://github.com/v2fly/geoip/raw/release/geoip-only-cn-private.dat"
+
+	echo ">>> Download latest geosite.dat"
 	curl -s -L -o "$TMP"/geosite.dat "https://github.com/v2fly/domain-list-community/raw/release/dlc.dat"
 }
 
