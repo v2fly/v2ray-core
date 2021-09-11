@@ -4,8 +4,6 @@
 package router
 
 import (
-	"strconv"
-
 	"inet.af/netaddr"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
@@ -21,16 +19,15 @@ type GeoIPMatcher struct {
 func (m *GeoIPMatcher) Init(cidrs []*CIDR) error {
 	var builder4, builder6 netaddr.IPSetBuilder
 	for _, cidr := range cidrs {
-		ip := net.IP(cidr.GetIp())
-		ipStr := ip.String() + "/" + strconv.Itoa(int(cidr.GetPrefix()))
-		ipPrefix, err := netaddr.ParseIPPrefix(ipStr)
-		if err != nil {
-			return err
+		netaddrIP, ok := netaddr.FromStdIP(net.IP(cidr.GetIp()))
+		if !ok {
+			return newError("invalid IP address ", cidr)
 		}
-		switch len(ip) {
-		case net.IPv4len:
+		ipPrefix := netaddr.IPPrefixFrom(netaddrIP, uint8(cidr.GetPrefix()))
+		switch {
+		case netaddrIP.Is4():
 			builder4.AddPrefix(ipPrefix)
-		case net.IPv6len:
+		case netaddrIP.Is6():
 			builder6.AddPrefix(ipPrefix)
 		}
 	}
