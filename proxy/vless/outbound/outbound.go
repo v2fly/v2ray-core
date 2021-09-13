@@ -17,8 +17,8 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/signal"
 	"github.com/v2fly/v2ray-core/v4/common/task"
 	"github.com/v2fly/v2ray-core/v4/features/policy"
-	"github.com/v2fly/v2ray-core/v4/protocol/vless"
-	"github.com/v2fly/v2ray-core/v4/protocol/vless/encoding"
+	"github.com/v2fly/v2ray-core/v4/proxy/vless"
+	"github.com/v2fly/v2ray-core/v4/proxy/vless/encoding"
 	"github.com/v2fly/v2ray-core/v4/transport"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
