@@ -14,6 +14,7 @@ message NameServer {
   v2ray.core.common.net.Endpoint address = 1;
   bytes client_ip = 5;
   bool skipFallback = 6;
+  bool concurrent = 7;
 
   message PriorityDomain {
     DomainMatchingType type = 1;

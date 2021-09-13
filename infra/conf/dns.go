@@ -20,6 +20,7 @@ type NameServerConfig struct {
 	ClientIP     *cfgcommon.Address
 	Port         uint16
 	SkipFallback bool
+	Concurrent   bool
 	Domains      []string
 	ExpectIPs    cfgcommon.StringList
 
@@ -38,6 +39,7 @@ func (c *NameServerConfig) UnmarshalJSON(data []byte) error {
 		ClientIP     *cfgcommon.Address   `json:"clientIp"`
 		Port         uint16               `json:"port"`
 		SkipFallback bool                 `json:"skipFallback"`
+		Concurrent   bool                 `json:"concurrent"`
 		Domains      []string             `json:"domains"`
 		ExpectIPs    cfgcommon.StringList `json:"expectIps"`
 	}
@@ -46,6 +48,7 @@ func (c *NameServerConfig) UnmarshalJSON(data []byte) error {
 		c.ClientIP = advanced.ClientIP
 		c.Port = advanced.Port
 		c.SkipFallback = advanced.SkipFallback
+		c.Concurrent = advanced.Concurrent
 		c.Domains = advanced.Domains
 		c.ExpectIPs = advanced.ExpectIPs
 		return nil
@@ -118,6 +121,7 @@ func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 		},
 		ClientIp:          myClientIP,
 		SkipFallback:      c.SkipFallback,
+		Concurrent:        c.Concurrent,
 		PrioritizedDomain: domains,
 		Geoip:             geoipList,
 		OriginalRules:     originalRules,

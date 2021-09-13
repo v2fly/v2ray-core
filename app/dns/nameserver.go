@@ -31,6 +31,7 @@ type Client struct {
 	server       Server
 	clientIP     net.IP
 	skipFallback bool
+	concurrent   bool
 	domains      []string
 	expectIPs    []*router.GeoIPMatcher
 }
@@ -152,6 +153,7 @@ func NewClient(ctx context.Context, ns *NameServer, clientIP net.IP, container r
 		client.server = server
 		client.clientIP = clientIP
 		client.skipFallback = ns.SkipFallback
+		client.concurrent = ns.Concurrent
 		client.domains = rules
 		client.expectIPs = matchers
 		return nil
