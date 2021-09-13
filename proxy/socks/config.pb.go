@@ -71,7 +71,6 @@ func (AuthType) EnumDescriptor() ([]byte, []int) {
 	return file_proxy_socks_config_proto_rawDescGZIP(), []int{0}
 }
 
-// AuthType is the outbound server version of Socks proxy.
 type Version int32
 
 const (

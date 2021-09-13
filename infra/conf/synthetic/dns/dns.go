@@ -140,14 +140,14 @@ var typeMap = map[routercommon.Domain_Type]dns.DomainMatchingType{
 
 // DNSConfig is a JSON serializable object for dns.Config.
 type DNSConfig struct {
-	Servers         []*NameServerConfig     `json:"servers"`
-	Hosts           map[string]*HostAddress `json:"hosts"`
-	ClientIP        *cfgcommon.Address      `json:"clientIp"`
-	Tag             string                  `json:"tag"`
-	QueryStrategy   string                  `json:"queryStrategy"`
-	DisableCache    bool                    `json:"disableCache"`
-	DisableFallback bool                    `json:"disableFallback"`
-
+	Servers                []*NameServerConfig     `json:"servers"`
+	Hosts                  map[string]*HostAddress `json:"hosts"`
+	ClientIP               *cfgcommon.Address      `json:"clientIp"`
+	Tag                    string                  `json:"tag"`
+	QueryStrategy          string                  `json:"queryStrategy"`
+	DisableCache           bool                    `json:"disableCache"`
+	DisableFallback        bool                    `json:"disableFallback"`
+	DisableFallbackIfMatch bool                    `json:"disableFallbackIfMatch"`
 	cfgctx context.Context
 }
 
@@ -224,9 +224,10 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 	geoLoader := cfgEnv.GetGeoLoader()
 
 	config := &dns.Config{
-		Tag:             c.Tag,
-		DisableCache:    c.DisableCache,
-		DisableFallback: c.DisableFallback,
+		Tag:                    c.Tag,
+		DisableCache:           c.DisableCache,
+		DisableFallback:        c.DisableFallback,
+		DisableFallbackIfMatch: c.DisableFallbackIfMatch,
 	}
 
 	if c.ClientIP != nil {

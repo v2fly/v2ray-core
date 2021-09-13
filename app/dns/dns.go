@@ -28,15 +28,16 @@ import (
 // DNS is a DNS rely server.
 type DNS struct {
 	sync.Mutex
-	tag             string
-	disableCache    bool
-	disableFallback bool
-	ipOption        *dns.IPOption
-	hosts           *StaticHosts
-	clients         []*Client
-	ctx             context.Context
-	domainMatcher   strmatcher.IndexMatcher
-	matcherInfos    []DomainMatcherInfo
+	tag                    string
+	disableCache           bool
+	disableFallback        bool
+	disableFallbackIfMatch bool
+	ipOption               *dns.IPOption
+	hosts                  *StaticHosts
+	clients                []*Client
+	ctx                    context.Context
+	domainMatcher          strmatcher.IndexMatcher
+	matcherInfos           []DomainMatcherInfo
 }
 
 // DomainMatcherInfo contains information attached to index returned by Server.domainMatcher
@@ -138,15 +139,16 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 	}
 
 	return &DNS{
-		tag:             tag,
-		hosts:           hosts,
-		ipOption:        ipOption,
-		clients:         clients,
-		ctx:             ctx,
-		domainMatcher:   domainMatcher,
-		matcherInfos:    matcherInfos,
-		disableCache:    config.DisableCache,
-		disableFallback: config.DisableFallback,
+		tag:                    tag,
+		hosts:                  hosts,
+		ipOption:               ipOption,
+		clients:                clients,
+		ctx:                    ctx,
+		domainMatcher:          domainMatcher,
+		matcherInfos:           matcherInfos,
+		disableCache:           config.DisableCache,
+		disableFallback:        config.DisableFallback,
+		disableFallbackIfMatch: config.DisableFallbackIfMatch,
 	}, nil
 }
 
@@ -267,6 +269,7 @@ func (s *DNS) sortClients(domain string) []*Client {
 	domainRules := []string{}
 
 	// Priority domain matching
+	hasMatch := false
 	for _, match := range s.domainMatcher.Match(domain) {
 		info := s.matcherInfos[match]
 		client := s.clients[info.clientIdx]
@@ -278,9 +281,10 @@ func (s *DNS) sortClients(domain string) []*Client {
 		clientUsed[info.clientIdx] = true
 		clients = append(clients, client)
 		clientNames = append(clientNames, client.Name())
+		hasMatch = true
 	}
 
-	if !s.disableFallback {
+	if !(s.disableFallback || s.disableFallbackIfMatch && hasMatch) {
 		// Default round-robin query
 		for idx, client := range s.clients {
 			if clientUsed[idx] || client.skipFallback {
