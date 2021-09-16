@@ -13,6 +13,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/session"
 	"github.com/v2fly/v2ray-core/v4/common/signal"
 	"github.com/v2fly/v2ray-core/v4/common/task"
+	"github.com/v2fly/v2ray-core/v4/features/dns"
 	"github.com/v2fly/v2ray-core/v4/features/policy"
 	"github.com/v2fly/v2ray-core/v4/transport"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
@@ -22,6 +23,8 @@ import (
 type Client struct {
 	serverPicker  protocol.ServerPicker
 	policyManager policy.Manager
+	version       Version
+	dns           dns.Client
 }
 
 // NewClient create a new Socks5 client based on the given config.
@@ -39,10 +42,16 @@ func NewClient(ctx context.Context, config *ClientConfig) (*Client, error) {
 	}
 
 	v := core.MustFromContext(ctx)
-	return &Client{
+	c := &Client{
 		serverPicker:  protocol.NewRoundRobinServerPicker(serverList),
 		policyManager: v.GetFeature(policy.ManagerType()).(policy.Manager),
-	}, nil
+		version:       config.Version,
+	}
+	if config.Version == Version_SOCKS4 {
+		c.dns = v.GetFeature(dns.ClientType()).(dns.Client)
+	}
+
+	return c, nil
 }
 
 // Process implements proxy.Outbound.Process.
@@ -89,6 +98,39 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		Address: destination.Address,
 		Port:    destination.Port,
 	}
+
+	switch c.version {
+	case Version_SOCKS4:
+		if request.Address.Family().IsDomain() {
+			if d, ok := c.dns.(dns.ClientWithIPOption); ok {
+				d.SetFakeDNSOption(false) // Skip FakeDNS
+			} else {
+				newError("DNS client doesn't implement ClientWithIPOption")
+			}
+
+			lookupFunc := c.dns.LookupIP
+			if lookupIPv4, ok := c.dns.(dns.IPv4Lookup); ok {
+				lookupFunc = lookupIPv4.LookupIPv4
+			}
+			ips, err := lookupFunc(request.Address.Domain())
+			if err != nil {
+				return err
+			} else if len(ips) == 0 {
+				return dns.ErrEmptyResponse
+			}
+			request.Address = net.IPAddress(ips[0])
+		}
+		fallthrough
+	case Version_SOCKS4A:
+		request.Version = socks4Version
+
+		if destination.Network == net.Network_UDP {
+			return newError("udp is not supported in socks4")
+		} else if destination.Address.Family().IsIPv6() {
+			return newError("ipv6 is not supported in socks4")
+		}
+	}
+
 	if destination.Network == net.Network_UDP {
 		request.Command = protocol.RequestCommandUDP
 	}
