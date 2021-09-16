@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/v2fly/v2ray-core/v4/common/bytespool"
+	"github.com/v2fly/v2ray-core/v4/common/net"
 )
 
 const (
@@ -17,9 +18,10 @@ var pool = bytespool.GetPool(Size)
 // the buffer into an internal buffer pool, in order to recreate a buffer more
 // quickly.
 type Buffer struct {
-	v     []byte
-	start int32
-	end   int32
+	v        []byte
+	start    int32
+	end      int32
+	Endpoint *net.Destination
 }
 
 // New creates a Buffer with 0 length and 2K capacity.

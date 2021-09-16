@@ -55,14 +55,14 @@ func (l *Loopback) Process(ctx context.Context, link *transport.Link, _ internet
 			return err
 		}
 
-		var readerOpt net.ConnectionOption
+		var readerOpt buf.ConnectionOption
 		if dialDest.Network == net.Network_TCP {
-			readerOpt = net.ConnectionOutputMulti(rawConn.Reader)
+			readerOpt = buf.ConnectionOutputMulti(rawConn.Reader)
 		} else {
-			readerOpt = net.ConnectionOutputMultiUDP(rawConn.Reader)
+			readerOpt = buf.ConnectionOutputMultiUDP(rawConn.Reader)
 		}
 
-		conn = net.NewConnection(net.ConnectionInputMulti(rawConn.Writer), readerOpt)
+		conn = buf.NewConnection(buf.ConnectionInputMulti(rawConn.Writer), readerOpt)
 		return nil
 	})
 	if err != nil {

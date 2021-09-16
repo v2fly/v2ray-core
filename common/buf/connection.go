@@ -1,7 +1,7 @@
 //go:build !confonly
 // +build !confonly
 
-package net
+package buf
 
 import (
 	"io"
@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/errors"
+	net2 "github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/signal/done"
 )
 
@@ -30,11 +30,11 @@ func ConnectionRemoteAddr(a net.Addr) ConnectionOption {
 
 func ConnectionInput(writer io.Writer) ConnectionOption {
 	return func(c *connection) {
-		c.writer = buf.NewWriter(writer)
+		c.writer = NewWriter(writer)
 	}
 }
 
-func ConnectionInputMulti(writer buf.Writer) ConnectionOption {
+func ConnectionInputMulti(writer Writer) ConnectionOption {
 	return func(c *connection) {
 		c.writer = writer
 	}
@@ -42,21 +42,21 @@ func ConnectionInputMulti(writer buf.Writer) ConnectionOption {
 
 func ConnectionOutput(reader io.Reader) ConnectionOption {
 	return func(c *connection) {
-		c.reader = &buf.BufferedReader{Reader: buf.NewReader(reader)}
+		c.reader = &BufferedReader{Reader: NewReader(reader)}
 	}
 }
 
-func ConnectionOutputMulti(reader buf.Reader) ConnectionOption {
+func ConnectionOutputMulti(reader Reader) ConnectionOption {
 	return func(c *connection) {
-		c.reader = &buf.BufferedReader{Reader: reader}
+		c.reader = &BufferedReader{Reader: reader}
 	}
 }
 
-func ConnectionOutputMultiUDP(reader buf.Reader) ConnectionOption {
+func ConnectionOutputMultiUDP(reader Reader) ConnectionOption {
 	return func(c *connection) {
-		c.reader = &buf.BufferedReader{
+		c.reader = &BufferedReader{
 			Reader:  reader,
-			Spliter: buf.SplitFirstBytes,
+			Spliter: SplitFirstBytes,
 		}
 	}
 }
@@ -88,12 +88,12 @@ func NewConnection(opts ...ConnectionOption) net.Conn {
 }
 
 type connection struct {
-	reader  *buf.BufferedReader
-	writer  buf.Writer
+	reader  *BufferedReader
+	writer  Writer
 	done    *done.Instance
 	onClose io.Closer
-	local   Addr
-	remote  Addr
+	local   net2.Addr
+	remote  net2.Addr
 }
 
 func (c *connection) Read(b []byte) (int, error) {
@@ -101,7 +101,7 @@ func (c *connection) Read(b []byte) (int, error) {
 }
 
 // ReadMultiBuffer implements buf.Reader.
-func (c *connection) ReadMultiBuffer() (buf.MultiBuffer, error) {
+func (c *connection) ReadMultiBuffer() (MultiBuffer, error) {
 	return c.reader.ReadMultiBuffer()
 }
 
@@ -111,19 +111,19 @@ func (c *connection) Write(b []byte) (int, error) {
 		return 0, io.ErrClosedPipe
 	}
 
-	if len(b)/buf.Size+1 > 64*1024*1024 {
+	if len(b)/Size+1 > 64*1024*1024 {
 		return 0, errors.New("value too large")
 	}
 	l := len(b)
-	sliceSize := l/buf.Size + 1
-	mb := make(buf.MultiBuffer, 0, sliceSize)
-	mb = buf.MergeBytes(mb, b)
+	sliceSize := l/Size + 1
+	mb := make(MultiBuffer, 0, sliceSize)
+	mb = MergeBytes(mb, b)
 	return l, c.writer.WriteMultiBuffer(mb)
 }
 
-func (c *connection) WriteMultiBuffer(mb buf.MultiBuffer) error {
+func (c *connection) WriteMultiBuffer(mb MultiBuffer) error {
 	if c.done.Done() {
-		buf.ReleaseMulti(mb)
+		ReleaseMulti(mb)
 		return io.ErrClosedPipe
 	}
 

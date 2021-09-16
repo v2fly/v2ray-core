@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/signal/done"
 	"github.com/v2fly/v2ray-core/v4/transport"
@@ -82,7 +83,7 @@ func (co *Outbound) Dispatch(ctx context.Context, link *transport.Link) {
 	}
 
 	closeSignal := done.New()
-	c := net.NewConnection(net.ConnectionInputMulti(link.Writer), net.ConnectionOutputMulti(link.Reader), net.ConnectionOnClose(closeSignal))
+	c := buf.NewConnection(buf.ConnectionInputMulti(link.Writer), buf.ConnectionOutputMulti(link.Reader), buf.ConnectionOnClose(closeSignal))
 	co.listener.add(c)
 	co.access.RUnlock()
 	<-closeSignal.Wait()

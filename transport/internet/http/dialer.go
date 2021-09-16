@@ -147,10 +147,10 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 
 	bwriter := buf.NewBufferedWriter(pwriter)
 	common.Must(bwriter.SetBuffered(false))
-	return net.NewConnection(
-		net.ConnectionOutput(response.Body),
-		net.ConnectionInput(bwriter),
-		net.ConnectionOnClose(common.ChainedClosable{breader, bwriter, response.Body}),
+	return buf.NewConnection(
+		buf.ConnectionOutput(response.Body),
+		buf.ConnectionInput(bwriter),
+		buf.ConnectionOnClose(common.ChainedClosable{breader, bwriter, response.Body}),
 	), nil
 }
 

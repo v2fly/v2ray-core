@@ -18,6 +18,7 @@ import (
 	"golang.org/x/net/dns/dnsmessage"
 
 	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/protocol/dns"
 	"github.com/v2fly/v2ray-core/v4/common/session"
@@ -68,9 +69,9 @@ func NewDoHNameServer(url *url.URL, dispatcher routing.Dispatcher) (*DoHNameServ
 			if err != nil {
 				return nil, err
 			}
-			return net.NewConnection(
-				net.ConnectionInputMulti(link.Writer),
-				net.ConnectionOutputMulti(link.Reader),
+			return buf.NewConnection(
+				buf.ConnectionInputMulti(link.Writer),
+				buf.ConnectionOutputMulti(link.Reader),
 			), nil
 		},
 	}

@@ -7,6 +7,7 @@ import (
 	"context"
 
 	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/session"
 	"github.com/v2fly/v2ray-core/v4/features/routing"
@@ -34,13 +35,13 @@ func DialTaggedOutbound(ctx context.Context, dest net.Destination, tag string) (
 	if err != nil {
 		return nil, err
 	}
-	var readerOpt net.ConnectionOption
+	var readerOpt buf.ConnectionOption
 	if dest.Network == net.Network_TCP {
-		readerOpt = net.ConnectionOutputMulti(r.Reader)
+		readerOpt = buf.ConnectionOutputMulti(r.Reader)
 	} else {
-		readerOpt = net.ConnectionOutputMultiUDP(r.Reader)
+		readerOpt = buf.ConnectionOutputMultiUDP(r.Reader)
 	}
-	return net.NewConnection(net.ConnectionInputMulti(r.Writer), readerOpt), nil
+	return buf.NewConnection(buf.ConnectionInputMulti(r.Writer), readerOpt), nil
 }
 
 func init() {

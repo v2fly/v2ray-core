@@ -14,6 +14,7 @@ import (
 	"golang.org/x/net/http2/h2c"
 
 	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	http_proto "github.com/v2fly/v2ray-core/v4/common/protocol/http"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
@@ -104,12 +105,12 @@ func (l *Listener) ServeHTTP(writer http.ResponseWriter, request *http.Request) 
 	}
 
 	done := done.New()
-	conn := net.NewConnection(
-		net.ConnectionOutput(request.Body),
-		net.ConnectionInput(flushWriter{w: writer, d: done}),
-		net.ConnectionOnClose(common.ChainedClosable{done, request.Body}),
-		net.ConnectionLocalAddr(l.Addr()),
-		net.ConnectionRemoteAddr(remoteAddr),
+	conn := buf.NewConnection(
+		buf.ConnectionOutput(request.Body),
+		buf.ConnectionInput(flushWriter{w: writer, d: done}),
+		buf.ConnectionOnClose(common.ChainedClosable{done, request.Body}),
+		buf.ConnectionLocalAddr(l.Addr()),
+		buf.ConnectionRemoteAddr(remoteAddr),
 	)
 	l.handler(conn)
 	<-done.Wait()
