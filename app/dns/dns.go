@@ -270,10 +270,8 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) (result []net
 
 		if client.concurrent {
 			go query()
-		} else {
-			if query() {
-				return result, reterr
-			}
+		} else if query() {
+			return result, reterr
 		}
 	}
 
