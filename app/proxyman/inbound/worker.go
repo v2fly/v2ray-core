@@ -88,6 +88,7 @@ func (w *tcpWorker) callback(conn internet.Connection) {
 		content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
 		content.SniffingRequest.OverrideDestinationForProtocol = w.sniffingConfig.DestinationOverride
 		content.SniffingRequest.MetadataOnly = w.sniffingConfig.MetadataOnly
+		content.SniffingRequest.RouteOnly = w.sniffingConfig.RouteOnly
 	}
 	ctx = session.ContextWithContent(ctx, content)
 	if w.uplinkCounter != nil || w.downlinkCounter != nil {
@@ -309,6 +310,7 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 				content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
 				content.SniffingRequest.OverrideDestinationForProtocol = w.sniffingConfig.DestinationOverride
 				content.SniffingRequest.MetadataOnly = w.sniffingConfig.MetadataOnly
+				content.SniffingRequest.RouteOnly = w.sniffingConfig.RouteOnly
 			}
 			ctx = session.ContextWithContent(ctx, content)
 			if err := w.proxy.Process(ctx, net.Network_UDP, conn, w.dispatcher); err != nil {
@@ -440,6 +442,7 @@ func (w *dsWorker) callback(conn internet.Connection) {
 		content.SniffingRequest.Enabled = w.sniffingConfig.Enabled
 		content.SniffingRequest.OverrideDestinationForProtocol = w.sniffingConfig.DestinationOverride
 		content.SniffingRequest.MetadataOnly = w.sniffingConfig.MetadataOnly
+		content.SniffingRequest.RouteOnly = w.sniffingConfig.RouteOnly
 	}
 	ctx = session.ContextWithContent(ctx, content)
 	if w.uplinkCounter != nil || w.downlinkCounter != nil {

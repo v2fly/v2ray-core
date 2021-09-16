@@ -60,6 +60,8 @@ message SniffingConfig {
   // Whether should only try to sniff metadata without waiting for client input.
   // Can be used to support SMTP like protocol where server send the first message.
   bool metadata_only = 3;
+
+  bool route_only = 4;
 }
 
 message ReceiverConfig {
