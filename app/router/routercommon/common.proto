@@ -49,6 +49,8 @@ message CIDR {
 
   // Number of leading ones in the network mask.
   uint32 prefix = 2;
+
+  string ip_addr = 68000 [(v2ray.core.common.protoext.field_opt).convert_time_parse_ip = "ip"];
 }
 
 message GeoIP {

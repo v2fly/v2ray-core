@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"io"
+	"net"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
@@ -24,6 +25,14 @@ func filterMessage(ctx context.Context, message protoreflect.Message) error {
 		field    string
 	}
 	var fileReadingQueue []fileRead
+
+	type pendingWrite struct {
+		field protoreflect.FieldDescriptor
+		value protoreflect.Value
+	}
+
+	var pendingWriteQueue []pendingWrite
+
 	message.Range(func(descriptor protoreflect.FieldDescriptor, value protoreflect.Value) bool {
 		v2extension, ferr := protoext.GetFieldOptions(descriptor)
 		if ferr == nil {
@@ -38,6 +47,16 @@ func filterMessage(ctx context.Context, message protoreflect.Message) error {
 				fileReadingQueue = append(fileReadingQueue, fileRead{
 					filename: value.String(),
 					field:    v2extension.ConvertTimeReadFileInto,
+				})
+			}
+
+			if v2extension.ConvertTimeParseIp != "" {
+				strIp := value.String()
+				ipValue := net.ParseIP(strIp)
+				target := message.Descriptor().Fields().ByTextName(v2extension.ConvertTimeParseIp)
+				pendingWriteQueue = append(pendingWriteQueue, pendingWrite{
+					field: target,
+					value: protoreflect.ValueOf(ipValue),
 				})
 			}
 		}
@@ -83,6 +102,10 @@ func filterMessage(ctx context.Context, message protoreflect.Message) error {
 		}
 		file.Close()
 		message.Set(field, protoreflect.ValueOf(fileContent))
+	}
+
+	for _, v := range pendingWriteQueue {
+		message.Set(v.field, v.value)
 	}
 	return nil
 }

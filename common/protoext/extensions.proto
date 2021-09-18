@@ -34,4 +34,6 @@ message FieldOpt{
   bool forbidden = 5;
   // convert_time_resource_loading read a file, and place its resource hash into another field
   string convert_time_resource_loading = 6;
+  // convert_time_parse_ip parse a string ip address, and put its binary representation into another field
+  string convert_time_parse_ip = 7;
 }
