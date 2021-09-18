@@ -25,6 +25,10 @@ func applyOutboundSocketOptions(network string, address string, fd uintptr, conf
 		if err := setTFO(syscall.Handle(fd), config.Tfo); err != nil {
 			return err
 		}
+
+		if err := enableKeepAlive(fd, config.GetTcpKeepAliveInterval()); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -33,6 +37,10 @@ func applyOutboundSocketOptions(network string, address string, fd uintptr, conf
 func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig) error {
 	if isTCPSocket(network) {
 		if err := setTFO(syscall.Handle(fd), config.Tfo); err != nil {
+			return err
+		}
+
+		if err := enableKeepAlive(fd, config.GetTcpKeepAliveInterval()); err != nil {
 			return err
 		}
 	}
@@ -49,5 +57,16 @@ func setReuseAddr(fd uintptr) error {
 }
 
 func setReusePort(fd uintptr) error {
+	return nil
+}
+
+func enableKeepAlive(fd uintptr, TcpKeepAliveInterval int32) error {
+	if TcpKeepAliveInterval >= 0 {
+        // On Windows, we only enable Keep-Alive.
+		if err := syscall.SetsockoptInt(syscall.Handle(fd), syscall.SOL_SOCKET, syscall.SO_KEEPALIVE, 1); err != nil {
+			return newError("failed to set SO_KEEPALIVE", err)
+		}
+	}
+
 	return nil
 }

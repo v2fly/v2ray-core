@@ -22,3 +22,7 @@ func setReuseAddr(fd uintptr) error {
 func setReusePort(fd uintptr) error {
 	return nil
 }
+
+func enableKeepAlive(fd uintptr, TcpKeepAliveInterval int32) error {
+	return nil
+}

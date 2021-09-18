@@ -25,6 +25,10 @@ func applyOutboundSocketOptions(network string, address string, fd uintptr, conf
 				return err
 			}
 		}
+
+		if err := enableKeepAlive(fd, config.GetTcpKeepAliveInterval()); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -42,6 +46,10 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 				return err
 			}
 		}
+
+		if err := enableKeepAlive(fd, config.GetTcpKeepAliveInterval()); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -56,5 +64,22 @@ func setReuseAddr(fd uintptr) error {
 }
 
 func setReusePort(fd uintptr) error {
+	return nil
+}
+
+func enableKeepAlive(fd uintptr, TcpKeepAliveInterval int32) error {
+	if TcpKeepAliveInterval >= 0 {
+		if TcpKeepAliveInterval == 0 {
+			// Default timeout is 10 minutes.
+			TcpKeepAliveInterval = 600
+		}
+		if err := syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_KEEPALIVE, 1); err != nil {
+			return newError("failed to set SO_KEEPALIVE", err)
+		}
+		if err := syscall.SetsockoptInt(int(fd), syscall.IPPROTO_TCP, syscall.TCP_KEEPALIVE, int(TcpKeepAliveInterval)); err != nil {
+			return newError("failed to set TCP_KEEPALIVE", err)
+		}
+	}
+
 	return nil
 }

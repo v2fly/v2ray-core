@@ -141,6 +141,10 @@ func applyOutboundSocketOptions(network string, address string, fd uintptr, conf
 				return newError("failed to set TCP_FASTOPEN_CONNECT=0").Base(err)
 			}
 		}
+
+		if err := enableKeepAlive(fd, config.GetTcpKeepAliveInterval()); err != nil {
+			return err
+		}
 	}
 
 	if config.Tproxy.IsEnabled() {
@@ -174,6 +178,10 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 			if err := syscall.SetsockoptInt(int(fd), syscall.IPPROTO_TCP, unix.TCP_FASTOPEN, 0); err != nil {
 				return newError("failed to set TCP_FASTOPEN=0").Base(err)
 			}
+		}
+
+		if err := enableKeepAlive(fd, config.GetTcpKeepAliveInterval()); err != nil {
+			return err
 		}
 	}
 
@@ -227,5 +235,22 @@ func setReusePort(fd uintptr) error {
 			return newError("failed to set SO_REUSEPORT").Base(err).AtWarning()
 		}
 	}
+	return nil
+}
+
+func enableKeepAlive(fd uintptr, TcpKeepAliveInterval int32) error {
+	if TcpKeepAliveInterval >= 0 {
+		if TcpKeepAliveInterval == 0 {
+			// Default timeout is 10 minutes.
+			TcpKeepAliveInterval = 600
+		}
+		if err := syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_KEEPALIVE, 1); err != nil {
+			return newError("failed to set SO_KEEPALIVE", err)
+		}
+		if err := syscall.SetsockoptInt(int(fd), syscall.IPPROTO_TCP, syscall.TCP_KEEPIDLE, int(TcpKeepAliveInterval)); err != nil {
+			return newError("failed to set TCP_KEEPIDLE", err)
+		}
+	}
+
 	return nil
 }

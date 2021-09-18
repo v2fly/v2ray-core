@@ -27,6 +27,11 @@ func getControlFunc(ctx context.Context, sockopt *SocketConfig, controllers []co
 				if err := applyInboundSocketOptions(network, fd, sockopt); err != nil {
 					newError("failed to apply socket options to incoming connection").Base(err).WriteToLog(session.ExportIDToError(ctx))
 				}
+			} else if isTCPSocket(network) {
+				// Apply default TCP Keep-Alive interval if not configured explicitly.
+				if err := enableKeepAlive(fd, 0); err != nil {
+					newError("failed to enable keep-alive").Base(err).WriteToLog(session.ExportIDToError(ctx))
+				}
 			}
 
 			setReusePort(fd) // nolint: staticcheck
@@ -50,7 +55,7 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 		network = addr.Network()
 		address = addr.String()
 		lc.Control = getControlFunc(ctx, sockopt, dl.controllers)
-		lc.KeepAlive = time.Second * time.Duration(sockopt.TcpKeepAliveInterval)
+		lc.KeepAlive = time.Duration(-1)
 	case *net.UnixAddr:
 		lc.Control = nil
 		network = addr.Network()

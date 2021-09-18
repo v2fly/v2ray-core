@@ -67,30 +67,33 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 	dialer := &net.Dialer{
 		Timeout:   time.Second * 16,
 		LocalAddr: resolveSrcAddr(dest.Network, src),
-		KeepAlive: time.Second * time.Duration(sockopt.TcpKeepAliveInterval),
+		KeepAlive: time.Duration(-1),
 	}
 
-	if sockopt != nil || len(d.controllers) > 0 {
-		dialer.Control = func(network, address string, c syscall.RawConn) error {
-			return c.Control(func(fd uintptr) {
-				if sockopt != nil {
-					if err := applyOutboundSocketOptions(network, address, fd, sockopt); err != nil {
-						newError("failed to apply socket options").Base(err).WriteToLog(session.ExportIDToError(ctx))
-					}
-					if dest.Network == net.Network_UDP && hasBindAddr(sockopt) {
-						if err := bindAddr(fd, sockopt.BindAddress, sockopt.BindPort); err != nil {
-							newError("failed to bind source address to ", sockopt.BindAddress).Base(err).WriteToLog(session.ExportIDToError(ctx))
-						}
+	dialer.Control = func(network, address string, c syscall.RawConn) error {
+		return c.Control(func(fd uintptr) {
+			if sockopt != nil {
+				if err := applyOutboundSocketOptions(network, address, fd, sockopt); err != nil {
+					newError("failed to apply socket options").Base(err).WriteToLog(session.ExportIDToError(ctx))
+				}
+				if dest.Network == net.Network_UDP && hasBindAddr(sockopt) {
+					if err := bindAddr(fd, sockopt.BindAddress, sockopt.BindPort); err != nil {
+						newError("failed to bind source address to ", sockopt.BindAddress).Base(err).WriteToLog(session.ExportIDToError(ctx))
 					}
 				}
+			} else if isTCPSocket(network) {
+				// Apply default TCP Keep-Alive interval if not configured explicitly.
+				if err := enableKeepAlive(fd, 0); err != nil {
+					newError("failed to enable keep-alive").Base(err).WriteToLog(session.ExportIDToError(ctx))
+				}
+			}
 
-				for _, ctl := range d.controllers {
-					if err := ctl(network, address, fd); err != nil {
-						newError("failed to apply external controller").Base(err).WriteToLog(session.ExportIDToError(ctx))
-					}
+			for _, ctl := range d.controllers {
+				if err := ctl(network, address, fd); err != nil {
+					newError("failed to apply external controller").Base(err).WriteToLog(session.ExportIDToError(ctx))
 				}
-			})
-		}
+			}
+		})
 	}
 
 	return dialer.DialContext(ctx, dest.Network.SystemString(), dest.NetAddr())
