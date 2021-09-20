@@ -11,6 +11,10 @@ Files: release/config/geoip.dat
 Copyright: 2015-2020 V2Fly Community
 License: CC-BY-SA-4.0
 
+Files: release/config/geoip-only-cn-private.dat
+Copyright: 2015-2020 V2Fly Community
+License: CC-BY-SA-4.0
+
 Files: release/debian/*
 Copyright: 2020 ymshenyu <ymshenyu@gmail.com>
 License: Expat
