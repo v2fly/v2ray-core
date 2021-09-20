@@ -1,3 +1,14 @@
+v2ray-core (4.42.2-1) unstable; urgency=medium
+
+  * Support Windows ARM64
+  * TLS: support client certificate authentication
+  * GeoIP asset: add trimmed GeoIP file `geoip-only-cn-private.dat` to zip package for ROM/RAM insufficient devices
+  * Socks: support 4/4a version of the socks protocol
+  * DNS: add option `disableFallbackIfMatch` for DNS
+  * More details in https://github.com/v2fly/v2ray-core/releases/tag/v4.42.2
+
+ -- V2Fly <dev@v2fly.org>  Mon, 20 Sep 2021 11:00:00 +0800
+
 v2ray-core (4.41.1-1) unstable; urgency=medium
 
   * VMess: added two VMess experiments: AuthenticatedLength & NoTerminationSignal

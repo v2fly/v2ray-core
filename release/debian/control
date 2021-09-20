@@ -37,3 +37,11 @@ Description: Library platform for building proxies in golang (routing file)
  Project V2Ray is a set of network tools that help you to build your
  own computer network. It secures your network connections and thus
  protects your privacy.
+
+Package: v2ray-geoip-only-cn-private
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Library platform for building proxies in golang (routing file)
+ Project V2Ray is a set of network tools that help you to build your
+ own computer network. It secures your network connections and thus
+ protects your privacy.
