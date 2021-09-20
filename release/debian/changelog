@@ -1,4 +1,4 @@
-v2ray-core (4.42.2-1) unstable; urgency=medium
+v2ray-core (4.42.2-2) unstable; urgency=medium
 
   * Support Windows ARM64
   * TLS: support client certificate authentication
