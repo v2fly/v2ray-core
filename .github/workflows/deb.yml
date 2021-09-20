@@ -21,14 +21,9 @@ jobs:
   package:
     if: github.repository == 'v2fly/v2ray-core'
     runs-on: ubuntu-latest
-    container: debian:sid
+    container: golang:1.17-bullseye
 
     steps:
-      - name: Install git
-        run: |
-          apt-get update
-          apt-get install -y git wget
-
       - name: Checkout codebase
         uses: actions/checkout@v2
         with:
@@ -42,11 +37,8 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          apt-get install -y build-essential dh-golang golang-1.17 reprepro
-
-      - name: Set environment variable
-        run: |
-          echo "PATH=/usr/lib/go-1.17/bin:${PATH}" >> $GITHUB_ENV
+          apt-get update
+          apt-get install -y build-essential dh-golang reprepro
 
       - name: Build
         run: |
