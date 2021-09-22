@@ -9,7 +9,7 @@ import (
 )
 
 // See https://github.com/v2fly/v2ray-core/issues/92#issuecomment-673238489
-func TestMatcherGroup(t *testing.T) {
+func TestLinearIndexMatcher(t *testing.T) {
 	rules := []struct {
 		Type   Type
 		Domain string

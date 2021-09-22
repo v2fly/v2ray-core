@@ -50,3 +50,26 @@ func (m *regexMatcher) Match(s string) bool {
 func (m *regexMatcher) String() string {
 	return "regexp:" + m.pattern.String()
 }
+
+// New creates a new Matcher based on the given pattern.
+func (t Type) New(pattern string) (Matcher, error) {
+	// 1. regex matching is case-sensitive
+	switch t {
+	case Full:
+		return fullMatcher(pattern), nil
+	case Substr:
+		return substrMatcher(pattern), nil
+	case Domain:
+		return domainMatcher(pattern), nil
+	case Regex:
+		r, err := regexp.Compile(pattern)
+		if err != nil {
+			return nil, err
+		}
+		return &regexMatcher{
+			pattern: r,
+		}, nil
+	default:
+		panic("Unknown type")
+	}
+}
