@@ -8,8 +8,8 @@ import (
 	. "github.com/v2fly/v2ray-core/v4/common/strmatcher"
 )
 
-func BenchmarkACAutomaton(b *testing.B) {
-	ac := NewACAutomaton()
+func BenchmarkACAutomatonMatcherGroup(b *testing.B) {
+	ac := NewACAutomatonMatcherGroup()
 	for i := 1; i <= 1024; i++ {
 		ac.Add(strconv.Itoa(i)+".v2fly.org", Domain)
 	}
@@ -47,8 +47,8 @@ func BenchmarkFullMatcherGroup(b *testing.B) {
 	}
 }
 
-func BenchmarkMarchGroup(b *testing.B) {
-	g := new(MatcherGroup)
+func BenchmarkLinearIndexMatcher(b *testing.B) {
+	g := new(LinearIndexMatcher)
 	for i := 1; i <= 1024; i++ {
 		m, err := Domain.New(strconv.Itoa(i) + ".v2fly.org")
 		common.Must(err)

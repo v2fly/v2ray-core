@@ -11,12 +11,12 @@ import (
 // StaticHosts represents static domain-ip mapping in DNS server.
 type StaticHosts struct {
 	ips      [][]net.Address
-	matchers *strmatcher.MatcherGroup
+	matchers *strmatcher.LinearIndexMatcher
 }
 
 // NewStaticHosts creates a new StaticHosts instance.
 func NewStaticHosts(hosts []*HostMapping, legacy map[string]*net.IPOrDomain) (*StaticHosts, error) {
-	g := new(strmatcher.MatcherGroup)
+	g := new(strmatcher.LinearIndexMatcher)
 	sh := &StaticHosts{
 		ips:      make([][]net.Address, len(hosts)+len(legacy)+16),
 		matchers: g,

@@ -68,7 +68,7 @@ type DomainMatcher struct {
 }
 
 func NewMphMatcherGroup(domains []*routercommon.Domain) (*DomainMatcher, error) {
-	g := strmatcher.NewMphMatcherGroup()
+	g := strmatcher.NewMphIndexMatcher()
 	for _, d := range domains {
 		matcherType, f := matcherTypeMap[d.Type]
 		if !f {
@@ -86,7 +86,7 @@ func NewMphMatcherGroup(domains []*routercommon.Domain) (*DomainMatcher, error) 
 }
 
 func NewDomainMatcher(domains []*routercommon.Domain) (*DomainMatcher, error) {
-	g := new(strmatcher.MatcherGroup)
+	g := new(strmatcher.LinearIndexMatcher)
 	for _, d := range domains {
 		m, err := domainToMatcher(d)
 		if err != nil {

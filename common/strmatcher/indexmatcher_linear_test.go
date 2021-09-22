@@ -80,7 +80,7 @@ func TestLinearIndexMatcher(t *testing.T) {
 			Output: []uint32{10, 4},
 		},
 	}
-	matcherGroup := &MatcherGroup{}
+	matcherGroup := &LinearIndexMatcher{}
 	for _, rule := range rules {
 		matcher, err := rule.Type.New(rule.Domain)
 		common.Must(err)

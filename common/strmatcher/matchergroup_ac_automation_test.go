@@ -6,7 +6,7 @@ import (
 	. "github.com/v2fly/v2ray-core/v4/common/strmatcher"
 )
 
-func TestACAutomaton(t *testing.T) {
+func TestACAutomatonMatcherGroup(t *testing.T) {
 	cases1 := []struct {
 		pattern string
 		mType   Type
@@ -57,7 +57,7 @@ func TestACAutomaton(t *testing.T) {
 		},
 	}
 	for _, test := range cases1 {
-		ac := NewACAutomaton()
+		ac := NewACAutomatonMatcherGroup()
 		ac.Add(test.pattern, test.mType)
 		ac.Build()
 		if m := ac.Match(test.input); m != test.output {
@@ -90,7 +90,7 @@ func TestACAutomaton(t *testing.T) {
 				mType:   Substr,
 			},
 		}
-		ac := NewACAutomaton()
+		ac := NewACAutomatonMatcherGroup()
 		for _, test := range cases2Input {
 			ac.Add(test.pattern, test.mType)
 		}
@@ -153,7 +153,7 @@ func TestACAutomaton(t *testing.T) {
 				mType:   Domain,
 			},
 		}
-		ac := NewACAutomaton()
+		ac := NewACAutomatonMatcherGroup()
 		for _, test := range cases3Input {
 			ac.Add(test.pattern, test.mType)
 		}

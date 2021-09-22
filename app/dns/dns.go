@@ -98,7 +98,7 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 
 	// MatcherInfos is ensured to cover the maximum index domainMatcher could return, where matcher's index starts from 1
 	matcherInfos := make([]DomainMatcherInfo, domainRuleCount+1)
-	domainMatcher := &strmatcher.MatcherGroup{}
+	domainMatcher := &strmatcher.LinearIndexMatcher{}
 	geoipContainer := router.GeoIPMatcherContainer{}
 
 	for _, endpoint := range config.NameServers {

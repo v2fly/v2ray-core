@@ -20,12 +20,12 @@ func RollingHash(s string) uint32 {
 	return h
 }
 
-// A MphMatcherGroup is divided into three parts:
+// A MphIndexMatcher is divided into three parts:
 // 1. `full` and `domain` patterns are matched by Rabin-Karp algorithm and minimal perfect hash table;
 // 2. `substr` patterns are matched by ac automaton;
 // 3. `regex` patterns are matched with the regex library.
-type MphMatcherGroup struct {
-	ac            *ACAutomaton
+type MphIndexMatcher struct {
+	ac            *ACAutomatonMatcherGroup
 	otherMatchers []matcherEntry
 	rules         []string
 	level0        []uint32
@@ -36,7 +36,7 @@ type MphMatcherGroup struct {
 	ruleMap       *map[string]uint32
 }
 
-func (g *MphMatcherGroup) AddFullOrDomainPattern(pattern string, t Type) {
+func (g *MphIndexMatcher) AddFullOrDomainPattern(pattern string, t Type) {
 	h := RollingHash(pattern)
 	switch t {
 	case Domain:
@@ -48,8 +48,8 @@ func (g *MphMatcherGroup) AddFullOrDomainPattern(pattern string, t Type) {
 	}
 }
 
-func NewMphMatcherGroup() *MphMatcherGroup {
-	return &MphMatcherGroup{
+func NewMphIndexMatcher() *MphIndexMatcher {
+	return &MphIndexMatcher{
 		ac:            nil,
 		otherMatchers: nil,
 		rules:         nil,
@@ -63,11 +63,11 @@ func NewMphMatcherGroup() *MphMatcherGroup {
 }
 
 // AddPattern adds a pattern to MphMatcherGroup
-func (g *MphMatcherGroup) AddPattern(pattern string, t Type) (uint32, error) {
+func (g *MphIndexMatcher) AddPattern(pattern string, t Type) (uint32, error) {
 	switch t {
 	case Substr:
 		if g.ac == nil {
-			g.ac = NewACAutomaton()
+			g.ac = NewACAutomatonMatcherGroup()
 		}
 		g.ac.Add(pattern, t)
 	case Full, Domain:
@@ -89,7 +89,7 @@ func (g *MphMatcherGroup) AddPattern(pattern string, t Type) (uint32, error) {
 }
 
 // Build builds a minimal perfect hash table and ac automaton from insert rules
-func (g *MphMatcherGroup) Build() {
+func (g *MphIndexMatcher) Build() {
 	if g.ac != nil {
 		g.ac.Build()
 	}
@@ -158,7 +158,7 @@ func nextPow2(v int) int {
 }
 
 // Lookup searches for s in t and returns its index and whether it was found.
-func (g *MphMatcherGroup) Lookup(h uint32, s string) bool {
+func (g *MphIndexMatcher) Lookup(h uint32, s string) bool {
 	i0 := int(h) & g.level0Mask
 	seed := g.level0[i0]
 	i1 := int(strhashFallback(unsafe.Pointer(&s), uintptr(seed))) & g.level1Mask
@@ -167,7 +167,7 @@ func (g *MphMatcherGroup) Lookup(h uint32, s string) bool {
 }
 
 // Match implements IndexMatcher.Match.
-func (g *MphMatcherGroup) Match(pattern string) []uint32 {
+func (g *MphIndexMatcher) Match(pattern string) []uint32 {
 	result := []uint32{}
 	hash := uint32(0)
 	for i := len(pattern) - 1; i >= 0; i-- {

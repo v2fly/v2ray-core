@@ -28,9 +28,9 @@ type Matcher interface {
 }
 
 // MatcherGroup is the interface for matching with a group of matchers.
-// type MatcherGroup interface {
-// 	Add(matcher Matcher, value uint32)
-// }
+type MatcherGroup interface {
+	Add(matcher Matcher, value uint32)
+}
 
 // IndexMatcher is the interface for matching with a group of matchers.
 type IndexMatcher interface {

@@ -1,8 +1,8 @@
 package strmatcher
 
-// MatcherGroup is an implementation of IndexMatcher.
+// LinearIndexMatcher is an implementation of IndexMatcher.
 // Empty initialization works.
-type MatcherGroup struct {
+type LinearIndexMatcher struct {
 	count         uint32
 	fullMatcher   FullMatcherGroup
 	domainMatcher DomainMatcherGroup
@@ -10,7 +10,7 @@ type MatcherGroup struct {
 }
 
 // Add adds a new Matcher into the MatcherGroup, and returns its index. The index will never be 0.
-func (g *MatcherGroup) Add(m Matcher) uint32 {
+func (g *LinearIndexMatcher) Add(m Matcher) uint32 {
 	g.count++
 	c := g.count
 
@@ -30,7 +30,7 @@ func (g *MatcherGroup) Add(m Matcher) uint32 {
 }
 
 // Match implements IndexMatcher.Match.
-func (g *MatcherGroup) Match(pattern string) []uint32 {
+func (g *LinearIndexMatcher) Match(pattern string) []uint32 {
 	result := []uint32{}
 	result = append(result, g.fullMatcher.Match(pattern)...)
 	result = append(result, g.domainMatcher.Match(pattern)...)
@@ -43,6 +43,6 @@ func (g *MatcherGroup) Match(pattern string) []uint32 {
 }
 
 // Size returns the number of matchers in the MatcherGroup.
-func (g *MatcherGroup) Size() uint32 {
+func (g *LinearIndexMatcher) Size() uint32 {
 	return g.count
 }

@@ -21,7 +21,7 @@ type Edge struct {
 	nextNode int
 }
 
-type ACAutomaton struct {
+type ACAutomatonMatcherGroup struct {
 	trie   [][validCharCount]Edge
 	fail   []int
 	exists []MatchType
@@ -121,8 +121,8 @@ var char2Index = []int{
 	'9':  52,
 }
 
-func NewACAutomaton() *ACAutomaton {
-	ac := new(ACAutomaton)
+func NewACAutomatonMatcherGroup() *ACAutomatonMatcherGroup {
+	ac := new(ACAutomatonMatcherGroup)
 	ac.trie = append(ac.trie, newNode())
 	ac.fail = append(ac.fail, 0)
 	ac.exists = append(ac.exists, MatchType{
@@ -132,7 +132,7 @@ func NewACAutomaton() *ACAutomaton {
 	return ac
 }
 
-func (ac *ACAutomaton) Add(domain string, t Type) {
+func (ac *ACAutomatonMatcherGroup) Add(domain string, t Type) {
 	node := 0
 	for i := len(domain) - 1; i >= 0; i-- {
 		idx := char2Index[domain[i]]
@@ -189,7 +189,7 @@ func (ac *ACAutomaton) Add(domain string, t Type) {
 	}
 }
 
-func (ac *ACAutomaton) Build() {
+func (ac *ACAutomatonMatcherGroup) Build() {
 	queue := list.New()
 	for i := 0; i < validCharCount; i++ {
 		if ac.trie[0][i].nextNode != 0 {
@@ -218,7 +218,7 @@ func (ac *ACAutomaton) Build() {
 	}
 }
 
-func (ac *ACAutomaton) Match(s string) bool {
+func (ac *ACAutomatonMatcherGroup) Match(s string) bool {
 	node := 0
 	fullMatch := true
 	// 1. the match string is all through trie edge. FULL MATCH or DOMAIN
