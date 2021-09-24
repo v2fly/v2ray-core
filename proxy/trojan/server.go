@@ -5,7 +5,6 @@ package trojan
 
 import (
 	"context"
-	"crypto/tls"
 	"io"
 	"strconv"
 	"time"
@@ -25,6 +24,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/features/policy"
 	"github.com/v2fly/v2ray-core/v4/features/routing"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/udp"
 )
 
