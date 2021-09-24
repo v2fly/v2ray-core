@@ -172,29 +172,27 @@ func (s *DNS) IsOwnLink(ctx context.Context) bool {
 
 // LookupIP implements dns.Client.
 func (s *DNS) LookupIP(domain string) ([]net.IP, error) {
-	return s.lookupIPInternal(domain, dns.IPOption{
-		IPv4Enable: true,
-		IPv6Enable: true,
-		FakeEnable: s.ipOption.FakeEnable,
-	})
+	return s.lookupIPInternal(domain, *s.ipOption)
 }
 
 // LookupIPv4 implements dns.IPv4Lookup.
 func (s *DNS) LookupIPv4(domain string) ([]net.IP, error) {
-	return s.lookupIPInternal(domain, dns.IPOption{
-		IPv4Enable: true,
-		IPv6Enable: false,
-		FakeEnable: s.ipOption.FakeEnable,
-	})
+	if !s.ipOption.IPv4Enable {
+		return nil, dns.ErrEmptyResponse
+	}
+	o := *s.ipOption
+	o.IPv6Enable = false
+	return s.lookupIPInternal(domain, o)
 }
 
 // LookupIPv6 implements dns.IPv6Lookup.
 func (s *DNS) LookupIPv6(domain string) ([]net.IP, error) {
-	return s.lookupIPInternal(domain, dns.IPOption{
-		IPv4Enable: false,
-		IPv6Enable: true,
-		FakeEnable: s.ipOption.FakeEnable,
-	})
+	if !s.ipOption.IPv6Enable {
+		return nil, dns.ErrEmptyResponse
+	}
+	o := *s.ipOption
+	o.IPv4Enable = false
+	return s.lookupIPInternal(domain, o)
 }
 
 func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, error) {
