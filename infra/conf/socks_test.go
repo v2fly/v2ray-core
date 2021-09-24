@@ -63,7 +63,8 @@ func TestSocksOutboundConfig(t *testing.T) {
 					"users": [
 						{"user": "test user", "pass": "test pass", "email": "test@email.com"}
 					]
-				}]
+				}],
+				"version": 5
 			}`,
 			Parser: loadJSON(creator),
 			Output: &socks.ClientConfig{
@@ -86,6 +87,7 @@ func TestSocksOutboundConfig(t *testing.T) {
 						},
 					},
 				},
+				Version: socks.Version_SOCKS5,
 			},
 		},
 	})

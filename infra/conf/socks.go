@@ -75,22 +75,28 @@ type SocksRemoteConfig struct {
 
 type SocksClientConfig struct {
 	Servers []*SocksRemoteConfig `json:"servers"`
-	Version string               `json:"version"`
+	Version interface{}          `json:"version"`
 }
 
 func (v *SocksClientConfig) Build() (proto.Message, error) {
 	config := new(socks.ClientConfig)
 	config.Server = make([]*protocol.ServerEndpoint, len(v.Servers))
-	switch strings.ToLower(v.Version) {
-	case "4":
-		config.Version = socks.Version_SOCKS4
-	case "4a":
-		config.Version = socks.Version_SOCKS4A
-	case "", "5":
-		config.Version = socks.Version_SOCKS5
-	default:
-		return nil, newError("failed to parse socks server version: ", v.Version).AtError()
+
+	config.Version = socks.Version_SOCKS5
+	switch v := v.Version.(type) {
+	case string:
+		if strings.EqualFold(v, "4") {
+			config.Version = socks.Version_SOCKS4
+		}
+		if strings.EqualFold(v, "4a") {
+			config.Version = socks.Version_SOCKS4A
+		}
+	case float64:
+		if v == 4 {
+			config.Version = socks.Version_SOCKS4
+		}
 	}
+
 	for idx, serverConfig := range v.Servers {
 		server := &protocol.ServerEndpoint{
 			Address: serverConfig.Address.Build(),
