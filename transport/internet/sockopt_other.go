@@ -3,26 +3,26 @@
 
 package internet
 
-func applyOutboundSocketOptions(network string, address string, fd uintptr, config *SocketConfig) error {
+func applyOutboundSocketOptions(_ string, _ string, _ uintptr, _ *SocketConfig) error {
 	return nil
 }
 
-func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig) error {
+func applyInboundSocketOptions(_ string, _ uintptr, _ *SocketConfig) error {
 	return nil
 }
 
-func bindAddr(fd uintptr, ip []byte, port uint32) error {
+func bindAddr(_ uintptr, _ []byte, _ uint32) error {
 	return nil
 }
 
-func setReuseAddr(fd uintptr) error {
+func setReuseAddr(_ uintptr) error {
 	return nil
 }
 
-func setReusePort(fd uintptr) error {
+func setReusePort(_ uintptr) error {
 	return nil
 }
 
-func enableKeepAlive(fd uintptr, TcpKeepAliveInterval int32) error {
+func enableKeepAlive(_ uintptr, _ int32) error {
 	return nil
 }

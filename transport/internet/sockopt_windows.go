@@ -60,9 +60,9 @@ func setReusePort(fd uintptr) error {
 	return nil
 }
 
-func enableKeepAlive(fd uintptr, TcpKeepAliveInterval int32) error {
-	if TcpKeepAliveInterval >= 0 {
-        // On Windows, we only enable Keep-Alive.
+func enableKeepAlive(fd uintptr, tcpKeepAliveInterval int32) error {
+	if tcpKeepAliveInterval >= 0 {
+		// On Windows, we only enable Keep-Alive.
 		if err := syscall.SetsockoptInt(syscall.Handle(fd), syscall.SOL_SOCKET, syscall.SO_KEEPALIVE, 1); err != nil {
 			return newError("failed to set SO_KEEPALIVE", err)
 		}

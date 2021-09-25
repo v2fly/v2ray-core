@@ -127,16 +127,16 @@ func setReusePort(fd uintptr) error {
 	return nil
 }
 
-func enableKeepAlive(fd uintptr, TcpKeepAliveInterval int32) error {
-	if TcpKeepAliveInterval >= 0 {
-		if TcpKeepAliveInterval == 0 {
+func enableKeepAlive(fd uintptr, tcpKeepAliveInterval int32) error {
+	if tcpKeepAliveInterval >= 0 {
+		if tcpKeepAliveInterval == 0 {
 			// Default timeout is 10 minutes.
-			TcpKeepAliveInterval = 600
+			tcpKeepAliveInterval = 600
 		}
 		if err := syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_KEEPALIVE, 1); err != nil {
 			return newError("failed to set SO_KEEPALIVE", err)
 		}
-		if err := syscall.SetsockoptInt(int(fd), syscall.IPPROTO_TCP, syscall.TCP_KEEPIDLE, int(TcpKeepAliveInterval)); err != nil {
+		if err := syscall.SetsockoptInt(int(fd), syscall.IPPROTO_TCP, syscall.TCP_KEEPIDLE, int(tcpKeepAliveInterval)); err != nil {
 			return newError("failed to set TCP_KEEPIDLE", err)
 		}
 	}
