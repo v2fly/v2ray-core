@@ -64,7 +64,7 @@ func TestSocksOutboundConfig(t *testing.T) {
 						{"user": "test user", "pass": "test pass", "email": "test@email.com"}
 					]
 				}],
-				"version": 5
+				"version": "5"
 			}`,
 			Parser: loadJSON(creator),
 			Output: &socks.ClientConfig{
@@ -88,6 +88,29 @@ func TestSocksOutboundConfig(t *testing.T) {
 					},
 				},
 				Version: socks.Version_SOCKS5,
+			},
+		},
+		{
+			Input: `{
+				"servers": [{
+					"address": "127.0.0.1",
+					"port": 1234
+				}],
+				"version": 4
+			}`,
+			Parser: loadJSON(creator),
+			Output: &socks.ClientConfig{
+				Server: []*protocol.ServerEndpoint{
+					{
+						Address: &net.IPOrDomain{
+							Address: &net.IPOrDomain_Ip{
+								Ip: []byte{127, 0, 0, 1},
+							},
+						},
+						Port: 1234,
+					},
+				},
+				Version: socks.Version_SOCKS4,
 			},
 		},
 	})
