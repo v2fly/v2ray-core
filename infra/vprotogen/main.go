@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"go/build"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -46,7 +45,7 @@ func GetRuntimeEnv(key string) (string, error) {
 	}
 	var data []byte
 	var runtimeEnv string
-	data, readErr := ioutil.ReadFile(file)
+	data, readErr := os.ReadFile(file)
 	if readErr != nil {
 		return "", readErr
 	}

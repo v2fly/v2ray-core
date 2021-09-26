@@ -5,7 +5,7 @@ package common
 import (
 	"fmt"
 	"go/build"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -70,7 +70,7 @@ func GetRuntimeEnv(key string) (string, error) {
 	}
 	var data []byte
 	var runtimeEnv string
-	data, readErr := ioutil.ReadFile(file)
+	data, readErr := os.ReadFile(file)
 	if readErr != nil {
 		return "", readErr
 	}
@@ -153,7 +153,7 @@ func FetchHTTPContent(target string) ([]byte, error) {
 		return nil, newError("unexpected HTTP status code: ", resp.StatusCode)
 	}
 
-	content, err := ioutil.ReadAll(resp.Body)
+	content, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, newError("failed to read HTTP response").Base(err)
 	}

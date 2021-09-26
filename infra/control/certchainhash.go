@@ -3,7 +3,7 @@ package control
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	v2tls "github.com/v2fly/v2ray-core/v4/transport/internet/tls"
 )
@@ -30,7 +30,7 @@ func (c CertificateChainHashCommand) Execute(args []string) error {
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	certContent, err := ioutil.ReadFile(*cert)
+	certContent, err := os.ReadFile(*cert)
 	if err != nil {
 		return err
 	}
