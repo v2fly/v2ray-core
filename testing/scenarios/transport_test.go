@@ -24,6 +24,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/proxy/vmess/inbound"
 	"github.com/v2fly/v2ray-core/v4/proxy/vmess/outbound"
 	"github.com/v2fly/v2ray-core/v4/testing/servers/tcp"
+	"github.com/v2fly/v2ray-core/v4/testing/servers/udp"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/domainsocket"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/headers/http"
@@ -258,7 +259,7 @@ func TestVMessQuic(t *testing.T) {
 	defer tcpServer.Close()
 
 	userID := protocol.NewID(uuid.New())
-	serverPort := tcp.PickPort()
+	serverPort := udp.PickPort()
 	serverConfig := &core.Config{
 		App: []*anypb.Any{
 			serial.ToTypedMessage(&log.Config{

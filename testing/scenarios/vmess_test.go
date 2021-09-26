@@ -404,7 +404,7 @@ func TestVMessGCMUDP(t *testing.T) {
 		},
 	}
 
-	clientPort := tcp.PickPort()
+	clientPort := udp.PickPort()
 	clientConfig := &core.Config{
 		App: []*anypb.Any{
 			serial.ToTypedMessage(&log.Config{
