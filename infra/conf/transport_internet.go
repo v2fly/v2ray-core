@@ -406,7 +406,7 @@ func (c *SocketConfig) Build() (*internet.SocketConfig, error) {
 
 	tfoQueueLength := c.TFOQueueLength
 	if tfoQueueLength == 0 {
-		tfoQueueLength = 1
+		tfoQueueLength = 4096
 	}
 
 	var tproxy internet.SocketConfig_TProxyMode

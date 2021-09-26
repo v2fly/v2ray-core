@@ -36,13 +36,13 @@ func TestSocketConfig(t *testing.T) {
 			Input: `{
 				"mark": 1,
 				"tcpFastOpen": true,
-				"tcpFastOpenQueueLength": 4096
+				"tcpFastOpenQueueLength": 1024
 			}`,
 			Parser: createParser(),
 			Output: &internet.SocketConfig{
 				Mark:           1,
 				Tfo:            internet.SocketConfig_Enable,
-				TfoQueueLength: 4096,
+				TfoQueueLength: 1024,
 			},
 		},
 	})
