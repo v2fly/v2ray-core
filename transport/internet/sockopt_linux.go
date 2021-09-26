@@ -84,8 +84,8 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 	if isTCPSocket(network) {
 		switch config.Tfo {
 		case SocketConfig_Enable:
-			if err := syscall.SetsockoptInt(int(fd), syscall.SOL_TCP, TCP_FASTOPEN, 1); err != nil {
-				return newError("failed to set TCP_FASTOPEN=1").Base(err)
+			if err := syscall.SetsockoptInt(int(fd), syscall.SOL_TCP, TCP_FASTOPEN, int(config.TfoQueueLength)); err != nil {
+				return newError("failed to set TCP_FASTOPEN=", config.TfoQueueLength).Base(err)
 			}
 		case SocketConfig_Disable:
 			if err := syscall.SetsockoptInt(int(fd), syscall.SOL_TCP, TCP_FASTOPEN, 0); err != nil {
