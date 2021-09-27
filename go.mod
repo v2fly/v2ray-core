@@ -3,6 +3,9 @@ module github.com/v2fly/v2ray-core/v4
 go 1.17
 
 require (
+	github.com/go-chi/chi/v5 v5.0.4
+	github.com/go-chi/render v1.0.1
+	github.com/go-playground/validator/v10 v10.9.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.6
@@ -10,6 +13,7 @@ require (
 	github.com/jhump/protoreflect v1.9.0
 	github.com/lucas-clemente/quic-go v0.23.0
 	github.com/miekg/dns v1.1.43
+	github.com/pelletier/go-toml v1.2.0
 	github.com/pires/go-proxyproto v0.6.1
 	github.com/seiflotfy/cuckoofilter v0.0.0-20201222105146-bc6005554a0c
 	github.com/stretchr/testify v1.7.0
@@ -23,6 +27,7 @@ require (
 	golang.org/x/sys v0.0.0-20210903071746-97244b99971b
 	google.golang.org/grpc v1.40.0
 	google.golang.org/protobuf v1.27.1
+	gopkg.in/yaml.v2 v2.4.0
 	h12.io/socks v1.0.3
 	inet.af/netaddr v0.0.0-20210903134321-85fa6c94624e
 )
@@ -33,7 +38,10 @@ require (
 	github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165 // indirect
 	github.com/ebfe/bcrypt_pbkdf v0.0.0-20140212075826-3c8d2dcb253a // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/go-playground/locales v0.14.0 // indirect
+	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
+	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40 // indirect
 	github.com/marten-seemann/qtls-go1-16 v0.1.4 // indirect
 	github.com/marten-seemann/qtls-go1-17 v0.1.0 // indirect
@@ -50,5 +58,5 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
