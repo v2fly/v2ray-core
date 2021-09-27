@@ -85,7 +85,7 @@ func loadFile(file string, target map[string]interface{}, converter func(v []byt
 }
 
 func loadReader(reader io.Reader, target map[string]interface{}, converter func(v []byte) ([]byte, error)) error {
-	bs, err := ioutil.ReadAll(reader)
+	bs, err := io.ReadAll(reader)
 	if err != nil {
 		return err
 	}

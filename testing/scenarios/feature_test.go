@@ -644,7 +644,7 @@ func TestDomainSniffing(t *testing.T) {
 		if resp.StatusCode != 200 {
 			t.Error("unexpected status code: ", resp.StatusCode)
 		}
-		common.Must(resp.Write(ioutil.Discard))
+		common.Must(resp.Write(io.Discard))
 	}
 }
 

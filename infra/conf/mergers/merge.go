@@ -50,7 +50,7 @@ func Merge(input interface{}, m map[string]interface{}) error {
 		}
 	case io.Reader:
 		// read to []byte incase it tries different mergers
-		bs, err := ioutil.ReadAll(v)
+		bs, err := io.ReadAll(v)
 		if err != nil {
 			return err
 		}

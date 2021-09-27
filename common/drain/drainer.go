@@ -36,7 +36,7 @@ func (d *BehaviorSeedLimitedDrainer) Drain(reader io.Reader) error {
 }
 
 func drainReadN(reader io.Reader, n int) error {
-	_, err := io.CopyN(ioutil.Discard, reader, int64(n))
+	_, err := io.CopyN(io.Discard, reader, int64(n))
 	return err
 }
 
