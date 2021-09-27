@@ -324,8 +324,6 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 			if !conn.inactive {
 				conn.setInactive()
 				w.removeConn(id)
-			} else {
-				newError("connection already removed by checker: ", conn).AtDebug().WriteToLog(session.ExportIDToError(ctx))
 			}
 		}()
 	}
