@@ -153,6 +153,11 @@ type udpConn struct {
 	done             *done.Instance
 	uplink           stats.Counter
 	downlink         stats.Counter
+	inactive         bool
+}
+
+func (c *udpConn) setInactive() {
+	c.inactive = true
 }
 
 func (c *udpConn) updateActivity() {
@@ -315,7 +320,13 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 				newError("connection ends").Base(err).WriteToLog(session.ExportIDToError(ctx))
 			}
 			conn.Close()
-			w.removeConn(id)
+			// conn not removed by checker TODO may be lock worker here is better
+			if !conn.inactive {
+				conn.setInactive()
+				w.removeConn(id)
+			} else {
+				newError("connection already removed by checker: ", conn).AtDebug().WriteToLog(session.ExportIDToError(ctx))
+			}
 		}()
 	}
 }
@@ -344,7 +355,10 @@ func (w *udpWorker) clean() error {
 
 	for addr, conn := range w.activeConn {
 		if nowSec-atomic.LoadInt64(&conn.lastActivityTime) > 8 { // TODO Timeout too small
-			delete(w.activeConn, addr)
+			if !conn.inactive {
+				conn.setInactive()
+				delete(w.activeConn, addr)
+			}
 			conn.Close()
 		}
 	}
