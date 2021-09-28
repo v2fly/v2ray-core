@@ -3,7 +3,6 @@ package mergers
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 
 	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/merge"

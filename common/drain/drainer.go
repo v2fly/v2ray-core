@@ -2,7 +2,6 @@ package drain
 
 import (
 	"io"
-	"io/ioutil"
 
 	"github.com/v2fly/v2ray-core/v4/common/dice"
 )

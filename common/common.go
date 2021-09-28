@@ -5,6 +5,7 @@ package common
 import (
 	"fmt"
 	"go/build"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"

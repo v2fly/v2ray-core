@@ -2,7 +2,6 @@ package mergers
 
 import (
 	"io"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 
