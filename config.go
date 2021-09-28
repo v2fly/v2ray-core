@@ -145,6 +145,7 @@ func loadSingleConfigAutoFormat(input interface{}) (*Config, error) {
 			return nil, newError("config loader not found for: ", extension).AtWarning()
 		}
 	}
+	var errorReasons strings.Builder
 	// no extension, try all loaders
 	for _, f := range configLoaders {
 		if f.Name[0] == FormatAuto {
@@ -153,9 +154,11 @@ func loadSingleConfigAutoFormat(input interface{}) (*Config, error) {
 		c, err := f.Loader(input)
 		if err == nil {
 			return c, nil
+		} else {
+			errorReasons.WriteString(fmt.Sprintf("unable to parse as %v:%v;", f.Name[0], err.Error()))
 		}
 	}
-	return nil, newError("tried all loaders but failed for: ", input).AtWarning()
+	return nil, newError("tried all loaders but failed when attempting to parse: ", input, ";", errorReasons.String()).AtWarning()
 }
 
 func getInputCount(input interface{}) int {
