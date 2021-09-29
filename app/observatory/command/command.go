@@ -34,7 +34,11 @@ func (s *service) GetOutboundStatus(ctx context.Context, request *GetOutboundSta
 		}
 		result = observeResult
 	} else {
-		observeResult, err := common.Must2(s.observatory.(features.TaggedFeatures).GetFeaturesByTag(request.Tag)).(extension.Observatory).GetObservation(ctx)
+		fet, err := s.observatory.(features.TaggedFeatures).GetFeaturesByTag(request.Tag)
+		if err != nil {
+			return nil, newError("cannot get tagged observatory").Base(err)
+		}
+		observeResult, err := fet.(extension.Observatory).GetObservation(ctx)
 		if err != nil {
 			return nil, newError("cannot get observation").Base(err)
 		}
