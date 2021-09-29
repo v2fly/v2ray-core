@@ -3,7 +3,7 @@ package scenarios
 import (
 	"context"
 	"google.golang.org/protobuf/types/known/anypb"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"testing"

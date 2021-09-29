@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/rand"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"testing"
