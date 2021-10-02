@@ -28,9 +28,8 @@ func TestCustomLogHandler(t *testing.T) {
 	})
 
 	logger, err := log.New(context.Background(), &log.Config{
-		ErrorLogLevel: clog.Severity_Debug,
-		ErrorLogType:  log.LogType_Console,
-		AccessLogType: log.LogType_None,
+		Error:  &log.LogSpecification{Type: log.LogType_Console, Level: clog.Severity_Debug},
+		Access: &log.LogSpecification{Type: log.LogType_None},
 	})
 	common.Must(err)
 

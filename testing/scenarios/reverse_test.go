@@ -216,8 +216,7 @@ func TestReverseProxyLongRunning(t *testing.T) {
 	serverConfig := &core.Config{
 		App: []*anypb.Any{
 			serial.ToTypedMessage(&log.Config{
-				ErrorLogLevel: clog.Severity_Warning,
-				ErrorLogType:  log.LogType_Console,
+				Error: &log.LogSpecification{Level: clog.Severity_Debug, Type: log.LogType_Console},
 			}),
 			serial.ToTypedMessage(&policy.Config{
 				Level: map[uint32]*policy.Policy{
@@ -299,8 +298,7 @@ func TestReverseProxyLongRunning(t *testing.T) {
 	clientConfig := &core.Config{
 		App: []*anypb.Any{
 			serial.ToTypedMessage(&log.Config{
-				ErrorLogLevel: clog.Severity_Warning,
-				ErrorLogType:  log.LogType_Console,
+				Error: &log.LogSpecification{Level: clog.Severity_Debug, Type: log.LogType_Console},
 			}),
 			serial.ToTypedMessage(&policy.Config{
 				Level: map[uint32]*policy.Policy{

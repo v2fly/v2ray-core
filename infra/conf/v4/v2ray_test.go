@@ -149,11 +149,15 @@ func TestV2RayConfig(t *testing.T) {
 			Output: &core.Config{
 				App: []*anypb.Any{
 					serial.ToTypedMessage(&log.Config{
-						ErrorLogType:  log.LogType_File,
-						ErrorLogPath:  "/var/log/v2ray/error.log",
-						ErrorLogLevel: clog.Severity_Error,
-						AccessLogType: log.LogType_File,
-						AccessLogPath: "/var/log/v2ray/access.log",
+						Error: &log.LogSpecification{
+							Type:  log.LogType_File,
+							Level: clog.Severity_Error,
+							Path:  "/var/log/v2ray/error.log",
+						},
+						Access: &log.LogSpecification{
+							Type: log.LogType_File,
+							Path: "/var/log/v2ray/access.log",
+						},
 					}),
 					serial.ToTypedMessage(&dispatcher.Config{}),
 					serial.ToTypedMessage(&proxyman.InboundConfig{}),

@@ -9,9 +9,8 @@ import (
 
 func DefaultLogConfig() *log.Config {
 	return &log.Config{
-		AccessLogType: log.LogType_None,
-		ErrorLogType:  log.LogType_Console,
-		ErrorLogLevel: clog.Severity_Warning,
+		Access: &log.LogSpecification{Type: log.LogType_None},
+		Error:  &log.LogSpecification{Type: log.LogType_Console, Level: clog.Severity_Warning},
 	}
 }
 
@@ -26,36 +25,36 @@ func (v *LogConfig) Build() *log.Config {
 		return nil
 	}
 	config := &log.Config{
-		ErrorLogType:  log.LogType_Console,
-		AccessLogType: log.LogType_Console,
+		Access: &log.LogSpecification{Type: log.LogType_Console},
+		Error:  &log.LogSpecification{Type: log.LogType_Console},
 	}
 
 	if v.AccessLog == "none" {
-		config.AccessLogType = log.LogType_None
+		config.Access.Type = log.LogType_None
 	} else if len(v.AccessLog) > 0 {
-		config.AccessLogPath = v.AccessLog
-		config.AccessLogType = log.LogType_File
+		config.Access.Path = v.AccessLog
+		config.Access.Type = log.LogType_File
 	}
 	if v.ErrorLog == "none" {
-		config.ErrorLogType = log.LogType_None
+		config.Error.Type = log.LogType_None
 	} else if len(v.ErrorLog) > 0 {
-		config.ErrorLogPath = v.ErrorLog
-		config.ErrorLogType = log.LogType_File
+		config.Error.Path = v.ErrorLog
+		config.Error.Type = log.LogType_File
 	}
 
 	level := strings.ToLower(v.LogLevel)
 	switch level {
 	case "debug":
-		config.ErrorLogLevel = clog.Severity_Debug
+		config.Error.Level = clog.Severity_Debug
 	case "info":
-		config.ErrorLogLevel = clog.Severity_Info
+		config.Error.Level = clog.Severity_Info
 	case "error":
-		config.ErrorLogLevel = clog.Severity_Error
+		config.Error.Level = clog.Severity_Error
 	case "none":
-		config.ErrorLogType = log.LogType_None
-		config.AccessLogType = log.LogType_None
+		config.Error.Type = log.LogType_None
+		config.Error.Type = log.LogType_None
 	default:
-		config.ErrorLogLevel = clog.Severity_Warning
+		config.Error.Level = clog.Severity_Warning
 	}
 	return config
 }

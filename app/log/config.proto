@@ -16,14 +16,18 @@ enum LogType {
   Event = 3;
 }
 
+message LogSpecification {
+  LogType type = 1;
+  v2ray.core.common.log.Severity level = 2;
+  string path = 3;
+}
+
 message Config {
   option (v2ray.core.common.protoext.message_opt).type = "service";
   option (v2ray.core.common.protoext.message_opt).short_name = "log";
 
-  LogType error_log_type = 1;
-  v2ray.core.common.log.Severity error_log_level = 2;
-  string error_log_path = 3;
+  reserved 1,2,3,4,5;
 
-  LogType access_log_type = 4;
-  string access_log_path = 5;
+  LogSpecification error = 6;
+  LogSpecification access = 7;
 }

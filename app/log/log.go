@@ -23,6 +23,15 @@ type Instance struct {
 
 // New creates a new log.Instance based on the given config.
 func New(ctx context.Context, config *Config) (*Instance, error) {
+
+	if config.Error == nil {
+		config.Error = &LogSpecification{Type: LogType_Console, Level: log.Severity_Warning}
+	}
+
+	if config.Access == nil {
+		config.Access = &LogSpecification{Type: LogType_None}
+	}
+
 	g := &Instance{
 		config: config,
 		active: false,
@@ -40,8 +49,8 @@ func New(ctx context.Context, config *Config) (*Instance, error) {
 }
 
 func (g *Instance) initAccessLogger() error {
-	handler, err := createHandler(g.config.AccessLogType, HandlerCreatorOptions{
-		Path: g.config.AccessLogPath,
+	handler, err := createHandler(g.config.Access.Type, HandlerCreatorOptions{
+		Path: g.config.Access.Path,
 	})
 	if err != nil {
 		return err
@@ -51,8 +60,8 @@ func (g *Instance) initAccessLogger() error {
 }
 
 func (g *Instance) initErrorLogger() error {
-	handler, err := createHandler(g.config.ErrorLogType, HandlerCreatorOptions{
-		Path: g.config.ErrorLogPath,
+	handler, err := createHandler(g.config.Error.Type, HandlerCreatorOptions{
+		Path: g.config.Error.Path,
 	})
 	if err != nil {
 		return err
@@ -127,7 +136,7 @@ func (g *Instance) Handle(msg log.Message) {
 			g.accessLogger.Handle(msg)
 		}
 	case *log.GeneralMessage:
-		if g.errorLogger != nil && msg.Severity <= g.config.ErrorLogLevel {
+		if g.errorLogger != nil && msg.Severity <= g.config.Error.Level {
 			g.errorLogger.Handle(msg)
 		}
 	default:
