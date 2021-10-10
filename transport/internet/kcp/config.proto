@@ -8,6 +8,8 @@ option java_multiple_files = true;
 
 import "google/protobuf/any.proto";
 
+import "common/protoext/extensions.proto";
+
 // Maximum Transmission Unit, in bytes.
 message MTU {
   uint32 value = 1;
@@ -48,6 +50,11 @@ message EncryptionSeed {
 }
 
 message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "transport";
+  option (v2ray.core.common.protoext.message_opt).short_name = "kcp";
+
+  option (v2ray.core.common.protoext.message_opt).transport_original_name = "mkcp";
+
   MTU mtu = 1;
   TTI tti = 2;
   UplinkCapacity uplink_capacity = 3;
