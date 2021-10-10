@@ -17,14 +17,19 @@ const (
 // Matcher is the interface to determine a string matches a pattern.
 //  * This is a basic matcher to represent a certain kind of match semantic(full, substr, domain or regex).
 type Matcher interface {
+	// Type returns the matcher's type.
+	Type() Type
+
+	// Pattern returns the matcher's raw string representation
+	Pattern() string
+
+	// String returns a string representation of the matcher containing its type and pattern.
+	String() string
+
 	// Match returns true if the given string matches a predefined pattern.
 	//  * This method is seldom used for performance reason
 	//    and is generally taken over by their corresponding MatcherGroup.
 	Match(str string) bool
-	// Type returns the matcher's type.
-	// Type() Type
-	// String returns a string representation of the matcher containing its type and pattern.
-	String() string
 }
 
 // MatcherGroup is the interface for matching with a group of matchers.
