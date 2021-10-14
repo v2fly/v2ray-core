@@ -17,13 +17,13 @@ type DomainMatcherGroup struct {
 	root *node
 }
 
-func (g *DomainMatcherGroup) Add(domain string, value uint32) {
+func (g *DomainMatcherGroup) AddDomainMatcher(matcher DomainMatcher, value uint32) {
 	if g.root == nil {
 		g.root = new(node)
 	}
 
 	current := g.root
-	parts := breakDomain(domain)
+	parts := breakDomain(matcher.Pattern())
 	for i := len(parts) - 1; i >= 0; i-- {
 		part := parts[i]
 		if current.sub == nil {
@@ -38,10 +38,6 @@ func (g *DomainMatcherGroup) Add(domain string, value uint32) {
 	}
 
 	current.values = append(current.values, value)
-}
-
-func (g *DomainMatcherGroup) addMatcher(m domainMatcher, value uint32) {
-	g.Add(string(m), value)
 }
 
 func (g *DomainMatcherGroup) Match(domain string) []uint32 {

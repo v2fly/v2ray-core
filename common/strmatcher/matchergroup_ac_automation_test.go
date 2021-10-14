@@ -58,7 +58,14 @@ func TestACAutomatonMatcherGroup(t *testing.T) {
 	}
 	for _, test := range cases1 {
 		ac := NewACAutomatonMatcherGroup()
-		ac.Add(test.pattern, test.mType)
+		switch test.mType {
+		case Full:
+			ac.AddFullMatcher(FullMatcher(test.pattern))
+		case Domain:
+			ac.AddDomainMatcher(DomainMatcher(test.pattern))
+		case Substr:
+			ac.AddSubstrMatcher(SubstrMatcher(test.pattern))
+		}
 		ac.Build()
 		if m := ac.Match(test.input); m != test.output {
 			t.Error("unexpected output: ", m, " for test case ", test)
@@ -92,7 +99,14 @@ func TestACAutomatonMatcherGroup(t *testing.T) {
 		}
 		ac := NewACAutomatonMatcherGroup()
 		for _, test := range cases2Input {
-			ac.Add(test.pattern, test.mType)
+			switch test.mType {
+			case Full:
+				ac.AddFullMatcher(FullMatcher(test.pattern))
+			case Domain:
+				ac.AddDomainMatcher(DomainMatcher(test.pattern))
+			case Substr:
+				ac.AddSubstrMatcher(SubstrMatcher(test.pattern))
+			}
 		}
 		ac.Build()
 		cases2Output := []struct {
@@ -155,7 +169,14 @@ func TestACAutomatonMatcherGroup(t *testing.T) {
 		}
 		ac := NewACAutomatonMatcherGroup()
 		for _, test := range cases3Input {
-			ac.Add(test.pattern, test.mType)
+			switch test.mType {
+			case Full:
+				ac.AddFullMatcher(FullMatcher(test.pattern))
+			case Domain:
+				ac.AddDomainMatcher(DomainMatcher(test.pattern))
+			case Substr:
+				ac.AddSubstrMatcher(SubstrMatcher(test.pattern))
+			}
 		}
 		ac.Build()
 		cases3Output := []struct {

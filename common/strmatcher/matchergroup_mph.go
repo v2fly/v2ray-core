@@ -40,12 +40,12 @@ func NewMphMatcherGroup() *MphMatcherGroup {
 }
 
 func (g *MphMatcherGroup) AddFullMatcher(matcher FullMatcher) {
-	pattern := strings.ToLower(string(matcher))
+	pattern := strings.ToLower(matcher.Pattern())
 	(*g.ruleMap)[pattern] = RollingHash(pattern)
 }
 
 func (g *MphMatcherGroup) AddDomainMatcher(matcher DomainMatcher) {
-	pattern := strings.ToLower(string(matcher))
+	pattern := strings.ToLower(matcher.Pattern())
 	h := RollingHash(pattern)
 	(*g.ruleMap)[pattern] = h
 	(*g.ruleMap)["."+pattern] = h*PrimeRK + uint32('.')

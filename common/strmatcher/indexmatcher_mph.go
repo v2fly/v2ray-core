@@ -39,7 +39,7 @@ func (g *MphIndexMatcher) Add(matcher Matcher) uint32 {
 		if g.ac == nil {
 			g.ac = NewACAutomatonMatcherGroup()
 		}
-		g.ac.Add(string(matcher), Substr)
+		g.ac.AddSubstrMatcher(matcher)
 	case *RegexMatcher:
 		g.regex.AddMatcher(matcher, index)
 	}

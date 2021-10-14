@@ -132,10 +132,22 @@ func NewACAutomatonMatcherGroup() *ACAutomatonMatcherGroup {
 	return ac
 }
 
-func (ac *ACAutomatonMatcherGroup) Add(domain string, t Type) {
-	node := 0
-	for i := len(domain) - 1; i >= 0; i-- {
-		idx := char2Index[domain[i]]
+func (ac *ACAutomatonMatcherGroup) AddFullMatcher(matcher FullMatcher) {
+	ac.addPattern(0, matcher.Pattern(), matcher.Type())
+}
+
+func (ac *ACAutomatonMatcherGroup) AddDomainMatcher(matcher DomainMatcher) {
+	node := ac.addPattern(0, matcher.Pattern(), Full)
+	ac.addPattern(node, ".", Domain)
+}
+
+func (ac *ACAutomatonMatcherGroup) AddSubstrMatcher(matcher SubstrMatcher) {
+	ac.addPattern(0, matcher.Pattern(), matcher.Type())
+}
+
+func (ac *ACAutomatonMatcherGroup) addPattern(node int, pattern string, matcherType Type) int {
+	for i := len(pattern) - 1; i >= 0; i-- {
+		idx := char2Index[pattern[i]]
 		if ac.trie[node][idx].nextNode == 0 {
 			ac.count++
 			if len(ac.trie) < ac.count+1 {
@@ -154,39 +166,10 @@ func (ac *ACAutomatonMatcherGroup) Add(domain string, t Type) {
 		node = ac.trie[node][idx].nextNode
 	}
 	ac.exists[node] = MatchType{
-		matchType: t,
+		matchType: matcherType,
 		exist:     true,
 	}
-	switch t {
-	case Domain:
-		ac.exists[node] = MatchType{
-			matchType: Full,
-			exist:     true,
-		}
-		idx := char2Index['.']
-		if ac.trie[node][idx].nextNode == 0 {
-			ac.count++
-			if len(ac.trie) < ac.count+1 {
-				ac.trie = append(ac.trie, newNode())
-				ac.fail = append(ac.fail, 0)
-				ac.exists = append(ac.exists, MatchType{
-					matchType: Full,
-					exist:     false,
-				})
-			}
-			ac.trie[node][idx] = Edge{
-				edgeType: TrieEdge,
-				nextNode: ac.count,
-			}
-		}
-		node = ac.trie[node][idx].nextNode
-		ac.exists[node] = MatchType{
-			matchType: t,
-			exist:     true,
-		}
-	default:
-		break
-	}
+	return node
 }
 
 func (ac *ACAutomatonMatcherGroup) Build() {

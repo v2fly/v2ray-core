@@ -6,43 +6,36 @@ type LinearIndexMatcher struct {
 	count         uint32
 	fullMatcher   FullMatcherGroup
 	domainMatcher DomainMatcherGroup
-	otherMatchers []matcherEntry
+	otherMatchers SimpleMatcherGroup
 }
 
-// Add adds a new Matcher into the MatcherGroup, and returns its index. The index will never be 0.
-func (g *LinearIndexMatcher) Add(m Matcher) uint32 {
+// Add implements IndexMatcher.Add.
+func (g *LinearIndexMatcher) Add(matcher Matcher) uint32 {
 	g.count++
-	c := g.count
+	index := g.count
 
-	switch tm := m.(type) {
-	case fullMatcher:
-		g.fullMatcher.addMatcher(tm, c)
-	case domainMatcher:
-		g.domainMatcher.addMatcher(tm, c)
+	switch matcher := matcher.(type) {
+	case FullMatcher:
+		g.fullMatcher.AddFullMatcher(matcher, index)
+	case DomainMatcher:
+		g.domainMatcher.AddDomainMatcher(matcher, index)
 	default:
-		g.otherMatchers = append(g.otherMatchers, matcherEntry{
-			m:  m,
-			id: c,
-		})
+		g.otherMatchers.AddMatcher(matcher, index)
 	}
 
-	return c
+	return index
 }
 
 // Match implements IndexMatcher.Match.
-func (g *LinearIndexMatcher) Match(pattern string) []uint32 {
+func (g *LinearIndexMatcher) Match(input string) []uint32 {
 	result := []uint32{}
-	result = append(result, g.fullMatcher.Match(pattern)...)
-	result = append(result, g.domainMatcher.Match(pattern)...)
-	for _, e := range g.otherMatchers {
-		if e.m.Match(pattern) {
-			result = append(result, e.id)
-		}
-	}
+	result = append(result, g.fullMatcher.Match(input)...)
+	result = append(result, g.domainMatcher.Match(input)...)
+	result = append(result, g.otherMatchers.Match(input)...)
 	return result
 }
 
-// Size returns the number of matchers in the MatcherGroup.
+// Size implements IndexMatcher.Size.
 func (g *LinearIndexMatcher) Size() uint32 {
 	return g.count
 }
