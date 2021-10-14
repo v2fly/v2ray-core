@@ -21,6 +21,8 @@ type Edge struct {
 	nextNode int
 }
 
+// ACAutoMationMatcherGroup is an implementation of MatcherGroup.
+// It uses an AC Automata to provide support for Full, Domain and Substr matcher. Trie node is char based.
 type ACAutomatonMatcherGroup struct {
 	trie   [][validCharCount]Edge
 	fail   []int
@@ -132,16 +134,19 @@ func NewACAutomatonMatcherGroup() *ACAutomatonMatcherGroup {
 	return ac
 }
 
-func (ac *ACAutomatonMatcherGroup) AddFullMatcher(matcher FullMatcher) {
+// AddFullMatcher implements MatcherGroupForFull.AddFullMatcher.
+func (ac *ACAutomatonMatcherGroup) AddFullMatcher(matcher FullMatcher, value uint32) {
 	ac.addPattern(0, matcher.Pattern(), matcher.Type())
 }
 
-func (ac *ACAutomatonMatcherGroup) AddDomainMatcher(matcher DomainMatcher) {
+// AddDomainMatcher implements MatcherGroupForDomain.AddDomainMatcher.
+func (ac *ACAutomatonMatcherGroup) AddDomainMatcher(matcher DomainMatcher, value uint32) {
 	node := ac.addPattern(0, matcher.Pattern(), Full)
 	ac.addPattern(node, ".", Domain)
 }
 
-func (ac *ACAutomatonMatcherGroup) AddSubstrMatcher(matcher SubstrMatcher) {
+// AddSubstrMatcher implements MatcherGroupForSubstr.AddSubstrMatcher.
+func (ac *ACAutomatonMatcherGroup) AddSubstrMatcher(matcher SubstrMatcher, value uint32) {
 	ac.addPattern(0, matcher.Pattern(), matcher.Type())
 }
 
@@ -201,7 +206,13 @@ func (ac *ACAutomatonMatcherGroup) Build() {
 	}
 }
 
-func (ac *ACAutomatonMatcherGroup) Match(s string) bool {
+// Match implements MatcherGroup.Match.
+func (ac *ACAutomatonMatcherGroup) Match(s string) []uint32 {
+	return nil
+}
+
+// MatchAny implements MatcherGroup.MatchAny.
+func (ac *ACAutomatonMatcherGroup) MatchAny(s string) bool {
 	node := 0
 	fullMatch := true
 	// 1. the match string is all through trie edge. FULL MATCH or DOMAIN

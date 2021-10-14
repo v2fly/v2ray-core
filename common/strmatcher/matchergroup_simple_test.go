@@ -55,11 +55,11 @@ func TestSimpleMatcherGroup(t *testing.T) {
 			output: []uint32{2},
 		},
 	}
-	matcherGroup := SimpleMatcherGroup{}
+	matcherGroup := &SimpleMatcherGroup{}
 	for id, entry := range patterns {
 		matcher, err := entry.mType.New(entry.pattern)
 		common.Must(err)
-		matcherGroup.AddMatcher(matcher, uint32(id))
+		common.Must(AddMatcherToGroup(matcherGroup, matcher, uint32(id)))
 	}
 	for _, test := range cases {
 		if r := matcherGroup.Match(test.input); !reflect.DeepEqual(r, test.output) {

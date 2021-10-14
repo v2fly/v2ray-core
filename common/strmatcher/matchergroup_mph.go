@@ -19,6 +19,8 @@ func RollingHash(s string) uint32 {
 	return h
 }
 
+// MphMatcherGroup is an implementation of MatcherGroup.
+// It implements Rabin-Karp algorithm and minimal perfect hash table for Full and Domain matcher.
 type MphMatcherGroup struct {
 	rules      []string
 	level0     []uint32
@@ -39,12 +41,14 @@ func NewMphMatcherGroup() *MphMatcherGroup {
 	}
 }
 
-func (g *MphMatcherGroup) AddFullMatcher(matcher FullMatcher) {
+// AddFullMatcher implements MatcherGroupForFull.
+func (g *MphMatcherGroup) AddFullMatcher(matcher FullMatcher, value uint32) {
 	pattern := strings.ToLower(matcher.Pattern())
 	(*g.ruleMap)[pattern] = RollingHash(pattern)
 }
 
-func (g *MphMatcherGroup) AddDomainMatcher(matcher DomainMatcher) {
+// AddDomainMatcher implements MatcherGroupForDomain.
+func (g *MphMatcherGroup) AddDomainMatcher(matcher DomainMatcher, value uint32) {
 	pattern := strings.ToLower(matcher.Pattern())
 	h := RollingHash(pattern)
 	(*g.ruleMap)[pattern] = h
@@ -119,22 +123,21 @@ func (g *MphMatcherGroup) Lookup(h uint32, s string) bool {
 
 // Match implements MatcherGroup.Match.
 func (g *MphMatcherGroup) Match(pattern string) []uint32 {
-	result := []uint32{}
+	return nil
+}
+
+// MatchAny implements MatcherGroup.MatchAny.
+func (g *MphMatcherGroup) MatchAny(pattern string) bool {
 	hash := uint32(0)
 	for i := len(pattern) - 1; i >= 0; i-- {
 		hash = hash*PrimeRK + uint32(pattern[i])
 		if pattern[i] == '.' {
 			if g.Lookup(hash, pattern[i:]) {
-				result = append(result, 1)
-				return result
+				return true
 			}
 		}
 	}
-	if g.Lookup(hash, pattern) {
-		result = append(result, 1)
-		return result
-	}
-	return nil
+	return g.Lookup(hash, pattern)
 }
 
 func nextPow2(v int) int {

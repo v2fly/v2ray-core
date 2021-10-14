@@ -32,9 +32,15 @@ type Matcher interface {
 	Match(str string) bool
 }
 
-// MatcherGroup is the interface for matching with a group of matchers.
+// MatcherGroup is an advanced type of matcher to accept a bunch of basic Matchers (of certain type, not all matcher types).
+// For example:
+//   * FullMatcherGroup accepts FullMatcher and uses a hash table to facilitate lookup.
+//   * DomainMatcherGroup accepts DomainMatcher and uses a trie to optimize both memory consumption and lookup speed.
 type MatcherGroup interface {
-	Add(matcher Matcher, value uint32)
+	// Match returns all matched matchers with their corresponding values.
+	Match(input string) []uint32
+	// MatchAny returns true as soon as one matching matcher is found.
+	MatchAny(input string) bool
 }
 
 // IndexMatcher is the interface for matching with a group of matchers.

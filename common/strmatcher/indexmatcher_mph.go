@@ -29,17 +29,17 @@ func (g *MphIndexMatcher) Add(matcher Matcher) uint32 {
 		if g.mph == nil {
 			g.mph = NewMphMatcherGroup()
 		}
-		g.mph.AddFullMatcher(matcher)
+		g.mph.AddFullMatcher(matcher, index)
 	case DomainMatcher:
 		if g.mph == nil {
 			g.mph = NewMphMatcherGroup()
 		}
-		g.mph.AddDomainMatcher(matcher)
+		g.mph.AddDomainMatcher(matcher, index)
 	case SubstrMatcher:
 		if g.ac == nil {
 			g.ac = NewACAutomatonMatcherGroup()
 		}
-		g.ac.AddSubstrMatcher(matcher)
+		g.ac.AddSubstrMatcher(matcher, index)
 	case *RegexMatcher:
 		g.regex.AddMatcher(matcher, index)
 	}
@@ -59,11 +59,11 @@ func (g *MphIndexMatcher) Build() {
 // Match implements IndexMatcher.Match.
 func (g *MphIndexMatcher) Match(pattern string) []uint32 {
 	result := []uint32{}
-	if len(g.mph.Match(pattern)) > 0 {
+	if g.mph.MatchAny(pattern) {
 		result = append(result, 1)
 		return result
 	}
-	if g.ac != nil && g.ac.Match(pattern) {
+	if g.ac != nil && g.ac.MatchAny(pattern) {
 		result = append(result, 1)
 		return result
 	}

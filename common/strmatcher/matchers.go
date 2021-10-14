@@ -1,6 +1,7 @@
 package strmatcher
 
 import (
+	"errors"
 	"regexp"
 	"strings"
 )
@@ -105,4 +106,62 @@ func (t Type) New(pattern string) (Matcher, error) {
 	default:
 		panic("Unknown type")
 	}
+}
+
+// MatcherGroupForAll is an interface indicating a MatcherGroup could accept all types of matchers.
+type MatcherGroupForAll interface {
+	AddMatcher(matcher Matcher, value uint32)
+}
+
+// MatcherGroupForFull is an interface indicating a MatcherGroup could accept FullMatchers.
+type MatcherGroupForFull interface {
+	AddFullMatcher(matcher FullMatcher, value uint32)
+}
+
+// MatcherGroupForDomain is an interface indicating a MatcherGroup could accept DomainMatchers.
+type MatcherGroupForDomain interface {
+	AddDomainMatcher(matcher DomainMatcher, value uint32)
+}
+
+// MatcherGroupForSubstr is an interface indicating a MatcherGroup could accept SubstrMatchers.
+type MatcherGroupForSubstr interface {
+	AddSubstrMatcher(matcher SubstrMatcher, value uint32)
+}
+
+// MatcherGroupForRegex is an interface indicating a MatcherGroup could accept RegexMatchers.
+type MatcherGroupForRegex interface {
+	AddRegexMatcher(matcher *RegexMatcher, value uint32)
+}
+
+// AddMatcherGroup is a helper function to try to add a Matcher to any kind of MatcherGroup.
+// It returns error if the MatcherGroup does not accept the provided Matcher's type.
+// This function is provided to help writing code to test a MatcherGroup.
+func AddMatcherToGroup(g MatcherGroup, matcher Matcher, value uint32) error {
+	if g, ok := g.(MatcherGroupForAll); ok {
+		g.AddMatcher(matcher, value)
+		return nil
+	}
+	switch matcher := matcher.(type) {
+	case FullMatcher:
+		if g, ok := g.(MatcherGroupForFull); ok {
+			g.AddFullMatcher(matcher, value)
+			return nil
+		}
+	case DomainMatcher:
+		if g, ok := g.(MatcherGroupForDomain); ok {
+			g.AddDomainMatcher(matcher, value)
+			return nil
+		}
+	case SubstrMatcher:
+		if g, ok := g.(MatcherGroupForSubstr); ok {
+			g.AddSubstrMatcher(matcher, value)
+			return nil
+		}
+	case *RegexMatcher:
+		if g, ok := g.(MatcherGroupForRegex); ok {
+			g.AddRegexMatcher(matcher, value)
+			return nil
+		}
+	}
+	return errors.New("cannot add matcher to matcher group")
 }

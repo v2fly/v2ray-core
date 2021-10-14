@@ -84,7 +84,7 @@ func TestDomainMatcherGroup(t *testing.T) {
 	}
 	g := new(DomainMatcherGroup)
 	for _, pattern := range patterns {
-		g.AddDomainMatcher(DomainMatcher(pattern.Pattern), pattern.Value)
+		AddMatcherToGroup(g, DomainMatcher(pattern.Pattern), pattern.Value)
 	}
 	for _, testCase := range testCases {
 		r := g.Match(testCase.Domain)

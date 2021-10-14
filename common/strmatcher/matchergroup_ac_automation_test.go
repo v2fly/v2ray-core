@@ -3,6 +3,7 @@ package strmatcher_test
 import (
 	"testing"
 
+	"github.com/v2fly/v2ray-core/v4/common"
 	. "github.com/v2fly/v2ray-core/v4/common/strmatcher"
 )
 
@@ -58,16 +59,11 @@ func TestACAutomatonMatcherGroup(t *testing.T) {
 	}
 	for _, test := range cases1 {
 		ac := NewACAutomatonMatcherGroup()
-		switch test.mType {
-		case Full:
-			ac.AddFullMatcher(FullMatcher(test.pattern))
-		case Domain:
-			ac.AddDomainMatcher(DomainMatcher(test.pattern))
-		case Substr:
-			ac.AddSubstrMatcher(SubstrMatcher(test.pattern))
-		}
+		matcher, err := test.mType.New(test.pattern)
+		common.Must(err)
+		common.Must(AddMatcherToGroup(ac, matcher, 0))
 		ac.Build()
-		if m := ac.Match(test.input); m != test.output {
+		if m := ac.MatchAny(test.input); m != test.output {
 			t.Error("unexpected output: ", m, " for test case ", test)
 		}
 	}
@@ -99,14 +95,9 @@ func TestACAutomatonMatcherGroup(t *testing.T) {
 		}
 		ac := NewACAutomatonMatcherGroup()
 		for _, test := range cases2Input {
-			switch test.mType {
-			case Full:
-				ac.AddFullMatcher(FullMatcher(test.pattern))
-			case Domain:
-				ac.AddDomainMatcher(DomainMatcher(test.pattern))
-			case Substr:
-				ac.AddSubstrMatcher(SubstrMatcher(test.pattern))
-			}
+			matcher, err := test.mType.New(test.pattern)
+			common.Must(err)
+			common.Must(AddMatcherToGroup(ac, matcher, 0))
 		}
 		ac.Build()
 		cases2Output := []struct {
@@ -147,7 +138,7 @@ func TestACAutomatonMatcherGroup(t *testing.T) {
 			},
 		}
 		for _, test := range cases2Output {
-			if m := ac.Match(test.pattern); m != test.res {
+			if m := ac.MatchAny(test.pattern); m != test.res {
 				t.Error("unexpected output: ", m, " for test case ", test)
 			}
 		}
@@ -169,14 +160,9 @@ func TestACAutomatonMatcherGroup(t *testing.T) {
 		}
 		ac := NewACAutomatonMatcherGroup()
 		for _, test := range cases3Input {
-			switch test.mType {
-			case Full:
-				ac.AddFullMatcher(FullMatcher(test.pattern))
-			case Domain:
-				ac.AddDomainMatcher(DomainMatcher(test.pattern))
-			case Substr:
-				ac.AddSubstrMatcher(SubstrMatcher(test.pattern))
-			}
+			matcher, err := test.mType.New(test.pattern)
+			common.Must(err)
+			common.Must(AddMatcherToGroup(ac, matcher, 0))
 		}
 		ac.Build()
 		cases3Output := []struct {
@@ -189,7 +175,7 @@ func TestACAutomatonMatcherGroup(t *testing.T) {
 			},
 		}
 		for _, test := range cases3Output {
-			if m := ac.Match(test.pattern); m != test.res {
+			if m := ac.MatchAny(test.pattern); m != test.res {
 				t.Error("unexpected output: ", m, " for test case ", test)
 			}
 		}

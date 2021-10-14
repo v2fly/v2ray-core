@@ -52,7 +52,7 @@ func TestFullMatcherGroup(t *testing.T) {
 	}
 	g := new(FullMatcherGroup)
 	for _, pattern := range patterns {
-		g.AddFullMatcher(FullMatcher(pattern.Pattern), pattern.Value)
+		AddMatcherToGroup(g, FullMatcher(pattern.Pattern), pattern.Value)
 	}
 	for _, testCase := range testCases {
 		r := g.Match(testCase.Domain)

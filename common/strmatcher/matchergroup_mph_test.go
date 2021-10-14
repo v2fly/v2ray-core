@@ -3,6 +3,7 @@ package strmatcher_test
 import (
 	"testing"
 
+	"github.com/v2fly/v2ray-core/v4/common"
 	. "github.com/v2fly/v2ray-core/v4/common/strmatcher"
 )
 
@@ -58,14 +59,11 @@ func TestMphMatcherGroup(t *testing.T) {
 	}
 	for _, test := range cases1 {
 		mph := NewMphMatcherGroup()
-		switch test.mType {
-		case Full:
-			mph.AddFullMatcher(FullMatcher(test.pattern))
-		case Domain:
-			mph.AddDomainMatcher(DomainMatcher(test.pattern))
-		}
+		matcher, err := test.mType.New(test.pattern)
+		common.Must(err)
+		common.Must(AddMatcherToGroup(mph, matcher, 0))
 		mph.Build()
-		if m := len(mph.Match(test.input)) > 0; m != test.output {
+		if m := mph.MatchAny(test.input); m != test.output {
 			t.Error("unexpected output: ", m, " for test case ", test)
 		}
 	}
@@ -89,12 +87,9 @@ func TestMphMatcherGroup(t *testing.T) {
 		}
 		mph := NewMphMatcherGroup()
 		for _, test := range cases2Input {
-			switch test.mType {
-			case Full:
-				mph.AddFullMatcher(FullMatcher(test.pattern))
-			case Domain:
-				mph.AddDomainMatcher(DomainMatcher(test.pattern))
-			}
+			matcher, err := test.mType.New(test.pattern)
+			common.Must(err)
+			common.Must(AddMatcherToGroup(mph, matcher, 0))
 		}
 		mph.Build()
 		cases2Output := []struct {
@@ -135,7 +130,7 @@ func TestMphMatcherGroup(t *testing.T) {
 			},
 		}
 		for _, test := range cases2Output {
-			if m := len(mph.Match(test.pattern)) > 0; m != test.res {
+			if m := mph.MatchAny(test.pattern); m != test.res {
 				t.Error("unexpected output: ", m, " for test case ", test)
 			}
 		}
@@ -156,12 +151,9 @@ func TestMphMatcherGroup(t *testing.T) {
 		}
 		mph := NewMphMatcherGroup()
 		for _, test := range cases3Input {
-			switch test.mType {
-			case Full:
-				mph.AddFullMatcher(FullMatcher(test.pattern))
-			case Domain:
-				mph.AddDomainMatcher(DomainMatcher(test.pattern))
-			}
+			matcher, err := test.mType.New(test.pattern)
+			common.Must(err)
+			common.Must(AddMatcherToGroup(mph, matcher, 0))
 		}
 		mph.Build()
 		cases3Output := []struct {
@@ -174,7 +166,7 @@ func TestMphMatcherGroup(t *testing.T) {
 			},
 		}
 		for _, test := range cases3Output {
-			if m := len(mph.Match(test.pattern)) > 0; m != test.res {
+			if m := mph.MatchAny(test.pattern); m != test.res {
 				t.Error("unexpected output: ", m, " for test case ", test)
 			}
 		}

@@ -11,12 +11,13 @@ type node struct {
 	sub    map[string]*node
 }
 
-// DomainMatcherGroup is a IndexMatcher for a large set of Domain matchers.
-// Visible for testing only.
+// DomainMatcherGroup is an implementation of MatcherGroup.
+// It uses trie to optimize both memory consumption and lookup speed. Trie node is domain label based.
 type DomainMatcherGroup struct {
 	root *node
 }
 
+// AddDomainMatcher implements MatcherGroupForDomain.AddDomainMatcher.
 func (g *DomainMatcherGroup) AddDomainMatcher(matcher DomainMatcher, value uint32) {
 	if g.root == nil {
 		g.root = new(node)
@@ -40,6 +41,7 @@ func (g *DomainMatcherGroup) AddDomainMatcher(matcher DomainMatcher, value uint3
 	current.values = append(current.values, value)
 }
 
+// Match implements MatcherGroup.Match.
 func (g *DomainMatcherGroup) Match(domain string) []uint32 {
 	if domain == "" {
 		return nil
@@ -91,4 +93,9 @@ func (g *DomainMatcherGroup) Match(domain string) []uint32 {
 		}
 		return result
 	}
+}
+
+// MatchAny implements MatcherGroup.MatchAny.
+func (g *DomainMatcherGroup) MatchAny(domain string) bool {
+	return len(g.Match(domain)) > 0
 }
