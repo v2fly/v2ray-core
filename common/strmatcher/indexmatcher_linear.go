@@ -9,6 +9,10 @@ type LinearIndexMatcher struct {
 	otherMatchers SimpleMatcherGroup
 }
 
+func NewLinearIndexMatcher() *LinearIndexMatcher {
+	return new(LinearIndexMatcher)
+}
+
 // Add implements IndexMatcher.Add.
 func (g *LinearIndexMatcher) Add(matcher Matcher) uint32 {
 	g.count++
@@ -26,6 +30,11 @@ func (g *LinearIndexMatcher) Add(matcher Matcher) uint32 {
 	return index
 }
 
+// Build implements IndexMatcher.Build.
+func (g *LinearIndexMatcher) Build() error {
+	return nil
+}
+
 // Match implements IndexMatcher.Match.
 func (g *LinearIndexMatcher) Match(input string) []uint32 {
 	result := []uint32{}
@@ -33,6 +42,11 @@ func (g *LinearIndexMatcher) Match(input string) []uint32 {
 	result = append(result, g.domainMatcher.Match(input)...)
 	result = append(result, g.otherMatchers.Match(input)...)
 	return result
+}
+
+// MatchAny implements IndexMatcher.MatchAny.
+func (g *LinearIndexMatcher) MatchAny(input string) bool {
+	return len(g.Match(input)) > 0
 }
 
 // Size implements IndexMatcher.Size.

@@ -15,7 +15,7 @@ const (
 )
 
 // Matcher is the interface to determine a string matches a pattern.
-//  * This is a basic matcher to represent a certain kind of match semantic(full, substr, domain or regex).
+//   * This is a basic matcher to represent a certain kind of match semantic(full, substr, domain or regex).
 type Matcher interface {
 	// Type returns the matcher's type.
 	Type() Type
@@ -27,9 +27,9 @@ type Matcher interface {
 	String() string
 
 	// Match returns true if the given string matches a predefined pattern.
-	//  * This method is seldom used for performance reason
-	//    and is generally taken over by their corresponding MatcherGroup.
-	Match(str string) bool
+	//   * This method is seldom used for performance reason
+	//     and is generally taken over by their corresponding MatcherGroup.
+	Match(input string) bool
 }
 
 // MatcherGroup is an advanced type of matcher to accept a bunch of basic Matchers (of certain type, not all matcher types).
@@ -39,14 +39,35 @@ type Matcher interface {
 type MatcherGroup interface {
 	// Match returns all matched matchers with their corresponding values.
 	Match(input string) []uint32
+
 	// MatchAny returns true as soon as one matching matcher is found.
 	MatchAny(input string) bool
 }
 
-// IndexMatcher is the interface for matching with a group of matchers.
+// IndexMatcher is a general type of matcher thats accepts all kinds of basic matchers.
+// It should:
+//   * Accept all Matcher types with no exception.
+//   * Optimize string matching with a combination of MatcherGroups.
+//   * Obey certain priority order specification when returning matched Matchers.
 type IndexMatcher interface {
+	// Size returns number of matchers added to IndexMatcher.
+	Size() uint32
+
+	// Add adds a new Matcher to IndexMatcher, and returns its index. The index will never be 0.
 	Add(matcher Matcher) uint32
-	// Match returns the index of a matcher that matches the input. It returns empty array if no such matcher exists.
+
+	// Build builds the IndexMatcher to be ready for matching.
+	Build() error
+
+	// Match returns the indices of all matchers that matches the input.
+	//   * Empty array is returned if no such matcher exists.
+	//   * The order of returned matchers should follow priority specification.
+	// Priority specification:
+	//   1. Priority between matcher types: full > domain > substr = regex.
+	//   2. Priority in the same-priority matching matcher and the same-level domain matcher: the early added takes precedence.
+	//   3. Priority across multi-level domain matcher: the further matched subdomain takes precedence.
 	Match(input string) []uint32
-	// Size() uint32
+
+	// MatchAny returns true as soon as one matching matcher is found.
+	MatchAny(input string) bool
 }

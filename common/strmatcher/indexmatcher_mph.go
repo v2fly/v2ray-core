@@ -47,26 +47,34 @@ func (g *MphIndexMatcher) Add(matcher Matcher) uint32 {
 	return index
 }
 
-func (g *MphIndexMatcher) Build() {
+// Build implements IndexMatcher.Build.
+func (g *MphIndexMatcher) Build() error {
 	if g.mph != nil {
 		g.mph.Build()
 	}
 	if g.ac != nil {
 		g.ac.Build()
 	}
+	return nil
 }
 
 // Match implements IndexMatcher.Match.
-func (g *MphIndexMatcher) Match(pattern string) []uint32 {
-	result := []uint32{}
-	if g.mph.MatchAny(pattern) {
-		result = append(result, 1)
-		return result
+func (g *MphIndexMatcher) Match(input string) []uint32 {
+	return nil
+}
+
+// MatchAny implements IndexMatcher.MatchAny.
+func (g *MphIndexMatcher) MatchAny(input string) bool {
+	if g.mph != nil && g.mph.MatchAny(input) {
+		return true
 	}
-	if g.ac != nil && g.ac.MatchAny(pattern) {
-		result = append(result, 1)
-		return result
+	if g.ac != nil && g.ac.MatchAny(input) {
+		return true
 	}
-	result = append(result, g.regex.Match(pattern)...)
-	return result
+	return g.regex.MatchAny(input)
+}
+
+// Size implements IndexMatcher.Size.
+func (g *MphIndexMatcher) Size() uint32 {
+	return g.count
 }
