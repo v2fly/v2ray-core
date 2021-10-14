@@ -42,13 +42,13 @@ func NewMphMatcherGroup() *MphMatcherGroup {
 }
 
 // AddFullMatcher implements MatcherGroupForFull.
-func (g *MphMatcherGroup) AddFullMatcher(matcher FullMatcher, value uint32) {
+func (g *MphMatcherGroup) AddFullMatcher(matcher FullMatcher, _ uint32) {
 	pattern := strings.ToLower(matcher.Pattern())
 	(*g.ruleMap)[pattern] = RollingHash(pattern)
 }
 
 // AddDomainMatcher implements MatcherGroupForDomain.
-func (g *MphMatcherGroup) AddDomainMatcher(matcher DomainMatcher, value uint32) {
+func (g *MphMatcherGroup) AddDomainMatcher(matcher DomainMatcher, _ uint32) {
 	pattern := strings.ToLower(matcher.Pattern())
 	h := RollingHash(pattern)
 	(*g.ruleMap)[pattern] = h
@@ -91,7 +91,7 @@ func (g *MphMatcherGroup) Build() {
 			findSeed := true
 			tmpOcc = tmpOcc[:0]
 			for _, i := range bucket.vals {
-				n := int(strhashFallback(unsafe.Pointer(&g.rules[i]), uintptr(seed))) & g.level1Mask
+				n := int(strhashFallback(unsafe.Pointer(&g.rules[i]), uintptr(seed))) & g.level1Mask // nosemgrep
 				if occ[n] {
 					for _, n := range tmpOcc {
 						occ[n] = false
@@ -116,13 +116,13 @@ func (g *MphMatcherGroup) Build() {
 func (g *MphMatcherGroup) Lookup(h uint32, s string) bool {
 	i0 := int(h) & g.level0Mask
 	seed := g.level0[i0]
-	i1 := int(strhashFallback(unsafe.Pointer(&s), uintptr(seed))) & g.level1Mask
+	i1 := int(strhashFallback(unsafe.Pointer(&s), uintptr(seed))) & g.level1Mask // nosemgrep
 	n := g.level1[i1]
 	return s == g.rules[int(n)]
 }
 
 // Match implements MatcherGroup.Match.
-func (g *MphMatcherGroup) Match(pattern string) []uint32 {
+func (*MphMatcherGroup) Match(_ string) []uint32 {
 	return nil
 }
 
@@ -239,7 +239,7 @@ tail:
 }
 
 func add(p unsafe.Pointer, x uintptr) unsafe.Pointer {
-	return unsafe.Pointer(uintptr(p) + x)
+	return unsafe.Pointer(uintptr(p) + x) // nosemgrep
 }
 
 func readUnaligned32(p unsafe.Pointer) uint32 {

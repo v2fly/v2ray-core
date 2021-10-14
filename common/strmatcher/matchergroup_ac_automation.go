@@ -135,18 +135,18 @@ func NewACAutomatonMatcherGroup() *ACAutomatonMatcherGroup {
 }
 
 // AddFullMatcher implements MatcherGroupForFull.AddFullMatcher.
-func (ac *ACAutomatonMatcherGroup) AddFullMatcher(matcher FullMatcher, value uint32) {
+func (ac *ACAutomatonMatcherGroup) AddFullMatcher(matcher FullMatcher, _ uint32) {
 	ac.addPattern(0, matcher.Pattern(), matcher.Type())
 }
 
 // AddDomainMatcher implements MatcherGroupForDomain.AddDomainMatcher.
-func (ac *ACAutomatonMatcherGroup) AddDomainMatcher(matcher DomainMatcher, value uint32) {
+func (ac *ACAutomatonMatcherGroup) AddDomainMatcher(matcher DomainMatcher, _ uint32) {
 	node := ac.addPattern(0, matcher.Pattern(), Full)
 	ac.addPattern(node, ".", Domain)
 }
 
 // AddSubstrMatcher implements MatcherGroupForSubstr.AddSubstrMatcher.
-func (ac *ACAutomatonMatcherGroup) AddSubstrMatcher(matcher SubstrMatcher, value uint32) {
+func (ac *ACAutomatonMatcherGroup) AddSubstrMatcher(matcher SubstrMatcher, _ uint32) {
 	ac.addPattern(0, matcher.Pattern(), matcher.Type())
 }
 
@@ -207,7 +207,7 @@ func (ac *ACAutomatonMatcherGroup) Build() {
 }
 
 // Match implements MatcherGroup.Match.
-func (ac *ACAutomatonMatcherGroup) Match(s string) []uint32 {
+func (*ACAutomatonMatcherGroup) Match(_ string) []uint32 {
 	return nil
 }
 

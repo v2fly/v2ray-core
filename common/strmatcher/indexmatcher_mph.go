@@ -59,7 +59,7 @@ func (g *MphIndexMatcher) Build() error {
 }
 
 // Match implements IndexMatcher.Match.
-func (g *MphIndexMatcher) Match(input string) []uint32 {
+func (*MphIndexMatcher) Match(string) []uint32 {
 	return nil
 }
 

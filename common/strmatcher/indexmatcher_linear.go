@@ -31,7 +31,7 @@ func (g *LinearIndexMatcher) Add(matcher Matcher) uint32 {
 }
 
 // Build implements IndexMatcher.Build.
-func (g *LinearIndexMatcher) Build() error {
+func (*LinearIndexMatcher) Build() error {
 	return nil
 }
 

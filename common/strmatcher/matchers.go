@@ -9,7 +9,7 @@ import (
 // FullMatcher is an implementation of Matcher.
 type FullMatcher string
 
-func (m FullMatcher) Type() Type {
+func (FullMatcher) Type() Type {
 	return Full
 }
 
@@ -28,7 +28,7 @@ func (m FullMatcher) Match(s string) bool {
 // SubstrMatcher is an implementation of Matcher.
 type SubstrMatcher string
 
-func (m SubstrMatcher) Type() Type {
+func (SubstrMatcher) Type() Type {
 	return Substr
 }
 
@@ -47,7 +47,7 @@ func (m SubstrMatcher) Match(s string) bool {
 // DomainMatcher is an implementation of Matcher.
 type DomainMatcher string
 
-func (m DomainMatcher) Type() Type {
+func (DomainMatcher) Type() Type {
 	return Substr
 }
 
@@ -72,7 +72,7 @@ type RegexMatcher struct {
 	pattern *regexp.Regexp
 }
 
-func (m *RegexMatcher) Type() Type {
+func (*RegexMatcher) Type() Type {
 	return Substr
 }
 
@@ -98,11 +98,11 @@ func (t Type) New(pattern string) (Matcher, error) {
 	case Domain:
 		return DomainMatcher(pattern), nil
 	case Regex: // 1. regex matching is case-sensitive
-		if regex, err := regexp.Compile(pattern); err == nil {
-			return &RegexMatcher{pattern: regex}, nil
-		} else {
+		regex, err := regexp.Compile(pattern)
+		if err != nil {
 			return nil, err
 		}
+		return &RegexMatcher{pattern: regex}, nil
 	default:
 		panic("Unknown type")
 	}
