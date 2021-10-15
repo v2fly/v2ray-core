@@ -6,10 +6,10 @@ type Type byte
 const (
 	// Full is the type of matcher that the input string must exactly equal to the pattern.
 	Full Type = iota
-	// Substr is the type of matcher that the input string must contain the pattern as a sub-string.
-	Substr
 	// Domain is the type of matcher that the input string must be a sub-domain or itself of the pattern.
 	Domain
+	// Substr is the type of matcher that the input string must contain the pattern as a sub-string.
+	Substr
 	// Regex is the type of matcher that the input string must matches the regular-expression pattern.
 	Regex
 )

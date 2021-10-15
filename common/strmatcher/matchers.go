@@ -25,6 +25,29 @@ func (m FullMatcher) Match(s string) bool {
 	return string(m) == s
 }
 
+// DomainMatcher is an implementation of Matcher.
+type DomainMatcher string
+
+func (DomainMatcher) Type() Type {
+	return Domain
+}
+
+func (m DomainMatcher) Pattern() string {
+	return string(m)
+}
+
+func (m DomainMatcher) String() string {
+	return "domain:" + m.Pattern()
+}
+
+func (m DomainMatcher) Match(s string) bool {
+	pattern := m.Pattern()
+	if !strings.HasSuffix(s, pattern) {
+		return false
+	}
+	return len(s) == len(pattern) || s[len(s)-len(pattern)-1] == '.'
+}
+
 // SubstrMatcher is an implementation of Matcher.
 type SubstrMatcher string
 
@@ -44,36 +67,13 @@ func (m SubstrMatcher) Match(s string) bool {
 	return strings.Contains(s, string(m))
 }
 
-// DomainMatcher is an implementation of Matcher.
-type DomainMatcher string
-
-func (DomainMatcher) Type() Type {
-	return Substr
-}
-
-func (m DomainMatcher) Pattern() string {
-	return string(m)
-}
-
-func (m DomainMatcher) String() string {
-	return "domain:" + m.Pattern()
-}
-
-func (m DomainMatcher) Match(s string) bool {
-	pattern := m.Pattern()
-	if !strings.HasSuffix(s, pattern) {
-		return false
-	}
-	return len(s) == len(pattern) || s[len(s)-len(pattern)-1] == '.'
-}
-
 // RegexMatcher is an implementation of Matcher.
 type RegexMatcher struct {
 	pattern *regexp.Regexp
 }
 
 func (*RegexMatcher) Type() Type {
-	return Substr
+	return Regex
 }
 
 func (m *RegexMatcher) Pattern() string {
