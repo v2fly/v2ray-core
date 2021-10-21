@@ -78,7 +78,6 @@ int = [ 123, 685_230 ]
 string = [ "哈哈", "Hello world", "newline newline2" ]
 date = [ "2018-02-17" ]
 datetime = [ "2018-02-17T15:02:31+08:00" ]
-mixed = [ true, false, 1, 0, "hello" ]
 1 = 0
 true = true
 str = "hello"
@@ -97,7 +96,6 @@ nodeName = "node"
     "string": ["哈哈", "Hello world",  "newline newline2"],
     "date": ["2018-02-17"],
     "datetime": ["2018-02-17T15:02:31+08:00"],
-    "mixed": [true,false,1,0,"hello"],
     "1": 0,
     "true": true,
     "str": "hello"
