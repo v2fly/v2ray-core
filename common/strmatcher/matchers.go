@@ -64,7 +64,7 @@ func (m SubstrMatcher) String() string {
 }
 
 func (m SubstrMatcher) Match(s string) bool {
-	return strings.Contains(s, string(m))
+	return strings.Contains(s, m.Pattern())
 }
 
 // RegexMatcher is an implementation of Matcher.

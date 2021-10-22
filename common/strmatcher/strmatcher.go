@@ -5,13 +5,13 @@ type Type byte
 
 const (
 	// Full is the type of matcher that the input string must exactly equal to the pattern.
-	Full Type = iota
+	Full Type = 0
 	// Domain is the type of matcher that the input string must be a sub-domain or itself of the pattern.
-	Domain
+	Domain Type = 1
 	// Substr is the type of matcher that the input string must contain the pattern as a sub-string.
-	Substr
+	Substr Type = 2
 	// Regex is the type of matcher that the input string must matches the regular-expression pattern.
-	Regex
+	Regex Type = 3
 )
 
 // Matcher is the interface to determine a string matches a pattern.
@@ -20,7 +20,7 @@ type Matcher interface {
 	// Type returns the matcher's type.
 	Type() Type
 
-	// Pattern returns the matcher's raw string representation
+	// Pattern returns the matcher's raw string representation.
 	Pattern() string
 
 	// String returns a string representation of the matcher containing its type and pattern.
@@ -63,9 +63,10 @@ type IndexMatcher interface {
 	//   * Empty array is returned if no such matcher exists.
 	//   * The order of returned matchers should follow priority specification.
 	// Priority specification:
-	//   1. Priority between matcher types: full > domain > substr = regex.
-	//   2. Priority in the same-priority matching matcher and the same-level domain matcher: the early added takes precedence.
-	//   3. Priority across multi-level domain matcher: the further matched subdomain takes precedence.
+	//   1. Priority between matcher types: full > domain > substr > regex.
+	//   2. Priority of same-priority matchers matching at same position: the early added takes precedence.
+	//   3. Priority of domain matchers matching at different levels: the further matched domain takes precedence.
+	//   4. Priority of substr matchers matching at different positions: the further matched substr takes precedence.
 	Match(input string) []uint32
 
 	// MatchAny returns true as soon as one matching matcher is found.

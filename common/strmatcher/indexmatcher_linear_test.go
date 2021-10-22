@@ -73,19 +73,20 @@ func TestLinearIndexMatcher(t *testing.T) {
 		},
 		{
 			Input:  "testapis.us",
-			Output: []uint32{1, 2, 6},
+			Output: []uint32{2, 6, 1},
 		},
 		{
 			Input:  "example.com",
 			Output: []uint32{10, 4},
 		},
 	}
-	matcherGroup := &LinearIndexMatcher{}
+	matcherGroup := NewLinearIndexMatcher()
 	for _, rule := range rules {
 		matcher, err := rule.Type.New(rule.Domain)
 		common.Must(err)
 		matcherGroup.Add(matcher)
 	}
+	matcherGroup.Build()
 	for _, test := range cases {
 		if m := matcherGroup.Match(test.Input); !reflect.DeepEqual(m, test.Output) {
 			t.Error("unexpected output: ", m, " for test case ", test)

@@ -6,6 +6,7 @@ type LinearIndexMatcher struct {
 	count         uint32
 	fullMatcher   FullMatcherGroup
 	domainMatcher DomainMatcherGroup
+	substrMatcher SubstrMatcherGroup
 	otherMatchers SimpleMatcherGroup
 }
 
@@ -23,6 +24,8 @@ func (g *LinearIndexMatcher) Add(matcher Matcher) uint32 {
 		g.fullMatcher.AddFullMatcher(matcher, index)
 	case DomainMatcher:
 		g.domainMatcher.AddDomainMatcher(matcher, index)
+	case SubstrMatcher:
+		g.substrMatcher.AddSubstrMatcher(matcher, index)
 	default:
 		g.otherMatchers.AddMatcher(matcher, index)
 	}
@@ -40,6 +43,7 @@ func (g *LinearIndexMatcher) Match(input string) []uint32 {
 	result := []uint32{}
 	result = append(result, g.fullMatcher.Match(input)...)
 	result = append(result, g.domainMatcher.Match(input)...)
+	result = append(result, g.substrMatcher.Match(input)...)
 	result = append(result, g.otherMatchers.Match(input)...)
 	return result
 }
