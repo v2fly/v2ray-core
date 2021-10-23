@@ -2,9 +2,10 @@ package antireplay
 
 import (
 	"sync"
-	"time"
 
 	cuckoo "github.com/seiflotfy/cuckoofilter"
+
+	"github.com/v2fly/v2ray-core/v4/app/ntp/ntptime"
 )
 
 const replayFilterCapacity = 100000
@@ -36,7 +37,7 @@ func (filter *ReplayFilter) Check(sum []byte) bool {
 	filter.lock.Lock()
 	defer filter.lock.Unlock()
 
-	now := time.Now().Unix()
+	now := ntptime.Now().Unix()
 	if filter.lastSwap == 0 {
 		filter.lastSwap = now
 		filter.poolA = cuckoo.NewFilter(replayFilterCapacity)

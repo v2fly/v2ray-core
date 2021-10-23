@@ -357,6 +357,7 @@ type Config struct {
 	FakeDNS          *FakeDNSConfig          `json:"fakeDns"`
 	BrowserForwarder *BrowserForwarderConfig `json:"browserForwarder"`
 	Observatory      *ObservatoryConfig      `json:"observatory"`
+	NTP              *NTPConfig              `json:"ntp"`
 
 	Services map[string]*json.RawMessage `json:"services"`
 }
@@ -422,6 +423,10 @@ func (c *Config) Override(o *Config, fn string) {
 
 	if o.Observatory != nil {
 		c.Observatory = o.Observatory
+	}
+
+	if o.NTP != nil {
+		c.NTP = o.NTP
 	}
 
 	// deprecated attrs... keep them for now
@@ -583,6 +588,14 @@ func (c *Config) Build() (*core.Config, error) {
 
 	if c.Observatory != nil {
 		r, err := c.Observatory.Build()
+		if err != nil {
+			return nil, err
+		}
+		config.App = append(config.App, serial.ToTypedMessage(r))
+	}
+
+	if c.NTP != nil {
+		r, err := c.NTP.Build()
 		if err != nil {
 			return nil, err
 		}

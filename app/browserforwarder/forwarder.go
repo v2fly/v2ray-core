@@ -9,10 +9,10 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/v2fly/BrowserBridge/handler"
 
+	"github.com/v2fly/v2ray-core/v4/app/ntp/ntptime"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/platform/securedload"
@@ -118,7 +118,7 @@ func BridgeResource(rw http.ResponseWriter, r *http.Request, path string) {
 		return
 	}
 
-	http.ServeContent(rw, r, path, time.Now(), bytes.NewReader(data))
+	http.ServeContent(rw, r, path, ntptime.Now(), bytes.NewReader(data))
 }
 
 func NewForwarder(ctx context.Context, cfg *Config) *Forwarder {

@@ -10,8 +10,8 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"time"
 
+	"github.com/v2fly/v2ray-core/v4/app/ntp/ntptime"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
 )
@@ -248,7 +248,7 @@ func formResponseHeader(config *ResponseConfig) *HeaderWriter {
 	}
 	if !config.HasHeader("Date") {
 		common.Must2(header.WriteString("Date: "))
-		common.Must2(header.WriteString(time.Now().Format(http.TimeFormat)))
+		common.Must2(header.WriteString(ntptime.Now().Format(http.TimeFormat)))
 		common.Must2(header.WriteString(CRLF))
 	}
 	common.Must2(header.WriteString(CRLF))

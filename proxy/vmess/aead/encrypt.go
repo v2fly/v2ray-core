@@ -7,13 +7,13 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"io"
-	"time"
 
+	"github.com/v2fly/v2ray-core/v4/app/ntp/ntptime"
 	"github.com/v2fly/v2ray-core/v4/common"
 )
 
 func SealVMessAEADHeader(key [16]byte, data []byte) []byte {
-	generatedAuthID := CreateAuthID(key[:], time.Now().Unix())
+	generatedAuthID := CreateAuthID(key[:], ntptime.Now().Unix())
 
 	connectionNonce := make([]byte, 8)
 	if _, err := io.ReadFull(rand.Reader, connectionNonce); err != nil {

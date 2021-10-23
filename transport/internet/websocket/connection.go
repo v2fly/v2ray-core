@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
+	"github.com/v2fly/v2ray-core/v4/app/ntp/ntptime"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/errors"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
@@ -146,7 +147,7 @@ func (c *connection) Close() error {
 		}
 	}
 	var errors []interface{}
-	if err := c.conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""), time.Now().Add(time.Second*5)); err != nil {
+	if err := c.conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""), ntptime.Now().Add(time.Second*5)); err != nil {
 		errors = append(errors, err)
 	}
 	if err := c.conn.Close(); err != nil {

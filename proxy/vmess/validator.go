@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/v2fly/v2ray-core/v4/app/ntp/ntptime"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/dice"
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
@@ -60,7 +61,7 @@ func NewTimedUserValidator(hasher protocol.IDHash) *TimedUserValidator {
 		users:             make([]*user, 0, 16),
 		userHash:          make(map[[16]byte]indexTimePair, 1024),
 		hasher:            hasher,
-		baseTime:          protocol.Timestamp(time.Now().Unix() - cacheDurationSec*2),
+		baseTime:          protocol.Timestamp(ntptime.Now().Unix() - cacheDurationSec*2),
 		aeadDecoderHolder: aead.NewAuthIDDecoderHolder(),
 	}
 	tuv.task = &task.Periodic{
@@ -114,7 +115,7 @@ func (v *TimedUserValidator) removeExpiredHashes(expire uint32) {
 }
 
 func (v *TimedUserValidator) updateUserHash() {
-	now := time.Now()
+	now := ntptime.Now()
 	nowSec := protocol.Timestamp(now.Unix())
 
 	v.Lock()
@@ -134,7 +135,7 @@ func (v *TimedUserValidator) Add(u *protocol.MemoryUser) error {
 	v.Lock()
 	defer v.Unlock()
 
-	nowSec := time.Now().Unix()
+	nowSec := ntptime.Now().Unix()
 
 	uu := &user{
 		user:    *u,

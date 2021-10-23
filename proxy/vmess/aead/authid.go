@@ -10,8 +10,8 @@ import (
 	"hash/crc32"
 	"io"
 	"math"
-	"time"
 
+	"github.com/v2fly/v2ray-core/v4/app/ntp/ntptime"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/antireplay"
 )
@@ -105,7 +105,7 @@ func (a *AuthIDDecoderHolder) Match(authID [16]byte) (interface{}, error) {
 			continue
 		}
 
-		if math.Abs(math.Abs(float64(t))-float64(time.Now().Unix())) > 120 {
+		if math.Abs(math.Abs(float64(t))-float64(ntptime.Now().Unix())) > 120 {
 			continue
 		}
 

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package v2ray.core.app.ntp;
+option csharp_namespace = "V2Ray.Core.App.NTP";
+option go_package = "github.com/v2fly/v2ray-core/v4/app/ntp";
+option java_package = "com.v2ray.core.app.ntp";
+option java_multiple_files = true;
+
+import "common/net/destination.proto";
+
+message Config {
+  // ntp server
+  v2ray.core.common.net.Endpoint address = 1;
+  uint32 sync_interval = 2;
+  string inbound_tag = 3;
+}

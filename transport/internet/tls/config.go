@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/v2fly/v2ray-core/v4/app/ntp/ntptime"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/protocol/tls/cert"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
@@ -94,7 +95,7 @@ func isCertificateExpired(c *tls.Certificate) bool {
 	}
 
 	// If leaf is not there, the certificate is probably not used yet. We trust user to provide a valid certificate.
-	return c.Leaf != nil && c.Leaf.NotAfter.Before(time.Now().Add(time.Minute*2))
+	return c.Leaf != nil && c.Leaf.NotAfter.Before(ntptime.Now().Add(time.Minute*2))
 }
 
 func issueCertificate(rawCA *Certificate, domain string) (*tls.Certificate, error) {

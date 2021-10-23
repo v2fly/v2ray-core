@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/v2fly/v2ray-core/v4/app/ntp/ntptime"
 	"github.com/v2fly/v2ray-core/v4/common"
 )
 
@@ -141,8 +142,8 @@ func Generate(parent *Certificate, opts ...Option) (*Certificate, error) {
 
 	template := &x509.Certificate{
 		SerialNumber:          serialNumber,
-		NotBefore:             time.Now().Add(time.Hour * -1),
-		NotAfter:              time.Now().Add(time.Hour),
+		NotBefore:             ntptime.Now().Add(time.Hour * -1),
+		NotAfter:              ntptime.Now().Add(time.Hour),
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
