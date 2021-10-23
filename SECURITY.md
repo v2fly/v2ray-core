@@ -6,7 +6,7 @@
 如有例外另行说明。
 
 Currently v2ray-core project is maintained by [V2Fly community](https://github.com/v2fly). Feature and security guarantee may only be limited to the
-master branch, though we would still try our best to follow the compatiblity claims listed on the official website.
+master branch, though we would still try our best to follow the compatibility claims listed on the official website.
 
 
 ## 汇报安全风险 Reporting a Vulnerability
