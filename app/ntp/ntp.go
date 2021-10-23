@@ -34,7 +34,8 @@ func (s *NTP) Type() interface{} {
 
 func (s *NTP) Start() error {
 	ntptime.Instance = s
-	return s.periodic.Start()
+	go s.periodic.Start()
+	return nil
 }
 
 func (s *NTP) Close() error {
@@ -62,29 +63,24 @@ func (s *NTP) FixedNow() time.Time {
 }
 
 func New(ctx context.Context, config *Config) (*NTP, error) {
+	s := &NTP{}
 	destination := config.Address.AsDestination()
 	/*if address := destination.Address; address.Family().IsDomain() {
 		// place holder
 	}*/
-	var server Server
-	{
-		core.RequireFeatures(ctx, func(dispatcher routing.Dispatcher) error {
-			ctx = session.ContextWithInbound(ctx, &session.Inbound{
-				Tag: config.InboundTag,
-			})
-			server = NewClassicNTPClient(ctx, destination, dispatcher)
-			return nil
+	err := core.RequireFeatures(ctx, func(dispatcher routing.Dispatcher) error {
+		ctx = session.ContextWithInbound(ctx, &session.Inbound{
+			Tag: config.InboundTag,
 		})
-	}
-	s := &NTP{
-		server: server,
-		ctx:    ctx,
-	}
-	s.periodic = &task.Periodic{
-		Execute:  s.run,
-		Interval: time.Second * time.Duration(config.SyncInterval),
-	}
-	return s, nil
+		s.ctx = ctx
+		s.server = NewClassicNTPClient(ctx, destination, dispatcher)
+		s.periodic = &task.Periodic{
+			Execute:  s.run,
+			Interval: time.Second * time.Duration(config.SyncInterval),
+		}
+		return nil
+	})
+	return s, err
 }
 
 type Server interface {

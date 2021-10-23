@@ -38,6 +38,7 @@ var (
 		"mtproto":     func() interface{} { return new(MTProtoClientConfig) },
 		"dns":         func() interface{} { return new(DNSOutboundConfig) },
 		"loopback":    func() interface{} { return new(LoopbackConfig) },
+		"ntp":         func() interface{} { return new(NTPOutboundConfig) },
 	}, "protocol", "settings")
 
 	ctllog = log.New(os.Stderr, "v2ctl> ", 0)

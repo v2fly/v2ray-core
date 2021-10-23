@@ -60,6 +60,9 @@ func (c *ClassicNTPClient) QueryClockOffset() (time.Duration, error) {
 		return 0, newError("failed to read ntp response").Base(err)
 	}
 
+	/*json,_ := json.MarshalIndent(recvMsg, "", "  ")
+	println(string(json))*/
+
 	delta := time.Since(transmitTime)
 	if delta < 0 {
 		// The local system may have had its clock adjusted since it
@@ -72,13 +75,13 @@ func (c *ClassicNTPClient) QueryClockOffset() (time.Duration, error) {
 	recvTime := ntp.ToNtpTime(transmitTime.Add(delta))
 
 	if recvMsg.GetMode() != ntp.Server {
-		return 0, newError("invalid mode in recvMsg")
+		return 0, newError("invalid mode in response")
 	}
 	if recvMsg.TransmitTime == ntp.Time(0) {
-		return 0, newError("invalid transmit time in recvMsg")
+		return 0, newError("invalid transmit time in response")
 	}
 	if recvMsg.OriginTime != packet.TransmitTime {
-		return 0, newError("server recvMsg mismatch")
+		return 0, newError("server response mismatch")
 	}
 	if recvMsg.ReceiveTime > recvMsg.TransmitTime {
 		return 0, newError("server clock ticked backwards")

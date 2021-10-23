@@ -6,6 +6,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/app/ntp"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	ntpproxy "github.com/v2fly/v2ray-core/v4/proxy/ntp"
 )
 
 type NTPConfig struct {
@@ -32,4 +33,14 @@ func (n *NTPConfig) Build() (proto.Message, error) {
 		c.InboundTag = "ntp"
 	}
 	return c, nil
+}
+
+type NTPOutboundConfig struct {
+	UserLevel uint32 `json:"userLevel"`
+}
+
+func (n *NTPOutboundConfig) Build() (proto.Message, error) {
+	return &ntpproxy.Config{
+		UserLevel: n.UserLevel,
+	}, nil
 }
