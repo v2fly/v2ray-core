@@ -17,6 +17,8 @@ import (
 	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
 )
 
+var _ encoding.GunServiceServer = (*Listener)(nil)
+
 type Listener struct {
 	encoding.UnimplementedGunServiceServer
 	ctx     context.Context
@@ -33,6 +35,17 @@ func (l Listener) Tun(server encoding.GunService_TunServer) error {
 	l.handler(encoding.NewGunConn(server, cancel))
 	<-tunCtx.Done()
 	return nil
+}
+
+func (l Listener) TunMulti(server encoding.GunService_TunMultiServer) error {
+	conn, done := encoding.NewMultiConn(server)
+	l.handler(conn)
+	<-done
+	return nil
+}
+
+func (l Listener) HandleConn(connection internet.Connection) {
+	l.handler(connection)
 }
 
 func (l Listener) Close() error {

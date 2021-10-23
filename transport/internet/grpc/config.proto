@@ -2,7 +2,17 @@ syntax = "proto3";
 package v2ray.core.transport.internet.grpc.encoding;
 option go_package = "github.com/v2fly/v2ray-core/v4/transport/internet/grpc";
 
+enum Mode {
+  Gun = 0;
+  Multi = 1;
+  Raw = 2;
+}
+
 message Config {
   string host = 1;
   string service_name = 2;
+  Mode mode = 3;
+  int32 idle_timeout = 4;
+  int32 health_check_timeout = 5;
+  bool permit_without_stream = 6;
 }
