@@ -5,6 +5,7 @@ package grpc
 
 import (
 	"context"
+	"io"
 	gonet "net"
 	"sync"
 	"time"
@@ -59,12 +60,33 @@ func dialgRPC(ctx context.Context, dest net.Destination, streamSettings *interne
 		return nil, newError("Cannot dial grpc").Base(err)
 	}
 	client := encoding.NewGunServiceClient(conn)
-	gunService, err := client.(encoding.GunServiceClientX).TunCustomName(ctx, grpcSettings.ServiceName)
-	if err != nil {
-		canceller()
-		return nil, newError("Cannot dial grpc").Base(err)
+
+	switch grpcSettings.Mode {
+	case Mode_Gun:
+		gunService, err := client.(encoding.GunServiceClientX).TunCustomName(ctx, grpcSettings.ServiceName)
+		if err != nil {
+			canceller()
+			return nil, newError("Cannot dial grpc").Base(err)
+		}
+		return encoding.NewGunConn(gunService, nil), nil
+	case Mode_Multi:
+		gunService, err := client.(encoding.GunServiceClientX).TunMultiCustomName(ctx, grpcSettings.ServiceName)
+		if err != nil {
+			canceller()
+			return nil, newError("Cannot dial grpc").Base(err)
+		}
+		conn, _ := encoding.NewMultiConn(gunService)
+		return conn, nil
+	case Mode_Raw:
+		gunService, err := client.(encoding.GunServiceClientX).TunRawCustomName(ctx, grpcSettings.ServiceName, grpc.CallContentSubtype("raw"))
+		if err != nil {
+			canceller()
+			return nil, newError("Cannot dial grpc").Base(err)
+		}
+		conn, _ := encoding.NewRawConn(gunService)
+		return conn, nil
 	}
-	return encoding.NewGunConn(gunService, nil), nil
+	return nil, io.EOF
 }
 
 func getGrpcClient(ctx context.Context, dest net.Destination, dialOption grpc.DialOption) (*grpc.ClientConn, dialerCanceller, error) {
@@ -114,6 +136,7 @@ func getGrpcClient(ctx context.Context, dest net.Destination, dialOption grpc.Di
 			detachedContext := core.ToBackgroundDetachedContext(ctx)
 			return internet.DialSystem(detachedContext, net.TCPDestination(address, port), nil)
 		}),
+		//grpc.WithUserAgent("gun/raw"),
 	)
 	globalDialerMap[dest] = conn
 	return conn, canceller, err

@@ -7,6 +7,12 @@ option java_package = "com.v2ray.core.transport.internet.grpc";
 
 import "common/protoext/extensions.proto";
 
+enum Mode {
+  Gun = 0;
+  Multi = 1;
+  Raw = 2;
+}
+
 message Config {
   option (v2ray.core.common.protoext.message_opt).type = "transport";
   option (v2ray.core.common.protoext.message_opt).short_name = "grpc";
@@ -15,4 +21,5 @@ message Config {
 
   string host = 1;
   string service_name = 2;
+  Mode mode = 3;
 }

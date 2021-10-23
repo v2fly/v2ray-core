@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 func BuildV2Ray() error {
@@ -17,8 +18,13 @@ func BuildV2Ray() error {
 	}
 
 	fmt.Printf("Building V2Ray into path (%s)\n", testBinaryPath)
-	cmd := exec.Command("go", "build", "-o="+testBinaryPath, GetSourcePath())
-	return cmd.Run()
+	cmd := exec.Command("go", "build", "-v", "-o="+testBinaryPath, "./main")
+	cmd.Env = os.Environ()
+	cmd.Dir, _ = filepath.Abs("../..")
+	println(cmd.Dir)
+	out, err := cmd.CombinedOutput()
+	println(string(out))
+	return err
 }
 
 func RunV2RayProtobuf(config []byte) *exec.Cmd {
