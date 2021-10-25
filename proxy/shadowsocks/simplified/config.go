@@ -17,7 +17,7 @@ func init() {
 			User: &protocol.User{
 				Account: serial.ToTypedMessage(&shadowsocks.Account{
 					Password:   simplifiedServer.Password,
-					CipherType: shadowsocks.CipherFromString(simplifiedServer.Method),
+					CipherType: simplifiedServer.Method,
 				}),
 			},
 			Network: net.ParseNetworks(simplifiedServer.Network),
@@ -37,7 +37,7 @@ func init() {
 						{
 							Account: serial.ToTypedMessage(&shadowsocks.Account{
 								Password:   simplifiedClient.Password,
-								CipherType: shadowsocks.CipherFromString(simplifiedClient.Method),
+								CipherType: simplifiedClient.Method,
 							}),
 						},
 					},
