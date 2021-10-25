@@ -41,5 +41,6 @@ func ExtractAddressFromPacket(data []byte) ([]byte, sysnet.Addr) {
 		Zone: "",
 	}
 	payload := data[int(packetBuf.Len()):]
+	packetBuf.Release()
 	return payload, addr
 }
