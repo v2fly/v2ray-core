@@ -135,8 +135,8 @@ func LoadConfig(formatName string, input interface{}) (*Config, error) {
 // * string of a single filename/url(s) to open to read
 // * io.Reader that reads a config content (the original way)
 func loadSingleConfigAutoFormat(input interface{}) (*Config, error) {
-	if file, ok := input.(string); ok {
-		extension := getExtension(file)
+	if file, ok := input.(cmdarg.Arg); ok {
+		extension := getExtension(file.String())
 		if extension != "" {
 			lowerName := strings.ToLower(extension)
 			if f, found := configLoaderByExt[lowerName]; found {
