@@ -42,6 +42,7 @@ var (
 		"trojan":      func() interface{} { return new(TrojanClientConfig) },
 		"dns":         func() interface{} { return new(DNSOutboundConfig) },
 		"loopback":    func() interface{} { return new(LoopbackConfig) },
+		"wireguard":   func() interface{} { return new(WireGuardClientConfig) },
 	}, "protocol", "settings")
 )
 

@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package v2ray.core.proxy.wireguard;
+option csharp_namespace = "V2Ray.Core.Proxy.WireGuard";
+option go_package = "github.com/v2fly/v2ray-core/v4/proxy/wireguard";
+option java_package = "com.v2ray.core.proxy.wireguard";
+option java_multiple_files = true;
+
+import "common/protocol/server_spec.proto";
+import "common/protoext/extensions.proto";
+import "common/net/address.proto";
+import "common/net/network.proto";
+
+message Config {
+  v2ray.core.common.protocol.ServerEndpoint server = 1;
+  v2ray.core.common.net.Network network = 2;
+  repeated string localAddress = 3;
+  string private_key = 4;
+  string peer_public_key = 5;
+  string pre_shared_key = 6;
+  uint32 mtu = 7;
+  uint32 user_level = 8;
+}
+
+message SimplifiedConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "outbound";
+  option (v2ray.core.common.protoext.message_opt).short_name = "wireguard";
+
+  v2ray.core.common.net.IPOrDomain address = 1;
+  uint32 port = 2;
+  v2ray.core.common.net.Network network = 3;
+  repeated string localAddress = 4;
+  string private_key = 5;
+  string peer_public_key = 6;
+  string pre_shared_key = 7;
+  uint32 mtu = 8;
+  uint32 user_level = 9;
+}
