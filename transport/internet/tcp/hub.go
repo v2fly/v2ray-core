@@ -3,12 +3,12 @@ package tcp
 import (
 	"context"
 	gotls "crypto/tls"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"strings"
 	"time"
 
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/common/session"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"

@@ -2,9 +2,10 @@ package outbound_test
 
 import (
 	"context"
-	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 	_ "unsafe"
+
+	"google.golang.org/protobuf/types/known/anypb"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/policy"

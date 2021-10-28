@@ -3,7 +3,9 @@ package v5cfg
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/golang/protobuf/proto"
+
 	"github.com/v2fly/v2ray-core/v4/common/environment/envctx"
 	"github.com/v2fly/v2ray-core/v4/common/environment/envimpl"
 	"github.com/v2fly/v2ray-core/v4/common/registry"

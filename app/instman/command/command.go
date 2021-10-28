@@ -3,10 +3,12 @@ package command
 import (
 	"context"
 	"encoding/base64"
+
+	"google.golang.org/grpc"
+
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/features/extension"
-	"google.golang.org/grpc"
 )
 
 type service struct {

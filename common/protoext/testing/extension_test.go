@@ -1,10 +1,12 @@
 package testing
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/v2fly/v2ray-core/v4/common/protoext"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/v2fly/v2ray-core/v4/common/protoext"
 )
 
 func TestMessageOpt(t *testing.T) {

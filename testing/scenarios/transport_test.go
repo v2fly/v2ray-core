@@ -1,13 +1,13 @@
 package scenarios
 
 import (
-	"google.golang.org/protobuf/types/known/anypb"
 	"os"
 	"runtime"
 	"testing"
 	"time"
 
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/log"

@@ -1,10 +1,11 @@
 package v2jsonpb
 
 import (
-	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 )
 
 type V2JsonProtobufFollowerFieldDescriptor struct {

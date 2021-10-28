@@ -7,10 +7,9 @@ import (
 	"net/url"
 	"sync"
 
-	core "github.com/v2fly/v2ray-core/v4"
-
 	"golang.org/x/net/http2"
 
+	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/net"

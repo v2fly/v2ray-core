@@ -1,11 +1,11 @@
 package standard
 
 import (
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"strings"
 
 	"google.golang.org/protobuf/proto"
 
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
 )

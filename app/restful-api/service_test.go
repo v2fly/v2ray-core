@@ -1,9 +1,10 @@
 package restful_api
 
 import (
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTypeReturnAnonymousType(t *testing.T) {

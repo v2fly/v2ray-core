@@ -1,12 +1,12 @@
 package router
 
 import (
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"strings"
 
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
 
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/strmatcher"
 	"github.com/v2fly/v2ray-core/v4/features/routing"

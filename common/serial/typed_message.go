@@ -2,11 +2,11 @@ package serial
 
 import (
 	"errors"
-	"google.golang.org/protobuf/types/known/anypb"
 	"reflect"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const V2RayTypeURLHeader = "types.v2fly.org/"

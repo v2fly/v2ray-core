@@ -2,9 +2,6 @@ package v4
 
 import (
 	"encoding/json"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/loader"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/socketcfg"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/tlscfg"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
@@ -12,6 +9,9 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/loader"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/socketcfg"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/tlscfg"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/domainsocket"
 	httpheader "github.com/v2fly/v2ray-core/v4/transport/internet/headers/http"

@@ -1,9 +1,9 @@
 package router
 
 import (
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"inet.af/netaddr"
 
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 )
 

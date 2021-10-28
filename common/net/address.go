@@ -3,9 +3,10 @@ package net
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/golang/protobuf/jsonpb"
 	"net"
 	"strings"
+
+	"github.com/golang/protobuf/jsonpb"
 )
 
 var (

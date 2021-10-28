@@ -1,7 +1,8 @@
 package v2jsonpb
 
 import (
-	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"io"
+
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
-	"io"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen

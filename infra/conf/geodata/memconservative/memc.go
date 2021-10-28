@@ -1,9 +1,9 @@
 package memconservative
 
 import (
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"runtime"
 
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
 )
 

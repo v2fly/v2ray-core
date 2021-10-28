@@ -2,17 +2,18 @@ package router
 
 import (
 	"context"
-	"github.com/golang/protobuf/proto"
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/observatory"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/features"
-	"github.com/v2fly/v2ray-core/v4/features/extension"
 	"math"
 	"sort"
 	"time"
 
+	"github.com/golang/protobuf/proto"
+
+	core "github.com/v2fly/v2ray-core/v4"
+	"github.com/v2fly/v2ray-core/v4/app/observatory"
+	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/dice"
+	"github.com/v2fly/v2ray-core/v4/features"
+	"github.com/v2fly/v2ray-core/v4/features/extension"
 )
 
 // LeastLoadStrategy represents a least load balancing strategy

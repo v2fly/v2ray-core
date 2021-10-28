@@ -2,16 +2,17 @@ package v4
 
 import (
 	"encoding/json"
+
 	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+
+	"github.com/v2fly/v2ray-core/v4/app/observatory"
 	"github.com/v2fly/v2ray-core/v4/app/observatory/burst"
 	"github.com/v2fly/v2ray-core/v4/app/observatory/multiObservatory"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/common/taggedfeatures"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
-	"google.golang.org/protobuf/types/known/anypb"
-
-	"github.com/v2fly/v2ray-core/v4/app/observatory"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/duration"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
 )
 
 type ObservatoryConfig struct {

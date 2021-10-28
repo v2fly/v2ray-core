@@ -3,15 +3,17 @@ package registry
 import (
 	"bytes"
 	"context"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
-	"github.com/v2fly/v2ray-core/v4/common/protoext"
-	"github.com/v2fly/v2ray-core/v4/common/protofilter"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	protov2 "google.golang.org/protobuf/proto"
 	"reflect"
 	"strings"
 	"sync"
+
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
+	protov2 "google.golang.org/protobuf/proto"
+
+	"github.com/v2fly/v2ray-core/v4/common/protoext"
+	"github.com/v2fly/v2ray-core/v4/common/protofilter"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 )
 
 type implementationRegistry struct {

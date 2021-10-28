@@ -1,9 +1,10 @@
 package sniffer
 
 import (
+	"strings"
+
 	"github.com/v2fly/v2ray-core/v4/app/proxyman"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
-	"strings"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen

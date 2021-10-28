@@ -1,11 +1,12 @@
 package burst_test
 
 import (
-	"github.com/v2fly/v2ray-core/v4/app/observatory/burst"
 	"math"
 	reflect "reflect"
 	"testing"
 	"time"
+
+	"github.com/v2fly/v2ray-core/v4/app/observatory/burst"
 )
 
 func TestHealthPingResults(t *testing.T) {

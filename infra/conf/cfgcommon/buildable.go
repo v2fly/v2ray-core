@@ -2,6 +2,7 @@ package cfgcommon
 
 import (
 	"context"
+
 	"github.com/golang/protobuf/proto"
 )
 

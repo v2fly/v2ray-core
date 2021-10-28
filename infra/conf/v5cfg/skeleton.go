@@ -2,6 +2,7 @@ package v5cfg
 
 import (
 	"encoding/json"
+
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/muxcfg"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/proxycfg"

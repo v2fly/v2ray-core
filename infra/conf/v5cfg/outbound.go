@@ -2,7 +2,9 @@ package v5cfg
 
 import (
 	"context"
+
 	"github.com/golang/protobuf/proto"
+
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/proxyman"
 	"github.com/v2fly/v2ray-core/v4/common/serial"

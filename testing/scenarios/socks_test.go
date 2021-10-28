@@ -1,11 +1,11 @@
 package scenarios
 
 import (
-	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 	"time"
 
 	xproxy "golang.org/x/net/proxy"
+	"google.golang.org/protobuf/types/known/anypb"
 	socks4 "h12.io/socks"
 
 	core "github.com/v2fly/v2ray-core/v4"

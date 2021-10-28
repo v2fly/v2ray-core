@@ -2,11 +2,11 @@ package burst
 
 import (
 	"context"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/tagged"
 	"net/http"
 	"time"
 
 	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/tagged"
 )
 
 type pingClient struct {

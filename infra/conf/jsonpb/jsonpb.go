@@ -2,14 +2,16 @@ package jsonpb
 
 import (
 	"bytes"
+	"io"
+
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
+
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"io"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen

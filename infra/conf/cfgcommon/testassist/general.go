@@ -2,12 +2,12 @@ package testassist
 
 import (
 	"encoding/json"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 )
 
 func LoadJSON(creator func() cfgcommon.Buildable) func(string) (proto.Message, error) {

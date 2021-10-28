@@ -2,6 +2,7 @@ package instman
 
 import (
 	"context"
+
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/features/extension"
@@ -28,7 +29,7 @@ func (i InstanceMgr) Close() error {
 
 func (i InstanceMgr) ListInstance(ctx context.Context) ([]string, error) {
 	var instanceNames []string
-	for k, _ := range i.instances {
+	for k := range i.instances {
 		instanceNames = append(instanceNames, k)
 	}
 	return instanceNames, nil

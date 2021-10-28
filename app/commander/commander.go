@@ -4,8 +4,6 @@ package commander
 
 import (
 	"context"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/v5cfg"
 	"net"
 	"sync"
 
@@ -13,8 +11,10 @@ import (
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/common/signal/done"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/v5cfg"
 )
 
 // Commander is a V2Ray feature that provides gRPC methods to external clients.

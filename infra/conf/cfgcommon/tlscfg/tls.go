@@ -2,11 +2,13 @@ package tlscfg
 
 import (
 	"encoding/base64"
+	"strings"
+
 	"github.com/golang/protobuf/proto"
+
 	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
-	"strings"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen

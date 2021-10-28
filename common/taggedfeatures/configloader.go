@@ -3,9 +3,11 @@ package taggedfeatures
 import (
 	"context"
 	"encoding/json"
+
+	"google.golang.org/protobuf/types/known/anypb"
+
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/v5cfg"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func LoadJsonConfig(ctx context.Context, interfaceType, defaultImpl string, message json.RawMessage) (*Config, error) {

@@ -2,15 +2,15 @@ package v4_test
 
 import (
 	"encoding/json"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/socketcfg"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/socketcfg"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
 	"github.com/v2fly/v2ray-core/v4/transport"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/headers/http"

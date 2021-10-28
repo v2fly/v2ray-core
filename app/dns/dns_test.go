@@ -1,13 +1,12 @@
 package dns_test
 
 import (
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
-	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/miekg/dns"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/dispatcher"
@@ -15,6 +14,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/app/policy"
 	"github.com/v2fly/v2ray-core/v4/app/proxyman"
 	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/outbound"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/serial"

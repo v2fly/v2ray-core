@@ -4,7 +4,6 @@ package inbound
 
 import (
 	"context"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"io"
 	"strings"
 	"sync"
@@ -18,6 +17,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/platform"
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/common/session"
 	"github.com/v2fly/v2ray-core/v4/common/signal"
 	"github.com/v2fly/v2ray-core/v4/common/task"

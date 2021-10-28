@@ -3,12 +3,12 @@ package serial
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
 	"io"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common/errors"
 	json_reader "github.com/v2fly/v2ray-core/v4/infra/conf/json"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
 )
 
 type offset struct {

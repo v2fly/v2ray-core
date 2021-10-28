@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/v2fly/v2ray-core/v4/main/v2binding"
 	"time"
+
+	"github.com/v2fly/v2ray-core/v4/main/v2binding"
 )
 
 func main() {

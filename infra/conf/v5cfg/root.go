@@ -3,7 +3,10 @@ package v5cfg
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/dispatcher"
 	"github.com/v2fly/v2ray-core/v4/app/proxyman"
@@ -12,7 +15,6 @@ import (
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/log"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {

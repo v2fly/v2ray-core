@@ -2,10 +2,11 @@ package taggedfeatures
 
 import (
 	"context"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/features"
 	"reflect"
 	"sync"
+
+	"github.com/v2fly/v2ray-core/v4/common/task"
+	"github.com/v2fly/v2ray-core/v4/features"
 )
 
 type Holder struct {
@@ -56,7 +57,7 @@ func (h *Holder) GetFeaturesTag() ([]string, error) {
 	h.access.RLock()
 	defer h.access.RUnlock()
 	var ret []string
-	for key, _ := range h.features {
+	for key := range h.features {
 		ret = append(ret, key)
 	}
 	return ret, nil

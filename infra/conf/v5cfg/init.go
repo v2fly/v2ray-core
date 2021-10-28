@@ -1,11 +1,12 @@
 package v5cfg
 
 import (
+	"io"
+
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/cmdarg"
-	"io"
 )
 
 const jsonV5 = "jsonv5"

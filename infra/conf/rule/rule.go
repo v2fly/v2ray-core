@@ -3,11 +3,11 @@ package rule
 import (
 	"context"
 	"encoding/json"
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"strconv"
 	"strings"
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 )

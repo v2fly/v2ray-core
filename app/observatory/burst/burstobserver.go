@@ -2,14 +2,16 @@ package burst
 
 import (
 	"context"
+	"sync"
+
 	"github.com/golang/protobuf/proto"
+
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/observatory"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/signal/done"
 	"github.com/v2fly/v2ray-core/v4/features/extension"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
-	"sync"
 )
 
 type Observer struct {

@@ -1,6 +1,8 @@
 package v2binding
 
 import (
+	"google.golang.org/protobuf/types/known/anypb"
+
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/commander"
 	"github.com/v2fly/v2ray-core/v4/app/dispatcher"
@@ -13,7 +15,6 @@ import (
 	_ "github.com/v2fly/v2ray-core/v4/main/distro/all"
 	"github.com/v2fly/v2ray-core/v4/proxy/blackhole"
 	"github.com/v2fly/v2ray-core/v4/proxy/dokodemo"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type bindingInstance struct {

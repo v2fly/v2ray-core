@@ -1,12 +1,12 @@
 package memconservative
 
 import (
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"io/ioutil"
 	"strings"
 
 	"google.golang.org/protobuf/proto"
 
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/common/platform"
 )
 

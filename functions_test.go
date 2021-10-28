@@ -3,13 +3,13 @@ package core_test
 import (
 	"context"
 	"crypto/rand"
-	"google.golang.org/protobuf/types/known/anypb"
 	"io"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/dispatcher"

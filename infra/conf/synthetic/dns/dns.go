@@ -5,11 +5,11 @@ package dns
 import (
 	"context"
 	"encoding/json"
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"sort"
 	"strings"
 
 	"github.com/v2fly/v2ray-core/v4/app/dns"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/platform"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
@@ -148,7 +148,7 @@ type DNSConfig struct {
 	DisableCache           bool                    `json:"disableCache"`
 	DisableFallback        bool                    `json:"disableFallback"`
 	DisableFallbackIfMatch bool                    `json:"disableFallbackIfMatch"`
-	cfgctx context.Context
+	cfgctx                 context.Context
 }
 
 type HostAddress struct {

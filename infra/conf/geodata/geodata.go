@@ -1,8 +1,9 @@
 package geodata
 
 import (
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"strings"
+
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 )
 
 type loader struct {

@@ -2,7 +2,6 @@ package command_test
 
 import (
 	"context"
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"testing"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	. "github.com/v2fly/v2ray-core/v4/app/router/command"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/app/stats"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"

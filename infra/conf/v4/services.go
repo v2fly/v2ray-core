@@ -2,11 +2,11 @@ package v4
 
 import (
 	"encoding/json"
-	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 )

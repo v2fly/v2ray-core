@@ -2,9 +2,6 @@ package router_test
 
 import (
 	"encoding/json"
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
-	router2 "github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
 	"testing"
 	"time"
 	_ "unsafe"
@@ -12,12 +9,15 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v4/app/router"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
 
 	// Geo loaders
 	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/memconservative"
 	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/standard"
+	router2 "github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
 )
 
 func TestRouterConfig(t *testing.T) {

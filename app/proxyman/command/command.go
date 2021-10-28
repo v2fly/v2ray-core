@@ -2,12 +2,12 @@ package command
 
 import (
 	"context"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
 
 	grpc "google.golang.org/grpc"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/features/inbound"
 	"github.com/v2fly/v2ray-core/v4/features/outbound"
 	"github.com/v2fly/v2ray-core/v4/proxy"

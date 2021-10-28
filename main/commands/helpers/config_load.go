@@ -2,12 +2,12 @@ package helpers
 
 import (
 	"bytes"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
 	"os"
 
 	"github.com/v2fly/v2ray-core/v4/infra/conf/merge"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/mergers"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
 )
 
 // LoadConfig load config files to *conf.Config, it will:

@@ -2,26 +2,30 @@ package v4_test
 
 import (
 	"encoding/json"
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/muxcfg"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
-	"google.golang.org/protobuf/types/known/anypb"
 	"reflect"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/dispatcher"
 	"github.com/v2fly/v2ray-core/v4/app/log"
 	"github.com/v2fly/v2ray-core/v4/app/proxyman"
 	"github.com/v2fly/v2ray-core/v4/app/router"
+	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v4/common"
 	clog "github.com/v2fly/v2ray-core/v4/common/log"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/muxcfg"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
+
+	// Geo loaders
+	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/memconservative"
+	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/standard"
+	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
 	"github.com/v2fly/v2ray-core/v4/proxy/blackhole"
 	dns_proxy "github.com/v2fly/v2ray-core/v4/proxy/dns"
 	"github.com/v2fly/v2ray-core/v4/proxy/freedom"
@@ -31,10 +35,6 @@ import (
 	"github.com/v2fly/v2ray-core/v4/transport/internet/http"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/websocket"
-
-	// Geo loaders
-	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/memconservative"
-	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/standard"
 )
 
 func TestV2RayConfig(t *testing.T) {

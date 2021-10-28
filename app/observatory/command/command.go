@@ -7,14 +7,14 @@ package command
 
 import (
 	"context"
-	"github.com/golang/protobuf/proto"
-	"github.com/v2fly/v2ray-core/v4/features"
 
+	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/observatory"
 	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v4/features"
 	"github.com/v2fly/v2ray-core/v4/features/extension"
 )
 

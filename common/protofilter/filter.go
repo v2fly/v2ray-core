@@ -2,13 +2,15 @@ package protofilter
 
 import (
 	"context"
+	"io"
+	"net"
+
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+
 	"github.com/v2fly/v2ray-core/v4/common/environment/envctx"
 	"github.com/v2fly/v2ray-core/v4/common/environment/filesystemcap"
 	"github.com/v2fly/v2ray-core/v4/common/protoext"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"io"
-	"net"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
