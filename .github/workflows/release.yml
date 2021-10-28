@@ -110,6 +110,12 @@ jobs:
           mkdir -p build_assets
           go build -v -o build_assets/v2ray -trimpath -ldflags "-s -w -buildid=" ./main
 
+      - name: Rename Windows V2Ray
+        if: matrix.goos == 'windows'
+        run: |
+          cd ./build_assets || exit 1
+          mv v2ray v2ray.exe
+
       - name: Download geo files
         run: |
           wget -O release/config/geoip.dat "https://raw.githubusercontent.com/v2fly/geoip/release/geoip.dat"
