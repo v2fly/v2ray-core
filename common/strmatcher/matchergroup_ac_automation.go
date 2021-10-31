@@ -21,7 +21,9 @@ type Edge struct {
 	nextNode int
 }
 
-type ACAutomaton struct {
+// ACAutoMationMatcherGroup is an implementation of MatcherGroup.
+// It uses an AC Automata to provide support for Full, Domain and Substr matcher. Trie node is char based.
+type ACAutomatonMatcherGroup struct {
 	trie   [][validCharCount]Edge
 	fail   []int
 	exists []MatchType
@@ -121,8 +123,8 @@ var char2Index = []int{
 	'9':  52,
 }
 
-func NewACAutomaton() *ACAutomaton {
-	ac := new(ACAutomaton)
+func NewACAutomatonMatcherGroup() *ACAutomatonMatcherGroup {
+	ac := new(ACAutomatonMatcherGroup)
 	ac.trie = append(ac.trie, newNode())
 	ac.fail = append(ac.fail, 0)
 	ac.exists = append(ac.exists, MatchType{
@@ -132,10 +134,25 @@ func NewACAutomaton() *ACAutomaton {
 	return ac
 }
 
-func (ac *ACAutomaton) Add(domain string, t Type) {
-	node := 0
-	for i := len(domain) - 1; i >= 0; i-- {
-		idx := char2Index[domain[i]]
+// AddFullMatcher implements MatcherGroupForFull.AddFullMatcher.
+func (ac *ACAutomatonMatcherGroup) AddFullMatcher(matcher FullMatcher, _ uint32) {
+	ac.addPattern(0, matcher.Pattern(), matcher.Type())
+}
+
+// AddDomainMatcher implements MatcherGroupForDomain.AddDomainMatcher.
+func (ac *ACAutomatonMatcherGroup) AddDomainMatcher(matcher DomainMatcher, _ uint32) {
+	node := ac.addPattern(0, matcher.Pattern(), Full)
+	ac.addPattern(node, ".", Domain)
+}
+
+// AddSubstrMatcher implements MatcherGroupForSubstr.AddSubstrMatcher.
+func (ac *ACAutomatonMatcherGroup) AddSubstrMatcher(matcher SubstrMatcher, _ uint32) {
+	ac.addPattern(0, matcher.Pattern(), matcher.Type())
+}
+
+func (ac *ACAutomatonMatcherGroup) addPattern(node int, pattern string, matcherType Type) int {
+	for i := len(pattern) - 1; i >= 0; i-- {
+		idx := char2Index[pattern[i]]
 		if ac.trie[node][idx].nextNode == 0 {
 			ac.count++
 			if len(ac.trie) < ac.count+1 {
@@ -154,42 +171,13 @@ func (ac *ACAutomaton) Add(domain string, t Type) {
 		node = ac.trie[node][idx].nextNode
 	}
 	ac.exists[node] = MatchType{
-		matchType: t,
+		matchType: matcherType,
 		exist:     true,
 	}
-	switch t {
-	case Domain:
-		ac.exists[node] = MatchType{
-			matchType: Full,
-			exist:     true,
-		}
-		idx := char2Index['.']
-		if ac.trie[node][idx].nextNode == 0 {
-			ac.count++
-			if len(ac.trie) < ac.count+1 {
-				ac.trie = append(ac.trie, newNode())
-				ac.fail = append(ac.fail, 0)
-				ac.exists = append(ac.exists, MatchType{
-					matchType: Full,
-					exist:     false,
-				})
-			}
-			ac.trie[node][idx] = Edge{
-				edgeType: TrieEdge,
-				nextNode: ac.count,
-			}
-		}
-		node = ac.trie[node][idx].nextNode
-		ac.exists[node] = MatchType{
-			matchType: t,
-			exist:     true,
-		}
-	default:
-		break
-	}
+	return node
 }
 
-func (ac *ACAutomaton) Build() {
+func (ac *ACAutomatonMatcherGroup) Build() {
 	queue := list.New()
 	for i := 0; i < validCharCount; i++ {
 		if ac.trie[0][i].nextNode != 0 {
@@ -218,7 +206,13 @@ func (ac *ACAutomaton) Build() {
 	}
 }
 
-func (ac *ACAutomaton) Match(s string) bool {
+// Match implements MatcherGroup.Match.
+func (*ACAutomatonMatcherGroup) Match(_ string) []uint32 {
+	return nil
+}
+
+// MatchAny implements MatcherGroup.MatchAny.
+func (ac *ACAutomatonMatcherGroup) MatchAny(s string) bool {
 	node := 0
 	fullMatch := true
 	// 1. the match string is all through trie edge. FULL MATCH or DOMAIN

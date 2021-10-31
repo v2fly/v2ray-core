@@ -8,15 +8,39 @@ import (
 )
 
 func TestDomainMatcherGroup(t *testing.T) {
-	g := new(DomainMatcherGroup)
-	g.Add("v2fly.org", 1)
-	g.Add("google.com", 2)
-	g.Add("x.a.com", 3)
-	g.Add("a.b.com", 4)
-	g.Add("c.a.b.com", 5)
-	g.Add("x.y.com", 4)
-	g.Add("x.y.com", 6)
-
+	patterns := []struct {
+		Pattern string
+		Value   uint32
+	}{
+		{
+			Pattern: "v2fly.org",
+			Value:   1,
+		},
+		{
+			Pattern: "google.com",
+			Value:   2,
+		},
+		{
+			Pattern: "x.a.com",
+			Value:   3,
+		},
+		{
+			Pattern: "a.b.com",
+			Value:   4,
+		},
+		{
+			Pattern: "c.a.b.com",
+			Value:   5,
+		},
+		{
+			Pattern: "x.y.com",
+			Value:   4,
+		},
+		{
+			Pattern: "x.y.com",
+			Value:   6,
+		},
+	}
 	testCases := []struct {
 		Domain string
 		Result []uint32
@@ -58,7 +82,10 @@ func TestDomainMatcherGroup(t *testing.T) {
 			Result: []uint32{4, 6},
 		},
 	}
-
+	g := new(DomainMatcherGroup)
+	for _, pattern := range patterns {
+		AddMatcherToGroup(g, DomainMatcher(pattern.Pattern), pattern.Value)
+	}
 	for _, testCase := range testCases {
 		r := g.Match(testCase.Domain)
 		if !reflect.DeepEqual(r, testCase.Result) {

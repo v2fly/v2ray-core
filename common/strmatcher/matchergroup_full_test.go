@@ -8,13 +8,31 @@ import (
 )
 
 func TestFullMatcherGroup(t *testing.T) {
-	g := new(FullMatcherGroup)
-	g.Add("v2fly.org", 1)
-	g.Add("google.com", 2)
-	g.Add("x.a.com", 3)
-	g.Add("x.y.com", 4)
-	g.Add("x.y.com", 6)
-
+	patterns := []struct {
+		Pattern string
+		Value   uint32
+	}{
+		{
+			Pattern: "v2fly.org",
+			Value:   1,
+		},
+		{
+			Pattern: "google.com",
+			Value:   2,
+		},
+		{
+			Pattern: "x.a.com",
+			Value:   3,
+		},
+		{
+			Pattern: "x.y.com",
+			Value:   4,
+		},
+		{
+			Pattern: "x.y.com",
+			Value:   6,
+		},
+	}
 	testCases := []struct {
 		Domain string
 		Result []uint32
@@ -32,7 +50,10 @@ func TestFullMatcherGroup(t *testing.T) {
 			Result: []uint32{4, 6},
 		},
 	}
-
+	g := new(FullMatcherGroup)
+	for _, pattern := range patterns {
+		AddMatcherToGroup(g, FullMatcher(pattern.Pattern), pattern.Value)
+	}
 	for _, testCase := range testCases {
 		r := g.Match(testCase.Domain)
 		if !reflect.DeepEqual(r, testCase.Result) {

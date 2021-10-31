@@ -49,7 +49,7 @@ func (s *statsServer) GetStats(ctx context.Context, request *GetStatsRequest) (*
 }
 
 func (s *statsServer) QueryStats(ctx context.Context, request *QueryStatsRequest) (*QueryStatsResponse, error) {
-	mgroup := &strmatcher.MatcherGroup{}
+	mgroup := &strmatcher.LinearIndexMatcher{}
 	if request.Pattern != "" {
 		request.Patterns = append(request.Patterns, request.Pattern)
 	}

@@ -2,7 +2,6 @@ package strmatcher
 
 import (
 	"math/bits"
-	"regexp"
 	"sort"
 	"strings"
 	"unsafe"
@@ -20,79 +19,44 @@ func RollingHash(s string) uint32 {
 	return h
 }
 
-// A MphMatcherGroup is divided into three parts:
-// 1. `full` and `domain` patterns are matched by Rabin-Karp algorithm and minimal perfect hash table;
-// 2. `substr` patterns are matched by ac automaton;
-// 3. `regex` patterns are matched with the regex library.
+// MphMatcherGroup is an implementation of MatcherGroup.
+// It implements Rabin-Karp algorithm and minimal perfect hash table for Full and Domain matcher.
 type MphMatcherGroup struct {
-	ac            *ACAutomaton
-	otherMatchers []matcherEntry
-	rules         []string
-	level0        []uint32
-	level0Mask    int
-	level1        []uint32
-	level1Mask    int
-	count         uint32
-	ruleMap       *map[string]uint32
-}
-
-func (g *MphMatcherGroup) AddFullOrDomainPattern(pattern string, t Type) {
-	h := RollingHash(pattern)
-	switch t {
-	case Domain:
-		(*g.ruleMap)["."+pattern] = h*PrimeRK + uint32('.')
-		fallthrough
-	case Full:
-		(*g.ruleMap)[pattern] = h
-	default:
-	}
+	rules      []string
+	level0     []uint32
+	level0Mask int
+	level1     []uint32
+	level1Mask int
+	ruleMap    *map[string]uint32
 }
 
 func NewMphMatcherGroup() *MphMatcherGroup {
 	return &MphMatcherGroup{
-		ac:            nil,
-		otherMatchers: nil,
-		rules:         nil,
-		level0:        nil,
-		level0Mask:    0,
-		level1:        nil,
-		level1Mask:    0,
-		count:         1,
-		ruleMap:       &map[string]uint32{},
+		rules:      nil,
+		level0:     nil,
+		level0Mask: 0,
+		level1:     nil,
+		level1Mask: 0,
+		ruleMap:    &map[string]uint32{},
 	}
 }
 
-// AddPattern adds a pattern to MphMatcherGroup
-func (g *MphMatcherGroup) AddPattern(pattern string, t Type) (uint32, error) {
-	switch t {
-	case Substr:
-		if g.ac == nil {
-			g.ac = NewACAutomaton()
-		}
-		g.ac.Add(pattern, t)
-	case Full, Domain:
-		pattern = strings.ToLower(pattern)
-		g.AddFullOrDomainPattern(pattern, t)
-	case Regex:
-		r, err := regexp.Compile(pattern)
-		if err != nil {
-			return 0, err
-		}
-		g.otherMatchers = append(g.otherMatchers, matcherEntry{
-			m:  &regexMatcher{pattern: r},
-			id: g.count,
-		})
-	default:
-		panic("Unknown type")
-	}
-	return g.count, nil
+// AddFullMatcher implements MatcherGroupForFull.
+func (g *MphMatcherGroup) AddFullMatcher(matcher FullMatcher, _ uint32) {
+	pattern := strings.ToLower(matcher.Pattern())
+	(*g.ruleMap)[pattern] = RollingHash(pattern)
 }
 
-// Build builds a minimal perfect hash table and ac automaton from insert rules
+// AddDomainMatcher implements MatcherGroupForDomain.
+func (g *MphMatcherGroup) AddDomainMatcher(matcher DomainMatcher, _ uint32) {
+	pattern := strings.ToLower(matcher.Pattern())
+	h := RollingHash(pattern)
+	(*g.ruleMap)[pattern] = h
+	(*g.ruleMap)["."+pattern] = h*PrimeRK + uint32('.')
+}
+
+// Build builds a minimal perfect hash table for insert rules.
 func (g *MphMatcherGroup) Build() {
-	if g.ac != nil {
-		g.ac.Build()
-	}
 	keyLen := len(*g.ruleMap)
 	if keyLen == 0 {
 		keyLen = 1
@@ -127,7 +91,7 @@ func (g *MphMatcherGroup) Build() {
 			findSeed := true
 			tmpOcc = tmpOcc[:0]
 			for _, i := range bucket.vals {
-				n := int(strhashFallback(unsafe.Pointer(&g.rules[i]), uintptr(seed))) & g.level1Mask
+				n := int(strhashFallback(unsafe.Pointer(&g.rules[i]), uintptr(seed))) & g.level1Mask // nosemgrep
 				if occ[n] {
 					for _, n := range tmpOcc {
 						occ[n] = false
@@ -148,6 +112,34 @@ func (g *MphMatcherGroup) Build() {
 	}
 }
 
+// Lookup searches for s in t and returns its index and whether it was found.
+func (g *MphMatcherGroup) Lookup(h uint32, s string) bool {
+	i0 := int(h) & g.level0Mask
+	seed := g.level0[i0]
+	i1 := int(strhashFallback(unsafe.Pointer(&s), uintptr(seed))) & g.level1Mask // nosemgrep
+	n := g.level1[i1]
+	return s == g.rules[int(n)]
+}
+
+// Match implements MatcherGroup.Match.
+func (*MphMatcherGroup) Match(_ string) []uint32 {
+	return nil
+}
+
+// MatchAny implements MatcherGroup.MatchAny.
+func (g *MphMatcherGroup) MatchAny(pattern string) bool {
+	hash := uint32(0)
+	for i := len(pattern) - 1; i >= 0; i-- {
+		hash = hash*PrimeRK + uint32(pattern[i])
+		if pattern[i] == '.' {
+			if g.Lookup(hash, pattern[i:]) {
+				return true
+			}
+		}
+	}
+	return g.Lookup(hash, pattern)
+}
+
 func nextPow2(v int) int {
 	if v <= 1 {
 		return 1
@@ -155,45 +147,6 @@ func nextPow2(v int) int {
 	const MaxUInt = ^uint(0)
 	n := (MaxUInt >> bits.LeadingZeros(uint(v))) + 1
 	return int(n)
-}
-
-// Lookup searches for s in t and returns its index and whether it was found.
-func (g *MphMatcherGroup) Lookup(h uint32, s string) bool {
-	i0 := int(h) & g.level0Mask
-	seed := g.level0[i0]
-	i1 := int(strhashFallback(unsafe.Pointer(&s), uintptr(seed))) & g.level1Mask
-	n := g.level1[i1]
-	return s == g.rules[int(n)]
-}
-
-// Match implements IndexMatcher.Match.
-func (g *MphMatcherGroup) Match(pattern string) []uint32 {
-	result := []uint32{}
-	hash := uint32(0)
-	for i := len(pattern) - 1; i >= 0; i-- {
-		hash = hash*PrimeRK + uint32(pattern[i])
-		if pattern[i] == '.' {
-			if g.Lookup(hash, pattern[i:]) {
-				result = append(result, 1)
-				return result
-			}
-		}
-	}
-	if g.Lookup(hash, pattern) {
-		result = append(result, 1)
-		return result
-	}
-	if g.ac != nil && g.ac.Match(pattern) {
-		result = append(result, 1)
-		return result
-	}
-	for _, e := range g.otherMatchers {
-		if e.m.Match(pattern) {
-			result = append(result, e.id)
-			return result
-		}
-	}
-	return nil
 }
 
 type indexBucket struct {
@@ -286,7 +239,7 @@ tail:
 }
 
 func add(p unsafe.Pointer, x uintptr) unsafe.Pointer {
-	return unsafe.Pointer(uintptr(p) + x)
+	return unsafe.Pointer(uintptr(p) + x) // nosemgrep
 }
 
 func readUnaligned32(p unsafe.Pointer) uint32 {
