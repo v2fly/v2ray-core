@@ -267,3 +267,12 @@ func TestMphMatcherGroupAsIndexMatcher(t *testing.T) {
 		}
 	}
 }
+
+func TestEmptyMphMatcherGroup(t *testing.T) {
+	g := NewMphMatcherGroup()
+	g.Build()
+	r := g.Match("v2fly.org")
+	if len(r) != 0 {
+		t.Error("Expect [], but ", r)
+	}
+}
