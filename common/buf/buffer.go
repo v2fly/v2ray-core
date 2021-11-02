@@ -20,12 +20,22 @@ type Buffer struct {
 	v     []byte
 	start int32
 	end   int32
+	out   bool
 }
 
 // New creates a Buffer with 0 length and 2K capacity.
 func New() *Buffer {
 	return &Buffer{
 		v: pool.Get().([]byte),
+	}
+}
+
+// As creates a Buffer with an existed bytearray
+func As(data []byte) *Buffer {
+	return &Buffer{
+		v:   data,
+		end: int32(len(data)),
+		out: true,
 	}
 }
 
@@ -39,7 +49,7 @@ func StackNew() Buffer {
 
 // Release recycles the buffer into an internal buffer pool.
 func (b *Buffer) Release() {
-	if b == nil || b.v == nil {
+	if b == nil || b.v == nil || b.out {
 		return
 	}
 
@@ -171,6 +181,28 @@ func (b *Buffer) WriteByte(v byte) error {
 // WriteString implements io.StringWriter.
 func (b *Buffer) WriteString(s string) (int, error) {
 	return b.Write([]byte(s))
+}
+
+// ReadByte implements io.ByteReader
+func (b *Buffer) ReadByte() (byte, error) {
+	if b.start == b.end {
+		return 0, io.EOF
+	}
+
+	nb := b.v[b.start]
+	b.start++
+	return nb, nil
+}
+
+// ReadBytes implements bufio.Reader.ReadBytes
+func (b *Buffer) ReadBytes(length int32) ([]byte, error) {
+	if b.end-b.start < length {
+		return nil, io.EOF
+	}
+
+	nb := b.v[b.start : b.start+length]
+	b.start += length
+	return nb, nil
 }
 
 // Read implements io.Reader.Read().
