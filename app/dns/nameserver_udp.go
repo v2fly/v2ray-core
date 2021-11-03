@@ -199,7 +199,7 @@ func (s *ClassicNameServer) sendQuery(ctx context.Context, domain string, client
 			udpCtx = session.ContextWithInbound(udpCtx, inbound)
 		}
 		udpCtx = session.ContextWithContent(udpCtx, &session.Content{
-			Protocol: "dns",
+			Protocol: "v2ray.dns",
 		})
 		s.udpServer.Dispatch(udpCtx, s.address, b)
 	}
