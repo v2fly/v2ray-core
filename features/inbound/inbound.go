@@ -20,6 +20,10 @@ type Handler interface {
 	GetRandomInboundProxy() (interface{}, net.Port, int)
 }
 
+type Initializer interface {
+	Initialize(self Handler)
+}
+
 // Manager is a feature that manages InboundHandlers.
 //
 // v2ray:api:stable

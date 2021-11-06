@@ -2,6 +2,7 @@ package shadowsocks
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	core "github.com/v2fly/v2ray-core/v4"
@@ -22,6 +23,16 @@ import (
 type Client struct {
 	serverPicker  protocol.ServerPicker
 	policyManager policy.Manager
+
+	plugin         SIP003Plugin
+	pluginOverride net.Destination
+}
+
+func (c *Client) Close() error {
+	if c.plugin != nil {
+		return c.plugin.Close()
+	}
+	return nil
 }
 
 // NewClient create a new Shadowsocks client.
@@ -43,6 +54,38 @@ func NewClient(ctx context.Context, config *ClientConfig) (*Client, error) {
 		serverPicker:  protocol.NewRoundRobinServerPicker(serverList),
 		policyManager: v.GetFeature(policy.ManagerType()).(policy.Manager),
 	}
+
+	if config.Plugin != "" {
+		s := client.serverPicker.PickServer()
+
+		var plugin SIP003Plugin
+
+		pc := plugins[config.Plugin]
+		if pc != nil {
+			plugin = pc()
+		} else if pluginLoader == nil {
+			return nil, newError("plugin loader not registered")
+		} else {
+			plugin = pluginLoader(config.Plugin)
+		}
+
+		port, err := net.GetFreePort()
+		if err != nil {
+			return nil, newError("failed to get free port for shadowsocks plugin").Base(err)
+		}
+
+		client.pluginOverride = net.Destination{
+			Network: net.Network_TCP,
+			Address: net.LocalHostIP,
+			Port:    net.Port(port),
+		}
+
+		if err := plugin.Init(net.LocalHostIP.String(), strconv.Itoa(port), s.Destination().Address.String(), s.Destination().Port.String(), config.PluginOpts, config.PluginArgs, s.PickUser().Account.(*MemoryAccount)); err != nil {
+			return nil, newError("failed to start plugin").Base(err)
+		}
+
+		client.plugin = plugin
+	}
 	return client, nil
 }
 
@@ -58,10 +101,16 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	var server *protocol.ServerSpec
 	var conn internet.Connection
 
-	err := retry.ExponentialBackoff(5, 100).On(func() error {
+	err := retry.ExponentialBackoff(2, 100).On(func() error {
 		server = c.serverPicker.PickServer()
-		dest := server.Destination()
-		dest.Network = network
+		var dest net.Destination
+		if network == net.Network_TCP && c.plugin != nil {
+			dest = c.pluginOverride
+		} else {
+			server = c.serverPicker.PickServer()
+			dest = server.Destination()
+			dest.Network = network
+		}
 		rawConn, err := dialer.Dial(ctx, dest)
 		if err != nil {
 			return err

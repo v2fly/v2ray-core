@@ -31,8 +31,14 @@ message ServerConfig {
   bool udp_enabled = 1 [deprecated = true];
   v2ray.core.common.protocol.User user = 2;
   repeated v2ray.core.common.net.Network network = 3;
+  string plugin = 4;
+  string plugin_opts = 5;
+  repeated string plugin_args = 6;
 }
 
 message ClientConfig {
   repeated v2ray.core.common.protocol.ServerEndpoint server = 1;
+  string plugin = 2;
+  string plugin_opts = 3;
+  repeated string plugin_args = 4;
 }

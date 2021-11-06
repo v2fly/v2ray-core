@@ -20,7 +20,10 @@ func init() {
 					CipherType: shadowsocks.CipherFromString(simplifiedServer.Method),
 				}),
 			},
-			Network: net.ParseNetworks(simplifiedServer.Network),
+			Network:    net.ParseNetworks(simplifiedServer.Network),
+			Plugin:     simplifiedServer.Plugin,
+			PluginOpts: simplifiedServer.PluginOpts,
+			PluginArgs: simplifiedServer.PluginArgs,
 		}
 
 		return common.CreateObject(ctx, fullServer)
@@ -43,6 +46,9 @@ func init() {
 					},
 				},
 			},
+			Plugin:     simplifiedClient.Plugin,
+			PluginOpts: simplifiedClient.PluginOpts,
+			PluginArgs: simplifiedClient.PluginArgs,
 		}
 
 		return common.CreateObject(ctx, fullClient)

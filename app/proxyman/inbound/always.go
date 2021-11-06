@@ -10,6 +10,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/errors"
 	"github.com/v2fly/v2ray-core/v4/common/mux"
 	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/features/inbound"
 	"github.com/v2fly/v2ray-core/v4/features/policy"
 	"github.com/v2fly/v2ray-core/v4/features/stats"
 	"github.com/v2fly/v2ray-core/v4/proxy"
@@ -57,7 +58,10 @@ func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *
 	if !ok {
 		return nil, newError("not an inbound proxy.")
 	}
+	return NewAlwaysOnInboundHandlerWithProxy(ctx, tag, receiverConfig, p, false)
+}
 
+func NewAlwaysOnInboundHandlerWithProxy(ctx context.Context, tag string, receiverConfig *proxyman.ReceiverConfig, p proxy.Inbound, inject bool) (*AlwaysOnInboundHandler, error) {
 	h := &AlwaysOnInboundHandler{
 		proxy: p,
 		mux:   mux.NewServer(ctx),
@@ -141,6 +145,12 @@ func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *
 				}
 				h.workers = append(h.workers, worker)
 			}
+		}
+	}
+
+	if !inject {
+		if i, ok := p.(inbound.Initializer); ok {
+			i.Initialize(h)
 		}
 	}
 

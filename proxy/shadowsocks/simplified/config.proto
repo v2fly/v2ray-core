@@ -16,6 +16,9 @@ message ServerConfig{
   string method = 1;
   string password = 2;
   string network = 3;
+  string plugin = 4;
+  string plugin_opts = 5;
+  repeated string plugin_args = 6;
 }
 
 message ClientConfig {
@@ -26,4 +29,7 @@ message ClientConfig {
   uint32 port = 2;
   string method = 3;
   string password = 4;
+  string plugin = 5;
+  string plugin_opts = 6;
+  repeated string plugin_args = 7;
 }

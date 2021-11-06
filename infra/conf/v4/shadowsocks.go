@@ -17,6 +17,9 @@ type ShadowsocksServerConfig struct {
 	Email       string                 `json:"email"`
 	NetworkList *cfgcommon.NetworkList `json:"network"`
 	IVCheck     bool                   `json:"ivCheck"`
+	Plugin      string                 `json:"plugin"`
+	PluginOpts  string                 `json:"pluginOpts"`
+	PluginArgs  *cfgcommon.StringList  `json:"pluginArgs"`
 }
 
 func (v *ShadowsocksServerConfig) Build() (proto.Message, error) {
@@ -42,6 +45,12 @@ func (v *ShadowsocksServerConfig) Build() (proto.Message, error) {
 		Account: serial.ToTypedMessage(account),
 	}
 
+	config.Plugin = v.Plugin
+	config.PluginOpts = v.PluginOpts
+	if v.PluginArgs != nil && len(*v.PluginArgs) > 0 {
+		config.PluginArgs = *v.PluginArgs
+	}
+
 	return config, nil
 }
 
@@ -57,7 +66,10 @@ type ShadowsocksServerTarget struct {
 }
 
 type ShadowsocksClientConfig struct {
-	Servers []*ShadowsocksServerTarget `json:"servers"`
+	Servers    []*ShadowsocksServerTarget `json:"servers"`
+	Plugin     string                     `json:"plugin"`
+	PluginOpts string                     `json:"pluginOpts"`
+	PluginArgs *cfgcommon.StringList      `json:"pluginArgs"`
 }
 
 func (v *ShadowsocksClientConfig) Build() (proto.Message, error) {
@@ -104,6 +116,11 @@ func (v *ShadowsocksClientConfig) Build() (proto.Message, error) {
 	}
 
 	config.Server = serverSpecs
+	config.Plugin = v.Plugin
+	config.PluginOpts = v.PluginOpts
+	if v.PluginArgs != nil && len(*v.PluginArgs) > 0 {
+		config.PluginArgs = *v.PluginArgs
+	}
 
 	return config, nil
 }
