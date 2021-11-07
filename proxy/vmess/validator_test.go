@@ -26,8 +26,7 @@ func TestUserValidator(t *testing.T) {
 	user := &protocol.MemoryUser{
 		Email: "test",
 		Account: toAccount(&Account{
-			Id:      id.String(),
-			AlterId: 8,
+			Id: id.String(),
 		}),
 	}
 	common.Must(v.Add(user))
@@ -99,8 +98,7 @@ func BenchmarkUserValidator(b *testing.B) {
 			v.Add(&protocol.MemoryUser{
 				Email: "test",
 				Account: toAccount(&Account{
-					Id:      id.String(),
-					AlterId: 16,
+					Id: id.String(),
 				}),
 			})
 		}
