@@ -30,8 +30,8 @@ func New() *Buffer {
 	}
 }
 
-// As creates a Buffer with an existed bytearray
-func As(data []byte) *Buffer {
+// FromBytes creates a Buffer with an existed bytearray
+func FromBytes(data []byte) *Buffer {
 	return &Buffer{
 		v:         data,
 		end:       int32(len(data)),
