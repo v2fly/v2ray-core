@@ -17,10 +17,10 @@ var pool = bytespool.GetPool(Size)
 // the buffer into an internal buffer pool, in order to recreate a buffer more
 // quickly.
 type Buffer struct {
-	v     []byte
-	start int32
-	end   int32
-	out   bool
+	v         []byte
+	start     int32
+	end       int32
+	unmanaged bool
 }
 
 // New creates a Buffer with 0 length and 2K capacity.
@@ -33,9 +33,9 @@ func New() *Buffer {
 // As creates a Buffer with an existed bytearray
 func As(data []byte) *Buffer {
 	return &Buffer{
-		v:   data,
-		end: int32(len(data)),
-		out: true,
+		v:         data,
+		end:       int32(len(data)),
+		unmanaged: true,
 	}
 }
 
@@ -49,7 +49,7 @@ func StackNew() Buffer {
 
 // Release recycles the buffer into an internal buffer pool.
 func (b *Buffer) Release() {
-	if b == nil || b.v == nil || b.out {
+	if b == nil || b.v == nil || b.unmanaged {
 		return
 	}
 
