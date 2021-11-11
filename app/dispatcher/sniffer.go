@@ -6,6 +6,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/protocol/bittorrent"
+	"github.com/v2fly/v2ray-core/v4/common/protocol/dns"
 	"github.com/v2fly/v2ray-core/v4/common/protocol/http"
 	"github.com/v2fly/v2ray-core/v4/common/protocol/quic"
 	"github.com/v2fly/v2ray-core/v4/common/protocol/tls"
@@ -39,6 +40,7 @@ func NewSniffer(ctx context.Context) *Sniffer {
 			{func(c context.Context, b []byte) (SniffResult, error) { return quic.SniffQUIC(b) }, false, net.Network_UDP},
 			{func(c context.Context, b []byte) (SniffResult, error) { return bittorrent.SniffBittorrent(b) }, false, net.Network_TCP},
 			{func(c context.Context, b []byte) (SniffResult, error) { return bittorrent.SniffUTP(b) }, false, net.Network_UDP},
+			{func(c context.Context, b []byte) (SniffResult, error) { return dns.SniffDNS(b) }, false, net.Network_Unknown},
 		},
 	}
 	if sniffer, err := newFakeDNSSniffer(ctx); err == nil {
@@ -61,7 +63,7 @@ func (s *Sniffer) Sniff(c context.Context, payload []byte, network net.Network) 
 		if si.metadataSniffer {
 			continue
 		}
-		if si.network != network {
+		if si.network != network && si.network != net.Network_Unknown {
 			continue
 		}
 		result, err := s(c, payload)
