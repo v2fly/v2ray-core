@@ -4,6 +4,7 @@ import (
 	"context"
 	"runtime"
 	"syscall"
+	"time"
 
 	"github.com/pires/go-proxyproto"
 
@@ -49,6 +50,9 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 		network = addr.Network()
 		address = addr.String()
 		lc.Control = getControlFunc(ctx, sockopt, dl.controllers)
+		if sockopt.TcpKeepAliveIdle != 0 {
+			lc.KeepAlive = time.Duration(-1)
+		}
 	case *net.UnixAddr:
 		lc.Control = nil
 		network = addr.Network()
