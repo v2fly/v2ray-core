@@ -141,6 +141,14 @@ func applyOutboundSocketOptions(network string, address string, fd uintptr, conf
 				return newError("failed to set TCP_FASTOPEN_CONNECT=0").Base(err)
 			}
 		}
+		if config.TcpKeepAliveInterval > 0 {
+			if err := syscall.SetsockoptInt(int(fd), syscall.IPPROTO_TCP, syscall.TCP_KEEPINTVL, int(config.TcpKeepAliveInterval)); err != nil {
+				return newError("failed to set TCP_KEEPINTVL", err)
+			}
+			if err := syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_KEEPALIVE, 1); err != nil {
+				return newError("failed to set SO_KEEPALIVE", err)
+			}
+		}
 	}
 
 	if config.Tproxy.IsEnabled() {
@@ -173,6 +181,14 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 		case SocketConfig_Disable:
 			if err := syscall.SetsockoptInt(int(fd), syscall.IPPROTO_TCP, unix.TCP_FASTOPEN, 0); err != nil {
 				return newError("failed to set TCP_FASTOPEN=0").Base(err)
+			}
+		}
+		if config.TcpKeepAliveInterval > 0 {
+			if err := syscall.SetsockoptInt(int(fd), syscall.IPPROTO_TCP, syscall.TCP_KEEPINTVL, int(config.TcpKeepAliveInterval)); err != nil {
+				return newError("failed to set TCP_KEEPINTVL", err)
+			}
+			if err := syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_KEEPALIVE, 1); err != nil {
+				return newError("failed to set SO_KEEPALIVE", err)
 			}
 		}
 	}
