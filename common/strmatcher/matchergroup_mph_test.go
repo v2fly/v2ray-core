@@ -1,6 +1,7 @@
 package strmatcher_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/v2fly/v2ray-core/v4/common"
@@ -170,5 +171,108 @@ func TestMphMatcherGroup(t *testing.T) {
 				t.Error("unexpected output: ", m, " for test case ", test)
 			}
 		}
+	}
+}
+
+// See https://github.com/v2fly/v2ray-core/issues/92#issuecomment-673238489
+func TestMphMatcherGroupAsIndexMatcher(t *testing.T) {
+	rules := []struct {
+		Type   Type
+		Domain string
+	}{
+		// Regex not supported by MphMatcherGroup
+		// {
+		// 	Type:   Regex,
+		// 	Domain: "apis\\.us$",
+		// },
+		// Substr not supported by MphMatcherGroup
+		// {
+		// 	Type:   Substr,
+		// 	Domain: "apis",
+		// },
+		{
+			Type:   Domain,
+			Domain: "googleapis.com",
+		},
+		{
+			Type:   Domain,
+			Domain: "com",
+		},
+		{
+			Type:   Full,
+			Domain: "www.baidu.com",
+		},
+		// Substr not supported by MphMatcherGroup, We add another matcher to preserve index
+		{
+			Type:   Domain,        // Substr,
+			Domain: "example.com", // "apis",
+		},
+		{
+			Type:   Domain,
+			Domain: "googleapis.com",
+		},
+		{
+			Type:   Full,
+			Domain: "fonts.googleapis.com",
+		},
+		{
+			Type:   Full,
+			Domain: "www.baidu.com",
+		},
+		{ // This matcher (index 10) is swapped with matcher (index 6) to test that full matcher takes high priority.
+			Type:   Full,
+			Domain: "example.com",
+		},
+		{
+			Type:   Domain,
+			Domain: "example.com",
+		},
+	}
+	cases := []struct {
+		Input  string
+		Output []uint32
+	}{
+		{
+			Input:  "www.baidu.com",
+			Output: []uint32{5, 9, 4},
+		},
+		{
+			Input:  "fonts.googleapis.com",
+			Output: []uint32{8, 3, 7, 4 /*2, 6*/},
+		},
+		{
+			Input:  "example.googleapis.com",
+			Output: []uint32{3, 7, 4 /*2, 6*/},
+		},
+		{
+			Input: "testapis.us",
+			// Output: []uint32{ /*2, 6*/ /*1,*/ },
+			Output: nil,
+		},
+		{
+			Input:  "example.com",
+			Output: []uint32{10, 6, 11, 4},
+		},
+	}
+	matcherGroup := NewMphMatcherGroup()
+	for i, rule := range rules {
+		matcher, err := rule.Type.New(rule.Domain)
+		common.Must(err)
+		common.Must(AddMatcherToGroup(matcherGroup, matcher, uint32(i+3)))
+	}
+	matcherGroup.Build()
+	for _, test := range cases {
+		if m := matcherGroup.Match(test.Input); !reflect.DeepEqual(m, test.Output) {
+			t.Error("unexpected output: ", m, " for test case ", test)
+		}
+	}
+}
+
+func TestEmptyMphMatcherGroup(t *testing.T) {
+	g := NewMphMatcherGroup()
+	g.Build()
+	r := g.Match("v2fly.org")
+	if len(r) != 0 {
+		t.Error("Expect [], but ", r)
 	}
 }

@@ -10,7 +10,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.6
 	github.com/gorilla/websocket v1.4.2
-	github.com/jhump/protoreflect v1.9.0
+	github.com/jhump/protoreflect v1.10.1
 	github.com/lucas-clemente/quic-go v0.24.0
 	github.com/marten-seemann/qtls-go1-17 v0.1.0
 	github.com/miekg/dns v1.1.43
@@ -26,7 +26,7 @@ require (
 	golang.org/x/net v0.0.0-20210903162142-ad29c8ab022f
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210903071746-97244b99971b
-	google.golang.org/grpc v1.40.0
+	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
 	h12.io/socks v1.0.3
