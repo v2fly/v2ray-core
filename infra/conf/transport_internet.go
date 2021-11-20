@@ -391,6 +391,7 @@ type SocketConfig struct {
 	TProxy               string `json:"tproxy"`
 	AcceptProxyProtocol  bool   `json:"acceptProxyProtocol"`
 	TCPKeepAliveInterval int32  `json:"tcpKeepAliveInterval"`
+	TCPKeepAliveIdle     int32  `json:"tcpKeepAliveIdle"`
 }
 
 // Build implements Buildable.
@@ -426,6 +427,7 @@ func (c *SocketConfig) Build() (*internet.SocketConfig, error) {
 		Tproxy:               tproxy,
 		AcceptProxyProtocol:  c.AcceptProxyProtocol,
 		TcpKeepAliveInterval: c.TCPKeepAliveInterval,
+		TcpKeepAliveIdle:     c.TCPKeepAliveIdle,
 	}, nil
 }
 
