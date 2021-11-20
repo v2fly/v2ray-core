@@ -5,7 +5,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	sysnet "net"
+	gonet "net"
 )
 
 var addrParser = protocol.NewAddressParser(
@@ -13,9 +13,9 @@ var addrParser = protocol.NewAddressParser(
 	protocol.AddressFamilyByte(0x02, net.AddressFamilyIPv6),
 )
 
-func AttachAddressToPacket(data []byte, address sysnet.Addr) []byte {
+func AttachAddressToPacket(data []byte, address gonet.Addr) []byte {
 	packetBuf := buf.StackNew()
-	udpaddr := address.(*sysnet.UDPAddr)
+	udpaddr := address.(*gonet.UDPAddr)
 	port, err := net.PortFromInt(uint32(udpaddr.Port))
 	if err != nil {
 		panic(err)
@@ -29,13 +29,13 @@ func AttachAddressToPacket(data []byte, address sysnet.Addr) []byte {
 	return data
 }
 
-func ExtractAddressFromPacket(data []byte) ([]byte, sysnet.Addr) {
+func ExtractAddressFromPacket(data []byte) ([]byte, gonet.Addr) {
 	packetBuf := buf.StackNew()
 	address, port, err := addrParser.ReadAddressPort(&packetBuf, bytes.NewReader(data))
 	if err != nil {
 		panic(err)
 	}
-	var addr = &sysnet.UDPAddr{
+	var addr = &gonet.UDPAddr{
 		IP:   address.IP(),
 		Port: int(port.Value()),
 		Zone: "",
