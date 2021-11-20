@@ -19,3 +19,17 @@ func TestPacketEncodingIPv4(t *testing.T) {
 	assert.Equal(t, packetPayload, packetData[:])
 	assert.Equal(t, packetAddress, decodedAddress)
 }
+
+func TestPacketEncodingIPv6(t *testing.T) {
+	packetAddress := &sysnet.UDPAddr{
+		IP:   sysnet.IPv6linklocalallrouters,
+		Port: 1234,
+	}
+	var packetData [256]byte
+	wrapped := AttachAddressToPacket(packetData[:], packetAddress)
+
+	packetPayload, decodedAddress := ExtractAddressFromPacket(wrapped)
+
+	assert.Equal(t, packetPayload, packetData[:])
+	assert.Equal(t, packetAddress, decodedAddress)
+}
