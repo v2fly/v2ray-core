@@ -1,3 +1,14 @@
+v2ray-core (4.43.0-1) unstable; urgency=medium
+
+  * Send Shadowsocks handshake with payload data if available
+  * Support custom TCP Fast Open queue length
+  * Fix: Trojan fallback cannot get ALPN
+  * Fix: DNS queryStrategy ignored
+  * Fix: UDP connection transport connection terminated unnecessarily
+  * More details in https://github.com/v2fly/v2ray-core/releases/tag/v4.43.0
+
+ -- V2Fly <dev@v2fly.org> Sun, 21 Nov 2021 21:30:00 +0800
+
 v2ray-core (4.42.2-2) unstable; urgency=medium
 
   * Support Windows ARM64
