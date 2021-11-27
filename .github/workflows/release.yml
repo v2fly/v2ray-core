@@ -59,6 +59,14 @@ jobs:
             goarch: arm
             goarm: 7
           # END FreeBSD ARM 6 7
+          # BEGIN OpenBSD ARM 6 7
+          - goos: openbsd
+            goarch: arm
+            goarm: 6
+          - goos: openbsd
+            goarch: arm
+            goarm: 7
+          # END OpenBSD ARM 6 7
           # BEGIN Other architectures
           - goos: darwin
             goarch: arm64
@@ -71,6 +79,8 @@ jobs:
           - goos: android
             goarch: arm64
           - goos: freebsd
+            goarch: arm64
+          - goos: openbsd
             goarch: arm64
           # BEGIN MIPS
           - goos: linux
