@@ -112,7 +112,7 @@ func (h *HeaderReader) Read(reader io.Reader) (*buf.Buffer, error) {
 	// Parse the request
 	if req, err := readRequest(bufio.NewReader(bytes.NewReader(headerBuf.Bytes()))); err != nil {
 		return nil, err
-	} else { // nolint: golint
+	} else { // nolint: revive
 		h.req = req
 	}
 

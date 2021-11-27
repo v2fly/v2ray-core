@@ -64,7 +64,7 @@ func (c InboundConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 		c.Settings = []byte("{}")
 	}
 
-	inboundConfigPack, err := loadHeterogeneousConfigFromRawJson("inbound", c.Protocol, c.Settings)
+	inboundConfigPack, err := loadHeterogeneousConfigFromRawJSON("inbound", c.Protocol, c.Settings)
 	if err != nil {
 		return nil, newError("unable to load inbound protocol config").Base(err)
 	}

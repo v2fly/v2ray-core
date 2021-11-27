@@ -53,8 +53,7 @@ func filterMessage(ctx context.Context, message protoreflect.Message) error {
 			}
 
 			if v2extension.ConvertTimeParseIp != "" {
-				strIp := value.String()
-				ipValue := net.ParseIP(strIp)
+				ipValue := net.ParseIP(value.String())
 				target := message.Descriptor().Fields().ByTextName(v2extension.ConvertTimeParseIp)
 				pendingWriteQueue = append(pendingWriteQueue, pendingWrite{
 					field: target,
@@ -116,10 +115,7 @@ func filterMap(ctx context.Context, mapValue protoreflect.Map) error {
 	var err error
 	mapValue.Range(func(key protoreflect.MapKey, value protoreflect.Value) bool {
 		err = filterMessage(ctx, value.Message())
-		if err != nil {
-			return false
-		}
-		return true
+		return err == nil
 	})
 	return err
 }

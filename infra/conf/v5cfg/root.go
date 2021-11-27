@@ -28,7 +28,7 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 
 	var logConfMsg *anypb.Any
 	if c.LogConfig != nil {
-		logConfMsgUnpacked, err := loadHeterogeneousConfigFromRawJson("service", "log", c.LogConfig)
+		logConfMsgUnpacked, err := loadHeterogeneousConfigFromRawJSON("service", "log", c.LogConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -41,7 +41,7 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	config.App = append([]*anypb.Any{logConfMsg}, config.App...)
 
 	if c.RouterConfig != nil {
-		routerConfig, err := loadHeterogeneousConfigFromRawJson("service", "router", c.RouterConfig)
+		routerConfig, err := loadHeterogeneousConfigFromRawJSON("service", "router", c.RouterConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -49,7 +49,7 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	}
 
 	if c.DNSConfig != nil {
-		dnsApp, err := loadHeterogeneousConfigFromRawJson("service", "dns", c.DNSConfig)
+		dnsApp, err := loadHeterogeneousConfigFromRawJSON("service", "dns", c.DNSConfig)
 		if err != nil {
 			return nil, newError("failed to parse DNS config").Base(err)
 		}
@@ -73,7 +73,7 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	}
 
 	for serviceName, service := range c.Services {
-		servicePackedConfig, err := loadHeterogeneousConfigFromRawJson("service", serviceName, service)
+		servicePackedConfig, err := loadHeterogeneousConfigFromRawJSON("service", serviceName, service)
 		if err != nil {
 			return nil, err
 		}
@@ -82,7 +82,7 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	return config, nil
 }
 
-func loadJsonConfig(data []byte) (*core.Config, error) {
+func loadJSONConfig(data []byte) (*core.Config, error) {
 	rootConfig := &RootConfig{}
 
 	err := json.Unmarshal(data, rootConfig)

@@ -1,4 +1,4 @@
-package restful_api
+package restfulapi
 
 import "github.com/v2fly/v2ray-core/v4/common/errors"
 

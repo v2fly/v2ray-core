@@ -26,13 +26,13 @@ func init() {
 				if err != nil {
 					return nil, err
 				}
-				return loadJsonConfig(data)
+				return loadJSONConfig(data)
 			case io.Reader:
 				data, err := buf.ReadAllToBytes(v)
 				if err != nil {
 					return nil, err
 				}
-				return loadJsonConfig(data)
+				return loadJSONConfig(data)
 			default:
 				return nil, newError("unknown type")
 			}

@@ -1,4 +1,4 @@
-package multiObservatory
+package multiobservatory
 
 import (
 	"context"
@@ -36,7 +36,7 @@ func New(ctx context.Context, config *Config) (*Observer, error) {
 
 func (x *Config) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {
 	var err error
-	x.Holders, err = taggedfeatures.LoadJsonConfig(context.TODO(), "service", "background", bytes)
+	x.Holders, err = taggedfeatures.LoadJSONConfig(context.TODO(), "service", "background", bytes)
 	return err
 }
 

@@ -173,7 +173,6 @@ func init() {
 		var routingRules []*RoutingRule
 
 		for _, v := range simplifiedConfig.Rule {
-
 			rule := new(RoutingRule)
 
 			for _, geo := range v.Geoip {

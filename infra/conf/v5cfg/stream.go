@@ -22,7 +22,7 @@ func (s StreamConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	if s.TransportSettings == nil {
 		s.TransportSettings = []byte("{}")
 	}
-	transportConfigPack, err := loadHeterogeneousConfigFromRawJson("transport", s.Transport, s.TransportSettings)
+	transportConfigPack, err := loadHeterogeneousConfigFromRawJSON("transport", s.Transport, s.TransportSettings)
 	if err != nil {
 		return nil, newError("unable to load transport config").Base(err)
 	}
@@ -37,7 +37,7 @@ func (s StreamConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 		if s.SecuritySettings == nil {
 			s.SecuritySettings = []byte("{}")
 		}
-		securityConfigPack, err := loadHeterogeneousConfigFromRawJson("security", s.Security, s.SecuritySettings)
+		securityConfigPack, err := loadHeterogeneousConfigFromRawJSON("security", s.Security, s.SecuritySettings)
 		if err != nil {
 			return nil, newError("unable to load security config").Base(err)
 		}

@@ -139,7 +139,7 @@ var typeMap = map[routercommon.Domain_Type]dns.DomainMatchingType{
 }
 
 // DNSConfig is a JSON serializable object for dns.Config.
-type DNSConfig struct {
+type DNSConfig struct { // nolint: revive
 	Servers                []*NameServerConfig     `json:"servers"`
 	Hosts                  map[string]*HostAddress `json:"hosts"`
 	ClientIP               *cfgcommon.Address      `json:"clientIp"`
@@ -216,7 +216,6 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 		} else {
 			return nil, newError("unable to create geo data loader ").Base(err)
 		}
-
 	}
 
 	cfgEnv := cfgcommon.GetConfigureLoadingEnvironment(c.cfgctx)

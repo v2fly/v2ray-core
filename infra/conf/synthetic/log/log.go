@@ -14,7 +14,7 @@ func DefaultLogConfig() *log.Config {
 	}
 }
 
-type LogConfig struct {
+type LogConfig struct { // nolint: revive
 	AccessLog string `json:"access"`
 	ErrorLog  string `json:"error"`
 	LogLevel  string `json:"loglevel"`

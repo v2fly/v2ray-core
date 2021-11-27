@@ -136,7 +136,7 @@ func executeConvert(cmd *base.Command, args []string) {
 			base.Fatalf(err.Error())
 		}
 		w := bytes.NewBuffer(nil)
-		err = jsonpb.DumpJsonPb(pbConfig, w)
+		err = jsonpb.DumpJSONPb(pbConfig, w)
 		if err != nil {
 			base.Fatalf(err.Error())
 		}

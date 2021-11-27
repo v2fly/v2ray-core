@@ -13,8 +13,5 @@ func ContextWithEnvironment(ctx context.Context, environment interface{}) contex
 }
 
 func EnvironmentFromContext(ctx context.Context) interface{} {
-	if environment, ok := ctx.Value(environmentKey).(interface{}); ok {
-		return environment
-	}
-	return nil
+	return ctx.Value(environmentKey)
 }

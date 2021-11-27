@@ -10,7 +10,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/socketcfg"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
+	v4 "github.com/v2fly/v2ray-core/v4/infra/conf/v4"
 	"github.com/v2fly/v2ray-core/v4/transport"
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/headers/http"

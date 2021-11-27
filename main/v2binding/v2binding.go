@@ -12,6 +12,8 @@ import (
 	"github.com/v2fly/v2ray-core/v4/app/router"
 	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
+
+	// Initialization
 	_ "github.com/v2fly/v2ray-core/v4/main/distro/all"
 	"github.com/v2fly/v2ray-core/v4/proxy/blackhole"
 	"github.com/v2fly/v2ray-core/v4/proxy/dokodemo"
@@ -77,7 +79,6 @@ func (b *bindingInstance) startAPIInstance() {
 		panic(err)
 	}
 	b.instance = instance
-	return
 }
 
 func withDefaultApps(config *core.Config) *core.Config {
