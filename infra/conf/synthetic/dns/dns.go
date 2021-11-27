@@ -204,7 +204,6 @@ func (c *DNSConfig) BuildV5(ctx context.Context) (*dns.Config, error) {
 
 // Build implements Buildable
 func (c *DNSConfig) Build() (*dns.Config, error) {
-
 	if c.cfgctx == nil {
 		c.cfgctx = cfgcommon.NewConfigureLoadingContext(context.Background())
 

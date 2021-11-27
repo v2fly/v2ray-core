@@ -9,14 +9,12 @@ type AppEnvironmentCapabilitySet interface {
 	SystemNetworkCapabilitySet
 	InstanceNetworkCapabilitySet
 	FileSystemCapabilitySet
-
 	PersistentStorage() storage.ScopedPersistentStorage
 	TransientStorage() storage.ScopedTransientStorage
 }
 
 type AppEnvironment interface {
 	AppEnvironmentCapabilitySet
-
 	NarrowScope(key []byte) (AppEnvironment, error)
 	doNotImpl()
 }

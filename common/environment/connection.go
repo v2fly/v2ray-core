@@ -8,7 +8,6 @@ type ConnectionCapabilitySet interface {
 
 type ConnectionEnvironment interface {
 	ConnectionCapabilitySet
-
 	doNotImpl()
 }
 

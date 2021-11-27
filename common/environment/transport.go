@@ -8,13 +8,11 @@ type TransportEnvironmentCapacitySet interface {
 	BaseEnvironmentCapabilitySet
 	SystemNetworkCapabilitySet
 	InstanceNetworkCapabilitySet
-
 	TransientStorage() storage.ScopedTransientStorage
 }
 
 type TransportEnvironment interface {
 	TransportEnvironmentCapacitySet
-
 	NarrowScope(key []byte) (TransportEnvironment, error)
 	doNotImpl()
 }

@@ -28,17 +28,18 @@ func init() {
 
 	common.Must(common.RegisterConfig((*ClientConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		simplifiedClient := config.(*ClientConfig)
-		fullClient := &trojan.ClientConfig{Server: []*protocol.ServerEndpoint{
-			{
-				Address: simplifiedClient.Address,
-				Port:    simplifiedClient.Port,
-				User: []*protocol.User{
-					{
-						Account: serial.ToTypedMessage(&trojan.Account{Password: simplifiedClient.Password}),
+		fullClient := &trojan.ClientConfig{
+			Server: []*protocol.ServerEndpoint{
+				{
+					Address: simplifiedClient.Address,
+					Port:    simplifiedClient.Port,
+					User: []*protocol.User{
+						{
+							Account: serial.ToTypedMessage(&trojan.Account{Password: simplifiedClient.Password}),
+						},
 					},
 				},
 			},
-		},
 		}
 		return common.CreateObject(ctx, fullClient)
 	}))

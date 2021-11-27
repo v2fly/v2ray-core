@@ -8,7 +8,6 @@ import (
 
 type PersistentStorageEngine interface {
 	features.Feature
-
 	PersistentStorageEngine()
 	Put(ctx context.Context, key []byte, value []byte) error
 	Get(ctx context.Context, key []byte) ([]byte, error)

@@ -42,7 +42,6 @@ func Interrupt(obj interface{}) error {
 type Runnable interface {
 	// Start starts the runnable object. Upon the method returning nil, the object begins to function properly.
 	Start() error
-
 	Closable
 }
 

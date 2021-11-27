@@ -67,6 +67,7 @@ outbounds:
 	json.Unmarshal(bs, &m)
 	assertResult(t, m, expected)
 }
+
 func TestYMLToJSON_ValueTypes(t *testing.T) {
 	input := `
 boolean: 

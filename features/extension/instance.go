@@ -9,7 +9,6 @@ import (
 // InstanceManagement : unstable
 type InstanceManagement interface {
 	features.Feature
-
 	ListInstance(ctx context.Context) ([]string, error)
 	AddInstance(ctx context.Context, name string, config []byte, configType string) error
 	StartInstance(ctx context.Context, name string) error

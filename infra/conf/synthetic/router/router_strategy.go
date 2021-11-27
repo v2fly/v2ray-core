@@ -15,16 +15,13 @@ const (
 	strategyLeastPing string = "leastping"
 )
 
-var (
-	strategyConfigLoader = loader.NewJSONConfigLoader(loader.ConfigCreatorCache{
-		strategyRandom:    func() interface{} { return new(strategyEmptyConfig) },
-		strategyLeastLoad: func() interface{} { return new(strategyLeastLoadConfig) },
-		strategyLeastPing: func() interface{} { return new(strategyLeastPingConfig) },
-	}, "type", "settings")
-)
+var strategyConfigLoader = loader.NewJSONConfigLoader(loader.ConfigCreatorCache{
+	strategyRandom:    func() interface{} { return new(strategyEmptyConfig) },
+	strategyLeastLoad: func() interface{} { return new(strategyLeastLoadConfig) },
+	strategyLeastPing: func() interface{} { return new(strategyLeastPingConfig) },
+}, "type", "settings")
 
-type strategyEmptyConfig struct {
-}
+type strategyEmptyConfig struct{}
 
 func (v *strategyEmptyConfig) Build() (proto.Message, error) {
 	return nil, nil

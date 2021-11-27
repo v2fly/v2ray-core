@@ -37,7 +37,6 @@ func WithAddressTypeParser(atp AddressTypeParser) AddressOption {
 
 type AddressSerializer interface {
 	ReadAddressPort(buffer *buf.Buffer, input io.Reader) (net.Address, net.Port, error)
-
 	WriteAddressPort(writer io.Writer, addr net.Address, port net.Port) error
 }
 

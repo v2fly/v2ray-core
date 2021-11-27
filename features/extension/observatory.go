@@ -10,7 +10,6 @@ import (
 
 type Observatory interface {
 	features.Feature
-
 	GetObservation(ctx context.Context) (proto.Message, error)
 }
 

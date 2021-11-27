@@ -70,6 +70,7 @@ security = 'tls'
 	json.Unmarshal(bs, &m)
 	assertResult(t, m, expected)
 }
+
 func TestTOMLToJSON_ValueTypes(t *testing.T) {
 	input := `
 boolean = [ true, false, true, false ]

@@ -1,10 +1,10 @@
 package core_test
 
 import (
-	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	. "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/dispatcher"

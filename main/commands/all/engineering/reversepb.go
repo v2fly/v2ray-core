@@ -41,4 +41,5 @@ var cmdReversePb = &base.Command{
 				io.Copy(os.Stdout, bytes.NewReader(value))
 			}
 		}
-	}}
+	},
+}

@@ -54,6 +54,7 @@ type V2JsonProtobufAnyTypeFieldDescriptor struct {
 func (v V2JsonProtobufAnyTypeFieldDescriptor) JSONName() string {
 	return "type"
 }
+
 func (v V2JsonProtobufAnyTypeFieldDescriptor) TextName() string {
 	return "type"
 }
@@ -70,6 +71,7 @@ func (v *V2JsonProtobufAnyValueField) Kind() protoreflect.Kind {
 func (v *V2JsonProtobufAnyValueField) JSONName() string {
 	return v.name
 }
+
 func (v *V2JsonProtobufAnyValueField) TextName() string {
 	return v.name
 }

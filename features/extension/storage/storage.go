@@ -6,11 +6,9 @@ import (
 
 type ScopedPersistentStorage interface {
 	ScopedPersistentStorageEngine()
-
 	Put(ctx context.Context, key []byte, value []byte) error
 	Get(ctx context.Context, key []byte) ([]byte, error)
 	List(ctx context.Context, keyPrefix []byte) ([][]byte, error)
-
 	ClearIfCharacteristicMismatch(ctx context.Context, characteristic []byte) error
 	NarrowScope(ctx context.Context, key []byte) (ScopedPersistentStorage, error)
 }

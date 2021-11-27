@@ -7,14 +7,13 @@ import (
 	"encoding/binary"
 	"io"
 
-	"github.com/v2fly/v2ray-core/v4/common/errors"
-
 	"github.com/lucas-clemente/quic-go/quicvarint"
 	"github.com/marten-seemann/qtls-go1-17"
 	"golang.org/x/crypto/hkdf"
 
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
+	"github.com/v2fly/v2ray-core/v4/common/errors"
 	ptls "github.com/v2fly/v2ray-core/v4/common/protocol/tls"
 )
 
