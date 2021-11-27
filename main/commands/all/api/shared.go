@@ -80,7 +80,7 @@ func dialAPIServerWithContext(ctx context.Context) (conn *grpc.ClientConn) {
 	return
 }
 
-func protoToJSONString(m proto.Message, prefix, indent string) (string, error) {
+func protoToJSONString(m proto.Message, prefix, indent string) (string, error) { // nolint: unparam
 	return strings.TrimSpace(protojson.MarshalOptions{Indent: indent}.Format(m)), nil
 }
 

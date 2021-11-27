@@ -18,7 +18,7 @@ type Observer struct {
 	config *Config
 	ctx    context.Context
 
-	statusLock sync.Mutex
+	statusLock sync.Mutex // nolint: structcheck
 	hp         *HealthPing
 
 	finished *done.Instance

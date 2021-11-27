@@ -25,7 +25,7 @@ import (
 	// Geo loaders
 	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/memconservative"
 	_ "github.com/v2fly/v2ray-core/v4/infra/conf/geodata/standard"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
+	v4 "github.com/v2fly/v2ray-core/v4/infra/conf/v4"
 	"github.com/v2fly/v2ray-core/v4/proxy/blackhole"
 	dns_proxy "github.com/v2fly/v2ray-core/v4/proxy/dns"
 	"github.com/v2fly/v2ray-core/v4/proxy/freedom"

@@ -46,7 +46,7 @@ func (c OutboundConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 		c.Settings = []byte("{}")
 	}
 
-	outboundConfigPack, err := loadHeterogeneousConfigFromRawJson("outbound", c.Protocol, c.Settings)
+	outboundConfigPack, err := loadHeterogeneousConfigFromRawJSON("outbound", c.Protocol, c.Settings)
 	if err != nil {
 		return nil, newError("unable to load outbound protocol config").Base(err)
 	}

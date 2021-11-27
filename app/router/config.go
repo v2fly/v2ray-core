@@ -178,7 +178,7 @@ func (br *BalancingRule) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes 
 	if stub.Strategy == "" {
 		stub.Strategy = "random"
 	}
-	settingsPack, err := v5cfg.LoadHeterogeneousConfigFromRawJson(context.TODO(), "balancer", stub.Strategy, stub.StrategySettings)
+	settingsPack, err := v5cfg.LoadHeterogeneousConfigFromRawJSON(context.TODO(), "balancer", stub.Strategy, stub.StrategySettings)
 	if err != nil {
 		return err
 	}

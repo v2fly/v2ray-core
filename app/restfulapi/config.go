@@ -1,4 +1,4 @@
-package restful_api
+package restfulapi
 
 import (
 	"context"

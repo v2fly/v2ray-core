@@ -24,10 +24,7 @@ func LoadArg(arg string) (out io.Reader, err error) {
 
 // LoadArgToBytes loads one arg to []byte, maybe an remote url, or local file path
 func LoadArgToBytes(arg string) (out []byte, err error) {
-	switch {
-	default:
-		out, err = ioutil.ReadFile(arg)
-	}
+	out, err = ioutil.ReadFile(arg)
 	if err != nil {
 		return
 	}

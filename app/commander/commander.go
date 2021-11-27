@@ -117,7 +117,7 @@ func init() {
 			Service: nil,
 		}
 		for _, v := range simplifiedConfig.Name {
-			pack, err := v5cfg.LoadHeterogeneousConfigFromRawJson(ctx, "grpcservice", v, []byte("{}"))
+			pack, err := v5cfg.LoadHeterogeneousConfigFromRawJSON(ctx, "grpcservice", v, []byte("{}"))
 			if err != nil {
 				return nil, err
 			}

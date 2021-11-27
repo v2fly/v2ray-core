@@ -17,7 +17,7 @@ import (
 	rule2 "github.com/v2fly/v2ray-core/v4/infra/conf/rule"
 )
 
-type RouterRulesConfig struct {
+type RouterRulesConfig struct { // nolint: revive
 	RuleList       []json.RawMessage `json:"rules"`
 	DomainStrategy string            `json:"domainStrategy"`
 }
@@ -82,7 +82,7 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 	}, nil
 }
 
-type RouterConfig struct {
+type RouterConfig struct { // nolint: revive
 	Settings       *RouterRulesConfig `json:"settings"` // Deprecated
 	RuleList       []json.RawMessage  `json:"rules"`
 	DomainStrategy *string            `json:"domainStrategy"`

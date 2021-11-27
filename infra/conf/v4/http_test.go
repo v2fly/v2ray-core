@@ -5,7 +5,7 @@ import (
 
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/v4"
+	v4 "github.com/v2fly/v2ray-core/v4/infra/conf/v4"
 	"github.com/v2fly/v2ray-core/v4/proxy/http"
 )
 

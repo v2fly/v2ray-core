@@ -33,7 +33,7 @@ import (
 	// Developer preview features
 	_ "github.com/v2fly/v2ray-core/v4/app/instman"
 	_ "github.com/v2fly/v2ray-core/v4/app/observatory"
-	_ "github.com/v2fly/v2ray-core/v4/app/restful-api"
+	_ "github.com/v2fly/v2ray-core/v4/app/restfulapi"
 
 	// Inbound and outbound proxies.
 	_ "github.com/v2fly/v2ray-core/v4/proxy/blackhole"
@@ -89,6 +89,7 @@ import (
 	// V5 version of json configure file parser
 	_ "github.com/v2fly/v2ray-core/v4/infra/conf/v5cfg"
 
+	// Simplified config
 	_ "github.com/v2fly/v2ray-core/v4/proxy/http/simplified"
 	_ "github.com/v2fly/v2ray-core/v4/proxy/shadowsocks/simplified"
 	_ "github.com/v2fly/v2ray-core/v4/proxy/socks/simplified"

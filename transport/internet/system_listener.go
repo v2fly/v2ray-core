@@ -70,7 +70,7 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 			if err != nil {
 				return nil, err
 			}
-			ctx = context.WithValue(ctx, address, locker) // nolint: golint,staticcheck
+			ctx = context.WithValue(ctx, address, locker) // nolint: revive,staticcheck
 		}
 	}
 

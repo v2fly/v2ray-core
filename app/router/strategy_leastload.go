@@ -64,8 +64,8 @@ func (l *LeastLoadStrategy) InjectContext(ctx context.Context) {
 	l.ctx = ctx
 }
 
-func (s *LeastLoadStrategy) PickOutbound(candidates []string) string {
-	selects := s.pickOutbounds(candidates)
+func (l *LeastLoadStrategy) PickOutbound(candidates []string) string {
+	selects := l.pickOutbounds(candidates)
 	count := len(selects)
 	if count == 0 {
 		// goes to fallbackTag
@@ -74,9 +74,9 @@ func (s *LeastLoadStrategy) PickOutbound(candidates []string) string {
 	return selects[dice.Roll(count)].Tag
 }
 
-func (s *LeastLoadStrategy) pickOutbounds(candidates []string) []*node {
-	qualified := s.getNodes(candidates, time.Duration(s.settings.MaxRTT))
-	selects := s.selectLeastLoad(qualified)
+func (l *LeastLoadStrategy) pickOutbounds(candidates []string) []*node {
+	qualified := l.getNodes(candidates, time.Duration(l.settings.MaxRTT))
+	selects := l.selectLeastLoad(qualified)
 	return selects
 }
 
@@ -96,12 +96,12 @@ func (s *LeastLoadStrategy) pickOutbounds(candidates []string) []*node {
 // 3. Speed priority: Baselines + `Expected Count <= 0`.
 // go through all baselines until find selects, if not, select none. Used in combination
 // with 'balancer.fallbackTag', it means: selects qualified nodes or use the fallback.
-func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
+func (l *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 	if len(nodes) == 0 {
 		newError("least load: no qualified outbound").AtInfo().WriteToLog()
 		return nil
 	}
-	expected := int(s.settings.Expected)
+	expected := int(l.settings.Expected)
 	availableCount := len(nodes)
 	if expected > availableCount {
 		return nodes
@@ -110,13 +110,13 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 	if expected <= 0 {
 		expected = 1
 	}
-	if len(s.settings.Baselines) == 0 {
+	if len(l.settings.Baselines) == 0 {
 		return nodes[:expected]
 	}
 
 	count := 0
 	// go through all base line until find expected selects
-	for _, b := range s.settings.Baselines {
+	for _, b := range l.settings.Baselines {
 		baseline := time.Duration(b)
 		for i := 0; i < availableCount; i++ {
 			if nodes[i].RTTDeviationCost > baseline {
@@ -130,30 +130,30 @@ func (s *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 			break
 		}
 	}
-	if s.settings.Expected > 0 && count < expected {
+	if l.settings.Expected > 0 && count < expected {
 		count = expected
 	}
 	return nodes[:count]
 }
 
-func (s *LeastLoadStrategy) getNodes(candidates []string, maxRTT time.Duration) []*node {
-	if s.observer == nil {
-		common.Must(core.RequireFeatures(s.ctx, func(observatory extension.Observatory) error {
-			s.observer = observatory
+func (l *LeastLoadStrategy) getNodes(candidates []string, maxRTT time.Duration) []*node {
+	if l.observer == nil {
+		common.Must(core.RequireFeatures(l.ctx, func(observatory extension.Observatory) error {
+			l.observer = observatory
 			return nil
 		}))
 	}
 
 	var result proto.Message
-	if s.settings.ObserverTag == "" {
-		observeResult, err := s.observer.GetObservation(s.ctx)
+	if l.settings.ObserverTag == "" {
+		observeResult, err := l.observer.GetObservation(l.ctx)
 		if err != nil {
 			newError("cannot get observation").Base(err).WriteToLog()
 			return make([]*node, 0)
 		}
 		result = observeResult
 	} else {
-		observeResult, err := common.Must2(s.observer.(features.TaggedFeatures).GetFeaturesByTag(s.settings.ObserverTag)).(extension.Observatory).GetObservation(s.ctx)
+		observeResult, err := common.Must2(l.observer.(features.TaggedFeatures).GetFeaturesByTag(l.settings.ObserverTag)).(extension.Observatory).GetObservation(l.ctx)
 		if err != nil {
 			newError("cannot get observation").Base(err).WriteToLog()
 			return make([]*node, 0)
@@ -175,16 +175,15 @@ func (s *LeastLoadStrategy) getNodes(candidates []string, maxRTT time.Duration) 
 				CountFail:        1,
 				RTTAverage:       time.Duration(v.Delay) * time.Millisecond,
 				RTTDeviation:     time.Duration(v.Delay) * time.Millisecond,
-				RTTDeviationCost: time.Duration(s.costs.Apply(v.OutboundTag, float64(time.Duration(v.Delay)*time.Millisecond))),
+				RTTDeviationCost: time.Duration(l.costs.Apply(v.OutboundTag, float64(time.Duration(v.Delay)*time.Millisecond))),
 			}
 
 			if v.HealthPing != nil {
 				record.RTTAverage = time.Duration(v.HealthPing.Average)
 				record.RTTDeviation = time.Duration(v.HealthPing.Deviation)
-				record.RTTDeviationCost = time.Duration(s.costs.Apply(v.OutboundTag, float64(v.HealthPing.Deviation)))
+				record.RTTDeviationCost = time.Duration(l.costs.Apply(v.OutboundTag, float64(v.HealthPing.Deviation)))
 				record.CountAll = int(v.HealthPing.All)
 				record.CountFail = int(v.HealthPing.Fail)
-
 			}
 			ret = append(ret, record)
 		}

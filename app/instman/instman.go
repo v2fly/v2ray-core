@@ -11,7 +11,7 @@ import (
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
 type InstanceMgr struct {
-	config    *Config
+	config    *Config // nolint: structcheck
 	instances map[string]*core.Instance
 }
 

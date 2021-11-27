@@ -31,7 +31,7 @@ var cmdReversePb = &base.Command{
 		}
 		switch *configFormat {
 		case "jsonpb":
-			if err := jsonpb.DumpJsonPb(&conf, os.Stdout); err != nil {
+			if err := jsonpb.DumpJSONPb(&conf, os.Stdout); err != nil {
 				base.Fatalf("%s", err)
 			}
 		case "v2jsonpb":

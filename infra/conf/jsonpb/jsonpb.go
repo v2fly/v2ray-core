@@ -16,7 +16,7 @@ import (
 
 //go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
 
-func loadJsonPb(data io.Reader) (*core.Config, error) {
+func loadJSONPB(data io.Reader) (*core.Config, error) {
 	coreconf := &core.Config{}
 	jsonpbloader := &jsonpb.Unmarshaler{AnyResolver: serial.GetResolver()}
 	err := jsonpbloader.Unmarshal(data, coreconf)
@@ -26,7 +26,7 @@ func loadJsonPb(data io.Reader) (*core.Config, error) {
 	return coreconf, nil
 }
 
-func dumpJsonPb(config proto.Message, w io.Writer) error {
+func dumpJSONPb(config proto.Message, w io.Writer) error {
 	jsonpbdumper := &jsonpb.Marshaler{AnyResolver: serial.GetResolver()}
 	err := jsonpbdumper.Marshal(w, config)
 	if err != nil {
@@ -35,8 +35,8 @@ func dumpJsonPb(config proto.Message, w io.Writer) error {
 	return nil
 }
 
-func DumpJsonPb(config proto.Message, w io.Writer) error {
-	return dumpJsonPb(config, w)
+func DumpJSONPb(config proto.Message, w io.Writer) error {
+	return dumpJSONPb(config, w)
 }
 
 const FormatProtobufJSONPB = "jsonpb"
@@ -56,13 +56,13 @@ func init() {
 				if err != nil {
 					return nil, err
 				}
-				return loadJsonPb(bytes.NewReader(data))
+				return loadJSONPB(bytes.NewReader(data))
 			case io.Reader:
 				data, err := buf.ReadAllToBytes(v)
 				if err != nil {
 					return nil, err
 				}
-				return loadJsonPb(bytes.NewReader(data))
+				return loadJSONPB(bytes.NewReader(data))
 			default:
 				return nil, newError("unknow type")
 			}

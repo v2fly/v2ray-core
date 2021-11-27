@@ -14,7 +14,7 @@ const (
 	muxPreferedSessionKey
 	sockoptSessionKey
 	trackedConnectionErrorKey
-	handlerSessionKey
+	handlerSessionKey // nolint: varcheck
 )
 
 // ContextWithID returns a new context with the given ID.
