@@ -7,7 +7,7 @@ issues:
   new: true
   exclude-rules:
     - linters:
-      - staticcheck
+        - staticcheck
       text: "SA1019:"
 
 linters:
@@ -19,13 +19,13 @@ linters:
     - gofmt
     - gofumpt
     - goimports
-    - golint
     - goprintffuncname
     - gosimple
     - govet
     - ineffassign
     - misspell
     - nakedret
+    - revive
     - rowserrcheck
     - staticcheck
     - structcheck
