@@ -306,7 +306,7 @@ func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.
 				newError("non existing tag: ", tag).AtWarning().WriteToLog(session.ExportIDToError(ctx))
 			}
 		} else {
-			newError("default route for ", destination).WriteToLog(session.ExportIDToError(ctx))
+			newError("default route for ", destination).AtWarning().WriteToLog(session.ExportIDToError(ctx))
 		}
 	}
 
