@@ -7,15 +7,12 @@ import (
 type ProxyEnvironmentCapabilitySet interface {
 	BaseEnvironmentCapabilitySet
 	InstanceNetworkCapabilitySet
-
 	TransientStorage() storage.ScopedTransientStorage
 }
 
 type ProxyEnvironment interface {
 	ProxyEnvironmentCapabilitySet
-
 	NarrowScope(key []byte) (ProxyEnvironment, error)
 	NarrowScopeToTransport(key []byte) (TransportEnvironment, error)
-
 	doNotImpl()
 }

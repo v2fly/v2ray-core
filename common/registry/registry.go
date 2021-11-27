@@ -77,7 +77,6 @@ func (i *implementationRegistry) LoadImplementationByAlias(ctx context.Context, 
 	}
 
 	return implementationConfigInstance.(proto.Message), nil
-
 }
 
 func newImplementationRegistry() *implementationRegistry {
@@ -107,7 +106,7 @@ func RegisterImplementation(proto interface{}, loader CustomLoader) error {
 
 func registerImplementation(proto interface{}, loader CustomLoader) error {
 	protoReflect := reflect.New(reflect.TypeOf(proto).Elem())
-	var proto2 = protoReflect.Interface().(protov2.Message)
+	proto2 := protoReflect.Interface().(protov2.Message)
 	msgDesc := proto2.ProtoReflect().Descriptor()
 	fullName := string(msgDesc.FullName())
 	msgOpts, err := protoext.GetMessageOptions(msgDesc)

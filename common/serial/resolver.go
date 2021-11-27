@@ -8,8 +8,7 @@ type AnyResolver interface {
 	Resolve(typeURL string) (proto.Message, error)
 }
 
-type serialResolver struct {
-}
+type serialResolver struct{}
 
 func (s serialResolver) Resolve(typeURL string) (proto.Message, error) {
 	instance, err := GetInstance(typeURL)

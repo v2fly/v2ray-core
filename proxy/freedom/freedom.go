@@ -71,7 +71,7 @@ func (h *Handler) resolveIP(ctx context.Context, domain string, localAddr net.Ad
 		newError("DNS client doesn't implement ClientWithIPOption")
 	}
 
-	var lookupFunc = h.dns.LookupIP
+	lookupFunc := h.dns.LookupIP
 	if h.config.DomainStrategy == Config_USE_IP4 || (localAddr != nil && localAddr.Family().IsIPv4()) {
 		if lookupIPv4, ok := h.dns.(dns.IPv4Lookup); ok {
 			lookupFunc = lookupIPv4.LookupIPv4

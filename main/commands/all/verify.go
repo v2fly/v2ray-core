@@ -25,9 +25,7 @@ func init() {
 	cmdVerify.Run = executeVerify // break init loop
 }
 
-var (
-	verifySigFile = cmdVerify.Flag.String("sig", "", "Path to the signature file")
-)
+var verifySigFile = cmdVerify.Flag.String("sig", "", "Path to the signature file")
 
 func executeVerify(cmd *base.Command, args []string) {
 	target := cmdVerify.Flag.Arg(0)
