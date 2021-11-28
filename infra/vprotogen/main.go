@@ -226,7 +226,7 @@ Download it from https://github.com/protocolbuffers/protobuf/releases
 		for _, relProtoFile := range files {
 			args := []string{
 				"-I", fmt.Sprintf("%v/../include", filepath.Dir(protoc)),
-				"-I", fmt.Sprintf("."),
+				"-I", ".",
 				"--go_out", pwd,
 				"--go_opt", "paths=source_relative",
 				"--go-grpc_out", pwd,
