@@ -5,20 +5,17 @@ import (
 )
 
 const (
-	// TCP_FASTOPEN is the socket option on darwin for TCP fast open.
-	TCP_FASTOPEN = 0x105 // nolint: revive,stylecheck
 	// TCP_FASTOPEN_SERVER is the value to enable TCP fast open on darwin for server connections.
 	TCP_FASTOPEN_SERVER = 0x01 // nolint: revive,stylecheck
 	// TCP_FASTOPEN_CLIENT is the value to enable TCP fast open on darwin for client connections.
 	TCP_FASTOPEN_CLIENT = 0x02 // nolint: revive,stylecheck
-	TCP_KEEPINTVL       = 0x101 // nolint: golint,stylecheck
 )
 
 func applyOutboundSocketOptions(network string, address string, fd uintptr, config *SocketConfig) error {
 	if isTCPSocket(network) {
 		switch config.Tfo {
 		case SocketConfig_Enable:
-			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_FASTOPEN, unix.TCP_FASTOPEN_CLIENT); err != nil {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_FASTOPEN, TCP_FASTOPEN_CLIENT); err != nil {
 				return err
 			}
 		case SocketConfig_Disable:
