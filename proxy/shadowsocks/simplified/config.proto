@@ -8,6 +8,7 @@ option java_multiple_files = true;
 
 import "common/protoext/extensions.proto";
 import "common/net/address.proto";
+import "common/net/network.proto";
 import "proxy/shadowsocks/config.proto";
 
 message ServerConfig{
@@ -16,7 +17,7 @@ message ServerConfig{
 
   v2ray.core.proxy.shadowsocks.CipherType method = 1;
   string password = 2;
-  string network = 3;
+  v2ray.core.common.net.NetworkList network = 3;
 }
 
 message ClientConfig {

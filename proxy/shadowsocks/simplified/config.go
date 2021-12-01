@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
 	"github.com/v2fly/v2ray-core/v4/common/protocol"
 	"github.com/v2fly/v2ray-core/v4/common/serial"
 	"github.com/v2fly/v2ray-core/v4/proxy/shadowsocks"
@@ -20,7 +19,7 @@ func init() {
 					CipherType: simplifiedServer.Method,
 				}),
 			},
-			Network: net.ParseNetworks(simplifiedServer.Network),
+			Network: simplifiedServer.Network.Network,
 		}
 
 		return common.CreateObject(ctx, fullServer)

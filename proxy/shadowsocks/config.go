@@ -214,8 +214,7 @@ func (c *CipherType) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []by
 	if err := json.Unmarshal(bytes, &method); err != nil {
 		return err
 	}
-	result := CipherFromString(method)
-	c = &result
+	*c = CipherFromString(method)
 
 	return nil
 }

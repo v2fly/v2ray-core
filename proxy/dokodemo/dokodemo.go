@@ -35,7 +35,7 @@ func init() {
 		fullConfig := &Config{
 			Address:        simplifiedServer.Address,
 			Port:           simplifiedServer.Port,
-			Networks:       net.ParseNetworks(simplifiedServer.Network),
+			Networks:       simplifiedServer.Network.Network,
 			FollowRedirect: simplifiedServer.FollowRedirect,
 		}
 

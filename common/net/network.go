@@ -1,7 +1,10 @@
 package net
 
 import (
+	"encoding/json"
 	"strings"
+
+	"github.com/golang/protobuf/jsonpb"
 )
 
 func (n Network) SystemString() string {
@@ -15,6 +18,17 @@ func (n Network) SystemString() string {
 	default:
 		return "unknown"
 	}
+}
+
+func (nl *NetworkList) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {
+	var networkList string
+	if err := json.Unmarshal(bytes, &networkList); err != nil {
+		return err
+	}
+
+	nl.Network = ParseNetworks(networkList)
+
+	return nil
 }
 
 // HasNetwork returns true if the network list has a certain network.
