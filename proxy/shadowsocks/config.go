@@ -211,10 +211,14 @@ func (NoneCipher) DecodePacket(key []byte, b *buf.Buffer) error {
 
 func (c *CipherType) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {
 	var method string
+
 	if err := json.Unmarshal(bytes, &method); err != nil {
 		return err
 	}
-	*c = CipherFromString(method)
+
+	if *c = CipherFromString(method); *c == CipherType_UNKNOWN {
+		return newError("unknown cipher method: ", method)
+	}
 
 	return nil
 }
