@@ -21,9 +21,9 @@ func (n Network) SystemString() string {
 }
 
 func (nl *NetworkList) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {
-	var networkStrings []string
-	if err := json.Unmarshal(bytes, &networkStrings); err == nil {
-		nl.Network = ParseNetworkStringList(networkStrings)
+	var networkStrList []string
+	if err := json.Unmarshal(bytes, &networkStrList); err == nil {
+		nl.Network = ParseNetworkStringList(networkStrList)
 		return nil
 	}
 
