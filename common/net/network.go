@@ -61,6 +61,10 @@ func ParseNetwork(net string) Network {
 }
 
 func ParseNetworkStringList(strList []string) []Network {
+	if strList == nil {
+		return []Network{Network_TCP}
+	}
+
 	list := make([]Network, len(strList))
 	for idx, str := range strList {
 		list[idx] = ParseNetwork(str)
