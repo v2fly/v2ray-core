@@ -103,7 +103,8 @@ func (m *Manager) AddHandler(ctx context.Context, handler outbound.Handler) erro
 	m.access.Lock()
 	defer m.access.Unlock()
 
-	if m.defaultHandler == nil {
+	if m.defaultHandler == nil ||
+		(len(m.defaultHandler.Tag()) > 0 && m.defaultHandler.Tag() == handler.Tag()) {
 		m.defaultHandler = handler
 	}
 
