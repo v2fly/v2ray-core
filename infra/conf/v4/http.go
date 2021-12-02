@@ -12,14 +12,16 @@ import (
 )
 
 type HTTPAccount struct {
-	Username string `json:"user"`
-	Password string `json:"pass"`
+	Username string            `json:"user"`
+	Password string            `json:"pass"`
+	Headers  map[string]string `json:"headers"`
 }
 
 func (v *HTTPAccount) Build() *http.Account {
 	return &http.Account{
 		Username: v.Username,
 		Password: v.Password,
+		Headers:  v.Headers,
 	}
 }
 
