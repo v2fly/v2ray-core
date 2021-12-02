@@ -150,8 +150,14 @@ func setUpHTTPTunnel(ctx context.Context, dest net.Destination, target string, u
 
 	if user != nil && user.Account != nil {
 		account := user.Account.(*Account)
-		auth := account.GetUsername() + ":" + account.GetPassword()
-		req.Header.Set("Proxy-Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(auth)))
+		username, password, headers := account.GetUsername(), account.GetPassword(), account.GetHeaders()
+		if username != "" && password != "" {
+			auth := username + ":" + password
+			req.Header.Set("Proxy-Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(auth)))
+		}
+		for key, value := range headers {
+			req.Header.Set(key, value)
+		}
 	}
 
 	connectHTTP1 := func(rawConn net.Conn) (net.Conn, error) {
