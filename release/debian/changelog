@@ -1,10 +1,10 @@
-v2ray-core (4.44.0-1) unstable; urgency=medium
+v2ray-core (4.44.0-2) unstable; urgency=medium
 
   * Fix DoS attack vulnerability in CommandSwitchAccountFactory
   * Fix: apply timeout to DNS outbound
   * More details in https://github.com/v2fly/v2ray-core/releases/tag/v4.44.0
 
- -- V2Fly <dev@v2fly.org>  Mon, 6 Dec 2021 21:30:00 +0800
+ -- V2Fly <dev@v2fly.org>  Mon, 6 Dec 2021 22:30:00 +0800
 
 v2ray-core (4.42.2-2) unstable; urgency=medium
 

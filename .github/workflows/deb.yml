@@ -2,20 +2,14 @@ name: Build debian packages
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - master
-      - v*
-    paths:
-      - ".github/workflows/deb.yml"
-      - "release/debian/*"
+    inputs:
+      tag:
+        description: "The tag version you want to build. Leave it empty to use the latest one."
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - ".github/workflows/deb.yml"
       - "release/debian/*"
-  release:
-    types: [prereleased]
 
 jobs:
   package:
@@ -29,8 +23,34 @@ jobs:
           apt-get update
           apt-get install -y git wget
 
-      - name: Checkout codebase
+      - name: Get tag
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        id: tag
+        run: |
+          latest_tag=$(curl -sSL --retry 5 "https://api.github.com/repos/v2fly/v2ray-core/releases/latest" | jq .tag_name | awk -F '"' '{print $2}')
+          if [[ -z "${{ github.event.inputs.tag }}" ]]; then
+            echo "Use the latest release tag of v2ray-core: ${latest_tag}"
+            echo ::set-output name=tag::${latest_tag}
+          else
+            echo "Use tag: ${{ github.event.inputs.tag }}"
+            echo ::set-output name=tag::${{ github.event.inputs.tag }}
+          fi
+
+      - name: Checkout codebase on a specific tag for `workflow_dispatch` event
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/checkout@v2
+        with:
+          ref: ${{ steps.tag.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Checkout codebase on the triggered commit for other events
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        uses: actions/checkout@v2
+
+      - name: Override file `release/debian/changelog` to get the latest CHANGELOG
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          curl --fail "https://raw.githubusercontent.com/v2fly/v2ray-core/${github.ref_name}/release/debian/changelog" > release/debian/changelog
 
       - name: Download geo files
         run: |
@@ -59,7 +79,7 @@ jobs:
           path: ./*.deb
 
       - name: Setup Repository
-        if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           git clone https://github.com/v2fly/debian.git archive
           echo ${{ secrets.DEBIAN_GPG_PRIVATE }} | base64 -d > private.key
