@@ -1,10 +1,10 @@
 package encoding_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
