@@ -4,7 +4,6 @@ package outbound
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"sync"
 
@@ -112,7 +111,7 @@ func (m *Manager) AddHandler(ctx context.Context, handler outbound.Handler) erro
 
 	if len(tag) > 0 {
 		if oldHandler, found := m.taggedHandler[tag]; found {
-			errors.New(fmt.Sprintf("will replace the existed outbound with the tag: %s", tag)).AtWarning().WriteToLog()
+			errors.New("will replace the existed outbound with the tag: " + tag).AtWarning().WriteToLog()
 			_ = oldHandler.Close()
 		}
 		m.taggedHandler[tag] = handler
