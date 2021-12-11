@@ -7,6 +7,7 @@ option java_package = "com.v2ray.core.proxy.socks";
 option java_multiple_files = true;
 
 import "common/net/address.proto";
+import "common/net/packetaddr/config.proto";
 import "common/protocol/server_spec.proto";
 
 // Account represents a Socks account.
@@ -38,6 +39,8 @@ message ServerConfig {
   bool udp_enabled = 4;
   uint32 timeout = 5 [deprecated = true];
   uint32 user_level = 6;
+
+  v2ray.core.net.packetaddr.PacketAddrType packet_encoding = 7;
 }
 
 // ClientConfig is the protobuf config for Socks client.
