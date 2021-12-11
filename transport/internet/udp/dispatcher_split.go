@@ -32,6 +32,10 @@ type Dispatcher struct {
 	callback   ResponseCallback
 }
 
+func (v *Dispatcher) Close() error {
+	return nil
+}
+
 func NewSplitDispatcher(dispatcher routing.Dispatcher, callback ResponseCallback) DispatcherI {
 	return &Dispatcher{
 		conns:      make(map[net.Destination]*connEntry),
