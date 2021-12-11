@@ -33,7 +33,7 @@ type ClassicNameServer struct {
 	ips       map[string]record
 	requests  map[uint16]dnsRequest
 	pub       *pubsub.Service
-	udpServer *udp.Dispatcher
+	udpServer udp.DispatcherI
 	cleanup   *task.Periodic
 	reqID     uint32
 }

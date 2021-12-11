@@ -32,7 +32,7 @@ type Dispatcher struct {
 	callback   ResponseCallback
 }
 
-func NewSplitDispatcher(dispatcher routing.Dispatcher, callback ResponseCallback) *Dispatcher {
+func NewSplitDispatcher(dispatcher routing.Dispatcher, callback ResponseCallback) DispatcherI {
 	return &Dispatcher{
 		conns:      make(map[net.Destination]*connEntry),
 		dispatcher: dispatcher,
@@ -133,7 +133,7 @@ func DialDispatcher(ctx context.Context, dispatcher routing.Dispatcher) (net.Pac
 	}
 
 	d := NewSplitDispatcher(dispatcher, c.callback)
-	c.dispatcher = d
+	c.dispatcher = d.(*Dispatcher)
 	return c, nil
 }
 
