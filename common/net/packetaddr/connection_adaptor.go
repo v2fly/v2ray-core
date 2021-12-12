@@ -1,6 +1,7 @@
 package packetaddr
 
 import (
+	"context"
 	gonet "net"
 	"sync"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/common/buf"
 	"github.com/v2fly/v2ray-core/v4/common/errors"
 	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v4/features/routing"
 	"github.com/v2fly/v2ray-core/v4/transport"
 )
 
@@ -31,19 +33,24 @@ func ToPacketAddrConn(link *transport.Link, dest net.Destination) (net.PacketCon
 	}
 }
 
-func CreatePacketAddrConn(link *transport.Link, isStream bool) (net.PacketConn, net.Destination, error) {
+func CreatePacketAddrConn(ctx context.Context, dispatcher routing.Dispatcher, isStream bool) (net.PacketConn, error) {
 	if isStream {
-		return nil, net.Destination{}, errUnsupported
+		return nil, errUnsupported
+	}
+	packetDest := net.Destination{
+		Address: net.DomainAddress(seqPacketMagicAddress),
+		Port:    0,
+		Network: net.Network_UDP,
+	}
+	link, err := dispatcher.Dispatch(ctx, packetDest)
+	if err != nil {
+		return nil, err
 	}
 	return &packetConnectionAdaptor{
-			readerAccess: &sync.Mutex{},
-			readerBuffer: nil,
-			link:         link,
-		}, net.Destination{
-			Address: net.DomainAddress(seqPacketMagicAddress),
-			Port:    0,
-			Network: net.Network_UDP,
-		}, nil
+		readerAccess: &sync.Mutex{},
+		readerBuffer: nil,
+		link:         link,
+	}, nil
 }
 
 type packetConnectionAdaptor struct {
