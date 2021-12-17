@@ -146,7 +146,7 @@ func main() {
 	if runtime.GOOS == "windows" {
 		suffix = ".exe"
 	}
-	gofmt := "gofmt" + suffix
+	gofmt := "gofumpt" + suffix
 	goimports := "gci" + suffix
 
 	if gofmtPath, err := exec.LookPath(gofmt); err != nil {
@@ -197,7 +197,7 @@ func main() {
 	}
 
 	gofmtArgs := []string{
-		"-s", "-l", "-e", "-w",
+		"-l", "-e", "-w",
 	}
 
 	goimportsArgs := []string{
