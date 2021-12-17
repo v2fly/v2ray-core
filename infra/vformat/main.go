@@ -104,6 +104,31 @@ func RunMany(binary string, args, files []string) {
 	}
 }
 
+func getGitChangedFiles() map[string]bool {
+	gitCmd := exec.Command("git", "diff", "--name-only", "HEAD")
+	result, err := gitCmd.CombinedOutput()
+	if err != nil {
+		return nil
+	}
+	resultStr := string(result)
+	if resultStr = strings.TrimSpace(resultStr); resultStr == "" {
+		return nil
+	}
+	fmt.Println("Changed files:\n" + resultStr)
+	pathMap := make(map[string]bool)
+	for _, path := range strings.Split(resultStr, "\n") {
+		_, err := os.Stat(path)
+		if err != nil {
+			continue
+		}
+		pathMap[path] = true
+	}
+	if len(pathMap) == 0 {
+		return nil
+	}
+	return pathMap
+}
+
 func main() {
 	pwd, err := os.Getwd()
 	if err != nil {
@@ -138,6 +163,7 @@ func main() {
 		goimports = goimportsPath
 	}
 
+	changedFiles := getGitChangedFiles()
 	rawFilesSlice := make([]string, 0, 1000)
 	walkErr := filepath.Walk("./", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -155,6 +181,11 @@ func main() {
 			!strings.HasSuffix(filename, ".pb.go") &&
 			!strings.Contains(dir, filepath.Join("testing", "mocks")) &&
 			!strings.Contains(path, filepath.Join("main", "distro", "all", "all.go")) {
+
+			if changedFiles != nil && !changedFiles[path] {
+				return nil
+			}
+
 			rawFilesSlice = append(rawFilesSlice, path)
 		}
 
