@@ -47,21 +47,21 @@ func newConnectionWithEarlyData(conn *websocket.Conn, remoteAddr net.Addr, early
 }
 
 func newConnectionWithDelayedDial(dialer DelayedDialer) *connection {
-	delayedDialContext, CancelFunc := context.WithCancel(context.Background())
+	delayedDialContext, cancelFunc := context.WithCancel(context.Background())
 	return &connection{
 		shouldWait:        true,
 		delayedDialFinish: delayedDialContext,
-		finishedDial:      CancelFunc,
+		finishedDial:      cancelFunc,
 		dialer:            dialer,
 	}
 }
 
 func newRelayedConnectionWithDelayedDial(dialer DelayedDialerForwarded) *connectionForwarder {
-	delayedDialContext, CancelFunc := context.WithCancel(context.Background())
+	delayedDialContext, cancelFunc := context.WithCancel(context.Background())
 	return &connectionForwarder{
 		shouldWait:        true,
 		delayedDialFinish: delayedDialContext,
-		finishedDial:      CancelFunc,
+		finishedDial:      cancelFunc,
 		dialer:            dialer,
 	}
 }
