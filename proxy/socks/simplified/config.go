@@ -12,9 +12,10 @@ func init() {
 	common.Must(common.RegisterConfig((*ServerConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		simplifiedServer := config.(*ServerConfig)
 		fullServer := &socks.ServerConfig{
-			AuthType:   socks.AuthType_NO_AUTH,
-			Address:    simplifiedServer.Address,
-			UdpEnabled: simplifiedServer.UdpEnabled,
+			AuthType:       socks.AuthType_NO_AUTH,
+			Address:        simplifiedServer.Address,
+			UdpEnabled:     simplifiedServer.UdpEnabled,
+			PacketEncoding: simplifiedServer.PacketEncoding,
 		}
 		return common.CreateObject(ctx, fullServer)
 	}))
