@@ -24,13 +24,13 @@ func init() {
 }
 
 func makeMergeLoader(formatName string) (*core.ConfigFormat, error) {
-	extenstoins, err := mergers.GetExtensions(formatName)
+	extensions, err := mergers.GetExtensions(formatName)
 	if err != nil {
 		return nil, err
 	}
 	return &core.ConfigFormat{
 		Name:      []string{formatName},
-		Extension: extenstoins,
+		Extension: extensions,
 		Loader:    makeLoaderFunc(formatName),
 	}, nil
 }

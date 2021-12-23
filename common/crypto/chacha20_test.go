@@ -48,9 +48,9 @@ func TestChaCha20Stream(t *testing.T) {
 	for _, c := range cases {
 		s := NewChaCha20Stream(c.key, c.iv)
 		input := make([]byte, len(c.output))
-		actualOutout := make([]byte, len(c.output))
-		s.XORKeyStream(actualOutout, input)
-		if r := cmp.Diff(c.output, actualOutout); r != "" {
+		actualOutput := make([]byte, len(c.output))
+		s.XORKeyStream(actualOutput, input)
+		if r := cmp.Diff(c.output, actualOutput); r != "" {
 			t.Fatal(r)
 		}
 	}

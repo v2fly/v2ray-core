@@ -47,7 +47,7 @@ func SubscribeRunnableChannel(c Channel) (chan interface{}, error) {
 	return c.Subscribe()
 }
 
-// UnsubscribeClosableChannel unsubcribes the channel and close it if there is no more subscriber.
+// UnsubscribeClosableChannel unsubscribes the channel and close it if there is no more subscriber.
 func UnsubscribeClosableChannel(c Channel, sub chan interface{}) error {
 	if err := c.Unsubscribe(sub); err != nil {
 		return err
