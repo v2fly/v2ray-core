@@ -95,4 +95,6 @@ message SocketConfig {
   int32 tcp_keep_alive_interval = 8;
 
   uint32 tfo_queue_length = 9;
+
+  int32 tcp_keep_alive_idle = 10;
 }
