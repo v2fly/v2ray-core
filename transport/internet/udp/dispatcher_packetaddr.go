@@ -46,12 +46,9 @@ func NewPacketAddrDispatcherCreator(ctx context.Context) PacketAddrDispatcherCre
 }
 
 func (pdc *PacketAddrDispatcherCreator) NewPacketAddrDispatcher(
-	dispatcher routing.Dispatcher, callback ResponseCallback) (DispatcherI, error) {
-	packetConn, err := packetaddr.CreatePacketAddrConn(pdc.ctx, dispatcher, false)
-	if err != nil {
-		return nil, err
-	}
+	dispatcher routing.Dispatcher, callback ResponseCallback) DispatcherI {
+	packetConn, _ := packetaddr.CreatePacketAddrConn(pdc.ctx, dispatcher, false)
 	pd := &PacketAddrDispatcher{conn: packetConn, callback: callback, ctx: pdc.ctx}
 	go pd.readWorker()
-	return pd, nil
+	return pd
 }
