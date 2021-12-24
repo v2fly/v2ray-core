@@ -2,6 +2,7 @@ package socks
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v4/common/net/packetaddr"
 	"io"
 	"time"
 
@@ -186,7 +187,14 @@ func (s *Server) transport(ctx context.Context, reader io.Reader, writer io.Writ
 }
 
 func (s *Server) handleUDPPayload(ctx context.Context, conn internet.Connection, dispatcher routing.Dispatcher) error {
-	udpServer := udp.NewSplitDispatcher(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
+	udpDispatcherConstructor := udp.NewSplitDispatcher
+	switch s.config.PacketEncoding {
+	case packetaddr.PacketAddrType_None:
+		break
+	case packetaddr.PacketAddrType_Packet:
+		udpDispatcherConstructor = udp.NewPacketAddrDispatcherCreator(ctx).NewPacketAddrDispatcher
+	}
+	udpServer := udpDispatcherConstructor(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
 		payload := packet.Payload
 		newError("writing back UDP response with ", payload.Len(), " bytes").AtDebug().WriteToLog(session.ExportIDToError(ctx))
 
