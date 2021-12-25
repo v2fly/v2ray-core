@@ -2,6 +2,7 @@ package packetaddr
 
 import (
 	"context"
+	"io"
 	gonet "net"
 	"sync"
 	"time"
@@ -104,4 +105,37 @@ func (c packetConnectionAdaptor) SetReadDeadline(t time.Time) error {
 
 func (c packetConnectionAdaptor) SetWriteDeadline(t time.Time) error {
 	return nil
+}
+
+func ToPacketAddrReadWriteCloser(conn net.PacketConn, isStream bool) io.ReadWriteCloser {
+	return &packetConnWrapper{conn}
+}
+
+type packetConnWrapper struct {
+	conn net.PacketConn
+}
+
+func (pc *packetConnWrapper) Read(p []byte) (n int, err error) {
+	recbuf := buf.StackNew()
+	recbuf.Extend(2048)
+	n, addr, err := pc.conn.ReadFrom(recbuf.Bytes())
+	if err != nil {
+		return 0, nil
+	}
+	result := AttachAddressToPacket(recbuf.Bytes()[0:n], addr)
+	n = copy(p, result)
+	return n, nil
+}
+
+func (pc *packetConnWrapper) Write(p []byte) (n int, err error) {
+	data, addr := ExtractAddressFromPacket(p)
+	_, err = pc.conn.WriteTo(data, addr)
+	if err != nil {
+		return 0, err
+	}
+	return len(p), nil
+}
+
+func (pc *packetConnWrapper) Close() error {
+	return pc.Close()
 }
