@@ -139,3 +139,15 @@ func (pc *packetConnWrapper) Write(p []byte) (n int, err error) {
 func (pc *packetConnWrapper) Close() error {
 	return pc.Close()
 }
+
+func GetDestinationSubsetOf(dest net.Destination) (bool, error) {
+	if !dest.Address.Family().IsDomain() {
+		return false, errNotPacketConn
+	}
+	switch dest.Address.Domain() {
+	case seqPacketMagicAddress:
+		return false, nil
+	default:
+		return false, errNotPacketConn
+	}
+}
