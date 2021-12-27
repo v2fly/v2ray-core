@@ -58,7 +58,7 @@ func Merge(input interface{}, m map[string]interface{}) error {
 			return err
 		}
 	default:
-		return newError("unknow merge input type")
+		return newError("unknown merge input type")
 	}
 	return nil
 }

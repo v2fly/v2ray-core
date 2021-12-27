@@ -52,7 +52,7 @@ func makeToJSONMergeFunc(converter func(v []byte) ([]byte, error)) MergeFunc {
 				return err
 			}
 		default:
-			return newError("unknow merge input type")
+			return newError("unknown merge input type")
 		}
 		return nil
 	}

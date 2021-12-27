@@ -260,7 +260,7 @@ func (s *Server) handlePlainHTTP(ctx context.Context, request *http.Request, wri
 		return err
 	}
 
-	// Plain HTTP request is not a stream. The request always finishes before response. Hense request has to be closed later.
+	// Plain HTTP request is not a stream. The request always finishes before response. Hence, request has to be closed later.
 	defer common.Close(link.Writer)
 	var result error = errWaitAnother
 

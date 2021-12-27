@@ -18,7 +18,7 @@ import (
 	"github.com/v2fly/v2ray-core/v4/transport/internet"
 )
 
-// Client is a inbound handler for Shadowsocks protocol
+// Client is an inbound handler for Shadowsocks protocol
 type Client struct {
 	serverPicker  protocol.ServerPicker
 	policyManager policy.Manager

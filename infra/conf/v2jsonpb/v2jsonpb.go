@@ -63,7 +63,7 @@ func init() {
 				}
 				return loadV2JsonPb(data)
 			default:
-				return nil, newError("unknow type")
+				return nil, newError("unknown type")
 			}
 		},
 	}))
