@@ -132,6 +132,7 @@ func (pc *packetConnWrapper) Read(p []byte) (n int, err error) {
 	}
 	result := AttachAddressToPacket(recbuf.Bytes()[0:n], addr)
 	n = copy(p, result)
+	recbuf.Release()
 	return n, nil
 }
 
