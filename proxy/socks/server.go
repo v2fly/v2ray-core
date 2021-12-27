@@ -192,7 +192,8 @@ func (s *Server) handleUDPPayload(ctx context.Context, conn internet.Connection,
 	case packetaddr.PacketAddrType_None:
 		break
 	case packetaddr.PacketAddrType_Packet:
-		udpDispatcherConstructor = udp.NewPacketAddrDispatcherCreator(ctx).NewPacketAddrDispatcher
+		packetAddrDispatcherFactory := udp.NewPacketAddrDispatcherCreator(ctx)
+		udpDispatcherConstructor = packetAddrDispatcherFactory.NewPacketAddrDispatcher
 	}
 	udpServer := udpDispatcherConstructor(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
 		payload := packet.Payload
