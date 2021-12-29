@@ -210,7 +210,7 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 	}
 
 	if isStream, err := packetaddr.GetDestinationSubsetOf(dest); err == nil {
-		packetConn, err := internet.ListenSystemPacket(ctx, nil, h.streamSettings.SocketSettings)
+		packetConn, err := internet.ListenSystemPacket(ctx, &net.UDPAddr{IP: net.AnyIP.IP(), Port: 0}, h.streamSettings.SocketSettings)
 		if err != nil {
 			return nil, newError("unable to listen socket").Base(err)
 		}

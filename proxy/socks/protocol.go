@@ -359,6 +359,17 @@ func EncodeUDPPacket(request *protocol.RequestHeader, data []byte) (*buf.Buffer,
 	return b, nil
 }
 
+func EncodeUDPPacketFromAddress(address net.Destination, data []byte) (*buf.Buffer, error) {
+	b := buf.New()
+	common.Must2(b.Write([]byte{0, 0, 0 /* Fragment */}))
+	if err := addrParser.WriteAddressPort(b, address.Address, address.Port); err != nil {
+		b.Release()
+		return nil, err
+	}
+	common.Must2(b.Write(data))
+	return b, nil
+}
+
 type UDPReader struct {
 	reader io.Reader
 }

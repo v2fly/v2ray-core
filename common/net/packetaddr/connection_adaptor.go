@@ -64,19 +64,23 @@ func (c *packetConnectionAdaptor) ReadFrom(p []byte) (n int, addr gonet.Addr, er
 	defer c.readerAccess.Unlock()
 	if c.readerBuffer.IsEmpty() {
 		c.readerBuffer, err = c.link.Reader.ReadMultiBuffer()
+		if err != nil {
+			return 0, nil, err
+		}
 	}
 	c.readerBuffer, n = buf.SplitFirstBytes(c.readerBuffer, p)
-	p, addr = ExtractAddressFromPacket(p)
+	var w []byte
+	w, addr = ExtractAddressFromPacket(p[:n])
+	n = copy(p, w)
 	return
 }
 
 func (c *packetConnectionAdaptor) WriteTo(p []byte, addr gonet.Addr) (n int, err error) {
 	payloadLen := len(p)
 	p = AttachAddressToPacket(p, addr)
-	buffer := buf.New()
+	buffer := buf.FromBytes(p)
 	mb := buf.MultiBuffer{buffer}
 	err = c.link.Writer.WriteMultiBuffer(mb)
-	buf.ReleaseMulti(mb)
 	if err != nil {
 		return 0, err
 	}
@@ -128,7 +132,7 @@ func (pc *packetConnWrapper) Read(p []byte) (n int, err error) {
 	recbuf.Extend(2048)
 	n, addr, err := pc.PacketConn.ReadFrom(recbuf.Bytes())
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 	result := AttachAddressToPacket(recbuf.Bytes()[0:n], addr)
 	n = copy(p, result)
@@ -146,7 +150,7 @@ func (pc *packetConnWrapper) Write(p []byte) (n int, err error) {
 }
 
 func (pc *packetConnWrapper) Close() error {
-	return pc.Close()
+	return pc.PacketConn.Close()
 }
 
 func GetDestinationSubsetOf(dest net.Destination) (bool, error) {

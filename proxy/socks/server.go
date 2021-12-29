@@ -200,10 +200,13 @@ func (s *Server) handleUDPPayload(ctx context.Context, conn internet.Connection,
 		newError("writing back UDP response with ", payload.Len(), " bytes").AtDebug().WriteToLog(session.ExportIDToError(ctx))
 
 		request := protocol.RequestHeaderFromContext(ctx)
+		var packetSource net.Destination
 		if request == nil {
-			return
+			packetSource = packet.Source
+		} else {
+			packetSource = net.UDPDestination(request.Address, request.Port)
 		}
-		udpMessage, err := EncodeUDPPacket(request, payload.Bytes())
+		udpMessage, err := EncodeUDPPacketFromAddress(packetSource, payload.Bytes())
 		payload.Release()
 
 		defer udpMessage.Release()
