@@ -24,8 +24,9 @@ func AttachAddressToPacket(data []byte, address gonet.Addr) []byte {
 	if err != nil {
 		panic(err)
 	}
+	//Incorrect buffer reuse
 	data = append(packetBuf.Bytes(), data...)
-	packetBuf.Release()
+	//packetBuf.Release()
 	return data
 }
 
