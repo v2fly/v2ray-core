@@ -17,6 +17,12 @@ import (
 	"github.com/v2fly/v2ray-core/v4/proxy/vmess/aead"
 )
 
+
+var (
+	ErrNotFound = newError("Not Found")
+	ErrTainted = newError("ErrTainted")
+)
+
 const (
 	updateInterval   = 10 * time.Second
 	cacheDurationSec = 120
@@ -257,7 +263,3 @@ func (v *TimedUserValidator) ShouldShowLegacyWarn() bool {
 	v.legacyWarnShown = true
 	return true
 }
-
-var ErrNotFound = newError("Not Found")
-
-var ErrTainted = newError("ErrTainted")
