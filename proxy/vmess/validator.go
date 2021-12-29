@@ -22,6 +22,11 @@ const (
 	cacheDurationSec = 120
 )
 
+var (
+	ErrNotFound = newError("Not Found")
+	ErrTainted = newError("ErrTainted")
+)
+
 type user struct {
 	user    protocol.MemoryUser
 	lastSec protocol.Timestamp
@@ -257,7 +262,3 @@ func (v *TimedUserValidator) ShouldShowLegacyWarn() bool {
 	v.legacyWarnShown = true
 	return true
 }
-
-var ErrNotFound = newError("Not Found")
-
-var ErrTainted = newError("ErrTainted")
