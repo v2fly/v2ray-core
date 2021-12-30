@@ -13,35 +13,43 @@ var addrParser = protocol.NewAddressParser(
 	protocol.AddressFamilyByte(0x02, net.AddressFamilyIPv6),
 )
 
-func AttachAddressToPacket(data []byte, address gonet.Addr) []byte {
-	packetBuf := buf.StackNew()
+// AttachAddressToPacket
+// relinquish ownership of data
+// gain ownership of the returning value
+func AttachAddressToPacket(data *buf.Buffer, address gonet.Addr) (*buf.Buffer, error) {
+	packetBuf := buf.New()
 	udpaddr := address.(*gonet.UDPAddr)
 	port, err := net.PortFromInt(uint32(udpaddr.Port))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	err = addrParser.WriteAddressPort(&packetBuf, net.IPAddress(udpaddr.IP), port)
+	err = addrParser.WriteAddressPort(packetBuf, net.IPAddress(udpaddr.IP), port)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	//Incorrect buffer reuse
-	data = append(packetBuf.Bytes(), data...)
-	//packetBuf.Release()
-	return data
+	_, err = packetBuf.Write(data.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	data.Release()
+	return packetBuf, nil
 }
 
-func ExtractAddressFromPacket(data []byte) ([]byte, gonet.Addr) {
+// ExtractAddressFromPacket
+// relinquish ownership of data
+// gain ownership of the returning value
+func ExtractAddressFromPacket(data *buf.Buffer) (*buf.Buffer, gonet.Addr, error) {
 	packetBuf := buf.StackNew()
-	address, port, err := addrParser.ReadAddressPort(&packetBuf, bytes.NewReader(data))
+	address, port, err := addrParser.ReadAddressPort(&packetBuf, bytes.NewReader(data.Bytes()))
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
 	var addr = &gonet.UDPAddr{
 		IP:   address.IP(),
 		Port: int(port.Value()),
 		Zone: "",
 	}
-	payload := data[int(packetBuf.Len()):]
+	data.Advance(packetBuf.Len())
 	packetBuf.Release()
-	return payload, addr
+	return data, addr, nil
 }
