@@ -2,6 +2,7 @@ package packetaddr
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/v2fly/v2ray-core/v4/common/buf"
 	sysnet "net"
 	"testing"
 )
@@ -12,11 +13,13 @@ func TestPacketEncodingIPv4(t *testing.T) {
 		Port: 1234,
 	}
 	var packetData [256]byte
-	wrapped := AttachAddressToPacket(packetData[:], packetAddress)
+	wrapped, err := AttachAddressToPacket(buf.FromBytes(packetData[:]), packetAddress)
+	assert.NoError(t, err)
 
-	packetPayload, decodedAddress := ExtractAddressFromPacket(wrapped)
+	packetPayload, decodedAddress, err := ExtractAddressFromPacket(wrapped)
+	assert.NoError(t, err)
 
-	assert.Equal(t, packetPayload, packetData[:])
+	assert.Equal(t, packetPayload.Bytes(), packetData[:])
 	assert.Equal(t, packetAddress, decodedAddress)
 }
 
@@ -26,10 +29,12 @@ func TestPacketEncodingIPv6(t *testing.T) {
 		Port: 1234,
 	}
 	var packetData [256]byte
-	wrapped := AttachAddressToPacket(packetData[:], packetAddress)
+	wrapped, err := AttachAddressToPacket(buf.FromBytes(packetData[:]), packetAddress)
+	assert.NoError(t, err)
 
-	packetPayload, decodedAddress := ExtractAddressFromPacket(wrapped)
+	packetPayload, decodedAddress, err := ExtractAddressFromPacket(wrapped)
+	assert.NoError(t, err)
 
-	assert.Equal(t, packetPayload, packetData[:])
+	assert.Equal(t, packetPayload.Bytes(), packetData[:])
 	assert.Equal(t, packetAddress, decodedAddress)
 }
