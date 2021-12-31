@@ -2,10 +2,11 @@ package packetaddr
 
 import (
 	"bytes"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
 	gonet "net"
+
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
 )
 
 var addrParser = protocol.NewAddressParser(
@@ -44,7 +45,7 @@ func ExtractAddressFromPacket(data *buf.Buffer) (*buf.Buffer, gonet.Addr, error)
 	if err != nil {
 		return nil, nil, err
 	}
-	var addr = &gonet.UDPAddr{
+	addr := &gonet.UDPAddr{
 		IP:   address.IP(),
 		Port: int(port.Value()),
 		Zone: "",

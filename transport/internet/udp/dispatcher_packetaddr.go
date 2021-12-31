@@ -2,11 +2,12 @@ package udp
 
 import (
 	"context"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/net/packetaddr"
-	"github.com/v2fly/v2ray-core/v4/common/protocol/udp"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
+
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
+	"github.com/v2fly/v2ray-core/v5/common/protocol/udp"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
 )
 
 type PacketAddrDispatcher struct {
@@ -25,6 +26,7 @@ func (p PacketAddrDispatcher) Dispatch(ctx context.Context, destination net.Dest
 	}
 	p.conn.WriteTo(payload.Bytes(), &net.UDPAddr{IP: destination.Address.IP(), Port: int(destination.Port.Value())})
 }
+
 func (p PacketAddrDispatcher) readWorker() {
 	for {
 		readBuf := buf.New()
