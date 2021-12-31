@@ -2,6 +2,8 @@ package socks
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v4/common/net/packetaddr"
+	"github.com/v2fly/v2ray-core/v4/transport/internet/udp"
 	"time"
 
 	core "github.com/v2fly/v2ray-core/v5"
@@ -160,6 +162,30 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, p.Timeouts.ConnectionIdle)
+
+	if packetConn, err := packetaddr.ToPacketAddrConn(link, destination); err == nil {
+		udpConn, err := dialer.Dial(ctx, udpRequest.Destination())
+		if err != nil {
+			return newError("failed to create UDP connection").Base(err)
+		}
+		defer udpConn.Close()
+
+		requestDone := func() error {
+			protocolWriter := NewUDPWriter(request, udpConn)
+			return udp.CopyPacketConn(protocolWriter, packetConn, udp.UpdateActivity(timer))
+		}
+		responseDone := func() error {
+			protocolReader := &UDPReader{
+				reader: udpConn,
+			}
+			return udp.CopyPacketConn(packetConn, protocolReader, udp.UpdateActivity(timer))
+		}
+		responseDoneAndCloseWriter := task.OnSuccess(responseDone, task.Close(link.Writer))
+		if err := task.Run(ctx, requestDone, responseDoneAndCloseWriter); err != nil {
+			return newError("connection ends").Base(err)
+		}
+		return nil
+	}
 
 	var requestFunc func() error
 	var responseFunc func() error
