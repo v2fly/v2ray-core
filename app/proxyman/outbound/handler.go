@@ -202,14 +202,15 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 			outbound.Gateway = h.senderSettings.Via.AsAddress()
 		}
 	}
-
+	var enablePacketAddrCapture = true
 	if h.senderSettings != nil && h.senderSettings.ProxySettings != nil && h.senderSettings.ProxySettings.HasTag() && h.senderSettings.ProxySettings.TransportLayerProxy {
 		tag := h.senderSettings.ProxySettings.Tag
 		newError("transport layer proxying to ", tag, " for dest ", dest).AtDebug().WriteToLog(session.ExportIDToError(ctx))
 		ctx = session.SetTransportLayerProxyTagToContext(ctx, tag)
+		enablePacketAddrCapture = false
 	}
 
-	if isStream, err := packetaddr.GetDestinationSubsetOf(dest); err == nil {
+	if isStream, err := packetaddr.GetDestinationSubsetOf(dest); err == nil && enablePacketAddrCapture {
 		packetConn, err := internet.ListenSystemPacket(ctx, &net.UDPAddr{IP: net.AnyIP.IP(), Port: 0}, h.streamSettings.SocketSettings)
 		if err != nil {
 			return nil, newError("unable to listen socket").Base(err)
