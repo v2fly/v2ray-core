@@ -2,9 +2,10 @@ package socks
 
 import (
 	"context"
+	"time"
+
 	"github.com/v2fly/v2ray-core/v4/common/net/packetaddr"
 	"github.com/v2fly/v2ray-core/v4/transport/internet/udp"
-	"time"
 
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"

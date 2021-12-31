@@ -390,9 +390,9 @@ func (r *UDPReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	return buf.MultiBuffer{b}, nil
 }
 
-func (v *UDPReader) ReadFrom(p []byte) (n int, addr gonet.Addr, err error) {
+func (r *UDPReader) ReadFrom(p []byte) (n int, addr gonet.Addr, err error) {
 	buffer := buf.New()
-	_, err = buffer.ReadFrom(v.reader)
+	_, err = buffer.ReadFrom(r.reader)
 	if err != nil {
 		buffer.Release()
 		return 0, nil, err

@@ -6,16 +6,18 @@ import (
 	"sync"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/errors"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
-	"github.com/v2fly/v2ray-core/v4/transport"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/transport"
 )
 
-var errNotPacketConn = errors.New("not a packet connection")
-var errUnsupported = errors.New("unsupported action")
+var (
+	errNotPacketConn = errors.New("not a packet connection")
+	errUnsupported   = errors.New("unsupported action")
+)
 
 func ToPacketAddrConn(link *transport.Link, dest net.Destination) (net.PacketConn, error) {
 	if !dest.Address.Family().IsDomain() {
@@ -80,6 +82,9 @@ func (c *packetConnectionAdaptor) WriteTo(p []byte, addr gonet.Addr) (n int, err
 	payloadLen := len(p)
 	var buffer *buf.Buffer
 	buffer, err = AttachAddressToPacket(buf.FromBytes(p), addr)
+	if err != nil {
+		return 0, err
+	}
 	mb := buf.MultiBuffer{buffer}
 	err = c.link.Writer.WriteMultiBuffer(mb)
 	if err != nil {

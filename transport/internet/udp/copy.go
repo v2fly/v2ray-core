@@ -3,8 +3,8 @@ package udp
 import (
 	gonet "net"
 
-	"github.com/v2fly/v2ray-core/v4/common/signal"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
 )
 
 type dataHandler func(content []byte, address gonet.Addr)
@@ -31,7 +31,7 @@ func CopyPacketConn(dst internet.AbstractPacketConnWriter, src internet.Abstract
 			handler(buffer[:n], addr)
 		}
 
-		n, err = dst.WriteTo(buffer[:n], addr)
+		_, err = dst.WriteTo(buffer[:n], addr)
 		if err != nil {
 			return err
 		}
