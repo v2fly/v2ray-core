@@ -115,7 +115,7 @@ func (s *clientSessions) cleanSessions() error {
 	return nil
 }
 
-func (s *clientSessions) openConnection(destAddr net.Addr, config *Config, tlsConfig *tls.Config, sockopt *internet.SocketConfig) (internet.Connection, error) {
+func (s *clientSessions) openConnection(ctx context.Context, destAddr net.Addr, config *Config, tlsConfig *tls.Config, sockopt *internet.SocketConfig) (internet.Connection, error) {
 	s.access.Lock()
 	defer s.access.Unlock()
 
@@ -139,12 +139,9 @@ func (s *clientSessions) openConnection(destAddr net.Addr, config *Config, tlsCo
 
 	sessions = removeInactiveSessions(sessions)
 
-	rawConn, err := internet.ListenSystemPacket(context.Background(), &net.UDPAddr{
-		IP:   []byte{0, 0, 0, 0},
-		Port: 0,
-	}, sockopt)
+	rawConn, err := internet.DialSystem(ctx, dest, sockopt)
 	if err != nil {
-		return nil, err
+		return nil, newError("failed to dial to dest: ", err).AtWarning().Base(err)
 	}
 
 	quicConfig := &quic.Config{
@@ -154,7 +151,11 @@ func (s *clientSessions) openConnection(destAddr net.Addr, config *Config, tlsCo
 		KeepAlive:            true,
 	}
 
-	conn, err := wrapSysConn(rawConn.(*net.UDPConn), config)
+	udpConn, _ := rawConn.(*net.UDPConn)
+	if udpConn == nil {
+		udpConn = rawConn.(*internet.PacketConnWrapper).Conn.(*net.UDPConn)
+	}
+	conn, err := wrapSysConn(udpConn, config)
 	if err != nil {
 		rawConn.Close()
 		return nil, err
@@ -210,7 +211,7 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 
 	config := streamSettings.ProtocolSettings.(*Config)
 
-	return client.openConnection(destAddr, config, tlsConfig, streamSettings.SocketSettings)
+	return client.openConnection(ctx, destAddr, config, tlsConfig, streamSettings.SocketSettings)
 }
 
 func init() {
