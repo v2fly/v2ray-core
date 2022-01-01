@@ -217,7 +217,7 @@ func TestVMessGCM(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:      userID.String(),
-								AlterId: 64,
+								AlterId: 0,
 							}),
 						},
 					},
@@ -265,7 +265,7 @@ func TestVMessGCM(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_AES128_GCM,
 										},
@@ -323,7 +323,7 @@ func TestVMessGCMReadv(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:      userID.String(),
-								AlterId: 64,
+								AlterId: 0,
 							}),
 						},
 					},
@@ -371,7 +371,7 @@ func TestVMessGCMReadv(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_AES128_GCM,
 										},
@@ -432,7 +432,7 @@ func TestVMessGCMUDP(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:      userID.String(),
-								AlterId: 64,
+								AlterId: 0,
 							}),
 						},
 					},
@@ -480,7 +480,7 @@ func TestVMessGCMUDP(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_AES128_GCM,
 										},
@@ -535,7 +535,7 @@ func TestVMessChacha20(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:      userID.String(),
-								AlterId: 64,
+								AlterId: 0,
 							}),
 						},
 					},
@@ -583,7 +583,7 @@ func TestVMessChacha20(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_CHACHA20_POLY1305,
 										},
@@ -639,7 +639,7 @@ func TestVMessNone(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:      userID.String(),
-								AlterId: 64,
+								AlterId: 0,
 							}),
 						},
 					},
@@ -687,7 +687,7 @@ func TestVMessNone(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_NONE,
 										},
@@ -745,7 +745,7 @@ func TestVMessKCP(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:      userID.String(),
-								AlterId: 64,
+								AlterId: 0,
 							}),
 						},
 					},
@@ -793,7 +793,7 @@ func TestVMessKCP(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_AES128_GCM,
 										},
@@ -875,7 +875,7 @@ func TestVMessKCPLarge(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:      userID.String(),
-								AlterId: 64,
+								AlterId: 0,
 							}),
 						},
 					},
@@ -923,7 +923,7 @@ func TestVMessKCPLarge(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_AES128_GCM,
 										},
@@ -1006,7 +1006,7 @@ func TestVMessGCMMux(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:      userID.String(),
-								AlterId: 64,
+								AlterId: 0,
 							}),
 						},
 					},
@@ -1060,7 +1060,7 @@ func TestVMessGCMMux(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_AES128_GCM,
 										},
@@ -1125,7 +1125,7 @@ func TestVMessGCMMuxUDP(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:      userID.String(),
-								AlterId: 64,
+								AlterId: 0,
 							}),
 						},
 					},
@@ -1193,7 +1193,7 @@ func TestVMessGCMMuxUDP(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_AES128_GCM,
 										},
@@ -1256,7 +1256,7 @@ func TestVMessZero(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:      userID.String(),
-								AlterId: 64,
+								AlterId: 0,
 							}),
 						},
 					},
@@ -1304,7 +1304,7 @@ func TestVMessZero(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_ZERO,
 										},
@@ -1359,7 +1359,7 @@ func TestVMessGCMLengthAuth(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:      userID.String(),
-								AlterId: 64,
+								AlterId: 0,
 							}),
 						},
 					},
@@ -1407,7 +1407,7 @@ func TestVMessGCMLengthAuth(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_AES128_GCM,
 										},
@@ -1466,7 +1466,7 @@ func TestVMessGCMLengthAuthPlusNoTerminationSignal(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:           userID.String(),
-								AlterId:      64,
+								AlterId:      0,
 								TestsEnabled: "AuthenticatedLength|NoTerminationSignal",
 							}),
 						},
@@ -1515,7 +1515,7 @@ func TestVMessGCMLengthAuthPlusNoTerminationSignal(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_AES128_GCM,
 										},
