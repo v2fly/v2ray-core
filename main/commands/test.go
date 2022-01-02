@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 
-	"github.com/v2fly/v2ray-core/v4/main/commands/base"
+	"github.com/v2fly/v2ray-core/v5/main/commands/base"
 )
 
 // CmdTest tests config files

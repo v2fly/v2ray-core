@@ -1,10 +1,10 @@
 package environment
 
 import (
-	"github.com/v2fly/v2ray-core/v4/common/environment/filesystemcap"
-	"github.com/v2fly/v2ray-core/v4/common/log"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/tagged"
+	"github.com/v2fly/v2ray-core/v5/common/environment/filesystemcap"
+	"github.com/v2fly/v2ray-core/v5/common/log"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tagged"
 )
 
 type BaseEnvironmentCapabilitySet interface {

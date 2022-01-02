@@ -3,10 +3,10 @@ package v4_test
 import (
 	"testing"
 
-	"github.com/v2fly/v2ray-core/v4/app/reverse"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
-	v4 "github.com/v2fly/v2ray-core/v4/infra/conf/v4"
+	"github.com/v2fly/v2ray-core/v5/app/reverse"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon/testassist"
+	v4 "github.com/v2fly/v2ray-core/v5/infra/conf/v4"
 )
 
 func TestReverseConfig(t *testing.T) {

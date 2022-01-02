@@ -4,7 +4,7 @@ run:
     - generated.*
 
 issues:
-  new: true
+  new: false
   exclude-rules:
     - linters:
         - staticcheck

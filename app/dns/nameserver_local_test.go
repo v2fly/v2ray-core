@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/v2fly/v2ray-core/v4/app/dns"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/features/dns"
+	. "github.com/v2fly/v2ray-core/v5/app/dns"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
 )
 
 func TestLocalNameServer(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/platform"
-	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem/fsifce"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/platform"
+	"github.com/v2fly/v2ray-core/v5/common/platform/filesystem/fsifce"
 )
 
 var NewFileSeeker fsifce.FileSeekerFunc = func(path string) (io.ReadSeekCloser, error) {

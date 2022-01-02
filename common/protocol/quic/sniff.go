@@ -11,10 +11,10 @@ import (
 	"github.com/marten-seemann/qtls-go1-17"
 	"golang.org/x/crypto/hkdf"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/errors"
-	ptls "github.com/v2fly/v2ray-core/v4/common/protocol/tls"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	ptls "github.com/v2fly/v2ray-core/v5/common/protocol/tls"
 )
 
 type SniffHeader struct {

@@ -1,6 +1,6 @@
 package filesystemcap
 
-import "github.com/v2fly/v2ray-core/v4/common/platform/filesystem/fsifce"
+import "github.com/v2fly/v2ray-core/v5/common/platform/filesystem/fsifce"
 
 type FileSystemCapabilitySet interface {
 	OpenFileForReadSeek() fsifce.FileSeekerFunc

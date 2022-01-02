@@ -3,8 +3,8 @@ package router
 import (
 	"inet.af/netaddr"
 
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
-	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
+	"github.com/v2fly/v2ray-core/v5/common/net"
 )
 
 type GeoIPMatcher struct {

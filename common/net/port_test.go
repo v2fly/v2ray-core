@@ -3,7 +3,7 @@ package net_test
 import (
 	"testing"
 
-	. "github.com/v2fly/v2ray-core/v4/common/net"
+	. "github.com/v2fly/v2ray-core/v5/common/net"
 )
 
 func TestPortRangeContains(t *testing.T) {

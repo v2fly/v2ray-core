@@ -3,7 +3,7 @@ package restfulapi
 import (
 	"context"
 
-	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v5/common"
 )
 
 func init() {
