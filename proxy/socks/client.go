@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common/net/packetaddr"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/udp"
+	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
 
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"
