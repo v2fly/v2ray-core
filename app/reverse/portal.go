@@ -19,6 +19,7 @@ import (
 )
 
 type Portal struct {
+	ctx    context.Context
 	ohm    outbound.Manager
 	tag    string
 	domain string
@@ -26,7 +27,7 @@ type Portal struct {
 	client *mux.ClientManager
 }
 
-func NewPortal(config *PortalConfig, ohm outbound.Manager) (*Portal, error) {
+func NewPortal(ctx context.Context, config *PortalConfig, ohm outbound.Manager) (*Portal, error) {
 	if config.Tag == "" {
 		return nil, newError("portal tag is empty")
 	}
@@ -41,6 +42,7 @@ func NewPortal(config *PortalConfig, ohm outbound.Manager) (*Portal, error) {
 	}
 
 	return &Portal{
+		ctx:    ctx,
 		ohm:    ohm,
 		tag:    config.Tag,
 		domain: config.Domain,
@@ -52,14 +54,14 @@ func NewPortal(config *PortalConfig, ohm outbound.Manager) (*Portal, error) {
 }
 
 func (p *Portal) Start() error {
-	return p.ohm.AddHandler(context.Background(), &Outbound{
+	return p.ohm.AddHandler(p.ctx, &Outbound{
 		portal: p,
 		tag:    p.tag,
 	})
 }
 
 func (p *Portal) Close() error {
-	return p.ohm.RemoveHandler(context.Background(), p.tag)
+	return p.ohm.RemoveHandler(p.ctx, p.tag)
 }
 
 func (p *Portal) HandleConnection(ctx context.Context, link *transport.Link) error {
@@ -74,7 +76,7 @@ func (p *Portal) HandleConnection(ctx context.Context, link *transport.Link) err
 			return newError("failed to create mux client worker").Base(err).AtWarning()
 		}
 
-		worker, err := NewPortalWorker(muxClient)
+		worker, err := NewPortalWorker(ctx, muxClient)
 		if err != nil {
 			return newError("failed to create portal worker").Base(err)
 		}
@@ -198,12 +200,11 @@ type PortalWorker struct {
 	draining bool
 }
 
-func NewPortalWorker(client *mux.ClientWorker) (*PortalWorker, error) {
+func NewPortalWorker(ctx context.Context, client *mux.ClientWorker) (*PortalWorker, error) {
 	opt := []pipe.Option{pipe.WithSizeLimit(16 * 1024)}
 	uplinkReader, uplinkWriter := pipe.New(opt...)
 	downlinkReader, downlinkWriter := pipe.New(opt...)
 
-	ctx := context.Background()
 	ctx = session.ContextWithOutbound(ctx, &session.Outbound{
 		Target: net.UDPDestination(net.DomainAddress(internalDomain), 0),
 	})
