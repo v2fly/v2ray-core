@@ -7,8 +7,8 @@
 package socks
 
 import (
-	packetaddr "github.com/v2fly/v2ray-core/v4/common/net/packetaddr"
 	net "github.com/v2fly/v2ray-core/v5/common/net"
+	packetaddr "github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
 	protocol "github.com/v2fly/v2ray-core/v5/common/protocol"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
