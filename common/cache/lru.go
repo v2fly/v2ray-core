@@ -25,7 +25,7 @@ type lruElement struct {
 	value interface{}
 }
 
-// NewLru init a lru cache
+// NewLru initializes a lru cache
 func NewLru(cap int) Lru {
 	return &lru{
 		capacity:         cap,
