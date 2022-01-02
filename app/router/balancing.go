@@ -27,7 +27,7 @@ type Balancer struct {
 	override override
 }
 
-// PickOutbound picks the tag of a outbound
+// PickOutbound picks the tag of an outbound
 func (b *Balancer) PickOutbound() (string, error) {
 	candidates, err := b.SelectOutbounds()
 	if err != nil {

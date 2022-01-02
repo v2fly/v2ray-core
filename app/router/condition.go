@@ -149,7 +149,7 @@ type PortMatcher struct {
 	onSource bool
 }
 
-// NewPortMatcher create a new port matcher that can match source or destination port
+// NewPortMatcher creates a new port matcher that can match source or destination port
 func NewPortMatcher(list *net.PortList, onSource bool) *PortMatcher {
 	return &PortMatcher{
 		port:     net.PortListFromProto(list),

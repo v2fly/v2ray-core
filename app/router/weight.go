@@ -28,7 +28,7 @@ type WeightManager struct {
 	defaultWeight float64
 }
 
-// Get get the weight of specified tag
+// Get gets the weight of specified tag
 func (s *WeightManager) Get(tag string) float64 {
 	weight, ok := s.cache[tag]
 	if ok {
