@@ -6,13 +6,13 @@ import (
 	"strings"
 	"time"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/router"
-	"github.com/v2fly/v2ray-core/v4/common/errors"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/strmatcher"
-	"github.com/v2fly/v2ray-core/v4/features/dns"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/router"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/strmatcher"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
 )
 
 // Server is the interface for Name Server.

@@ -4,21 +4,21 @@ import (
 	"context"
 	"time"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/retry"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/signal"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/features/policy"
-	"github.com/v2fly/v2ray-core/v4/transport"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/retry"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	"github.com/v2fly/v2ray-core/v5/features/policy"
+	"github.com/v2fly/v2ray-core/v5/transport"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
 )
 
-// Client is a inbound handler for trojan protocol
+// Client is an inbound handler for trojan protocol
 type Client struct {
 	serverPicker  protocol.ServerPicker
 	policyManager policy.Manager
@@ -103,7 +103,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 			return newError("failed to write A request payload").Base(err).AtWarning()
 		}
 
-		// Flush; bufferWriter.WriteMultiBufer now is bufferWriter.writer.WriteMultiBuffer
+		// Flush; bufferWriter.WriteMultiBuffer now is bufferWriter.writer.WriteMultiBuffer
 		if err = bufferWriter.SetBuffered(false); err != nil {
 			return newError("failed to flush payload").Base(err).AtWarning()
 		}

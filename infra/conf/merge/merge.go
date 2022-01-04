@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package merge provides the capbility to merge multiple
+Package merge provides the capability to merge multiple
 JSON files or contents into one output.
 
 Merge Rules:
@@ -19,7 +19,7 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/serial"
 )
 
 // JSONs merges multiple json contents into one json.

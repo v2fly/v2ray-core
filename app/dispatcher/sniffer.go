@@ -3,12 +3,12 @@ package dispatcher
 import (
 	"context"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol/bittorrent"
-	"github.com/v2fly/v2ray-core/v4/common/protocol/http"
-	"github.com/v2fly/v2ray-core/v4/common/protocol/quic"
-	"github.com/v2fly/v2ray-core/v4/common/protocol/tls"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol/bittorrent"
+	"github.com/v2fly/v2ray-core/v5/common/protocol/http"
+	"github.com/v2fly/v2ray-core/v5/common/protocol/quic"
+	"github.com/v2fly/v2ray-core/v5/common/protocol/tls"
 )
 
 type SniffResult interface {

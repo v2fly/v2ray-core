@@ -8,9 +8,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	. "github.com/v2fly/v2ray-core/v4/common/protocol/http"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	. "github.com/v2fly/v2ray-core/v5/common/protocol/http"
 )
 
 func TestParseXForwardedFor(t *testing.T) {

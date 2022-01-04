@@ -3,10 +3,10 @@ package registry
 import (
 	"github.com/golang/protobuf/proto"
 
-	"github.com/v2fly/v2ray-core/v4/common/protoext"
+	"github.com/v2fly/v2ray-core/v5/common/protoext"
 )
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 type implementationSet struct {
 	AliasLookup map[string]*implementation

@@ -3,7 +3,7 @@ package extension
 import (
 	"context"
 
-	"github.com/v2fly/v2ray-core/v4/features"
+	"github.com/v2fly/v2ray-core/v5/features"
 )
 
 // InstanceManagement : unstable

@@ -6,10 +6,10 @@ import (
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
 
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/strmatcher"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
+	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/strmatcher"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
 )
 
 type Condition interface {
@@ -149,7 +149,7 @@ type PortMatcher struct {
 	onSource bool
 }
 
-// NewPortMatcher create a new port matcher that can match source or destination port
+// NewPortMatcher creates a new port matcher that can match source or destination port
 func NewPortMatcher(list *net.PortList, onSource bool) *PortMatcher {
 	return &PortMatcher{
 		port:     net.PortListFromProto(list),

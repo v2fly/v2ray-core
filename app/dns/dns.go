@@ -4,7 +4,7 @@
 // Package dns is an implementation of core.DNS feature.
 package dns
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 import (
 	"context"
@@ -12,17 +12,17 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/v2fly/v2ray-core/v4/app/router"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/errors"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/platform"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/strmatcher"
-	"github.com/v2fly/v2ray-core/v4/features"
-	"github.com/v2fly/v2ray-core/v4/features/dns"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
+	"github.com/v2fly/v2ray-core/v5/app/router"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/platform"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/strmatcher"
+	"github.com/v2fly/v2ray-core/v5/features"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/geodata"
 )
 
 // DNS is a DNS rely server.

@@ -3,15 +3,15 @@ package v4_test
 import (
 	"testing"
 
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/testassist"
-	v4 "github.com/v2fly/v2ray-core/v4/infra/conf/v4"
-	"github.com/v2fly/v2ray-core/v4/proxy/vless"
-	"github.com/v2fly/v2ray-core/v4/proxy/vless/inbound"
-	"github.com/v2fly/v2ray-core/v4/proxy/vless/outbound"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon/testassist"
+	v4 "github.com/v2fly/v2ray-core/v5/infra/conf/v4"
+	"github.com/v2fly/v2ray-core/v5/proxy/vless"
+	"github.com/v2fly/v2ray-core/v5/proxy/vless/inbound"
+	"github.com/v2fly/v2ray-core/v5/proxy/vless/outbound"
 )
 
 func TestVLessOutbound(t *testing.T) {

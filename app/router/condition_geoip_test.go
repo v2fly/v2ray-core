@@ -10,11 +10,11 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/v2fly/v2ray-core/v4/app/router"
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
+	"github.com/v2fly/v2ray-core/v5/app/router"
+	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/platform/filesystem"
 )
 
 func init() {

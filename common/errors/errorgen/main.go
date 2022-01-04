@@ -26,7 +26,7 @@ func main() {
 
 	fmt.Fprintf(file, `package %s
 
-import "github.com/v2fly/v2ray-core/v4/common/errors"
+import "github.com/v2fly/v2ray-core/v5/common/errors"
 
 type errPathObjHolder struct{}
 

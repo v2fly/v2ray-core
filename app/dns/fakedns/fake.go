@@ -9,10 +9,10 @@ import (
 	"math/big"
 	gonet "net"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/cache"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/features/dns"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/cache"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
 )
 
 type Holder struct {
@@ -105,7 +105,7 @@ func (fkdns *Holder) initialize(ipPoolCidr string, lruSize int) error {
 	return nil
 }
 
-// GetFakeIPForDomain check and generate a fake IP for a domain name
+// GetFakeIPForDomain checks and generate a fake IP for a domain name
 func (fkdns *Holder) GetFakeIPForDomain(domain string) []net.Address {
 	if v, ok := fkdns.domainToIP.Get(domain); ok {
 		return []net.Address{v.(net.Address)}
@@ -128,7 +128,7 @@ func (fkdns *Holder) GetFakeIPForDomain(domain string) []net.Address {
 	return []net.Address{ip}
 }
 
-// GetDomainFromFakeDNS check if an IP is a fake IP and have corresponding domain name
+// GetDomainFromFakeDNS checks if an IP is a fake IP and have corresponding domain name
 func (fkdns *Holder) GetDomainFromFakeDNS(ip net.Address) string {
 	if !ip.Family().IsIP() || !fkdns.ipRange.Contains(ip.IP()) {
 		return ""

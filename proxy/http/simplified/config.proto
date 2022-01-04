@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package v2ray.core.proxy.http.simplified;
 option csharp_namespace = "V2Ray.Core.Proxy.Http.Simplified";
-option go_package = "github.com/v2fly/v2ray-core/v4/proxy/http/simplified";
+option go_package = "github.com/v2fly/v2ray-core/v5/proxy/http/simplified";
 option java_package = "com.v2ray.core.proxy.http.simplified";
 option java_multiple_files = true;
 

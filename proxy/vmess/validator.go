@@ -9,12 +9,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/dice"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess/aead"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/dice"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess/aead"
 )
 
 const (

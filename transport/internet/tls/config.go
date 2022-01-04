@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol/tls/cert"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol/tls/cert"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
 )
 
 var globalSessionCache = tls.NewLRUClientSessionCache(128)

@@ -3,7 +3,7 @@ package internet
 import (
 	"context"
 
-	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/net"
 )
 
 var transportListenerCache = make(map[string]ListenFunc)

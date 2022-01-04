@@ -3,21 +3,22 @@ package outbound
 import (
 	"context"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/proxyman"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/mux"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/features/outbound"
-	"github.com/v2fly/v2ray-core/v4/features/policy"
-	"github.com/v2fly/v2ray-core/v4/features/stats"
-	"github.com/v2fly/v2ray-core/v4/proxy"
-	"github.com/v2fly/v2ray-core/v4/transport"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
-	"github.com/v2fly/v2ray-core/v4/transport/pipe"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/proxyman"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/mux"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/features/outbound"
+	"github.com/v2fly/v2ray-core/v5/features/policy"
+	"github.com/v2fly/v2ray-core/v5/features/stats"
+	"github.com/v2fly/v2ray-core/v5/proxy"
+	"github.com/v2fly/v2ray-core/v5/transport"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/v5/transport/pipe"
 )
 
 func getStatCounter(v *core.Instance, tag string) (stats.Counter, stats.Counter) {
@@ -201,11 +202,21 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 			outbound.Gateway = h.senderSettings.Via.AsAddress()
 		}
 	}
-
+	enablePacketAddrCapture := true
 	if h.senderSettings != nil && h.senderSettings.ProxySettings != nil && h.senderSettings.ProxySettings.HasTag() && h.senderSettings.ProxySettings.TransportLayerProxy {
 		tag := h.senderSettings.ProxySettings.Tag
 		newError("transport layer proxying to ", tag, " for dest ", dest).AtDebug().WriteToLog(session.ExportIDToError(ctx))
 		ctx = session.SetTransportLayerProxyTagToContext(ctx, tag)
+		enablePacketAddrCapture = false
+	}
+
+	if isStream, err := packetaddr.GetDestinationSubsetOf(dest); err == nil && enablePacketAddrCapture {
+		packetConn, err := internet.ListenSystemPacket(ctx, &net.UDPAddr{IP: net.AnyIP.IP(), Port: 0}, h.streamSettings.SocketSettings)
+		if err != nil {
+			return nil, newError("unable to listen socket").Base(err)
+		}
+		conn := packetaddr.ToPacketAddrConnWrapper(packetConn, isStream)
+		return h.getStatCouterConnection(conn), nil
 	}
 
 	conn, err := internet.Dial(ctx, dest, h.streamSettings)
