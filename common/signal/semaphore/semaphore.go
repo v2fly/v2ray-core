@@ -5,7 +5,7 @@ type Instance struct {
 	token chan struct{}
 }
 
-// New create a new Semaphore with n permits.
+// New creates a new Semaphore with n permits.
 func New(n int) *Instance {
 	s := &Instance{
 		token: make(chan struct{}, n),
