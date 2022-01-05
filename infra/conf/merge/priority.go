@@ -20,7 +20,7 @@ func getPriority(v interface{}) float64 {
 	return 0
 }
 
-// sortByPriority sort slice by priority fields of their elements
+// sortByPriority sorts slice by priority fields of their elements
 func sortByPriority(slice []interface{}) {
 	sort.Slice(
 		slice,
