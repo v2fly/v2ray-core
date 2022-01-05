@@ -50,7 +50,7 @@ func ToMap(content []byte, target map[string]interface{}) (map[string]interface{
 	return target, nil
 }
 
-// FromMap apply merge rules to map and convert it to json
+// FromMap applies merge rules to map and convert it to json
 func FromMap(target map[string]interface{}) ([]byte, error) {
 	if target == nil {
 		target = make(map[string]interface{})
