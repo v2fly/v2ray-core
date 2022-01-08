@@ -13,7 +13,7 @@ require (
 	github.com/jhump/protoreflect v1.10.1
 	github.com/lucas-clemente/quic-go v0.24.0
 	github.com/marten-seemann/qtls-go1-17 v0.1.0
-	github.com/miekg/dns v1.1.43
+	github.com/miekg/dns v1.1.45
 	github.com/pelletier/go-toml v1.9.4
 	github.com/pires/go-proxyproto v0.6.1
 	github.com/seiflotfy/cuckoofilter v0.0.0-20201222105146-bc6005554a0c
@@ -54,7 +54,7 @@ require (
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20211027215541-db492cf91b37 // indirect
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/text v0.3.6 // indirect
-	golang.org/x/tools v0.1.1 // indirect
+	golang.org/x/tools v0.1.6-0.20210726203631-07bc1bf47fb2 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
