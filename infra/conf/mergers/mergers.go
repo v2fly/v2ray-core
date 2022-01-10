@@ -50,7 +50,7 @@ var (
 	mergersByExt  = make(map[string]*Merger)
 )
 
-// RegisterMerger add a new Merger.
+// RegisterMerger adds a new Merger.
 func RegisterMerger(format *Merger) error {
 	if _, found := mergersByName[format.Name]; found {
 		return newError(format.Name, " already registered.")
