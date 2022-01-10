@@ -9,7 +9,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/cmdarg"
 )
 
-// MergeAs load input and merge as specified format into m
+// MergeAs loads input and merge as specified format into m
 func MergeAs(formatName string, input interface{}, m map[string]interface{}) error {
 	f, found := mergersByName[formatName]
 	if !found {
