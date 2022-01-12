@@ -89,7 +89,7 @@ func executeRun(cmd *base.Command, args []string) {
 	}
 	defer server.Close()
 
-	// Explicitly triggering GC to remove garbage from config loading.
+	// Explicitly triggers GC to remove garbage from config loading.
 	runtime.GC()
 
 	{
@@ -130,7 +130,7 @@ func readConfDir(dirPath string, extension []string) cmdarg.Arg {
 	return files
 }
 
-// getFolderFiles get files in the folder and it's children
+// getFolderFiles gets files in the folder and it's children
 func readConfDirRecursively(dirPath string, extension []string) cmdarg.Arg {
 	files := make(cmdarg.Arg, 0)
 	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
