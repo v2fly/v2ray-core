@@ -118,7 +118,7 @@ var (
 	exitMu     sync.Mutex
 )
 
-// SetExitStatus set exit status code
+// SetExitStatus sets exit status code
 func SetExitStatus(n int) {
 	exitMu.Lock()
 	if exitStatus < n {
@@ -127,7 +127,7 @@ func SetExitStatus(n int) {
 	exitMu.Unlock()
 }
 
-// GetExitStatus get exit status code
+// GetExitStatus gets exit status code
 func GetExitStatus() int {
 	return exitStatus
 }
