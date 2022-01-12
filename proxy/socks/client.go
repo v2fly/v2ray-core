@@ -30,7 +30,7 @@ type Client struct {
 	dns           dns.Client
 }
 
-// NewClient create a new Socks5 client based on the given config.
+// NewClient creates a new Socks5 client based on the given config.
 func NewClient(ctx context.Context, config *ClientConfig) (*Client, error) {
 	serverList := protocol.NewServerList()
 	for _, rec := range config.Server {
