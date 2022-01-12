@@ -24,7 +24,7 @@ type Inbound interface {
 	Process(context.Context, net.Network, internet.Connection, routing.Dispatcher) error
 }
 
-// An Outbound process outbound connections.
+// An Outbound processes outbound connections.
 type Outbound interface {
 	// Process processes the given connection. The given dialer may be used to dial a system outbound connection.
 	Process(context.Context, *transport.Link, internet.Dialer) error
