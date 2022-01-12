@@ -10,7 +10,7 @@ func init() {
 	}
 }
 
-// RegisterCommand register a command to RootCommand
+// RegisterCommand registers a command to RootCommand
 func RegisterCommand(cmd *Command) {
 	RootCommand.Commands = append(RootCommand.Commands, cmd)
 }
