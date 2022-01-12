@@ -24,7 +24,7 @@ type Client struct {
 	policyManager policy.Manager
 }
 
-// NewClient create a new trojan client.
+// NewClient creates a new trojan client.
 func NewClient(ctx context.Context, config *ClientConfig) (*Client, error) {
 	serverList := protocol.NewServerList()
 	for _, rec := range config.Server {
