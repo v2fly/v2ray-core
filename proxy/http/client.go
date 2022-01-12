@@ -42,7 +42,7 @@ var (
 	cachedH2Conns map[net.Destination]h2Conn
 )
 
-// NewClient create a new http client based on the given config.
+// NewClient creates a new http client based on the given config.
 func NewClient(ctx context.Context, config *ClientConfig) (*Client, error) {
 	serverList := protocol.NewServerList()
 	for _, rec := range config.Server {
