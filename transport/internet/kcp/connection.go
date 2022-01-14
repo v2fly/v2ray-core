@@ -201,7 +201,7 @@ type Connection struct {
 	pingUpdater *Updater
 }
 
-// NewConnection create a new KCP connection between local and remote.
+// NewConnection creates a new KCP connection between local and remote.
 func NewConnection(meta ConnMetadata, writer PacketWriter, closer io.Closer, config *Config) *Connection {
 	newError("#", meta.Conversation, " creating connection to ", meta.RemoteAddr).WriteToLog()
 
