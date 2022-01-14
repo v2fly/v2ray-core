@@ -103,7 +103,7 @@ func (a *Account) AsAccount() (protocol.Account, error) {
 			}
 			return nil
 		}(),
-		ReducedIVEntropy: a.ExperimentReducedInitialIvEntropy,
+		ReducedIVEntropy: a.ExperimentReducedIvHeadEntropy,
 	}, nil
 }
 
