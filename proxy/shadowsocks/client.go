@@ -26,7 +26,7 @@ type Client struct {
 	policyManager policy.Manager
 }
 
-// NewClient create a new Shadowsocks client.
+// NewClient creates a new Shadowsocks client.
 func NewClient(ctx context.Context, config *ClientConfig) (*Client, error) {
 	serverList := protocol.NewServerList()
 	for _, rec := range config.Server {
