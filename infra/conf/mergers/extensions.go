@@ -2,7 +2,7 @@ package mergers
 
 import "strings"
 
-// GetExtensions get extensions of given format
+// GetExtensions gets extensions of given format
 func GetExtensions(formatName string) ([]string, error) {
 	lowerName := strings.ToLower(formatName)
 	if lowerName == "auto" {
@@ -15,7 +15,7 @@ func GetExtensions(formatName string) ([]string, error) {
 	return f.Extensions, nil
 }
 
-// GetAllExtensions get all extensions supported
+// GetAllExtensions gets all extensions supported
 func GetAllExtensions() []string {
 	extensions := make([]string, 0)
 	for _, f := range mergersByName {
