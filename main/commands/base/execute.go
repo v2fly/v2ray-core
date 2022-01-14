@@ -12,7 +12,7 @@ import (
 // Use of this source code is governed by a BSD-style
 // copied from "github.com/golang/go/main.go"
 
-// Execute excute the commands
+// Execute excutes the commands
 func Execute() {
 	flag.Parse()
 	args := flag.Args()
@@ -82,7 +82,7 @@ func SortCommands() {
 	})
 }
 
-// SortLessFunc used for sort commands list, can be override from outside
+// SortLessFunc is used for sorting commands list, can be override from outside
 var SortLessFunc = func(i, j *Command) bool {
 	return i.Name() < j.Name()
 }
