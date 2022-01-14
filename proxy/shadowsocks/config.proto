@@ -16,6 +16,7 @@ message Account {
   CipherType cipher_type = 2;
 
   bool iv_check = 3;
+  bool experiment_reduced_iv_head_entropy = 90001;
 }
 
 enum CipherType {
