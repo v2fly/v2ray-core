@@ -74,7 +74,7 @@ func (c *Client) LookupIPv6(host string) ([]net.IP, error) {
 	return ipv6, nil
 }
 
-// New create a new dns.Client that queries localhost for DNS.
+// New creates a new dns.Client that queries localhost for DNS.
 func New() *Client {
 	return &Client{}
 }
