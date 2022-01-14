@@ -29,7 +29,7 @@ type Route interface {
 	GetOutboundTag() string
 }
 
-// RouterType return the type of Router interface. Can be used to implement common.HasType.
+// RouterType returns the type of Router interface. Can be used to implement common.HasType.
 //
 // v2ray:api:stable
 func RouterType() interface{} {
