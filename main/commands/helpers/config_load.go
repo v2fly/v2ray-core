@@ -10,7 +10,7 @@ import (
 	v4 "github.com/v2fly/v2ray-core/v5/infra/conf/v4"
 )
 
-// LoadConfig load config files to *conf.Config, it will:
+// LoadConfig loads config files to *conf.Config, it will:
 // - resolve folder to files
 // - try to read stdin if no file specified
 func LoadConfig(files []string, format string, recursively bool) (*v4.Config, error) {
@@ -26,7 +26,7 @@ func LoadConfig(files []string, format string, recursively bool) (*v4.Config, er
 	return serial.DecodeJSONConfig(r)
 }
 
-// LoadConfigToMap load config files to map, it will:
+// LoadConfigToMap loads config files to map, it will:
 // - resolve folder to files
 // - try to read stdin if no file specified
 func LoadConfigToMap(files []string, format string, recursively bool) (map[string]interface{}, error) {
