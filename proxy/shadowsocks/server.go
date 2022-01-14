@@ -27,7 +27,7 @@ type Server struct {
 	policyManager policy.Manager
 }
 
-// NewServer create a new Shadowsocks server.
+// NewServer creates a new Shadowsocks server.
 func NewServer(ctx context.Context, config *ServerConfig) (*Server, error) {
 	if config.GetUser() == nil {
 		return nil, newError("user is not specified")
