@@ -47,7 +47,7 @@ var (
 	configLoaderByExt  = make(map[string]*ConfigFormat)
 )
 
-// RegisterConfigLoader add a new ConfigLoader.
+// RegisterConfigLoader adds a new ConfigLoader.
 func RegisterConfigLoader(format *ConfigFormat) error {
 	for _, name := range format.Name {
 		if _, found := configLoaderByName[name]; found {
@@ -72,7 +72,7 @@ func getExtension(filename string) string {
 	return strings.ToLower(ext)
 }
 
-// GetLoaderExtensions get config loader extensions.
+// GetLoaderExtensions gets config loader extensions.
 func GetLoaderExtensions(formatName string) ([]string, error) {
 	if formatName == FormatAuto {
 		return GetAllExtensions(), nil
@@ -83,7 +83,7 @@ func GetLoaderExtensions(formatName string) ([]string, error) {
 	return nil, newError("config loader not found: ", formatName).AtWarning()
 }
 
-// GetAllExtensions get all extensions supported
+// GetAllExtensions gets all extensions supported
 func GetAllExtensions() []string {
 	extensions := make([]string, 0)
 	for _, f := range configLoaderByName {
