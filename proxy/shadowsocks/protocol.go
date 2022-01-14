@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"hash/crc32"
 	"io"
+	mrand "math/rand"
 	gonet "net"
 
 	"github.com/v2fly/v2ray-core/v5/common"
@@ -103,6 +104,9 @@ func WriteTCPRequest(request *protocol.RequestHeader, writer io.Writer) (buf.Wri
 	if account.Cipher.IVSize() > 0 {
 		iv = make([]byte, account.Cipher.IVSize())
 		common.Must2(rand.Read(iv))
+		if account.ReducedIVEntropy {
+			remapToPrintable(iv[:6])
+		}
 		if ivError := account.CheckIV(iv); ivError != nil {
 			return nil, newError("failed to mark outgoing iv").Base(ivError)
 		}
@@ -300,4 +304,12 @@ func (w *UDPWriter) WriteTo(payload []byte, addr gonet.Addr) (n int, err error) 
 	_, err = w.Writer.Write(packet.Bytes())
 	packet.Release()
 	return len(payload), err
+}
+
+func remapToPrintable(input []byte) {
+	const charSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\\\""
+	seed := mrand.New(mrand.NewSource(int64(crc32.ChecksumIEEE(input))))
+	for i := range input {
+		input[i] = charSet[seed.Intn(len(charSet))]
+	}
 }
