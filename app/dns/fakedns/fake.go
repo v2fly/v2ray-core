@@ -105,7 +105,7 @@ func (fkdns *Holder) initialize(ipPoolCidr string, lruSize int) error {
 	return nil
 }
 
-// GetFakeIPForDomain checks and generate a fake IP for a domain name
+// GetFakeIPForDomain checks and generates a fake IP for a domain name
 func (fkdns *Holder) GetFakeIPForDomain(domain string) []net.Address {
 	if v, ok := fkdns.domainToIP.Get(domain); ok {
 		return []net.Address{v.(net.Address)}
