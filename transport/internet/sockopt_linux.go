@@ -82,6 +82,32 @@ func applyOutboundSocketOptions(network string, address string, fd uintptr, conf
 		}
 	}
 
+	if config.BindToDevice != "" {
+		if err := unix.BindToDevice(int(fd), config.BindToDevice); err != nil {
+			return newError("failed to set SO_BINDTODEVICE").Base(err)
+		}
+	}
+
+	if config.SocketTxBufSize != 0 {
+		syscallTarget := unix.SO_SNDBUF
+		if config.SocketForceBufSize {
+			syscallTarget = unix.SO_SNDBUFFORCE
+		}
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, syscallTarget, int(config.SocketTxBufSize)); err != nil {
+			return newError("failed to set SO_SNDBUF/SO_SNDBUFFORCE").Base(err)
+		}
+	}
+
+	if config.SocketRxBufSize != 0 {
+		syscallTarget := unix.SO_RCVBUF
+		if config.SocketForceBufSize {
+			syscallTarget = unix.SO_RCVBUFFORCE
+		}
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, syscallTarget, int(config.SocketRxBufSize)); err != nil {
+			return newError("failed to set SO_RCVBUF/SO_RCVBUFFORCE").Base(err)
+		}
+	}
+
 	return nil
 }
 
@@ -134,6 +160,31 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 		}
 	}
 
+	if config.BindToDevice != "" {
+		if err := unix.BindToDevice(int(fd), config.BindToDevice); err != nil {
+			return newError("failed to set SO_BINDTODEVICE").Base(err)
+		}
+	}
+
+	if config.SocketTxBufSize != 0 {
+		syscallTarget := unix.SO_SNDBUF
+		if config.SocketForceBufSize {
+			syscallTarget = unix.SO_SNDBUFFORCE
+		}
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, syscallTarget, int(config.SocketTxBufSize)); err != nil {
+			return newError("failed to set SO_SNDBUF/SO_SNDBUFFORCE").Base(err)
+		}
+	}
+
+	if config.SocketRxBufSize != 0 {
+		syscallTarget := unix.SO_RCVBUF
+		if config.SocketForceBufSize {
+			syscallTarget = unix.SO_RCVBUFFORCE
+		}
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, syscallTarget, int(config.SocketRxBufSize)); err != nil {
+			return newError("failed to set SO_RCVBUF/SO_RCVBUFFORCE").Base(err)
+		}
+	}
 	return nil
 }
 
