@@ -35,14 +35,14 @@ func applyOutboundSocketOptions(network string, address string, fd uintptr, conf
 		}
 	}
 
-	if config.SocketTxBufSize != 0 {
-		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_SNDBUF, int(config.SocketTxBufSize)); err != nil {
+	if config.TxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_SNDBUF, int(config.TxBufSize)); err != nil {
 			return newError("failed to set SO_SNDBUF").Base(err)
 		}
 	}
 
-	if config.SocketRxBufSize != 0 {
-		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_RCVBUF, int(config.SocketTxBufSize)); err != nil {
+	if config.RxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_RCVBUF, int(config.TxBufSize)); err != nil {
 			return newError("failed to set SO_RCVBUF").Base(err)
 		}
 	}
@@ -62,14 +62,14 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 		}
 	}
 
-	if config.SocketTxBufSize != 0 {
-		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_SNDBUF, int(config.SocketTxBufSize)); err != nil {
+	if config.TxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_SNDBUF, int(config.TxBufSize)); err != nil {
 			return newError("failed to set SO_SNDBUF").Base(err)
 		}
 	}
 
-	if config.SocketRxBufSize != 0 {
-		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_RCVBUF, int(config.SocketTxBufSize)); err != nil {
+	if config.RxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_RCVBUF, int(config.TxBufSize)); err != nil {
 			return newError("failed to set SO_RCVBUF").Base(err)
 		}
 	}
