@@ -9,8 +9,6 @@ const (
 	TCP_FASTOPEN_SERVER = 0x01 // nolint: revive,stylecheck
 	// TCP_FASTOPEN_CLIENT is the value to enable TCP fast open on darwin for client connections.
 	TCP_FASTOPEN_CLIENT = 0x02 // nolint: revive,stylecheck
-	// syscall.TCP_KEEPINTVL is missing on some darwin architectures.
-	sysTCP_KEEPINTVL = 0x101 // nolint: revive,stylecheck
 )
 
 func applyOutboundSocketOptions(network string, address string, fd uintptr, config *SocketConfig) error {
@@ -26,17 +24,18 @@ func applyOutboundSocketOptions(network string, address string, fd uintptr, conf
 			}
 		}
 
+		if config.TcpKeepAliveIdle > 0 {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_KEEPALIVE, int(config.TcpKeepAliveInterval)); err != nil {
+				return newError("failed to set TCP_KEEPINTVL", err)
+			}
+		}
+		if config.TcpKeepAliveInterval > 0 {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_KEEPINTVL, int(config.TcpKeepAliveIdle)); err != nil {
+				return newError("failed to set TCP_KEEPIDLE", err)
+			}
+		}
+
 		if config.TcpKeepAliveIdle > 0 || config.TcpKeepAliveInterval > 0 {
-			if config.TcpKeepAliveIdle > 0 {
-				if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_KEEPALIVE, int(config.TcpKeepAliveInterval)); err != nil {
-					return newError("failed to set TCP_KEEPINTVL", err)
-				}
-			}
-			if config.TcpKeepAliveInterval > 0 {
-				if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, sysTCP_KEEPINTVL, int(config.TcpKeepAliveIdle)); err != nil {
-					return newError("failed to set TCP_KEEPIDLE", err)
-				}
-			}
 			if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_KEEPALIVE, 1); err != nil {
 				return newError("failed to set SO_KEEPALIVE", err)
 			}
@@ -58,17 +57,17 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 				return err
 			}
 		}
+		if config.TcpKeepAliveIdle > 0 {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_KEEPALIVE, int(config.TcpKeepAliveInterval)); err != nil {
+				return newError("failed to set TCP_KEEPINTVL", err)
+			}
+		}
+		if config.TcpKeepAliveInterval > 0 {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.SO_KEEPALIVE, int(config.TcpKeepAliveIdle)); err != nil {
+				return newError("failed to set TCP_KEEPIDLE", err)
+			}
+		}
 		if config.TcpKeepAliveIdle > 0 || config.TcpKeepAliveInterval > 0 {
-			if config.TcpKeepAliveIdle > 0 {
-				if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_KEEPALIVE, int(config.TcpKeepAliveInterval)); err != nil {
-					return newError("failed to set TCP_KEEPINTVL", err)
-				}
-			}
-			if config.TcpKeepAliveInterval > 0 {
-				if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, sysTCP_KEEPINTVL, int(config.TcpKeepAliveIdle)); err != nil {
-					return newError("failed to set TCP_KEEPIDLE", err)
-				}
-			}
 			if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_KEEPALIVE, 1); err != nil {
 				return newError("failed to set SO_KEEPALIVE", err)
 			}
