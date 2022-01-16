@@ -88,22 +88,22 @@ func applyOutboundSocketOptions(network string, address string, fd uintptr, conf
 		}
 	}
 
-	if config.SocketTxBufSize != 0 {
+	if config.TxBufSize != 0 {
 		syscallTarget := unix.SO_SNDBUF
-		if config.SocketForceBufSize {
+		if config.ForceBufSize {
 			syscallTarget = unix.SO_SNDBUFFORCE
 		}
-		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, syscallTarget, int(config.SocketTxBufSize)); err != nil {
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, syscallTarget, int(config.TxBufSize)); err != nil {
 			return newError("failed to set SO_SNDBUF/SO_SNDBUFFORCE").Base(err)
 		}
 	}
 
-	if config.SocketRxBufSize != 0 {
+	if config.RxBufSize != 0 {
 		syscallTarget := unix.SO_RCVBUF
-		if config.SocketForceBufSize {
+		if config.ForceBufSize {
 			syscallTarget = unix.SO_RCVBUFFORCE
 		}
-		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, syscallTarget, int(config.SocketRxBufSize)); err != nil {
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, syscallTarget, int(config.RxBufSize)); err != nil {
 			return newError("failed to set SO_RCVBUF/SO_RCVBUFFORCE").Base(err)
 		}
 	}
@@ -166,22 +166,22 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 		}
 	}
 
-	if config.SocketTxBufSize != 0 {
+	if config.TxBufSize != 0 {
 		syscallTarget := unix.SO_SNDBUF
-		if config.SocketForceBufSize {
+		if config.ForceBufSize {
 			syscallTarget = unix.SO_SNDBUFFORCE
 		}
-		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, syscallTarget, int(config.SocketTxBufSize)); err != nil {
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, syscallTarget, int(config.TxBufSize)); err != nil {
 			return newError("failed to set SO_SNDBUF/SO_SNDBUFFORCE").Base(err)
 		}
 	}
 
-	if config.SocketRxBufSize != 0 {
+	if config.RxBufSize != 0 {
 		syscallTarget := unix.SO_RCVBUF
-		if config.SocketForceBufSize {
+		if config.ForceBufSize {
 			syscallTarget = unix.SO_RCVBUFFORCE
 		}
-		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, syscallTarget, int(config.SocketRxBufSize)); err != nil {
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, syscallTarget, int(config.RxBufSize)); err != nil {
 			return newError("failed to set SO_RCVBUF/SO_RCVBUFFORCE").Base(err)
 		}
 	}
