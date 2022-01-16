@@ -103,4 +103,6 @@ message SocketConfig {
   int64 socket_rx_buf_size = 12;
 
   int64 socket_tx_buf_size = 13;
+
+  bool socket_force_buf_size = 14;
 }
