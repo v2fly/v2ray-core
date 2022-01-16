@@ -100,9 +100,7 @@ message SocketConfig {
 
   string bind_to_device = 11;
 
-  int64 socket_rx_buf_size = 12;
-
-  int64 socket_tx_buf_size = 13;
-
-  bool socket_force_buf_size = 14;
+  int64 rx_buf_size = 12;
+  int64 tx_buf_size = 13;
+  bool force_buf_size = 14;
 }
