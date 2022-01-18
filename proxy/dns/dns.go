@@ -247,17 +247,21 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 		ips, err = h.ipv6Lookup.LookupIPv6(domain)
 	}
 
-	rcode := dns.RCodeFromError(err)
-	if rcode == 0 && len(ips) == 0 && err != dns.ErrEmptyResponse {
-		newError("ip query").Base(err).WriteToLog()
-		return
+	var rcode dnsmessage.RCode
+	rcode = dnsmessage.RCode(dns.RCodeFromError(err))
+	if rcode == 0 && len(ips) == 0 {
+		if err != dns.ErrEmptyResponse {
+			newError("ip query").Base(err).WriteToLog()
+			return
+		}
+		rcode = dnsmessage.RCodeNameError
 	}
 
 	b := buf.New()
 	rawBytes := b.Extend(buf.Size)
 	builder := dnsmessage.NewBuilder(rawBytes[:0], dnsmessage.Header{
 		ID:                 id,
-		RCode:              dnsmessage.RCode(rcode),
+		RCode:              rcode,
 		RecursionAvailable: true,
 		RecursionDesired:   true,
 		Response:           true,
