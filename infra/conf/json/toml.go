@@ -8,7 +8,7 @@ import (
 	"github.com/pelletier/go-toml"
 )
 
-// FromTOML convert toml to json
+// FromTOML converts toml to json
 func FromTOML(v []byte) ([]byte, error) {
 	tomlReader := bytes.NewReader(v)
 	jsonStr, err := jsonFromTomlReader(tomlReader)
