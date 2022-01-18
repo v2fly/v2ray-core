@@ -28,4 +28,5 @@ message ClientConfig {
   uint32 port = 2;
   string method = 3;
   string password = 4;
+  bool experiment_reduced_iv_head_entropy = 90001;
 }
