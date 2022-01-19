@@ -60,7 +60,7 @@ func (b *Balancer) InjectContext(ctx context.Context) {
 	}
 }
 
-// SelectOutbounds select outbounds with selectors of the Balancer
+// SelectOutbounds selects outbounds with selectors of the Balancer
 func (b *Balancer) SelectOutbounds() ([]string, error) {
 	hs, ok := b.ohm.(outbound.HandlerSelector)
 	if !ok {
