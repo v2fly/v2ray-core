@@ -26,7 +26,7 @@ require (
 	golang.org/x/net v0.0.0-20211205041911-012df41ee64c
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d
-	google.golang.org/grpc v1.43.0
+	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
 	h12.io/socks v1.0.3
