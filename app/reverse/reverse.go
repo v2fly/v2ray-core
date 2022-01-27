@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	internalDomain = "reverse.internal.v2fly.org"
+	internalDomain         = "reverse.internal.v2fly.org"
+	internalDomainProjectV = "reverse.internal.v2ray.com"
 )
 
 func isDomain(dest net.Destination, domain string) bool {
@@ -22,7 +23,7 @@ func isDomain(dest net.Destination, domain string) bool {
 }
 
 func isInternalDomain(dest net.Destination) bool {
-	return isDomain(dest, internalDomain)
+	return isDomain(dest, internalDomain) || isDomain(dest, internalDomainProjectV)
 }
 
 func init() {
