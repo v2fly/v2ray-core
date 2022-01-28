@@ -57,11 +57,13 @@ func isActive(s quic.Session) bool {
 
 func removeInactiveSessions(sessions []*sessionContext) []*sessionContext {
 	activeSessions := make([]*sessionContext, 0, len(sessions))
-	for _, s := range sessions {
+	for i, s := range sessions {
 		if isActive(s.session) {
 			activeSessions = append(activeSessions, s)
 			continue
 		}
+
+		newError("closing quic session at index: ", i).WriteToLog()
 		if err := s.session.CloseWithError(0, ""); err != nil {
 			newError("failed to close session").Base(err).WriteToLog()
 		}
@@ -71,27 +73,11 @@ func removeInactiveSessions(sessions []*sessionContext) []*sessionContext {
 	}
 
 	if len(activeSessions) < len(sessions) {
+		newError("active quic session reduced from ", len(sessions), " to ", len(activeSessions)).WriteToLog()
 		return activeSessions
 	}
 
 	return sessions
-}
-
-func openStream(sessions []*sessionContext, destAddr net.Addr) *interConn {
-	for _, s := range sessions {
-		if !isActive(s.session) {
-			continue
-		}
-
-		conn, err := s.openStream(destAddr)
-		if err != nil {
-			continue
-		}
-
-		return conn
-	}
-
-	return nil
 }
 
 func (s *clientSessions) cleanSessions() error {
@@ -130,10 +116,16 @@ func (s *clientSessions) openConnection(destAddr net.Addr, config *Config, tlsCo
 		sessions = s
 	}
 
-	if true {
-		conn := openStream(sessions, destAddr)
-		if conn != nil {
-			return conn, nil
+	if len(sessions) > 0 {
+		s := sessions[len(sessions)-1]
+		if isActive(s.session) {
+			conn, err := s.openStream(destAddr)
+			if err == nil {
+				return conn, nil
+			}
+			newError("failed to openStream: ").Base(err).WriteToLog()
+		} else {
+			newError("current quic session is not active!").WriteToLog()
 		}
 	}
 
@@ -151,7 +143,7 @@ func (s *clientSessions) openConnection(destAddr net.Addr, config *Config, tlsCo
 		ConnectionIDLength:   12,
 		HandshakeIdleTimeout: time.Second * 8,
 		MaxIdleTimeout:       time.Second * 30,
-		KeepAlive:            true,
+		KeepAlive:            false,
 	}
 
 	conn, err := wrapSysConn(rawConn.(*net.UDPConn), config)
