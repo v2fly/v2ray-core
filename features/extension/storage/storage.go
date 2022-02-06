@@ -20,6 +20,6 @@ type ScopedTransientStorage interface {
 	Get(ctx context.Context, key string) (interface{}, error)
 	List(ctx context.Context, keyPrefix string) ([]string, error)
 	Clear(ctx context.Context)
-	NarrowScope(ctx context.Context, key string) (ScopedPersistentStorage, error)
+	NarrowScope(ctx context.Context, key string) (ScopedTransientStorage, error)
 	DropScope(ctx context.Context, key string) error
 }
