@@ -3,6 +3,7 @@ module github.com/v2fly/v2ray-core/v5
 go 1.17
 
 require (
+	github.com/adrg/xdg v0.4.0
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/render v1.0.1
 	github.com/go-playground/validator/v10 v10.10.0
