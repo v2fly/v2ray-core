@@ -1,18 +1,14 @@
 package environment
 
-import (
-	"github.com/v2fly/v2ray-core/v5/features/extension/storage"
-)
-
 type ProxyEnvironmentCapabilitySet interface {
 	BaseEnvironmentCapabilitySet
 	InstanceNetworkCapabilitySet
-	TransientStorage() storage.ScopedTransientStorage
+	TransientStorageCapabilitySet
 }
 
 type ProxyEnvironment interface {
 	ProxyEnvironmentCapabilitySet
-	NarrowScope(key []byte) (ProxyEnvironment, error)
-	NarrowScopeToTransport(key []byte) (TransportEnvironment, error)
+	NarrowScope(key string) (ProxyEnvironment, error)
+	NarrowScopeToTransport(key string) (TransportEnvironment, error)
 	doNotImpl()
 }
