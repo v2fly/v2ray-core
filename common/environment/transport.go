@@ -1,18 +1,14 @@
 package environment
 
-import (
-	"github.com/v2fly/v2ray-core/v5/features/extension/storage"
-)
-
 type TransportEnvironmentCapacitySet interface {
 	BaseEnvironmentCapabilitySet
 	SystemNetworkCapabilitySet
 	InstanceNetworkCapabilitySet
-	TransientStorage() storage.ScopedTransientStorage
+	TransientStorageCapabilitySet
 }
 
 type TransportEnvironment interface {
 	TransportEnvironmentCapacitySet
-	NarrowScope(key []byte) (TransportEnvironment, error)
+	NarrowScope(key string) (TransportEnvironment, error)
 	doNotImpl()
 }

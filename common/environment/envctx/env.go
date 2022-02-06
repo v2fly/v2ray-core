@@ -2,10 +2,8 @@ package envctx
 
 import "context"
 
-type environmentContextKey int
-
 const (
-	environmentKey environmentContextKey = iota
+	environmentKey string = "v2.environment"
 )
 
 func ContextWithEnvironment(ctx context.Context, environment interface{}) context.Context {
