@@ -10,7 +10,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.7
 	github.com/gorilla/websocket v1.4.2
-	github.com/jhump/protoreflect v1.10.1
+	github.com/jhump/protoreflect v1.10.2
 	github.com/lucas-clemente/quic-go v0.25.0
 	github.com/marten-seemann/qtls-go1-17 v0.1.0
 	github.com/miekg/dns v1.1.45
