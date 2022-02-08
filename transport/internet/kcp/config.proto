@@ -10,59 +10,35 @@ import "google/protobuf/any.proto";
 
 import "common/protoext/extensions.proto";
 
-// Maximum Transmission Unit, in bytes.
-message MTU {
-  uint32 value = 1;
-}
-
-// Transmission Time Interview, in milli-sec.
-message TTI {
-  uint32 value = 1;
-}
-
-// Uplink capacity, in MB.
-message UplinkCapacity {
-  uint32 value = 1;
-}
-
-// Downlink capacity, in MB.
-message DownlinkCapacity {
-  uint32 value = 1;
-}
-
-message WriteBuffer {
-  // Buffer size in bytes.
-  uint32 size = 1;
-}
-
-message ReadBuffer {
-  // Buffer size in bytes.
-  uint32 size = 1;
-}
-
-message ConnectionReuse {
-  bool enable = 1;
-}
-
-// Maximum Transmission Unit, in bytes.
-message EncryptionSeed {
-  string seed = 1;
-}
-
 message Config {
   option (v2ray.core.common.protoext.message_opt).type = "transport";
   option (v2ray.core.common.protoext.message_opt).short_name = "kcp";
 
   option (v2ray.core.common.protoext.message_opt).transport_original_name = "mkcp";
 
-  MTU mtu = 1;
-  TTI tti = 2;
-  UplinkCapacity uplink_capacity = 3;
-  DownlinkCapacity downlink_capacity = 4;
+  // Maximum Transmission Unit, in bytes.
+  uint32 mtu = 1;
+
+  // Transmission Time Interview, in milli-sec.
+  uint32 tti = 2;
+
+  // Uplink capacity, in MB.
+  uint32 uplink_capacity = 3;
+
+  // Downlink capacity, in MB.
+  uint32 downlink_capacity = 4;
+
   bool congestion = 5;
-  WriteBuffer write_buffer = 6;
-  ReadBuffer read_buffer = 7;
+
+  // Buffer size in bytes.
+  uint32 write_buffer = 6;
+
+  // Buffer size in bytes.
+  uint32 read_buffer = 7;
+
   google.protobuf.Any header_config = 8;
+
   reserved 9;
-  EncryptionSeed seed = 10;
+
+  string seed = 10;
 }

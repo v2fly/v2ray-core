@@ -39,60 +39,38 @@ var (
 )
 
 type KCPConfig struct {
-	Mtu             *uint32         `json:"mtu"`
-	Tti             *uint32         `json:"tti"`
-	UpCap           *uint32         `json:"uplinkCapacity"`
-	DownCap         *uint32         `json:"downlinkCapacity"`
-	Congestion      *bool           `json:"congestion"`
-	ReadBufferSize  *uint32         `json:"readBufferSize"`
-	WriteBufferSize *uint32         `json:"writeBufferSize"`
+	Mtu             uint32          `json:"mtu"`
+	Tti             uint32          `json:"tti"`
+	UpCap           uint32          `json:"uplinkCapacity"`
+	DownCap         uint32          `json:"downlinkCapacity"`
+	Congestion      bool            `json:"congestion"`
+	ReadBufferSize  uint32          `json:"readBufferSize"`
+	WriteBufferSize uint32          `json:"writeBufferSize"`
 	HeaderConfig    json.RawMessage `json:"header"`
-	Seed            *string         `json:"seed"`
+	Seed            string          `json:"seed"`
 }
 
 // Build implements Buildable.
 func (c *KCPConfig) Build() (proto.Message, error) {
-	config := new(kcp.Config)
+	config := &kcp.Config{
+		Mtu:              c.Mtu,
+		Tti:              c.Tti,
+		UplinkCapacity:   c.UpCap,
+		DownlinkCapacity: c.DownCap,
+		ReadBuffer:       c.ReadBufferSize,
+		WriteBuffer:      c.WriteBufferSize,
+		Congestion:       c.Congestion,
+		Seed:             c.Seed,
+	}
 
-	if c.Mtu != nil {
-		mtu := *c.Mtu
-		if mtu < 576 || mtu > 1460 {
-			return nil, newError("invalid mKCP MTU size: ", mtu).AtError()
-		}
-		config.Mtu = &kcp.MTU{Value: mtu}
+	if c.Mtu != 0 && (c.Mtu < 576 || c.Mtu > 1460) {
+		return nil, newError("invalid mKCP MTU size: ", c.Mtu).AtError()
 	}
-	if c.Tti != nil {
-		tti := *c.Tti
-		if tti < 10 || tti > 100 {
-			return nil, newError("invalid mKCP TTI: ", tti).AtError()
-		}
-		config.Tti = &kcp.TTI{Value: tti}
+
+	if c.Tti != 0 && (c.Tti < 10 || c.Tti > 100) {
+		return nil, newError("invalid mKCP TTI: ", c.Tti).AtError()
 	}
-	if c.UpCap != nil {
-		config.UplinkCapacity = &kcp.UplinkCapacity{Value: *c.UpCap}
-	}
-	if c.DownCap != nil {
-		config.DownlinkCapacity = &kcp.DownlinkCapacity{Value: *c.DownCap}
-	}
-	if c.Congestion != nil {
-		config.Congestion = *c.Congestion
-	}
-	if c.ReadBufferSize != nil {
-		size := *c.ReadBufferSize
-		if size > 0 {
-			config.ReadBuffer = &kcp.ReadBuffer{Size: size * 1024 * 1024}
-		} else {
-			config.ReadBuffer = &kcp.ReadBuffer{Size: 512 * 1024}
-		}
-	}
-	if c.WriteBufferSize != nil {
-		size := *c.WriteBufferSize
-		if size > 0 {
-			config.WriteBuffer = &kcp.WriteBuffer{Size: size * 1024 * 1024}
-		} else {
-			config.WriteBuffer = &kcp.WriteBuffer{Size: 512 * 1024}
-		}
-	}
+
 	if len(c.HeaderConfig) > 0 {
 		headerConfig, _, err := kcpHeaderLoader.Load(c.HeaderConfig)
 		if err != nil {
@@ -103,10 +81,6 @@ func (c *KCPConfig) Build() (proto.Message, error) {
 			return nil, newError("invalid mKCP header config").Base(err).AtError()
 		}
 		config.HeaderConfig = serial.ToTypedMessage(ts)
-	}
-
-	if c.Seed != nil {
-		config.Seed = &kcp.EncryptionSeed{Seed: *c.Seed}
 	}
 
 	return config, nil

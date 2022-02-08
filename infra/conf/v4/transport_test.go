@@ -147,7 +147,7 @@ func TestTransportConfig(t *testing.T) {
 					{
 						ProtocolName: "mkcp",
 						Settings: serial.ToTypedMessage(&kcp.Config{
-							Mtu:          &kcp.MTU{Value: 1200},
+							Mtu:          1200,
 							HeaderConfig: serial.ToTypedMessage(&noop.Config{}),
 						}),
 					},

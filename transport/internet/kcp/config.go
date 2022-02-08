@@ -12,56 +12,56 @@ const protocolName = "mkcp"
 
 // GetMTUValue returns the value of MTU settings.
 func (c *Config) GetMTUValue() uint32 {
-	if c == nil || c.Mtu == nil {
+	if c == nil || c.Mtu == 0 {
 		return 1350
 	}
-	return c.Mtu.Value
+	return c.Mtu
 }
 
 // GetTTIValue returns the value of TTI settings.
 func (c *Config) GetTTIValue() uint32 {
-	if c == nil || c.Tti == nil {
+	if c == nil || c.Tti == 0 {
 		return 50
 	}
-	return c.Tti.Value
+	return c.Tti
 }
 
 // GetUplinkCapacityValue returns the value of UplinkCapacity settings.
 func (c *Config) GetUplinkCapacityValue() uint32 {
-	if c == nil || c.UplinkCapacity == nil {
+	if c == nil || c.UplinkCapacity == 0 {
 		return 5
 	}
-	return c.UplinkCapacity.Value
+	return c.UplinkCapacity
 }
 
 // GetDownlinkCapacityValue returns the value of DownlinkCapacity settings.
 func (c *Config) GetDownlinkCapacityValue() uint32 {
-	if c == nil || c.DownlinkCapacity == nil {
+	if c == nil || c.DownlinkCapacity == 0 {
 		return 20
 	}
-	return c.DownlinkCapacity.Value
+	return c.DownlinkCapacity
 }
 
 // GetWriteBufferSize returns the size of WriterBuffer in bytes.
 func (c *Config) GetWriteBufferSize() uint32 {
-	if c == nil || c.WriteBuffer == nil {
+	if c == nil || c.WriteBuffer == 0 {
 		return 2 * 1024 * 1024
 	}
-	return c.WriteBuffer.Size
+	return c.WriteBuffer * 1024 * 1024
 }
 
 // GetReadBufferSize returns the size of ReadBuffer in bytes.
 func (c *Config) GetReadBufferSize() uint32 {
-	if c == nil || c.ReadBuffer == nil {
+	if c == nil || c.ReadBuffer == 0 {
 		return 2 * 1024 * 1024
 	}
-	return c.ReadBuffer.Size
+	return c.ReadBuffer * 1024 * 1024
 }
 
 // GetSecurity returns the security settings.
 func (c *Config) GetSecurity() (cipher.AEAD, error) {
-	if c.Seed != nil {
-		return NewAEADAESGCMBasedOnSeed(c.Seed.Seed), nil
+	if c.Seed != "" {
+		return NewAEADAESGCMBasedOnSeed(c.Seed), nil
 	}
 	return NewSimpleAuthenticator(), nil
 }
