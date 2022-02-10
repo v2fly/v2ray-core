@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/environment"
+	"github.com/v2fly/v2ray-core/v5/common/environment/transientstorageimpl"
 	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"github.com/v2fly/v2ray-core/v5/features"
 	"github.com/v2fly/v2ray-core/v5/features/dns"
@@ -90,13 +92,15 @@ type Instance struct {
 	features           []features.Feature
 	featureResolutions []resolution
 	running            bool
+	env                environment.RootEnvironment
 
 	ctx context.Context
 }
 
 func AddInboundHandler(server *Instance, config *InboundHandlerConfig) error {
 	inboundManager := server.GetFeature(inbound.ManagerType()).(inbound.Manager)
-	rawHandler, err := CreateObject(server, config)
+	proxyEnv := server.env.ProxyEnvironment("i" + config.Tag)
+	rawHandler, err := CreateObjectWithEnvironment(server, config, proxyEnv)
 	if err != nil {
 		return err
 	}
@@ -122,7 +126,8 @@ func addInboundHandlers(server *Instance, configs []*InboundHandlerConfig) error
 
 func AddOutboundHandler(server *Instance, config *OutboundHandlerConfig) error {
 	outboundManager := server.GetFeature(outbound.ManagerType()).(outbound.Manager)
-	rawHandler, err := CreateObject(server, config)
+	proxyEnv := server.env.ProxyEnvironment("o" + config.Tag)
+	rawHandler, err := CreateObjectWithEnvironment(server, config, proxyEnv)
 	if err != nil {
 		return err
 	}
@@ -186,12 +191,16 @@ func initInstanceWithConfig(config *Config, server *Instance) (bool, error) {
 		return true, err
 	}
 
+	server.env = environment.NewRootEnvImpl(server.ctx, transientstorageimpl.NewScopedTransientStorageImpl())
+
 	for _, appSettings := range config.App {
 		settings, err := serial.GetInstanceOf(appSettings)
 		if err != nil {
 			return true, err
 		}
-		obj, err := CreateObject(server, settings)
+		key := appSettings.TypeUrl
+		appEnv := server.env.AppEnvironment(key)
+		obj, err := CreateObjectWithEnvironment(server, settings, appEnv)
 		if err != nil {
 			return true, err
 		}
