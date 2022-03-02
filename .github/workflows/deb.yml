@@ -30,7 +30,7 @@ jobs:
           apt-get install -y git wget
 
       - name: Checkout codebase
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Download geo files
         run: |
