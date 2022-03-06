@@ -315,7 +315,7 @@ func init() {
 		return New(ctx, config.(*Config))
 	}))
 
-	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) { // nolint: staticcheck
+	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		ctx = cfgcommon.NewConfigureLoadingContext(ctx)
 
 		geoloadername := platform.NewEnvFlag("v2ray.conf.geoloader").GetValue(func() string {
