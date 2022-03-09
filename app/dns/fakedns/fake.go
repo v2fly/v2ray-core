@@ -8,6 +8,7 @@ import (
 	"math"
 	"math/big"
 	gonet "net"
+	"sync"
 
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/cache"
@@ -18,6 +19,7 @@ import (
 type Holder struct {
 	domainToIP cache.Lru
 	nextIP     *big.Int
+	mu         *sync.Mutex
 
 	ipRange *gonet.IPNet
 
@@ -54,6 +56,7 @@ func (fkdns *Holder) Close() error {
 	fkdns.domainToIP = nil
 	fkdns.nextIP = nil
 	fkdns.ipRange = nil
+	fkdns.mu = nil
 	return nil
 }
 
@@ -72,7 +75,7 @@ func NewFakeDNSHolder() (*Holder, error) {
 }
 
 func NewFakeDNSHolderConfigOnly(conf *FakeDnsPool) (*Holder, error) {
-	return &Holder{nil, nil, nil, conf}, nil
+	return &Holder{nil, nil, nil, nil, conf}, nil
 }
 
 func (fkdns *Holder) initializeFromConfig() error {
@@ -102,11 +105,14 @@ func (fkdns *Holder) initialize(ipPoolCidr string, lruSize int) error {
 	fkdns.domainToIP = cache.NewLru(lruSize)
 	fkdns.ipRange = ipRange
 	fkdns.nextIP = currentIP
+	fkdns.mu = new(sync.Mutex)
 	return nil
 }
 
 // GetFakeIPForDomain checks and generate a fake IP for a domain name
 func (fkdns *Holder) GetFakeIPForDomain(domain string) []net.Address {
+	fkdns.mu.Lock()
+	defer fkdns.mu.Unlock()
 	if v, ok := fkdns.domainToIP.Get(domain); ok {
 		return []net.Address{v.(net.Address)}
 	}
