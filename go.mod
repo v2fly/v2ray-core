@@ -14,7 +14,7 @@ require (
 	github.com/jhump/protoreflect v1.12.0
 	github.com/lucas-clemente/quic-go v0.25.0
 	github.com/marten-seemann/qtls-go1-17 v0.1.0
-	github.com/miekg/dns v1.1.46
+	github.com/miekg/dns v1.1.47
 	github.com/pelletier/go-toml v1.9.4
 	github.com/pires/go-proxyproto v0.6.2
 	github.com/seiflotfy/cuckoofilter v0.0.0-20201222105146-bc6005554a0c
