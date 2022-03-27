@@ -2,10 +2,13 @@ package quic
 
 import (
 	"context"
+	"io"
 	"sync"
 	"time"
 
 	"github.com/lucas-clemente/quic-go"
+	"github.com/lucas-clemente/quic-go/logging"
+	"github.com/lucas-clemente/quic-go/qlog"
 
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -152,6 +155,9 @@ func (s *clientSessions) openConnection(destAddr net.Addr, config *Config, tlsCo
 		HandshakeIdleTimeout: time.Second * 8,
 		MaxIdleTimeout:       time.Second * 30,
 		KeepAlive:            true,
+		Tracer: qlog.NewTracer(func(_ logging.Perspective, connID []byte) io.WriteCloser {
+			return &QlogWriter{connID: connID}
+		}),
 	}
 
 	conn, err := wrapSysConn(rawConn.(*net.UDPConn), config)

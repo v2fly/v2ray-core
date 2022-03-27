@@ -2,9 +2,12 @@ package quic
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"github.com/lucas-clemente/quic-go"
+	"github.com/lucas-clemente/quic-go/logging"
+	"github.com/lucas-clemente/quic-go/qlog"
 
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -108,6 +111,9 @@ func Listen(ctx context.Context, address net.Address, port net.Port, streamSetti
 		MaxIncomingStreams:    32,
 		MaxIncomingUniStreams: -1,
 		KeepAlive:             true,
+		Tracer: qlog.NewTracer(func(_ logging.Perspective, connID []byte) io.WriteCloser {
+			return &QlogWriter{connID: connID}
+		}),
 	}
 
 	conn, err := wrapSysConn(rawConn.(*net.UDPConn), config)
