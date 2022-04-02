@@ -297,7 +297,7 @@ func (s *DoHNameServer) findIPsForDomain(domain string, option dns_feature.IPOpt
 
 	var ips []net.Address
 	var lastErr error
-	if option.IPv6Enable && record.AAAA != nil && record.AAAA.RCode == dnsmessage.RCodeSuccess {
+	if option.IPv6Enable {
 		aaaa, err := record.AAAA.getIPs()
 		if err != nil {
 			lastErr = err
@@ -305,7 +305,7 @@ func (s *DoHNameServer) findIPsForDomain(domain string, option dns_feature.IPOpt
 		ips = append(ips, aaaa...)
 	}
 
-	if option.IPv4Enable && record.A != nil && record.A.RCode == dnsmessage.RCodeSuccess {
+	if option.IPv4Enable {
 		a, err := record.A.getIPs()
 		if err != nil {
 			lastErr = err
