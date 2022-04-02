@@ -12,7 +12,7 @@ require (
 	github.com/google/go-cmp v0.5.7
 	github.com/gorilla/websocket v1.5.0
 	github.com/jhump/protoreflect v1.12.0
-	github.com/lucas-clemente/quic-go v0.25.0
+	github.com/lucas-clemente/quic-go v0.26.0
 	github.com/marten-seemann/qtls-go1-17 v0.1.1
 	github.com/miekg/dns v1.1.48
 	github.com/pelletier/go-toml v1.9.4
@@ -45,8 +45,8 @@ require (
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40 // indirect
-	github.com/marten-seemann/qtls-go1-16 v0.1.4 // indirect
-	github.com/marten-seemann/qtls-go1-18 v0.1.0-beta.1 // indirect
+	github.com/marten-seemann/qtls-go1-16 v0.1.5 // indirect
+	github.com/marten-seemann/qtls-go1-18 v0.1.1 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/onsi/ginkgo v1.16.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
