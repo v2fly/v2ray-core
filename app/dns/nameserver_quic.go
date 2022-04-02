@@ -232,20 +232,20 @@ func (s *QUICNameServer) findIPsForDomain(domain string, option dns_feature.IPOp
 
 	var ips []net.Address
 	var lastErr error
-	if option.IPv6Enable && record.AAAA != nil && record.AAAA.RCode == dnsmessage.RCodeSuccess {
-		aaaa, err := record.AAAA.getIPs()
-		if err != nil {
-			lastErr = err
-		}
-		ips = append(ips, aaaa...)
-	}
-
-	if option.IPv4Enable && record.A != nil && record.A.RCode == dnsmessage.RCodeSuccess {
+	if option.IPv4Enable {
 		a, err := record.A.getIPs()
 		if err != nil {
 			lastErr = err
 		}
 		ips = append(ips, a...)
+	}
+
+	if option.IPv6Enable {
+		aaaa, err := record.AAAA.getIPs()
+		if err != nil {
+			lastErr = err
+		}
+		ips = append(ips, aaaa...)
 	}
 
 	if len(ips) > 0 {
@@ -256,11 +256,7 @@ func (s *QUICNameServer) findIPsForDomain(domain string, option dns_feature.IPOp
 		return nil, lastErr
 	}
 
-	if (option.IPv4Enable && record.A != nil) || (option.IPv6Enable && record.AAAA != nil) {
-		return nil, dns_feature.ErrEmptyResponse
-	}
-
-	return nil, errRecordNotFound
+	return nil, dns_feature.ErrEmptyResponse
 }
 
 // QueryIP is called from dns.Server->queryIPTimeout
