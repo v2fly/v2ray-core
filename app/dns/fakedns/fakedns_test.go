@@ -2,13 +2,16 @@ package fakedns
 
 import (
 	gonet "net"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/uuid"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/uuid"
 )
 
 func TestNewFakeDnsHolder(_ *testing.T) {
@@ -69,6 +72,31 @@ func TestFakeDnsHolderCreateMappingManySingleDomain(t *testing.T) {
 
 	addr2 := fkdns.GetFakeIPForDomain("fakednstest.v2fly.org")
 	assert.Equal(t, "198.18.0.0", addr2[0].IP().String())
+}
+
+func TestGetFakeIPForDomainConcurrently(t *testing.T) {
+	fkdns, err := NewFakeDNSHolder()
+	common.Must(err)
+
+	total := 200
+	addr := make([][]net.Address, total+1)
+	var errg errgroup.Group
+	for i := 0; i < total; i++ {
+		errg.Go(testGetFakeIP(i, addr, fkdns))
+	}
+	errg.Wait()
+	for i := 0; i < total; i++ {
+		for j := i + 1; j < total; j++ {
+			assert.NotEqual(t, addr[i][0].IP().String(), addr[j][0].IP().String())
+		}
+	}
+}
+
+func testGetFakeIP(index int, addr [][]net.Address, fkdns *Holder) func() error {
+	return func() error {
+		addr[index] = fkdns.GetFakeIPForDomain("fakednstest" + strconv.Itoa(index) + ".example.com")
+		return nil
+	}
 }
 
 func TestFakeDnsHolderCreateMappingAndRollOver(t *testing.T) {

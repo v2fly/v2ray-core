@@ -10,15 +10,15 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/errors"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	. "github.com/v2fly/v2ray-core/v4/transport/internet/kcp"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	. "github.com/v2fly/v2ray-core/v5/transport/internet/kcp"
 )
 
 func TestDialAndListen(t *testing.T) {
-	listerner, err := NewListener(context.Background(), net.LocalHostIP, net.Port(0), &internet.MemoryStreamConfig{
+	listener, err := NewListener(context.Background(), net.LocalHostIP, net.Port(0), &internet.MemoryStreamConfig{
 		ProtocolName:     "mkcp",
 		ProtocolSettings: &Config{},
 	}, func(conn internet.Connection) {
@@ -38,9 +38,9 @@ func TestDialAndListen(t *testing.T) {
 		}(conn)
 	})
 	common.Must(err)
-	defer listerner.Close()
+	defer listener.Close()
 
-	port := net.Port(listerner.Addr().(*net.UDPAddr).Port)
+	port := net.Port(listener.Addr().(*net.UDPAddr).Port)
 
 	var errg errgroup.Group
 	for i := 0; i < 10; i++ {
@@ -76,10 +76,10 @@ func TestDialAndListen(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for i := 0; i < 60 && listerner.ActiveConnections() > 0; i++ {
+	for i := 0; i < 60 && listener.ActiveConnections() > 0; i++ {
 		time.Sleep(500 * time.Millisecond)
 	}
-	if v := listerner.ActiveConnections(); v != 0 {
+	if v := listener.ActiveConnections(); v != 0 {
 		t.Error("active connections: ", v)
 	}
 }

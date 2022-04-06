@@ -3,10 +3,10 @@ package jsonv4
 import (
 	"fmt"
 
-	handlerService "github.com/v2fly/v2ray-core/v4/app/proxyman/command"
-	"github.com/v2fly/v2ray-core/v4/main/commands/all/api"
-	"github.com/v2fly/v2ray-core/v4/main/commands/base"
-	"github.com/v2fly/v2ray-core/v4/main/commands/helpers"
+	handlerService "github.com/v2fly/v2ray-core/v5/app/proxyman/command"
+	"github.com/v2fly/v2ray-core/v5/main/commands/all/api"
+	"github.com/v2fly/v2ray-core/v5/main/commands/base"
+	"github.com/v2fly/v2ray-core/v5/main/commands/helpers"
 )
 
 var cmdAddOutbounds = &base.Command{

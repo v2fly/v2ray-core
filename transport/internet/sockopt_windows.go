@@ -1,6 +1,9 @@
 package internet
 
-import "syscall"
+import (
+	"golang.org/x/sys/windows"
+	"syscall"
+)
 
 const (
 	TCP_FASTOPEN = 15 // nolint: revive,stylecheck
@@ -25,10 +28,22 @@ func applyOutboundSocketOptions(network string, address string, fd uintptr, conf
 		if err := setTFO(syscall.Handle(fd), config.Tfo); err != nil {
 			return err
 		}
-		if config.TcpKeepAliveInterval > 0 {
+		if config.TcpKeepAliveIdle > 0 {
 			if err := syscall.SetsockoptInt(syscall.Handle(fd), syscall.SOL_SOCKET, syscall.SO_KEEPALIVE, 1); err != nil {
 				return newError("failed to set SO_KEEPALIVE", err)
 			}
+		}
+	}
+
+	if config.TxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_SNDBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_SNDBUF").Base(err)
+		}
+	}
+
+	if config.RxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_RCVBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_RCVBUF").Base(err)
 		}
 	}
 
@@ -40,10 +55,22 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 		if err := setTFO(syscall.Handle(fd), config.Tfo); err != nil {
 			return err
 		}
-		if config.TcpKeepAliveInterval > 0 {
+		if config.TcpKeepAliveIdle > 0 {
 			if err := syscall.SetsockoptInt(syscall.Handle(fd), syscall.SOL_SOCKET, syscall.SO_KEEPALIVE, 1); err != nil {
 				return newError("failed to set SO_KEEPALIVE", err)
 			}
+		}
+	}
+
+	if config.TxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_SNDBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_SNDBUF").Base(err)
+		}
+	}
+
+	if config.RxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_RCVBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_RCVBUF").Base(err)
 		}
 	}
 

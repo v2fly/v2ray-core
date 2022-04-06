@@ -3,7 +3,7 @@ package kcp
 import (
 	"sync"
 
-	"github.com/v2fly/v2ray-core/v4/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
 )
 
 type ReceivingWindow struct {

@@ -7,22 +7,23 @@ import (
 	"context"
 	"strings"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/features/dns"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
 )
 
-// newFakeDNSSniffer Create a Fake DNS metadata sniffer
+// newFakeDNSSniffer Creates a Fake DNS metadata sniffer
 func newFakeDNSSniffer(ctx context.Context) (protocolSnifferWithMetadata, error) {
 	var fakeDNSEngine dns.FakeDNSEngine
-	err := core.RequireFeatures(ctx, func(fdns dns.FakeDNSEngine) {
-		fakeDNSEngine = fdns
-	})
-	if err != nil {
-		return protocolSnifferWithMetadata{}, err
+	{
+		fakeDNSEngineFeat := core.MustFromContext(ctx).GetFeature((*dns.FakeDNSEngine)(nil))
+		if fakeDNSEngineFeat != nil {
+			fakeDNSEngine = fakeDNSEngineFeat.(dns.FakeDNSEngine)
+		}
 	}
+
 	if fakeDNSEngine == nil {
 		errNotInit := newError("FakeDNSEngine is not initialized, but such a sniffer is used").AtError()
 		return protocolSnifferWithMetadata{}, errNotInit

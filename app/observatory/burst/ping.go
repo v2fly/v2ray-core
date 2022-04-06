@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/tagged"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tagged"
 )
 
 type pingClient struct {

@@ -24,13 +24,33 @@ func applyOutboundSocketOptions(network string, address string, fd uintptr, conf
 			}
 		}
 
+		if config.TcpKeepAliveIdle > 0 {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_KEEPALIVE, int(config.TcpKeepAliveInterval)); err != nil {
+				return newError("failed to set TCP_KEEPINTVL").Base(err)
+			}
+		}
 		if config.TcpKeepAliveInterval > 0 {
-			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_KEEPINTVL, int(config.TcpKeepAliveInterval)); err != nil {
-				return newError("failed to set TCP_KEEPINTVL", err)
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_KEEPINTVL, int(config.TcpKeepAliveIdle)); err != nil {
+				return newError("failed to set TCP_KEEPIDLE").Base(err)
 			}
+		}
+
+		if config.TcpKeepAliveIdle > 0 || config.TcpKeepAliveInterval > 0 {
 			if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_KEEPALIVE, 1); err != nil {
-				return newError("failed to set SO_KEEPALIVE", err)
+				return newError("failed to set SO_KEEPALIVE").Base(err)
 			}
+		}
+	}
+
+	if config.TxBufSize != 0 {
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_SNDBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_SNDBUF").Base(err)
+		}
+	}
+
+	if config.RxBufSize != 0 {
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_RCVBUF, int(config.RxBufSize)); err != nil {
+			return newError("failed to set SO_RCVBUF").Base(err)
 		}
 	}
 
@@ -49,16 +69,34 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 				return err
 			}
 		}
-		if config.TcpKeepAliveInterval > 0 {
-			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_KEEPINTVL, int(config.TcpKeepAliveInterval)); err != nil {
-				return newError("failed to set TCP_KEEPINTVL", err)
+		if config.TcpKeepAliveIdle > 0 {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_KEEPALIVE, int(config.TcpKeepAliveInterval)); err != nil {
+				return newError("failed to set TCP_KEEPINTVL").Base(err)
 			}
+		}
+		if config.TcpKeepAliveInterval > 0 {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.SO_KEEPALIVE, int(config.TcpKeepAliveIdle)); err != nil {
+				return newError("failed to set TCP_KEEPIDLE").Base(err)
+			}
+		}
+		if config.TcpKeepAliveIdle > 0 || config.TcpKeepAliveInterval > 0 {
 			if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_KEEPALIVE, 1); err != nil {
-				return newError("failed to set SO_KEEPALIVE", err)
+				return newError("failed to set SO_KEEPALIVE").Base(err)
 			}
 		}
 	}
 
+	if config.TxBufSize != 0 {
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_SNDBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_SNDBUF/SO_SNDBUFFORCE").Base(err)
+		}
+	}
+
+	if config.RxBufSize != 0 {
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_RCVBUF, int(config.RxBufSize)); err != nil {
+			return newError("failed to set SO_RCVBUF/SO_RCVBUFFORCE").Base(err)
+		}
+	}
 	return nil
 }
 

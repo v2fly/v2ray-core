@@ -1,6 +1,6 @@
 package command
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 import (
 	"context"
@@ -8,10 +8,10 @@ import (
 
 	grpc "google.golang.org/grpc"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/log"
-	"github.com/v2fly/v2ray-core/v4/common"
-	cmlog "github.com/v2fly/v2ray-core/v4/common/log"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/log"
+	"github.com/v2fly/v2ray-core/v5/common"
+	cmlog "github.com/v2fly/v2ray-core/v5/common/log"
 )
 
 // LoggerServer is the implemention of LoggerService

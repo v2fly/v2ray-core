@@ -104,7 +104,7 @@ jobs:
 
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -119,7 +119,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.17
+          go-version: ^1.18
 
       - name: Get project dependencies
         run: go mod download
@@ -180,14 +180,14 @@ jobs:
     needs: build
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.17
+          go-version: ^1.18
 
       - uses: actions/download-artifact@v2
         with:

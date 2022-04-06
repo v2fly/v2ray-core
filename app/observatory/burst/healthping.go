@@ -7,7 +7,7 @@ import (
 	sync "sync"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common/dice"
+	"github.com/v2fly/v2ray-core/v5/common/dice"
 )
 
 // HealthPingSettings holds settings for health Checker
@@ -175,7 +175,7 @@ func (h *HealthPing) doCheck(tags []string, duration time.Duration, rounds int) 
 	}
 }
 
-// PutResult put a ping rtt to results
+// PutResult puts a ping rtt to results
 func (h *HealthPing) PutResult(tag string, rtt time.Duration) {
 	h.access.Lock()
 	defer h.access.Unlock()
