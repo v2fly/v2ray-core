@@ -14,39 +14,39 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
 
-type sessionContext struct {
+type connectionContext struct {
 	rawConn *sysConn
-	session quic.Session
+	conn    quic.Connection
 }
 
-var errSessionClosed = newError("session closed")
+var errConnectionClosed = newError("connection closed")
 
-func (c *sessionContext) openStream(destAddr net.Addr) (*interConn, error) {
-	if !isActive(c.session) {
-		return nil, errSessionClosed
+func (c *connectionContext) openStream(destAddr net.Addr) (*interConn, error) {
+	if !isActive(c.conn) {
+		return nil, errConnectionClosed
 	}
 
-	stream, err := c.session.OpenStream()
+	stream, err := c.conn.OpenStream()
 	if err != nil {
 		return nil, err
 	}
 
 	conn := &interConn{
 		stream: stream,
-		local:  c.session.LocalAddr(),
+		local:  c.conn.LocalAddr(),
 		remote: destAddr,
 	}
 
 	return conn, nil
 }
 
-type clientSessions struct {
-	access   sync.Mutex
-	sessions map[net.Destination][]*sessionContext
-	cleanup  *task.Periodic
+type clientConnections struct {
+	access  sync.Mutex
+	conns   map[net.Destination][]*connectionContext
+	cleanup *task.Periodic
 }
 
-func isActive(s quic.Session) bool {
+func isActive(s quic.Connection) bool {
 	select {
 	case <-s.Context().Done():
 		return false
@@ -55,31 +55,31 @@ func isActive(s quic.Session) bool {
 	}
 }
 
-func removeInactiveSessions(sessions []*sessionContext) []*sessionContext {
-	activeSessions := make([]*sessionContext, 0, len(sessions))
-	for _, s := range sessions {
-		if isActive(s.session) {
-			activeSessions = append(activeSessions, s)
+func removeInactiveConnections(conns []*connectionContext) []*connectionContext {
+	activeConnections := make([]*connectionContext, 0, len(conns))
+	for _, s := range conns {
+		if isActive(s.conn) {
+			activeConnections = append(activeConnections, s)
 			continue
 		}
-		if err := s.session.CloseWithError(0, ""); err != nil {
-			newError("failed to close session").Base(err).WriteToLog()
+		if err := s.conn.CloseWithError(0, ""); err != nil {
+			newError("failed to close connection").Base(err).WriteToLog()
 		}
 		if err := s.rawConn.Close(); err != nil {
 			newError("failed to close raw connection").Base(err).WriteToLog()
 		}
 	}
 
-	if len(activeSessions) < len(sessions) {
-		return activeSessions
+	if len(activeConnections) < len(conns) {
+		return activeConnections
 	}
 
-	return sessions
+	return conns
 }
 
-func openStream(sessions []*sessionContext, destAddr net.Addr) *interConn {
-	for _, s := range sessions {
-		if !isActive(s.session) {
+func openStream(conns []*connectionContext, destAddr net.Addr) *interConn {
+	for _, s := range conns {
+		if !isActive(s.conn) {
 			continue
 		}
 
@@ -94,50 +94,50 @@ func openStream(sessions []*sessionContext, destAddr net.Addr) *interConn {
 	return nil
 }
 
-func (s *clientSessions) cleanSessions() error {
+func (s *clientConnections) cleanConnections() error {
 	s.access.Lock()
 	defer s.access.Unlock()
 
-	if len(s.sessions) == 0 {
+	if len(s.conns) == 0 {
 		return nil
 	}
 
-	newSessionMap := make(map[net.Destination][]*sessionContext)
+	newConnMap := make(map[net.Destination][]*connectionContext)
 
-	for dest, sessions := range s.sessions {
-		sessions = removeInactiveSessions(sessions)
-		if len(sessions) > 0 {
-			newSessionMap[dest] = sessions
+	for dest, conns := range s.conns {
+		conns = removeInactiveConnections(conns)
+		if len(conns) > 0 {
+			newConnMap[dest] = conns
 		}
 	}
 
-	s.sessions = newSessionMap
+	s.conns = newConnMap
 	return nil
 }
 
-func (s *clientSessions) openConnection(destAddr net.Addr, config *Config, tlsConfig *tls.Config, sockopt *internet.SocketConfig) (internet.Connection, error) {
+func (s *clientConnections) openConnection(destAddr net.Addr, config *Config, tlsConfig *tls.Config, sockopt *internet.SocketConfig) (internet.Connection, error) {
 	s.access.Lock()
 	defer s.access.Unlock()
 
-	if s.sessions == nil {
-		s.sessions = make(map[net.Destination][]*sessionContext)
+	if s.conns == nil {
+		s.conns = make(map[net.Destination][]*connectionContext)
 	}
 
 	dest := net.DestinationFromAddr(destAddr)
 
-	var sessions []*sessionContext
-	if s, found := s.sessions[dest]; found {
-		sessions = s
+	var conns []*connectionContext
+	if s, found := s.conns[dest]; found {
+		conns = s
 	}
 
 	if true {
-		conn := openStream(sessions, destAddr)
+		conn := openStream(conns, destAddr)
 		if conn != nil {
 			return conn, nil
 		}
 	}
 
-	sessions = removeInactiveSessions(sessions)
+	conns = removeInactiveConnections(conns)
 
 	rawConn, err := internet.ListenSystemPacket(context.Background(), &net.UDPAddr{
 		IP:   []byte{0, 0, 0, 0},
@@ -154,33 +154,33 @@ func (s *clientSessions) openConnection(destAddr net.Addr, config *Config, tlsCo
 		KeepAlive:            true,
 	}
 
-	conn, err := wrapSysConn(rawConn.(*net.UDPConn), config)
+	sysConn, err := wrapSysConn(rawConn.(*net.UDPConn), config)
 	if err != nil {
 		rawConn.Close()
 		return nil, err
 	}
 
-	session, err := quic.DialContext(context.Background(), conn, destAddr, "", tlsConfig.GetTLSConfig(tls.WithDestination(dest)), quicConfig)
+	conn, err := quic.DialContext(context.Background(), sysConn, destAddr, "", tlsConfig.GetTLSConfig(tls.WithDestination(dest)), quicConfig)
 	if err != nil {
-		conn.Close()
+		sysConn.Close()
 		return nil, err
 	}
 
-	context := &sessionContext{
-		session: session,
-		rawConn: conn,
+	context := &connectionContext{
+		conn:    conn,
+		rawConn: sysConn,
 	}
-	s.sessions[dest] = append(sessions, context)
+	s.conns[dest] = append(conns, context)
 	return context.openStream(destAddr)
 }
 
-var client clientSessions
+var client clientConnections
 
 func init() {
-	client.sessions = make(map[net.Destination][]*sessionContext)
+	client.conns = make(map[net.Destination][]*connectionContext)
 	client.cleanup = &task.Periodic{
 		Interval: time.Minute,
-		Execute:  client.cleanSessions,
+		Execute:  client.cleanConnections,
 	}
 	common.Must(client.cleanup.Start())
 }
