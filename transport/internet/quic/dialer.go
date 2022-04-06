@@ -138,8 +138,8 @@ func (s *clientConnections) openConnection(destAddr net.Addr, config *Config, tl
 	}
 
 	conns = removeInactiveConnections(conns)
-  
-  newError("dialing QUIC to ", dest).WriteToLog()
+
+	newError("dialing QUIC to ", dest).WriteToLog()
 
 	rawConn, err := internet.ListenSystemPacket(context.Background(), &net.UDPAddr{
 		IP:   []byte{0, 0, 0, 0},
