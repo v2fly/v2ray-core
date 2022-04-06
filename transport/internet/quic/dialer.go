@@ -130,7 +130,7 @@ func (s *clientConnections) openConnection(destAddr net.Addr, config *Config, tl
 		conns = s
 	}
 
-	if true {
+	{
 		conn := openStream(conns, destAddr)
 		if conn != nil {
 			return conn, nil
