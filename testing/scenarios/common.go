@@ -24,6 +24,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/retry"
 	"github.com/v2fly/v2ray-core/v5/common/serial"
+  	"github.com/v2fly/v2ray-core/v5/common/units"
 )
 
 func xor(b []byte) []byte {
@@ -198,7 +199,18 @@ func testUDPConn(port net.Port, payloadSize int, timeout time.Duration) func() e
 }
 
 func testTCPConn2(conn net.Conn, payloadSize int, timeout time.Duration) func() error {
-	return func() error {
+	return func() (err1 error) {
+		start := time.Now()
+		defer func() {
+			var m runtime.MemStats
+			runtime.ReadMemStats(&m)
+			// For info on each, see: https://golang.org/pkg/runtime/#MemStats
+			fmt.Println("testConn finishes:", time.Since(start).Milliseconds(), "ms\t",
+				err1, "\tAlloc =", units.ByteSize(m.Alloc).String(),
+				"\tTotalAlloc =", units.ByteSize(m.TotalAlloc).String(),
+				"\tSys =", units.ByteSize(m.Sys).String(),
+				"\tNumGC =", m.NumGC)
+		}()
 		payload := make([]byte, payloadSize)
 		common.Must2(rand.Read(payload))
 
