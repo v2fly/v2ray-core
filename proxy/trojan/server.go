@@ -245,7 +245,8 @@ func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReade
 func (s *Server) handleConnection(ctx context.Context, sessionPolicy policy.Session,
 	destination net.Destination,
 	clientReader buf.Reader,
-	clientWriter buf.Writer, dispatcher routing.Dispatcher) error {
+	clientWriter buf.Writer, dispatcher routing.Dispatcher,
+) error {
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
 	ctx = policy.ContextWithBufferPolicy(ctx, sessionPolicy.Buffer)

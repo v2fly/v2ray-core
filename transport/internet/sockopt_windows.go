@@ -1,8 +1,9 @@
 package internet
 
 import (
-	"golang.org/x/sys/windows"
 	"syscall"
+
+	"golang.org/x/sys/windows"
 )
 
 const (
