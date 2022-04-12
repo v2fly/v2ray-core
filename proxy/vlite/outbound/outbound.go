@@ -48,7 +48,7 @@ type Handler struct {
 
 // Process implements proxy.Outbound.Process().
 func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer internet.Dialer) error {
-	proxyEnvironment := envctx.EnvironmentFromContext(ctx).(environment.ProxyEnvironment)
+	proxyEnvironment := envctx.EnvironmentFromContext(h.ctx).(environment.ProxyEnvironment)
 	statusInstanceIfce, err := proxyEnvironment.TransientStorage().Get(ctx, "status")
 	if err != nil {
 		return newError("uninitialized handler").Base(err)
@@ -64,7 +64,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		return newError("target not specified")
 	}
 	destination := outbound.Target
-	packetConnOut := statusInstance.connAdp.DialUDP(net.UDPAddr{Port: int(connid)})
+	packetConnOut := statusInstance.connAdp.DialUDP(net.UDPAddr{Port: int(connid % 65535)})
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, time.Second*600)
 
@@ -118,7 +118,7 @@ type status struct {
 }
 
 func createStatusFromConfig(config *UDPProtocolConfig) (*status, error) {
-	s := &status{}
+	s := &status{password: []byte(config.Password)}
 	ctx := context.Background()
 
 	s.msgbus = ibus.NewMessageBus()
@@ -130,13 +130,14 @@ func createStatusFromConfig(config *UDPProtocolConfig) (*status, error) {
 
 	ctx = context.WithValue(ctx, interfaces.ExtraOptionsUDPMask, string(s.password))
 
-	destinationString := fmt.Sprintf("%v:%v", config.Address.String(), config.Port)
+	destinationString := fmt.Sprintf("%v:%v", config.Address.AsAddress().String(), config.Port)
 
 	s.udpdialer = udpClient.NewUdpClient(destinationString, ctx)
 	if config.EnableStabilization {
 		s.udpdialer = udpunic.NewUdpUniClient(string(s.password), ctx, s.udpdialer)
 		s.udpdialer = uniclient.NewUnifiedConnectionClient(s.udpdialer, ctx)
 	}
+	s.ctx = ctx
 	return s, nil
 }
 
