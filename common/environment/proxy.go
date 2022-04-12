@@ -6,6 +6,8 @@ type ProxyEnvironmentCapabilitySet interface {
 	TransientStorageCapabilitySet
 }
 
+// TODO Add NarrowScopeToConnection
+
 type ProxyEnvironment interface {
 	ProxyEnvironmentCapabilitySet
 	NarrowScope(key string) (ProxyEnvironment, error)
