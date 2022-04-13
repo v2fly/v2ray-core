@@ -130,6 +130,11 @@ func createStatusFromConfig(config *UDPProtocolConfig) (*status, error) {
 
 	ctx = context.WithValue(ctx, interfaces.ExtraOptionsUDPMask, string(s.password))
 
+	if config.HandshakeMaskingPaddingSize != 0 {
+		ctxv := &interfaces.ExtraOptionsUsePacketArmorValue{PacketArmorPaddingTo: int(config.HandshakeMaskingPaddingSize), UsePacketArmor: true}
+		ctx = context.WithValue(ctx, interfaces.ExtraOptionsUsePacketArmor, ctxv)
+	}
+
 	destinationString := fmt.Sprintf("%v:%v", config.Address.AsAddress().String(), config.Port)
 
 	s.udpdialer = udpClient.NewUdpClient(destinationString, ctx)
