@@ -407,8 +407,8 @@ github.com/v2fly/ss-bloomring v0.0.0-20210312155135-28617310f63e/go.mod h1:5t19P
 github.com/viant/assertly v0.4.8/go.mod h1:aGifi++jvCrUaklKEKT0BU95igDNaqkvz+49uaYMPRU=
 github.com/viant/toolbox v0.24.0/go.mod h1:OxMCG57V0PXuIP2HNQrtJf2CjqdmbrOx5EkMILuUhzM=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
-github.com/xiaokangwang/VLite v0.0.0-20211025121834-0283a2d8f1a6 h1:2x5SYCEOkD+8OSZRRn734PgtYGHdrgW66XlfI5bXw6k=
-github.com/xiaokangwang/VLite v0.0.0-20211025121834-0283a2d8f1a6/go.mod h1:QN7Go2ftTVfx0aCTh9RXHV8pkpi0FtmbwQw40dy61wQ=
+github.com/xiaokangwang/VLite v0.0.0-20220418190619-cff95160a432 h1:I/ATawgO2RerCq9ACwL0wBB8xNXZdE3J+93MCEHReRs=
+github.com/xiaokangwang/VLite v0.0.0-20220418190619-cff95160a432/go.mod h1:QN7Go2ftTVfx0aCTh9RXHV8pkpi0FtmbwQw40dy61wQ=
 github.com/xtaci/smux v1.5.12/go.mod h1:OMlQbT5vcgl2gb49mFkYo6SMf+zP3rcjcwQz7ZU7IGY=
 github.com/xtaci/smux v1.5.15 h1:6hMiXswcleXj5oNfcJc+DXS8Vj36XX2LaX98udog6Kc=
 github.com/xtaci/smux v1.5.15/go.mod h1:OMlQbT5vcgl2gb49mFkYo6SMf+zP3rcjcwQz7ZU7IGY=
