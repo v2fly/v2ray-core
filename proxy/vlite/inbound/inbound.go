@@ -107,7 +107,7 @@ func (s *status) Connection(conn gonet.Conn, connctx context.Context) context.Co
 
 	}(connctx)
 
-	if s.config.EnableStabilization && s.config.EnableRenegotiation {
+	if !s.config.EnableStabilization || !s.config.EnableRenegotiation {
 		relay := udpsctpserver.NewPacketRelayServer(conn, S_S2CTraffic2, S_S2CDataTraffic2, S_C2STraffic2, s, s.password, connctx)
 		udpserver := server.UDPServer(connctx, S_S2CTraffic, S_S2CDataTraffic, S_C2STraffic, relay)
 		_ = udpserver
@@ -117,7 +117,7 @@ func (s *status) Connection(conn gonet.Conn, connctx context.Context) context.Co
 		udpserver := server.UDPServer(connctx, S_S2CTraffic, S_S2CDataTraffic, S_C2STraffic, relay)
 		_ = udpserver
 	}
-	return nil
+	return connctx
 }
 
 func createStatusFromConfig(config *UDPProtocolConfig) (*status, error) {
@@ -151,7 +151,9 @@ func enableInterface(s *status) error {
 	if s.config.EnableStabilization {
 		s.transport = uniserver.NewUnifiedConnectionTransportHub(s, s.ctx)
 	}
-	s.transport = udpunis.NewUdpUniServer(string(s.password), s.ctx, s.transport)
+	if s.config.EnableStabilization {
+		s.transport = udpunis.NewUdpUniServer(string(s.password), s.ctx, s.transport)
+	}
 	return nil
 }
 
