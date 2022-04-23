@@ -1,6 +1,7 @@
 package dns_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -211,7 +212,7 @@ func TestUDPServer(t *testing.T) {
 		return v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
 	}
 
-	doLookupTest1 := func(client feature_dns.Client) {
+	doLookupTest := func(client feature_dns.Client) {
 		{
 			ips, err := client.LookupIP("google.com")
 			if err != nil {
@@ -247,7 +248,7 @@ func TestUDPServer(t *testing.T) {
 		{
 			clientv6 := client.(feature_dns.IPv6Lookup)
 			ips, err := clientv6.LookupIPv6("ipv4only.google.com")
-			if err != feature_dns.ErrEmptyResponse {
+			if strings.Contains(err.Error(), feature_dns.ErrEmptyResponse.Error()) == false {
 				t.Fatal("error: ", err)
 			}
 			if len(ips) != 0 {
@@ -256,7 +257,7 @@ func TestUDPServer(t *testing.T) {
 		}
 	}
 
-	doLookupTest2 := func(client feature_dns.Client) {
+	doLookupCacheTest := func(client feature_dns.Client) {
 		ips, err := client.LookupIP("google.com")
 		if err != nil {
 			t.Fatal("unexpected error: ", err)
@@ -270,11 +271,11 @@ func TestUDPServer(t *testing.T) {
 	client := createClient(false)
 	concurrencyClient := createClient(true)
 
-	doLookupTest1(client)
-	doLookupTest1(concurrencyClient)
+	doLookupTest(client)
+	doLookupTest(concurrencyClient)
 	dnsServer.Shutdown()
-	doLookupTest2(client)
-	doLookupTest2(concurrencyClient)
+	doLookupCacheTest(client)
+	doLookupCacheTest(concurrencyClient)
 }
 
 func TestPrioritizedDomain(t *testing.T) {

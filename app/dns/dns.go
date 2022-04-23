@@ -206,6 +206,10 @@ type QueryResult struct {
 	err    error
 }
 
+func isTolerableLookupError(err error) bool {
+	return err == context.Canceled || err == context.DeadlineExceeded || err == errExpectedIPNonMatch || err == dns.ErrEmptyResponse
+}
+
 func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, error) {
 	if domain == "" {
 		return nil, newError("empty domain name")
@@ -281,7 +285,7 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, er
 			if queryResult.err != nil {
 				newError("failed to lookup ip for domain ", domain, " at server ", queryResult.server).Base(queryResult.err).WriteToLog()
 
-				if queryResult.err != context.Canceled && queryResult.err != context.DeadlineExceeded && queryResult.err != errExpectedIPNonMatch {
+				if isTolerableLookupError(queryResult.err) == false {
 					return nil, queryResult.err
 				}
 
@@ -312,7 +316,7 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, er
 				newError("failed to lookup ip for domain ", domain, " at server ", client.Name()).Base(err).WriteToLog()
 				errs = append(errs, err)
 			}
-			if err != context.Canceled && err != context.DeadlineExceeded && err != errExpectedIPNonMatch {
+			if isTolerableLookupError(err) == false {
 				return nil, err
 			}
 		}
