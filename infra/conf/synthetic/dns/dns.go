@@ -146,6 +146,7 @@ type DNSConfig struct { // nolint: revive
 	Tag                    string                  `json:"tag"`
 	QueryStrategy          string                  `json:"queryStrategy"`
 	DisableCache           bool                    `json:"disableCache"`
+	EnableConcurrency      bool                    `json:"enableConcurrency"`
 	DisableFallback        bool                    `json:"disableFallback"`
 	DisableFallbackIfMatch bool                    `json:"disableFallbackIfMatch"`
 	cfgctx                 context.Context
@@ -224,6 +225,7 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 	config := &dns.Config{
 		Tag:                    c.Tag,
 		DisableCache:           c.DisableCache,
+		EnableConcurrency:      c.EnableConcurrency,
 		DisableFallback:        c.DisableFallback,
 		DisableFallbackIfMatch: c.DisableFallbackIfMatch,
 	}

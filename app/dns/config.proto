@@ -84,6 +84,8 @@ message Config {
   // DisableCache disables DNS cache
   bool disableCache = 8;
 
+  bool enableConcurrency = 12;
+
   QueryStrategy query_strategy = 9;
 
   bool disableFallback = 10;

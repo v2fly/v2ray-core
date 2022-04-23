@@ -9,12 +9,12 @@ package dns
 import (
 	"context"
 	"fmt"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"strings"
 	"sync"
 
 	"github.com/v2fly/v2ray-core/v5/app/router"
 	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/platform"
 	"github.com/v2fly/v2ray-core/v5/common/session"
@@ -30,6 +30,7 @@ type DNS struct {
 	sync.Mutex
 	tag                    string
 	disableCache           bool
+	enableConcurrency      bool
 	disableFallback        bool
 	disableFallbackIfMatch bool
 	ipOption               *dns.IPOption
@@ -147,6 +148,7 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 		domainMatcher:          domainMatcher,
 		matcherInfos:           matcherInfos,
 		disableCache:           config.DisableCache,
+		enableConcurrency:      config.EnableConcurrency,
 		disableFallback:        config.DisableFallback,
 		disableFallbackIfMatch: config.DisableFallbackIfMatch,
 	}, nil
@@ -198,6 +200,12 @@ func (s *DNS) LookupIPv6(domain string) ([]net.IP, error) {
 	return s.lookupIPInternal(domain, o)
 }
 
+type QueryResult struct {
+	server string
+	ip     []net.IP
+	err    error
+}
+
 func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, error) {
 	if domain == "" {
 		return nil, newError("empty domain name")
@@ -220,24 +228,95 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, er
 		return toNetIP(addrs)
 	}
 
+	enableConcurrency := true
+
 	// Name servers lookup
 	errs := []error{}
 	ctx := session.ContextWithInbound(s.ctx, &session.Inbound{Tag: s.tag})
-	for _, client := range s.sortClients(domain) {
+
+	skipQuery := func(client *Client) bool {
 		if !option.FakeEnable && strings.EqualFold(client.Name(), "FakeDNS") {
 			newError("skip DNS resolution for domain ", domain, " at server ", client.Name()).AtDebug().WriteToLog()
-			continue
+			return true
 		}
-		ips, err := client.QueryIP(ctx, domain, option, s.disableCache)
-		if len(ips) > 0 {
-			return ips, nil
+		return false
+	}
+
+	if enableConcurrency {
+		var queryResultChannels []chan QueryResult // channels for receiving dns querying result
+		for _, client := range s.sortClients(domain) {
+			if skipQuery(client) {
+				continue
+			}
+
+			resultChan := make(chan QueryResult)
+			queryResultChannels = append(queryResultChannels, resultChan)
+
+			// concurrency query
+			go func(resultChan chan QueryResult, client *Client, ctx context.Context, option dns.IPOption, s *DNS) {
+				ips, err := func() ([]net.IP, error) {
+					ips, err := client.QueryIP(ctx, domain, option, s.disableCache)
+					if err != nil {
+						return nil, err
+					}
+
+					if len(ips) > 0 {
+						return ips, nil
+					}
+
+					return nil, newError("server ", client.Name(), " returning nil for domain ", domain) // on empty result
+				}()
+
+				// send query result to channel
+				resultChan <- QueryResult{
+					server: client.Name(),
+					ip:     ips,
+					err:    err,
+				}
+			}(resultChan, client, ctx, option, s)
 		}
-		if err != nil {
-			newError("failed to lookup ip for domain ", domain, " at server ", client.Name()).Base(err).WriteToLog()
-			errs = append(errs, err)
+
+		// get the first available result from query result channel
+		var queryResult QueryResult
+		for key, queryResultChannel := range queryResultChannels {
+			queryResult = <-queryResultChannel
+			if queryResult.err != nil {
+				newError("failed to lookup ip for domain ", domain, " at server ", queryResult.server).Base(queryResult.err).WriteToLog()
+
+				if queryResult.err != context.Canceled && queryResult.err != context.DeadlineExceeded && queryResult.err != errExpectedIPNonMatch {
+					return nil, queryResult.err
+				}
+
+				errs = append(errs, queryResult.err)
+
+				continue // try next result on error
+			}
+			newError("take ", queryResult.ip, " for ", domain, " from #", key, " ", queryResult.server).AtInfo().WriteToLog()
+			return queryResult.ip, nil
 		}
-		if err != context.Canceled && err != context.DeadlineExceeded && err != errExpectedIPNonMatch {
-			return nil, err
+	} else {
+		for _, client := range s.sortClients(domain) {
+			if skipQuery(client) {
+				continue
+			}
+			/*
+				if !option.FakeEnable && strings.EqualFold(client.Name(), "FakeDNS") {
+					newError("skip DNS resolution for domain ", domain, " at server ", client.Name()).AtDebug().WriteToLog()
+					continue
+				}
+			*/
+
+			ips, err := client.QueryIP(ctx, domain, option, s.disableCache)
+			if len(ips) > 0 {
+				return ips, nil
+			}
+			if err != nil {
+				newError("failed to lookup ip for domain ", domain, " at server ", client.Name()).Base(err).WriteToLog()
+				errs = append(errs, err)
+			}
+			if err != context.Canceled && err != context.DeadlineExceeded && err != errExpectedIPNonMatch {
+				return nil, err
+			}
 		}
 	}
 
