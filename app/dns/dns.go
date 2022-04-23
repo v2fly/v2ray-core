@@ -228,8 +228,6 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, er
 		return toNetIP(addrs)
 	}
 
-	enableConcurrency := true
-
 	// Name servers lookup
 	errs := []error{}
 	ctx := session.ContextWithInbound(s.ctx, &session.Inbound{Tag: s.tag})
@@ -242,7 +240,7 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, er
 		return false
 	}
 
-	if enableConcurrency {
+	if s.enableConcurrency {
 		var queryResultChannels []chan QueryResult // channels for receiving dns querying result
 		for _, client := range s.sortClients(domain) {
 			if skipQuery(client) {

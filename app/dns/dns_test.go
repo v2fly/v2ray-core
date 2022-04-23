@@ -177,38 +177,86 @@ func TestUDPServer(t *testing.T) {
 	go dnsServer.ListenAndServe()
 	time.Sleep(time.Second)
 
-	config := &core.Config{
-		App: []*anypb.Any{
-			serial.ToTypedMessage(&Config{
-				NameServers: []*net.Endpoint{
-					{
-						Network: net.Network_UDP,
-						Address: &net.IPOrDomain{
-							Address: &net.IPOrDomain_Ip{
-								Ip: []byte{127, 0, 0, 1},
+	createClient := func(enableConcurrency bool) feature_dns.Client {
+		config := &core.Config{
+			App: []*anypb.Any{
+				serial.ToTypedMessage(&Config{
+					NameServers: []*net.Endpoint{
+						{
+							Network: net.Network_UDP,
+							Address: &net.IPOrDomain{
+								Address: &net.IPOrDomain_Ip{
+									Ip: []byte{127, 0, 0, 1},
+								},
 							},
+							Port: uint32(port),
 						},
-						Port: uint32(port),
 					},
-				},
-			}),
-			serial.ToTypedMessage(&dispatcher.Config{}),
-			serial.ToTypedMessage(&proxyman.OutboundConfig{}),
-			serial.ToTypedMessage(&policy.Config{}),
-		},
-		Outbound: []*core.OutboundHandlerConfig{
-			{
-				ProxySettings: serial.ToTypedMessage(&freedom.Config{}),
+					EnableConcurrency: enableConcurrency,
+				}),
+				serial.ToTypedMessage(&dispatcher.Config{}),
+				serial.ToTypedMessage(&proxyman.OutboundConfig{}),
+				serial.ToTypedMessage(&policy.Config{}),
 			},
-		},
+			Outbound: []*core.OutboundHandlerConfig{
+				{
+					ProxySettings: serial.ToTypedMessage(&freedom.Config{}),
+				},
+			},
+		}
+
+		v, err := core.New(config)
+		common.Must(err)
+
+		return v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
 	}
 
-	v, err := core.New(config)
-	common.Must(err)
+	doLookupTest1 := func(client feature_dns.Client) {
+		{
+			ips, err := client.LookupIP("google.com")
+			if err != nil {
+				t.Fatal("unexpected error: ", err)
+			}
 
-	client := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
+			if r := cmp.Diff(ips, []net.IP{{8, 8, 8, 8}}); r != "" {
+				t.Fatal(r)
+			}
+		}
 
-	{
+		{
+			ips, err := client.LookupIP("facebook.com")
+			if err != nil {
+				t.Fatal("unexpected error: ", err)
+			}
+
+			if r := cmp.Diff(ips, []net.IP{{9, 9, 9, 9}}); r != "" {
+				t.Fatal(r)
+			}
+		}
+
+		{
+			_, err := client.LookupIP("notexist.google.com")
+			if err == nil {
+				t.Fatal("nil error")
+			}
+			if r := feature_dns.RCodeFromError(err); r != uint16(dns.RcodeNameError) {
+				t.Fatal("expected NameError, but got ", r)
+			}
+		}
+
+		{
+			clientv6 := client.(feature_dns.IPv6Lookup)
+			ips, err := clientv6.LookupIPv6("ipv4only.google.com")
+			if err != feature_dns.ErrEmptyResponse {
+				t.Fatal("error: ", err)
+			}
+			if len(ips) != 0 {
+				t.Fatal("ips: ", ips)
+			}
+		}
+	}
+
+	doLookupTest2 := func(client feature_dns.Client) {
 		ips, err := client.LookupIP("google.com")
 		if err != nil {
 			t.Fatal("unexpected error: ", err)
@@ -219,50 +267,14 @@ func TestUDPServer(t *testing.T) {
 		}
 	}
 
-	{
-		ips, err := client.LookupIP("facebook.com")
-		if err != nil {
-			t.Fatal("unexpected error: ", err)
-		}
+	client := createClient(false)
+	concurrencyClient := createClient(true)
 
-		if r := cmp.Diff(ips, []net.IP{{9, 9, 9, 9}}); r != "" {
-			t.Fatal(r)
-		}
-	}
-
-	{
-		_, err := client.LookupIP("notexist.google.com")
-		if err == nil {
-			t.Fatal("nil error")
-		}
-		if r := feature_dns.RCodeFromError(err); r != uint16(dns.RcodeNameError) {
-			t.Fatal("expected NameError, but got ", r)
-		}
-	}
-
-	{
-		clientv6 := client.(feature_dns.IPv6Lookup)
-		ips, err := clientv6.LookupIPv6("ipv4only.google.com")
-		if err != feature_dns.ErrEmptyResponse {
-			t.Fatal("error: ", err)
-		}
-		if len(ips) != 0 {
-			t.Fatal("ips: ", ips)
-		}
-	}
-
+	doLookupTest1(client)
+	doLookupTest1(concurrencyClient)
 	dnsServer.Shutdown()
-
-	{
-		ips, err := client.LookupIP("google.com")
-		if err != nil {
-			t.Fatal("unexpected error: ", err)
-		}
-
-		if r := cmp.Diff(ips, []net.IP{{8, 8, 8, 8}}); r != "" {
-			t.Fatal(r)
-		}
-	}
+	doLookupTest2(client)
+	doLookupTest2(concurrencyClient)
 }
 
 func TestPrioritizedDomain(t *testing.T) {
