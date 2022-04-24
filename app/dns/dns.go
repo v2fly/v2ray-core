@@ -9,9 +9,10 @@ package dns
 import (
 	"context"
 	"fmt"
-	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"strings"
 	"sync"
+
+	"github.com/v2fly/v2ray-core/v5/common/errors"
 
 	"github.com/v2fly/v2ray-core/v5/app/router"
 	"github.com/v2fly/v2ray-core/v5/common"
