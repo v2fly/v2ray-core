@@ -1,7 +1,6 @@
 package dns_test
 
 import (
-	"strings"
 	"testing"
 	"time"
 
@@ -248,7 +247,7 @@ func TestUDPServer(t *testing.T) {
 		{
 			clientv6 := client.(feature_dns.IPv6Lookup)
 			ips, err := clientv6.LookupIPv6("ipv4only.google.com")
-			if strings.Contains(err.Error(), feature_dns.ErrEmptyResponse.Error()) == false {
+			if err != feature_dns.ErrEmptyResponse {
 				t.Fatal("error: ", err)
 			}
 			if len(ips) != 0 {
