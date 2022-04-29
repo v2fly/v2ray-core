@@ -7,7 +7,7 @@ const (
 )
 
 func ContextWithEnvironment(ctx context.Context, environment interface{}) context.Context {
-	return context.WithValue(ctx, environmentKey, environment)
+	return context.WithValue(ctx, environmentKey, environment) //nolint: revive
 }
 
 func EnvironmentFromContext(ctx context.Context) interface{} {

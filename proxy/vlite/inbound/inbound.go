@@ -2,7 +2,11 @@ package inbound
 
 import (
 	"context"
-	"github.com/mustafaturan/bus"
+	"io"
+	gonet "net"
+	"strconv"
+	"sync"
+
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/environment"
 	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
@@ -11,6 +15,8 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/signal/done"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
+
+	"github.com/mustafaturan/bus"
 	"github.com/xiaokangwang/VLite/interfaces"
 	"github.com/xiaokangwang/VLite/interfaces/ibus"
 	"github.com/xiaokangwang/VLite/transport"
@@ -20,10 +26,6 @@ import (
 	"github.com/xiaokangwang/VLite/transport/udp/udpuni/udpunis"
 	"github.com/xiaokangwang/VLite/transport/uni/uniserver"
 	"github.com/xiaokangwang/VLite/workers/server"
-	"io"
-	gonet "net"
-	"strconv"
-	"sync"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
@@ -60,17 +62,17 @@ type status struct {
 	access sync.Mutex
 }
 
-func (s *status) RelayStream(conn io.ReadWriteCloser, ctx context.Context) {
+func (s *status) RelayStream(conn io.ReadWriteCloser, ctx context.Context) { //nolint:revive
 }
 
-func (s *status) Connection(conn gonet.Conn, connctx context.Context) context.Context {
-	S_S2CTraffic := make(chan server.UDPServerTxToClientTraffic, 8)
-	S_S2CDataTraffic := make(chan server.UDPServerTxToClientDataTraffic, 8)
-	S_C2STraffic := make(chan server.UDPServerRxFromClientTraffic, 8)
+func (s *status) Connection(conn gonet.Conn, connctx context.Context) context.Context { //nolint:revive
+	S_S2CTraffic := make(chan server.UDPServerTxToClientTraffic, 8)         //nolint:revive
+	S_S2CDataTraffic := make(chan server.UDPServerTxToClientDataTraffic, 8) //nolint:revive
+	S_C2STraffic := make(chan server.UDPServerRxFromClientTraffic, 8)       //nolint:revive
 
-	S_S2CTraffic2 := make(chan interfaces.TrafficWithChannelTag, 8)
-	S_S2CDataTraffic2 := make(chan interfaces.TrafficWithChannelTag, 8)
-	S_C2STraffic2 := make(chan interfaces.TrafficWithChannelTag, 8)
+	S_S2CTraffic2 := make(chan interfaces.TrafficWithChannelTag, 8)     //nolint:revive
+	S_S2CDataTraffic2 := make(chan interfaces.TrafficWithChannelTag, 8) //nolint:revive
+	S_C2STraffic2 := make(chan interfaces.TrafficWithChannelTag, 8)     //nolint:revive
 
 	go func(ctx context.Context) {
 		for {
@@ -92,7 +94,6 @@ func (s *status) Connection(conn gonet.Conn, connctx context.Context) context.Co
 				return
 			}
 		}
-
 	}(connctx)
 
 	go func(ctx context.Context) {
@@ -104,7 +105,6 @@ func (s *status) Connection(conn gonet.Conn, connctx context.Context) context.Co
 				return
 			}
 		}
-
 	}(connctx)
 
 	if !s.config.EnableStabilization || !s.config.EnableRenegotiation {
@@ -126,21 +126,21 @@ func createStatusFromConfig(config *UDPProtocolConfig) (*status, error) {
 	s.password = []byte(config.Password)
 
 	s.msgbus = ibus.NewMessageBus()
-	s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsMessageBus, s.msgbus)
+	s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsMessageBus, s.msgbus) //nolint:revive
 
 	if config.ScramblePacket {
-		s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUDPShouldMask, true)
+		s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUDPShouldMask, true) //nolint:revive
 	}
 
 	if s.config.EnableFec {
-		s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUDPFECEnabled, true)
+		s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUDPFECEnabled, true) //nolint:revive
 	}
 
-	s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUDPMask, string(s.password))
+	s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUDPMask, string(s.password)) //nolint:revive
 
 	if config.HandshakeMaskingPaddingSize != 0 {
 		ctxv := &interfaces.ExtraOptionsUsePacketArmorValue{PacketArmorPaddingTo: int(config.HandshakeMaskingPaddingSize), UsePacketArmor: true}
-		s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUsePacketArmor, ctxv)
+		s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUsePacketArmor, ctxv) //nolint:revive
 	}
 
 	return s, nil

@@ -4,9 +4,10 @@ package transientstorageimpl
 
 import (
 	"context"
-	"github.com/v2fly/v2ray-core/v5/features/extension/storage"
 	"strings"
 	"sync"
+
+	"github.com/v2fly/v2ray-core/v5/features/extension/storage"
 )
 
 func NewScopedTransientStorageImpl() storage.ScopedTransientStorage {
@@ -44,7 +45,7 @@ func (s *scopedTransientStorageImpl) List(ctx context.Context, keyPrefix string)
 	s.access.Lock()
 	defer s.access.Unlock()
 	var ret []string
-	for key, _ := range s.values {
+	for key := range s.values {
 		if strings.HasPrefix(key, keyPrefix) {
 			ret = append(ret, key)
 		}
