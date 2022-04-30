@@ -12,8 +12,6 @@ import (
 	"github.com/v2fly/v2ray-core/v5/app/router"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/serial"
-
-	// Initialization
 	_ "github.com/v2fly/v2ray-core/v5/main/distro/all"
 	"github.com/v2fly/v2ray-core/v5/proxy/blackhole"
 	"github.com/v2fly/v2ray-core/v5/proxy/dokodemo"
