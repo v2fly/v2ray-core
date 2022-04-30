@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
 	"golang.org/x/sync/errgroup"
 
 	"github.com/v2fly/v2ray-core/v5/common"

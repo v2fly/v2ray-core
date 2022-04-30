@@ -21,8 +21,6 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon/muxcfg"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon/testassist"
-
-	// Geo loaders
 	_ "github.com/v2fly/v2ray-core/v5/infra/conf/geodata/memconservative"
 	_ "github.com/v2fly/v2ray-core/v5/infra/conf/geodata/standard"
 	v4 "github.com/v2fly/v2ray-core/v5/infra/conf/v4"
