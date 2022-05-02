@@ -123,7 +123,7 @@ func createStatusFromConfig(config *UDPProtocolConfig) (*status, error) {
 	s.msgbus = ibus.NewMessageBus()
 	ctx = context.WithValue(ctx, interfaces.ExtraOptionsMessageBus, s.msgbus) //nolint:revive
 
-	s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsDisableAutoQuitForClient, true) //nolint:revive
+	ctx = context.WithValue(ctx, interfaces.ExtraOptionsDisableAutoQuitForClient, true) //nolint:revive
 
 	if config.EnableFec {
 		ctx = context.WithValue(ctx, interfaces.ExtraOptionsUDPFECEnabled, true) //nolint:revive
