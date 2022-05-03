@@ -33,7 +33,7 @@ var rootCerts rootCertsCache
 
 func (c *Config) getCertPool() (*x509.CertPool, error) {
 	if c.DisableSystemRoot {
-		return c.loadSelfCertPool()
+		return c.loadSelfCertPool(Certificate_AUTHORITY_VERIFY)
 	}
 
 	if len(c.Certificate) == 0 {

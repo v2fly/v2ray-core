@@ -30,11 +30,13 @@ func ParseCertificate(c *cert.Certificate) *Certificate {
 	return nil
 }
 
-func (c *Config) loadSelfCertPool() (*x509.CertPool, error) {
+func (c *Config) loadSelfCertPool(usage Certificate_Usage) (*x509.CertPool, error) {
 	root := x509.NewCertPool()
 	for _, cert := range c.Certificate {
-		if !root.AppendCertsFromPEM(cert.Certificate) {
-			return nil, newError("failed to append cert").AtWarning()
+		if cert.Usage == usage {
+			if !root.AppendCertsFromPEM(cert.Certificate) {
+				return nil, newError("failed to append cert").AtWarning()
+			}
 		}
 	}
 	return root, nil
@@ -209,6 +211,11 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 		}
 	}
 
+	clientRoot, err := c.loadSelfCertPool(Certificate_AUTHORITY_VERIFY_CLIENT)
+	if err != nil {
+		newError("failed to load client root certificate").AtError().Base(err).WriteToLog()
+	}
+
 	config := &tls.Config{
 		ClientSessionCache:     globalSessionCache,
 		RootCAs:                root,
@@ -216,6 +223,7 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 		NextProtos:             c.NextProtocol,
 		SessionTicketsDisabled: !c.EnableSessionResumption,
 		VerifyPeerCertificate:  c.verifyPeerCert,
+		ClientCAs:              clientRoot,
 	}
 
 	for _, opt := range opts {
@@ -238,6 +246,9 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 		config.NextProtos = []string{"h2", "http/1.1"}
 	}
 
+	if c.VerifyClientCertificate {
+		config.ClientAuth = tls.RequireAndVerifyClientCert
+	}
 	return config
 }
 
