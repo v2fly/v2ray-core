@@ -69,7 +69,7 @@ func (c InboundConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 		return nil, newError("unable to load inbound protocol config").Base(err)
 	}
 
-	if content, ok := inboundConfigPack.(*dokodemo.Config); ok {
+	if content, ok := inboundConfigPack.(*dokodemo.SimplifiedConfig); ok {
 		receiverSettings.ReceiveOriginalDestination = content.FollowRedirect
 	}
 
