@@ -46,6 +46,18 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 		conds.Add(cond)
 	}
 
+	var geoDomains []*routercommon.Domain
+	for _, geo := range rr.GeoDomain {
+		geoDomains = append(geoDomains, geo.Domain...)
+	}
+	if len(geoDomains) > 0 {
+		cond, err := NewDomainMatcher(rr.DomainMatcher, geoDomains)
+		if err != nil {
+			return nil, newError("failed to build geo domain condition").Base(err)
+		}
+		conds.Add(cond)
+	}
+
 	if len(rr.UserEmail) > 0 {
 		conds.Add(NewUserMatcher(rr.UserEmail))
 	}
