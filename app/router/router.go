@@ -220,7 +220,6 @@ func init() {
 					if err != nil {
 						return nil, newError("unable to load geodomain").Base(err)
 					}
-					rule.Domain = append(rule.Domain, geo.Domain...)
 				}
 			}
 			if v.PortList != "" {
@@ -240,6 +239,7 @@ func init() {
 				rule.SourcePortList = portList.Build()
 			}
 			rule.Domain = v.Domain
+			rule.GeoDomain = v.GeoDomain
 			if v.Networks != "" {
 				rule.Networks = net.ParseNetworks(v.Networks)
 			}
