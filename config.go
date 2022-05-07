@@ -147,15 +147,30 @@ func loadSingleConfigAutoFormat(input interface{}) (*Config, error) {
 	}
 
 	if reader, ok := input.(io.Reader); ok {
-		var err error
-		input, err = buf.ReadAllToBytes(reader)
+		data, err := buf.ReadAllToBytes(reader)
 		if err != nil {
 			return nil, err
 		}
+
+		// no extension, try all loaders
+		config, err := loadSingleConfigByTryingAllLoaders(data)
+		if err == nil {
+			return config, nil
+		}
+		return nil, newError("tried all loaders but failed when attempting to parse: ", input, ";", err).AtWarning()
 	}
 
-	var errorReasons strings.Builder
 	// no extension, try all loaders
+	config, err := loadSingleConfigByTryingAllLoaders(input)
+	if err == nil {
+		return config, nil
+	}
+	return nil, newError("tried all loaders but failed when attempting to parse: ", input, ";", err).AtWarning()
+}
+
+func loadSingleConfigByTryingAllLoaders(input interface{}) (*Config, error) {
+	var errorReasons strings.Builder
+
 	for _, f := range configLoaders {
 		if f.Name[0] == FormatAuto {
 			continue
@@ -166,7 +181,7 @@ func loadSingleConfigAutoFormat(input interface{}) (*Config, error) {
 		}
 		errorReasons.WriteString(fmt.Sprintf("unable to parse as %v:%v;", f.Name[0], err.Error()))
 	}
-	return nil, newError("tried all loaders but failed when attempting to parse: ", input, ";", errorReasons.String()).AtWarning()
+	return nil, newError(errorReasons.String())
 }
 
 func getInputCount(input interface{}) int {
