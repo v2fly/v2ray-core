@@ -135,37 +135,33 @@ func LoadConfig(formatName string, input interface{}) (*Config, error) {
 // * string of a single filename/url(s) to open to read
 // * io.Reader that reads a config content (the original way)
 func loadSingleConfigAutoFormat(input interface{}) (*Config, error) {
-	if file, ok := input.(cmdarg.Arg); ok {
-		extension := getExtension(file.String())
-		if extension != "" {
-			lowerName := strings.ToLower(extension)
-			if f, found := configLoaderByExt[lowerName]; found {
-				return f.Loader(file)
-			}
-			return nil, newError("config loader not found for: ", extension).AtWarning()
-		}
-	}
-
-	if reader, ok := input.(io.Reader); ok {
-		data, err := buf.ReadAllToBytes(reader)
+	switch v := input.(type) {
+	case cmdarg.Arg:
+		return loadSingleConfigAutoFormatFromFile(v.String())
+	case string:
+		return loadSingleConfigByTryingAllLoaders(v)
+	case io.Reader:
+		data, err := buf.ReadAllToBytes(v)
 		if err != nil {
 			return nil, err
 		}
+		return loadSingleConfigByTryingAllLoaders(data)
+	default:
+		return loadSingleConfigByTryingAllLoaders(v)
+	}
+}
 
-		// no extension, try all loaders
-		config, err := loadSingleConfigByTryingAllLoaders(data)
-		if err == nil {
-			return config, nil
+func loadSingleConfigAutoFormatFromFile(file string) (*Config, error) {
+	extension := getExtension(file)
+	if extension != "" {
+		lowerName := strings.ToLower(extension)
+		if f, found := configLoaderByExt[lowerName]; found {
+			return f.Loader(file)
 		}
-		return nil, newError("tried all loaders but failed when attempting to parse: ", input, ";", err).AtWarning()
+		return nil, newError("config loader not found for: ", extension).AtWarning()
 	}
 
-	// no extension, try all loaders
-	config, err := loadSingleConfigByTryingAllLoaders(input)
-	if err == nil {
-		return config, nil
-	}
-	return nil, newError("tried all loaders but failed when attempting to parse: ", input, ";", err).AtWarning()
+	return loadSingleConfigByTryingAllLoaders(file)
 }
 
 func loadSingleConfigByTryingAllLoaders(input interface{}) (*Config, error) {
@@ -181,7 +177,8 @@ func loadSingleConfigByTryingAllLoaders(input interface{}) (*Config, error) {
 		}
 		errorReasons.WriteString(fmt.Sprintf("unable to parse as %v:%v;", f.Name[0], err.Error()))
 	}
-	return nil, newError(errorReasons.String())
+
+	return nil, newError("tried all loaders but failed when attempting to parse: ", input, ";", errorReasons.String()).AtWarning()
 }
 
 func getInputCount(input interface{}) int {
