@@ -145,6 +145,15 @@ func loadSingleConfigAutoFormat(input interface{}) (*Config, error) {
 			return nil, newError("config loader not found for: ", extension).AtWarning()
 		}
 	}
+
+	if reader, ok := input.(io.Reader); ok {
+		var err error
+		input, err = buf.ReadAllToBytes(reader)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	var errorReasons strings.Builder
 	// no extension, try all loaders
 	for _, f := range configLoaders {
