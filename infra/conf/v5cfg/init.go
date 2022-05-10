@@ -1,6 +1,7 @@
 package v5cfg
 
 import (
+	"bytes"
 	"io"
 
 	core "github.com/v2fly/v2ray-core/v5"
@@ -26,6 +27,15 @@ func init() {
 				data, err := buf.ReadAllToBytes(&json.Reader{
 					Reader: r,
 				})
+				if err != nil {
+					return nil, err
+				}
+				return loadJSONConfig(data)
+			case []byte:
+				r := &json.Reader{
+					Reader: bytes.NewReader(v),
+				}
+				data, err := buf.ReadAllToBytes(r)
 				if err != nil {
 					return nil, err
 				}
