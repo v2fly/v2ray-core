@@ -27,6 +27,8 @@ func init() {
 					return nil, err
 				}
 				return loadJSONConfig(data)
+			case []byte:
+				return loadJSONConfig(v)
 			case io.Reader:
 				data, err := buf.ReadAllToBytes(v)
 				if err != nil {
