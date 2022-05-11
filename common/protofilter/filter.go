@@ -55,9 +55,12 @@ func filterMessage(ctx context.Context, message protoreflect.Message) error {
 			if v2extension.ConvertTimeParseIp != "" {
 				ipValue := net.ParseIP(value.String())
 				target := message.Descriptor().Fields().ByTextName(v2extension.ConvertTimeParseIp)
+				if ipValue.To4() != nil {
+					ipValue = ipValue.To4()
+				}
 				pendingWriteQueue = append(pendingWriteQueue, pendingWrite{
 					field: target,
-					value: protoreflect.ValueOf(ipValue),
+					value: protoreflect.ValueOf([]byte(ipValue)),
 				})
 			}
 		}
