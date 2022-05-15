@@ -69,8 +69,6 @@ func InitializeServerConfigs(configs ...*core.Config) ([]*exec.Cmd, error) {
 		servers = append(servers, server)
 	}
 
-	time.Sleep(time.Second * 2)
-
 	return servers, nil
 }
 
@@ -90,6 +88,8 @@ func InitializeServerConfig(config *core.Config) (*exec.Cmd, error) {
 	if err := proc.Start(); err != nil {
 		return nil, err
 	}
+
+	time.Sleep(time.Second * 2)
 
 	return proc, nil
 }
