@@ -12,10 +12,10 @@ require (
 	github.com/google/go-cmp v0.5.8
 	github.com/gorilla/websocket v1.5.0
 	github.com/jhump/protoreflect v1.12.0
-	github.com/lucas-clemente/quic-go v0.27.0
+	github.com/lucas-clemente/quic-go v0.27.2
 	github.com/marten-seemann/qtls-go1-16 v0.1.5
-	github.com/marten-seemann/qtls-go1-17 v0.1.1
-	github.com/marten-seemann/qtls-go1-18 v0.1.1
+	github.com/marten-seemann/qtls-go1-17 v0.1.2
+	github.com/marten-seemann/qtls-go1-18 v0.1.2
 	github.com/miekg/dns v1.1.49
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
