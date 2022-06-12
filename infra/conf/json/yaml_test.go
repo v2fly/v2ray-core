@@ -116,7 +116,7 @@ TRUE: TRUE
         "parent": null
     },
     "string": ["哈哈", "Hello world",  "newline newline2"],
-    "date": ["2018-02-17"],
+    "date": ["2018-02-17T00:00:00Z"],
     "datetime": ["2018-02-17T15:02:31+08:00"],
     "mixed": [true,false,1,0,null,"hello"],
     "1": 0,
