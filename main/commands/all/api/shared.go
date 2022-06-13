@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -80,12 +79,17 @@ func dialAPIServerWithContext(ctx context.Context) (conn *grpc.ClientConn) {
 	return
 }
 
-func protoToJSONString(m proto.Message, prefix, indent string) (string, error) { // nolint: unparam
-	return strings.TrimSpace(protojson.MarshalOptions{Indent: indent}.Format(m)), nil
+func protoToJSONString(m proto.Message, _, indent string) (string, error) {
+	ops := protojson.MarshalOptions{
+		Indent:          indent,
+		EmitUnpopulated: true,
+	}
+	b, err := ops.Marshal(m)
+	return string(b), err
 }
 
 func showJSONResponse(m proto.Message) {
-	output, err := protoToJSONString(m, "", "")
+	output, err := protoToJSONString(m, "", "    ")
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "%v\n", m)
 		base.Fatalf("error encode json: %s", err)
