@@ -53,6 +53,8 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 		strategy = strategyLeastLoad
 	case strategyLeastPing:
 		strategy = "leastping"
+	case strategyFallback:
+		strategy = "fallback"
 	default:
 		return nil, newError("unknown balancing strategy: " + r.Strategy.Type)
 	}

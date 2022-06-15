@@ -134,6 +134,20 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 			strategy:  &LeastPingStrategy{config: s},
 			ohm:       ohm,
 		}, nil
+	case "fallback":
+		i, err := serial.GetInstanceOf(br.StrategySettings)
+		if err != nil {
+			return nil, err
+		}
+		s, ok := i.(*StrategyFallbackConfig)
+		if !ok {
+			return nil, newError("not a StrategyFallbackConfig").AtError()
+		}
+		return &Balancer{
+			selectors: br.OutboundSelector,
+			strategy:  &FallbackStrategy{config: s},
+			ohm:       ohm,
+		}, nil
 	case "leastload":
 		i, err := serial.GetInstanceOf(br.StrategySettings)
 		if err != nil {

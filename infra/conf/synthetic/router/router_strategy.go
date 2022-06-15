@@ -13,12 +13,14 @@ const (
 	strategyRandom    string = "random"
 	strategyLeastLoad string = "leastload"
 	strategyLeastPing string = "leastping"
+	strategyFallback  string = "fallback"
 )
 
 var strategyConfigLoader = loader.NewJSONConfigLoader(loader.ConfigCreatorCache{
 	strategyRandom:    func() interface{} { return new(strategyEmptyConfig) },
 	strategyLeastLoad: func() interface{} { return new(strategyLeastLoadConfig) },
 	strategyLeastPing: func() interface{} { return new(strategyLeastPingConfig) },
+	strategyFallback:  func() interface{} { return new(strategyFallbackConfig) },
 }, "type", "settings")
 
 type strategyEmptyConfig struct{}
@@ -97,4 +99,12 @@ type strategyLeastPingConfig struct {
 
 func (s strategyLeastPingConfig) Build() (proto.Message, error) {
 	return &router.StrategyLeastPingConfig{ObserverTag: s.ObserverTag}, nil
+}
+
+type strategyFallbackConfig struct {
+	ObserverTag string `json:"observerTag,omitempty"`
+}
+
+func (s strategyFallbackConfig) Build() (proto.Message, error) {
+	return &router.StrategyFallbackConfig{ObserverTag: s.ObserverTag}, nil
 }
