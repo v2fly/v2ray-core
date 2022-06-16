@@ -45,7 +45,7 @@ func NewQUICNameServer(url *url.URL) (*QUICNameServer, error) {
 	newError("DNS: created Local DNS-over-QUIC client for ", url.String()).AtInfo().WriteToLog()
 
 	var err error
-	port := net.Port(784)
+	port := net.Port(853)
 	if url.Port() != "" {
 		port, err = net.PortFromString(url.Port())
 		if err != nil {
