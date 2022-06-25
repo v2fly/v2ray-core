@@ -72,6 +72,9 @@ func (c InboundConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	if content, ok := inboundConfigPack.(*dokodemo.SimplifiedConfig); ok {
 		receiverSettings.ReceiveOriginalDestination = content.FollowRedirect
 	}
+	if content, ok := inboundConfigPack.(*dokodemo.Config); ok {
+		receiverSettings.ReceiveOriginalDestination = content.FollowRedirect
+	}
 
 	return &core.InboundHandlerConfig{
 		Tag:              c.Tag,
