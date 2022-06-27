@@ -2,9 +2,11 @@ syntax = "proto3";
 
 package v2ray.core.app.stats.command;
 option csharp_namespace = "V2Ray.Core.App.Stats.Command";
-option go_package = "github.com/v2fly/v2ray-core/v4/app/stats/command";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/stats/command";
 option java_package = "com.v2ray.core.app.stats.command";
 option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
 
 message GetStatsRequest {
   // Name of the stat counter.
@@ -23,8 +25,11 @@ message GetStatsResponse {
 }
 
 message QueryStatsRequest {
+  // Deprecated, use Patterns instead
   string pattern = 1;
   bool reset = 2;
+  repeated string patterns = 3;
+  bool regexp = 4;
 }
 
 message QueryStatsResponse {
@@ -52,4 +57,7 @@ service StatsService {
   rpc GetSysStats(SysStatsRequest) returns (SysStatsResponse) {}
 }
 
-message Config {}
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "grpcservice";
+  option (v2ray.core.common.protoext.message_opt).short_name = "stats";
+}

@@ -1,5 +1,3 @@
-// +build !confonly
-
 package kcp
 
 import (
@@ -8,12 +6,12 @@ import (
 	gotls "crypto/tls"
 	"sync"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/udp"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
 )
 
 type ConnectionID struct {

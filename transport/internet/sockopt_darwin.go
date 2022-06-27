@@ -1,29 +1,56 @@
 package internet
 
 import (
-	"syscall"
+	"golang.org/x/sys/unix"
 )
 
 const (
-	// TCP_FASTOPEN is the socket option on darwin for TCP fast open.
-	TCP_FASTOPEN = 0x105 // nolint: golint,stylecheck
 	// TCP_FASTOPEN_SERVER is the value to enable TCP fast open on darwin for server connections.
-	TCP_FASTOPEN_SERVER = 0x01 // nolint: golint,stylecheck
+	TCP_FASTOPEN_SERVER = 0x01 // nolint: revive,stylecheck
 	// TCP_FASTOPEN_CLIENT is the value to enable TCP fast open on darwin for client connections.
-	TCP_FASTOPEN_CLIENT = 0x02 // nolint: golint,stylecheck
+	TCP_FASTOPEN_CLIENT = 0x02 // nolint: revive,stylecheck
 )
 
 func applyOutboundSocketOptions(network string, address string, fd uintptr, config *SocketConfig) error {
 	if isTCPSocket(network) {
 		switch config.Tfo {
 		case SocketConfig_Enable:
-			if err := syscall.SetsockoptInt(int(fd), syscall.IPPROTO_TCP, TCP_FASTOPEN, TCP_FASTOPEN_CLIENT); err != nil {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_FASTOPEN, TCP_FASTOPEN_CLIENT); err != nil {
 				return err
 			}
 		case SocketConfig_Disable:
-			if err := syscall.SetsockoptInt(int(fd), syscall.IPPROTO_TCP, TCP_FASTOPEN, 0); err != nil {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_FASTOPEN, 0); err != nil {
 				return err
 			}
+		}
+
+		if config.TcpKeepAliveInterval > 0 {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_KEEPINTVL, int(config.TcpKeepAliveInterval)); err != nil {
+				return newError("failed to set TCP_KEEPINTVL").Base(err)
+			}
+		}
+		if config.TcpKeepAliveIdle > 0 {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_KEEPALIVE, int(config.TcpKeepAliveIdle)); err != nil {
+				return newError("failed to set TCP_KEEPALIVE (TCP keepalive idle time on Darwin)").Base(err)
+			}
+		}
+
+		if config.TcpKeepAliveInterval > 0 || config.TcpKeepAliveIdle > 0 {
+			if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_KEEPALIVE, 1); err != nil {
+				return newError("failed to set SO_KEEPALIVE").Base(err)
+			}
+		}
+	}
+
+	if config.TxBufSize != 0 {
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_SNDBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_SNDBUF").Base(err)
+		}
+	}
+
+	if config.RxBufSize != 0 {
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_RCVBUF, int(config.RxBufSize)); err != nil {
+			return newError("failed to set SO_RCVBUF").Base(err)
 		}
 	}
 
@@ -34,16 +61,42 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 	if isTCPSocket(network) {
 		switch config.Tfo {
 		case SocketConfig_Enable:
-			if err := syscall.SetsockoptInt(int(fd), syscall.IPPROTO_TCP, TCP_FASTOPEN, TCP_FASTOPEN_SERVER); err != nil {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_FASTOPEN, TCP_FASTOPEN_SERVER); err != nil {
 				return err
 			}
 		case SocketConfig_Disable:
-			if err := syscall.SetsockoptInt(int(fd), syscall.IPPROTO_TCP, TCP_FASTOPEN, 0); err != nil {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_FASTOPEN, 0); err != nil {
 				return err
+			}
+		}
+		if config.TcpKeepAliveInterval > 0 {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_KEEPINTVL, int(config.TcpKeepAliveInterval)); err != nil {
+				return newError("failed to set TCP_KEEPINTVL").Base(err)
+			}
+		}
+		if config.TcpKeepAliveIdle > 0 {
+			if err := unix.SetsockoptInt(int(fd), unix.IPPROTO_TCP, unix.TCP_KEEPALIVE, int(config.TcpKeepAliveIdle)); err != nil {
+				return newError("failed to set TCP_KEEPALIVE (TCP keepalive idle time on Darwin)").Base(err)
+			}
+		}
+		if config.TcpKeepAliveInterval > 0 || config.TcpKeepAliveIdle > 0 {
+			if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_KEEPALIVE, 1); err != nil {
+				return newError("failed to set SO_KEEPALIVE").Base(err)
 			}
 		}
 	}
 
+	if config.TxBufSize != 0 {
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_SNDBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_SNDBUF/SO_SNDBUFFORCE").Base(err)
+		}
+	}
+
+	if config.RxBufSize != 0 {
+		if err := unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_RCVBUF, int(config.RxBufSize)); err != nil {
+			return newError("failed to set SO_RCVBUF/SO_RCVBUFFORCE").Base(err)
+		}
+	}
 	return nil
 }
 

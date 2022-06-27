@@ -1,10 +1,8 @@
-// +build !confonly
-
 package log
 
 import (
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/log"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/log"
 )
 
 type HandlerCreatorOptions struct {
@@ -13,9 +11,7 @@ type HandlerCreatorOptions struct {
 
 type HandlerCreator func(LogType, HandlerCreatorOptions) (log.Handler, error)
 
-var (
-	handlerCreatorMap = make(map[LogType]HandlerCreator)
-)
+var handlerCreatorMap = make(map[LogType]HandlerCreator)
 
 func RegisterHandlerCreator(logType LogType, f HandlerCreator) error {
 	if f == nil {

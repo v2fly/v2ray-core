@@ -1,5 +1,3 @@
-// +build !confonly
-
 package http
 
 import (
@@ -11,20 +9,20 @@ import (
 	"strings"
 	"time"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/errors"
-	"github.com/v2fly/v2ray-core/v4/common/log"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	http_proto "github.com/v2fly/v2ray-core/v4/common/protocol/http"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/signal"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/features/policy"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/log"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	http_proto "github.com/v2fly/v2ray-core/v5/common/protocol/http"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	"github.com/v2fly/v2ray-core/v5/features/policy"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
 )
 
 // Server is an HTTP proxy server.
@@ -203,7 +201,7 @@ func (s *Server) handleConnect(ctx context.Context, _ *http.Request, reader *buf
 		return nil
 	}
 
-	var closeWriter = task.OnSuccess(requestDone, task.Close(link.Writer))
+	closeWriter := task.OnSuccess(requestDone, task.Close(link.Writer))
 	if err := task.Run(ctx, closeWriter, responseDone); err != nil {
 		common.Interrupt(link.Reader)
 		common.Interrupt(link.Writer)
@@ -262,7 +260,7 @@ func (s *Server) handlePlainHTTP(ctx context.Context, request *http.Request, wri
 		return err
 	}
 
-	// Plain HTTP request is not a stream. The request always finishes before response. Hense request has to be closed later.
+	// Plain HTTP request is not a stream. The request always finishes before response. Hence, request has to be closed later.
 	defer common.Close(link.Writer)
 	var result error = errWaitAnother
 

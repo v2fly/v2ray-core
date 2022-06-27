@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/signal/done"
-	"github.com/v2fly/v2ray-core/v4/common/task"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/signal/done"
+	"github.com/v2fly/v2ray-core/v5/common/task"
 )
 
 type Subscriber struct {
@@ -87,8 +87,7 @@ func (s *Service) Subscribe(name string) *Subscriber {
 		done:   done.New(),
 	}
 	s.Lock()
-	subs := append(s.subs[name], sub)
-	s.subs[name] = subs
+	s.subs[name] = append(s.subs[name], sub)
 	s.Unlock()
 	common.Must(s.ctask.Start())
 	return sub

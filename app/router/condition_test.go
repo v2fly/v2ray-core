@@ -1,35 +1,54 @@
 package router_test
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
-	. "github.com/v2fly/v2ray-core/v4/app/router"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/errors"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/platform"
-	"github.com/v2fly/v2ray-core/v4/common/platform/filesystem"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/protocol/http"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
-	routing_session "github.com/v2fly/v2ray-core/v4/features/routing/session"
+	"github.com/v2fly/v2ray-core/v5/app/router"
+	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/platform/filesystem"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/protocol/http"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	routing_session "github.com/v2fly/v2ray-core/v5/features/routing/session"
 )
 
 func init() {
+	const (
+		geoipURL   = "https://raw.githubusercontent.com/v2fly/geoip/release/geoip.dat"
+		geositeURL = "https://raw.githubusercontent.com/v2fly/domain-list-community/release/dlc.dat"
+	)
+
 	wd, err := os.Getwd()
 	common.Must(err)
 
-	if _, err := os.Stat(platform.GetAssetLocation("geoip.dat")); err != nil && os.IsNotExist(err) {
-		common.Must(filesystem.CopyFile(platform.GetAssetLocation("geoip.dat"), filepath.Join(wd, "..", "..", "release", "config", "geoip.dat")))
+	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
+	geoipPath := filepath.Join(tempPath, "geoip.dat")
+	geositePath := filepath.Join(tempPath, "geosite.dat")
+
+	os.Setenv("v2ray.location.asset", tempPath)
+
+	if _, err := os.Stat(geoipPath); err != nil && errors.Is(err, fs.ErrNotExist) {
+		common.Must(os.MkdirAll(tempPath, 0o755))
+		geoipBytes, err := common.FetchHTTPContent(geoipURL)
+		common.Must(err)
+		common.Must(filesystem.WriteFile(geoipPath, geoipBytes))
 	}
-	if _, err := os.Stat(platform.GetAssetLocation("geosite.dat")); err != nil && os.IsNotExist(err) {
-		common.Must(filesystem.CopyFile(platform.GetAssetLocation("geosite.dat"), filepath.Join(wd, "..", "..", "release", "config", "geosite.dat")))
+	if _, err := os.Stat(geositePath); err != nil && errors.Is(err, fs.ErrNotExist) {
+		common.Must(os.MkdirAll(tempPath, 0o755))
+		geositeBytes, err := common.FetchHTTPContent(geositeURL)
+		common.Must(err)
+		common.Must(filesystem.WriteFile(geositePath, geositeBytes))
 	}
 }
 
@@ -56,23 +75,23 @@ func TestRoutingRule(t *testing.T) {
 	}
 
 	cases := []struct {
-		rule *RoutingRule
+		rule *router.RoutingRule
 		test []ruleTest
 	}{
 		{
-			rule: &RoutingRule{
-				Domain: []*Domain{
+			rule: &router.RoutingRule{
+				Domain: []*routercommon.Domain{
 					{
 						Value: "v2fly.org",
-						Type:  Domain_Plain,
+						Type:  routercommon.Domain_Plain,
 					},
 					{
 						Value: "google.com",
-						Type:  Domain_Domain,
+						Type:  routercommon.Domain_RootDomain,
 					},
 					{
 						Value: "^facebook\\.com$",
-						Type:  Domain_Regex,
+						Type:  routercommon.Domain_Regex,
 					},
 				},
 			},
@@ -108,8 +127,8 @@ func TestRoutingRule(t *testing.T) {
 			},
 		},
 		{
-			rule: &RoutingRule{
-				Cidr: []*CIDR{
+			rule: &router.RoutingRule{
+				Cidr: []*routercommon.CIDR{
 					{
 						Ip:     []byte{8, 8, 8, 8},
 						Prefix: 32,
@@ -144,10 +163,10 @@ func TestRoutingRule(t *testing.T) {
 			},
 		},
 		{
-			rule: &RoutingRule{
-				Geoip: []*GeoIP{
+			rule: &router.RoutingRule{
+				Geoip: []*routercommon.GeoIP{
 					{
-						Cidr: []*CIDR{
+						Cidr: []*routercommon.CIDR{
 							{
 								Ip:     []byte{8, 8, 8, 8},
 								Prefix: 32,
@@ -184,8 +203,8 @@ func TestRoutingRule(t *testing.T) {
 			},
 		},
 		{
-			rule: &RoutingRule{
-				SourceCidr: []*CIDR{
+			rule: &router.RoutingRule{
+				SourceCidr: []*routercommon.CIDR{
 					{
 						Ip:     []byte{192, 168, 0, 0},
 						Prefix: 16,
@@ -204,7 +223,7 @@ func TestRoutingRule(t *testing.T) {
 			},
 		},
 		{
-			rule: &RoutingRule{
+			rule: &router.RoutingRule{
 				UserEmail: []string{
 					"admin@v2fly.org",
 				},
@@ -225,7 +244,7 @@ func TestRoutingRule(t *testing.T) {
 			},
 		},
 		{
-			rule: &RoutingRule{
+			rule: &router.RoutingRule{
 				Protocol: []string{"http"},
 			},
 			test: []ruleTest{
@@ -236,7 +255,7 @@ func TestRoutingRule(t *testing.T) {
 			},
 		},
 		{
-			rule: &RoutingRule{
+			rule: &router.RoutingRule{
 				InboundTag: []string{"test", "test1"},
 			},
 			test: []ruleTest{
@@ -251,7 +270,7 @@ func TestRoutingRule(t *testing.T) {
 			},
 		},
 		{
-			rule: &RoutingRule{
+			rule: &router.RoutingRule{
 				PortList: &net.PortList{
 					Range: []*net.PortRange{
 						{From: 443, To: 443},
@@ -279,7 +298,7 @@ func TestRoutingRule(t *testing.T) {
 			},
 		},
 		{
-			rule: &RoutingRule{
+			rule: &router.RoutingRule{
 				SourcePortList: &net.PortList{
 					Range: []*net.PortRange{
 						{From: 123, To: 123},
@@ -307,7 +326,7 @@ func TestRoutingRule(t *testing.T) {
 			},
 		},
 		{
-			rule: &RoutingRule{
+			rule: &router.RoutingRule{
 				Protocol:   []string{"http"},
 				Attributes: "attrs[':path'].startswith('/test')",
 			},
@@ -333,18 +352,18 @@ func TestRoutingRule(t *testing.T) {
 	}
 }
 
-func loadGeoSite(country string) ([]*Domain, error) {
+func loadGeoSite(country string) ([]*routercommon.Domain, error) {
 	geositeBytes, err := filesystem.ReadAsset("geosite.dat")
 	if err != nil {
 		return nil, err
 	}
-	var geositeList GeoSiteList
+	var geositeList routercommon.GeoSiteList
 	if err := proto.Unmarshal(geositeBytes, &geositeList); err != nil {
 		return nil, err
 	}
 
 	for _, site := range geositeList.Entry {
-		if site.CountryCode == country {
+		if strings.EqualFold(site.CountryCode, country) {
 			return site.Domain, nil
 		}
 	}
@@ -356,9 +375,9 @@ func TestChinaSites(t *testing.T) {
 	domains, err := loadGeoSite("CN")
 	common.Must(err)
 
-	matcher, err := NewDomainMatcher(domains)
+	matcher, err := router.NewDomainMatcher("linear", domains)
 	common.Must(err)
-	acMatcher, err := NewACAutomatonDomainMatcher(domains)
+	mphMatcher, err := router.NewDomainMatcher("mph", domains)
 	common.Must(err)
 
 	type TestCase struct {
@@ -389,8 +408,8 @@ func TestChinaSites(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		r1 := matcher.ApplyDomain(testCase.Domain)
-		r2 := acMatcher.ApplyDomain(testCase.Domain)
+		r1 := matcher.Match(testCase.Domain)
+		r2 := mphMatcher.Match(testCase.Domain)
 		if r1 != testCase.Output {
 			t.Error("DomainMatcher expected output ", testCase.Output, " for domain ", testCase.Domain, " but got ", r1)
 		} else if r2 != testCase.Output {
@@ -399,11 +418,11 @@ func TestChinaSites(t *testing.T) {
 	}
 }
 
-func BenchmarkACDomainMatcher(b *testing.B) {
+func BenchmarkMphDomainMatcher(b *testing.B) {
 	domains, err := loadGeoSite("CN")
 	common.Must(err)
 
-	matcher, err := NewACAutomatonDomainMatcher(domains)
+	matcher, err := router.NewDomainMatcher("mph", domains)
 	common.Must(err)
 
 	type TestCase struct {
@@ -436,7 +455,7 @@ func BenchmarkACDomainMatcher(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, testCase := range testCases {
-			_ = matcher.ApplyDomain(testCase.Domain)
+			_ = matcher.Match(testCase.Domain)
 		}
 	}
 }
@@ -445,7 +464,7 @@ func BenchmarkDomainMatcher(b *testing.B) {
 	domains, err := loadGeoSite("CN")
 	common.Must(err)
 
-	matcher, err := NewDomainMatcher(domains)
+	matcher, err := router.NewDomainMatcher("linear", domains)
 	common.Must(err)
 
 	type TestCase struct {
@@ -478,18 +497,18 @@ func BenchmarkDomainMatcher(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, testCase := range testCases {
-			_ = matcher.ApplyDomain(testCase.Domain)
+			_ = matcher.Match(testCase.Domain)
 		}
 	}
 }
 
 func BenchmarkMultiGeoIPMatcher(b *testing.B) {
-	var geoips []*GeoIP
+	var geoips []*routercommon.GeoIP
 
 	{
 		ips, err := loadGeoIP("CN")
 		common.Must(err)
-		geoips = append(geoips, &GeoIP{
+		geoips = append(geoips, &routercommon.GeoIP{
 			CountryCode: "CN",
 			Cidr:        ips,
 		})
@@ -498,7 +517,7 @@ func BenchmarkMultiGeoIPMatcher(b *testing.B) {
 	{
 		ips, err := loadGeoIP("JP")
 		common.Must(err)
-		geoips = append(geoips, &GeoIP{
+		geoips = append(geoips, &routercommon.GeoIP{
 			CountryCode: "JP",
 			Cidr:        ips,
 		})
@@ -507,7 +526,7 @@ func BenchmarkMultiGeoIPMatcher(b *testing.B) {
 	{
 		ips, err := loadGeoIP("CA")
 		common.Must(err)
-		geoips = append(geoips, &GeoIP{
+		geoips = append(geoips, &routercommon.GeoIP{
 			CountryCode: "CA",
 			Cidr:        ips,
 		})
@@ -516,13 +535,13 @@ func BenchmarkMultiGeoIPMatcher(b *testing.B) {
 	{
 		ips, err := loadGeoIP("US")
 		common.Must(err)
-		geoips = append(geoips, &GeoIP{
+		geoips = append(geoips, &routercommon.GeoIP{
 			CountryCode: "US",
 			Cidr:        ips,
 		})
 	}
 
-	matcher, err := NewMultiGeoIPMatcher(geoips, false)
+	matcher, err := router.NewMultiGeoIPMatcher(geoips, false)
 	common.Must(err)
 
 	ctx := withOutbound(&session.Outbound{Target: net.TCPDestination(net.ParseAddress("8.8.8.8"), 80)})

@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package v2ray.core.app.instman.command;
+option csharp_namespace = "V2Ray.Core.App.Instman.Command";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/instman/command";
+option java_package = "com.v2ray.core.app.observatory.instman";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+
+message ListInstanceReq{}
+message ListInstanceResp{
+  repeated string name = 1;
+}
+
+message AddInstanceReq{
+  string name = 1;
+  string configType = 2;
+  string configContentB64 = 3;
+}
+
+message AddInstanceResp{}
+
+message StartInstanceReq{
+  string name = 1;
+}
+
+message StartInstanceResp{
+}
+
+service InstanceManagementService {
+  rpc ListInstance(ListInstanceReq) returns (ListInstanceResp);
+  rpc AddInstance(AddInstanceReq) returns (AddInstanceResp);
+  rpc StartInstance(StartInstanceReq) returns (StartInstanceResp);
+}
+
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "grpcservice";
+  option (v2ray.core.common.protoext.message_opt).short_name = "instman";
+}

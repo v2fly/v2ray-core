@@ -2,11 +2,12 @@ syntax = "proto3";
 
 package v2ray.core.app.log;
 option csharp_namespace = "V2Ray.Core.App.Log";
-option go_package = "github.com/v2fly/v2ray-core/v4/app/log";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/log";
 option java_package = "com.v2ray.core.app.log";
 option java_multiple_files = true;
 
 import "common/log/log.proto";
+import "common/protoext/extensions.proto";
 
 enum LogType {
   None = 0;
@@ -15,11 +16,18 @@ enum LogType {
   Event = 3;
 }
 
-message Config {
-  LogType error_log_type = 1;
-  v2ray.core.common.log.Severity error_log_level = 2;
-  string error_log_path = 3;
+message LogSpecification {
+  LogType type = 1;
+  v2ray.core.common.log.Severity level = 2;
+  string path = 3;
+}
 
-  LogType access_log_type = 4;
-  string access_log_path = 5;
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "service";
+  option (v2ray.core.common.protoext.message_opt).short_name = "log";
+
+  reserved 1,2,3,4,5;
+
+  LogSpecification error = 6;
+  LogSpecification access = 7;
 }

@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package v2ray.core.app.router.routercommon;
+option csharp_namespace = "V2Ray.Core.App.Router.Routercommon";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/router/routercommon";
+option java_package = "com.v2ray.core.app.router.routercommon";
+option java_multiple_files = true;
+
+
+import "common/protoext/extensions.proto";
+
+// Domain for routing decision.
+message Domain {
+  // Type of domain value.
+  enum Type {
+    // The value is used as is.
+    Plain = 0;
+    // The value is used as a regular expression.
+    Regex = 1;
+    // The value is a root domain.
+    RootDomain = 2;
+    // The value is a domain.
+    Full = 3;
+  }
+
+  // Domain matching type.
+  Type type = 1;
+
+  // Domain value.
+  string value = 2;
+
+  message Attribute {
+    string key = 1;
+
+    oneof typed_value {
+      bool bool_value = 2;
+      int64 int_value = 3;
+    }
+  }
+
+  // Attributes of this domain. May be used for filtering.
+  repeated Attribute attribute = 3;
+}
+
+// IP for routing decision, in CIDR form.
+message CIDR {
+  // IP address, should be either 4 or 16 bytes.
+  bytes ip = 1;
+
+  // Number of leading ones in the network mask.
+  uint32 prefix = 2;
+
+  string ip_addr = 68000 [(v2ray.core.common.protoext.field_opt).convert_time_parse_ip = "ip"];
+}
+
+message GeoIP {
+  string country_code = 1;
+  repeated CIDR cidr = 2;
+  bool inverse_match = 3;
+
+  // resource_hash instruct simplified config converter to load domain from geo file.
+  bytes resource_hash = 4;
+  string code = 5;
+
+  string file_path = 68000[(v2ray.core.common.protoext.field_opt).convert_time_resource_loading = "resource_hash"];
+}
+
+message GeoIPList {
+  repeated GeoIP entry = 1;
+}
+
+message GeoSite {
+  string country_code = 1;
+  repeated Domain domain = 2;
+
+  // resource_hash instruct simplified config converter to load domain from geo file.
+  bytes resource_hash = 3;
+  string code = 4;
+
+  string file_path = 68000[(v2ray.core.common.protoext.field_opt).convert_time_resource_loading = "resource_hash"];
+}
+
+message GeoSiteList {
+  repeated GeoSite entry = 1;
+}

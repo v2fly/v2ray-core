@@ -1,8 +1,6 @@
-// +build !confonly
-
 package inbound
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 import (
 	"context"
@@ -11,24 +9,25 @@ import (
 	"sync"
 	"time"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/errors"
-	"github.com/v2fly/v2ray-core/v4/common/log"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/platform"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/signal"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/common/uuid"
-	feature_inbound "github.com/v2fly/v2ray-core/v4/features/inbound"
-	"github.com/v2fly/v2ray-core/v4/features/policy"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess/encoding"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/log"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/platform"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	"github.com/v2fly/v2ray-core/v5/common/uuid"
+	feature_inbound "github.com/v2fly/v2ray-core/v5/features/inbound"
+	"github.com/v2fly/v2ray-core/v5/features/policy"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess/encoding"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
 )
 
 type userByEmail struct {
@@ -181,8 +180,10 @@ func (h *Handler) RemoveUser(ctx context.Context, email string) error {
 func transferResponse(timer signal.ActivityUpdater, session *encoding.ServerSession, request *protocol.RequestHeader, response *protocol.ResponseHeader, input buf.Reader, output *buf.BufferedWriter) error {
 	session.EncodeResponseHeader(response, output)
 
-	bodyWriter := session.EncodeResponseBody(request, output)
-
+	bodyWriter, err := session.EncodeResponseBody(request, output)
+	if err != nil {
+		return newError("failed to start decoding response").Base(err)
+	}
 	{
 		// Optimize for small response packet
 		data, err := input.ReadMultiBuffer()
@@ -203,7 +204,9 @@ func transferResponse(timer signal.ActivityUpdater, session *encoding.ServerSess
 		return err
 	}
 
-	if request.Option.Has(protocol.RequestOptionChunkStream) {
+	account := request.User.Account.(*vmess.MemoryAccount)
+
+	if request.Option.Has(protocol.RequestOptionChunkStream) && !account.NoTerminationSignal {
 		if err := bodyWriter.WriteMultiBuffer(buf.MultiBuffer{}); err != nil {
 			return err
 		}
@@ -287,7 +290,10 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 	requestDone := func() error {
 		defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
 
-		bodyReader := svrSession.DecodeRequestBody(request, reader)
+		bodyReader, err := svrSession.DecodeRequestBody(request, reader)
+		if err != nil {
+			return newError("failed to start decoding").Base(err)
+		}
 		if err := buf.Copy(bodyReader, link.Writer, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer request").Base(err)
 		}
@@ -306,7 +312,7 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 		return transferResponse(timer, svrSession, request, response, link.Reader, writer)
 	}
 
-	var requestDonePost = task.OnSuccess(requestDone, task.Close(link.Writer))
+	requestDonePost := task.OnSuccess(requestDone, task.Close(link.Writer))
 	if err := task.Run(ctx, requestDonePost, responseDone); err != nil {
 		common.Interrupt(link.Reader)
 		common.Interrupt(link.Writer)
@@ -352,19 +358,34 @@ func (h *Handler) generateCommand(ctx context.Context, request *protocol.Request
 	return nil
 }
 
-var aeadForced = false
-var aeadForced2022 = false
+var (
+	aeadForced     = false
+	aeadForced2022 = false
+)
 
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return New(ctx, config.(*Config))
 	}))
 
-	var defaultFlagValue = "NOT_DEFINED_AT_ALL"
+	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
+		simplifiedServer := config.(*SimplifiedConfig)
+		fullConfig := &Config{
+			User: func() (users []*protocol.User) {
+				for _, v := range simplifiedServer.Users {
+					account := &vmess.Account{Id: v}
+					users = append(users, &protocol.User{
+						Account: serial.ToTypedMessage(account),
+					})
+				}
+				return
+			}(),
+		}
 
-	if time.Now().Year() >= 2022 {
-		defaultFlagValue = "true_by_default_2022"
-	}
+		return common.CreateObject(ctx, fullConfig)
+	}))
+
+	defaultFlagValue := "true_by_default_2022"
 
 	isAeadForced := platform.NewEnvFlag("v2ray.vmess.aead.forced").GetValue(func() string { return defaultFlagValue })
 	if isAeadForced == "true" {

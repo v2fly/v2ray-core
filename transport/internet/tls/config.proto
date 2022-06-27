@@ -2,9 +2,11 @@ syntax = "proto3";
 
 package v2ray.core.transport.internet.tls;
 option csharp_namespace = "V2Ray.Core.Transport.Internet.Tls";
-option go_package = "github.com/v2fly/v2ray-core/v4/transport/internet/tls";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/tls";
 option java_package = "com.v2ray.core.transport.internet.tls";
 option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
 
 message Certificate {
   // TLS certificate in x509 format.
@@ -17,14 +19,21 @@ message Certificate {
     ENCIPHERMENT = 0;
     AUTHORITY_VERIFY = 1;
     AUTHORITY_ISSUE = 2;
+    AUTHORITY_VERIFY_CLIENT = 3;
   }
 
   Usage usage = 3;
+
+  string certificate_file = 96001 [(v2ray.core.common.protoext.field_opt).convert_time_read_file_into = "Certificate"];
+  string key_file = 96002 [(v2ray.core.common.protoext.field_opt).convert_time_read_file_into = "Key"];
 }
 
 message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "security";
+  option (v2ray.core.common.protoext.message_opt).short_name = "tls";
+
   // Whether or not to allow self-signed certificates.
-  bool allow_insecure = 1;
+  bool allow_insecure = 1 [(v2ray.core.common.protoext.field_opt).forbidden = true];
 
   // List of certificates to be served on server.
   repeated Certificate certificate = 2;
@@ -41,4 +50,14 @@ message Config {
   // If true, root certificates on the system will not be loaded for
   // verification.
   bool disable_system_root = 6;
+
+  /* @Document A pinned certificate chain sha256 hash.
+     @Document If the server's hash does not match this value, the connection will be aborted.
+     @Document This value replace allow_insecure.
+     @Critical
+  */
+  repeated bytes pinned_peer_certificate_chain_sha256 = 7;
+
+  // If true, the client is required to present a certificate.
+  bool verify_client_certificate = 8;
 }

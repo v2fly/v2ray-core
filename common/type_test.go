@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	. "github.com/v2fly/v2ray-core/v4/common"
+	. "github.com/v2fly/v2ray-core/v5/common"
 )
 
 type TConfig struct {
@@ -16,7 +16,7 @@ type YConfig struct {
 }
 
 func TestObjectCreation(t *testing.T) {
-	var f = func(ctx context.Context, t interface{}) (interface{}, error) {
+	f := func(ctx context.Context, t interface{}) (interface{}, error) {
 		return func() int {
 			return t.(*TConfig).value
 		}, nil

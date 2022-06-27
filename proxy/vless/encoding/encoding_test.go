@@ -4,14 +4,15 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/uuid"
-	"github.com/v2fly/v2ray-core/v4/proxy/vless"
-	. "github.com/v2fly/v2ray-core/v4/proxy/vless/encoding"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/uuid"
+	"github.com/v2fly/v2ray-core/v5/proxy/vless"
+	. "github.com/v2fly/v2ray-core/v5/proxy/vless/encoding"
 )
 
 func toAccount(a *vless.Account) protocol.Account {
@@ -52,7 +53,8 @@ func TestRequestSerialization(t *testing.T) {
 	if r := cmp.Diff(actualRequest, expectedRequest, cmp.AllowUnexported(protocol.ID{})); r != "" {
 		t.Error(r)
 	}
-	if r := cmp.Diff(actualAddons, expectedAddons); r != "" {
+
+	if r := cmp.Diff(actualAddons, expectedAddons, protocmp.Transform()); r != "" {
 		t.Error(r)
 	}
 }
@@ -120,7 +122,8 @@ func TestMuxRequest(t *testing.T) {
 	if r := cmp.Diff(actualRequest, expectedRequest, cmp.AllowUnexported(protocol.ID{})); r != "" {
 		t.Error(r)
 	}
-	if r := cmp.Diff(actualAddons, expectedAddons); r != "" {
+
+	if r := cmp.Diff(actualAddons, expectedAddons, protocmp.Transform()); r != "" {
 		t.Error(r)
 	}
 }

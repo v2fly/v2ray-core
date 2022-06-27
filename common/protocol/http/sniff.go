@@ -5,8 +5,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
 )
 
 type version byte
@@ -37,7 +37,8 @@ func (h *SniffHeader) Domain() string {
 }
 
 var (
-	methods = [...]string{"get", "post", "head", "put", "delete", "options", "connect"}
+	// refer to https://pkg.go.dev/net/http@master#pkg-constants
+	methods = [...]string{"get", "post", "head", "put", "delete", "options", "connect", "patch", "trace"}
 
 	errNotHTTPMethod = errors.New("not an HTTP method")
 )

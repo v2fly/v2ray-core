@@ -2,14 +2,18 @@ syntax = "proto3";
 
 package v2ray.core.transport.internet.tcp;
 option csharp_namespace = "V2Ray.Core.Transport.Internet.Tcp";
-option go_package = "github.com/v2fly/v2ray-core/v4/transport/internet/tcp";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/tcp";
 option java_package = "com.v2ray.core.transport.internet.tcp";
 option java_multiple_files = true;
 
-import "common/serial/typed_message.proto";
+import "google/protobuf/any.proto";
+import "common/protoext/extensions.proto";
 
 message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "transport";
+  option (v2ray.core.common.protoext.message_opt).short_name = "tcp";
+
   reserved 1;
-  v2ray.core.common.serial.TypedMessage header_settings = 2;
+  google.protobuf.Any header_settings = 2;
   bool accept_proxy_protocol = 3;
 }

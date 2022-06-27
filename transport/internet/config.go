@@ -1,8 +1,14 @@
 package internet
 
 import (
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/features"
+	"context"
+
+	"github.com/golang/protobuf/proto"
+
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/protoext"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/features"
 )
 
 type ConfigCreator func() interface{}
@@ -38,6 +44,10 @@ func RegisterProtocolConfigCreator(name string, creator ConfigCreator) error {
 		return newError("protocol ", name, " is already registered").AtError()
 	}
 	globalTransportConfigCreatorCache[name] = creator
+
+	common.RegisterConfig(creator(), func(ctx context.Context, config interface{}) (interface{}, error) {
+		return nil, newError("transport config should use CreateTransportConfig instead")
+	})
 	return nil
 }
 
@@ -50,7 +60,7 @@ func CreateTransportConfig(name string) (interface{}, error) {
 }
 
 func (c *TransportConfig) GetTypedSettings() (interface{}, error) {
-	return c.Settings.GetInstance()
+	return serial.GetInstanceOf(c.Settings)
 }
 
 func (c *TransportConfig) GetUnifiedProtocolName() string {
@@ -98,8 +108,8 @@ func (c *StreamConfig) GetTransportSettingsFor(protocol string) (interface{}, er
 
 func (c *StreamConfig) GetEffectiveSecuritySettings() (interface{}, error) {
 	for _, settings := range c.SecuritySettings {
-		if settings.Type == c.SecurityType {
-			return settings.GetInstance()
+		if serial.V2Type(settings) == c.SecurityType {
+			return serial.GetInstanceOf(settings)
 		}
 	}
 	return serial.GetInstance(c.SecurityType)
@@ -121,4 +131,14 @@ func (c *ProxyConfig) HasTag() bool {
 
 func (m SocketConfig_TProxyMode) IsEnabled() bool {
 	return m != SocketConfig_Off
+}
+
+func getOriginalMessageName(streamSettings *MemoryStreamConfig) string {
+	msgOpts, err := protoext.GetMessageOptions(proto.MessageV2(streamSettings.ProtocolSettings).ProtoReflect().Descriptor())
+	if err == nil {
+		if msgOpts.TransportOriginalName != "" {
+			return msgOpts.TransportOriginalName
+		}
+	}
+	return ""
 }

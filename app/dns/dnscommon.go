@@ -1,5 +1,3 @@
-// +build !confonly
-
 package dns
 
 import (
@@ -9,13 +7,13 @@ import (
 
 	"golang.org/x/net/dns/dnsmessage"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/errors"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	dns_feature "github.com/v2fly/v2ray-core/v4/features/dns"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	dns_feature "github.com/v2fly/v2ray-core/v5/features/dns"
 )
 
-// Fqdn normalize domain make sure it ends with '.'
+// Fqdn normalizes domain make sure it ends with '.'
 func Fqdn(domain string) string {
 	if len(domain) > 0 && strings.HasSuffix(domain, ".") {
 		return domain
@@ -56,9 +54,7 @@ func isNewer(baseRec *IPRecord, newRec *IPRecord) bool {
 	return baseRec.Expire.Before(newRec.Expire)
 }
 
-var (
-	errRecordNotFound = errors.New("record not found")
-)
+var errRecordNotFound = errors.New("record not found")
 
 type dnsRequest struct {
 	reqType dnsmessage.Type
@@ -167,7 +163,7 @@ func buildReqMsgs(domain string, option dns_feature.IPOption, reqIDGen func() ui
 	return reqs
 }
 
-// parseResponse parse DNS answers from the returned payload
+// parseResponse parses DNS answers from the returned payload
 func parseResponse(payload []byte) (*IPRecord, error) {
 	var parser dnsmessage.Parser
 	h, err := parser.Start(payload)
@@ -215,7 +211,7 @@ L:
 		case dnsmessage.TypeAAAA:
 			ans, err := parser.AAAAResource()
 			if err != nil {
-				newError("failed to parse A record for domain: ", ah.Name).Base(err).WriteToLog()
+				newError("failed to parse AAAA record for domain: ", ah.Name).Base(err).WriteToLog()
 				break L
 			}
 			ipRecord.IP = append(ipRecord.IP, net.IPAddress(ans.AAAA[:]))

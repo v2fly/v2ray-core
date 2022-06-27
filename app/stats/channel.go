@@ -1,12 +1,10 @@
-// +build !confonly
-
 package stats
 
 import (
 	"context"
 	"sync"
 
-	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v5/common"
 )
 
 // Channel is an implementation of stats.Channel.

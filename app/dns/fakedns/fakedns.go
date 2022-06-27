@@ -1,5 +1,6 @@
+//go:build !confonly
 // +build !confonly
 
 package fakedns
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen

@@ -1,8 +1,6 @@
-// +build !confonly
-
 package inbound
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 import (
 	"context"
@@ -10,25 +8,26 @@ import (
 	"strconv"
 	"time"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/errors"
-	"github.com/v2fly/v2ray-core/v4/common/log"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/retry"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/signal"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/features/dns"
-	feature_inbound "github.com/v2fly/v2ray-core/v4/features/inbound"
-	"github.com/v2fly/v2ray-core/v4/features/policy"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
-	"github.com/v2fly/v2ray-core/v4/proxy/vless"
-	"github.com/v2fly/v2ray-core/v4/proxy/vless/encoding"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/log"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/retry"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
+	feature_inbound "github.com/v2fly/v2ray-core/v5/features/inbound"
+	"github.com/v2fly/v2ray-core/v5/features/policy"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/proxy/vless"
+	"github.com/v2fly/v2ray-core/v5/proxy/vless/encoding"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
 
 func init() {
@@ -41,6 +40,24 @@ func init() {
 			return nil, err
 		}
 		return New(ctx, config.(*Config), dc)
+	}))
+
+	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
+		simplifiedServer := config.(*SimplifiedConfig)
+		fullConfig := &Config{
+			Clients: func() (users []*protocol.User) {
+				for _, v := range simplifiedServer.Users {
+					account := &vless.Account{Id: v}
+					users = append(users, &protocol.User{
+						Account: serial.ToTypedMessage(account),
+					})
+				}
+				return
+			}(),
+			Decryption: "none",
+		}
+
+		return common.CreateObject(ctx, fullConfig)
 	}))
 }
 
@@ -383,7 +400,7 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 		// default: clientReader := reader
 		clientReader := encoding.DecodeBodyAddons(reader, request, requestAddons)
 
-		// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBufer
+		// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBuffer
 		if err := buf.Copy(clientReader, serverWriter, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer request payload").Base(err).AtInfo()
 		}
@@ -411,12 +428,12 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection i
 			}
 		}
 
-		// Flush; bufferWriter.WriteMultiBufer now is bufferWriter.writer.WriteMultiBuffer
+		// Flush; bufferWriter.WriteMultiBuffer now is bufferWriter.writer.WriteMultiBuffer
 		if err := bufferWriter.SetBuffered(false); err != nil {
 			return newError("failed to write A response payload").Base(err).AtWarning()
 		}
 
-		// from serverReader.ReadMultiBuffer to clientWriter.WriteMultiBufer
+		// from serverReader.ReadMultiBuffer to clientWriter.WriteMultiBuffer
 		if err := buf.Copy(serverReader, clientWriter, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer response payload").Base(err).AtInfo()
 		}

@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/proxy/blackhole"
-	"github.com/v2fly/v2ray-core/v4/transport"
-	"github.com/v2fly/v2ray-core/v4/transport/pipe"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/proxy/blackhole"
+	"github.com/v2fly/v2ray-core/v5/transport"
+	"github.com/v2fly/v2ray-core/v5/transport/pipe"
 )
 
 func TestBlackHoleHTTPResponse(t *testing.T) {
@@ -20,7 +20,7 @@ func TestBlackHoleHTTPResponse(t *testing.T) {
 
 	reader, writer := pipe.New(pipe.WithoutSizeLimit())
 
-	var readerError = make(chan error)
+	readerError := make(chan error)
 	var mb buf.MultiBuffer
 	go func() {
 		b, e := reader.ReadMultiBuffer()

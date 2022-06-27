@@ -2,11 +2,12 @@ syntax = "proto3";
 
 package v2ray.core.app.commander;
 option csharp_namespace = "V2Ray.Core.App.Commander";
-option go_package = "github.com/v2fly/v2ray-core/v4/app/commander";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/commander";
 option java_package = "com.v2ray.core.app.commander";
 option java_multiple_files = true;
 
-import "common/serial/typed_message.proto";
+import "google/protobuf/any.proto";
+import "common/protoext/extensions.proto";
 
 // Config is the settings for Commander.
 message Config {
@@ -14,8 +15,20 @@ message Config {
   string tag = 1;
   // Services that supported by this server. All services must implement Service
   // interface.
-  repeated v2ray.core.common.serial.TypedMessage service = 2;
+  repeated google.protobuf.Any service = 2;
 }
 
 // ReflectionConfig is the placeholder config for ReflectionService.
-message ReflectionConfig {}
+message ReflectionConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "grpcservice";
+  option (v2ray.core.common.protoext.message_opt).short_name = "reflection";
+}
+
+
+message SimplifiedConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "service";
+  option (v2ray.core.common.protoext.message_opt).short_name = "commander";
+
+  string tag = 1;
+  repeated string name = 2;
+}

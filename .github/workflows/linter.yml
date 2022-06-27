@@ -16,18 +16,19 @@ on:
 
 jobs:
   lint:
+    if: github.repository == 'v2fly/v2ray-core'
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.x
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: ^1.16
+          go-version: ^1.18
 
       - name: Checkout codebase
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2.5.1
+        uses: golangci/golangci-lint-action@v3
         with:
           version: latest
           args: --config=.github/linters/.golangci.yml

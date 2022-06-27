@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package v2ray.core.common.protoext.testing;
+option csharp_namespace = "V2Ray.Core.Common.ProtoExt.Testing";
+option go_package = "github.com/v2fly/v2ray-core/common/protoext/testing";
+option java_package = "com.v2ray.core.common.protoext.testing";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+
+message TestingMessage{
+  option (v2ray.core.common.protoext.message_opt).type = "demo";
+  option (v2ray.core.common.protoext.message_opt).type = "demo2";
+
+  string test_field = 1
+  [(v2ray.core.common.protoext.field_opt).allowed_values = "test",
+    (v2ray.core.common.protoext.field_opt).allowed_values = "test2"];
+}

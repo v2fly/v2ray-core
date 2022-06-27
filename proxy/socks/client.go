@@ -1,29 +1,32 @@
-// +build !confonly
-
 package socks
 
 import (
 	"context"
 	"time"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/retry"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/signal"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/features/policy"
-	"github.com/v2fly/v2ray-core/v4/transport"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/retry"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
+	"github.com/v2fly/v2ray-core/v5/features/policy"
+	"github.com/v2fly/v2ray-core/v5/transport"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
 )
 
 // Client is a Socks5 client.
 type Client struct {
 	serverPicker  protocol.ServerPicker
 	policyManager policy.Manager
+	version       Version
+	dns           dns.Client
 }
 
 // NewClient create a new Socks5 client based on the given config.
@@ -41,10 +44,16 @@ func NewClient(ctx context.Context, config *ClientConfig) (*Client, error) {
 	}
 
 	v := core.MustFromContext(ctx)
-	return &Client{
+	c := &Client{
 		serverPicker:  protocol.NewRoundRobinServerPicker(serverList),
 		policyManager: v.GetFeature(policy.ManagerType()).(policy.Manager),
-	}, nil
+		version:       config.Version,
+	}
+	if config.Version == Version_SOCKS4 {
+		c.dns = v.GetFeature(dns.ClientType()).(dns.Client)
+	}
+
+	return c, nil
 }
 
 // Process implements proxy.Outbound.Process.
@@ -91,6 +100,39 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		Address: destination.Address,
 		Port:    destination.Port,
 	}
+
+	switch c.version {
+	case Version_SOCKS4:
+		if request.Address.Family().IsDomain() {
+			if d, ok := c.dns.(dns.ClientWithIPOption); ok {
+				d.SetFakeDNSOption(false) // Skip FakeDNS
+			} else {
+				newError("DNS client doesn't implement ClientWithIPOption")
+			}
+
+			lookupFunc := c.dns.LookupIP
+			if lookupIPv4, ok := c.dns.(dns.IPv4Lookup); ok {
+				lookupFunc = lookupIPv4.LookupIPv4
+			}
+			ips, err := lookupFunc(request.Address.Domain())
+			if err != nil {
+				return err
+			} else if len(ips) == 0 {
+				return dns.ErrEmptyResponse
+			}
+			request.Address = net.IPAddress(ips[0])
+		}
+		fallthrough
+	case Version_SOCKS4A:
+		request.Version = socks4Version
+
+		if destination.Network == net.Network_UDP {
+			return newError("udp is not supported in socks4")
+		} else if destination.Address.Family().IsIPv6() {
+			return newError("ipv6 is not supported in socks4")
+		}
+	}
+
 	if destination.Network == net.Network_UDP {
 		request.Command = protocol.RequestCommandUDP
 	}
@@ -121,6 +163,30 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, p.Timeouts.ConnectionIdle)
 
+	if packetConn, err := packetaddr.ToPacketAddrConn(link, destination); err == nil {
+		udpConn, err := dialer.Dial(ctx, udpRequest.Destination())
+		if err != nil {
+			return newError("failed to create UDP connection").Base(err)
+		}
+		defer udpConn.Close()
+
+		requestDone := func() error {
+			protocolWriter := NewUDPWriter(request, udpConn)
+			return udp.CopyPacketConn(protocolWriter, packetConn, udp.UpdateActivity(timer))
+		}
+		responseDone := func() error {
+			protocolReader := &UDPReader{
+				reader: udpConn,
+			}
+			return udp.CopyPacketConn(packetConn, protocolReader, udp.UpdateActivity(timer))
+		}
+		responseDoneAndCloseWriter := task.OnSuccess(responseDone, task.Close(link.Writer))
+		if err := task.Run(ctx, requestDone, responseDoneAndCloseWriter); err != nil {
+			return newError("connection ends").Base(err)
+		}
+		return nil
+	}
+
 	var requestFunc func() error
 	var responseFunc func() error
 	if request.Command == protocol.RequestCommandTCP {
@@ -149,7 +215,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		}
 	}
 
-	var responseDonePost = task.OnSuccess(responseFunc, task.Close(link.Writer))
+	responseDonePost := task.OnSuccess(responseFunc, task.Close(link.Writer))
 	if err := task.Run(ctx, requestFunc, responseDonePost); err != nil {
 		return newError("connection ends").Base(err)
 	}

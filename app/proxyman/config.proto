@@ -2,14 +2,14 @@ syntax = "proto3";
 
 package v2ray.core.app.proxyman;
 option csharp_namespace = "V2Ray.Core.App.Proxyman";
-option go_package = "github.com/v2fly/v2ray-core/v4/app/proxyman";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/proxyman";
 option java_package = "com.v2ray.core.app.proxyman";
 option java_multiple_files = true;
 
 import "common/net/address.proto";
 import "common/net/port.proto";
 import "transport/internet/config.proto";
-import "common/serial/typed_message.proto";
+import "google/protobuf/any.proto";
 
 message InboundConfig {}
 
@@ -79,8 +79,8 @@ message ReceiverConfig {
 
 message InboundHandlerConfig {
   string tag = 1;
-  v2ray.core.common.serial.TypedMessage receiver_settings = 2;
-  v2ray.core.common.serial.TypedMessage proxy_settings = 3;
+  google.protobuf.Any receiver_settings = 2;
+  google.protobuf.Any proxy_settings = 3;
 }
 
 message OutboundConfig {}

@@ -7,28 +7,30 @@ import (
 	"time"
 
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/protobuf/types/known/anypb"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/log"
-	"github.com/v2fly/v2ray-core/v4/app/proxyman"
-	"github.com/v2fly/v2ray-core/v4/common"
-	clog "github.com/v2fly/v2ray-core/v4/common/log"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/common/uuid"
-	"github.com/v2fly/v2ray-core/v4/proxy/dokodemo"
-	"github.com/v2fly/v2ray-core/v4/proxy/freedom"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess/inbound"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess/outbound"
-	"github.com/v2fly/v2ray-core/v4/testing/servers/tcp"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/domainsocket"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/headers/http"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/headers/wechat"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/quic"
-	tcptransport "github.com/v2fly/v2ray-core/v4/transport/internet/tcp"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/log"
+	"github.com/v2fly/v2ray-core/v5/app/proxyman"
+	"github.com/v2fly/v2ray-core/v5/common"
+	clog "github.com/v2fly/v2ray-core/v5/common/log"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/uuid"
+	"github.com/v2fly/v2ray-core/v5/proxy/dokodemo"
+	"github.com/v2fly/v2ray-core/v5/proxy/freedom"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess/inbound"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess/outbound"
+	"github.com/v2fly/v2ray-core/v5/testing/servers/tcp"
+	"github.com/v2fly/v2ray-core/v5/testing/servers/udp"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/domainsocket"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/headers/http"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/headers/wechat"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/quic"
+	tcptransport "github.com/v2fly/v2ray-core/v5/transport/internet/tcp"
 )
 
 func TestHTTPConnectionHeader(t *testing.T) {
@@ -257,12 +259,11 @@ func TestVMessQuic(t *testing.T) {
 	defer tcpServer.Close()
 
 	userID := protocol.NewID(uuid.New())
-	serverPort := tcp.PickPort()
+	serverPort := udp.PickPort()
 	serverConfig := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&log.Config{
-				ErrorLogLevel: clog.Severity_Debug,
-				ErrorLogType:  log.LogType_Console,
+				Error: &log.LogSpecification{Level: clog.Severity_Debug, Type: log.LogType_Console},
 			}),
 		},
 		Inbound: []*core.InboundHandlerConfig{
@@ -290,7 +291,7 @@ func TestVMessQuic(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:      userID.String(),
-								AlterId: 64,
+								AlterId: 0,
 							}),
 						},
 					},
@@ -306,10 +307,9 @@ func TestVMessQuic(t *testing.T) {
 
 	clientPort := tcp.PickPort()
 	clientConfig := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&log.Config{
-				ErrorLogLevel: clog.Severity_Debug,
-				ErrorLogType:  log.LogType_Console,
+				Error: &log.LogSpecification{Level: clog.Severity_Debug, Type: log.LogType_Console},
 			}),
 		},
 		Inbound: []*core.InboundHandlerConfig{
@@ -354,7 +354,7 @@ func TestVMessQuic(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_AES128_GCM,
 										},

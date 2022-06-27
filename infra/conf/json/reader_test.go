@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	. "github.com/v2fly/v2ray-core/v4/infra/conf/json"
+	"github.com/v2fly/v2ray-core/v5/common"
+	. "github.com/v2fly/v2ray-core/v5/infra/conf/json"
 )
 
 func TestReader(t *testing.T) {
@@ -24,7 +24,8 @@ content 2`,
 			`
 content 
 
-content 2`},
+content 2`,
+		},
 		{`content`, `content`},
 		{" ", " "},
 		{`con/*abcd*/tent`, "content"},

@@ -1,5 +1,3 @@
-// +build !confonly
-
 package dns
 
 import (
@@ -11,9 +9,9 @@ import (
 	"github.com/miekg/dns"
 	"golang.org/x/net/dns/dnsmessage"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	dns_feature "github.com/v2fly/v2ray-core/v4/features/dns"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	dns_feature "github.com/v2fly/v2ray-core/v5/features/dns"
 )
 
 func Test_parseResponse(t *testing.T) {
@@ -52,20 +50,28 @@ func Test_parseResponse(t *testing.T) {
 		want    *IPRecord
 		wantErr bool
 	}{
-		{"empty",
+		{
+			"empty",
 			&IPRecord{0, []net.Address(nil), time.Time{}, dnsmessage.RCodeSuccess},
 			false,
 		},
-		{"error",
+		{
+			"error",
 			nil,
 			true,
 		},
-		{"a record",
-			&IPRecord{1, []net.Address{net.ParseAddress("8.8.8.8"), net.ParseAddress("8.8.4.4")},
-				time.Time{}, dnsmessage.RCodeSuccess},
+		{
+			"a record",
+			&IPRecord{
+				1,
+				[]net.Address{net.ParseAddress("8.8.8.8"), net.ParseAddress("8.8.4.4")},
+				time.Time{},
+				dnsmessage.RCodeSuccess,
+			},
 			false,
 		},
-		{"aaaa record",
+		{
+			"aaaa record",
 			&IPRecord{2, []net.Address{net.ParseAddress("2001::123:8888"), net.ParseAddress("2001::123:8844")}, time.Time{}, dnsmessage.RCodeSuccess},
 			false,
 		},

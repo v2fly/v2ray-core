@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package v2ray.core.app.log.command;
 option csharp_namespace = "V2Ray.Core.App.Log.Command";
-option go_package = "github.com/v2fly/v2ray-core/v4/app/log/command";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/log/command";
 option java_package = "com.v2ray.core.app.log.command";
 option java_multiple_files = true;
 
@@ -12,6 +12,15 @@ message RestartLoggerRequest {}
 
 message RestartLoggerResponse {}
 
+message FollowLogRequest {}
+
+message FollowLogResponse {
+  string message = 1;
+}
+
 service LoggerService {
   rpc RestartLogger(RestartLoggerRequest) returns (RestartLoggerResponse) {}
+
+  //Unstable interface
+  rpc FollowLog(FollowLogRequest) returns (stream FollowLogResponse) {};
 }

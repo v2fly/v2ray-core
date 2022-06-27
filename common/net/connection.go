@@ -1,5 +1,3 @@
-// +build !confonly
-
 package net
 
 import (
@@ -7,10 +5,10 @@ import (
 	"net"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/errors"
-	"github.com/v2fly/v2ray-core/v4/common/signal/done"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/signal/done"
 )
 
 type ConnectionOption func(*connection)

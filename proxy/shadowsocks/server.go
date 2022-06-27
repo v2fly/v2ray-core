@@ -1,25 +1,24 @@
-// +build !confonly
-
 package shadowsocks
 
 import (
 	"context"
 	"time"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/log"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	udp_proto "github.com/v2fly/v2ray-core/v4/common/protocol/udp"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/signal"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/features/policy"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/udp"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/log"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	udp_proto "github.com/v2fly/v2ray-core/v5/common/protocol/udp"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	"github.com/v2fly/v2ray-core/v5/features/policy"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
 )
 
 type Server struct {
@@ -72,10 +71,23 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 }
 
 func (s *Server) handlerUDPPayload(ctx context.Context, conn internet.Connection, dispatcher routing.Dispatcher) error {
-	udpServer := udp.NewDispatcher(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
+	udpDispatcherConstructor := udp.NewSplitDispatcher
+	switch s.config.PacketEncoding {
+	case packetaddr.PacketAddrType_None:
+		break
+	case packetaddr.PacketAddrType_Packet:
+		packetAddrDispatcherFactory := udp.NewPacketAddrDispatcherCreator(ctx)
+		udpDispatcherConstructor = packetAddrDispatcherFactory.NewPacketAddrDispatcher
+	}
+
+	udpServer := udpDispatcherConstructor(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
 		request := protocol.RequestHeaderFromContext(ctx)
 		if request == nil {
-			return
+			request = &protocol.RequestHeader{
+				Port:    packet.Source.Port,
+				Address: packet.Source.Address,
+				User:    s.user,
+			}
 		}
 
 		payload := packet.Payload
@@ -222,7 +234,7 @@ func (s *Server) handleConnection(ctx context.Context, conn internet.Connection,
 		return nil
 	}
 
-	var requestDoneAndCloseWriter = task.OnSuccess(requestDone, task.Close(link.Writer))
+	requestDoneAndCloseWriter := task.OnSuccess(requestDone, task.Close(link.Writer))
 	if err := task.Run(ctx, requestDoneAndCloseWriter, responseDone); err != nil {
 		common.Interrupt(link.Reader)
 		common.Interrupt(link.Writer)

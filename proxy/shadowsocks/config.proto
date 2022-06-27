@@ -2,17 +2,21 @@ syntax = "proto3";
 
 package v2ray.core.proxy.shadowsocks;
 option csharp_namespace = "V2Ray.Core.Proxy.Shadowsocks";
-option go_package = "github.com/v2fly/v2ray-core/v4/proxy/shadowsocks";
+option go_package = "github.com/v2fly/v2ray-core/v5/proxy/shadowsocks";
 option java_package = "com.v2ray.core.proxy.shadowsocks";
 option java_multiple_files = true;
 
 import "common/net/network.proto";
 import "common/protocol/user.proto";
 import "common/protocol/server_spec.proto";
+import "common/net/packetaddr/config.proto";
 
 message Account {
   string password = 1;
   CipherType cipher_type = 2;
+
+  bool iv_check = 3;
+  bool experiment_reduced_iv_head_entropy = 90001;
 }
 
 enum CipherType {
@@ -29,6 +33,7 @@ message ServerConfig {
   bool udp_enabled = 1 [deprecated = true];
   v2ray.core.common.protocol.User user = 2;
   repeated v2ray.core.common.net.Network network = 3;
+  v2ray.core.net.packetaddr.PacketAddrType packet_encoding = 4;
 }
 
 message ClientConfig {

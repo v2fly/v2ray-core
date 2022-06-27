@@ -7,25 +7,25 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/miekg/dns"
+	"google.golang.org/protobuf/types/known/anypb"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/dispatcher"
-	dnsapp "github.com/v2fly/v2ray-core/v4/app/dns"
-	"github.com/v2fly/v2ray-core/v4/app/policy"
-	"github.com/v2fly/v2ray-core/v4/app/proxyman"
-	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/inbound"
-	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/outbound"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	dns_proxy "github.com/v2fly/v2ray-core/v4/proxy/dns"
-	"github.com/v2fly/v2ray-core/v4/proxy/dokodemo"
-	"github.com/v2fly/v2ray-core/v4/testing/servers/tcp"
-	"github.com/v2fly/v2ray-core/v4/testing/servers/udp"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/dispatcher"
+	dnsapp "github.com/v2fly/v2ray-core/v5/app/dns"
+	"github.com/v2fly/v2ray-core/v5/app/policy"
+	"github.com/v2fly/v2ray-core/v5/app/proxyman"
+	_ "github.com/v2fly/v2ray-core/v5/app/proxyman/inbound"
+	_ "github.com/v2fly/v2ray-core/v5/app/proxyman/outbound"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	dns_proxy "github.com/v2fly/v2ray-core/v5/proxy/dns"
+	"github.com/v2fly/v2ray-core/v5/proxy/dokodemo"
+	"github.com/v2fly/v2ray-core/v5/testing/servers/tcp"
+	"github.com/v2fly/v2ray-core/v5/testing/servers/udp"
 )
 
-type staticHandler struct {
-}
+type staticHandler struct{}
 
 func (*staticHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	ans := new(dns.Msg)
@@ -91,7 +91,7 @@ func TestUDPDNSTunnel(t *testing.T) {
 
 	serverPort := udp.PickPort()
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&dnsapp.Config{
 				NameServers: []*net.Endpoint{
 					{
@@ -208,7 +208,7 @@ func TestTCPDNSTunnel(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&dnsapp.Config{
 				NameServer: []*dnsapp.NameServer{
 					{
@@ -294,7 +294,7 @@ func TestUDP2TCPDNSTunnel(t *testing.T) {
 
 	serverPort := tcp.PickPort()
 	config := &core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&dnsapp.Config{
 				NameServer: []*dnsapp.NameServer{
 					{

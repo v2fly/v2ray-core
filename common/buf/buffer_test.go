@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	. "github.com/v2fly/v2ray-core/v4/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common"
+	. "github.com/v2fly/v2ray-core/v5/common/buf"
 )
 
 func TestBufferClear(t *testing.T) {
@@ -78,6 +78,7 @@ func TestBufferByte(t *testing.T) {
 		buffer.Release()
 	}
 }
+
 func TestBufferResize(t *testing.T) {
 	buffer := New()
 	defer buffer.Release()

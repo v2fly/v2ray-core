@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package v2ray.core.common.taggedfeatures;
+option csharp_namespace = "V2Ray.Core.Common.Taggedfeatures";
+option go_package = "github.com/v2fly/v2ray-core/v5/common/taggedfeatures";
+option java_package = "com.v2ray.core.common.taggedfeatures";
+option java_multiple_files = true;
+
+import "google/protobuf/any.proto";
+
+message Config {
+  map<string, google.protobuf.Any> features = 1;
+}

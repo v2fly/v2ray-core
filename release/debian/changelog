@@ -1,3 +1,83 @@
+v2ray-core (4.42.2-2) unstable; urgency=medium
+
+  * Support Windows ARM64
+  * TLS: support client certificate authentication
+  * GeoIP asset: add trimmed GeoIP file `geoip-only-cn-private.dat` to zip package for ROM/RAM insufficient devices
+  * Socks: support 4/4a version of the socks protocol
+  * DNS: add option `disableFallbackIfMatch` for DNS
+  * More details in https://github.com/v2fly/v2ray-core/releases/tag/v4.42.2
+
+ -- V2Fly <dev@v2fly.org>  Mon, 20 Sep 2021 11:00:00 +0800
+
+v2ray-core (4.41.1-1) unstable; urgency=medium
+
+  * VMess: added two VMess experiments: AuthenticatedLength & NoTerminationSignal
+  * Draining connection at client side when receiving invalid data
+  * Observatory: support custom probe interval and probe URL
+  * Fix: connection stability issue in HTTP/2 & gRPC transport
+  * More details in https://github.com/v2fly/v2ray-core/releases/tag/v4.41.1
+
+ -- V2Fly <dev@v2fly.org>  Wed, 18 Aug 2021 10:00:00 +0800
+
+v2ray-core (4.40.1-1) unstable; urgency=medium
+
+  * DNS: support DNS over TCP
+  * Fix: new certification issuing incorrectly delayed
+  * More details in https://github.com/v2fly/v2ray-core/releases/tag/v4.40.1
+
+ -- V2Fly <dev@v2fly.org>  Tue, 22 Jun 2021 22:00:00 +0800
+
+v2ray-core (4.39.2-1) unstable; urgency=medium
+
+  * Websocket: support header based Websocket early data & its partial browser forwarder support
+  * GeoData: add a memory efficient geodata decoder called `memconservative` for memory-limited devices
+  * HTTP/2 Transport: support to set method and headers for outgoing connections
+  * TCP Socket Option: support to set keepalive interval on Linux operating system
+  * Fixed BrowserForwarder panics with empty config
+  * Fixed FakeDNS prints error with empty config
+  * Fixed dual stack FakeDNS Close method
+  * Fixed Observatory starts with empty config & fails to close
+  * Fixed null check on alternative system dialer
+  * Fixed the chain proxy support for gRPC and HTTP/2 transport
+  * Fixed leastping logic
+  * Fixed v2ctl unable to create geodata loaders
+  * More details in https://github.com/v2fly/v2ray-core/releases/tag/v4.39.2
+
+ -- V2Fly <dev@v2fly.org>  Wed, 26 May 2021 08:00:00 +0800
+
+v2ray-core (4.38.3-1) unstable; urgency=medium
+
+  * FakeDNS: add fakedns+others sniffer
+  * FakeDNS: support dual stack IP pool by default
+  * Observatory: A component that measures the connectivity of selected outbounds
+  * Multi-JSON support for Observatory & BrowserForwarder
+  * Routing: add leastPing balancing strategy
+  * Fix: FakeDNS crash
+  * Fix: FakeDNS return ErrEmptyResponse when no FakeIP found
+  * Fix: UDP DNS connection crash
+  * More details in https://github.com/v2fly/v2ray-core/releases/tag/v4.38.3
+
+ -- V2Fly <dev@v2fly.org>  Wed, 5 May 2021 10:00:00 +0800
+
+v2ray-core (4.37.3-1) unstable; urgency=medium
+
+  * DNS: hosts support multiple addresses (#884 #886 #888)
+  * Fix: cannot load geoip & geosite (#889)
+  * Chore: use Go v1.16 to build Debian package (#890)
+
+ -- V2Fly <dev@v2fly.org>  Mon, 12 Apr 2021 23:05:51 +0800
+
+v2ray-core (4.37.2-1) unstable; urgency=medium
+
+  * Websocket: support browser forwarder (#818)
+  * Websocket: support Websocket 0-RTT early data (#818)
+  * Shadowsocks: add replay protection for Shadowsocks proxy (#777)
+  * DNS: add queryStrategy option for DNS (#794)
+  * DNS: add disableFallback & skipFallback option for DNS client (#864)
+  * GeoIP: add inversed GeoIP matching (#860)
+
+ -- V2Fly <dev@v2fly.org>  Sun, 11 Apr 2021 22:00:51 +0800
+
 v2ray-core (4.34.0-1) unstable; urgency=medium
 
   * TLS Session Resumption is now disabled by default (#569).

@@ -1,6 +1,6 @@
 package http
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 import (
 	"bufio"
@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
 )
 
 const (
@@ -90,7 +90,7 @@ func (h *HeaderReader) Read(reader io.Reader) (*buf.Buffer, error) {
 			buffer.Clear()
 			copy(buffer.Extend(lenEnding), leftover)
 
-			if _, err := readRequest(bufio.NewReader(bytes.NewReader(headerBuf.Bytes())), false); err != io.ErrUnexpectedEOF {
+			if _, err := readRequest(bufio.NewReader(bytes.NewReader(headerBuf.Bytes()))); err != io.ErrUnexpectedEOF {
 				return nil, err
 			}
 		}
@@ -110,9 +110,9 @@ func (h *HeaderReader) Read(reader io.Reader) (*buf.Buffer, error) {
 	}
 
 	// Parse the request
-	if req, err := readRequest(bufio.NewReader(bytes.NewReader(headerBuf.Bytes())), false); err != nil {
+	if req, err := readRequest(bufio.NewReader(bytes.NewReader(headerBuf.Bytes()))); err != nil {
 		return nil, err
-	} else { // nolint: golint
+	} else { // nolint: revive
 		h.req = req
 	}
 

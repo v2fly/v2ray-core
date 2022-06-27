@@ -1,5 +1,3 @@
-// +build !confonly
-
 package kcp
 
 import (
@@ -7,7 +5,7 @@ import (
 	"encoding/binary"
 	"hash/fnv"
 
-	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v5/common"
 )
 
 // SimpleAuthenticator is a legacy AEAD used for KCP encryption.

@@ -6,11 +6,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	. "github.com/v2fly/v2ray-core/v4/proxy/socks"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	. "github.com/v2fly/v2ray-core/v5/proxy/socks"
 )
 
 func TestUDPEncoding(t *testing.T) {
@@ -69,7 +69,7 @@ func TestReadUsernamePassword(t *testing.T) {
 				t.Error("for input: ", testCase.Input, " expect username ", testCase.Username, " but actually ", username)
 			}
 			if testCase.Password != password {
-				t.Error("for input: ", testCase.Input, " expect passowrd ", testCase.Password, " but actually ", password)
+				t.Error("for input: ", testCase.Input, " expect password ", testCase.Password, " but actually ", password)
 			}
 		}
 	}

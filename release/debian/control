@@ -4,19 +4,19 @@ Priority: optional
 Maintainer: ymshenyu <ymshenyu@gmail.com>
 Build-Depends:  debhelper-compat (= 12),
                 dh-golang,
-                golang-any
 Standards-Version: 4.5.0
 Homepage: https://github.com/v2fly/v2ray-core
 #Vcs-Browser: https://salsa.debian.org/debian/v2ray-core
 #Vcs-Git: https://salsa.debian.org/debian/v2ray-core.git
 Rules-Requires-Root: no
-XS-Go-Import-Path: github.com/v2fly/v2ray-core/v4
+XS-Go-Import-Path: github.com/v2fly/v2ray-core/v5
 
 Package: v2ray
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Recommends: v2ray-domain-list-community,
-            v2ray-geoip
+            v2ray-geoip,
+            v2ray-geoip-only-cn-private
 Description: Library platform for building proxies in golang
  Project V2Ray is a set of network tools that help you to build your
  own computer network. It secures your network connections and thus
@@ -31,6 +31,14 @@ Description: Library platform for building proxies in golang (routing file)
  protects your privacy.
 
 Package: v2ray-geoip
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Library platform for building proxies in golang (routing file)
+ Project V2Ray is a set of network tools that help you to build your
+ own computer network. It secures your network connections and thus
+ protects your privacy.
+
+Package: v2ray-geoip-only-cn-private
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Library platform for building proxies in golang (routing file)

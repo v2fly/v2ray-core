@@ -2,10 +2,11 @@ syntax = "proto3";
 
 package v2ray.core.app.router.command;
 option csharp_namespace = "V2Ray.Core.App.Router.Command";
-option go_package = "github.com/v2fly/v2ray-core/v4/app/router/command";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/router/command";
 option java_package = "com.v2ray.core.app.router.command";
 option java_multiple_files = true;
 
+import "common/protoext/extensions.proto";
 import "common/net/network.proto";
 
 // RoutingContext is the context with information relative to routing process.
@@ -60,10 +61,44 @@ message TestRouteRequest {
   bool PublishResult = 3;
 }
 
+message PrincipleTargetInfo {
+  repeated string tag = 1;
+}
+
+message OverrideInfo {
+  string target = 2;
+}
+
+message BalancerMsg {
+  OverrideInfo override = 5;
+  PrincipleTargetInfo principle_target = 6;
+}
+
+message GetBalancerInfoRequest {
+  string tag = 1;
+}
+
+message GetBalancerInfoResponse {
+  BalancerMsg balancer = 1;
+}
+
+message OverrideBalancerTargetRequest {
+  string balancerTag = 1;
+  string target = 2;
+}
+
+message OverrideBalancerTargetResponse {}
+
 service RoutingService {
   rpc SubscribeRoutingStats(SubscribeRoutingStatsRequest)
       returns (stream RoutingContext) {}
   rpc TestRoute(TestRouteRequest) returns (RoutingContext) {}
+
+  rpc GetBalancerInfo(GetBalancerInfoRequest) returns (GetBalancerInfoResponse){}
+  rpc OverrideBalancerTarget(OverrideBalancerTargetRequest) returns (OverrideBalancerTargetResponse) {}
 }
 
-message Config {}
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "grpcservice";
+  option (v2ray.core.common.protoext.message_opt).short_name = "router";
+}

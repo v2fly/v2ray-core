@@ -2,12 +2,13 @@ syntax = "proto3";
 
 package v2ray.core.app.proxyman.command;
 option csharp_namespace = "V2Ray.Core.App.Proxyman.Command";
-option go_package = "github.com/v2fly/v2ray-core/v4/app/proxyman/command";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/proxyman/command";
 option java_package = "com.v2ray.core.app.proxyman.command";
 option java_multiple_files = true;
 
 import "common/protocol/user.proto";
-import "common/serial/typed_message.proto";
+import "google/protobuf/any.proto";
+import "common/protoext/extensions.proto";
 import "config.proto";
 
 message AddUserOperation {
@@ -32,7 +33,7 @@ message RemoveInboundResponse {}
 
 message AlterInboundRequest {
   string tag = 1;
-  v2ray.core.common.serial.TypedMessage operation = 2;
+  google.protobuf.Any operation = 2;
 }
 
 message AlterInboundResponse {}
@@ -51,7 +52,7 @@ message RemoveOutboundResponse {}
 
 message AlterOutboundRequest {
   string tag = 1;
-  v2ray.core.common.serial.TypedMessage operation = 2;
+  google.protobuf.Any operation = 2;
 }
 
 message AlterOutboundResponse {}
@@ -70,4 +71,7 @@ service HandlerService {
   rpc AlterOutbound(AlterOutboundRequest) returns (AlterOutboundResponse) {}
 }
 
-message Config {}
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "grpcservice";
+  option (v2ray.core.common.protoext.message_opt).short_name = "proxyman";
+}

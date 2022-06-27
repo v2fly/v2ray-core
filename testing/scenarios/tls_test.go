@@ -7,26 +7,27 @@ import (
 	"time"
 
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/protobuf/types/known/anypb"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/proxyman"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/protocol/tls/cert"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/common/uuid"
-	"github.com/v2fly/v2ray-core/v4/proxy/dokodemo"
-	"github.com/v2fly/v2ray-core/v4/proxy/freedom"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess/inbound"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess/outbound"
-	"github.com/v2fly/v2ray-core/v4/testing/servers/tcp"
-	"github.com/v2fly/v2ray-core/v4/testing/servers/udp"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/http"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/websocket"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/proxyman"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/protocol/tls/cert"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/uuid"
+	"github.com/v2fly/v2ray-core/v5/proxy/dokodemo"
+	"github.com/v2fly/v2ray-core/v5/proxy/freedom"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess/inbound"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess/outbound"
+	"github.com/v2fly/v2ray-core/v5/testing/servers/tcp"
+	"github.com/v2fly/v2ray-core/v5/testing/servers/udp"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/http"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/websocket"
 )
 
 func TestSimpleTLSConnection(t *testing.T) {
@@ -47,7 +48,7 @@ func TestSimpleTLSConnection(t *testing.T) {
 					Listen:    net.NewIPOrDomain(net.LocalHostIP),
 					StreamSettings: &internet.StreamConfig{
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								Certificate: []*tls.Certificate{tls.ParseCertificate(cert.MustGenerate(nil))},
 							}),
@@ -109,7 +110,7 @@ func TestSimpleTLSConnection(t *testing.T) {
 				SenderSettings: serial.ToTypedMessage(&proxyman.SenderConfig{
 					StreamSettings: &internet.StreamConfig{
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								AllowInsecure: true,
 							}),
@@ -124,7 +125,7 @@ func TestSimpleTLSConnection(t *testing.T) {
 	common.Must(err)
 	defer CloseAllServers(servers)
 
-	if err := testTCPConn(clientPort, 1024, time.Second*2)(); err != nil {
+	if err := testTCPConn(clientPort, 1024, time.Second*20)(); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -160,7 +161,7 @@ func TestAutoIssuingCertificate(t *testing.T) {
 					Listen:    net.NewIPOrDomain(net.LocalHostIP),
 					StreamSettings: &internet.StreamConfig{
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								Certificate: []*tls.Certificate{{
 									Certificate: certPEM,
@@ -226,7 +227,7 @@ func TestAutoIssuingCertificate(t *testing.T) {
 				SenderSettings: serial.ToTypedMessage(&proxyman.SenderConfig{
 					StreamSettings: &internet.StreamConfig{
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								ServerName: "v2fly.org",
 								Certificate: []*tls.Certificate{{
@@ -246,7 +247,7 @@ func TestAutoIssuingCertificate(t *testing.T) {
 	defer CloseAllServers(servers)
 
 	for i := 0; i < 10; i++ {
-		if err := testTCPConn(clientPort, 1024, time.Second*2)(); err != nil {
+		if err := testTCPConn(clientPort, 1024, time.Second*20)(); err != nil {
 			t.Error(err)
 		}
 	}
@@ -271,7 +272,7 @@ func TestTLSOverKCP(t *testing.T) {
 					StreamSettings: &internet.StreamConfig{
 						Protocol:     internet.TransportProtocol_MKCP,
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								Certificate: []*tls.Certificate{tls.ParseCertificate(cert.MustGenerate(nil))},
 							}),
@@ -334,7 +335,7 @@ func TestTLSOverKCP(t *testing.T) {
 					StreamSettings: &internet.StreamConfig{
 						Protocol:     internet.TransportProtocol_MKCP,
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								AllowInsecure: true,
 							}),
@@ -349,7 +350,7 @@ func TestTLSOverKCP(t *testing.T) {
 	common.Must(err)
 	defer CloseAllServers(servers)
 
-	if err := testTCPConn(clientPort, 1024, time.Second*2)(); err != nil {
+	if err := testTCPConn(clientPort, 1024, time.Second*20)(); err != nil {
 		t.Error(err)
 	}
 }
@@ -373,7 +374,7 @@ func TestTLSOverWebSocket(t *testing.T) {
 					StreamSettings: &internet.StreamConfig{
 						Protocol:     internet.TransportProtocol_WebSocket,
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								Certificate: []*tls.Certificate{tls.ParseCertificate(cert.MustGenerate(nil))},
 							}),
@@ -442,7 +443,7 @@ func TestTLSOverWebSocket(t *testing.T) {
 							},
 						},
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								AllowInsecure: true,
 							}),
@@ -494,7 +495,7 @@ func TestHTTP2(t *testing.T) {
 							},
 						},
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								Certificate: []*tls.Certificate{tls.ParseCertificate(cert.MustGenerate(nil))},
 							}),
@@ -566,7 +567,7 @@ func TestHTTP2(t *testing.T) {
 							},
 						},
 						SecurityType: serial.GetMessageType(&tls.Config{}),
-						SecuritySettings: []*serial.TypedMessage{
+						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(&tls.Config{
 								AllowInsecure: true,
 							}),
@@ -587,5 +588,108 @@ func TestHTTP2(t *testing.T) {
 	}
 	if err := errg.Wait(); err != nil {
 		t.Error(err)
+	}
+}
+
+func TestSimpleTLSConnectionPinned(t *testing.T) {
+	tcpServer := tcp.Server{
+		MsgProcessor: xor,
+	}
+	dest, err := tcpServer.Start()
+	common.Must(err)
+	defer tcpServer.Close()
+	certificateDer := cert.MustGenerate(nil)
+	certificate := tls.ParseCertificate(certificateDer)
+	certHash := tls.GenerateCertChainHash([][]byte{certificateDer.Certificate})
+	userID := protocol.NewID(uuid.New())
+	serverPort := tcp.PickPort()
+	serverConfig := &core.Config{
+		Inbound: []*core.InboundHandlerConfig{
+			{
+				ReceiverSettings: serial.ToTypedMessage(&proxyman.ReceiverConfig{
+					PortRange: net.SinglePortRange(serverPort),
+					Listen:    net.NewIPOrDomain(net.LocalHostIP),
+					StreamSettings: &internet.StreamConfig{
+						SecurityType: serial.GetMessageType(&tls.Config{}),
+						SecuritySettings: []*anypb.Any{
+							serial.ToTypedMessage(&tls.Config{
+								Certificate: []*tls.Certificate{certificate},
+							}),
+						},
+					},
+				}),
+				ProxySettings: serial.ToTypedMessage(&inbound.Config{
+					User: []*protocol.User{
+						{
+							Account: serial.ToTypedMessage(&vmess.Account{
+								Id: userID.String(),
+							}),
+						},
+					},
+				}),
+			},
+		},
+		Outbound: []*core.OutboundHandlerConfig{
+			{
+				ProxySettings: serial.ToTypedMessage(&freedom.Config{}),
+			},
+		},
+	}
+
+	clientPort := tcp.PickPort()
+	clientConfig := &core.Config{
+		Inbound: []*core.InboundHandlerConfig{
+			{
+				ReceiverSettings: serial.ToTypedMessage(&proxyman.ReceiverConfig{
+					PortRange: net.SinglePortRange(clientPort),
+					Listen:    net.NewIPOrDomain(net.LocalHostIP),
+				}),
+				ProxySettings: serial.ToTypedMessage(&dokodemo.Config{
+					Address: net.NewIPOrDomain(dest.Address),
+					Port:    uint32(dest.Port),
+					NetworkList: &net.NetworkList{
+						Network: []net.Network{net.Network_TCP},
+					},
+				}),
+			},
+		},
+		Outbound: []*core.OutboundHandlerConfig{
+			{
+				ProxySettings: serial.ToTypedMessage(&outbound.Config{
+					Receiver: []*protocol.ServerEndpoint{
+						{
+							Address: net.NewIPOrDomain(net.LocalHostIP),
+							Port:    uint32(serverPort),
+							User: []*protocol.User{
+								{
+									Account: serial.ToTypedMessage(&vmess.Account{
+										Id: userID.String(),
+									}),
+								},
+							},
+						},
+					},
+				}),
+				SenderSettings: serial.ToTypedMessage(&proxyman.SenderConfig{
+					StreamSettings: &internet.StreamConfig{
+						SecurityType: serial.GetMessageType(&tls.Config{}),
+						SecuritySettings: []*anypb.Any{
+							serial.ToTypedMessage(&tls.Config{
+								AllowInsecure:                    true,
+								PinnedPeerCertificateChainSha256: [][]byte{certHash},
+							}),
+						},
+					},
+				}),
+			},
+		},
+	}
+
+	servers, err := InitializeServerConfigs(serverConfig, clientConfig)
+	common.Must(err)
+	defer CloseAllServers(servers)
+
+	if err := testTCPConn(clientPort, 1024, time.Second*20)(); err != nil {
+		t.Fatal(err)
 	}
 }

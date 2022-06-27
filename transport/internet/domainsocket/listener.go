@@ -1,6 +1,5 @@
-// +build !windows
-// +build !wasm
-// +build !confonly
+//go:build !windows && !wasm
+// +build !windows,!wasm
 
 package domainsocket
 
@@ -12,10 +11,10 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
 
 type Listener struct {

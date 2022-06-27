@@ -1,5 +1,3 @@
-// +build !confonly
-
 package kcp
 
 import (
@@ -11,9 +9,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/signal"
-	"github.com/v2fly/v2ray-core/v4/common/signal/semaphore"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/common/signal/semaphore"
 )
 
 var (

@@ -1,24 +1,22 @@
-// +build !confonly
-
 package dns
 
 import (
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/strmatcher"
-	"github.com/v2fly/v2ray-core/v4/features"
-	"github.com/v2fly/v2ray-core/v4/features/dns"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/strmatcher"
+	"github.com/v2fly/v2ray-core/v5/features"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
 )
 
 // StaticHosts represents static domain-ip mapping in DNS server.
 type StaticHosts struct {
 	ips      [][]net.Address
-	matchers *strmatcher.MatcherGroup
+	matchers *strmatcher.LinearIndexMatcher
 }
 
 // NewStaticHosts creates a new StaticHosts instance.
-func NewStaticHosts(hosts []*Config_HostMapping, legacy map[string]*net.IPOrDomain) (*StaticHosts, error) {
-	g := new(strmatcher.MatcherGroup)
+func NewStaticHosts(hosts []*HostMapping, legacy map[string]*net.IPOrDomain) (*StaticHosts, error) {
+	g := new(strmatcher.LinearIndexMatcher)
 	sh := &StaticHosts{
 		ips:      make([][]net.Address, len(hosts)+len(legacy)+16),
 		matchers: g,
@@ -49,6 +47,8 @@ func NewStaticHosts(hosts []*Config_HostMapping, legacy map[string]*net.IPOrDoma
 		id := g.Add(matcher)
 		ips := make([]net.Address, 0, len(mapping.Ip)+1)
 		switch {
+		case len(mapping.ProxiedDomain) > 0:
+			ips = append(ips, net.DomainAddress(mapping.ProxiedDomain))
 		case len(mapping.Ip) > 0:
 			for _, ip := range mapping.Ip {
 				addr := net.IPAddress(ip)
@@ -57,17 +57,8 @@ func NewStaticHosts(hosts []*Config_HostMapping, legacy map[string]*net.IPOrDoma
 				}
 				ips = append(ips, addr)
 			}
-
-		case len(mapping.ProxiedDomain) > 0:
-			ips = append(ips, net.DomainAddress(mapping.ProxiedDomain))
-
 		default:
 			return nil, newError("neither IP address nor proxied domain specified for domain: ", mapping.Domain).AtWarning()
-		}
-
-		// Special handling for localhost IPv6. This is a dirty workaround as JSON config supports only single IP mapping.
-		if len(ips) == 1 && ips[0] == net.LocalHostIP {
-			ips = append(ips, net.LocalHostIPv6)
 		}
 
 		sh.ips[id] = ips
@@ -99,6 +90,7 @@ func (h *StaticHosts) lookup(domain string, option dns.IPOption, maxDepth int) [
 	case len(addrs) == 0: // Not recorded in static hosts, return nil
 		return nil
 	case len(addrs) == 1 && addrs[0].Family().IsDomain(): // Try to unwrap domain
+		newError("found replaced domain: ", domain, " -> ", addrs[0].Domain(), ". Try to unwrap it").AtDebug().WriteToLog()
 		if maxDepth > 0 {
 			unwrapped := h.lookup(addrs[0].Domain(), option, maxDepth-1)
 			if unwrapped != nil {

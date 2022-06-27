@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package v2ray.core.proxy.vlite.outbound;
+option csharp_namespace = "V2Ray.Core.Proxy.Vlite.Outbound";
+option go_package = "github.com/v2fly/v2ray-core/v5/proxy/vlite/outbound";
+option java_package = "com.v2ray.core.proxy.vlite.outbound";
+option java_multiple_files = true;
+
+import "common/net/address.proto";
+import "common/protoext/extensions.proto";
+
+message UDPProtocolConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "outbound";
+  option (v2ray.core.common.protoext.message_opt).short_name = "vliteu";
+  v2ray.core.common.net.IPOrDomain address = 1;
+  uint32 port = 2;
+
+  string password = 3;
+  bool scramble_packet = 4;
+  bool enable_fec = 5;
+  bool enable_stabilization = 6;
+  bool enable_renegotiation = 7;
+  uint32 handshake_masking_padding_size = 8;
+}

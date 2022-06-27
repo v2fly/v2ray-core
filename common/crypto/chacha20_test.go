@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	. "github.com/v2fly/v2ray-core/v4/common/crypto"
+	"github.com/v2fly/v2ray-core/v5/common"
+	. "github.com/v2fly/v2ray-core/v5/common/crypto"
 )
 
 func mustDecodeHex(s string) []byte {
@@ -18,7 +18,7 @@ func mustDecodeHex(s string) []byte {
 }
 
 func TestChaCha20Stream(t *testing.T) {
-	var cases = []struct {
+	cases := []struct {
 		key    []byte
 		iv     []byte
 		output []byte
@@ -48,9 +48,9 @@ func TestChaCha20Stream(t *testing.T) {
 	for _, c := range cases {
 		s := NewChaCha20Stream(c.key, c.iv)
 		input := make([]byte, len(c.output))
-		actualOutout := make([]byte, len(c.output))
-		s.XORKeyStream(actualOutout, input)
-		if r := cmp.Diff(c.output, actualOutout); r != "" {
+		actualOutput := make([]byte, len(c.output))
+		s.XORKeyStream(actualOutput, input)
+		if r := cmp.Diff(c.output, actualOutput); r != "" {
 			t.Fatal(r)
 		}
 	}

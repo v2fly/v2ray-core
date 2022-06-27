@@ -1,22 +1,23 @@
-// +build !confonly
-
 package shadowsocks
 
 import (
 	"context"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/retry"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/signal"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/features/policy"
-	"github.com/v2fly/v2ray-core/v4/transport"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/retry"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	"github.com/v2fly/v2ray-core/v5/features/policy"
+	"github.com/v2fly/v2ray-core/v5/proxy"
+	"github.com/v2fly/v2ray-core/v5/transport"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
 )
 
 // Client is a inbound handler for Shadowsocks protocol
@@ -74,7 +75,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	if err != nil {
 		return newError("failed to find an available destination").AtWarning().Base(err)
 	}
-	newError("tunneling request to ", destination, " via ", server.Destination()).WriteToLog(session.ExportIDToError(ctx))
+	newError("tunneling request to ", destination, " via ", network, ":", server.Destination().NetAddr()).WriteToLog(session.ExportIDToError(ctx))
 
 	defer conn.Close()
 
@@ -100,19 +101,45 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
 
+	if packetConn, err := packetaddr.ToPacketAddrConn(link, destination); err == nil {
+		requestDone := func() error {
+			protocolWriter := &UDPWriter{
+				Writer:  conn,
+				Request: request,
+			}
+			return udp.CopyPacketConn(protocolWriter, packetConn, udp.UpdateActivity(timer))
+		}
+		responseDone := func() error {
+			protocolReader := &UDPReader{
+				Reader: conn,
+				User:   user,
+			}
+			return udp.CopyPacketConn(packetConn, protocolReader, udp.UpdateActivity(timer))
+		}
+		responseDoneAndCloseWriter := task.OnSuccess(responseDone, task.Close(link.Writer))
+		if err := task.Run(ctx, requestDone, responseDoneAndCloseWriter); err != nil {
+			return newError("connection ends").Base(err)
+		}
+		return nil
+	}
+
 	if request.Command == protocol.RequestCommandTCP {
-		bufferedWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
-		bodyWriter, err := WriteTCPRequest(request, bufferedWriter)
-		if err != nil {
-			return newError("failed to write request").Base(err)
-		}
-
-		if err := bufferedWriter.SetBuffered(false); err != nil {
-			return err
-		}
-
 		requestDone := func() error {
 			defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
+			bufferedWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
+			bodyWriter, err := WriteTCPRequest(request, bufferedWriter)
+			if err != nil {
+				return newError("failed to write request").Base(err)
+			}
+
+			if err = buf.CopyOnceTimeout(link.Reader, bodyWriter, proxy.FirstPayloadTimeout); err != nil && err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
+				return newError("failed to write A request payload").Base(err).AtWarning()
+			}
+
+			if err := bufferedWriter.SetBuffered(false); err != nil {
+				return err
+			}
+
 			return buf.Copy(link.Reader, bodyWriter, buf.UpdateActivity(timer))
 		}
 
@@ -127,7 +154,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 			return buf.Copy(responseReader, link.Writer, buf.UpdateActivity(timer))
 		}
 
-		var responseDoneAndCloseWriter = task.OnSuccess(responseDone, task.Close(link.Writer))
+		responseDoneAndCloseWriter := task.OnSuccess(responseDone, task.Close(link.Writer))
 		if err := task.Run(ctx, requestDone, responseDoneAndCloseWriter); err != nil {
 			return newError("connection ends").Base(err)
 		}
@@ -164,7 +191,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 			return nil
 		}
 
-		var responseDoneAndCloseWriter = task.OnSuccess(responseDone, task.Close(link.Writer))
+		responseDoneAndCloseWriter := task.OnSuccess(responseDone, task.Close(link.Writer))
 		if err := task.Run(ctx, requestDone, responseDoneAndCloseWriter); err != nil {
 			return newError("connection ends").Base(err)
 		}

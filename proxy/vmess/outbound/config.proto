@@ -2,12 +2,24 @@ syntax = "proto3";
 
 package v2ray.core.proxy.vmess.outbound;
 option csharp_namespace = "V2Ray.Core.Proxy.Vmess.Outbound";
-option go_package = "github.com/v2fly/v2ray-core/v4/proxy/vmess/outbound";
+option go_package = "github.com/v2fly/v2ray-core/v5/proxy/vmess/outbound";
 option java_package = "com.v2ray.core.proxy.vmess.outbound";
 option java_multiple_files = true;
 
 import "common/protocol/server_spec.proto";
+import "common/net/address.proto";
+import "common/protoext/extensions.proto";
 
 message Config {
   repeated v2ray.core.common.protocol.ServerEndpoint Receiver = 1;
+}
+
+
+message SimplifiedConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "outbound";
+  option (v2ray.core.common.protoext.message_opt).short_name = "vmess";
+
+  v2ray.core.common.net.IPOrDomain address = 1;
+  uint32 port = 2;
+  string uuid = 3;
 }

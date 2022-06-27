@@ -1,9 +1,13 @@
 package internet
 
-import "syscall"
+import (
+	"syscall"
+
+	"golang.org/x/sys/windows"
+)
 
 const (
-	TCP_FASTOPEN = 15 // nolint: golint,stylecheck
+	TCP_FASTOPEN = 15 // nolint: revive,stylecheck
 )
 
 func setTFO(fd syscall.Handle, settings SocketConfig_TCPFastOpenState) error {
@@ -25,7 +29,23 @@ func applyOutboundSocketOptions(network string, address string, fd uintptr, conf
 		if err := setTFO(syscall.Handle(fd), config.Tfo); err != nil {
 			return err
 		}
+		if config.TcpKeepAliveIdle > 0 {
+			if err := syscall.SetsockoptInt(syscall.Handle(fd), syscall.SOL_SOCKET, syscall.SO_KEEPALIVE, 1); err != nil {
+				return newError("failed to set SO_KEEPALIVE", err)
+			}
+		}
+	}
 
+	if config.TxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_SNDBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_SNDBUF").Base(err)
+		}
+	}
+
+	if config.RxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_RCVBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_RCVBUF").Base(err)
+		}
 	}
 
 	return nil
@@ -35,6 +55,23 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 	if isTCPSocket(network) {
 		if err := setTFO(syscall.Handle(fd), config.Tfo); err != nil {
 			return err
+		}
+		if config.TcpKeepAliveIdle > 0 {
+			if err := syscall.SetsockoptInt(syscall.Handle(fd), syscall.SOL_SOCKET, syscall.SO_KEEPALIVE, 1); err != nil {
+				return newError("failed to set SO_KEEPALIVE", err)
+			}
+		}
+	}
+
+	if config.TxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_SNDBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_SNDBUF").Base(err)
+		}
+	}
+
+	if config.RxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_RCVBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_RCVBUF").Base(err)
 		}
 	}
 

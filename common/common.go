@@ -5,20 +5,21 @@ package common
 import (
 	"fmt"
 	"go/build"
-	"io/ioutil"
+	"io"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
 )
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
-var (
-	// ErrNoClue is for the situation that existing information is not enough to make a decision. For example, Router may return this error when there is no suitable route.
-	ErrNoClue = errors.New("not enough information for making a decision")
-)
+// ErrNoClue is for the situation that existing information is not enough to make a decision. For example, Router may return this error when there is no suitable route.
+var ErrNoClue = errors.New("not enough information for making a decision")
 
 // Must panics if err is not nil.
 func Must(err error) {
@@ -69,7 +70,7 @@ func GetRuntimeEnv(key string) (string, error) {
 	}
 	var data []byte
 	var runtimeEnv string
-	data, readErr := ioutil.ReadFile(file)
+	data, readErr := os.ReadFile(file)
 	if readErr != nil {
 		return "", readErr
 	}
@@ -124,35 +125,38 @@ func GetGOPATH() string {
 	return GOPATH
 }
 
-// GetModuleName returns the value of module in `go.mod` file.
-func GetModuleName(pathToProjectRoot string) (string, error) {
-	var moduleName string
-	loopPath := pathToProjectRoot
-	for {
-		if idx := strings.LastIndex(loopPath, string(filepath.Separator)); idx >= 0 {
-			gomodPath := filepath.Join(loopPath, "go.mod")
-			gomodBytes, err := ioutil.ReadFile(gomodPath)
-			if err != nil {
-				loopPath = loopPath[:idx]
-				continue
-			}
-
-			gomodContent := string(gomodBytes)
-			moduleIdx := strings.Index(gomodContent, "module ")
-			newLineIdx := strings.Index(gomodContent, "\n")
-
-			if moduleIdx >= 0 {
-				if newLineIdx >= 0 {
-					moduleName = strings.TrimSpace(gomodContent[moduleIdx+6 : newLineIdx])
-					moduleName = strings.TrimSuffix(moduleName, "\r")
-				} else {
-					moduleName = strings.TrimSpace(gomodContent[moduleIdx+6:])
-				}
-				return moduleName, nil
-			}
-			return "", fmt.Errorf("can not get module path in `%s`", gomodPath)
-		}
-		break
+// FetchHTTPContent dials http(s) for remote content
+func FetchHTTPContent(target string) ([]byte, error) {
+	parsedTarget, err := url.Parse(target)
+	if err != nil {
+		return nil, newError("invalid URL: ", target).Base(err)
 	}
-	return moduleName, fmt.Errorf("no `go.mod` file in every parent directory of `%s`", pathToProjectRoot)
+
+	if s := strings.ToLower(parsedTarget.Scheme); s != "http" && s != "https" {
+		return nil, newError("invalid scheme: ", parsedTarget.Scheme)
+	}
+
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+	resp, err := client.Do(&http.Request{
+		Method: "GET",
+		URL:    parsedTarget,
+		Close:  true,
+	})
+	if err != nil {
+		return nil, newError("failed to dial to ", target).Base(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, newError("unexpected HTTP status code: ", resp.StatusCode)
+	}
+
+	content, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, newError("failed to read HTTP response").Base(err)
+	}
+
+	return content, nil
 }

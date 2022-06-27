@@ -1,11 +1,9 @@
-// +build !confonly
-
 package quic
 
 import (
 	"sync"
 
-	"github.com/v2fly/v2ray-core/v4/common/bytespool"
+	"github.com/v2fly/v2ray-core/v5/common/bytespool"
 )
 
 var pool *sync.Pool

@@ -1,28 +1,29 @@
-// +build !confonly
-
 package outbound
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 import (
 	"context"
-	"time"
-
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/platform"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/retry"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/signal"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/features/policy"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess/encoding"
-	"github.com/v2fly/v2ray-core/v4/transport"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	"crypto/hmac"
+	"crypto/sha256"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/platform"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/retry"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	"github.com/v2fly/v2ray-core/v5/features/policy"
+	"github.com/v2fly/v2ray-core/v5/proxy"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess/encoding"
+	"github.com/v2fly/v2ray-core/v5/transport"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"hash/crc64"
 )
 
 // Handler is an outbound connection handler for VMess protocol.
@@ -79,7 +80,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	}
 
 	target := outbound.Target
-	newError("tunneling request to ", target, " via ", rec.Destination()).WriteToLog(session.ExportIDToError(ctx))
+	newError("tunneling request to ", target, " via ", rec.Destination().NetAddr()).WriteToLog(session.ExportIDToError(ctx))
 
 	command := protocol.RequestCommandTCP
 	if target.Network == net.Network_UDP {
@@ -110,6 +111,16 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		request.Option.Set(protocol.RequestOptionGlobalPadding)
 	}
 
+	if request.Security == protocol.SecurityType_ZERO {
+		request.Security = protocol.SecurityType_NONE
+		request.Option.Clear(protocol.RequestOptionChunkStream)
+		request.Option.Clear(protocol.RequestOptionChunkMasking)
+	}
+
+	if account.AuthenticatedLengthExperiment {
+		request.Option.Set(protocol.RequestOptionAuthenticatedLength)
+	}
+
 	input := link.Reader
 	output := link.Writer
 
@@ -118,7 +129,12 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		isAEAD = true
 	}
 
-	session := encoding.NewClientSession(ctx, isAEAD, protocol.DefaultIDHash)
+	hashkdf := hmac.New(sha256.New, []byte("VMessBF"))
+	hashkdf.Write(account.ID.Bytes())
+
+	behaviorSeed := crc64.Checksum(hashkdf.Sum(nil), crc64.MakeTable(crc64.ISO))
+
+	session := encoding.NewClientSession(ctx, isAEAD, protocol.DefaultIDHash, int64(behaviorSeed))
 	sessionPolicy := h.policyManager.ForLevel(request.User.Level)
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -132,8 +148,11 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 			return newError("failed to encode request").Base(err).AtWarning()
 		}
 
-		bodyWriter := session.EncodeRequestBody(request, writer)
-		if err := buf.CopyOnceTimeout(input, bodyWriter, time.Millisecond*100); err != nil && err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
+		bodyWriter, err := session.EncodeRequestBody(request, writer)
+		if err != nil {
+			return newError("failed to start encoding").Base(err)
+		}
+		if err := buf.CopyOnceTimeout(input, bodyWriter, proxy.FirstPayloadTimeout); err != nil && err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
 			return newError("failed to write first payload").Base(err)
 		}
 
@@ -145,7 +164,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 			return err
 		}
 
-		if request.Option.Has(protocol.RequestOptionChunkStream) {
+		if request.Option.Has(protocol.RequestOptionChunkStream) && !account.NoTerminationSignal {
 			if err := bodyWriter.WriteMultiBuffer(buf.MultiBuffer{}); err != nil {
 				return err
 			}
@@ -164,12 +183,14 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		}
 		h.handleCommand(rec.Destination(), header.Command)
 
-		bodyReader := session.DecodeResponseBody(request, reader)
-
+		bodyReader, err := session.DecodeResponseBody(request, reader)
+		if err != nil {
+			return newError("failed to start encoding response").Base(err)
+		}
 		return buf.Copy(bodyReader, output, buf.UpdateActivity(timer))
 	}
 
-	var responseDonePost = task.OnSuccess(responseDone, task.Close(output))
+	responseDonePost := task.OnSuccess(responseDone, task.Close(output))
 	if err := task.Run(ctx, requestDone, responseDonePost); err != nil {
 		return newError("connection ends").Base(err)
 	}
@@ -189,6 +210,23 @@ func shouldEnablePadding(s protocol.SecurityType) bool {
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return New(ctx, config.(*Config))
+	}))
+
+	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
+		simplifiedClient := config.(*SimplifiedConfig)
+		fullClient := &Config{Receiver: []*protocol.ServerEndpoint{
+			{
+				Address: simplifiedClient.Address,
+				Port:    simplifiedClient.Port,
+				User: []*protocol.User{
+					{
+						Account: serial.ToTypedMessage(&vmess.Account{Id: simplifiedClient.Uuid}),
+					},
+				},
+			},
+		}}
+
+		return common.CreateObject(ctx, fullClient)
 	}))
 
 	const defaultFlagValue = "NOT_DEFINED_AT_ALL"

@@ -1,5 +1,3 @@
-// +build !confonly
-
 package http
 
 import (
@@ -12,14 +10,14 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	http_proto "github.com/v2fly/v2ray-core/v4/common/protocol/http"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/signal/done"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	http_proto "github.com/v2fly/v2ray-core/v5/common/protocol/http"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal/done"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
 
 type Listener struct {
@@ -71,6 +69,13 @@ func (l *Listener) ServeHTTP(writer http.ResponseWriter, request *http.Request) 
 	}
 
 	writer.Header().Set("Cache-Control", "no-store")
+
+	for _, httpHeader := range l.config.Header {
+		for _, httpHeaderValue := range httpHeader.Value {
+			writer.Header().Set(httpHeader.Name, httpHeaderValue)
+		}
+	}
+
 	writer.WriteHeader(200)
 	if f, ok := writer.(http.Flusher); ok {
 		f.Flush()

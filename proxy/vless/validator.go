@@ -1,13 +1,11 @@
-// +build !confonly
-
 package vless
 
 import (
 	"strings"
 	"sync"
 
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/uuid"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/uuid"
 )
 
 // Validator stores valid VLESS users.

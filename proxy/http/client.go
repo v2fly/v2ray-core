@@ -1,5 +1,3 @@
-// +build !confonly
-
 package http
 
 import (
@@ -13,20 +11,21 @@ import (
 
 	"golang.org/x/net/http2"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/bytespool"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/retry"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/signal"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/features/policy"
-	"github.com/v2fly/v2ray-core/v4/transport"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/bytespool"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/retry"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	"github.com/v2fly/v2ray-core/v5/features/policy"
+	"github.com/v2fly/v2ray-core/v5/proxy"
+	"github.com/v2fly/v2ray-core/v5/transport"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
 
 type Client struct {
@@ -81,14 +80,23 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	var user *protocol.MemoryUser
 	var conn internet.Connection
 
-	mbuf, _ := link.Reader.ReadMultiBuffer()
-	len := mbuf.Len()
-	firstPayload := bytespool.Alloc(len)
-	mbuf, _ = buf.SplitBytes(mbuf, firstPayload)
-	firstPayload = firstPayload[:len]
+	var firstPayload []byte
 
-	buf.ReleaseMulti(mbuf)
-	defer bytespool.Free(firstPayload)
+	if reader, ok := link.Reader.(buf.TimeoutReader); ok {
+		// 0-RTT optimization for HTTP/2: If the payload comes very soon, it can be
+		// transmitted together. Note we should not get stuck here, as the payload may
+		// not exist (considering to access MySQL database via a HTTP proxy, where the
+		// server sends hello to the client first).
+		if mbuf, _ := reader.ReadMultiBufferTimeout(proxy.FirstPayloadTimeout); mbuf != nil {
+			mlen := mbuf.Len()
+			firstPayload = bytespool.Alloc(mlen)
+			mbuf, _ = buf.SplitBytes(mbuf, firstPayload)
+			firstPayload = firstPayload[:mlen]
+
+			buf.ReleaseMulti(mbuf)
+			defer bytespool.Free(firstPayload)
+		}
+	}
 
 	if err := retry.ExponentialBackoff(5, 100).On(func() error {
 		server := c.serverPicker.PickServer()
@@ -133,7 +141,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		return buf.Copy(buf.NewReader(conn), link.Writer, buf.UpdateActivity(timer))
 	}
 
-	var responseDonePost = task.OnSuccess(responseFunc, task.Close(link.Writer))
+	responseDonePost := task.OnSuccess(responseFunc, task.Close(link.Writer))
 	if err := task.Run(ctx, requestFunc, responseDonePost); err != nil {
 		return newError("connection ends").Base(err)
 	}

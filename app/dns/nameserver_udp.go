@@ -1,3 +1,4 @@
+//go:build !confonly
 // +build !confonly
 
 package dns
@@ -11,16 +12,17 @@ import (
 
 	"golang.org/x/net/dns/dnsmessage"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol/dns"
-	udp_proto "github.com/v2fly/v2ray-core/v4/common/protocol/udp"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/signal/pubsub"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	dns_feature "github.com/v2fly/v2ray-core/v4/features/dns"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/udp"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol/dns"
+	udp_proto "github.com/v2fly/v2ray-core/v5/common/protocol/udp"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal/pubsub"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	dns_feature "github.com/v2fly/v2ray-core/v5/features/dns"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
 )
 
 // ClassicNameServer implemented traditional UDP DNS.
@@ -31,7 +33,7 @@ type ClassicNameServer struct {
 	ips       map[string]record
 	requests  map[uint16]dnsRequest
 	pub       *pubsub.Service
-	udpServer *udp.Dispatcher
+	udpServer udp.DispatcherI
 	cleanup   *task.Periodic
 	reqID     uint32
 }
@@ -54,7 +56,7 @@ func NewClassicNameServer(address net.Destination, dispatcher routing.Dispatcher
 		Interval: time.Minute,
 		Execute:  s.Cleanup,
 	}
-	s.udpServer = udp.NewDispatcher(dispatcher, s.HandleResponse)
+	s.udpServer = udp.NewSplitDispatcher(dispatcher, s.HandleResponse)
 	newError("DNS: created UDP client initialized for ", address.NetAddr()).AtInfo().WriteToLog()
 	return s
 }
@@ -192,7 +194,7 @@ func (s *ClassicNameServer) sendQuery(ctx context.Context, domain string, client
 	for _, req := range reqs {
 		s.addPendingRequest(req)
 		b, _ := dns.PackMessage(req.msg)
-		udpCtx := context.Background()
+		udpCtx := core.ToBackgroundDetachedContext(ctx)
 		if inbound := session.InboundFromContext(ctx); inbound != nil {
 			udpCtx = session.ContextWithInbound(udpCtx, inbound)
 		}

@@ -2,11 +2,15 @@ syntax = "proto3";
 
 package v2ray.core.transport.internet.http;
 option csharp_namespace = "V2Ray.Core.Transport.Internet.Http";
-option go_package = "github.com/v2fly/v2ray-core/v4/transport/internet/http";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/http";
 option java_package = "com.v2ray.core.transport.internet.http";
 option java_multiple_files = true;
+
+import "transport/internet/headers/http/config.proto";
 
 message Config {
   repeated string host = 1;
   string path = 2;
+  string method = 3;
+  repeated v2ray.core.transport.internet.headers.http.Header header = 4;
 }

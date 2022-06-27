@@ -1,5 +1,9 @@
 package net
 
+import (
+	"strings"
+)
+
 func (n Network) SystemString() string {
 	switch n {
 	case Network_TCP:
@@ -21,4 +25,27 @@ func HasNetwork(list []Network, network Network) bool {
 		}
 	}
 	return false
+}
+
+func ParseNetwork(net string) Network {
+	switch strings.ToLower(net) {
+	case "tcp":
+		return Network_TCP
+	case "udp":
+		return Network_UDP
+	case "unix":
+		return Network_UNIX
+	default:
+		return Network_Unknown
+	}
+}
+
+func ParseNetworks(netlist string) []Network {
+	strlist := strings.Split(netlist, ",")
+	nl := make([]Network, len(strlist))
+	for idx, network := range strlist {
+		nl[idx] = ParseNetwork(network)
+	}
+
+	return nl
 }

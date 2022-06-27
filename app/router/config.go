@@ -1,51 +1,21 @@
+//go:build !confonly
 // +build !confonly
 
 package router
 
 import (
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/features/outbound"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
+	"context"
+	"encoding/json"
+
+	"github.com/golang/protobuf/jsonpb"
+
+	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/features/outbound"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/v5cfg"
 )
-
-// CIDRList is an alias of []*CIDR to provide sort.Interface.
-type CIDRList []*CIDR
-
-// Len implements sort.Interface.
-func (l *CIDRList) Len() int {
-	return len(*l)
-}
-
-// Less implements sort.Interface.
-func (l *CIDRList) Less(i int, j int) bool {
-	ci := (*l)[i]
-	cj := (*l)[j]
-
-	if len(ci.Ip) < len(cj.Ip) {
-		return true
-	}
-
-	if len(ci.Ip) > len(cj.Ip) {
-		return false
-	}
-
-	for k := 0; k < len(ci.Ip); k++ {
-		if ci.Ip[k] < cj.Ip[k] {
-			return true
-		}
-
-		if ci.Ip[k] > cj.Ip[k] {
-			return false
-		}
-	}
-
-	return ci.Prefix < cj.Prefix
-}
-
-// Swap implements sort.Interface.
-func (l *CIDRList) Swap(i int, j int) {
-	(*l)[i], (*l)[j] = (*l)[j], (*l)[i]
-}
 
 type Rule struct {
 	Tag       string
@@ -69,11 +39,23 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 	conds := NewConditionChan()
 
 	if len(rr.Domain) > 0 {
-		matcher, err := NewACAutomatonDomainMatcher(rr.Domain)
+		cond, err := NewDomainMatcher(rr.DomainMatcher, rr.Domain)
 		if err != nil {
 			return nil, newError("failed to build domain condition").Base(err)
 		}
-		conds.Add(matcher)
+		conds.Add(cond)
+	}
+
+	var geoDomains []*routercommon.Domain
+	for _, geo := range rr.GeoDomain {
+		geoDomains = append(geoDomains, geo.Domain...)
+	}
+	if len(geoDomains) > 0 {
+		cond, err := NewDomainMatcher(rr.DomainMatcher, geoDomains)
+		if err != nil {
+			return nil, newError("failed to build geo domain condition").Base(err)
+		}
+		conds.Add(cond)
 	}
 
 	if len(rr.UserEmail) > 0 {
@@ -107,7 +89,7 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 		}
 		conds.Add(cond)
 	} else if len(rr.Cidr) > 0 {
-		cond, err := NewMultiGeoIPMatcher([]*GeoIP{{Cidr: rr.Cidr}}, false)
+		cond, err := NewMultiGeoIPMatcher([]*routercommon.GeoIP{{Cidr: rr.Cidr}}, false)
 		if err != nil {
 			return nil, err
 		}
@@ -121,7 +103,7 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 		}
 		conds.Add(cond)
 	} else if len(rr.SourceCidr) > 0 {
-		cond, err := NewMultiGeoIPMatcher([]*GeoIP{{Cidr: rr.SourceCidr}}, true)
+		cond, err := NewMultiGeoIPMatcher([]*routercommon.GeoIP{{Cidr: rr.SourceCidr}}, true)
 		if err != nil {
 			return nil, err
 		}
@@ -147,10 +129,77 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 	return conds, nil
 }
 
-func (br *BalancingRule) Build(ohm outbound.Manager) (*Balancer, error) {
-	return &Balancer{
-		selectors: br.OutboundSelector,
-		strategy:  &RandomStrategy{},
-		ohm:       ohm,
-	}, nil
+// Build builds the balancing rule
+func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatcher) (*Balancer, error) {
+	switch br.Strategy {
+	case "leastping":
+		i, err := serial.GetInstanceOf(br.StrategySettings)
+		if err != nil {
+			return nil, err
+		}
+		s, ok := i.(*StrategyLeastPingConfig)
+		if !ok {
+			return nil, newError("not a StrategyLeastPingConfig").AtError()
+		}
+		return &Balancer{
+			selectors: br.OutboundSelector,
+			strategy:  &LeastPingStrategy{config: s},
+			ohm:       ohm,
+		}, nil
+	case "leastload":
+		i, err := serial.GetInstanceOf(br.StrategySettings)
+		if err != nil {
+			return nil, err
+		}
+		s, ok := i.(*StrategyLeastLoadConfig)
+		if !ok {
+			return nil, newError("not a StrategyLeastLoadConfig").AtError()
+		}
+		leastLoadStrategy := NewLeastLoadStrategy(s)
+		return &Balancer{
+			selectors: br.OutboundSelector,
+			ohm:       ohm, fallbackTag: br.FallbackTag,
+			strategy: leastLoadStrategy,
+		}, nil
+	case "random":
+		fallthrough
+	case "":
+		return &Balancer{
+			selectors: br.OutboundSelector,
+			ohm:       ohm, fallbackTag: br.FallbackTag,
+			strategy: &RandomStrategy{},
+		}, nil
+	default:
+		return nil, newError("unrecognized balancer type")
+	}
+}
+
+func (br *BalancingRule) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {
+	type BalancingRuleStub struct {
+		Tag              string          `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+		OutboundSelector []string        `protobuf:"bytes,2,rep,name=outbound_selector,json=outboundSelector,proto3" json:"outbound_selector,omitempty"`
+		Strategy         string          `protobuf:"bytes,3,opt,name=strategy,proto3" json:"strategy,omitempty"`
+		StrategySettings json.RawMessage `protobuf:"bytes,4,opt,name=strategy_settings,json=strategySettings,proto3" json:"strategy_settings,omitempty"`
+		FallbackTag      string          `protobuf:"bytes,5,opt,name=fallback_tag,json=fallbackTag,proto3" json:"fallback_tag,omitempty"`
+	}
+
+	var stub BalancingRuleStub
+	if err := json.Unmarshal(bytes, &stub); err != nil {
+		return err
+	}
+	if stub.Strategy == "" {
+		stub.Strategy = "random"
+	}
+	settingsPack, err := v5cfg.LoadHeterogeneousConfigFromRawJSON(context.TODO(), "balancer", stub.Strategy, stub.StrategySettings)
+	if err != nil {
+		return err
+	}
+	br.StrategySettings = serial.ToTypedMessage(settingsPack)
+
+	br.Tag = stub.Tag
+	br.Strategy = stub.Strategy
+	br.OutboundSelector = stub.OutboundSelector
+	br.FallbackTag = stub.FallbackTag
+
+	return nil
 }

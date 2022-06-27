@@ -1,5 +1,3 @@
-// +build !confonly
-
 package kcp
 
 import (
@@ -7,9 +5,9 @@ import (
 	"crypto/rand"
 	"io"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
 )
 
 type PacketReader interface {
@@ -21,7 +19,7 @@ type PacketWriter interface {
 	io.Writer
 }
 
-type KCPPacketReader struct { // nolint: golint
+type KCPPacketReader struct { // nolint: revive
 	Security cipher.AEAD
 	Header   internet.PacketHeader
 }
@@ -57,7 +55,7 @@ func (r *KCPPacketReader) Read(b []byte) []Segment {
 	return result
 }
 
-type KCPPacketWriter struct { // nolint: golint
+type KCPPacketWriter struct { // nolint: revive
 	Header   internet.PacketHeader
 	Security cipher.AEAD
 	Writer   io.Writer

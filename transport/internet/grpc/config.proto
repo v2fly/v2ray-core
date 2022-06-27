@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package v2ray.core.transport.internet.grpc.encoding;
+option csharp_namespace = "V2Ray.Core.Transport.Internet.Grpc";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/grpc";
+option java_package = "com.v2ray.core.transport.internet.grpc";
+
+import "common/protoext/extensions.proto";
+
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "transport";
+  option (v2ray.core.common.protoext.message_opt).short_name = "grpc";
+
+  option (v2ray.core.common.protoext.message_opt).transport_original_name = "gun";
+
+  string host = 1;
+  string service_name = 2;
+}

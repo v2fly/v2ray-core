@@ -1,5 +1,3 @@
-// +build !confonly
-
 package tcp
 
 import (
@@ -8,11 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
 
 // Listener is an internet.Listener that listens for TCP connections.
@@ -40,7 +39,7 @@ func ListenTCP(ctx context.Context, address net.Address, port net.Port, streamSe
 	}
 	var listener net.Listener
 	var err error
-	if port == net.Port(0) { // unix
+	if address.Family().IsDomain() {
 		listener, err = internet.ListenSystem(ctx, &net.UnixAddr{
 			Name: address.Domain(),
 			Net:  "unix",
@@ -75,7 +74,7 @@ func ListenTCP(ctx context.Context, address net.Address, port net.Port, streamSe
 	}
 
 	if tcpSettings.HeaderSettings != nil {
-		headerConfig, err := tcpSettings.HeaderSettings.GetInstance()
+		headerConfig, err := serial.GetInstanceOf(tcpSettings.HeaderSettings)
 		if err != nil {
 			return nil, newError("invalid header settings").Base(err).AtError()
 		}

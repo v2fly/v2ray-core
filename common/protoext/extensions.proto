@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package v2ray.core.common.protoext;
+option csharp_namespace = "V2Ray.Core.Common.ProtoExt";
+option go_package = "github.com/v2fly/v2ray-core/v5/common/protoext";
+option java_package = "com.v2ray.core.common.protoext";
+option java_multiple_files = true;
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.MessageOptions {
+  MessageOpt message_opt = 50000;
+}
+
+extend google.protobuf.FieldOptions {
+  FieldOpt field_opt = 50000;
+}
+
+message MessageOpt{
+  repeated string type = 1;
+  repeated string short_name = 2;
+
+  string transport_original_name = 86001;
+}
+
+message FieldOpt{
+  repeated string any_wants = 1;
+  repeated string allowed_values = 2;
+  repeated string allowed_value_types = 3;
+
+  // convert_time_read_file_into read a file into another field, and clear this field during input parsing
+  string convert_time_read_file_into = 4;
+  // forbidden marks a boolean to be inaccessible to user
+  bool forbidden = 5;
+  // convert_time_resource_loading read a file, and place its resource hash into another field
+  string convert_time_resource_loading = 6;
+  // convert_time_parse_ip parse a string ip address, and put its binary representation into another field
+  string convert_time_parse_ip = 7;
+}

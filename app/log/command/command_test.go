@@ -4,20 +4,22 @@ import (
 	"context"
 	"testing"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/dispatcher"
-	"github.com/v2fly/v2ray-core/v4/app/log"
-	. "github.com/v2fly/v2ray-core/v4/app/log/command"
-	"github.com/v2fly/v2ray-core/v4/app/proxyman"
-	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/inbound"
-	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/outbound"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"google.golang.org/protobuf/types/known/anypb"
+
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/dispatcher"
+	"github.com/v2fly/v2ray-core/v5/app/log"
+	. "github.com/v2fly/v2ray-core/v5/app/log/command"
+	"github.com/v2fly/v2ray-core/v5/app/proxyman"
+	_ "github.com/v2fly/v2ray-core/v5/app/proxyman/inbound"
+	_ "github.com/v2fly/v2ray-core/v5/app/proxyman/outbound"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
 )
 
 func TestLoggerRestart(t *testing.T) {
 	v, err := core.New(&core.Config{
-		App: []*serial.TypedMessage{
+		App: []*anypb.Any{
 			serial.ToTypedMessage(&log.Config{}),
 			serial.ToTypedMessage(&dispatcher.Config{}),
 			serial.ToTypedMessage(&proxyman.InboundConfig{}),

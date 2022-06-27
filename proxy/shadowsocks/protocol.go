@@ -1,5 +1,3 @@
-// +build !confonly
-
 package shadowsocks
 
 import (
@@ -8,13 +6,14 @@ import (
 	"crypto/sha256"
 	"hash/crc32"
 	"io"
-	"io/ioutil"
+	mrand "math/rand"
+	gonet "net"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/dice"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/drain"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
 )
 
 const (
@@ -39,12 +38,10 @@ func ReadTCPSession(user *protocol.MemoryUser, reader io.Reader) (*protocol.Requ
 
 	behaviorSeed := crc32.ChecksumIEEE(hashkdf.Sum(nil))
 
-	behaviorRand := dice.NewDeterministicDice(int64(behaviorSeed))
-	BaseDrainSize := behaviorRand.Roll(3266)
-	RandDrainMax := behaviorRand.Roll(64) + 1
-	RandDrainRolled := dice.Roll(RandDrainMax)
-	DrainSize := BaseDrainSize + 16 + 38 + RandDrainRolled
-	readSizeRemain := DrainSize
+	drainer, err := drain.NewBehaviorSeedLimitedDrainer(int64(behaviorSeed), 16+38, 3266, 64)
+	if err != nil {
+		return nil, nil, newError("failed to initialize drainer").Base(err)
+	}
 
 	buffer := buf.New()
 	defer buffer.Release()
@@ -53,9 +50,8 @@ func ReadTCPSession(user *protocol.MemoryUser, reader io.Reader) (*protocol.Requ
 	var iv []byte
 	if ivLen > 0 {
 		if _, err := buffer.ReadFullFrom(reader, ivLen); err != nil {
-			readSizeRemain -= int(buffer.Len())
-			DrainConnN(reader, readSizeRemain)
-			return nil, nil, newError("failed to read IV").Base(err)
+			drainer.AcknowledgeReceive(int(buffer.Len()))
+			return nil, nil, drain.WithError(drainer, reader, newError("failed to read IV").Base(err))
 		}
 
 		iv = append([]byte(nil), buffer.BytesTo(ivLen)...)
@@ -63,9 +59,8 @@ func ReadTCPSession(user *protocol.MemoryUser, reader io.Reader) (*protocol.Requ
 
 	r, err := account.Cipher.NewDecryptionReader(account.Key, iv, reader)
 	if err != nil {
-		readSizeRemain -= int(buffer.Len())
-		DrainConnN(reader, readSizeRemain)
-		return nil, nil, newError("failed to initialize decoding stream").Base(err).AtError()
+		drainer.AcknowledgeReceive(int(buffer.Len()))
+		return nil, nil, drain.WithError(drainer, reader, newError("failed to initialize decoding stream").Base(err).AtError())
 	}
 	br := &buf.BufferedReader{Reader: r}
 
@@ -75,31 +70,29 @@ func ReadTCPSession(user *protocol.MemoryUser, reader io.Reader) (*protocol.Requ
 		Command: protocol.RequestCommandTCP,
 	}
 
-	readSizeRemain -= int(buffer.Len())
+	drainer.AcknowledgeReceive(int(buffer.Len()))
 	buffer.Clear()
 
 	addr, port, err := addrParser.ReadAddressPort(buffer, br)
 	if err != nil {
-		readSizeRemain -= int(buffer.Len())
-		DrainConnN(reader, readSizeRemain)
-		return nil, nil, newError("failed to read address").Base(err)
+		drainer.AcknowledgeReceive(int(buffer.Len()))
+		return nil, nil, drain.WithError(drainer, reader, newError("failed to read address").Base(err))
 	}
 
 	request.Address = addr
 	request.Port = port
 
 	if request.Address == nil {
-		readSizeRemain -= int(buffer.Len())
-		DrainConnN(reader, readSizeRemain)
-		return nil, nil, newError("invalid remote address.")
+		drainer.AcknowledgeReceive(int(buffer.Len()))
+		return nil, nil, drain.WithError(drainer, reader, newError("invalid remote address."))
+	}
+
+	if ivError := account.CheckIV(iv); ivError != nil {
+		drainer.AcknowledgeReceive(int(buffer.Len()))
+		return nil, nil, drain.WithError(drainer, reader, newError("failed iv check").Base(ivError))
 	}
 
 	return request, br, nil
-}
-
-func DrainConnN(reader io.Reader, n int) error {
-	_, err := io.CopyN(ioutil.Discard, reader, int64(n))
-	return err
 }
 
 // WriteTCPRequest writes Shadowsocks request into the given writer, and returns a writer for body.
@@ -111,6 +104,12 @@ func WriteTCPRequest(request *protocol.RequestHeader, writer io.Writer) (buf.Wri
 	if account.Cipher.IVSize() > 0 {
 		iv = make([]byte, account.Cipher.IVSize())
 		common.Must2(rand.Read(iv))
+		if account.ReducedIVEntropy {
+			remapToPrintable(iv[:6])
+		}
+		if ivError := account.CheckIV(iv); ivError != nil {
+			return nil, newError("failed to mark outgoing iv").Base(ivError)
+		}
 		if err := buf.WriteAllBytes(writer, iv); err != nil {
 			return nil, newError("failed to write IV")
 		}
@@ -137,12 +136,28 @@ func WriteTCPRequest(request *protocol.RequestHeader, writer io.Writer) (buf.Wri
 func ReadTCPResponse(user *protocol.MemoryUser, reader io.Reader) (buf.Reader, error) {
 	account := user.Account.(*MemoryAccount)
 
+	hashkdf := hmac.New(sha256.New, []byte("SSBSKDF"))
+	hashkdf.Write(account.Key)
+
+	behaviorSeed := crc32.ChecksumIEEE(hashkdf.Sum(nil))
+
+	drainer, err := drain.NewBehaviorSeedLimitedDrainer(int64(behaviorSeed), 16+38, 3266, 64)
+	if err != nil {
+		return nil, newError("failed to initialize drainer").Base(err)
+	}
+
 	var iv []byte
 	if account.Cipher.IVSize() > 0 {
 		iv = make([]byte, account.Cipher.IVSize())
-		if _, err := io.ReadFull(reader, iv); err != nil {
+		if n, err := io.ReadFull(reader, iv); err != nil {
 			return nil, newError("failed to read IV").Base(err)
+		} else { // nolint: revive
+			drainer.AcknowledgeReceive(n)
 		}
+	}
+
+	if ivError := account.CheckIV(iv); ivError != nil {
+		return nil, drain.WithError(drainer, reader, newError("failed iv check").Base(ivError))
 	}
 
 	return account.Cipher.NewDecryptionReader(account.Key, iv, reader)
@@ -156,6 +171,9 @@ func WriteTCPResponse(request *protocol.RequestHeader, writer io.Writer) (buf.Wr
 	if account.Cipher.IVSize() > 0 {
 		iv = make([]byte, account.Cipher.IVSize())
 		common.Must2(rand.Read(iv))
+		if ivError := account.CheckIV(iv); ivError != nil {
+			return nil, newError("failed to mark outgoing iv").Base(ivError)
+		}
 		if err := buf.WriteAllBytes(writer, iv); err != nil {
 			return nil, newError("failed to write IV.").Base(err)
 		}
@@ -240,6 +258,23 @@ func (v *UDPReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	return buf.MultiBuffer{payload}, nil
 }
 
+func (v *UDPReader) ReadFrom(p []byte) (n int, addr gonet.Addr, err error) {
+	buffer := buf.New()
+	_, err = buffer.ReadFrom(v.Reader)
+	if err != nil {
+		buffer.Release()
+		return 0, nil, err
+	}
+	vaddr, payload, err := DecodeUDPPacket(v.User, buffer)
+	if err != nil {
+		buffer.Release()
+		return 0, nil, err
+	}
+	n = copy(p, payload.Bytes())
+	payload.Release()
+	return n, &gonet.UDPAddr{IP: vaddr.Address.IP(), Port: int(vaddr.Port)}, nil
+}
+
 type UDPWriter struct {
 	Writer  io.Writer
 	Request *protocol.RequestHeader
@@ -254,4 +289,27 @@ func (w *UDPWriter) Write(payload []byte) (int, error) {
 	_, err = w.Writer.Write(packet.Bytes())
 	packet.Release()
 	return len(payload), err
+}
+
+func (w *UDPWriter) WriteTo(payload []byte, addr gonet.Addr) (n int, err error) {
+	request := *w.Request
+	udpAddr := addr.(*gonet.UDPAddr)
+	request.Command = protocol.RequestCommandUDP
+	request.Address = net.IPAddress(udpAddr.IP)
+	request.Port = net.Port(udpAddr.Port)
+	packet, err := EncodeUDPPacket(&request, payload)
+	if err != nil {
+		return 0, err
+	}
+	_, err = w.Writer.Write(packet.Bytes())
+	packet.Release()
+	return len(payload), err
+}
+
+func remapToPrintable(input []byte) {
+	const charSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\\\""
+	seed := mrand.New(mrand.NewSource(int64(crc32.ChecksumIEEE(input))))
+	for i := range input {
+		input[i] = charSet[seed.Intn(len(charSet))]
+	}
 }

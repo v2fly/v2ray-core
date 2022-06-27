@@ -1,32 +1,48 @@
-// +build !confonly
-
 package outbound
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 import (
 	"context"
-	"time"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/retry"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/signal"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/features/policy"
-	"github.com/v2fly/v2ray-core/v4/proxy/vless"
-	"github.com/v2fly/v2ray-core/v4/proxy/vless/encoding"
-	"github.com/v2fly/v2ray-core/v4/transport"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/retry"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	"github.com/v2fly/v2ray-core/v5/features/policy"
+	"github.com/v2fly/v2ray-core/v5/proxy"
+	"github.com/v2fly/v2ray-core/v5/proxy/vless"
+	"github.com/v2fly/v2ray-core/v5/proxy/vless/encoding"
+	"github.com/v2fly/v2ray-core/v5/transport"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
 )
 
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return New(ctx, config.(*Config))
+	}))
+
+	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
+		simplifiedClient := config.(*SimplifiedConfig)
+		fullClient := &Config{Vnext: []*protocol.ServerEndpoint{
+			{
+				Address: simplifiedClient.Address,
+				Port:    simplifiedClient.Port,
+				User: []*protocol.User{
+					{
+						Account: serial.ToTypedMessage(&vless.Account{Id: simplifiedClient.Uuid, Encryption: "none"}),
+					},
+				},
+			},
+		}}
+
+		return common.CreateObject(ctx, fullClient)
 	}))
 }
 
@@ -82,7 +98,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	}
 
 	target := outbound.Target
-	newError("tunneling request to ", target, " via ", rec.Destination()).AtInfo().WriteToLog(session.ExportIDToError(ctx))
+	newError("tunneling request to ", target, " via ", rec.Destination().NetAddr()).AtInfo().WriteToLog(session.ExportIDToError(ctx))
 
 	command := protocol.RequestCommandTCP
 	if target.Network == net.Network_UDP {
@@ -123,16 +139,16 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 
 		// default: serverWriter := bufferWriter
 		serverWriter := encoding.EncodeBodyAddons(bufferWriter, request, requestAddons)
-		if err := buf.CopyOnceTimeout(clientReader, serverWriter, time.Millisecond*100); err != nil && err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
+		if err := buf.CopyOnceTimeout(clientReader, serverWriter, proxy.FirstPayloadTimeout); err != nil && err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
 			return err // ...
 		}
 
-		// Flush; bufferWriter.WriteMultiBufer now is bufferWriter.writer.WriteMultiBuffer
+		// Flush; bufferWriter.WriteMultiBuffer now is bufferWriter.writer.WriteMultiBuffer
 		if err := bufferWriter.SetBuffered(false); err != nil {
 			return newError("failed to write A request payload").Base(err).AtWarning()
 		}
 
-		// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBufer
+		// from clientReader.ReadMultiBuffer to serverWriter.WriteMultiBuffer
 		if err := buf.Copy(clientReader, serverWriter, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer request payload").Base(err).AtInfo()
 		}
@@ -151,7 +167,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		// default: serverReader := buf.NewReader(conn)
 		serverReader := encoding.DecodeBodyAddons(conn, request, responseAddons)
 
-		// from serverReader.ReadMultiBuffer to clientWriter.WriteMultiBufer
+		// from serverReader.ReadMultiBuffer to clientWriter.WriteMultiBuffer
 		if err := buf.Copy(serverReader, clientWriter, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer response payload").Base(err).AtInfo()
 		}

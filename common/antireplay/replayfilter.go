@@ -9,7 +9,7 @@ import (
 
 const replayFilterCapacity = 100000
 
-// ReplayFilter check for replay attacks.
+// ReplayFilter checks for replay attacks.
 type ReplayFilter struct {
 	lock     sync.Mutex
 	poolA    *cuckoo.Filter
@@ -19,7 +19,7 @@ type ReplayFilter struct {
 	interval int64
 }
 
-// NewReplayFilter create a new filter with specifying the expiration time interval in seconds.
+// NewReplayFilter creates a new filter with specifying the expiration time interval in seconds.
 func NewReplayFilter(interval int64) *ReplayFilter {
 	filter := &ReplayFilter{}
 	filter.interval = interval
@@ -31,7 +31,7 @@ func (filter *ReplayFilter) Interval() int64 {
 	return filter.interval
 }
 
-// Check determine if there are duplicate records.
+// Check determines if there are duplicate records.
 func (filter *ReplayFilter) Check(sum []byte) bool {
 	filter.lock.Lock()
 	defer filter.lock.Unlock()

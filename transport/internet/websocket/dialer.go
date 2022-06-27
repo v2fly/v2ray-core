@@ -1,18 +1,22 @@
-// +build !confonly
-
 package websocket
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
+	"io"
+	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/features/extension"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
 
 // Dial dials a WebSocket connection to the given destination.
@@ -55,7 +59,37 @@ func dialWebsocket(ctx context.Context, dest net.Destination, streamSettings *in
 	}
 	uri := protocol + "://" + host + wsSettings.GetNormalizedPath()
 
-	conn, resp, err := dialer.Dial(uri, wsSettings.GetRequestHeader())
+	if wsSettings.UseBrowserForwarding {
+		var forwarder extension.BrowserForwarder
+		err := core.RequireFeatures(ctx, func(Forwarder extension.BrowserForwarder) {
+			forwarder = Forwarder
+		})
+		if err != nil {
+			return nil, newError("cannot find browser forwarder service").Base(err)
+		}
+		if wsSettings.MaxEarlyData != 0 {
+			return newRelayedConnectionWithDelayedDial(&dialerWithEarlyDataRelayed{
+				forwarder: forwarder,
+				uriBase:   uri,
+				config:    wsSettings,
+			}), nil
+		}
+		conn, err := forwarder.DialWebsocket(uri, nil)
+		if err != nil {
+			return nil, newError("cannot dial with browser forwarder service").Base(err)
+		}
+		return newRelayedConnection(conn), nil
+	}
+
+	if wsSettings.MaxEarlyData != 0 {
+		return newConnectionWithDelayedDial(&dialerWithEarlyData{
+			dialer:  dialer,
+			uriBase: uri,
+			config:  wsSettings,
+		}), nil
+	}
+
+	conn, resp, err := dialer.Dial(uri, wsSettings.GetRequestHeader()) // nolint: bodyclose
 	if err != nil {
 		var reason string
 		if resp != nil {
@@ -65,4 +99,99 @@ func dialWebsocket(ctx context.Context, dest net.Destination, streamSettings *in
 	}
 
 	return newConnection(conn, conn.RemoteAddr()), nil
+}
+
+type dialerWithEarlyData struct {
+	dialer  *websocket.Dialer
+	uriBase string
+	config  *Config
+}
+
+func (d dialerWithEarlyData) Dial(earlyData []byte) (*websocket.Conn, error) {
+	earlyDataBuf := bytes.NewBuffer(nil)
+	base64EarlyDataEncoder := base64.NewEncoder(base64.RawURLEncoding, earlyDataBuf)
+
+	earlydata := bytes.NewReader(earlyData)
+	limitedEarlyDatareader := io.LimitReader(earlydata, int64(d.config.MaxEarlyData))
+	n, encerr := io.Copy(base64EarlyDataEncoder, limitedEarlyDatareader)
+	if encerr != nil {
+		return nil, newError("websocket delayed dialer cannot encode early data").Base(encerr)
+	}
+
+	if errc := base64EarlyDataEncoder.Close(); errc != nil {
+		return nil, newError("websocket delayed dialer cannot encode early data tail").Base(errc)
+	}
+
+	dialFunction := func() (*websocket.Conn, *http.Response, error) {
+		return d.dialer.Dial(d.uriBase+earlyDataBuf.String(), d.config.GetRequestHeader())
+	}
+
+	if d.config.EarlyDataHeaderName != "" {
+		dialFunction = func() (*websocket.Conn, *http.Response, error) {
+			earlyDataStr := earlyDataBuf.String()
+			currentHeader := d.config.GetRequestHeader()
+			currentHeader.Set(d.config.EarlyDataHeaderName, earlyDataStr)
+			return d.dialer.Dial(d.uriBase, currentHeader)
+		}
+	}
+
+	conn, resp, err := dialFunction() // nolint: bodyclose
+	if err != nil {
+		var reason string
+		if resp != nil {
+			reason = resp.Status
+		}
+		return nil, newError("failed to dial to (", d.uriBase, ") with early data: ", reason).Base(err)
+	}
+	if n != int64(len(earlyData)) {
+		if errWrite := conn.WriteMessage(websocket.BinaryMessage, earlyData[n:]); errWrite != nil {
+			return nil, newError("failed to dial to (", d.uriBase, ") with early data as write of remainder early data failed: ").Base(err)
+		}
+	}
+	return conn, nil
+}
+
+type dialerWithEarlyDataRelayed struct {
+	forwarder extension.BrowserForwarder
+	uriBase   string
+	config    *Config
+}
+
+func (d dialerWithEarlyDataRelayed) Dial(earlyData []byte) (io.ReadWriteCloser, error) {
+	earlyDataBuf := bytes.NewBuffer(nil)
+	base64EarlyDataEncoder := base64.NewEncoder(base64.RawURLEncoding, earlyDataBuf)
+
+	earlydata := bytes.NewReader(earlyData)
+	limitedEarlyDatareader := io.LimitReader(earlydata, int64(d.config.MaxEarlyData))
+	n, encerr := io.Copy(base64EarlyDataEncoder, limitedEarlyDatareader)
+	if encerr != nil {
+		return nil, newError("websocket delayed dialer cannot encode early data").Base(encerr)
+	}
+
+	if errc := base64EarlyDataEncoder.Close(); errc != nil {
+		return nil, newError("websocket delayed dialer cannot encode early data tail").Base(errc)
+	}
+
+	dialFunction := func() (io.ReadWriteCloser, error) {
+		return d.forwarder.DialWebsocket(d.uriBase+earlyDataBuf.String(), d.config.GetRequestHeader())
+	}
+
+	if d.config.EarlyDataHeaderName != "" {
+		earlyDataStr := earlyDataBuf.String()
+		currentHeader := d.config.GetRequestHeader()
+		currentHeader.Set(d.config.EarlyDataHeaderName, earlyDataStr)
+		return d.forwarder.DialWebsocket(d.uriBase, currentHeader)
+	}
+
+	conn, err := dialFunction()
+	if err != nil {
+		var reason string
+		return nil, newError("failed to dial to (", d.uriBase, ") with early data: ", reason).Base(err)
+	}
+	if n != int64(len(earlyData)) {
+		if _, errWrite := conn.Write(earlyData[n:]); errWrite != nil {
+			return nil, newError("failed to dial to (", d.uriBase, ") with early data as write of remainder early data failed: ").Base(err)
+		}
+	}
+	return conn, nil
 }
