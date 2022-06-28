@@ -216,9 +216,9 @@ func (ac *ACAutomatonMatcherGroup) MatchAny(input string) bool {
 }
 
 // Letter-Digit-Hyphen (LDH) subset (https://tools.ietf.org/html/rfc952):
-//   * Letters A to Z (no distinction is made between uppercase and lowercase)
-//   * Digits 0 to 9
-//   * Hyphens(-) and Periods(.)
+//   - Letters A to Z (no distinction is made between uppercase and lowercase)
+//   - Digits 0 to 9
+//   - Hyphens(-) and Periods(.)
 //
 // If for future the strmatcher are used for other scenarios than domain,
 // we could add a new Charset interface to represent variable charsets.

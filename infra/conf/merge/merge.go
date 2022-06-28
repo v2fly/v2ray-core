@@ -11,7 +11,6 @@ Merge Rules:
 - Simple values (string, number, boolean) are overwritten, others are merged
 - Elements with same "tag" (or "_tag") in an array will be merged
 - Add "_priority" property to array elements will help sort the
-
 */
 package merge
 
