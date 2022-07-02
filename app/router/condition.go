@@ -55,7 +55,7 @@ func domainToMatcher(domain *routercommon.Domain) (strmatcher.Matcher, error) {
 		return nil, newError("unsupported domain type", domain.Type)
 	}
 
-	matcher, err := matcherType.New(domain.Value)
+	matcher, err := matcherType.New(strings.ToLower(domain.Value))
 	if err != nil {
 		return nil, newError("failed to create domain matcher").Base(err)
 	}
@@ -91,7 +91,7 @@ func NewDomainMatcher(matcherType string, domains []*routercommon.Domain) (*Doma
 }
 
 func (m *DomainMatcher) Match(domain string) bool {
-	return m.matcher.MatchAny(domain)
+	return m.matcher.MatchAny(strings.ToLower(domain))
 }
 
 // Apply implements Condition.
