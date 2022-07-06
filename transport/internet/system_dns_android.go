@@ -10,13 +10,17 @@ import (
 
 const SystemDNS = "8.8.8.8:53"
 
-/* DNSResolverFunc
-   This is a temporary API and is subject to removal at any time.
+/*
+DNSResolverFunc
+
+	This is a temporary API and is subject to removal at any time.
 */
 type DNSResolverFunc func() *net.Resolver
 
-/* NewDNSResolver
-   This is a temporary API and is subject to removal at any time.
+/*
+NewDNSResolver
+
+	This is a temporary API and is subject to removal at any time.
 */
 var NewDNSResolver DNSResolverFunc = func() *net.Resolver {
 	return &net.Resolver{
