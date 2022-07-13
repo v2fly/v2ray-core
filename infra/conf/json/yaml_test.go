@@ -1,9 +1,10 @@
-package json
+package json_test
 
 import (
 	"encoding/json"
-	"reflect"
 	"testing"
+
+	. "github.com/v2fly/v2ray-core/v5/infra/conf/json"
 )
 
 func TestYMLToJSON_V2Style(t *testing.T) {
@@ -116,7 +117,7 @@ TRUE: TRUE
         "parent": null
     },
     "string": ["哈哈", "Hello world",  "newline newline2"],
-    "date": ["2018-02-17"],
+    "date": ["2018-02-17T00:00:00Z"],
     "datetime": ["2018-02-17T15:02:31+08:00"],
     "mixed": [true,false,1,0,null,"hello"],
     "1": 0,
@@ -131,16 +132,4 @@ TRUE: TRUE
 	m := make(map[string]interface{})
 	json.Unmarshal(bs, &m)
 	assertResult(t, m, expected)
-}
-
-func assertResult(t *testing.T, value map[string]interface{}, expected string) {
-	e := make(map[string]interface{})
-	err := json.Unmarshal([]byte(expected), &e)
-	if err != nil {
-		t.Error(err)
-	}
-	if !reflect.DeepEqual(value, e) {
-		bs, _ := json.Marshal(value)
-		t.Fatalf("expected:\n%s\n\nactual:\n%s", expected, string(bs))
-	}
 }
