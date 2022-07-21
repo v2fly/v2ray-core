@@ -24,7 +24,7 @@ import (
 
 // NextProtoDQ - During connection establishment, DNS/QUIC support is indicated
 // by selecting the ALPN token "dq" in the crypto handshake.
-const NextProtoDQ = "doq-i00"
+const NextProtoDQ = "doq"
 
 const handshakeIdleTimeout = time.Second * 8
 
