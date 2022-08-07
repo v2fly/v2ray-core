@@ -57,6 +57,8 @@ func init() {
 					return nil, err
 				}
 				return loadJSONPB(bytes.NewReader(data))
+			case []byte:
+				return loadJSONPB(bytes.NewReader(v))
 			case io.Reader:
 				data, err := buf.ReadAllToBytes(v)
 				if err != nil {

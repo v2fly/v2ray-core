@@ -12,28 +12,28 @@ require (
 	github.com/google/go-cmp v0.5.8
 	github.com/gorilla/websocket v1.5.0
 	github.com/jhump/protoreflect v1.12.0
-	github.com/lucas-clemente/quic-go v0.27.0
+	github.com/lucas-clemente/quic-go v0.28.1
 	github.com/marten-seemann/qtls-go1-16 v0.1.5
-	github.com/marten-seemann/qtls-go1-17 v0.1.1
-	github.com/marten-seemann/qtls-go1-18 v0.1.1
-	github.com/miekg/dns v1.1.49
+	github.com/marten-seemann/qtls-go1-17 v0.1.2
+	github.com/marten-seemann/qtls-go1-18 v0.1.2
+	github.com/miekg/dns v1.1.50
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pires/go-proxyproto v0.6.2
 	github.com/seiflotfy/cuckoofilter v0.0.0-20220312154859-af7fbb8e765b
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.8.0
 	github.com/v2fly/BrowserBridge v0.0.0-20210430233438-0570fc1d7d08
 	github.com/v2fly/VSign v0.0.0-20201108000810-e2adc24bf848
 	github.com/v2fly/ss-bloomring v0.0.0-20210312155135-28617310f63e
 	github.com/xiaokangwang/VLite v0.0.0-20220418190619-cff95160a432
 	go.starlark.net v0.0.0-20220302181546-5411bad688d1
 	golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064
-	golang.org/x/net v0.0.0-20220325170049-de3da57026de
+	golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20220325203850-36772127a21f
-	google.golang.org/grpc v1.46.0
-	google.golang.org/protobuf v1.28.0
-	gopkg.in/yaml.v2 v2.4.0
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a
+	google.golang.org/grpc v1.48.0
+	google.golang.org/protobuf v1.28.1
+	gopkg.in/yaml.v3 v3.0.1
 	h12.io/socks v1.0.3
 	inet.af/netaddr v0.0.0-20211027220019-c74959edd3b6
 )
@@ -53,6 +53,7 @@ require (
 	github.com/klauspost/reedsolomon v1.9.3 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40 // indirect
+	github.com/marten-seemann/qtls-go1-19 v0.1.0-beta.1 // indirect
 	github.com/mustafaturan/monoton v1.0.0 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/onsi/ginkgo v1.16.4 // indirect
@@ -73,5 +74,4 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

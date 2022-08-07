@@ -135,18 +135,38 @@ func LoadConfig(formatName string, input interface{}) (*Config, error) {
 // * string of a single filename/url(s) to open to read
 // * io.Reader that reads a config content (the original way)
 func loadSingleConfigAutoFormat(input interface{}) (*Config, error) {
-	if file, ok := input.(cmdarg.Arg); ok {
-		extension := getExtension(file.String())
-		if extension != "" {
-			lowerName := strings.ToLower(extension)
-			if f, found := configLoaderByExt[lowerName]; found {
-				return f.Loader(file)
-			}
-			return nil, newError("config loader not found for: ", extension).AtWarning()
+	switch v := input.(type) {
+	case cmdarg.Arg:
+		return loadSingleConfigAutoFormatFromFile(v.String())
+	case string:
+		return loadSingleConfigByTryingAllLoaders(v)
+	case io.Reader:
+		data, err := buf.ReadAllToBytes(v)
+		if err != nil {
+			return nil, err
 		}
+		return loadSingleConfigByTryingAllLoaders(data)
+	default:
+		return loadSingleConfigByTryingAllLoaders(v)
 	}
+}
+
+func loadSingleConfigAutoFormatFromFile(file string) (*Config, error) {
+	extension := getExtension(file)
+	if extension != "" {
+		lowerName := strings.ToLower(extension)
+		if f, found := configLoaderByExt[lowerName]; found {
+			return f.Loader(file)
+		}
+		return nil, newError("config loader not found for: ", extension).AtWarning()
+	}
+
+	return loadSingleConfigByTryingAllLoaders(file)
+}
+
+func loadSingleConfigByTryingAllLoaders(input interface{}) (*Config, error) {
 	var errorReasons strings.Builder
-	// no extension, try all loaders
+
 	for _, f := range configLoaders {
 		if f.Name[0] == FormatAuto {
 			continue
@@ -157,6 +177,7 @@ func loadSingleConfigAutoFormat(input interface{}) (*Config, error) {
 		}
 		errorReasons.WriteString(fmt.Sprintf("unable to parse as %v:%v;", f.Name[0], err.Error()))
 	}
+
 	return nil, newError("tried all loaders but failed when attempting to parse: ", input, ";", errorReasons.String()).AtWarning()
 }
 
