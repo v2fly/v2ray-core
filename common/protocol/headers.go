@@ -1,8 +1,9 @@
 package protocol
 
 import (
-	"golang.org/x/sys/cpu"
 	"runtime"
+
+	"golang.org/x/sys/cpu"
 
 	"github.com/v2fly/v2ray-core/v5/common/bitmask"
 	"github.com/v2fly/v2ray-core/v5/common/net"
