@@ -18,7 +18,7 @@ message ServerConfig{
 
   v2ray.core.proxy.shadowsocks.CipherType method = 1;
   string password = 2;
-  v2ray.core.common.net.NetworkList network = 3;
+  v2ray.core.common.net.NetworkList networks = 3;
   v2ray.core.net.packetaddr.PacketAddrType packet_encoding = 4;
 }
 
