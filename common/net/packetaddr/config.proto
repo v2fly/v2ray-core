@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package v2ray.core.net.packetaddr;
+option csharp_namespace = "V2Ray.Core.Common.Net.Packetaddr";
+option go_package = "github.com/v2fly/v2ray-core/v5/common/net/packetaddr";
+option java_package = "com.v2ray.core.common.net.packetaddr";
+option java_multiple_files = true;
+
+enum PacketAddrType {
+  None = 0;
+  Packet = 1;
+}

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/v2fly/v2ray-core/v4/common/signal"
+	. "github.com/v2fly/v2ray-core/v5/common/signal"
 )
 
 func TestActivityTimer(t *testing.T) {
@@ -29,7 +29,7 @@ func TestActivityTimerUpdate(t *testing.T) {
 	timer.SetTimeout(time.Second * 1)
 	time.Sleep(time.Second * 2)
 	if ctx.Err() == nil {
-		t.Error("expcted some error, but got nil")
+		t.Error("expected some error, but got nil")
 	}
 	runtime.KeepAlive(timer)
 }

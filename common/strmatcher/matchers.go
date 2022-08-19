@@ -133,7 +133,7 @@ type MatcherGroupForRegex interface {
 	AddRegexMatcher(matcher *RegexMatcher, value uint32)
 }
 
-// AddMatcherGroup is a helper function to try to add a Matcher to any kind of MatcherGroup.
+// AddMatcherToGroup is a helper function to try to add a Matcher to any kind of MatcherGroup.
 // It returns error if the MatcherGroup does not accept the provided Matcher's type.
 // This function is provided to help writing code to test a MatcherGroup.
 func AddMatcherToGroup(g MatcherGroup, matcher Matcher, value uint32) error {

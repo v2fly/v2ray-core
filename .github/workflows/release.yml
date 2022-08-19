@@ -104,7 +104,7 @@ jobs:
 
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -117,9 +117,9 @@ jobs:
           echo "ASSET_NAME=$_NAME" >> $GITHUB_ENV
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: ^1.17
+          go-version: ^1.19
 
       - name: Get project dependencies
         run: go mod download
@@ -161,7 +161,7 @@ jobs:
           openssl dgst -sha512 $FILE | sed 's/([^)]*)//g' >>$DGST
 
       - name: Upload ZIP file to Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
           path: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
@@ -180,16 +180,16 @@ jobs:
     needs: build
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: ^1.17
+          go-version: ^1.18
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           path: build_artifacts
 
@@ -224,17 +224,17 @@ jobs:
           openssl dgst -sha256 $FILE | sed 's/([^)]*)//g' >>$DGST
           openssl dgst -sha512 $FILE | sed 's/([^)]*)//g' >>$DGST
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Release.unsigned
           path: build_artifacts/Release.unsigned
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Release.unsigned.dgst
           path: build_artifacts/Release.unsigned.dgst
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: v2ray-extra.zip
           path: build_artifacts/v2ray-extra.zip

@@ -7,13 +7,13 @@ import (
 	"github.com/jhump/protoreflect/dynamic"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/v2fly/v2ray-core/v4/app/commander"
-	loggerservice "github.com/v2fly/v2ray-core/v4/app/log/command"
-	observatoryservice "github.com/v2fly/v2ray-core/v4/app/observatory/command"
-	handlerservice "github.com/v2fly/v2ray-core/v4/app/proxyman/command"
-	routerservice "github.com/v2fly/v2ray-core/v4/app/router/command"
-	statsservice "github.com/v2fly/v2ray-core/v4/app/stats/command"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"github.com/v2fly/v2ray-core/v5/app/commander"
+	loggerservice "github.com/v2fly/v2ray-core/v5/app/log/command"
+	observatoryservice "github.com/v2fly/v2ray-core/v5/app/observatory/command"
+	handlerservice "github.com/v2fly/v2ray-core/v5/app/proxyman/command"
+	routerservice "github.com/v2fly/v2ray-core/v5/app/router/command"
+	statsservice "github.com/v2fly/v2ray-core/v5/app/stats/command"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
 )
 
 type APIConfig struct {

@@ -14,11 +14,11 @@ import (
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/hkdf"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/antireplay"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/crypto"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/antireplay"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/crypto"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
 )
 
 // MemoryAccount is an account type converted from Account.
@@ -27,6 +27,8 @@ type MemoryAccount struct {
 	Key    []byte
 
 	replayFilter antireplay.GeneralizedReplayFilter
+
+	ReducedIVEntropy bool
 }
 
 // Equals implements protocol.Account.Equals().
@@ -103,6 +105,7 @@ func (a *Account) AsAccount() (protocol.Account, error) {
 			}
 			return nil
 		}(),
+		ReducedIVEntropy: a.ExperimentReducedIvHeadEntropy,
 	}, nil
 }
 

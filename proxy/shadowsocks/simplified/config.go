@@ -3,10 +3,10 @@ package simplified
 import (
 	"context"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/proxy/shadowsocks"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/proxy/shadowsocks"
 )
 
 func init() {
@@ -19,7 +19,8 @@ func init() {
 					CipherType: simplifiedServer.Method,
 				}),
 			},
-			Network: simplifiedServer.Network.Network,
+			Network:        simplifiedServer.Network.Network,
+			PacketEncoding: simplifiedServer.PacketEncoding,
 		}
 
 		return common.CreateObject(ctx, fullServer)
@@ -35,8 +36,9 @@ func init() {
 					User: []*protocol.User{
 						{
 							Account: serial.ToTypedMessage(&shadowsocks.Account{
-								Password:   simplifiedClient.Password,
-								CipherType: simplifiedClient.Method,
+								Password:                       simplifiedClient.Password,
+								CipherType:                     simplifiedClient.Method,
+								ExperimentReducedIvHeadEntropy: simplifiedClient.ExperimentReducedIvHeadEntropy,
 							}),
 						},
 					},

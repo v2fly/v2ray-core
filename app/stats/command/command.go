@@ -1,6 +1,6 @@
 package command
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 import (
 	"context"
@@ -9,11 +9,11 @@ import (
 
 	grpc "google.golang.org/grpc"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/stats"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/strmatcher"
-	feature_stats "github.com/v2fly/v2ray-core/v4/features/stats"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/stats"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/strmatcher"
+	feature_stats "github.com/v2fly/v2ray-core/v5/features/stats"
 )
 
 // statsServer is an implementation of StatsService.

@@ -1,19 +1,19 @@
 package router
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 import (
 	"context"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/platform"
-	"github.com/v2fly/v2ray-core/v4/features/dns"
-	"github.com/v2fly/v2ray-core/v4/features/outbound"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
-	routing_dns "github.com/v2fly/v2ray-core/v4/features/routing/dns"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/platform"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
+	"github.com/v2fly/v2ray-core/v5/features/outbound"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	routing_dns "github.com/v2fly/v2ray-core/v5/features/routing/dns"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/geodata"
 )
 
 // Router is an implementation of routing.Router.
@@ -125,7 +125,7 @@ func (r *Router) Close() error {
 	return nil
 }
 
-// Type implement common.HasType.
+// Type implements common.HasType.
 func (*Router) Type() interface{} {
 	return routing.RouterType()
 }
@@ -219,10 +219,9 @@ func init() {
 					if err != nil {
 						return nil, newError("unable to load geodomain").Base(err)
 					}
-					rule.Domain = append(rule.Domain, geo.Domain...)
 				}
 			}
-			{
+			if v.PortList != "" {
 				portList := &cfgcommon.PortList{}
 				err := portList.UnmarshalText(v.PortList)
 				if err != nil {
@@ -230,7 +229,7 @@ func init() {
 				}
 				rule.PortList = portList.Build()
 			}
-			{
+			if v.SourcePortList != "" {
 				portList := &cfgcommon.PortList{}
 				err := portList.UnmarshalText(v.SourcePortList)
 				if err != nil {
@@ -239,12 +238,20 @@ func init() {
 				rule.SourcePortList = portList.Build()
 			}
 			rule.Domain = v.Domain
+			rule.GeoDomain = v.GeoDomain
 			rule.Networks = v.Networks.Network
 			rule.Protocol = v.Protocol
 			rule.Attributes = v.Attributes
 			rule.UserEmail = v.UserEmail
 			rule.InboundTag = v.InboundTag
 			rule.DomainMatcher = v.DomainMatcher
+			switch s := v.TargetTag.(type) {
+			case *SimplifiedRoutingRule_Tag:
+				rule.TargetTag = &RoutingRule_Tag{s.Tag}
+			case *SimplifiedRoutingRule_BalancingTag:
+				rule.TargetTag = &RoutingRule_BalancingTag{s.BalancingTag}
+			}
+			routingRules = append(routingRules, rule)
 		}
 
 		fullConfig := &Config{

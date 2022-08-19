@@ -7,26 +7,26 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/log"
-	"github.com/v2fly/v2ray-core/v4/app/policy"
-	"github.com/v2fly/v2ray-core/v4/app/proxyman"
-	"github.com/v2fly/v2ray-core/v4/app/reverse"
-	"github.com/v2fly/v2ray-core/v4/app/router"
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
-	"github.com/v2fly/v2ray-core/v4/common"
-	clog "github.com/v2fly/v2ray-core/v4/common/log"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/common/uuid"
-	"github.com/v2fly/v2ray-core/v4/proxy/blackhole"
-	"github.com/v2fly/v2ray-core/v4/proxy/dokodemo"
-	"github.com/v2fly/v2ray-core/v4/proxy/freedom"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess/inbound"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess/outbound"
-	"github.com/v2fly/v2ray-core/v4/testing/servers/tcp"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/log"
+	"github.com/v2fly/v2ray-core/v5/app/policy"
+	"github.com/v2fly/v2ray-core/v5/app/proxyman"
+	"github.com/v2fly/v2ray-core/v5/app/reverse"
+	"github.com/v2fly/v2ray-core/v5/app/router"
+	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
+	"github.com/v2fly/v2ray-core/v5/common"
+	clog "github.com/v2fly/v2ray-core/v5/common/log"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/uuid"
+	"github.com/v2fly/v2ray-core/v5/proxy/blackhole"
+	"github.com/v2fly/v2ray-core/v5/proxy/dokodemo"
+	"github.com/v2fly/v2ray-core/v5/proxy/freedom"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess/inbound"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess/outbound"
+	"github.com/v2fly/v2ray-core/v5/testing/servers/tcp"
 )
 
 func TestReverseProxy(t *testing.T) {
@@ -96,7 +96,7 @@ func TestReverseProxy(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:      userID.String(),
-								AlterId: 64,
+								AlterId: 0,
 							}),
 						},
 					},
@@ -171,7 +171,7 @@ func TestReverseProxy(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_AES128_GCM,
 										},
@@ -280,7 +280,7 @@ func TestReverseProxyLongRunning(t *testing.T) {
 						{
 							Account: serial.ToTypedMessage(&vmess.Account{
 								Id:      userID.String(),
-								AlterId: 64,
+								AlterId: 0,
 							}),
 						},
 					},
@@ -368,7 +368,7 @@ func TestReverseProxyLongRunning(t *testing.T) {
 								{
 									Account: serial.ToTypedMessage(&vmess.Account{
 										Id:      userID.String(),
-										AlterId: 64,
+										AlterId: 0,
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_AES128_GCM,
 										},

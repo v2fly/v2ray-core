@@ -3,11 +3,31 @@ package internet
 import (
 	"net"
 
-	"github.com/v2fly/v2ray-core/v4/features/stats"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/features/stats"
 )
 
 type Connection interface {
 	net.Conn
+}
+
+type AbstractPacketConnReader interface {
+	ReadFrom(p []byte) (n int, addr net.Addr, err error)
+}
+
+type AbstractPacketConnWriter interface {
+	WriteTo(p []byte, addr net.Addr) (n int, err error)
+}
+
+type AbstractPacketConn interface {
+	AbstractPacketConnReader
+	AbstractPacketConnWriter
+	common.Closable
+}
+
+type PacketConn interface {
+	AbstractPacketConn
+	net.PacketConn
 }
 
 type StatCouterConnection struct {

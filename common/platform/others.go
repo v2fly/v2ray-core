@@ -4,24 +4,13 @@
 package platform
 
 import (
-	"errors"
-	"io/fs"
-	"os"
 	"path/filepath"
-)
 
-func ExpandEnv(s string) string {
-	return os.ExpandEnv(s)
-}
+	"github.com/adrg/xdg"
+)
 
 func LineSeparator() string {
 	return "\n"
-}
-
-func GetToolLocation(file string) string {
-	const name = "v2ray.location.tool"
-	toolPath := EnvFlag{Name: name, AltName: NormalizeEnvName(name)}.GetValue(getExecutableDir)
-	return filepath.Join(toolPath, file)
 }
 
 // GetAssetLocation search for `file` in certain locations
@@ -29,20 +18,10 @@ func GetAssetLocation(file string) string {
 	const name = "v2ray.location.asset"
 	assetPath := NewEnvFlag(name).GetValue(getExecutableDir)
 	defPath := filepath.Join(assetPath, file)
-	for _, p := range []string{
-		defPath,
-		filepath.Join("/usr/local/share/v2ray/", file),
-		filepath.Join("/usr/share/v2ray/", file),
-		filepath.Join("/opt/share/v2ray/", file),
-	} {
-		if _, err := os.Stat(p); err != nil && errors.Is(err, fs.ErrNotExist) {
-			continue
-		}
-
-		// asset found
-		return p
+	relPath := filepath.Join("v2ray", file)
+	fullPath, err := xdg.SearchDataFile(relPath)
+	if err != nil {
+		return defPath
 	}
-
-	// asset not found, let the caller throw out the error
-	return defPath
+	return fullPath
 }

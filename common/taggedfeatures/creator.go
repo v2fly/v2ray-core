@@ -3,9 +3,9 @@ package taggedfeatures
 import (
 	"context"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/features"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/features"
 )
 
 func NewHolderFromConfig(ctx context.Context, config *Config, memberType interface{}) (features.TaggedFeatures, error) {

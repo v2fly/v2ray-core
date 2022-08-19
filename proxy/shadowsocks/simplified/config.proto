@@ -2,13 +2,14 @@ syntax = "proto3";
 
 package v2ray.core.proxy.shadowsocks.simplified;
 option csharp_namespace = "V2Ray.Core.Proxy.Shadowsocks.Simplified";
-option go_package = "github.com/v2fly/v2ray-core/v4/proxy/shadowsocks/simplified";
+option go_package = "github.com/v2fly/v2ray-core/v5/proxy/shadowsocks/simplified";
 option java_package = "com.v2ray.core.proxy.shadowsocks.simplified";
 option java_multiple_files = true;
 
 import "common/protoext/extensions.proto";
 import "common/net/address.proto";
 import "common/net/network.proto";
+import "common/net/packetaddr/config.proto";
 import "proxy/shadowsocks/config.proto";
 
 message ServerConfig{
@@ -18,6 +19,7 @@ message ServerConfig{
   v2ray.core.proxy.shadowsocks.CipherType method = 1;
   string password = 2;
   v2ray.core.common.net.NetworkList network = 3;
+  v2ray.core.net.packetaddr.PacketAddrType packet_encoding = 4;
 }
 
 message ClientConfig {
@@ -28,4 +30,5 @@ message ClientConfig {
   uint32 port = 2;
   v2ray.core.proxy.shadowsocks.CipherType method = 3;
   string password = 4;
+  bool experiment_reduced_iv_head_entropy = 90001;
 }

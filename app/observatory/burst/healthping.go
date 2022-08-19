@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	sync "sync"
+	"sync"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common/dice"
+	"github.com/v2fly/v2ray-core/v5/common/dice"
 )
 
 // HealthPingSettings holds settings for health Checker
@@ -21,9 +21,10 @@ type HealthPingSettings struct {
 
 // HealthPing is the health checker for balancers
 type HealthPing struct {
-	ctx    context.Context
-	access sync.Mutex
-	ticker *time.Ticker
+	ctx         context.Context
+	access      sync.Mutex
+	ticker      *time.Ticker
+	tickerClose chan struct{}
 
 	Settings *HealthPingSettings
 	Results  map[string]*HealthPingRTTS
@@ -72,7 +73,9 @@ func (h *HealthPing) StartScheduler(selector func() ([]string, error)) {
 	}
 	interval := h.Settings.Interval * time.Duration(h.Settings.SamplingCount)
 	ticker := time.NewTicker(interval)
+	tickerClose := make(chan struct{})
 	h.ticker = ticker
+	h.tickerClose = tickerClose
 	go func() {
 		for {
 			go func() {
@@ -84,9 +87,11 @@ func (h *HealthPing) StartScheduler(selector func() ([]string, error)) {
 				h.doCheck(tags, interval, h.Settings.SamplingCount)
 				h.Cleanup(tags)
 			}()
-			_, ok := <-ticker.C
-			if !ok {
-				break
+			select {
+			case <-ticker.C:
+				continue
+			case <-tickerClose:
+				return
 			}
 		}
 	}()
@@ -94,8 +99,13 @@ func (h *HealthPing) StartScheduler(selector func() ([]string, error)) {
 
 // StopScheduler implements the HealthChecker
 func (h *HealthPing) StopScheduler() {
+	if h.ticker == nil {
+		return
+	}
 	h.ticker.Stop()
 	h.ticker = nil
+	close(h.tickerClose)
+	h.tickerClose = nil
 }
 
 // Check implements the HealthChecker
@@ -175,7 +185,7 @@ func (h *HealthPing) doCheck(tags []string, duration time.Duration, rounds int) 
 	}
 }
 
-// PutResult put a ping rtt to results
+// PutResult puts a ping rtt to results
 func (h *HealthPing) PutResult(tag string, rtt time.Duration) {
 	h.access.Lock()
 	defer h.access.Unlock()

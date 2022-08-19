@@ -12,13 +12,13 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common"
+	"github.com/v2fly/v2ray-core/v5/common"
 )
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 type Certificate struct {
-	// Cerificate in ASN.1 DER format
+	// Certificate in ASN.1 DER format
 	Certificate []byte
 	// Private key in ASN.1 DER format
 	PrivateKey []byte

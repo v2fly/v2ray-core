@@ -14,13 +14,13 @@ import (
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/grpc/encoding"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/tls"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/grpc/encoding"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
 
 func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.MemoryStreamConfig) (internet.Connection, error) {
@@ -54,7 +54,7 @@ func dialgRPC(ctx context.Context, dest net.Destination, streamSettings *interne
 		dialOption = grpc.WithTransportCredentials(credentials.NewTLS(config.GetTLSConfig()))
 	}
 
-	conn, canceller, err := getGrpcClient(ctx, dest, dialOption)
+	conn, canceller, err := getGrpcClient(ctx, dest, dialOption, streamSettings)
 	if err != nil {
 		return nil, newError("Cannot dial grpc").Base(err)
 	}
@@ -67,7 +67,7 @@ func dialgRPC(ctx context.Context, dest net.Destination, streamSettings *interne
 	return encoding.NewGunConn(gunService, nil), nil
 }
 
-func getGrpcClient(ctx context.Context, dest net.Destination, dialOption grpc.DialOption) (*grpc.ClientConn, dialerCanceller, error) {
+func getGrpcClient(ctx context.Context, dest net.Destination, dialOption grpc.DialOption, streamSettings *internet.MemoryStreamConfig) (*grpc.ClientConn, dialerCanceller, error) {
 	globalDialerAccess.Lock()
 	defer globalDialerAccess.Unlock()
 
@@ -112,7 +112,7 @@ func getGrpcClient(ctx context.Context, dest net.Destination, dialOption grpc.Di
 			}
 			address := net.ParseAddress(rawHost)
 			detachedContext := core.ToBackgroundDetachedContext(ctx)
-			return internet.DialSystem(detachedContext, net.TCPDestination(address, port), nil)
+			return internet.DialSystem(detachedContext, net.TCPDestination(address, port), streamSettings.SocketSettings)
 		}),
 	)
 	globalDialerMap[dest] = conn
