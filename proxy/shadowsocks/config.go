@@ -6,9 +6,11 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"crypto/sha1"
+	"encoding/json"
 	"io"
 	"strings"
 
+	"github.com/golang/protobuf/jsonpb"
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/hkdf"
 
@@ -207,6 +209,20 @@ func (NoneCipher) EncodePacket(key []byte, b *buf.Buffer) error {
 }
 
 func (NoneCipher) DecodePacket(key []byte, b *buf.Buffer) error {
+	return nil
+}
+
+func (c *CipherType) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {
+	var method string
+
+	if err := json.Unmarshal(bytes, &method); err != nil {
+		return err
+	}
+
+	if *c = CipherFromString(method); *c == CipherType_UNKNOWN {
+		return newError("unknown cipher method: ", method)
+	}
+
 	return nil
 }
 
