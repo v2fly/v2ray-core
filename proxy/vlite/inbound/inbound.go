@@ -126,21 +126,21 @@ func createStatusFromConfig(config *UDPProtocolConfig) (*status, error) { //noli
 	s.password = []byte(config.Password)
 
 	s.msgbus = ibus.NewMessageBus()
-	s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsMessageBus, s.msgbus) //nolint:revive
+	s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsMessageBus, s.msgbus) //nolint:revive,staticcheck
 
 	if config.ScramblePacket {
-		s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUDPShouldMask, true) //nolint:revive
+		s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUDPShouldMask, true) //nolint:revive,staticcheck
 	}
 
 	if s.config.EnableFec {
-		s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUDPFECEnabled, true) //nolint:revive
+		s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUDPFECEnabled, true) //nolint:revive,staticcheck
 	}
 
-	s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUDPMask, string(s.password)) //nolint:revive
+	s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUDPMask, string(s.password)) //nolint:revive,staticcheck
 
 	if config.HandshakeMaskingPaddingSize != 0 {
 		ctxv := &interfaces.ExtraOptionsUsePacketArmorValue{PacketArmorPaddingTo: int(config.HandshakeMaskingPaddingSize), UsePacketArmor: true}
-		s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUsePacketArmor, ctxv) //nolint:revive
+		s.ctx = context.WithValue(s.ctx, interfaces.ExtraOptionsUsePacketArmor, ctxv) //nolint:revive,staticcheck
 	}
 
 	return s, nil
