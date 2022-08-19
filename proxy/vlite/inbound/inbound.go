@@ -65,14 +65,14 @@ type status struct {
 func (s *status) RelayStream(conn io.ReadWriteCloser, ctx context.Context) { //nolint:revive
 }
 
-func (s *status) Connection(conn gonet.Conn, connctx context.Context) context.Context { //nolint:revive
-	S_S2CTraffic := make(chan server.UDPServerTxToClientTraffic, 8)         //nolint:revive
-	S_S2CDataTraffic := make(chan server.UDPServerTxToClientDataTraffic, 8) //nolint:revive
-	S_C2STraffic := make(chan server.UDPServerRxFromClientTraffic, 8)       //nolint:revive
+func (s *status) Connection(conn gonet.Conn, connctx context.Context) context.Context { //nolint:revive,stylecheck
+	S_S2CTraffic := make(chan server.UDPServerTxToClientTraffic, 8)         //nolint:revive,stylecheck
+	S_S2CDataTraffic := make(chan server.UDPServerTxToClientDataTraffic, 8) //nolint:revive,stylecheck
+	S_C2STraffic := make(chan server.UDPServerRxFromClientTraffic, 8)       //nolint:revive,stylecheck
 
-	S_S2CTraffic2 := make(chan interfaces.TrafficWithChannelTag, 8)     //nolint:revive
-	S_S2CDataTraffic2 := make(chan interfaces.TrafficWithChannelTag, 8) //nolint:revive
-	S_C2STraffic2 := make(chan interfaces.TrafficWithChannelTag, 8)     //nolint:revive
+	S_S2CTraffic2 := make(chan interfaces.TrafficWithChannelTag, 8)     //nolint:revive,stylecheck
+	S_S2CDataTraffic2 := make(chan interfaces.TrafficWithChannelTag, 8) //nolint:revive,stylecheck
+	S_C2STraffic2 := make(chan interfaces.TrafficWithChannelTag, 8)     //nolint:revive,stylecheck
 
 	go func(ctx context.Context) {
 		for {
@@ -120,7 +120,7 @@ func (s *status) Connection(conn gonet.Conn, connctx context.Context) context.Co
 	return connctx
 }
 
-func createStatusFromConfig(config *UDPProtocolConfig) (*status, error) {
+func createStatusFromConfig(config *UDPProtocolConfig) (*status, error) { //nolint:unparam
 	s := &status{ctx: context.Background(), config: config}
 
 	s.password = []byte(config.Password)
