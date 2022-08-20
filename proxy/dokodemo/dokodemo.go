@@ -71,7 +71,7 @@ func (d *Door) Network() []net.Network {
 		return d.config.Networks
 	}
 
-	return d.config.NetworkList.Network
+	return d.config.NetworkList.GetNetwork()
 }
 
 func (d *Door) policy() policy.Session {

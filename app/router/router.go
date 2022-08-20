@@ -239,7 +239,7 @@ func init() {
 			}
 			rule.Domain = v.Domain
 			rule.GeoDomain = v.GeoDomain
-			rule.Networks = v.Networks.Network
+			rule.Networks = v.Networks.GetNetwork()
 			rule.Protocol = v.Protocol
 			rule.Attributes = v.Attributes
 			rule.UserEmail = v.UserEmail
