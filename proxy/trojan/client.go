@@ -7,6 +7,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
 	"github.com/v2fly/v2ray-core/v5/common/protocol"
 	"github.com/v2fly/v2ray-core/v5/common/retry"
 	"github.com/v2fly/v2ray-core/v5/common/session"
@@ -16,6 +17,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/proxy"
 	"github.com/v2fly/v2ray-core/v5/transport"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
 )
 
 // Client is an inbound handler for trojan protocol
@@ -85,6 +87,51 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
 
+	if packetConn, err := packetaddr.ToPacketAddrConn(link, destination); err == nil {
+		postRequest := func() error {
+			defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
+
+			var buffer [2048]byte
+			_, addr, err := packetConn.ReadFrom(buffer[:])
+			if err != nil {
+				return newError("failed to read a packet").Base(err)
+			}
+			dest := net.DestinationFromAddr(addr)
+
+			bufferWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
+			connWriter := &ConnWriter{Writer: bufferWriter, Target: dest, Account: account}
+			packetWriter := &PacketWriter{Writer: connWriter, Target: dest}
+
+			// write some request payload to buffer
+			if _, err := packetWriter.WriteTo(buffer[:], addr); err != nil {
+				return newError("failed to write a request payload").Base(err)
+			}
+
+			// Flush; bufferWriter.WriteMultiBuffer now is bufferWriter.writer.WriteMultiBuffer
+			if err = bufferWriter.SetBuffered(false); err != nil {
+				return newError("failed to flush payload").Base(err).AtWarning()
+			}
+
+			return udp.CopyPacketConn(packetWriter, packetConn, udp.UpdateActivity(timer))
+		}
+
+		getResponse := func() error {
+			defer timer.SetTimeout(sessionPolicy.Timeouts.UplinkOnly)
+
+			packetReader := &PacketReader{Reader: conn}
+			splitReader := &PacketSplitReader{Reader: packetReader}
+
+			return udp.CopyPacketConn(packetConn, splitReader, udp.UpdateActivity(timer))
+		}
+
+		responseDoneAndCloseWriter := task.OnSuccess(getResponse, task.Close(link.Writer))
+		if err := task.Run(ctx, postRequest, responseDoneAndCloseWriter); err != nil {
+			return newError("connection ends").Base(err)
+		}
+
+		return nil
+	}
+
 	postRequest := func() error {
 		defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
 
@@ -100,7 +147,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 
 		// write some request payload to buffer
 		if err = buf.CopyOnceTimeout(link.Reader, bodyWriter, proxy.FirstPayloadTimeout); err != nil && err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
-			return newError("failed to write A request payload").Base(err).AtWarning()
+			return newError("failed to write a request payload").Base(err).AtWarning()
 		}
 
 		// Flush; bufferWriter.WriteMultiBuffer now is bufferWriter.writer.WriteMultiBuffer
