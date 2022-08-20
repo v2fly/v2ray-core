@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 	"go/build"
 	"io"
@@ -247,4 +249,66 @@ Download it from https://github.com/protocolbuffers/protobuf/releases
 			}
 		}
 	}
+
+	normalizeWalkErr := filepath.Walk("./", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		filename := filepath.Base(path)
+		if strings.HasSuffix(filename, ".pb.go") &&
+			path != "config.pb.go" {
+			if err := NormalizeGeneratedProtoFile(path); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+
+		return nil
+	})
+	if normalizeWalkErr != nil {
+		fmt.Println(normalizeWalkErr)
+		os.Exit(1)
+	}
+}
+
+func NormalizeGeneratedProtoFile(path string) error {
+	fd, err := os.OpenFile(path, os.O_RDWR, 0o644)
+	if err != nil {
+		return err
+	}
+
+	_, err = fd.Seek(0, os.SEEK_SET)
+	if err != nil {
+		return err
+	}
+	out := bytes.NewBuffer(nil)
+	scanner := bufio.NewScanner(fd)
+	valid := false
+	for scanner.Scan() {
+		if !valid && !strings.HasPrefix(scanner.Text(), "package ") {
+			continue
+		}
+		valid = true
+		out.Write(scanner.Bytes())
+		out.Write([]byte("\n"))
+	}
+	_, err = fd.Seek(0, os.SEEK_SET)
+	if err != nil {
+		return err
+	}
+	err = fd.Truncate(0)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(fd, bytes.NewReader(out.Bytes()))
+	if err != nil {
+		return err
+	}
+	return nil
 }
