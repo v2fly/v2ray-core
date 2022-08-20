@@ -19,7 +19,7 @@ func init() {
 					CipherType: simplifiedServer.Method,
 				}),
 			},
-			Network:        simplifiedServer.Networks.Network,
+			Network:        simplifiedServer.Networks.GetNetwork(),
 			PacketEncoding: simplifiedServer.PacketEncoding,
 		}
 
