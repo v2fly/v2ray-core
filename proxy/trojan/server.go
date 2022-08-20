@@ -210,7 +210,6 @@ func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReade
 	udpDispatcherConstructor := udp.NewSplitDispatcher
 	switch s.packetEncoding {
 	case packetaddr.PacketAddrType_None:
-		break
 	case packetaddr.PacketAddrType_Packet:
 		packetAddrDispatcherFactory := udp.NewPacketAddrDispatcherCreator(ctx)
 		udpDispatcherConstructor = packetAddrDispatcherFactory.NewPacketAddrDispatcher
