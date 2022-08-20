@@ -62,7 +62,7 @@ func TestReader1(t *testing.T) {
 		output string
 	}
 
-	bufLen := 8
+	bufLen := 1
 
 	data := []dataStruct{
 		{"loooooooooooooooooooooooooooooooooooooooog", "loooooooooooooooooooooooooooooooooooooooog"},
@@ -70,6 +70,7 @@ func TestReader1(t *testing.T) {
 		{`{"t": "\/test"}`, `{"t": "\/test"}`},
 		{`"\// fake comment"`, `"\// fake comment"`},
 		{`"\/\/\/\/\/"`, `"\/\/\/\/\/"`},
+		{`/test/test`, `/test/test`},
 	}
 
 	for _, testCase := range data {
