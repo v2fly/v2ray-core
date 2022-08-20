@@ -292,23 +292,20 @@ type PacketSplitReader struct {
 	Payload *PacketPayload
 }
 
-func (r *PacketSplitReader) ReadFrom(p []byte) (int, gonet.Addr, error) {
-	var err error
-
+func (r *PacketSplitReader) ReadFrom(p []byte) (n int, addr gonet.Addr, err error) {
 	if r.Payload == nil || r.Payload.Buffer.IsEmpty() {
 		r.Payload, err = r.Reader.ReadMultiBufferWithMetadata()
 		if err != nil {
-			return 0, nil, err
+			return
 		}
 	}
 
-	addr := &gonet.UDPAddr{
+	addr = &gonet.UDPAddr{
 		IP:   r.Payload.Target.Address.IP(),
 		Port: int(r.Payload.Target.Port),
 	}
 
-	mb, nBytes := buf.SplitBytes(r.Payload.Buffer, p)
-	r.Payload.Buffer = mb
+	r.Payload.Buffer, n = buf.SplitBytes(r.Payload.Buffer, p)
 
-	return nBytes, addr, nil
+	return
 }
