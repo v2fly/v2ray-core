@@ -22,6 +22,7 @@ func init() {
 				}
 				return
 			}(),
+			PacketEncoding: simplifiedServer.PacketEncoding,
 		}
 		return common.CreateObject(ctx, fullServer)
 	}))

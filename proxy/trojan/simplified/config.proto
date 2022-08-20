@@ -8,12 +8,14 @@ option java_multiple_files = true;
 
 import "common/protoext/extensions.proto";
 import "common/net/address.proto";
+import "common/net/packetaddr/config.proto";
 
 message ServerConfig{
   option (v2ray.core.common.protoext.message_opt).type = "inbound";
   option (v2ray.core.common.protoext.message_opt).short_name = "trojan";
 
   repeated string users = 1;
+  v2ray.core.net.packetaddr.PacketAddrType packet_encoding = 2;
 }
 
 message ClientConfig {

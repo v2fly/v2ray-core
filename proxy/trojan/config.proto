@@ -8,6 +8,7 @@ option java_multiple_files = true;
 
 import "common/protocol/user.proto";
 import "common/protocol/server_spec.proto";
+import "common/net/packetaddr/config.proto";
 
 message Account {
   string password = 1;
@@ -28,4 +29,5 @@ message ClientConfig {
 message ServerConfig {
   repeated v2ray.core.common.protocol.User users = 1;
   repeated Fallback fallbacks = 3;
+  v2ray.core.net.packetaddr.PacketAddrType packet_encoding = 4;
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/v2fly/v2ray-core/v5/common/log"
 	"github.com/v2fly/v2ray-core/v5/common/net"
+	packetaddr "github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
 	"github.com/v2fly/v2ray-core/v5/common/protocol"
 	udp_proto "github.com/v2fly/v2ray-core/v5/common/protocol/udp"
 	"github.com/v2fly/v2ray-core/v5/common/retry"
@@ -33,9 +34,10 @@ func init() {
 
 // Server is an inbound connection handler that handles messages in trojan protocol.
 type Server struct {
-	policyManager policy.Manager
-	validator     *Validator
-	fallbacks     map[string]map[string]*Fallback // or nil
+	policyManager  policy.Manager
+	validator      *Validator
+	fallbacks      map[string]map[string]*Fallback // or nil
+	packetEncoding packetaddr.PacketAddrType
 }
 
 // NewServer creates a new trojan inbound handler.
@@ -54,8 +56,9 @@ func NewServer(ctx context.Context, config *ServerConfig) (*Server, error) {
 
 	v := core.MustFromContext(ctx)
 	server := &Server{
-		policyManager: v.GetFeature(policy.ManagerType()).(policy.Manager),
-		validator:     validator,
+		policyManager:  v.GetFeature(policy.ManagerType()).(policy.Manager),
+		validator:      validator,
+		packetEncoding: config.PacketEncoding,
 	}
 
 	if config.Fallbacks != nil {
@@ -204,7 +207,16 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 }
 
 func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReader, clientWriter *PacketWriter, dispatcher routing.Dispatcher) error {
-	udpServer := udp.NewSplitDispatcher(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
+	udpDispatcherConstructor := udp.NewSplitDispatcher
+	switch s.packetEncoding {
+	case packetaddr.PacketAddrType_None:
+		break
+	case packetaddr.PacketAddrType_Packet:
+		packetAddrDispatcherFactory := udp.NewPacketAddrDispatcherCreator(ctx)
+		udpDispatcherConstructor = packetAddrDispatcherFactory.NewPacketAddrDispatcher
+	}
+
+	udpServer := udpDispatcherConstructor(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
 		if err := clientWriter.WriteMultiBufferWithMetadata(buf.MultiBuffer{packet.Payload}, packet.Source); err != nil {
 			newError("failed to write response").Base(err).AtWarning().WriteToLog(session.ExportIDToError(ctx))
 		}
@@ -225,8 +237,8 @@ func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReade
 				}
 				return nil
 			}
-
-			ctx = log.ContextWithAccessMessage(ctx, &log.AccessMessage{
+			currentPacketCtx := ctx
+			currentPacketCtx = log.ContextWithAccessMessage(currentPacketCtx, &log.AccessMessage{
 				From:   inbound.Source,
 				To:     p.Target,
 				Status: log.AccessAccepted,
@@ -236,7 +248,7 @@ func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReade
 			newError("tunnelling request to ", p.Target).WriteToLog(session.ExportIDToError(ctx))
 
 			for _, b := range p.Buffer {
-				udpServer.Dispatch(ctx, p.Target, b)
+				udpServer.Dispatch(currentPacketCtx, p.Target, b)
 			}
 		}
 	}
