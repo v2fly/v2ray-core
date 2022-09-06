@@ -2,6 +2,7 @@ run:
   timeout: 5m
   skip-files:
     - generated.*
+    - .pb.go
 
 issues:
   new: true
