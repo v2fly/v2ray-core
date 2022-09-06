@@ -65,6 +65,12 @@ import (
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/udp"
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/websocket"
 
+	// Developer preview transports
+	_ "github.com/v2fly/v2ray-core/v5/transport/internet/request/assembly"
+
+	_ "github.com/v2fly/v2ray-core/v5/transport/internet/request/assembler/simple"
+	_ "github.com/v2fly/v2ray-core/v5/transport/internet/request/roundtripper/httprt"
+
 	// Transport headers
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/headers/http"
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/headers/noop"

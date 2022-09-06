@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package v2ray.core.transport.internet.request.roundtripper.httprt;
+option csharp_namespace = "V2Ray.Core.Transport.Internet.Request.Roundtripper.httprt";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/request/roundtripper/httprt";
+option java_package = "com.v2ray.core.transport.internet.request.roundtripper.httprt";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+
+message ClientConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "transport.request.roundtripper.client";
+  option (v2ray.core.common.protoext.message_opt).short_name = "httprt";
+
+  HTTPConfig http = 1;
+}
+
+message ServerConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "transport.request.roundtripper.server";
+  option (v2ray.core.common.protoext.message_opt).short_name = "httprt";
+  HTTPConfig http = 1;
+  bool no_decoding_session_tag = 2;
+}
+
+message HTTPConfig {
+  string path = 1;
+  string urlPrefix = 2;
+}

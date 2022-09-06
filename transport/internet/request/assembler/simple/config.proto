@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package v2ray.core.transport.internet.request.assembler.simple;
+option csharp_namespace = "V2Ray.Core.Transport.Internet.Request.Assembler.Simple";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/request/assembler/simple";
+option java_package = "com.v2ray.core.transport.internet.request.assembler.simple";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+
+message ClientConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "transport.request.assembler.client";
+  option (v2ray.core.common.protoext.message_opt).short_name = "simple";
+
+  int32 max_write_size = 1;
+  int32 wait_subsequent_write_ms = 2;
+  int32 initial_polling_interval_ms = 3;
+  int32 max_polling_interval_ms = 4;
+  int32 min_polling_interval_ms = 5;
+  float backoff_factor = 6;
+  int32 failed_retry_interval_ms = 7;
+}
+
+message ServerConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "transport.request.assembler.server";
+  option (v2ray.core.common.protoext.message_opt).short_name = "simple";
+
+  int32 max_write_size = 1;
+}

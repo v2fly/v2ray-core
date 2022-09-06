@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package v2ray.core.transport.internet.request.assembly;
+option csharp_namespace = "V2Ray.Core.Transport.Internet.Request.Assembly";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/request/assembly";
+option java_package = "com.v2ray.core.transport.internet.request.assembly";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+import "google/protobuf/any.proto";
+
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "transport";
+  option (v2ray.core.common.protoext.message_opt).short_name = "request";
+
+  google.protobuf.Any assembler = 1;
+  google.protobuf.Any roundtripper = 2;
+}
