@@ -5,6 +5,12 @@ import (
 	"testing"
 	_ "unsafe"
 
+	"github.com/v2fly/v2ray-core/v5/common/environment/systemnetworkimpl"
+
+	"github.com/v2fly/v2ray-core/v5/common/environment"
+	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
+	"github.com/v2fly/v2ray-core/v5/common/environment/transientstorageimpl"
+
 	"google.golang.org/protobuf/types/known/anypb"
 
 	core "github.com/v2fly/v2ray-core/v5"
@@ -43,6 +49,10 @@ func TestOutboundWithoutStatCounter(t *testing.T) {
 	v, _ := core.New(config)
 	v.AddFeature((outbound.Manager)(new(Manager)))
 	ctx := toContext(context.Background(), v)
+	defaultNetworkImpl := systemnetworkimpl.NewSystemNetworkDefault()
+	rootEnv := environment.NewRootEnvImpl(ctx, transientstorageimpl.NewScopedTransientStorageImpl(), defaultNetworkImpl.Dialer(), defaultNetworkImpl.Listener())
+	proxyEnvironment := rootEnv.ProxyEnvironment("o")
+	ctx = envctx.ContextWithEnvironment(ctx, proxyEnvironment)
 	h, _ := NewHandler(ctx, &core.OutboundHandlerConfig{
 		Tag:           "tag",
 		ProxySettings: serial.ToTypedMessage(&freedom.Config{}),
@@ -72,6 +82,10 @@ func TestOutboundWithStatCounter(t *testing.T) {
 	v, _ := core.New(config)
 	v.AddFeature((outbound.Manager)(new(Manager)))
 	ctx := toContext(context.Background(), v)
+	defaultNetworkImpl := systemnetworkimpl.NewSystemNetworkDefault()
+	rootEnv := environment.NewRootEnvImpl(ctx, transientstorageimpl.NewScopedTransientStorageImpl(), defaultNetworkImpl.Dialer(), defaultNetworkImpl.Listener())
+	proxyEnvironment := rootEnv.ProxyEnvironment("o")
+	ctx = envctx.ContextWithEnvironment(ctx, proxyEnvironment)
 	h, _ := NewHandler(ctx, &core.OutboundHandlerConfig{
 		Tag:           "tag",
 		ProxySettings: serial.ToTypedMessage(&freedom.Config{}),

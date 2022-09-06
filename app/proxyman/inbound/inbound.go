@@ -16,6 +16,7 @@ import (
 
 // Manager is to manage all inbound handlers.
 type Manager struct {
+	ctx             context.Context
 	access          sync.RWMutex
 	untaggedHandler []inbound.Handler
 	taggedHandlers  map[string]inbound.Handler
@@ -25,6 +26,7 @@ type Manager struct {
 // New returns a new Manager for inbound handlers.
 func New(ctx context.Context, config *proxyman.InboundConfig) (*Manager, error) {
 	m := &Manager{
+		ctx:            ctx,
 		taggedHandlers: make(map[string]inbound.Handler),
 	}
 	return m, nil

@@ -9,12 +9,21 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tagged"
 )
 
-func NewRootEnvImpl(ctx context.Context, transientStorage storage.ScopedTransientStorage) RootEnvironment {
-	return &rootEnvImpl{transientStorage: transientStorage, ctx: ctx}
+func NewRootEnvImpl(ctx context.Context, transientStorage storage.ScopedTransientStorage,
+	systemDialer internet.SystemDialer, systemListener internet.SystemListener,
+) RootEnvironment {
+	return &rootEnvImpl{
+		transientStorage: transientStorage,
+		systemListener:   systemListener,
+		systemDialer:     systemDialer,
+		ctx:              ctx,
+	}
 }
 
 type rootEnvImpl struct {
 	transientStorage storage.ScopedTransientStorage
+	systemDialer     internet.SystemDialer
+	systemListener   internet.SystemListener
 
 	ctx context.Context
 }
@@ -30,6 +39,8 @@ func (r *rootEnvImpl) AppEnvironment(tag string) AppEnvironment {
 	}
 	return &appEnvImpl{
 		transientStorage: transientStorage,
+		systemListener:   r.systemListener,
+		systemDialer:     r.systemDialer,
 		ctx:              r.ctx,
 	}
 }
@@ -41,12 +52,16 @@ func (r *rootEnvImpl) ProxyEnvironment(tag string) ProxyEnvironment {
 	}
 	return &proxyEnvImpl{
 		transientStorage: transientStorage,
+		systemListener:   r.systemListener,
+		systemDialer:     r.systemDialer,
 		ctx:              r.ctx,
 	}
 }
 
 type appEnvImpl struct {
 	transientStorage storage.ScopedTransientStorage
+	systemDialer     internet.SystemDialer
+	systemListener   internet.SystemListener
 
 	ctx context.Context
 }
@@ -98,6 +113,8 @@ func (a *appEnvImpl) NarrowScope(key string) (AppEnvironment, error) {
 	}
 	return &appEnvImpl{
 		transientStorage: transientStorage,
+		systemDialer:     a.systemDialer,
+		systemListener:   a.systemListener,
 		ctx:              a.ctx,
 	}, nil
 }
@@ -108,6 +125,8 @@ func (a *appEnvImpl) doNotImpl() {
 
 type proxyEnvImpl struct {
 	transientStorage storage.ScopedTransientStorage
+	systemDialer     internet.SystemDialer
+	systemListener   internet.SystemListener
 
 	ctx context.Context
 }
@@ -156,6 +175,8 @@ func (p *proxyEnvImpl) doNotImpl() {
 
 type transportEnvImpl struct {
 	transientStorage storage.ScopedTransientStorage
+	systemDialer     internet.SystemDialer
+	systemListener   internet.SystemListener
 
 	ctx context.Context
 }

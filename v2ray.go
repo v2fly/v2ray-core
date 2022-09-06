@@ -3,10 +3,11 @@ package core
 import (
 	"context"
 	"reflect"
-	"sync"
+	sync "sync"
 
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/environment"
+	"github.com/v2fly/v2ray-core/v5/common/environment/systemnetworkimpl"
 	"github.com/v2fly/v2ray-core/v5/common/environment/transientstorageimpl"
 	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"github.com/v2fly/v2ray-core/v5/features"
@@ -191,7 +192,8 @@ func initInstanceWithConfig(config *Config, server *Instance) (bool, error) {
 		return true, err
 	}
 
-	server.env = environment.NewRootEnvImpl(server.ctx, transientstorageimpl.NewScopedTransientStorageImpl())
+	defaultNetworkImpl := systemnetworkimpl.NewSystemNetworkDefault()
+	server.env = environment.NewRootEnvImpl(server.ctx, transientstorageimpl.NewScopedTransientStorageImpl(), defaultNetworkImpl.Dialer(), defaultNetworkImpl.Listener())
 
 	for _, appSettings := range config.App {
 		settings, err := serial.GetInstanceOf(appSettings)
