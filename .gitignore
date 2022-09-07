@@ -19,7 +19,6 @@
 *.zip
 *.tar.gz
 v2ray
-v2ctl
 mockgen
 vprotogen
 !infra/vprotogen/
