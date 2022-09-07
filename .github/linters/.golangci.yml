@@ -10,6 +10,9 @@ issues:
     - linters:
         - staticcheck
       text: "SA1019:"
+    - linters:
+        - stylecheck
+      text: "ST1016:"
 
 linters:
   enable:
