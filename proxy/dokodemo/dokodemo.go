@@ -35,7 +35,7 @@ func init() {
 		fullConfig := &Config{
 			Address:        simplifiedServer.Address,
 			Port:           simplifiedServer.Port,
-			Networks:       net.ParseNetworks(simplifiedServer.Network),
+			Networks:       simplifiedServer.Networks.Network,
 			FollowRedirect: simplifiedServer.FollowRedirect,
 		}
 
@@ -71,7 +71,7 @@ func (d *Door) Network() []net.Network {
 		return d.config.Networks
 	}
 
-	return d.config.NetworkList.Network
+	return d.config.NetworkList.GetNetwork()
 }
 
 func (d *Door) policy() policy.Session {

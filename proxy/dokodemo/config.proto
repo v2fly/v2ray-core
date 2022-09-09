@@ -31,6 +31,6 @@ message SimplifiedConfig {
 
   v2ray.core.common.net.IPOrDomain address = 1;
   uint32 port = 2;
-  string network = 3;
+  v2ray.core.common.net.NetworkList networks = 3;
   bool follow_redirect = 4;
 }

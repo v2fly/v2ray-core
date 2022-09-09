@@ -156,7 +156,7 @@ message SimplifiedRoutingRule {
   string port_list = 14;
 
   // List of networks for matching.
-  string networks = 13;
+  v2ray.core.common.net.NetworkList networks = 13;
 
   // List of GeoIPs for source IP address matching. If this entry exists, the
   // source_cidr above will have no effect.

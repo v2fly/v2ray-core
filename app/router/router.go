@@ -7,7 +7,6 @@ import (
 
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/platform"
 	"github.com/v2fly/v2ray-core/v5/features/dns"
 	"github.com/v2fly/v2ray-core/v5/features/outbound"
@@ -240,9 +239,7 @@ func init() {
 			}
 			rule.Domain = v.Domain
 			rule.GeoDomain = v.GeoDomain
-			if v.Networks != "" {
-				rule.Networks = net.ParseNetworks(v.Networks)
-			}
+			rule.Networks = v.Networks.GetNetwork()
 			rule.Protocol = v.Protocol
 			rule.Attributes = v.Attributes
 			rule.UserEmail = v.UserEmail

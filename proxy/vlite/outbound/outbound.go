@@ -116,28 +116,28 @@ type status struct {
 	access sync.Mutex
 }
 
-func createStatusFromConfig(config *UDPProtocolConfig) (*status, error) {
+func createStatusFromConfig(config *UDPProtocolConfig) (*status, error) { //nolint:unparam
 	s := &status{password: []byte(config.Password)}
 	ctx := context.Background()
 
 	s.msgbus = ibus.NewMessageBus()
-	ctx = context.WithValue(ctx, interfaces.ExtraOptionsMessageBus, s.msgbus) //nolint:revive
+	ctx = context.WithValue(ctx, interfaces.ExtraOptionsMessageBus, s.msgbus) //nolint:revive,staticcheck
 
-	ctx = context.WithValue(ctx, interfaces.ExtraOptionsDisableAutoQuitForClient, true) //nolint:revive
+	ctx = context.WithValue(ctx, interfaces.ExtraOptionsDisableAutoQuitForClient, true) //nolint:revive,staticcheck
 
 	if config.EnableFec {
-		ctx = context.WithValue(ctx, interfaces.ExtraOptionsUDPFECEnabled, true) //nolint:revive
+		ctx = context.WithValue(ctx, interfaces.ExtraOptionsUDPFECEnabled, true) //nolint:revive,staticcheck
 	}
 
 	if config.ScramblePacket {
-		ctx = context.WithValue(ctx, interfaces.ExtraOptionsUDPShouldMask, true) //nolint:revive
+		ctx = context.WithValue(ctx, interfaces.ExtraOptionsUDPShouldMask, true) //nolint:revive,staticcheck
 	}
 
-	ctx = context.WithValue(ctx, interfaces.ExtraOptionsUDPMask, string(s.password)) //nolint:revive
+	ctx = context.WithValue(ctx, interfaces.ExtraOptionsUDPMask, string(s.password)) //nolint:revive,staticcheck
 
 	if config.HandshakeMaskingPaddingSize != 0 {
 		ctxv := &interfaces.ExtraOptionsUsePacketArmorValue{PacketArmorPaddingTo: int(config.HandshakeMaskingPaddingSize), UsePacketArmor: true}
-		ctx = context.WithValue(ctx, interfaces.ExtraOptionsUsePacketArmor, ctxv) //nolint:revive
+		ctx = context.WithValue(ctx, interfaces.ExtraOptionsUsePacketArmor, ctxv) //nolint:revive,staticcheck
 	}
 
 	destinationString := fmt.Sprintf("%v:%v", config.Address.AsAddress().String(), config.Port)
@@ -157,13 +157,13 @@ func enableInterface(s *status) error {
 		return newError("unable to connect to remote").Base(err)
 	}
 
-	C_C2STraffic := make(chan client2.UDPClientTxToServerTraffic, 8)         //nolint:revive
-	C_C2SDataTraffic := make(chan client2.UDPClientTxToServerDataTraffic, 8) //nolint:revive
-	C_S2CTraffic := make(chan client2.UDPClientRxFromServerTraffic, 8)       //nolint:revive
+	C_C2STraffic := make(chan client2.UDPClientTxToServerTraffic, 8)         //nolint:revive,stylecheck
+	C_C2SDataTraffic := make(chan client2.UDPClientTxToServerDataTraffic, 8) //nolint:revive,stylecheck
+	C_S2CTraffic := make(chan client2.UDPClientRxFromServerTraffic, 8)       //nolint:revive,stylecheck
 
-	C_C2STraffic2 := make(chan interfaces.TrafficWithChannelTag, 8)     //nolint:revive
-	C_C2SDataTraffic2 := make(chan interfaces.TrafficWithChannelTag, 8) //nolint:revive
-	C_S2CTraffic2 := make(chan interfaces.TrafficWithChannelTag, 8)     //nolint:revive
+	C_C2STraffic2 := make(chan interfaces.TrafficWithChannelTag, 8)     //nolint:revive,stylecheck
+	C_C2SDataTraffic2 := make(chan interfaces.TrafficWithChannelTag, 8) //nolint:revive,stylecheck
+	C_S2CTraffic2 := make(chan interfaces.TrafficWithChannelTag, 8)     //nolint:revive,stylecheck
 
 	go func(ctx context.Context) {
 		for {
