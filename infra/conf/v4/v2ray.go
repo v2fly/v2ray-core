@@ -10,6 +10,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/app/dispatcher"
 	"github.com/v2fly/v2ray-core/v5/app/proxyman"
 	"github.com/v2fly/v2ray-core/v5/app/stats"
+	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon/loader"
@@ -199,6 +200,17 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 		if receiverSettings.StreamSettings.SocketSettings.Tproxy == internet.SocketConfig_Off {
 			receiverSettings.StreamSettings.SocketSettings.Tproxy = internet.SocketConfig_Redirect
 		}
+	}
+	if content, ok := rawConfig.(*SocksServerConfig); ok && content.UDP &&
+		(receiverSettings.Listen.AsAddress() == net.AnyIP || receiverSettings.Listen.AsAddress() == net.AnyIPv6) {
+		receiverSettings.ReceiveOriginalDestination = true
+		if receiverSettings.StreamSettings == nil {
+			receiverSettings.StreamSettings = &internet.StreamConfig{}
+		}
+		if receiverSettings.StreamSettings.SocketSettings == nil {
+			receiverSettings.StreamSettings.SocketSettings = &internet.SocketConfig{}
+		}
+		receiverSettings.StreamSettings.SocketSettings.ReceiveOriginalDestAddress = true
 	}
 	ts, err := rawConfig.(cfgcommon.Buildable).Build()
 	if err != nil {
