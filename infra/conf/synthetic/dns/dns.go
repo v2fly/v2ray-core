@@ -18,12 +18,16 @@ import (
 )
 
 type NameServerConfig struct {
-	Address      *cfgcommon.Address
-	ClientIP     *cfgcommon.Address
-	Port         uint16
-	SkipFallback bool
-	Domains      []string
-	ExpectIPs    cfgcommon.StringList
+	Address          *cfgcommon.Address
+	ClientIP         *cfgcommon.Address
+	Port             uint16
+	Tag              string
+	QueryStrategy    string
+	CacheStrategy    string
+	FallbackStrategy string
+	SkipFallback     bool
+	Domains          []string
+	ExpectIPs        cfgcommon.StringList
 
 	cfgctx context.Context
 }
@@ -36,17 +40,25 @@ func (c *NameServerConfig) UnmarshalJSON(data []byte) error {
 	}
 
 	var advanced struct {
-		Address      *cfgcommon.Address   `json:"address"`
-		ClientIP     *cfgcommon.Address   `json:"clientIp"`
-		Port         uint16               `json:"port"`
-		SkipFallback bool                 `json:"skipFallback"`
-		Domains      []string             `json:"domains"`
-		ExpectIPs    cfgcommon.StringList `json:"expectIps"`
+		Address          *cfgcommon.Address   `json:"address"`
+		ClientIP         *cfgcommon.Address   `json:"clientIp"`
+		Port             uint16               `json:"port"`
+		Tag              string               `json:"tag"`
+		QueryStrategy    string               `json:"queryStrategy"`
+		CacheStrategy    string               `json:"cacheStrategy"`
+		FallbackStrategy string               `json:"fallbackStrategy"`
+		SkipFallback     bool                 `json:"skipFallback"`
+		Domains          []string             `json:"domains"`
+		ExpectIPs        cfgcommon.StringList `json:"expectIps"`
 	}
 	if err := json.Unmarshal(data, &advanced); err == nil {
 		c.Address = advanced.Address
 		c.ClientIP = advanced.ClientIP
 		c.Port = advanced.Port
+		c.Tag = advanced.Tag
+		c.QueryStrategy = advanced.QueryStrategy
+		c.CacheStrategy = advanced.CacheStrategy
+		c.FallbackStrategy = advanced.FallbackStrategy
 		c.SkipFallback = advanced.SkipFallback
 		c.Domains = advanced.Domains
 		c.ExpectIPs = advanced.ExpectIPs
@@ -117,6 +129,40 @@ func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 		myClientIP = []byte(c.ClientIP.IP())
 	}
 
+	queryStrategy := new(dns.QueryStrategy)
+	switch strings.ToLower(c.QueryStrategy) {
+	case "useip", "use_ip", "use-ip":
+		*queryStrategy = dns.QueryStrategy_USE_IP
+	case "useip4", "useipv4", "use_ip4", "use_ipv4", "use_ip_v4", "use-ip4", "use-ipv4", "use-ip-v4":
+		*queryStrategy = dns.QueryStrategy_USE_IP4
+	case "useip6", "useipv6", "use_ip6", "use_ipv6", "use_ip_v6", "use-ip6", "use-ipv6", "use-ip-v6":
+		*queryStrategy = dns.QueryStrategy_USE_IP6
+	default:
+		queryStrategy = nil
+	}
+
+	cacheStrategy := new(dns.CacheStrategy)
+	switch strings.ToLower(c.CacheStrategy) {
+	case "enabled":
+		*cacheStrategy = dns.CacheStrategy_CacheEnabled
+	case "disabled":
+		*cacheStrategy = dns.CacheStrategy_CacheDisabled
+	default:
+		cacheStrategy = nil
+	}
+
+	fallbackStrategy := new(dns.FallbackStrategy)
+	switch strings.ToLower(c.FallbackStrategy) {
+	case "enabled":
+		*fallbackStrategy = dns.FallbackStrategy_Enabled
+	case "disabled":
+		*fallbackStrategy = dns.FallbackStrategy_Disabled
+	case "disabledifanymatch", "disabled_if_any_match", "disabled-if-any-match":
+		*fallbackStrategy = dns.FallbackStrategy_DisabledIfAnyMatch
+	default:
+		fallbackStrategy = nil
+	}
+
 	return &dns.NameServer{
 		Address: &net.Endpoint{
 			Network: net.Network_UDP,
@@ -124,7 +170,11 @@ func (c *NameServerConfig) Build() (*dns.NameServer, error) {
 			Port:    uint32(c.Port),
 		},
 		ClientIp:          myClientIP,
+		Tag:               c.Tag,
 		SkipFallback:      c.SkipFallback,
+		QueryStrategy:     queryStrategy,
+		CacheStrategy:     cacheStrategy,
+		FallbackStrategy:  fallbackStrategy,
 		PrioritizedDomain: domains,
 		Geoip:             geoipList,
 		OriginalRules:     originalRules,
@@ -145,6 +195,8 @@ type DNSConfig struct { // nolint: revive
 	ClientIP               *cfgcommon.Address      `json:"clientIp"`
 	Tag                    string                  `json:"tag"`
 	QueryStrategy          string                  `json:"queryStrategy"`
+	CacheStrategy          string                  `json:"cacheStrategy"`
+	FallbackStrategy       string                  `json:"fallbackStrategy"`
 	DisableCache           bool                    `json:"disableCache"`
 	DisableFallback        bool                    `json:"disableFallback"`
 	DisableFallbackIfMatch bool                    `json:"disableFallbackIfMatch"`
@@ -243,6 +295,24 @@ func (c *DNSConfig) Build() (*dns.Config, error) {
 		config.QueryStrategy = dns.QueryStrategy_USE_IP4
 	case "useip6", "useipv6", "use_ip6", "use_ipv6", "use_ip_v6", "use-ip6", "use-ipv6", "use-ip-v6":
 		config.QueryStrategy = dns.QueryStrategy_USE_IP6
+	}
+
+	config.CacheStrategy = dns.CacheStrategy_CacheEnabled
+	switch strings.ToLower(c.CacheStrategy) {
+	case "enabled":
+		config.CacheStrategy = dns.CacheStrategy_CacheEnabled
+	case "disabled":
+		config.CacheStrategy = dns.CacheStrategy_CacheDisabled
+	}
+
+	config.FallbackStrategy = dns.FallbackStrategy_Enabled
+	switch strings.ToLower(c.FallbackStrategy) {
+	case "enabled":
+		config.FallbackStrategy = dns.FallbackStrategy_Enabled
+	case "disabled":
+		config.FallbackStrategy = dns.FallbackStrategy_Disabled
+	case "disabledifanymatch", "disabled_if_any_match", "disabled-if-any-match":
+		config.FallbackStrategy = dns.FallbackStrategy_DisabledIfAnyMatch
 	}
 
 	for _, server := range c.Servers {

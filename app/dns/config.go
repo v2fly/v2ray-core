@@ -4,9 +4,12 @@
 package dns
 
 import (
+	"golang.org/x/net/dns/dnsmessage"
+
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/strmatcher"
 	"github.com/v2fly/v2ray-core/v5/common/uuid"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
 )
 
 var typeMap = map[DomainMatchingType]strmatcher.Type{
@@ -58,6 +61,25 @@ func toNetIP(addrs []net.Address) ([]net.IP, error) {
 		}
 	}
 	return ips, nil
+}
+
+func toIPOption(s QueryStrategy) dns.IPOption {
+	return dns.IPOption{
+		IPv4Enable: s == QueryStrategy_USE_IP || s == QueryStrategy_USE_IP4,
+		IPv6Enable: s == QueryStrategy_USE_IP || s == QueryStrategy_USE_IP6,
+		FakeEnable: false,
+	}
+}
+
+func toReqTypes(option dns.IPOption) []dnsmessage.Type {
+	var reqTypes []dnsmessage.Type
+	if option.IPv4Enable {
+		reqTypes = append(reqTypes, dnsmessage.TypeA)
+	}
+	if option.IPv6Enable {
+		reqTypes = append(reqTypes, dnsmessage.TypeAAAA)
+	}
+	return reqTypes
 }
 
 func generateRandomTag() string {

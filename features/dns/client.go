@@ -14,6 +14,18 @@ type IPOption struct {
 	FakeEnable bool
 }
 
+func (opt IPOption) With(other IPOption) IPOption {
+	return IPOption{
+		IPv4Enable: opt.IPv4Enable && other.IPv4Enable,
+		IPv6Enable: opt.IPv6Enable && other.IPv6Enable,
+		FakeEnable: opt.FakeEnable && other.FakeEnable,
+	}
+}
+
+func (opt IPOption) IsValid() bool {
+	return opt.IPv4Enable || opt.IPv6Enable
+}
+
 // Client is a V2Ray feature for querying DNS information.
 //
 // v2ray:api:stable
