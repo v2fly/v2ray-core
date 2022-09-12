@@ -1,101 +1,109 @@
 package strmatcher
 
-import "strings"
-
-func breakDomain(domain string) []string {
-	return strings.Split(domain, ".")
-}
-
-type node struct {
-	values []uint32
-	sub    map[string]*node
+type trieNode struct {
+	values   []uint32
+	children map[string]*trieNode
 }
 
 // DomainMatcherGroup is an implementation of MatcherGroup.
 // It uses trie to optimize both memory consumption and lookup speed. Trie node is domain label based.
 type DomainMatcherGroup struct {
-	root *node
+	root *trieNode
+}
+
+func NewDomainMatcherGroup() *DomainMatcherGroup {
+	return &DomainMatcherGroup{
+		root: new(trieNode),
+	}
 }
 
 // AddDomainMatcher implements MatcherGroupForDomain.AddDomainMatcher.
 func (g *DomainMatcherGroup) AddDomainMatcher(matcher DomainMatcher, value uint32) {
-	if g.root == nil {
-		g.root = new(node)
-	}
-
-	current := g.root
-	parts := breakDomain(matcher.Pattern())
-	for i := len(parts) - 1; i >= 0; i-- {
-		part := parts[i]
-		if current.sub == nil {
-			current.sub = make(map[string]*node)
+	node := g.root
+	pattern := matcher.Pattern()
+	for i := len(pattern); i > 0; {
+		var part string
+		for j := i - 1; ; j-- {
+			if pattern[j] == '.' {
+				part = pattern[j+1 : i]
+				i = j
+				break
+			}
+			if j == 0 {
+				part = pattern[j:i]
+				i = j
+				break
+			}
 		}
-		next := current.sub[part]
+		if node.children == nil {
+			node.children = make(map[string]*trieNode)
+		}
+		next := node.children[part]
 		if next == nil {
-			next = new(node)
-			current.sub[part] = next
+			next = new(trieNode)
+			node.children[part] = next
 		}
-		current = next
+		node = next
 	}
 
-	current.values = append(current.values, value)
+	node.values = append(node.values, value)
 }
 
 // Match implements MatcherGroup.Match.
-func (g *DomainMatcherGroup) Match(domain string) []uint32 {
-	if domain == "" {
-		return nil
-	}
-
-	current := g.root
-	if current == nil {
-		return nil
-	}
-
-	nextPart := func(idx int) int {
-		for i := idx - 1; i >= 0; i-- {
-			if domain[i] == '.' {
-				return i
+func (g *DomainMatcherGroup) Match(input string) []uint32 {
+	matches := make([][]uint32, 0, 5)
+	node := g.root
+	for i := len(input); i > 0; {
+		for j := i - 1; ; j-- {
+			if input[j] == '.' { // Domain label found
+				node = node.children[input[j+1:i]]
+				i = j
+				break
+			}
+			if j == 0 { // The last part of domain label
+				node = node.children[input[j:i]]
+				i = j
+				break
 			}
 		}
-		return -1
-	}
-
-	matches := [][]uint32{}
-	idx := len(domain)
-	for {
-		if idx == -1 || current.sub == nil {
+		if node == nil { // No more match if no trie edge transition
 			break
 		}
-
-		nidx := nextPart(idx)
-		part := domain[nidx+1 : idx]
-		next := current.sub[part]
-		if next == nil {
+		if len(node.values) > 0 { // Found matched matchers
+			matches = append(matches, node.values)
+		}
+		if node.children == nil { // No more match if leaf node reached
 			break
 		}
-		current = next
-		idx = nidx
-		if len(current.values) > 0 {
-			matches = append(matches, current.values)
-		}
 	}
-	switch len(matches) {
-	case 0:
-		return nil
-	case 1:
-		return matches[0]
-	default:
-		result := []uint32{}
-		for idx := range matches {
-			// Insert reversely, the subdomain that matches further ranks higher
-			result = append(result, matches[len(matches)-1-idx]...)
-		}
-		return result
-	}
+	return CompositeMatchesReverse(matches)
 }
 
 // MatchAny implements MatcherGroup.MatchAny.
-func (g *DomainMatcherGroup) MatchAny(domain string) bool {
-	return len(g.Match(domain)) > 0
+func (g *DomainMatcherGroup) MatchAny(input string) bool {
+	node := g.root
+	for i := len(input); i > 0; {
+		for j := i - 1; ; j-- {
+			if input[j] == '.' {
+				node = node.children[input[j+1:i]]
+				i = j
+				break
+			}
+			if j == 0 {
+				node = node.children[input[j:i]]
+				i = j
+				break
+			}
+		}
+		if node == nil {
+			return false
+		}
+		if len(node.values) > 0 {
+			return true
+		}
+		if node.children == nil {
+			return false
+		}
+	}
+	return false
 }

@@ -165,18 +165,7 @@ func (g *MphMatcherGroup) Match(input string) []uint32 {
 	if mphIdx := g.Lookup(hash, input); mphIdx != 0 {
 		matches = append(matches, g.values[mphIdx])
 	}
-	switch len(matches) {
-	case 0:
-		return nil
-	case 1:
-		return matches[0]
-	default:
-		result := []uint32{}
-		for i := len(matches) - 1; i >= 0; i-- {
-			result = append(result, matches[i]...)
-		}
-		return result
-	}
+	return CompositeMatchesReverse(matches)
 }
 
 // MatchAny implements MatcherGroup.MatchAny.
