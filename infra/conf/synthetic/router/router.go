@@ -83,10 +83,11 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 }
 
 type RouterConfig struct { // nolint: revive
-	Settings       *RouterRulesConfig `json:"settings"` // Deprecated
-	RuleList       []json.RawMessage  `json:"rules"`
-	DomainStrategy *string            `json:"domainStrategy"`
-	Balancers      []*BalancingRule   `json:"balancers"`
+	Settings        *RouterRulesConfig `json:"settings"` // Deprecated
+	RuleList        []json.RawMessage  `json:"rules"`
+	DomainStrategy  *string            `json:"domainStrategy"`
+	ResolveStrategy *string            `json:"resolveStrategy"`
+	Balancers       []*BalancingRule   `json:"balancers"`
 
 	DomainMatcher string `json:"domainMatcher"`
 
@@ -113,6 +114,26 @@ func (c *RouterConfig) getDomainStrategy() router.DomainStrategy {
 	}
 }
 
+func (c *RouterConfig) getResolveStrategy() router.ResolveStrategy {
+	rs := ""
+	if c.ResolveStrategy != nil {
+		rs = *c.ResolveStrategy
+	}
+
+	switch strings.ToLower(rs) {
+	case "usedns", "use_dns", "use-dns":
+		return router.ResolveStrategy_UseDNS
+	case "useorigin", "use_origin", "use-origin":
+		return router.ResolveStrategy_UseOrigin
+	case "preferorigin", "prefer_origin", "prefer-origin":
+		return router.ResolveStrategy_PreferOrigin
+	case "disabled", "asis", "as_is", "as-is":
+		return router.ResolveStrategy_Disabled
+	default:
+		return router.ResolveStrategy_UseDNS
+	}
+}
+
 func (c *RouterConfig) BuildV5(ctx context.Context) (*router.Config, error) {
 	c.cfgctx = ctx
 	return c.Build()
@@ -121,6 +142,7 @@ func (c *RouterConfig) BuildV5(ctx context.Context) (*router.Config, error) {
 func (c *RouterConfig) Build() (*router.Config, error) {
 	config := new(router.Config)
 	config.DomainStrategy = c.getDomainStrategy()
+	config.ResolveStrategy = c.getResolveStrategy()
 
 	if c.cfgctx == nil {
 		c.cfgctx = cfgcommon.NewConfigureLoadingContext(context.Background())

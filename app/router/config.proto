@@ -128,8 +128,23 @@ enum DomainStrategy {
   IpOnDemand = 3;
 }
 
+enum ResolveStrategy {
+  // Resolve IP with internal DNS Only.
+  UseDNS = 0;
+
+  // Resolve IP to its original destination, if available.
+  UseOrigin = 1;
+
+  // Resolve IP to its original destination first, and fallback to internal DNS if not available.
+  PreferOrigin = 3;
+
+  // Do not try to resolve IP.
+  Disabled = 255;
+}
+
 message Config {
   DomainStrategy domain_strategy = 1;
+  ResolveStrategy resolve_strategy = 4;
   repeated RoutingRule rule = 2;
   repeated BalancingRule balancing_rule = 3;
 }

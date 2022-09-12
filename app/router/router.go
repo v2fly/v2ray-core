@@ -12,16 +12,18 @@ import (
 	"github.com/v2fly/v2ray-core/v5/features/outbound"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
 	routing_dns "github.com/v2fly/v2ray-core/v5/features/routing/dns"
+	routing_session "github.com/v2fly/v2ray-core/v5/features/routing/session"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/geodata"
 )
 
 // Router is an implementation of routing.Router.
 type Router struct {
-	domainStrategy DomainStrategy
-	rules          []*Rule
-	balancers      map[string]*Balancer
-	dns            dns.Client
+	domainStrategy  DomainStrategy
+	resolveStrategy ResolveStrategy
+	rules           []*Rule
+	balancers       map[string]*Balancer
+	dns             dns.Client
 }
 
 // Route is an implementation of routing.Route.
@@ -34,6 +36,7 @@ type Route struct {
 // Init initializes the Router.
 func (r *Router) Init(ctx context.Context, config *Config, d dns.Client, ohm outbound.Manager, dispatcher routing.Dispatcher) error {
 	r.domainStrategy = config.DomainStrategy
+	r.resolveStrategy = config.ResolveStrategy
 	r.dns = d
 
 	r.balancers = make(map[string]*Balancer, len(config.BalancingRule))
@@ -84,13 +87,16 @@ func (r *Router) PickRoute(ctx routing.Context) (routing.Route, error) {
 }
 
 func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context, error) {
+	resolveStrategy := r.resolveStrategy
 	// SkipDNSResolve is set from DNS module.
 	// the DOH remote server maybe a domain name,
 	// this prevents cycle resolving dead loop
-	skipDNSResolve := ctx.GetSkipDNSResolve()
+	if ctx.GetSkipDNSResolve() {
+		resolveStrategy = ResolveStrategy_Disabled
+	}
 
-	if r.domainStrategy == DomainStrategy_IpOnDemand && !skipDNSResolve {
-		ctx = routing_dns.ContextWithDNSClient(ctx, r.dns)
+	if r.domainStrategy == DomainStrategy_IpOnDemand {
+		ctx = r.contextWithResolveStrategy(ctx, resolveStrategy)
 	}
 
 	for _, rule := range r.rules {
@@ -99,20 +105,33 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 		}
 	}
 
-	if r.domainStrategy != DomainStrategy_IpIfNonMatch || len(ctx.GetTargetDomain()) == 0 || skipDNSResolve {
-		return nil, ctx, common.ErrNoClue
-	}
+	if r.domainStrategy == DomainStrategy_IpIfNonMatch && resolveStrategy != ResolveStrategy_Disabled && len(ctx.GetTargetDomain()) != 0 {
+		ctx = r.contextWithResolveStrategy(ctx, resolveStrategy)
 
-	ctx = routing_dns.ContextWithDNSClient(ctx, r.dns)
-
-	// Try applying rules again if we have IPs.
-	for _, rule := range r.rules {
-		if rule.Apply(ctx) {
-			return rule, ctx, nil
+		// Try applying rules again if we have IPs.
+		for _, rule := range r.rules {
+			if rule.Apply(ctx) {
+				return rule, ctx, nil
+			}
 		}
 	}
 
 	return nil, ctx, common.ErrNoClue
+}
+
+func (r *Router) contextWithResolveStrategy(ctx routing.Context, resolveStrategy ResolveStrategy) routing.Context {
+	switch resolveStrategy {
+	case ResolveStrategy_Disabled:
+		return ctx
+	case ResolveStrategy_UseDNS:
+		return routing_dns.ContextWithDNSClient(ctx, r.dns)
+	case ResolveStrategy_UseOrigin:
+		return routing_session.ContextWithOriginDestination(ctx)
+	case ResolveStrategy_PreferOrigin:
+		return routing_dns.ContextWithDNSClient(routing_session.ContextWithOriginDestination(ctx), r.dns)
+	default:
+		return ctx
+	}
 }
 
 // Start implements common.Runnable.
