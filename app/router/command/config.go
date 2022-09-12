@@ -12,6 +12,10 @@ type routingContext struct {
 	*RoutingContext
 }
 
+func (c routingContext) Unwrap() routing.Context {
+	return nil
+}
+
 func (c routingContext) GetSourceIPs() []net.IP {
 	return mapBytesToIPs(c.RoutingContext.GetSourceIPs())
 }
@@ -26,13 +30,6 @@ func (c routingContext) GetTargetIPs() []net.IP {
 
 func (c routingContext) GetTargetPort() net.Port {
 	return net.Port(c.RoutingContext.GetTargetPort())
-}
-
-// GetSkipDNSResolve is a mock implementation here to match the interface,
-// SkipDNSResolve is set from dns module, no use if coming from a protobuf object?
-// TODO: please confirm @Vigilans
-func (c routingContext) GetSkipDNSResolve() bool {
-	return false
 }
 
 // AsRoutingContext converts a protobuf RoutingContext into an implementation of routing.Context.

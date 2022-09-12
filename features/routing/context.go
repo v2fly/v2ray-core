@@ -8,6 +8,9 @@ import (
 //
 // v2ray:api:stable
 type Context interface {
+	// Unwrap returns the underlying routing context it wraps. Returns nil if no such context.
+	Unwrap() Context
+
 	// GetInboundTag returns the tag of the inbound the connection was from.
 	GetInboundTag() string
 
@@ -37,7 +40,4 @@ type Context interface {
 
 	// GetAttributes returns extra attributes from the connection content.
 	GetAttributes() map[string]string
-
-	// GetSkipDNSResolve returns a flag switch for weather skip dns resolve during route pick.
-	GetSkipDNSResolve() bool
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/features/dns"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
+	routing_session "github.com/v2fly/v2ray-core/v5/features/routing/session"
 )
 
 // ResolvableContext is an implementation of routing.Context, with domain resolving capability.
@@ -13,6 +14,11 @@ type ResolvableContext struct {
 	routing.Context
 	dnsClient   dns.Client
 	resolvedIPs []net.IP
+}
+
+// Unwrap implements routing.Context.
+func (ctx *ResolvableContext) Unwrap() routing.Context {
+	return ctx.Context
 }
 
 // GetTargetIPs overrides original routing.Context's implementation.
@@ -67,6 +73,11 @@ func (ctx *ResolvableContext) GetTargetIPs() []net.IP {
 
 // ContextWithDNSClient creates a new routing context with domain resolving capability.
 // Resolved domain IPs can be retrieved by GetTargetIPs().
-func ContextWithDNSClient(ctx routing.Context, client dns.Client) routing.Context {
-	return &ResolvableContext{Context: ctx, dnsClient: client}
+func ContextWithDNSClient(context routing.Context, client dns.Client) (routing.Context, bool) {
+	for ctx := context; ctx != nil; ctx = ctx.Unwrap() {
+		if ctx, ok := ctx.(*routing_session.Context); ok && ctx.Content != nil && ctx.Content.SkipDNSResolve {
+			return context, false
+		}
+	}
+	return &ResolvableContext{Context: context, dnsClient: client}, true
 }

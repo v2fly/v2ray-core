@@ -87,16 +87,8 @@ func (r *Router) PickRoute(ctx routing.Context) (routing.Route, error) {
 }
 
 func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context, error) {
-	resolveStrategy := r.resolveStrategy
-	// SkipDNSResolve is set from DNS module.
-	// the DOH remote server maybe a domain name,
-	// this prevents cycle resolving dead loop
-	if ctx.GetSkipDNSResolve() {
-		resolveStrategy = ResolveStrategy_Disabled
-	}
-
 	if r.domainStrategy == DomainStrategy_IpOnDemand {
-		ctx = r.contextWithResolveStrategy(ctx, resolveStrategy)
+		ctx, _ = r.contextWithResolveStrategy(ctx)
 	}
 
 	for _, rule := range r.rules {
@@ -105,13 +97,14 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 		}
 	}
 
-	if r.domainStrategy == DomainStrategy_IpIfNonMatch && resolveStrategy != ResolveStrategy_Disabled && len(ctx.GetTargetDomain()) != 0 {
-		ctx = r.contextWithResolveStrategy(ctx, resolveStrategy)
-
-		// Try applying rules again if we have IPs.
-		for _, rule := range r.rules {
-			if rule.Apply(ctx) {
-				return rule, ctx, nil
+	if r.domainStrategy == DomainStrategy_IpIfNonMatch && len(ctx.GetTargetDomain()) != 0 {
+		var updated bool // Whether the returned context is different from sent context
+		if ctx, updated = r.contextWithResolveStrategy(ctx); updated {
+			// Try applying rules again if we have IPs.
+			for _, rule := range r.rules {
+				if rule.Apply(ctx) {
+					return rule, ctx, nil
+				}
 			}
 		}
 	}
@@ -119,18 +112,20 @@ func (r *Router) pickRouteInternal(ctx routing.Context) (*Rule, routing.Context,
 	return nil, ctx, common.ErrNoClue
 }
 
-func (r *Router) contextWithResolveStrategy(ctx routing.Context, resolveStrategy ResolveStrategy) routing.Context {
-	switch resolveStrategy {
-	case ResolveStrategy_Disabled:
-		return ctx
+func (r *Router) contextWithResolveStrategy(ctx routing.Context) (routing.Context, bool) {
+	switch r.resolveStrategy {
 	case ResolveStrategy_UseDNS:
 		return routing_dns.ContextWithDNSClient(ctx, r.dns)
 	case ResolveStrategy_UseOrigin:
 		return routing_session.ContextWithOriginDestination(ctx)
 	case ResolveStrategy_PreferOrigin:
-		return routing_dns.ContextWithDNSClient(routing_session.ContextWithOriginDestination(ctx), r.dns)
+		ctx, ret1 := routing_session.ContextWithOriginDestination(ctx)
+		ctx, ret2 := routing_dns.ContextWithDNSClient(ctx, r.dns)
+		return ctx, ret1 || ret2
+	case ResolveStrategy_Disabled:
+		fallthrough
 	default:
-		return ctx
+		return ctx, false
 	}
 }
 

@@ -15,6 +15,11 @@ type Context struct {
 	Content  *session.Content
 }
 
+// Unwrap implements routing.Context.
+func (ctx *Context) Unwrap() routing.Context {
+	return nil
+}
+
 // GetInboundTag implements routing.Context.
 func (ctx *Context) GetInboundTag() string {
 	if ctx.Inbound == nil {
@@ -107,14 +112,6 @@ func (ctx *Context) GetAttributes() map[string]string {
 		return nil
 	}
 	return ctx.Content.Attributes
-}
-
-// GetSkipDNSResolve implements routing.Context.
-func (ctx *Context) GetSkipDNSResolve() bool {
-	if ctx.Content == nil {
-		return false
-	}
-	return ctx.Content.SkipDNSResolve
 }
 
 // AsRoutingContext creates a context from context.context with session info.
