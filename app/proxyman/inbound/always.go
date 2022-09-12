@@ -78,15 +78,6 @@ func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *
 		return nil, newError("failed to parse stream config").Base(err).AtWarning()
 	}
 
-	if receiverConfig.ReceiveOriginalDestination {
-		if mss.SocketSettings == nil {
-			mss.SocketSettings = &internet.SocketConfig{}
-		}
-		if mss.SocketSettings.Tproxy == internet.SocketConfig_Off {
-			mss.SocketSettings.Tproxy = internet.SocketConfig_Redirect
-		}
-		mss.SocketSettings.ReceiveOriginalDestAddress = true
-	}
 	if pr == nil {
 		if net.HasNetwork(nl, net.Network_UNIX) {
 			newError("creating unix domain socket worker on ", address).AtDebug().WriteToLog()
