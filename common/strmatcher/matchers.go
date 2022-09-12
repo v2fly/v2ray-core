@@ -147,11 +147,11 @@ func (t Type) NewDomainPattern(pattern string) (Matcher, error) {
 }
 
 // ToDomain converts input pattern to a domain string, and return error if such a conversion cannot be made.
-//   1. Conforms to Letter-Digit-Hyphen (LDH) subset (https://tools.ietf.org/html/rfc952):
+//  1. Conforms to Letter-Digit-Hyphen (LDH) subset (https://tools.ietf.org/html/rfc952):
 //     * Letters A to Z (no distinction between uppercase and lowercase, we convert to lowers)
 //     * Digits 0 to 9
 //     * Hyphens(-) and Periods(.)
-//   2. Non-ASCII characters not supported for now.
+//  2. Non-ASCII characters not supported for now.
 //     * May support Internationalized domain name to Punycode if needed in the future.
 func ToDomain(pattern string) (string, error) {
 	builder := strings.Builder{}
@@ -257,9 +257,9 @@ func CompositeMatches(matches [][]uint32) []uint32 {
 
 // CompositeMatches flattens the matches slice to produce a single matched indices slice.
 // It is designed that:
-//   1. All matchers are concatenated in reverse order, so the matcher that matches further ranks higher.
-//   2. Indices in the same matcher keeps their original order.
-//   3. Avoid new memory allocation as possible.
+//  1. All matchers are concatenated in reverse order, so the matcher that matches further ranks higher.
+//  2. Indices in the same matcher keeps their original order.
+//  3. Avoid new memory allocation as possible.
 func CompositeMatchesReverse(matches [][]uint32) []uint32 {
 	switch len(matches) {
 	case 0:
