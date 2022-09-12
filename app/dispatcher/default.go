@@ -199,41 +199,39 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 	if !destination.IsValid() {
 		panic("Dispatcher: Invalid destination.")
 	}
-	ob := &session.Outbound{
-		Target: destination,
-	}
-	ctx = session.ContextWithOutbound(ctx, ob)
-
-	inbound, outbound := d.getLink(ctx)
+	outbound := &session.Outbound{Target: destination}
+	ctx = session.ContextWithOutbound(ctx, outbound)
 	content := session.ContentFromContext(ctx)
 	if content == nil {
 		content = new(session.Content)
 		ctx = session.ContextWithContent(ctx, content)
 	}
-	sniffingRequest := content.SniffingRequest
-	if !sniffingRequest.Enabled {
-		go d.routedDispatch(ctx, outbound, destination)
-	} else {
+	inboundLink, outboundLink := d.getLink(ctx)
+
+	if sniffingRequest := content.SniffingRequest; sniffingRequest.Enabled {
 		go func() {
 			cReader := &cachedReader{
-				reader: outbound.Reader.(*pipe.Reader),
+				reader: outboundLink.Reader.(*pipe.Reader),
 			}
-			outbound.Reader = cReader
+			outboundLink.Reader = cReader
 			result, err := sniffer(ctx, cReader, sniffingRequest.MetadataOnly, destination.Network)
 			if err == nil {
 				content.Protocol = result.Protocol()
 			}
 			if err == nil && shouldOverride(result, sniffingRequest.OverrideDestinationForProtocol) {
+				content.OverriddenDestination = destination.Address
 				domain := result.Domain()
-				newError("sniffed domain: ", domain).WriteToLog(session.ExportIDToError(ctx))
+				newError("sniffed domain: ", domain, " for ", destination).WriteToLog(session.ExportIDToError(ctx))
 				destination.Address = net.ParseAddress(domain)
-				ob.Target = destination
+				outbound.Target = destination
 			}
-			d.routedDispatch(ctx, outbound, destination)
+			d.routedDispatch(ctx, outboundLink, destination)
 		}()
+	} else {
+		go d.routedDispatch(ctx, outboundLink, destination)
 	}
 
-	return inbound, nil
+	return inboundLink, nil
 }
 
 func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool, network net.Network) (SniffResult, error) {

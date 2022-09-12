@@ -64,11 +64,13 @@ type SniffingRequest struct {
 type Content struct {
 	// Protocol of current content.
 	Protocol string
-
+	// Request options for sniffers.
 	SniffingRequest SniffingRequest
-
+	// Additional Attributes.
 	Attributes map[string]string
-
+	// Original destination address before overridden by sniffing result.
+	OverriddenDestination net.Address
+	// Whether to skip internal DNS resolution during routing decision.
 	SkipDNSResolve bool
 }
 
