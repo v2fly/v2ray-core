@@ -287,44 +287,30 @@ func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.
 
 	if forcedOutboundTag := session.GetForcedOutboundTagFromContext(ctx); forcedOutboundTag != "" {
 		ctx = session.SetForcedOutboundTagToContext(ctx, "")
-		if h := d.ohm.GetHandler(forcedOutboundTag); h != nil {
-			newError("taking platform initialized detour [", forcedOutboundTag, "] for [", destination, "]").WriteToLog(session.ExportIDToError(ctx))
-			handler = h
-		} else {
-			newError("non existing tag for platform initialized detour: ", forcedOutboundTag).AtError().WriteToLog(session.ExportIDToError(ctx))
-			common.Close(link.Writer)
-			common.Interrupt(link.Reader)
-			return
-		}
+		handler = d.ohm.GetHandler(forcedOutboundTag)
 	} else if d.router != nil {
-		if route, err := d.router.PickRoute(routing_session.AsRoutingContext(ctx)); err == nil {
-			tag := route.GetOutboundTag()
-			if h := d.ohm.GetHandler(tag); h != nil {
-				newError("taking detour [", tag, "] for [", destination, "]").WriteToLog(session.ExportIDToError(ctx))
-				handler = h
-			} else {
-				newError("non existing tag: ", tag).AtWarning().WriteToLog(session.ExportIDToError(ctx))
-			}
-		} else {
+		route, err := d.router.PickRoute(routing_session.AsRoutingContext(ctx))
+		if err == nil {
+			handler = d.ohm.GetHandler(route.GetOutboundTag())
+		} else if err == common.ErrNoClue {
 			newError("default route for ", destination).AtWarning().WriteToLog(session.ExportIDToError(ctx))
+			handler = d.ohm.GetDefaultHandler()
 		}
 	}
 
 	if handler == nil {
-		handler = d.ohm.GetDefaultHandler()
-	}
-
-	if handler == nil {
-		newError("default outbound handler not exist").WriteToLog(session.ExportIDToError(ctx))
+		newError("failed to detour a handler for [", destination, "]").WriteToLog(session.ExportIDToError(ctx))
 		common.Close(link.Writer)
 		common.Interrupt(link.Reader)
 		return
 	}
 
+	if tag := handler.Tag(); tag != "" {
+		newError("taking detour [", handler.Tag(), "] for [", destination, "]").WriteToLog(session.ExportIDToError(ctx))
+	}
+
 	if accessMessage := log.AccessMessageFromContext(ctx); accessMessage != nil {
-		if tag := handler.Tag(); tag != "" {
-			accessMessage.Detour = tag
-		}
+		accessMessage.Detour = handler.Tag()
 		log.Record(accessMessage)
 	}
 
