@@ -41,6 +41,7 @@ type tcpWorker struct {
 	sniffingConfig  *proxyman.SniffingConfig
 	uplinkCounter   stats.Counter
 	downlinkCounter stats.Counter
+	listeningAddrs  map[net.Address]bool
 
 	hub internet.Listener
 
@@ -54,33 +55,52 @@ func getTProxyType(s *internet.MemoryStreamConfig) internet.SocketConfig_TProxyM
 	return s.SocketSettings.Tproxy
 }
 
+func (w *tcpWorker) getGateway(originDest net.Destination) net.Destination {
+	if !originDest.IsValid() {
+		return net.TCPDestination(w.address, w.port)
+	}
+	if w.address != net.AnyIP && w.address != net.AnyIPv6 {
+		return net.TCPDestination(w.address, w.port)
+	}
+	if getTProxyType(w.stream) != internet.SocketConfig_TProxy {
+		if w.port != originDest.Port {
+			return net.TCPDestination(w.address, w.port)
+		}
+		if !w.listeningAddrs[originDest.Address] {
+			return net.TCPDestination(w.address, w.port)
+		}
+	}
+	return originDest
+}
+
 func (w *tcpWorker) callback(conn internet.Connection) {
 	ctx, cancel := context.WithCancel(w.ctx)
 	sid := session.NewID()
 	ctx = session.ContextWithID(ctx, sid)
 
+	var originalDest net.Destination
 	if w.recvOrigDest {
-		var dest net.Destination
 		switch getTProxyType(w.stream) {
 		case internet.SocketConfig_Redirect:
-			d, err := tcp.GetOriginalDestination(conn)
+			var err error
+			originalDest, err = tcp.GetOriginalDestination(conn)
 			if err != nil {
 				newError("failed to get original destination").Base(err).WriteToLog(session.ExportIDToError(ctx))
-			} else {
-				dest = d
 			}
 		case internet.SocketConfig_TProxy:
-			dest = net.DestinationFromAddr(conn.LocalAddr())
+			fallthrough
+		default:
+			originalDest = net.DestinationFromAddr(conn.LocalAddr())
 		}
-		if dest.IsValid() {
-			ctx = session.ContextWithOutbound(ctx, &session.Outbound{
-				Target: dest,
-			})
-		}
+	}
+	if originalDest.IsValid() && getTProxyType(w.stream) != internet.SocketConfig_Off {
+		ctx = session.ContextWithOutbound(ctx, &session.Outbound{
+			Target: originalDest,
+		})
 	}
 	ctx = session.ContextWithInbound(ctx, &session.Inbound{
 		Source:  net.DestinationFromAddr(conn.RemoteAddr()),
-		Gateway: net.TCPDestination(w.address, w.port),
+		Gateway: w.getGateway(originalDest),
 		Tag:     w.tag,
 	})
 	content := new(session.Content)
@@ -239,6 +259,7 @@ type udpWorker struct {
 	sniffingConfig  *proxyman.SniffingConfig
 	uplinkCounter   stats.Counter
 	downlinkCounter stats.Counter
+	listeningAddrs  map[net.Address]bool
 
 	checker    *task.Periodic
 	activeConn map[connID]*udpConn
@@ -265,18 +286,43 @@ func (w *udpWorker) getConnection(id connID) (*udpConn, bool) {
 			IP:   id.src.Address.IP(),
 			Port: int(id.src.Port),
 		},
-		local: &net.UDPAddr{
-			IP:   w.address.IP(),
-			Port: int(w.port),
-		},
 		done:     done.New(),
 		uplink:   w.uplinkCounter,
 		downlink: w.downlinkCounter,
+	}
+	if id.dest.IsValid() {
+		conn.local = &net.UDPAddr{
+			IP:   id.dest.Address.IP(),
+			Port: int(id.dest.Port),
+		}
+	} else {
+		conn.local = &net.UDPAddr{
+			IP:   w.address.IP(),
+			Port: int(w.port),
+		}
 	}
 	w.activeConn[id] = conn
 
 	conn.updateActivity()
 	return conn, false
+}
+
+func (w *udpWorker) getGateway(originDest net.Destination) net.Destination {
+	if !originDest.IsValid() {
+		return net.UDPDestination(w.address, w.port)
+	}
+	if w.address != net.AnyIP && w.address != net.AnyIPv6 {
+		return net.UDPDestination(w.address, w.port)
+	}
+	if getTProxyType(w.stream) != internet.SocketConfig_Off {
+		if w.port != originDest.Port {
+			return net.UDPDestination(w.address, w.port)
+		}
+		if !w.listeningAddrs[originDest.Address] {
+			return net.UDPDestination(w.address, w.port)
+		}
+	}
+	return originDest
 }
 
 func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest net.Destination) {
@@ -306,7 +352,7 @@ func (w *udpWorker) callback(b *buf.Buffer, source net.Destination, originalDest
 			}
 			ctx = session.ContextWithInbound(ctx, &session.Inbound{
 				Source:  source,
-				Gateway: net.UDPDestination(w.address, w.port),
+				Gateway: w.getGateway(originalDest),
 				Tag:     w.tag,
 			})
 			content := new(session.Content)
