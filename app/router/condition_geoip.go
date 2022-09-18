@@ -1,7 +1,9 @@
 package router
 
 import (
-	"inet.af/netaddr"
+	"net/netip"
+
+	"go4.org/netipx"
 
 	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -10,18 +12,20 @@ import (
 type GeoIPMatcher struct {
 	countryCode  string
 	reverseMatch bool
-	ip4          *netaddr.IPSet
-	ip6          *netaddr.IPSet
+	ip4          *netipx.IPSet
+	ip6          *netipx.IPSet
 }
 
 func (m *GeoIPMatcher) Init(cidrs []*routercommon.CIDR) error {
-	var builder4, builder6 netaddr.IPSetBuilder
+	var builder4, builder6 netipx.IPSetBuilder
 	for _, cidr := range cidrs {
-		netaddrIP, ok := netaddr.FromStdIP(net.IP(cidr.GetIp()))
+		netaddrIP, ok := netip.AddrFromSlice(cidr.GetIp())
 		if !ok {
 			return newError("invalid IP address ", cidr)
 		}
-		ipPrefix := netaddr.IPPrefixFrom(netaddrIP, uint8(cidr.GetPrefix()))
+		netaddrIP = netaddrIP.Unmap()
+		ipPrefix := netip.PrefixFrom(netaddrIP, int(cidr.GetPrefix()))
+
 		switch {
 		case netaddrIP.Is4():
 			builder4.AddPrefix(ipPrefix)
@@ -48,7 +52,7 @@ func (m *GeoIPMatcher) SetReverseMatch(isReverseMatch bool) {
 }
 
 func (m *GeoIPMatcher) match4(ip net.IP) bool {
-	nip, ok := netaddr.FromStdIP(ip)
+	nip, ok := netipx.FromStdIP(ip)
 	if !ok {
 		return false
 	}
@@ -56,7 +60,7 @@ func (m *GeoIPMatcher) match4(ip net.IP) bool {
 }
 
 func (m *GeoIPMatcher) match6(ip net.IP) bool {
-	nip, ok := netaddr.FromStdIP(ip)
+	nip, ok := netipx.FromStdIP(ip)
 	if !ok {
 		return false
 	}
