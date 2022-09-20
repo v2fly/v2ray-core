@@ -64,7 +64,7 @@ jobs:
           PRIVATE_KEY: ${{ secrets.DEBIAN_GPG_PRIVATE }}
         run: |
           git clone https://github.com/v2fly/debian.git archive
-          echo -n $PRIVATE_KEY | base64 -d > private.key
+          echo -n $PRIVATE_KEY | base64 -d -i > private.key
           gpg --import --batch private.key
           gpg -K
           cd archive
