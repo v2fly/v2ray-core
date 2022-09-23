@@ -23,6 +23,7 @@ type HealthPingSettings struct {
 type HealthPing struct {
 	ctx         context.Context
 	access      sync.Mutex
+	accessWait  sync.WaitGroup
 	ticker      *time.Ticker
 	tickerClose chan struct{}
 
@@ -192,6 +193,8 @@ func (h *HealthPing) doCheck(tags []string, duration time.Duration, rounds int) 
 func (h *HealthPing) PutResult(tag string, rtt time.Duration) {
 	h.access.Lock()
 	defer h.access.Unlock()
+	h.accessWait.Add(1)
+	defer h.accessWait.Done()
 	if h.Results == nil {
 		h.Results = make(map[string]*HealthPingRTTS)
 	}
@@ -213,6 +216,8 @@ func (h *HealthPing) PutResult(tag string, rtt time.Duration) {
 func (h *HealthPing) Cleanup(tags []string) {
 	h.access.Lock()
 	defer h.access.Unlock()
+	h.accessWait.Add(1)
+	defer h.accessWait.Done()
 	for tag := range h.Results {
 		found := false
 		for _, v := range tags {
