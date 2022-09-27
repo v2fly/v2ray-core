@@ -32,7 +32,8 @@ func (o *Observer) GetObservation(ctx context.Context) (proto.Message, error) {
 
 func (o *Observer) createResult() []*observatory.OutboundStatus {
 	var result []*observatory.OutboundStatus
-	o.hp.accessWait.Wait()
+	o.hp.access.RLock()
+	defer o.hp.access.RUnlock()
 	for name, value := range o.hp.Results {
 		status := observatory.OutboundStatus{
 			Alive:           value.getStatistics().All != value.getStatistics().Fail,
