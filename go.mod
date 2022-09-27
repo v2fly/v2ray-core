@@ -12,7 +12,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/websocket v1.5.0
 	github.com/jhump/protoreflect v1.13.0
-	github.com/lucas-clemente/quic-go v0.29.0
+	github.com/lucas-clemente/quic-go v0.29.1
 	github.com/marten-seemann/qtls-go1-18 v0.1.2
 	github.com/marten-seemann/qtls-go1-19 v0.1.0
 	github.com/miekg/dns v1.1.50
