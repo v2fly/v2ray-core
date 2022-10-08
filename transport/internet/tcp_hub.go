@@ -36,6 +36,11 @@ func ListenUnix(ctx context.Context, address net.Address, settings *MemoryStream
 	}
 
 	protocol := settings.ProtocolName
+
+	if originalProtocolName := getOriginalMessageName(settings); originalProtocolName != "" {
+		protocol = originalProtocolName
+	}
+
 	listenFunc := transportListenerCache[protocol]
 	if listenFunc == nil {
 		return nil, newError(protocol, " unix istener not registered.").AtError()
