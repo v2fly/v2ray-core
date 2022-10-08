@@ -146,10 +146,21 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	if err := conn.SetDeadline(time.Now().Add(p.Timeouts.Handshake)); err != nil {
 		newError("failed to set deadline for handshake").Base(err).WriteToLog(session.ExportIDToError(ctx))
 	}
-	udpRequest, err := ClientHandshake(request, conn, conn)
-	if err != nil {
-		return newError("failed to establish connection to server").AtWarning().Base(err)
+
+	var udpRequest *protocol.RequestHeader
+	var err error
+	if request.Version == socks4Version {
+		err = ClientHandshake4(request, conn, conn)
+		if err != nil {
+			return newError("failed to establish connection to server").AtWarning().Base(err)
+		}
+	} else {
+		udpRequest, err = ClientHandshake(request, conn, conn)
+		if err != nil {
+			return newError("failed to establish connection to server").AtWarning().Base(err)
+		}
 	}
+
 	if udpRequest != nil {
 		if udpRequest.Address == net.AnyIP || udpRequest.Address == net.AnyIPv6 {
 			udpRequest.Address = dest.Address
