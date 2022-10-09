@@ -1,9 +1,10 @@
 package localdns
 
 import (
+	"golang.org/x/net/idna"
+
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/features/dns"
-	"golang.org/x/net/idna"
 )
 
 // Client is an implementation of dns.Client, which queries localhost for DNS.
