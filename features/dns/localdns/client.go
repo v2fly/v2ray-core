@@ -3,6 +3,7 @@ package localdns
 import (
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/features/dns"
+	"golang.org/x/net/idna"
 )
 
 // Client is an implementation of dns.Client, which queries localhost for DNS.
@@ -21,7 +22,11 @@ func (*Client) Close() error { return nil }
 
 // LookupIP implements Client.
 func (*Client) LookupIP(host string) ([]net.IP, error) {
-	ips, err := net.LookupIP(host)
+	asciiHost, err := idna.ToASCII(host)
+	if err != nil {
+		return nil, err
+	}
+	ips, err := net.LookupIP(asciiHost)
 	if err != nil {
 		return nil, err
 	}

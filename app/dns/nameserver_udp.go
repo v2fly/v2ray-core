@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"golang.org/x/net/dns/dnsmessage"
+	"golang.org/x/net/idna"
 
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"
@@ -245,7 +246,12 @@ func (s *ClassicNameServer) findIPsForDomain(domain string, option dns_feature.I
 
 // QueryIP implements Server.
 func (s *ClassicNameServer) QueryIP(ctx context.Context, domain string, clientIP net.IP, option dns_feature.IPOption, disableCache bool) ([]net.IP, error) {
-	fqdn := Fqdn(domain)
+	asciiDomain, err := idna.ToASCII(domain)
+	if err != nil {
+		return nil, err
+	}
+
+	fqdn := Fqdn(asciiDomain)
 
 	if disableCache {
 		newError("DNS cache is disabled. Querying IP for ", domain, " at ", s.name).AtDebug().WriteToLog()

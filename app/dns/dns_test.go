@@ -104,6 +104,11 @@ func (*staticHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 		case q.Name == "Mijia\\ Cloud." && q.Qtype == dns.TypeA:
 			rr, _ := dns.NewRR("Mijia\\ Cloud. IN A 127.0.0.1")
 			ans.Answer = append(ans.Answer, rr)
+
+		case q.Name == "xn--vi8h.ws." /* 🍕.ws */ && q.Qtype == dns.TypeA:
+			rr, err := dns.NewRR("xn--vi8h.ws. IN A 208.100.42.200")
+			common.Must(err)
+			ans.Answer = append(ans.Answer, rr)
 		}
 	}
 	w.WriteMsg(ans)
@@ -248,6 +253,17 @@ func TestUDPServer(t *testing.T) {
 		}
 		if len(ips) != 0 {
 			t.Fatal("ips: ", ips)
+		}
+	}
+
+	{
+		ips, err := client.LookupIP("🍕.ws")
+		if err != nil {
+			t.Fatal("unexpected error: ", err)
+		}
+
+		if r := cmp.Diff(ips, []net.IP{{208, 100, 42, 200}}); r != "" {
+			t.Fatal(r)
 		}
 	}
 
