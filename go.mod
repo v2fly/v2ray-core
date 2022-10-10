@@ -14,7 +14,7 @@ require (
 	github.com/jhump/protoreflect v1.13.0
 	github.com/lucas-clemente/quic-go v0.29.1
 	github.com/marten-seemann/qtls-go1-18 v0.1.2
-	github.com/marten-seemann/qtls-go1-19 v0.1.0
+	github.com/marten-seemann/qtls-go1-19 v0.1.1
 	github.com/miekg/dns v1.1.50
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
