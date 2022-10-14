@@ -449,6 +449,11 @@ func (c *Config) Override(o *Config, fn string) {
 				c.InboundConfigs = append(c.InboundConfigs, o.InboundConfigs[0])
 				ctllog.Println("[", fn, "] appended inbound with tag: ", o.InboundConfigs[0].Tag)
 			}
+		} else if strings.Contains(strings.ToLower(fn), "partial") {
+			c.InboundConfigs = append(c.InboundConfigs, o.InboundConfigs...)
+			for _, inbound := range o.InboundConfigs {
+				ctllog.Println("[", fn, "] appended inbound with tag: ", inbound.Tag)
+			}
 		} else {
 			c.InboundConfigs = o.InboundConfigs
 		}
@@ -468,6 +473,11 @@ func (c *Config) Override(o *Config, fn string) {
 					c.OutboundConfigs = append(o.OutboundConfigs, c.OutboundConfigs...)
 					ctllog.Println("[", fn, "] prepended outbound with tag: ", o.OutboundConfigs[0].Tag)
 				}
+			}
+		} else if strings.Contains(strings.ToLower(fn), "partial") {
+			c.OutboundConfigs = append(c.OutboundConfigs, o.OutboundConfigs...)
+			for _, outbound := range o.OutboundConfigs {
+				ctllog.Println("[", fn, "] appended outbound with tag: ", outbound.Tag)
 			}
 		} else {
 			c.OutboundConfigs = o.OutboundConfigs
