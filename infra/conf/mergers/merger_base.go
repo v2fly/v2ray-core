@@ -23,6 +23,9 @@ func makeMerger(name string, extensions []string, converter jsonConverter) *Merg
 // makeToJSONMergeFunc makes a merge func who merge the format by converting it to JSON
 func makeToJSONMergeFunc(converter func(v []byte) ([]byte, error)) MergeFunc {
 	return func(input interface{}, target map[string]interface{}) error {
+		if input == nil {
+			return nil
+		}
 		if target == nil {
 			return errors.New("merge target is nil")
 		}
