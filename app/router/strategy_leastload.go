@@ -118,8 +118,8 @@ func (l *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 	// go through all base line until find expected selects
 	for _, b := range l.settings.Baselines {
 		baseline := time.Duration(b)
-		for i := 0; i < availableCount; i++ {
-			if nodes[i].RTTDeviationCost > baseline {
+		for i := count; i < availableCount; i++ {
+			if nodes[i].RTTDeviationCost >= baseline {
 				break
 			}
 			count = i + 1
