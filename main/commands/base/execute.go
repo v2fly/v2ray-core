@@ -14,6 +14,9 @@ import (
 
 // Execute excute the commands
 func Execute() {
+	flag.Usage = func() {
+		PrintUsage(os.Stderr, RootCommand)
+	}
 	flag.Parse()
 	args := flag.Args()
 	if len(args) < 1 {
