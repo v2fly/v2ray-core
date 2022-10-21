@@ -2,12 +2,13 @@ package mergers
 
 import (
 	"fmt"
-	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/v2fly/v2ray-core/v5/common/buf"
 
 	"github.com/v2fly/v2ray-core/v5/common/cmdarg"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/merge"
