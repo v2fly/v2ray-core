@@ -3,13 +3,9 @@ package mergers
 import (
 	"fmt"
 	"io"
-	"net/http"
-	"net/url"
 	"strings"
-	"time"
 
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-
+	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/cmdarg"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/merge"
 )
@@ -78,7 +74,7 @@ func loadFile(file string, target map[string]interface{}, converter func(v []byt
 	var bs []byte
 	var err error
 	if strings.HasPrefix(file, "http://") || strings.HasPrefix(file, "https://") {
-		bs, err = fetchHTTPContent(file)
+		bs, err = common.FetchHTTPContent(file)
 	} else {
 		bs, err = cmdarg.LoadArgToBytes(file)
 	}
@@ -93,41 +89,6 @@ func loadFile(file string, target map[string]interface{}, converter func(v []byt
 	}
 	_, err = merge.ToMap(bs, target)
 	return err
-}
-
-func fetchHTTPContent(target string) ([]byte, error) {
-	parsedTarget, err := url.Parse(target)
-	if err != nil {
-		return nil, newError("invalid URL: ", target).Base(err)
-	}
-
-	if s := strings.ToLower(parsedTarget.Scheme); s != "http" && s != "https" {
-		return nil, newError("invalid scheme: ", parsedTarget.Scheme)
-	}
-
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-	resp, err := client.Do(&http.Request{
-		Method: "GET",
-		URL:    parsedTarget,
-		Close:  true,
-	})
-	if err != nil {
-		return nil, newError("failed to dial to ", target).Base(err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return nil, newError("unexpected HTTP status code: ", resp.StatusCode)
-	}
-
-	content, err := buf.ReadAllToBytes(resp.Body)
-	if err != nil {
-		return nil, newError("failed to read HTTP response").Base(err)
-	}
-
-	return content, nil
 }
 
 func loadReader(reader io.Reader, target map[string]interface{}, converter func(v []byte) ([]byte, error)) error {
