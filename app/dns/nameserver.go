@@ -11,6 +11,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/features"
 	"github.com/v2fly/v2ray-core/v5/features/dns"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
 )
@@ -109,6 +110,7 @@ func NewClient(ctx context.Context, ns *NameServer, dns *Config) (*Client, error
 		case dns.CacheStrategy != CacheStrategy_CacheEnabled:
 			*ns.CacheStrategy = dns.CacheStrategy
 		case dns.DisableCache:
+			features.PrintDeprecatedFeatureWarning("DNS disableCache settings")
 			*ns.CacheStrategy = CacheStrategy_CacheDisabled
 		}
 	}
@@ -116,12 +118,15 @@ func NewClient(ctx context.Context, ns *NameServer, dns *Config) (*Client, error
 		ns.FallbackStrategy = new(FallbackStrategy)
 		switch {
 		case ns.SkipFallback:
+			features.PrintDeprecatedFeatureWarning("DNS server skipFallback settings")
 			*ns.FallbackStrategy = FallbackStrategy_Disabled
 		case dns.FallbackStrategy != FallbackStrategy_Enabled:
 			*ns.FallbackStrategy = dns.FallbackStrategy
 		case dns.DisableFallback:
+			features.PrintDeprecatedFeatureWarning("DNS disableFallback settings")
 			*ns.FallbackStrategy = FallbackStrategy_Disabled
 		case dns.DisableFallbackIfMatch:
+			features.PrintDeprecatedFeatureWarning("DNS disableFallbackIfMatch settings")
 			*ns.FallbackStrategy = FallbackStrategy_DisabledIfAnyMatch
 		}
 	}
