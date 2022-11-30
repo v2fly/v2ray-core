@@ -22,6 +22,9 @@ func MergeAs(formatName string, input interface{}, m map[string]interface{}) err
 // it detects extension for merger selecting, or try all mergers
 // if no extension found
 func Merge(input interface{}, m map[string]interface{}) error {
+	if input == nil {
+		return nil
+	}
 	switch v := input.(type) {
 	case string:
 		err := mergeSingleFile(v, m)

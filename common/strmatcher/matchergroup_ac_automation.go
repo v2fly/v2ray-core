@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	acValidCharCount = 38 // aA-zZ (26), 0-9 (10), - (1), . (1)
+	acValidCharCount = 39 // aA-zZ (26), 0-9 (10), - (1), . (1), invalid(1)
 	acMatchTypeCount = 3  // Full, Domain and Substr
 )
 
@@ -127,8 +127,8 @@ func (ac *ACAutomatonMatcherGroup) Build() error {
 
 // Match implements MatcherGroup.Match.
 func (ac *ACAutomatonMatcherGroup) Match(input string) []uint32 {
-	var suffixMatches [][]uint32
-	var substrMatches [][]uint32
+	suffixMatches := make([][]uint32, 0, 5)
+	substrMatches := make([][]uint32, 0, 5)
 	fullMatch := true    // fullMatch indicates no fail edge traversed so far.
 	node := &ac.nodes[0] // start from root node.
 	// 1. the match string is all through trie edge. FULL MATCH or DOMAIN
@@ -177,18 +177,10 @@ func (ac *ACAutomatonMatcherGroup) Match(input string) []uint32 {
 			suffixMatches = append(suffixMatches, values[Full])
 		}
 	}
-	switch matches := append(substrMatches, suffixMatches...); len(matches) { // nolint: gocritic
-	case 0:
-		return nil
-	case 1:
-		return matches[0]
-	default:
-		result := []uint32{}
-		for i := len(matches) - 1; i >= 0; i-- {
-			result = append(result, matches[i]...)
-		}
-		return result
+	if len(substrMatches) == 0 {
+		return CompositeMatchesReverse(suffixMatches)
 	}
+	return CompositeMatchesReverse(append(substrMatches, suffixMatches...))
 }
 
 // MatchAny implements MatcherGroup.MatchAny.
@@ -222,69 +214,69 @@ func (ac *ACAutomatonMatcherGroup) MatchAny(input string) bool {
 //
 // If for future the strmatcher are used for other scenarios than domain,
 // we could add a new Charset interface to represent variable charsets.
-var acCharset = []int{
-	'A': 0,
-	'a': 0,
-	'B': 1,
-	'b': 1,
-	'C': 2,
-	'c': 2,
-	'D': 3,
-	'd': 3,
-	'E': 4,
-	'e': 4,
-	'F': 5,
-	'f': 5,
-	'G': 6,
-	'g': 6,
-	'H': 7,
-	'h': 7,
-	'I': 8,
-	'i': 8,
-	'J': 9,
-	'j': 9,
-	'K': 10,
-	'k': 10,
-	'L': 11,
-	'l': 11,
-	'M': 12,
-	'm': 12,
-	'N': 13,
-	'n': 13,
-	'O': 14,
-	'o': 14,
-	'P': 15,
-	'p': 15,
-	'Q': 16,
-	'q': 16,
-	'R': 17,
-	'r': 17,
-	'S': 18,
-	's': 18,
-	'T': 19,
-	't': 19,
-	'U': 20,
-	'u': 20,
-	'V': 21,
-	'v': 21,
-	'W': 22,
-	'w': 22,
-	'X': 23,
-	'x': 23,
-	'Y': 24,
-	'y': 24,
-	'Z': 25,
-	'z': 25,
-	'-': 26,
-	'.': 27,
-	'0': 28,
-	'1': 29,
-	'2': 30,
-	'3': 31,
-	'4': 32,
-	'5': 33,
-	'6': 34,
-	'7': 35,
-	'8': 36,
-	'9': 37,
+var acCharset = [256]int{
+	'A': 1,
+	'a': 1,
+	'B': 2,
+	'b': 2,
+	'C': 3,
+	'c': 3,
+	'D': 4,
+	'd': 4,
+	'E': 5,
+	'e': 5,
+	'F': 6,
+	'f': 6,
+	'G': 7,
+	'g': 7,
+	'H': 8,
+	'h': 8,
+	'I': 9,
+	'i': 9,
+	'J': 10,
+	'j': 10,
+	'K': 11,
+	'k': 11,
+	'L': 12,
+	'l': 12,
+	'M': 13,
+	'm': 13,
+	'N': 14,
+	'n': 14,
+	'O': 15,
+	'o': 15,
+	'P': 16,
+	'p': 16,
+	'Q': 17,
+	'q': 17,
+	'R': 18,
+	'r': 18,
+	'S': 19,
+	's': 19,
+	'T': 20,
+	't': 20,
+	'U': 21,
+	'u': 21,
+	'V': 22,
+	'v': 22,
+	'W': 23,
+	'w': 23,
+	'X': 24,
+	'x': 24,
+	'Y': 25,
+	'y': 25,
+	'Z': 26,
+	'z': 26,
+	'-': 27,
+	'.': 28,
+	'0': 29,
+	'1': 30,
+	'2': 31,
+	'3': 32,
+	'4': 33,
+	'5': 34,
+	'6': 35,
+	'7': 36,
+	'8': 37,
+	'9': 38,
 }

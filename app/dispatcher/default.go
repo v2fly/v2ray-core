@@ -182,7 +182,7 @@ func shouldOverride(result SniffResult, domainOverride []string) bool {
 		protocolString = resComp.ProtocolForDomainResult()
 	}
 	for _, p := range domainOverride {
-		if strings.HasPrefix(p, protocolString) {
+		if strings.HasPrefix(protocolString, p) || strings.HasSuffix(protocolString, p) {
 			return true
 		}
 		if resultSubset, ok := result.(SnifferIsProtoSubsetOf); ok {

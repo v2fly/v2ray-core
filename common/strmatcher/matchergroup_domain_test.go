@@ -82,7 +82,7 @@ func TestDomainMatcherGroup(t *testing.T) {
 			Result: []uint32{4, 6},
 		},
 	}
-	g := new(DomainMatcherGroup)
+	g := NewDomainMatcherGroup()
 	for _, pattern := range patterns {
 		AddMatcherToGroup(g, DomainMatcher(pattern.Pattern), pattern.Value)
 	}
@@ -95,7 +95,7 @@ func TestDomainMatcherGroup(t *testing.T) {
 }
 
 func TestEmptyDomainMatcherGroup(t *testing.T) {
-	g := new(DomainMatcherGroup)
+	g := NewDomainMatcherGroup()
 	r := g.Match("v2fly.org")
 	if len(r) != 0 {
 		t.Error("Expect [], but ", r)

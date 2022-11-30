@@ -8,6 +8,7 @@ import (
 	"encoding/gob"
 	"io"
 
+	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
 )
@@ -28,11 +29,24 @@ func RetrieveOriginalDest(oob []byte) net.Destination {
 // ReadUDPMsg stores laddr, caddr for later use
 func ReadUDPMsg(conn *net.UDPConn, payload []byte, oob []byte) (int, int, int, *net.UDPAddr, error) {
 	nBytes, addr, err := conn.ReadFromUDP(payload)
+	if err != nil {
+		return nBytes, 0, 0, addr, err
+	}
+
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
-	enc.Encode(conn.LocalAddr().(*net.UDPAddr))
+	localAddr, ok := conn.LocalAddr().(*net.UDPAddr)
+	if !ok {
+		return 0, 0, 0, nil, errors.New("invalid local address")
+	}
+	if addr == nil {
+		return 0, 0, 0, nil, errors.New("invalid remote address")
+	}
+	enc.Encode(localAddr)
 	enc.Encode(addr)
+
 	var reader io.Reader = &buf
 	noob, _ := reader.Read(oob)
-	return nBytes, noob, 0, addr, err
+
+	return nBytes, noob, 0, addr, nil
 }

@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/v2fly/v2ray-core/v5/common/cmdarg"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/merge"
 )
 
@@ -22,8 +23,11 @@ func makeMerger(name string, extensions []string, converter jsonConverter) *Merg
 // makeToJSONMergeFunc makes a merge func who merge the format by converting it to JSON
 func makeToJSONMergeFunc(converter func(v []byte) ([]byte, error)) MergeFunc {
 	return func(input interface{}, target map[string]interface{}) error {
+		if input == nil {
+			return nil
+		}
 		if target == nil {
-			panic("merge target is nil")
+			return errors.New("merge target is nil")
 		}
 		switch v := input.(type) {
 		case string:
