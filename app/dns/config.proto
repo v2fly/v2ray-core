@@ -15,7 +15,7 @@ import "common/protoext/extensions.proto";
 message NameServer {
   v2ray.core.common.net.Endpoint address = 1;
   bytes client_ip = 5;
-  bool skipFallback = 6;
+  string tag = 7;
 
   message PriorityDomain {
     DomainMatchingType type = 1;
@@ -30,6 +30,13 @@ message NameServer {
   repeated PriorityDomain prioritized_domain = 2;
   repeated v2ray.core.app.router.routercommon.GeoIP geoip = 3;
   repeated OriginalRule original_rules = 4;
+
+  // Deprecated. Use fallback_strategy.
+  bool skipFallback = 6 [deprecated = true];
+
+  optional QueryStrategy query_strategy = 8;
+  optional CacheStrategy cache_strategy = 9;
+  optional FallbackStrategy fallback_strategy = 10;
 }
 
 enum DomainMatchingType {
@@ -45,6 +52,16 @@ enum QueryStrategy {
   USE_IP6 = 2;
 }
 
+enum CacheStrategy {
+  CacheEnabled = 0;
+  CacheDisabled = 1;
+}
+
+enum FallbackStrategy {
+  Enabled = 0;
+  Disabled = 1;
+  DisabledIfAnyMatch = 2;
+}
 
 message HostMapping {
   DomainMatchingType type = 1;
@@ -82,13 +99,23 @@ message Config {
   reserved 7;
 
   // DisableCache disables DNS cache
-  bool disableCache = 8;
+  // Deprecated. Use cache_strategy.
+  bool disableCache = 8 [deprecated = true];
 
+  // Deprecated. Use fallback_strategy.
+  bool disableFallback = 10 [deprecated = true];
+
+  // Deprecated. Use fallback_strategy.
+  bool disableFallbackIfMatch = 11 [deprecated = true];
+
+  // Default query strategy (IPv4, IPv6, or both) for each name server.
   QueryStrategy query_strategy = 9;
 
-  bool disableFallback = 10;
+  // Default cache strategy for each name server.
+  CacheStrategy cache_strategy = 12;
 
-  bool disableFallbackIfMatch = 11;
+  // Default fallback strategy for each name server.
+  FallbackStrategy fallback_strategy = 13;
 }
 
 
@@ -121,13 +148,23 @@ message SimplifiedConfig {
   reserved 7;
 
   // DisableCache disables DNS cache
-  bool disableCache = 8;
+  // Deprecated. Use cache_strategy.
+  bool disableCache = 8 [deprecated = true];
 
+  // Deprecated. Use fallback_strategy.
+  bool disableFallback = 10 [deprecated = true];
+
+  // Deprecated. Use fallback_strategy.
+  bool disableFallbackIfMatch = 11 [deprecated = true];
+
+  // Default query strategy (IPv4, IPv6, or both) for each name server.
   QueryStrategy query_strategy = 9;
 
-  bool disableFallback = 10;
+  // Default cache strategy for each name server.
+  CacheStrategy cache_strategy = 12;
 
-  bool disableFallbackIfMatch = 11;
+  // Default fallback strategy for each name server.
+  FallbackStrategy fallback_strategy = 13;
 }
 
 
@@ -145,7 +182,7 @@ message SimplifiedHostMapping {
 message SimplifiedNameServer {
   v2ray.core.common.net.Endpoint address = 1;
   string client_ip = 5;
-  bool skipFallback = 6;
+  string tag = 7;
 
   message PriorityDomain {
     DomainMatchingType type = 1;
@@ -160,4 +197,11 @@ message SimplifiedNameServer {
   repeated PriorityDomain prioritized_domain = 2;
   repeated v2ray.core.app.router.routercommon.GeoIP geoip = 3;
   repeated OriginalRule original_rules = 4;
+
+  // Deprecated. Use fallback_strategy.
+  bool skipFallback = 6 [deprecated = true];
+
+  optional QueryStrategy query_strategy = 8;
+  optional CacheStrategy cache_strategy = 9;
+  optional FallbackStrategy fallback_strategy = 10;
 }

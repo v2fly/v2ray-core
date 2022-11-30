@@ -10,7 +10,8 @@ import (
 	"github.com/v2fly/v2ray-core/v5/app/router"
 	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/strmatcher"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/features"
 	"github.com/v2fly/v2ray-core/v5/features/dns"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
 )
@@ -25,11 +26,16 @@ type Server interface {
 
 // Client is the interface for DNS client.
 type Client struct {
-	server       Server
-	clientIP     net.IP
-	skipFallback bool
-	domains      []string
-	expectIPs    []*router.GeoIPMatcher
+	server   Server
+	clientIP net.IP
+	tag      string
+
+	queryStrategy    dns.IPOption
+	cacheStrategy    CacheStrategy
+	fallbackStrategy FallbackStrategy
+
+	domains   []string
+	expectIPs []*router.GeoIPMatcher
 }
 
 var errExpectedIPNonMatch = errors.New("expectIPs not match")
@@ -68,117 +74,79 @@ func NewServer(dest net.Destination, dispatcher routing.Dispatcher) (Server, err
 }
 
 // NewClient creates a DNS client managing a name server with client IP, domain rules and expected IPs.
-func NewClient(ctx context.Context, ns *NameServer, clientIP net.IP, container router.GeoIPMatcherContainer, matcherInfos *[]DomainMatcherInfo, updateDomainRule func(strmatcher.Matcher, int, []DomainMatcherInfo) error) (*Client, error) {
+func NewClient(ctx context.Context, ns *NameServer, dns *Config) (*Client, error) {
 	client := &Client{}
 
+	// Create DNS server instance
 	err := core.RequireFeatures(ctx, func(dispatcher routing.Dispatcher) error {
 		// Create a new server for each client for now
 		server, err := NewServer(ns.Address.AsDestination(), dispatcher)
 		if err != nil {
 			return newError("failed to create nameserver").Base(err).AtWarning()
 		}
-
-		// Priotize local domains with specific TLDs or without any dot to local DNS
-		if _, isLocalDNS := server.(*LocalNameServer); isLocalDNS {
-			ns.PrioritizedDomain = append(ns.PrioritizedDomain, localTLDsAndDotlessDomains...)
-			ns.OriginalRules = append(ns.OriginalRules, localTLDsAndDotlessDomainsRule)
-			// The following lines is a solution to avoid core panics（rule index out of range） when setting `localhost` DNS client in config.
-			// Because the `localhost` DNS client will apend len(localTLDsAndDotlessDomains) rules into matcherInfos to match `geosite:private` default rule.
-			// But `matcherInfos` has no enough length to add rules, which leads to core panics (rule index out of range).
-			// To avoid this, the length of `matcherInfos` must be equal to the expected, so manually append it with Golang default zero value first for later modification.
-			// Related issues:
-			// https://github.com/v2fly/v2ray-core/issues/529
-			// https://github.com/v2fly/v2ray-core/issues/719
-			for i := 0; i < len(localTLDsAndDotlessDomains); i++ {
-				*matcherInfos = append(*matcherInfos, DomainMatcherInfo{
-					clientIdx:     uint16(0),
-					domainRuleIdx: uint16(0),
-				})
-			}
-		}
-
-		// Establish domain rules
-		var rules []string
-		ruleCurr := 0
-		ruleIter := 0
-		for _, domain := range ns.PrioritizedDomain {
-			domainRule, err := toStrMatcher(domain.Type, domain.Domain)
-			if err != nil {
-				return newError("failed to create prioritized domain").Base(err).AtWarning()
-			}
-			originalRuleIdx := ruleCurr
-			if ruleCurr < len(ns.OriginalRules) {
-				rule := ns.OriginalRules[ruleCurr]
-				if ruleCurr >= len(rules) {
-					rules = append(rules, rule.Rule)
-				}
-				ruleIter++
-				if ruleIter >= int(rule.Size) {
-					ruleIter = 0
-					ruleCurr++
-				}
-			} else { // No original rule, generate one according to current domain matcher (majorly for compatibility with tests)
-				rules = append(rules, domainRule.String())
-				ruleCurr++
-			}
-			err = updateDomainRule(domainRule, originalRuleIdx, *matcherInfos)
-			if err != nil {
-				return newError("failed to create prioritized domain").Base(err).AtWarning()
-			}
-		}
-
-		// Establish expected IPs
-		var matchers []*router.GeoIPMatcher
-		for _, geoip := range ns.Geoip {
-			matcher, err := container.Add(geoip)
-			if err != nil {
-				return newError("failed to create ip matcher").Base(err).AtWarning()
-			}
-			matchers = append(matchers, matcher)
-		}
-
-		if len(clientIP) > 0 {
-			switch ns.Address.Address.GetAddress().(type) {
-			case *net.IPOrDomain_Domain:
-				newError("DNS: client ", ns.Address.Address.GetDomain(), " uses clientIP ", clientIP.String()).AtInfo().WriteToLog()
-			case *net.IPOrDomain_Ip:
-				newError("DNS: client ", ns.Address.Address.GetIp(), " uses clientIP ", clientIP.String()).AtInfo().WriteToLog()
-			}
-		}
-
 		client.server = server
-		client.clientIP = clientIP
-		client.skipFallback = ns.SkipFallback
-		client.domains = rules
-		client.expectIPs = matchers
 		return nil
 	})
-	return client, err
-}
+	if err != nil {
+		return nil, err
+	}
 
-// NewSimpleClient creates a DNS client with a simple destination.
-func NewSimpleClient(ctx context.Context, endpoint *net.Endpoint, clientIP net.IP) (*Client, error) {
-	client := &Client{}
-	err := core.RequireFeatures(ctx, func(dispatcher routing.Dispatcher) error {
-		server, err := NewServer(endpoint.AsDestination(), dispatcher)
-		if err != nil {
-			return newError("failed to create nameserver").Base(err).AtWarning()
+	// Initialize fields with default values
+	if len(ns.Tag) == 0 {
+		ns.Tag = dns.Tag
+		if len(ns.Tag) == 0 {
+			ns.Tag = generateRandomTag()
 		}
-		client.server = server
-		client.clientIP = clientIP
-		return nil
-	})
-
-	if len(clientIP) > 0 {
-		switch endpoint.Address.GetAddress().(type) {
-		case *net.IPOrDomain_Domain:
-			newError("DNS: client ", endpoint.Address.GetDomain(), " uses clientIP ", clientIP.String()).AtInfo().WriteToLog()
-		case *net.IPOrDomain_Ip:
-			newError("DNS: client ", endpoint.Address.GetIp(), " uses clientIP ", clientIP.String()).AtInfo().WriteToLog()
+	}
+	if len(ns.ClientIp) == 0 {
+		ns.ClientIp = dns.ClientIp
+	}
+	if ns.QueryStrategy == nil {
+		ns.QueryStrategy = &dns.QueryStrategy
+	}
+	if ns.CacheStrategy == nil {
+		ns.CacheStrategy = new(CacheStrategy)
+		switch {
+		case dns.CacheStrategy != CacheStrategy_CacheEnabled:
+			*ns.CacheStrategy = dns.CacheStrategy
+		case dns.DisableCache:
+			features.PrintDeprecatedFeatureWarning("DNS disableCache settings")
+			*ns.CacheStrategy = CacheStrategy_CacheDisabled
+		}
+	}
+	if ns.FallbackStrategy == nil {
+		ns.FallbackStrategy = new(FallbackStrategy)
+		switch {
+		case ns.SkipFallback:
+			features.PrintDeprecatedFeatureWarning("DNS server skipFallback settings")
+			*ns.FallbackStrategy = FallbackStrategy_Disabled
+		case dns.FallbackStrategy != FallbackStrategy_Enabled:
+			*ns.FallbackStrategy = dns.FallbackStrategy
+		case dns.DisableFallback:
+			features.PrintDeprecatedFeatureWarning("DNS disableFallback settings")
+			*ns.FallbackStrategy = FallbackStrategy_Disabled
+		case dns.DisableFallbackIfMatch:
+			features.PrintDeprecatedFeatureWarning("DNS disableFallbackIfMatch settings")
+			*ns.FallbackStrategy = FallbackStrategy_DisabledIfAnyMatch
 		}
 	}
 
-	return client, err
+	// Priotize local domains with specific TLDs or without any dot to local DNS
+	if strings.EqualFold(ns.Address.Address.GetDomain(), "localhost") {
+		ns.PrioritizedDomain = append(ns.PrioritizedDomain, localTLDsAndDotlessDomains...)
+		ns.OriginalRules = append(ns.OriginalRules, localTLDsAndDotlessDomainsRule)
+	}
+
+	if len(ns.ClientIp) > 0 {
+		newError("DNS: client ", ns.Address.Address.AsAddress(), " uses clientIP ", net.IP(ns.ClientIp).String()).AtInfo().WriteToLog()
+	}
+
+	client.clientIP = ns.ClientIp
+	client.tag = ns.Tag
+	client.queryStrategy = toIPOption(*ns.QueryStrategy)
+	client.cacheStrategy = *ns.CacheStrategy
+	client.fallbackStrategy = *ns.FallbackStrategy
+	return client, nil
 }
 
 // Name returns the server name the client manages.
@@ -187,9 +155,17 @@ func (c *Client) Name() string {
 }
 
 // QueryIP send DNS query to the name server with the client's IP.
-func (c *Client) QueryIP(ctx context.Context, domain string, option dns.IPOption, disableCache bool) ([]net.IP, error) {
+func (c *Client) QueryIP(ctx context.Context, domain string, option dns.IPOption) ([]net.IP, error) {
+	queryOption := option.With(c.queryStrategy)
+	if !queryOption.IsValid() {
+		newError(c.server.Name(), " returns empty answer: ", domain, ". ", toReqTypes(option)).AtInfo().WriteToLog()
+		return nil, dns.ErrEmptyResponse
+	}
+	disableCache := c.cacheStrategy == CacheStrategy_CacheDisabled
+
+	ctx = session.ContextWithInbound(ctx, &session.Inbound{Tag: c.tag})
 	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)
-	ips, err := c.server.QueryIP(ctx, domain, c.clientIP, option, disableCache)
+	ips, err := c.server.QueryIP(ctx, domain, c.clientIP, queryOption, disableCache)
 	cancel()
 
 	if err != nil {
