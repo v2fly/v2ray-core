@@ -98,6 +98,9 @@ message Config {
 
   reserved 7;
 
+  // Domain matcher to use
+  string domain_matcher = 15;
+
   // DisableCache disables DNS cache
   // Deprecated. Use cache_strategy.
   bool disableCache = 8 [deprecated = true];
@@ -146,6 +149,9 @@ message SimplifiedConfig {
   string tag = 6;
 
   reserved 7;
+
+  // Domain matcher to use
+  string domain_matcher = 15;
 
   // DisableCache disables DNS cache
   // Deprecated. Use cache_strategy.
