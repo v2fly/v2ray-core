@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 	"unicode/utf8"
+
+	"golang.org/x/net/idna"
 )
 
 // FullMatcher is an implementation of Matcher.
@@ -151,29 +153,41 @@ func (t Type) NewDomainPattern(pattern string) (Matcher, error) {
 //     * Letters A to Z (no distinction between uppercase and lowercase, we convert to lowers)
 //     * Digits 0 to 9
 //     * Hyphens(-) and Periods(.)
-//  2. Non-ASCII characters not supported for now.
-//     * May support Internationalized domain name to Punycode if needed in the future.
+//  2. If any non-ASCII characters, domain are converted from Internationalized domain name to Punycode.
 func ToDomain(pattern string) (string, error) {
-	builder := strings.Builder{}
-	builder.Grow(len(pattern))
-	for i := 0; i < len(pattern); i++ {
-		c := pattern[i]
-		if c >= utf8.RuneSelf {
-			return "", errors.New("non-ASCII characters not supported for now")
+	for {
+		isASCII, hasUpper := true, false
+		for i := 0; i < len(pattern); i++ {
+			c := pattern[i]
+			if c >= utf8.RuneSelf {
+				isASCII = false
+				break
+			}
+			switch {
+			case 'A' <= c && c <= 'Z':
+				hasUpper = true
+			case 'a' <= c && c <= 'z':
+			case '0' <= c && c <= '9':
+			case c == '-':
+			case c == '.':
+			default:
+				return "", errors.New("pattern string does not conform to Letter-Digit-Hyphen (LDH) subset")
+			}
 		}
-		switch {
-		case 'A' <= c && c <= 'Z':
-			c += 'a' - 'A'
-		case 'a' <= c && c <= 'z':
-		case '0' <= c && c <= '9':
-		case c == '-':
-		case c == '.':
-		default:
-			return "", errors.New("pattern string does not conform to Letter-Digit-Hyphen (LDH) subset")
+		if !isASCII {
+			var err error
+			pattern, err = idna.New().ToASCII(pattern)
+			if err != nil {
+				return "", err
+			}
+			continue
 		}
-		builder.WriteByte(c)
+		if hasUpper {
+			pattern = strings.ToLower(pattern)
+		}
+		break
 	}
-	return builder.String(), nil
+	return pattern, nil
 }
 
 // MatcherGroupForAll is an interface indicating a MatcherGroup could accept all types of matchers.
