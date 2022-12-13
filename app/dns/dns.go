@@ -30,7 +30,6 @@ import (
 // DNS is a DNS rely server.
 type DNS struct {
 	sync.Mutex
-	ipOption      dns.IPOption
 	hosts         *StaticHosts
 	clients       []*Client
 	ctx           context.Context
@@ -82,10 +81,9 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 	}
 
 	s := &DNS{
-		ipOption: toIPOption(config.QueryStrategy),
-		hosts:    hosts,
-		clients:  clients,
-		ctx:      ctx,
+		hosts:   hosts,
+		clients: clients,
+		ctx:     ctx,
 	}
 
 	// Establish members related to global DNS state
@@ -311,22 +309,6 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, er
 		return nil, dns.ErrEmptyResponse
 	}
 	return nil, newError("returning nil for domain ", domain).Base(errors.Combine(errs...))
-}
-
-// GetIPOption implements ClientWithIPOption.
-func (s *DNS) GetIPOption() *dns.IPOption {
-	return &s.ipOption
-}
-
-// SetQueryOption implements ClientWithIPOption.
-func (s *DNS) SetQueryOption(isIPv4Enable, isIPv6Enable bool) {
-	s.ipOption.IPv4Enable = isIPv4Enable
-	s.ipOption.IPv6Enable = isIPv6Enable
-}
-
-// SetFakeDNSOption implements ClientWithIPOption.
-func (s *DNS) SetFakeDNSOption(isFakeEnable bool) {
-	s.ipOption.FakeEnable = isFakeEnable
 }
 
 func (s *DNS) sortClients(domain string, option dns.IPOption) []*Client {
