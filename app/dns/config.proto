@@ -9,6 +9,7 @@ option java_multiple_files = true;
 import "common/net/address.proto";
 import "common/net/destination.proto";
 import "app/router/routercommon/common.proto";
+import "app/dns/fakedns/fakedns.proto";
 
 import "common/protoext/extensions.proto";
 
@@ -30,6 +31,8 @@ message NameServer {
   repeated PriorityDomain prioritized_domain = 2;
   repeated v2ray.core.app.router.routercommon.GeoIP geoip = 3;
   repeated OriginalRule original_rules = 4;
+
+  v2ray.core.app.dns.fakedns.FakeDnsPoolMulti fake_dns = 11;
 
   // Deprecated. Use fallback_strategy.
   bool skipFallback = 6 [deprecated = true];
@@ -91,7 +94,11 @@ message Config {
   // (IPv6).
   bytes client_ip = 3;
 
+  // Static domain-ip mapping in DNS server.
   repeated HostMapping static_hosts = 4;
+
+  // Global fakedns object.
+  v2ray.core.app.dns.fakedns.FakeDnsPoolMulti fake_dns = 16;
 
   // Tag is the inbound tag of DNS client.
   string tag = 6;
@@ -143,7 +150,11 @@ message SimplifiedConfig {
   // (IPv6).
   string client_ip = 3;
 
+  // Static domain-ip mapping in DNS server.
   repeated HostMapping static_hosts = 4;
+
+  // Global fakedns object.
+  v2ray.core.app.dns.fakedns.FakeDnsPoolMulti fake_dns = 16;
 
   // Tag is the inbound tag of DNS client.
   string tag = 6;
@@ -203,6 +214,8 @@ message SimplifiedNameServer {
   repeated PriorityDomain prioritized_domain = 2;
   repeated v2ray.core.app.router.routercommon.GeoIP geoip = 3;
   repeated OriginalRule original_rules = 4;
+
+  v2ray.core.app.dns.fakedns.FakeDnsPoolMulti fake_dns = 11;
 
   // Deprecated. Use fallback_strategy.
   bool skipFallback = 6 [deprecated = true];

@@ -31,6 +31,17 @@ type FakeDNSEngineRev0 interface {
 	GetFakeIPForDomain3(domain string, IPv4 bool, IPv6 bool) []net.Address
 }
 
+// ClientWithFakeDNS is an optional feature for utilizing FakeDNS feature of DNS client.
+//
+// v2ray:api:beta
+type ClientWithFakeDNS interface {
+	// AsFakeDNSClient converts the client to dns.Client that enables FakeDNS querying option.
+	AsFakeDNSClient() Client
+
+	// AsFakeDNSEngine converts the client to dns.FakeDNSEngine that could serve FakeDNSEngine feature.
+	AsFakeDNSEngine() FakeDNSEngine
+}
+
 // FakeDNSEngineType returns the type of FakeDNSEngine interface. Can be used for implementing common.HasType.
 //
 // v2ray:api:beta
