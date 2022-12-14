@@ -377,7 +377,7 @@ func (s *DNS) formatClientNames(clientIdxs []int, option dns.IPOption) []string 
 		} else {
 			name = client.Name()
 		}
-		counter[name] += 1
+		counter[name]++
 		clientNames = append(clientNames, name)
 	}
 	for idx, clientIdx := range clientIdxs {

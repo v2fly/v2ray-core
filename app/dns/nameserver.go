@@ -43,7 +43,7 @@ type Client struct {
 var errExpectedIPNonMatch = errors.New("expectIPs not match")
 
 // NewServer creates a name server object according to the network destination url.
-func NewServer(dest net.Destination, ctx context.Context, onCreated func(Server) error) error {
+func NewServer(ctx context.Context, dest net.Destination, onCreated func(Server) error) error {
 	onCreatedWithError := func(server Server, err error) error {
 		if err != nil {
 			return err
@@ -86,7 +86,7 @@ func NewClient(ctx context.Context, ns *NameServer, dns *Config) (*Client, error
 	client := &Client{}
 
 	// Create DNS server instance
-	err := NewServer(ns.Address.AsDestination(), ctx, func(server Server) error {
+	err := NewServer(ctx, ns.Address.AsDestination(), func(server Server) error {
 		client.server = server
 		return nil
 	})

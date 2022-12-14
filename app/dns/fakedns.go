@@ -1,3 +1,6 @@
+//go:build !confonly
+// +build !confonly
+
 package dns
 
 import (
@@ -34,7 +37,7 @@ type FakeDNSEngine struct {
 }
 
 // Type implements common.HasType.
-func (f *FakeDNSEngine) Type() interface{} {
+func (*FakeDNSEngine) Type() interface{} {
 	return dns.FakeDNSEngineType()
 }
 
