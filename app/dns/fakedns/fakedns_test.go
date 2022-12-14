@@ -312,5 +312,4 @@ func TestFakeDNSMultiAddPool(t *testing.T) {
 	t.Run("addPoolAfterStart", func(t *testing.T) {
 		runTest(false)
 	})
-
 }

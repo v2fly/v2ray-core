@@ -64,7 +64,7 @@ func (f *FakeDNSEngine) IsIPInIPPool(ip net.Address) bool {
 }
 
 // GetFakeIPForDomain3 implements dns.FakeDNSEngineRev0.
-func (f *FakeDNSEngine) GetFakeIPForDomain3(domain string, IPv4 bool, IPv6 bool) []net.Address {
+func (f *FakeDNSEngine) GetFakeIPForDomain3(domain string, IPv4 bool, IPv6 bool) []net.Address { // nolint: gocritic
 	option := dns.IPOption{IPv4Enable: IPv4, IPv6Enable: IPv6, FakeEnable: true}
 	for _, client := range f.dns.sortClients(domain, option) {
 		fakeServer, ok := client.fakeDNS.(*FakeDNSServer)

@@ -191,7 +191,7 @@ func (h *HolderMulti) IsEmpty() bool {
 }
 
 func (h *HolderMulti) AddPool(poolConfig *FakeDnsPool) (*Holder, error) {
-	_, newIpRange, err := gonet.ParseCIDR(poolConfig.IpPool)
+	_, newIPRange, err := gonet.ParseCIDR(poolConfig.IpPool)
 	if err != nil {
 		return nil, err
 	}
@@ -207,11 +207,11 @@ func (h *HolderMulti) AddPool(poolConfig *FakeDnsPool) (*Holder, error) {
 				return nil, err
 			}
 		}
-		if ipRange.String() == newIpRange.String() {
+		if ipRange.String() == newIPRange.String() {
 			return v, nil
 		}
-		if ipRange.Contains(newIpRange.IP) || newIpRange.Contains(ipRange.IP) {
-			return nil, newError("Trying to add ip pool ", newIpRange, " that overlaps with existing ip pool ", ipRange)
+		if ipRange.Contains(newIPRange.IP) || newIPRange.Contains(ipRange.IP) {
+			return nil, newError("Trying to add ip pool ", newIPRange, " that overlaps with existing ip pool ", ipRange)
 		}
 	}
 	holder, err := NewFakeDNSHolderConfigOnly(poolConfig)

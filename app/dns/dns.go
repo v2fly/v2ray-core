@@ -217,7 +217,7 @@ func establishFakeDNS(s *DNS, config *Config, nsClientMap map[int]int) error {
 			return nil
 		}
 		if client, ok := client.(dns.ClientWithFakeDNS); ok {
-			v.AddFeature(client.AsFakeDNSEngine())
+			return v.AddFeature(client.AsFakeDNSEngine())
 		}
 		return nil
 	})

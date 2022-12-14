@@ -235,8 +235,8 @@ func TestDNSConfigParsing(t *testing.T) {
 						},
 						FakeDns: &fakedns.FakeDnsPoolMulti{
 							Pools: []*fakedns.FakeDnsPool{
-								{IpPool: "198.19.0.0/16", LruSize: 65536},
-								{IpPool: "fc01::/18", LruSize: 65536},
+								{IpPool: "198.19.0.0/16", LruSize: 65535},
+								{IpPool: "fc01::/18", LruSize: 65535},
 							},
 						},
 					},

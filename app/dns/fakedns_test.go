@@ -6,6 +6,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/miekg/dns"
+	"google.golang.org/protobuf/types/known/anypb"
+
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/app/dispatcher"
 	. "github.com/v2fly/v2ray-core/v5/app/dns"
@@ -18,7 +20,6 @@ import (
 	feature_dns "github.com/v2fly/v2ray-core/v5/features/dns"
 	"github.com/v2fly/v2ray-core/v5/proxy/freedom"
 	"github.com/v2fly/v2ray-core/v5/testing/servers/udp"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestFakeDNS(t *testing.T) {
