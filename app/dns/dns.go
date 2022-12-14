@@ -205,8 +205,12 @@ func establishFakeDNS(s *DNS, config *Config, nsClientMap map[int]int) error {
 		s.clients[clientIdx].fakeDNS = NewFakeDNSServer(engine)
 		s.clients[clientIdx].queryStrategy.FakeEnable = true
 	}
-	s.fakeDNSEngine = &FakeDNSEngine{dns: s, fakeHolders: fakeHolders, fakeDefault: fakeDefault}
+	// Do not create FakeDNSEngine feature if no FakeDNS server is configured
+	if fakeHolders.IsEmpty() {
+		return nil
+	}
 	// Add FakeDNSEngine feature when DNS feature is added for the first time
+	s.fakeDNSEngine = &FakeDNSEngine{dns: s, fakeHolders: fakeHolders, fakeDefault: fakeDefault}
 	return core.RequireFeatures(s.ctx, func(client dns.Client) error {
 		v := core.MustFromContext(s.ctx)
 		if v.GetFeature(dns.FakeDNSEngineType()) != nil {

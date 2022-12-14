@@ -7,6 +7,7 @@ import (
 	"time"
 
 	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/dns/fakedns"
 	"github.com/v2fly/v2ray-core/v5/app/router"
 	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -132,19 +133,32 @@ func NewClient(ctx context.Context, ns *NameServer, dns *Config) (*Client, error
 			*ns.FallbackStrategy = FallbackStrategy_DisabledIfAnyMatch
 		}
 	}
-	if ns.FakeDns != nil && len(ns.FakeDns.Pools) == 0 {
-		ns.FakeDns = dns.FakeDns
+	if (ns.FakeDns != nil && len(ns.FakeDns.Pools) == 0) || // Use globally configured fake ip pool if: 1. `fakedns` config is set, but empty(represents { "fakedns": true } in JSON settings);
+		ns.FakeDns == nil && strings.EqualFold(ns.Address.Address.GetDomain(), "fakedns") { // 2. `fakedns` config not set, but server address is `fakedns`(represents { "address": "fakedns" } in JSON settings).
+		if dns.FakeDns != nil {
+			ns.FakeDns = dns.FakeDns
+		} else {
+			ns.FakeDns = &fakedns.FakeDnsPoolMulti{}
+			queryStrategy := toIPOption(*ns.QueryStrategy)
+			if queryStrategy.IPv4Enable {
+				ns.FakeDns.Pools = append(ns.FakeDns.Pools, &fakedns.FakeDnsPool{
+					IpPool:  "198.18.0.0/15",
+					LruSize: 65535,
+				})
+			}
+			if queryStrategy.IPv6Enable {
+				ns.FakeDns.Pools = append(ns.FakeDns.Pools, &fakedns.FakeDnsPool{
+					IpPool:  "fc00::/18",
+					LruSize: 65535,
+				})
+			}
+		}
 	}
 
 	// Priotize local domains with specific TLDs or without any dot to local DNS
 	if strings.EqualFold(ns.Address.Address.GetDomain(), "localhost") {
 		ns.PrioritizedDomain = append(ns.PrioritizedDomain, localTLDsAndDotlessDomains...)
 		ns.OriginalRules = append(ns.OriginalRules, localTLDsAndDotlessDomainsRule)
-	}
-
-	// Use globally configured fake ip pool for `fakedns` destination if `fakedns` config not set
-	if strings.EqualFold(ns.Address.Address.GetDomain(), "fakedns") && ns.FakeDns == nil {
-		ns.FakeDns = dns.FakeDns
 	}
 
 	if len(ns.ClientIp) > 0 {

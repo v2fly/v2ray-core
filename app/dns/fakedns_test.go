@@ -171,3 +171,78 @@ func TestFakeDNS(t *testing.T) {
 		}
 	}
 }
+
+func TestFakeDNSEmptyGlobalConfig(t *testing.T) {
+	config := &core.Config{
+		App: []*anypb.Any{
+			serial.ToTypedMessage(&Config{
+				NameServer: []*NameServer{
+					{ // "fakedns"
+						Address: &net.Endpoint{
+							Network: net.Network_UDP,
+							Address: &net.IPOrDomain{
+								Address: &net.IPOrDomain_Domain{
+									Domain: "fakedns",
+								},
+							},
+						},
+						QueryStrategy: QueryStrategy_USE_IP4.Enum(),
+					},
+					{ // "localhost"
+						Address: &net.Endpoint{
+							Network: net.Network_UDP,
+							Address: &net.IPOrDomain{
+								Address: &net.IPOrDomain_Domain{
+									Domain: "localhost",
+								},
+							},
+						},
+						QueryStrategy: QueryStrategy_USE_IP6.Enum(),
+						PrioritizedDomain: []*NameServer_PriorityDomain{
+							{Type: DomainMatchingType_Subdomain, Domain: "google.com"},
+						},
+						FakeDns: &fakedns.FakeDnsPoolMulti{Pools: []*fakedns.FakeDnsPool{}}, // "fakedns": true
+					},
+				},
+			}),
+			serial.ToTypedMessage(&dispatcher.Config{}),
+			serial.ToTypedMessage(&proxyman.OutboundConfig{}),
+			serial.ToTypedMessage(&policy.Config{}),
+		},
+		Outbound: []*core.OutboundHandlerConfig{
+			{
+				ProxySettings: serial.ToTypedMessage(&freedom.Config{}),
+			},
+		},
+	}
+
+	v, err := core.New(config)
+	common.Must(err)
+	common.Must(v.Start())
+
+	dnsClient := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
+	fakeClient := dnsClient.(feature_dns.ClientWithFakeDNS).AsFakeDNSClient()
+
+	{ // Lookup facebook.com will return 198.18.0.0/15 (default IPv4 pool)
+		ips, err := fakeClient.LookupIP("facebook.com")
+		if err != nil {
+			t.Fatal("unexpected error: ", err)
+		}
+		for _, ip := range ips {
+			if !(&net.IPNet{IP: net.IP{198, 18, 0, 0}, Mask: net.CIDRMask(15, 8*net.IPv4len)}).Contains(ip) {
+				t.Fatal("Lookup facebook.com with fake client not in default IPv4 pool 198.18.0.0/15")
+			}
+		}
+	}
+	{ // Lookup google.com will return fc00::/18 (default IPv6 pool)
+		ips, err := fakeClient.LookupIP("google.com")
+		if err != nil {
+			t.Fatal("unexpected error: ", err)
+		}
+		for _, ip := range ips {
+			if !(&net.IPNet{IP: net.IP{0xfc, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, Mask: net.CIDRMask(18, 8*net.IPv6len)}).Contains(ip) {
+				t.Fatal("Lookup google.com with fake client not in default IPv6 pool fc00::/18")
+			}
+		}
+	}
+}

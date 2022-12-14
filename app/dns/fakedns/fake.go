@@ -186,6 +186,10 @@ func (h *HolderMulti) GetDomainFromFakeDNS(ip net.Address) string {
 	return ""
 }
 
+func (h *HolderMulti) IsEmpty() bool {
+	return len(h.holders) == 0
+}
+
 func (h *HolderMulti) AddPool(poolConfig *FakeDnsPool) (*Holder, error) {
 	_, newIpRange, err := gonet.ParseCIDR(poolConfig.IpPool)
 	if err != nil {
