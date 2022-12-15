@@ -176,7 +176,7 @@ func ToDomain(pattern string) (string, error) {
 		}
 		if !isASCII {
 			var err error
-			pattern, err = idna.New().ToASCII(pattern)
+			pattern, err = idna.Punycode.ToASCII(pattern)
 			if err != nil {
 				return "", err
 			}
