@@ -67,16 +67,6 @@ func NewStaticHosts(hosts []*HostMapping, legacy map[string]*net.IPOrDomain) (*S
 	return sh, nil
 }
 
-func filterIP(ips []net.Address, option dns.IPOption) []net.Address {
-	filtered := make([]net.Address, 0, len(ips))
-	for _, ip := range ips {
-		if (ip.Family().IsIPv4() && option.IPv4Enable) || (ip.Family().IsIPv6() && option.IPv6Enable) {
-			filtered = append(filtered, ip)
-		}
-	}
-	return filtered
-}
-
 func (h *StaticHosts) lookupInternal(domain string) []net.Address {
 	var ips []net.Address
 	for _, id := range h.matchers.Match(domain) {

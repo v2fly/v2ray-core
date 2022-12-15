@@ -226,3 +226,13 @@ L:
 
 	return ipRecord, nil
 }
+
+func filterIP(ips []net.Address, option dns_feature.IPOption) []net.Address {
+	filtered := make([]net.Address, 0, len(ips))
+	for _, ip := range ips {
+		if (ip.Family().IsIPv4() && option.IPv4Enable) || (ip.Family().IsIPv6() && option.IPv6Enable) {
+			filtered = append(filtered, ip)
+		}
+	}
+	return filtered
+}

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/dns/fakedns"
 	"github.com/v2fly/v2ray-core/v5/app/router"
 	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -36,41 +37,48 @@ type Client struct {
 
 	domains   []string
 	expectIPs []*router.GeoIPMatcher
+	fakeDNS   Server
 }
 
 var errExpectedIPNonMatch = errors.New("expectIPs not match")
 
 // NewServer creates a name server object according to the network destination url.
-func NewServer(dest net.Destination, dispatcher routing.Dispatcher) (Server, error) {
+func NewServer(ctx context.Context, dest net.Destination, onCreated func(Server) error) error {
+	onCreatedWithError := func(server Server, err error) error {
+		if err != nil {
+			return err
+		}
+		return onCreated(server)
+	}
 	if address := dest.Address; address.Family().IsDomain() {
 		u, err := url.Parse(address.Domain())
 		if err != nil {
-			return nil, err
+			return err
 		}
 		switch {
 		case strings.EqualFold(u.String(), "localhost"):
-			return NewLocalNameServer(), nil
-		case strings.EqualFold(u.Scheme, "https"): // DOH Remote mode
-			return NewDoHNameServer(u, dispatcher)
-		case strings.EqualFold(u.Scheme, "https+local"): // DOH Local mode
-			return NewDoHLocalNameServer(u), nil
-		case strings.EqualFold(u.Scheme, "quic+local"): // DNS-over-QUIC Local mode
-			return NewQUICNameServer(u)
-		case strings.EqualFold(u.Scheme, "tcp"): // DNS-over-TCP Remote mode
-			return NewTCPNameServer(u, dispatcher)
-		case strings.EqualFold(u.Scheme, "tcp+local"): // DNS-over-TCP Local mode
-			return NewTCPLocalNameServer(u)
+			return onCreated(NewLocalNameServer())
 		case strings.EqualFold(u.String(), "fakedns"):
-			return NewFakeDNSServer(), nil
+			return core.RequireFeatures(ctx, func(fakedns dns.FakeDNSEngine) error { return onCreated(NewFakeDNSServer(fakedns)) })
+		case strings.EqualFold(u.Scheme, "https"): // DOH Remote mode
+			return core.RequireFeatures(ctx, func(dispatcher routing.Dispatcher) error { return onCreatedWithError(NewDoHNameServer(u, dispatcher)) })
+		case strings.EqualFold(u.Scheme, "https+local"): // DOH Local mode
+			return onCreated(NewDoHLocalNameServer(u))
+		case strings.EqualFold(u.Scheme, "tcp"): // DNS-over-TCP Remote mode
+			return core.RequireFeatures(ctx, func(dispatcher routing.Dispatcher) error { return onCreatedWithError(NewTCPNameServer(u, dispatcher)) })
+		case strings.EqualFold(u.Scheme, "tcp+local"): // DNS-over-TCP Local mode
+			return onCreatedWithError(NewTCPLocalNameServer(u))
+		case strings.EqualFold(u.Scheme, "quic+local"): // DNS-over-QUIC Local mode
+			return onCreatedWithError(NewQUICNameServer(u))
 		}
 	}
 	if dest.Network == net.Network_Unknown {
 		dest.Network = net.Network_UDP
 	}
 	if dest.Network == net.Network_UDP { // UDP classic DNS mode
-		return NewClassicNameServer(dest, dispatcher), nil
+		return core.RequireFeatures(ctx, func(dispatcher routing.Dispatcher) error { return onCreated(NewClassicNameServer(dest, dispatcher)) })
 	}
-	return nil, newError("No available name server could be created from ", dest).AtWarning()
+	return newError("No available name server could be created from ", dest).AtWarning()
 }
 
 // NewClient creates a DNS client managing a name server with client IP, domain rules and expected IPs.
@@ -78,12 +86,7 @@ func NewClient(ctx context.Context, ns *NameServer, dns *Config) (*Client, error
 	client := &Client{}
 
 	// Create DNS server instance
-	err := core.RequireFeatures(ctx, func(dispatcher routing.Dispatcher) error {
-		// Create a new server for each client for now
-		server, err := NewServer(ns.Address.AsDestination(), dispatcher)
-		if err != nil {
-			return newError("failed to create nameserver").Base(err).AtWarning()
-		}
+	err := NewServer(ctx, ns.Address.AsDestination(), func(server Server) error {
 		client.server = server
 		return nil
 	})
@@ -130,6 +133,27 @@ func NewClient(ctx context.Context, ns *NameServer, dns *Config) (*Client, error
 			*ns.FallbackStrategy = FallbackStrategy_DisabledIfAnyMatch
 		}
 	}
+	if (ns.FakeDns != nil && len(ns.FakeDns.Pools) == 0) || // Use globally configured fake ip pool if: 1. `fakedns` config is set, but empty(represents { "fakedns": true } in JSON settings);
+		ns.FakeDns == nil && strings.EqualFold(ns.Address.Address.GetDomain(), "fakedns") { // 2. `fakedns` config not set, but server address is `fakedns`(represents { "address": "fakedns" } in JSON settings).
+		if dns.FakeDns != nil {
+			ns.FakeDns = dns.FakeDns
+		} else {
+			ns.FakeDns = &fakedns.FakeDnsPoolMulti{}
+			queryStrategy := toIPOption(*ns.QueryStrategy)
+			if queryStrategy.IPv4Enable {
+				ns.FakeDns.Pools = append(ns.FakeDns.Pools, &fakedns.FakeDnsPool{
+					IpPool:  "198.18.0.0/15",
+					LruSize: 65535,
+				})
+			}
+			if queryStrategy.IPv6Enable {
+				ns.FakeDns.Pools = append(ns.FakeDns.Pools, &fakedns.FakeDnsPool{
+					IpPool:  "fc00::/18",
+					LruSize: 65535,
+				})
+			}
+		}
+	}
 
 	// Priotize local domains with specific TLDs or without any dot to local DNS
 	if strings.EqualFold(ns.Address.Address.GetDomain(), "localhost") {
@@ -154,21 +178,25 @@ func (c *Client) Name() string {
 	return c.server.Name()
 }
 
-// QueryIP send DNS query to the name server with the client's IP.
+// QueryIP send DNS query to the name server with the client's IP and IP options.
 func (c *Client) QueryIP(ctx context.Context, domain string, option dns.IPOption) ([]net.IP, error) {
 	queryOption := option.With(c.queryStrategy)
 	if !queryOption.IsValid() {
 		newError(c.server.Name(), " returns empty answer: ", domain, ". ", toReqTypes(option)).AtInfo().WriteToLog()
 		return nil, dns.ErrEmptyResponse
 	}
+	server := c.server
+	if queryOption.FakeEnable && c.fakeDNS != nil {
+		server = c.fakeDNS
+	}
 	disableCache := c.cacheStrategy == CacheStrategy_CacheDisabled
 
 	ctx = session.ContextWithInbound(ctx, &session.Inbound{Tag: c.tag})
 	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)
-	ips, err := c.server.QueryIP(ctx, domain, c.clientIP, queryOption, disableCache)
+	ips, err := server.QueryIP(ctx, domain, c.clientIP, queryOption, disableCache)
 	cancel()
 
-	if err != nil {
+	if err != nil || queryOption.FakeEnable {
 		return ips, err
 	}
 	return c.MatchExpectedIPs(domain, ips)

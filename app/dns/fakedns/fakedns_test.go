@@ -217,3 +217,99 @@ func TestFakeDNSMulti(t *testing.T) {
 		})
 	})
 }
+
+func TestFakeDNSMultiAddPool(t *testing.T) {
+	runTest := func(runTestBeforeStart bool) {
+		fakeMulti, err := NewFakeDNSHolderMulti(&FakeDnsPoolMulti{
+			Pools: []*FakeDnsPool{{
+				IpPool:  "240.0.0.0/12",
+				LruSize: 256,
+			}, {
+				IpPool:  "fddd:c5b4:ff5f:f4f0::/64",
+				LruSize: 256,
+			}},
+		})
+		common.Must(err)
+		if !runTestBeforeStart {
+			err = fakeMulti.Start()
+			common.Must(err)
+		}
+		t.Run("ipv4_return_existing", func(t *testing.T) {
+			pool, err := fakeMulti.AddPool(&FakeDnsPool{
+				IpPool:  "240.0.0.1/12",
+				LruSize: 256,
+			})
+			common.Must(err)
+			if pool != fakeMulti.holders[0] {
+				t.Error("HolderMulti.AddPool not returning same holder for existing IPv4 pool")
+			}
+		})
+		t.Run("ipv6_return_existing", func(t *testing.T) {
+			pool, err := fakeMulti.AddPool(&FakeDnsPool{
+				IpPool:  "fddd:c5b4:ff5f:f4f0::1/64",
+				LruSize: 256,
+			})
+			common.Must(err)
+			if pool != fakeMulti.holders[1] {
+				t.Error("HolderMulti.AddPool not returning same holder for existing IPv6 pool")
+			}
+		})
+		t.Run("ipv4_reject_overlap", func(t *testing.T) {
+			_, err := fakeMulti.AddPool(&FakeDnsPool{
+				IpPool:  "240.8.0.0/13",
+				LruSize: 256,
+			})
+			if err == nil {
+				t.Error("HolderMulti.AddPool not rejecting IPv4 pool that is subnet of existing ones")
+			}
+			_, err = fakeMulti.AddPool(&FakeDnsPool{
+				IpPool:  "240.0.0.0/11",
+				LruSize: 256,
+			})
+			if err == nil {
+				t.Error("HolderMulti.AddPool not rejecting IPv4 pool that contains existing ones")
+			}
+		})
+		t.Run("new_pool", func(t *testing.T) {
+			pool, err := fakeMulti.AddPool(&FakeDnsPool{
+				IpPool:  "192.168.168.0/16",
+				LruSize: 256,
+			})
+			common.Must(err)
+			if pool != fakeMulti.holders[2] {
+				t.Error("HolderMulti.AddPool not creating new holder for new IPv4 pool")
+			}
+		})
+		t.Run("add_pool_multi", func(t *testing.T) {
+			pools, err := fakeMulti.AddPoolMulti(&FakeDnsPoolMulti{
+				Pools: []*FakeDnsPool{{
+					IpPool:  "192.168.168.0/16",
+					LruSize: 256,
+				}, {
+					IpPool:  "2001:1111::/64",
+					LruSize: 256,
+				}},
+			})
+			common.Must(err)
+			if len(pools.holders) != 2 {
+				t.Error("HolderMulti.AddPoolMutli not returning holderMulti that has the same length as passed PoolMulti config")
+			}
+			if pools.holders[0] != fakeMulti.holders[2] {
+				t.Error("HolderMulti.AddPoolMulti not returning same holder for existing IPv4 pool 192.168.168.0/16")
+			}
+			if pools.holders[1] != fakeMulti.holders[3] {
+				t.Error("HolderMulti.AddPoolMulti not creating new holder for new IPv6 pool 2001:1111::/64")
+			}
+		})
+		if runTestBeforeStart {
+			err = fakeMulti.Start()
+			common.Must(err)
+		}
+	}
+	t.Run("addPoolBeforeStart", func(t *testing.T) {
+		runTest(true)
+	})
+	t.Run("addPoolAfterStart", func(t *testing.T) {
+		runTest(false)
+	})
+}
