@@ -278,9 +278,11 @@ func ConfigFromStreamSettings(settings *internet.MemoryStreamConfig) *Config {
 	if settings == nil {
 		return nil
 	}
-	config, ok := settings.SecuritySettings.(*Config)
-	if !ok {
+	if settings.SecuritySettings == nil {
 		return nil
 	}
+	// Fail close for unknown TLS settings type.
+	// For TLS Clients, Security Engine should be used, instead of this.
+	config := settings.SecuritySettings.(*Config)
 	return config
 }
