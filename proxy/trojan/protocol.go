@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"io"
 	gonet "net"
-	"sync"
 
 	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -289,15 +288,11 @@ func (r *PacketReader) ReadMultiBufferWithMetadata() (*PacketPayload, error) {
 }
 
 type PacketConnectionReader struct {
-	readerAccess *sync.Mutex
-	reader       *PacketReader
-	payload      *PacketPayload
+	reader  *PacketReader
+	payload *PacketPayload
 }
 
 func (r *PacketConnectionReader) ReadFrom(p []byte) (n int, addr gonet.Addr, err error) {
-	r.readerAccess.Lock()
-	defer r.readerAccess.Unlock()
-
 	if r.payload == nil || r.payload.Buffer.IsEmpty() {
 		r.payload, err = r.reader.ReadMultiBufferWithMetadata()
 		if err != nil {
