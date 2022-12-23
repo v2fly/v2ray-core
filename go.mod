@@ -13,7 +13,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/jhump/protoreflect v1.14.0
 	github.com/lucas-clemente/quic-go v0.31.1
-	github.com/marten-seemann/qtls-go1-18 v0.1.3
+	github.com/marten-seemann/qtls-go1-18 v0.1.4
 	github.com/marten-seemann/qtls-go1-19 v0.1.1
 	github.com/miekg/dns v1.1.50
 	github.com/mustafaturan/bus v1.0.2
