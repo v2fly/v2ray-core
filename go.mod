@@ -29,7 +29,7 @@ require (
 	go.starlark.net v0.0.0-20220817180228-f738f5508c12
 	go4.org/netipx v0.0.0-20220812043211-3cc044ffd68d
 	golang.org/x/crypto v0.4.0
-	golang.org/x/net v0.3.0
+	golang.org/x/net v0.4.0
 	golang.org/x/sync v0.0.0-20220907140024-f12130a52804
 	golang.org/x/sys v0.3.0
 	google.golang.org/grpc v1.51.0
