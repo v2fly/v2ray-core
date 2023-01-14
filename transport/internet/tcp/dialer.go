@@ -25,7 +25,7 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 	}
 
 	if securityEngine != nil {
-		conn, err = securityEngine.Client(conn)
+		conn, err = securityEngine.Client(conn, security.OptionWithDestination{Dest: dest})
 		if err != nil {
 			return nil, newError("unable to create security protocol client from security engine").Base(err)
 		}
