@@ -22,7 +22,7 @@ type HealthPingSettings struct {
 // HealthPing is the health checker for balancers
 type HealthPing struct {
 	ctx         context.Context
-	access      sync.Mutex
+	access      sync.RWMutex
 	ticker      *time.Ticker
 	tickerClose chan struct{}
 
