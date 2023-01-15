@@ -58,7 +58,7 @@ func (fw flushWriter) Write(p []byte) (n int, err error) {
 
 func (l *Listener) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	host := request.Host
-	if !l.config.isValidHost(host) {
+	if len(l.config.Host) != 0 && !l.config.isValidHost(host) {
 		writer.WriteHeader(404)
 		return
 	}
