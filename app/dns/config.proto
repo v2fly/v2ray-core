@@ -151,7 +151,7 @@ message SimplifiedConfig {
   string client_ip = 3;
 
   // Static domain-ip mapping in DNS server.
-  repeated HostMapping static_hosts = 4;
+  repeated SimplifiedHostMapping static_hosts = 4;
 
   // Global fakedns object.
   v2ray.core.app.dns.fakedns.FakeDnsPoolMulti fake_dns = 16;

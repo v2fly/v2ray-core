@@ -451,8 +451,22 @@ func init() {
 			nameservers = append(nameservers, nameserver)
 		}
 
+		var statichosts []*HostMapping
+
+		for _, v := range simplifiedConfig.StaticHosts {
+			statichost := &HostMapping{
+				Type:          v.Type,
+				Domain:        v.Domain,
+				ProxiedDomain: v.ProxiedDomain,
+			}
+			for _, ip := range v.Ip {
+				statichost.Ip = append(statichost.Ip, net.ParseIP(ip))
+			}
+			statichosts = append(statichosts, statichost)
+		}
+
 		fullConfig := &Config{
-			StaticHosts:      simplifiedConfig.StaticHosts,
+			StaticHosts:      statichosts,
 			NameServer:       nameservers,
 			ClientIp:         net.ParseIP(simplifiedConfig.ClientIp),
 			Tag:              simplifiedConfig.Tag,
