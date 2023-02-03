@@ -44,6 +44,7 @@ func (s *LoggerServer) FollowLog(_ *FollowLogRequest, stream LoggerService_Follo
 		return newError("logger not support following")
 	}
 	ctx, cancel := context.WithCancel(stream.Context())
+	defer cancel()
 	f := func(msg cmlog.Message) {
 		err := stream.Send(&FollowLogResponse{
 			Message: msg.String(),
