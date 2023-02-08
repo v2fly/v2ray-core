@@ -45,6 +45,7 @@ message SystemPolicy {
   }
 
   Stats stats = 1;
+  bool override_access_log_dest = 2;
 }
 
 message Config {

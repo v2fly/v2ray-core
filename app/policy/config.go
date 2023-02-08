@@ -89,5 +89,6 @@ func (p *SystemPolicy) ToCorePolicy() policy.System {
 			OutboundUplink:   p.Stats.OutboundUplink,
 			OutboundDownlink: p.Stats.OutboundDownlink,
 		},
+		OverrideAccessLogDest: p.OverrideAccessLogDest,
 	}
 }
