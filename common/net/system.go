@@ -19,6 +19,7 @@ var (
 	ListenUDP       = net.ListenUDP
 	ListenUnix      = net.ListenUnix
 	LookupIP        = net.LookupIP
+	ParseCIDR       = net.ParseCIDR
 	ParseIP         = net.ParseIP
 	ResolveUDPAddr  = net.ResolveUDPAddr
 	ResolveUnixAddr = net.ResolveUnixAddr

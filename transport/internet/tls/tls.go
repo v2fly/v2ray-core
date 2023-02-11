@@ -66,6 +66,6 @@ func Server(c net.Conn, config *tls.Config) net.Conn {
 
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
-		return nil, newError("tls should be used with v2tls")
+		return NewTLSSecurityEngineFromConfig(config.(*Config))
 	}))
 }

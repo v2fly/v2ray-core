@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/lucas-clemente/quic-go"
+	"github.com/quic-go/quic-go"
 	"golang.org/x/net/dns/dnsmessage"
 	"golang.org/x/net/http2"
 

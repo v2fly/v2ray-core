@@ -15,6 +15,7 @@ import (
 	dns_proto "github.com/v2fly/v2ray-core/v5/common/protocol/dns"
 	"github.com/v2fly/v2ray-core/v5/common/session"
 	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/common/strmatcher"
 	"github.com/v2fly/v2ray-core/v5/common/task"
 	"github.com/v2fly/v2ray-core/v5/features/dns"
 	"github.com/v2fly/v2ray-core/v5/features/policy"
@@ -55,6 +56,10 @@ type Handler struct {
 }
 
 func (h *Handler) Init(config *Config, dnsClient dns.Client, policyManager policy.Manager) error {
+	// Enable FakeDNS for DNS outbound
+	if clientWithFakeDNS, ok := dnsClient.(dns.ClientWithFakeDNS); ok {
+		dnsClient = clientWithFakeDNS.AsFakeDNSClient()
+	}
 	h.client = dnsClient
 	h.timeout = policyManager.ForLevel(config.UserLevel).Timeouts.ConnectionIdle
 
@@ -190,8 +195,10 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 			if !h.isOwnLink(ctx) {
 				isIPQuery, domain, id, qType := parseIPQuery(b.Bytes())
 				if isIPQuery {
-					go h.handleIPQuery(id, qType, domain, writer)
-					continue
+					if domain, err := strmatcher.ToDomain(domain); err == nil {
+						go h.handleIPQuery(id, qType, domain, writer)
+						continue
+					}
 				}
 			}
 
@@ -232,13 +239,6 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 	var err error
 
 	var ttl uint32 = 600
-
-	// Do NOT skip FakeDNS
-	if c, ok := h.client.(dns.ClientWithIPOption); ok {
-		c.SetFakeDNSOption(true)
-	} else {
-		newError("dns.Client doesn't implement ClientWithIPOption")
-	}
 
 	switch qType {
 	case dnsmessage.TypeA:

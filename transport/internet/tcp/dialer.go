@@ -8,7 +8,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"github.com/v2fly/v2ray-core/v5/common/session"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/security"
 )
 
 // Dial dials a new TCP connection to the given destination.
@@ -19,16 +19,16 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 		return nil, err
 	}
 
-	if config := tls.ConfigFromStreamSettings(streamSettings); config != nil {
-		tlsConfig := config.GetTLSConfig(tls.WithDestination(dest))
-		/*
-			if config.IsExperiment8357() {
-				conn = tls.UClient(conn, tlsConfig)
-			} else {
-				conn = tls.Client(conn, tlsConfig)
-			}
-		*/
-		conn = tls.Client(conn, tlsConfig)
+	securityEngine, err := security.CreateSecurityEngineFromSettings(ctx, streamSettings)
+	if err != nil {
+		return nil, newError("unable to create security engine").Base(err)
+	}
+
+	if securityEngine != nil {
+		conn, err = securityEngine.Client(conn, security.OptionWithDestination{Dest: dest})
+		if err != nil {
+			return nil, newError("unable to create security protocol client from security engine").Base(err)
+		}
 	}
 
 	tcpSettings := streamSettings.ProtocolSettings.(*Config)

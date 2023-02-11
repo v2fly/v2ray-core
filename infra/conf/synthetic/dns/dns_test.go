@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"github.com/v2fly/v2ray-core/v5/app/dns"
+	"github.com/v2fly/v2ray-core/v5/app/dns/fakedns"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/platform/filesystem"
@@ -147,6 +148,142 @@ func TestDNSConfigParsing(t *testing.T) {
 				QueryStrategy:   dns.QueryStrategy_USE_IP4,
 				DisableCache:    true,
 				DisableFallback: true,
+			},
+		},
+		{
+			Input: `{
+				"servers": [{
+					"address": "fakedns",
+					"tag": "fake",
+					"queryStrategy": "UseIPv6",
+					"fallbackStrategy": "disabledIfAnyMatch",
+					"fakedns": true
+				}, {
+					"address": "8.8.8.8",
+					"port": 5353,
+					"tag": "local",
+					"clientIp": "10.0.0.1",
+					"queryStrategy": "UseIP",
+					"cacheStrategy": "enabled",
+					"fallbackStrategy": "disabled",
+					"domains": ["domain:v2fly.org"],
+					"fakedns": ["198.19.0.0/16", "fc01::/18"]
+				}],
+				"hosts": {
+					"v2fly.org": "127.0.0.1",
+					"www.v2fly.org": ["1.2.3.4", "5.6.7.8"],
+					"domain:example.com": "google.com",
+					"geosite:test": ["127.0.0.1", "127.0.0.2"],
+					"keyword:google": ["8.8.8.8", "8.8.4.4"],
+					"regexp:.*\\.com": "8.8.4.4"
+				},
+				"fakedns": [
+					{ "ipPool": "198.18.0.0/16", "poolSize": 32768 },
+					{ "ipPool": "fc00::/18", "poolSize": 32768 }
+				],
+				"tag": "global",
+				"clientIp": "10.0.0.1",
+				"queryStrategy": "UseIPv4",
+				"cacheStrategy": "disabled",
+				"fallbackStrategy": "enabled"
+			}`,
+			Parser: parserCreator(),
+			Output: &dns.Config{
+				NameServer: []*dns.NameServer{
+					{
+						Address: &net.Endpoint{
+							Address: &net.IPOrDomain{
+								Address: &net.IPOrDomain_Domain{
+									Domain: "fakedns",
+								},
+							},
+							Network: net.Network_UDP,
+						},
+						Tag:              "fake",
+						QueryStrategy:    dns.QueryStrategy_USE_IP6.Enum(),
+						FallbackStrategy: dns.FallbackStrategy_DisabledIfAnyMatch.Enum(),
+						FakeDns: &fakedns.FakeDnsPoolMulti{
+							Pools: []*fakedns.FakeDnsPool{},
+						},
+					},
+					{
+						Address: &net.Endpoint{
+							Address: &net.IPOrDomain{
+								Address: &net.IPOrDomain_Ip{
+									Ip: []byte{8, 8, 8, 8},
+								},
+							},
+							Network: net.Network_UDP,
+							Port:    5353,
+						},
+						Tag:              "local",
+						ClientIp:         []byte{10, 0, 0, 1},
+						QueryStrategy:    dns.QueryStrategy_USE_IP.Enum(),
+						CacheStrategy:    dns.CacheStrategy_CacheEnabled.Enum(),
+						FallbackStrategy: dns.FallbackStrategy_Disabled.Enum(),
+						PrioritizedDomain: []*dns.NameServer_PriorityDomain{
+							{
+								Type:   dns.DomainMatchingType_Subdomain,
+								Domain: "v2fly.org",
+							},
+						},
+						OriginalRules: []*dns.NameServer_OriginalRule{
+							{
+								Rule: "domain:v2fly.org",
+								Size: 1,
+							},
+						},
+						FakeDns: &fakedns.FakeDnsPoolMulti{
+							Pools: []*fakedns.FakeDnsPool{
+								{IpPool: "198.19.0.0/16", LruSize: 65535},
+								{IpPool: "fc01::/18", LruSize: 65535},
+							},
+						},
+					},
+				},
+				StaticHosts: []*dns.HostMapping{
+					{
+						Type:          dns.DomainMatchingType_Subdomain,
+						Domain:        "example.com",
+						ProxiedDomain: "google.com",
+					},
+					{
+						Type:   dns.DomainMatchingType_Full,
+						Domain: "test.example.com",
+						Ip:     [][]byte{{127, 0, 0, 1}, {127, 0, 0, 2}},
+					},
+					{
+						Type:   dns.DomainMatchingType_Keyword,
+						Domain: "google",
+						Ip:     [][]byte{{8, 8, 8, 8}, {8, 8, 4, 4}},
+					},
+					{
+						Type:   dns.DomainMatchingType_Regex,
+						Domain: ".*\\.com",
+						Ip:     [][]byte{{8, 8, 4, 4}},
+					},
+					{
+						Type:   dns.DomainMatchingType_Full,
+						Domain: "v2fly.org",
+						Ip:     [][]byte{{127, 0, 0, 1}},
+					},
+					{
+						Type:   dns.DomainMatchingType_Full,
+						Domain: "www.v2fly.org",
+						Ip:     [][]byte{{1, 2, 3, 4}, {5, 6, 7, 8}},
+					},
+				},
+				FakeDns: &fakedns.FakeDnsPoolMulti{
+					Pools: []*fakedns.FakeDnsPool{
+						{IpPool: "198.18.0.0/16", LruSize: 32768},
+						{IpPool: "fc00::/18", LruSize: 32768},
+					},
+				},
+				Tag:              "global",
+				ClientIp:         []byte{10, 0, 0, 1},
+				QueryStrategy:    dns.QueryStrategy_USE_IP4,
+				CacheStrategy:    dns.CacheStrategy_CacheDisabled,
+				FallbackStrategy: dns.FallbackStrategy_Enabled,
 			},
 		},
 	})

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"io"
+	gonet "net"
 	"net/http"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/session"
 	"github.com/v2fly/v2ray-core/v5/features/extension"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/security"
 )
 
 // Dial dials a WebSocket connection to the given destination.
@@ -48,9 +49,27 @@ func dialWebsocket(ctx context.Context, dest net.Destination, streamSettings *in
 
 	protocol := "ws"
 
-	if config := tls.ConfigFromStreamSettings(streamSettings); config != nil {
+	securityEngine, err := security.CreateSecurityEngineFromSettings(ctx, streamSettings)
+	if err != nil {
+		return nil, newError("unable to create security engine").Base(err)
+	}
+
+	if securityEngine != nil {
 		protocol = "wss"
-		dialer.TLSClientConfig = config.GetTLSConfig(tls.WithDestination(dest), tls.WithNextProto("http/1.1"))
+
+		dialer.NetDialTLSContext = func(ctx context.Context, network, addr string) (gonet.Conn, error) {
+			conn, err := dialer.NetDial(network, addr)
+			if err != nil {
+				return nil, newError("dial TLS connection failed").Base(err)
+			}
+			conn, err = securityEngine.Client(conn,
+				security.OptionWithDestination{Dest: dest},
+				security.OptionWithALPN{ALPNs: []string{"http/1.1"}})
+			if err != nil {
+				return nil, newError("unable to create security protocol client from security engine").Base(err)
+			}
+			return conn, nil
+		}
 	}
 
 	host := dest.NetAddr()

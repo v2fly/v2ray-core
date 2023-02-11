@@ -43,18 +43,19 @@ func (s *LoggerServer) FollowLog(_ *FollowLogRequest, stream LoggerService_Follo
 	if !ok {
 		return newError("logger not support following")
 	}
-	done := make(chan struct{})
+	ctx, cancel := context.WithCancel(stream.Context())
+	defer cancel()
 	f := func(msg cmlog.Message) {
 		err := stream.Send(&FollowLogResponse{
 			Message: msg.String(),
 		})
 		if err != nil {
-			close(done)
+			cancel()
 		}
 	}
 	follower.AddFollower(f)
 	defer follower.RemoveFollower(f)
-	<-done
+	<-ctx.Done()
 	return nil
 }
 

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package v2ray.core.transport.internet.tls.utls;
+option csharp_namespace = "V2Ray.Core.Transport.Internet.Tls.UTls";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/tls/utls";
+option java_package = "com.v2ray.core.transport.internet.tls.utls";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+import "transport/internet/tls/config.proto";
+
+enum ForcedALPN{
+  TRANSPORT_PREFERENCE_TAKE_PRIORITY = 0;
+  NO_ALPN = 1;
+  UTLS_PRESET = 2;
+}
+
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "security";
+  option (v2ray.core.common.protoext.message_opt).short_name = "utls";
+
+  v2ray.core.transport.internet.tls.Config tls_config = 1;
+  string imitate = 2;
+  bool noSNI = 3;
+  ForcedALPN force_alpn = 4;
+}

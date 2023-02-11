@@ -14,6 +14,18 @@ type IPOption struct {
 	FakeEnable bool
 }
 
+func (opt IPOption) With(other IPOption) IPOption {
+	return IPOption{
+		IPv4Enable: opt.IPv4Enable && other.IPv4Enable,
+		IPv6Enable: opt.IPv6Enable && other.IPv6Enable,
+		FakeEnable: opt.FakeEnable && other.FakeEnable,
+	}
+}
+
+func (opt IPOption) IsValid() bool {
+	return opt.IPv4Enable || opt.IPv6Enable
+}
+
 // Client is a V2Ray feature for querying DNS information.
 //
 // v2ray:api:stable
@@ -38,18 +50,30 @@ type IPv6Lookup interface {
 	LookupIPv6(domain string) ([]net.IP, error)
 }
 
-// ClientWithIPOption is an optional feature for querying DNS information.
+// LookupIPWithOption is a helper function for querying DNS information from a dns.Client with dns.IPOption.
 //
 // v2ray:api:beta
-type ClientWithIPOption interface {
-	// GetIPOption returns IPOption for the DNS client.
-	GetIPOption() *IPOption
-
-	// SetQueryOption sets IPv4Enable and IPv6Enable for the DNS client.
-	SetQueryOption(isIPv4Enable, isIPv6Enable bool)
-
-	// SetFakeDNSOption sets FakeEnable option for DNS client.
-	SetFakeDNSOption(isFakeEnable bool)
+func LookupIPWithOption(client Client, domain string, option IPOption) ([]net.IP, error) {
+	if option.FakeEnable {
+		if clientWithFakeDNS, ok := client.(ClientWithFakeDNS); ok {
+			client = clientWithFakeDNS.AsFakeDNSClient()
+		}
+	}
+	if option.IPv4Enable && !option.IPv6Enable {
+		if ipv4Lookup, ok := client.(IPv4Lookup); ok {
+			return ipv4Lookup.LookupIPv4(domain)
+		} else {
+			return nil, errors.New("dns.Client doesn't implement IPv4Lookup")
+		}
+	}
+	if option.IPv6Enable && !option.IPv4Enable {
+		if ipv6Lookup, ok := client.(IPv6Lookup); ok {
+			return ipv6Lookup.LookupIPv6(domain)
+		} else {
+			return nil, errors.New("dns.Client doesn't implement IPv6Lookup")
+		}
+	}
+	return client.LookupIP(domain)
 }
 
 // ClientType returns the type of Client interface. Can be used for implementing common.HasType.
