@@ -14,7 +14,7 @@ import (
 
 // Execute excute the commands
 func Execute() {
-	flag.Usage = func () {
+	flag.Usage = func() {
 		PrintUsage(os.Stderr, RootCommand)
 	}
 	flag.Parse()
