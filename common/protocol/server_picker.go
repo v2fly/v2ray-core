@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"github.com/v2fly/v2ray-core/v5/common/net"
 	"sync"
 )
 
@@ -50,6 +51,18 @@ func (sl *ServerList) removeServer(idx uint32) {
 	n := len(sl.servers)
 	sl.servers[idx] = sl.servers[n-1]
 	sl.servers = sl.servers[:n-1]
+}
+
+func (sl *ServerList) RemoveServer(destination net.Destination) {
+	sl.Lock()
+	defer sl.Unlock()
+
+	for idx, server := range sl.servers {
+		if server.Destination() == destination {
+			sl.removeServer(uint32(idx))
+			break
+		}
+	}
 }
 
 type ServerPicker interface {

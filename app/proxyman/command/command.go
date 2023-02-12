@@ -2,6 +2,8 @@ package command
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
 
 	grpc "google.golang.org/grpc"
 
@@ -33,6 +35,14 @@ func getInbound(handler inbound.Handler) (proxy.Inbound, error) {
 	return gi.GetInbound(), nil
 }
 
+func getOutbound(handler outbound.Handler) (proxy.Outbound, error) {
+	gi, ok := handler.(proxy.GetOutbound)
+	if !ok {
+		return nil, newError("can't get outbound proxy from handler.")
+	}
+	return gi.GetOutbound(), nil
+}
+
 // ApplyInbound implements InboundOperation.
 func (op *AddUserOperation) ApplyInbound(ctx context.Context, handler inbound.Handler) error {
 	p, err := getInbound(handler)
@@ -61,6 +71,35 @@ func (op *RemoveUserOperation) ApplyInbound(ctx context.Context, handler inbound
 		return newError("proxy is not a UserManager")
 	}
 	return um.RemoveUser(ctx, op.Email)
+}
+
+func (op *AddVNextOperation) ApplyOutbound(ctx context.Context, handler outbound.Handler) error {
+	p, err := getOutbound(handler)
+	if err != nil {
+		return err
+	}
+	um, ok := p.(proxy.VNextDialer)
+	if !ok {
+		return newError("proxy is not a VNextDialer")
+	}
+	server, err := protocol.NewServerSpecFromPB(op.Server)
+	if err != nil {
+		return newError("failed to parse server spec").Base(err)
+	}
+	return um.AddServer(ctx, server)
+}
+
+func (op *RemoveVNextOperation) ApplyOutbound(ctx context.Context, handler outbound.Handler) error {
+	p, err := getOutbound(handler)
+	if err != nil {
+		return err
+	}
+	um, ok := p.(proxy.VNextDialer)
+	if !ok {
+		return newError("proxy is not a VNextDialer")
+	}
+	dest := net.TCPDestination(op.Address.AsAddress(), net.Port(op.Port))
+	return um.RemoveServer(ctx, dest)
 }
 
 type handlerServer struct {

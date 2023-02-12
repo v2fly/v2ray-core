@@ -7,6 +7,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"hash/crc64"
+	"sync"
 
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"
@@ -27,29 +28,83 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
 )
 
+type serverByDestination struct {
+	sync.Mutex
+	cache map[net.Destination]*protocol.ServerSpec
+}
+
+func newServerByDestination() *serverByDestination {
+	return &serverByDestination{
+		cache: make(map[net.Destination]*protocol.ServerSpec),
+	}
+}
+
+func (v *serverByDestination) addNoLock(u *protocol.ServerSpec) bool {
+	if _, found := v.cache[u.Destination()]; found {
+		return false
+	}
+	v.cache[u.Destination()] = u
+	return true
+}
+
+func (v *serverByDestination) Add(u *protocol.ServerSpec) bool {
+	v.Lock()
+	defer v.Unlock()
+
+	return v.addNoLock(u)
+}
+
+func (v *serverByDestination) Get(destination net.Destination) (*protocol.ServerSpec, bool) {
+	v.Lock()
+	defer v.Unlock()
+
+	server, found := v.cache[destination]
+	if !found {
+		return nil, false
+	}
+	return server, true
+}
+
+func (v *serverByDestination) Remove(destination net.Destination) bool {
+	v.Lock()
+	defer v.Unlock()
+
+	if _, found := v.cache[destination]; !found {
+		return false
+	}
+	delete(v.cache, destination)
+	return true
+}
+
 // Handler is an outbound connection handler for VMess protocol.
 type Handler struct {
-	serverList    *protocol.ServerList
-	serverPicker  protocol.ServerPicker
-	policyManager policy.Manager
+	serverList          *protocol.ServerList
+	serverByDestination *serverByDestination
+	serverPicker        protocol.ServerPicker
+	policyManager       policy.Manager
 }
 
 // New creates a new VMess outbound handler.
 func New(ctx context.Context, config *Config) (*Handler, error) {
 	serverList := protocol.NewServerList()
+	serverCache := newServerByDestination()
 	for _, rec := range config.Receiver {
 		s, err := protocol.NewServerSpecFromPB(rec)
 		if err != nil {
 			return nil, newError("failed to parse server spec").Base(err)
+		}
+		if !serverCache.Add(s) {
+			return nil, newError("duplicated destination: ", s.Destination())
 		}
 		serverList.AddServer(s)
 	}
 
 	v := core.MustFromContext(ctx)
 	handler := &Handler{
-		serverList:    serverList,
-		serverPicker:  protocol.NewRoundRobinServerPicker(serverList),
-		policyManager: v.GetFeature(policy.ManagerType()).(policy.Manager),
+		serverList:          serverList,
+		serverByDestination: serverCache,
+		serverPicker:        protocol.NewRoundRobinServerPicker(serverList),
+		policyManager:       v.GetFeature(policy.ManagerType()).(policy.Manager),
 	}
 
 	return handler, nil
@@ -196,6 +251,25 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		return newError("connection ends").Base(err)
 	}
 
+	return nil
+}
+
+func (h *Handler) AddServer(ctx context.Context, server *protocol.ServerSpec) error {
+	if server.Destination().IsValid() && !h.serverByDestination.Add(server) {
+		return newError("Server ", server.Destination().String(), " already exists.")
+	}
+	h.serverList.AddServer(server)
+	return nil
+}
+
+func (h *Handler) RemoveServer(ctx context.Context, destination net.Destination) error {
+	if !destination.IsValid() {
+		return newError("Destination must not be valid.")
+	}
+	if !h.serverByDestination.Remove(destination) {
+		return newError("Destination ", destination.String(), " not found.")
+	}
+	h.serverList.RemoveServer(destination)
 	return nil
 }
 

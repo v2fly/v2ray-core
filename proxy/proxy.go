@@ -43,6 +43,14 @@ type UserManager interface {
 	RemoveUser(context.Context, string) error
 }
 
+// VNextDialer is the interface for Outbounds that can dial to VNext servers.
+type VNextDialer interface {
+	// AddServer adds a new server to the dialer.
+	AddServer(ctx context.Context, server *protocol.ServerSpec) error
+	// RemoveServer removes a server from the dialer.
+	RemoveServer(ctx context.Context, destination net.Destination) error
+}
+
 type GetInbound interface {
 	GetInbound() Inbound
 }

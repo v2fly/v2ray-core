@@ -7,6 +7,8 @@ option java_package = "com.v2ray.core.app.proxyman.command";
 option java_multiple_files = true;
 
 import "common/protocol/user.proto";
+import "common/protocol/server_spec.proto";
+import "common/net/address.proto";
 import "google/protobuf/any.proto";
 import "common/protoext/extensions.proto";
 import "config.proto";
@@ -17,6 +19,15 @@ message AddUserOperation {
 
 message RemoveUserOperation {
   string email = 1;
+}
+
+message AddVNextOperation {
+  v2ray.core.common.protocol.ServerEndpoint server = 1;
+}
+
+message RemoveVNextOperation {
+  v2ray.core.common.net.IPOrDomain address = 1;
+  uint32 port = 2;
 }
 
 message AddInboundRequest {
