@@ -51,6 +51,8 @@ type Outbound struct {
 	Target net.Destination
 	// Gateway address
 	Gateway net.Address
+	// Domain resolver to use when dialing
+	Resolver func(ctx context.Context, domain string) net.Address
 }
 
 // SniffingRequest controls the behavior of content sniffing.

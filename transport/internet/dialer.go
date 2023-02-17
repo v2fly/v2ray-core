@@ -68,13 +68,31 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *MemoryStrea
 
 // DialSystem calls system dialer to create a network connection.
 func DialSystem(ctx context.Context, dest net.Destination, sockopt *SocketConfig) (net.Conn, error) {
+	outbound := session.OutboundFromContext(ctx)
+
 	var src net.Address
-	if outbound := session.OutboundFromContext(ctx); outbound != nil {
+	if outbound != nil {
 		src = outbound.Gateway
 	}
 
 	if transportLayerOutgoingTag := session.GetTransportLayerProxyTagFromContext(ctx); transportLayerOutgoingTag != "" {
 		return DialTaggedOutbound(ctx, dest, transportLayerOutgoingTag)
+	}
+
+	originalAddr := dest.Address
+	if outbound != nil && outbound.Resolver != nil && dest.Address.Family().IsDomain() {
+		if addr := outbound.Resolver(ctx, dest.Address.Domain()); addr != nil {
+			dest.Address = addr
+		}
+	}
+
+	switch {
+	case src != nil && dest.Address != originalAddr:
+		newError("dialing to ", dest, " resolved from ", originalAddr, " via ", src).WriteToLog(session.ExportIDToError(ctx))
+	case src != nil:
+		newError("dialing to ", dest, " via ", src).WriteToLog(session.ExportIDToError(ctx))
+	case dest.Address != originalAddr:
+		newError("dialing to ", dest, " resolved from ", originalAddr).WriteToLog(session.ExportIDToError(ctx))
 	}
 
 	return effectiveSystemDialer.Dial(ctx, src, dest, sockopt)
