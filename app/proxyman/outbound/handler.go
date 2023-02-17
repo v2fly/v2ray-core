@@ -6,11 +6,13 @@ import (
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/app/proxyman"
 	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/dice"
 	"github.com/v2fly/v2ray-core/v5/common/mux"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
 	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
 	"github.com/v2fly/v2ray-core/v5/features/outbound"
 	"github.com/v2fly/v2ray-core/v5/features/policy"
 	"github.com/v2fly/v2ray-core/v5/features/stats"
@@ -56,6 +58,7 @@ type Handler struct {
 	mux             *mux.ClientManager
 	uplinkCounter   stats.Counter
 	downlinkCounter stats.Counter
+	dns             dns.Client
 }
 
 // NewHandler create a new Handler based on the given configuration.
@@ -120,6 +123,16 @@ func NewHandler(ctx context.Context, config *core.OutboundHandlerConfig) (outbou
 					},
 				),
 			},
+		}
+	}
+
+	if h.senderSettings != nil && h.senderSettings.DomainStrategy != proxyman.SenderConfig_AS_IS {
+		err := core.RequireFeatures(ctx, func(d dns.Client) error {
+			h.dns = d
+			return nil
+		})
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -208,7 +221,19 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 			}
 			outbound.Gateway = h.senderSettings.Via.AsAddress()
 		}
+
+		if h.senderSettings.DomainStrategy != proxyman.SenderConfig_AS_IS {
+			outbound := session.OutboundFromContext(ctx)
+			if outbound == nil {
+				outbound = new(session.Outbound)
+				ctx = session.ContextWithOutbound(ctx, outbound)
+			}
+			outbound.Resolver = func(ctx context.Context, domain string) net.Address {
+				return h.resolveIP(ctx, domain, h.Address())
+			}
+		}
 	}
+
 	enablePacketAddrCapture := true
 	if h.senderSettings != nil && h.senderSettings.ProxySettings != nil && h.senderSettings.ProxySettings.HasTag() && h.senderSettings.ProxySettings.TransportLayerProxy {
 		tag := h.senderSettings.ProxySettings.Tag
@@ -228,6 +253,22 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 
 	conn, err := internet.Dial(ctx, dest, h.streamSettings)
 	return h.getStatCouterConnection(conn), err
+}
+
+func (h *Handler) resolveIP(ctx context.Context, domain string, localAddr net.Address) net.Address {
+	strategy := h.senderSettings.DomainStrategy
+	ips, err := dns.LookupIPWithOption(h.dns, domain, dns.IPOption{
+		IPv4Enable: strategy == proxyman.SenderConfig_USE_IP || strategy == proxyman.SenderConfig_USE_IP4 || (localAddr != nil && localAddr.Family().IsIPv4()),
+		IPv6Enable: strategy == proxyman.SenderConfig_USE_IP || strategy == proxyman.SenderConfig_USE_IP6 || (localAddr != nil && localAddr.Family().IsIPv6()),
+		FakeEnable: false,
+	})
+	if err != nil {
+		newError("failed to get IP address for domain ", domain).Base(err).WriteToLog(session.ExportIDToError(ctx))
+	}
+	if len(ips) == 0 {
+		return nil
+	}
+	return net.IPAddress(ips[dice.Roll(len(ips))])
 }
 
 func (h *Handler) getStatCouterConnection(conn internet.Connection) internet.Connection {

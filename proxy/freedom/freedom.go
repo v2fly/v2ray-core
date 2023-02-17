@@ -104,6 +104,11 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 			destination.Port = net.Port(server.Port)
 		}
 	}
+	if h.config.useIP() {
+		outbound.Resolver = func(ctx context.Context, domain string) net.Address {
+			return h.resolveIP(ctx, domain, dialer.Address())
+		}
+	}
 	newError("opening connection to ", destination).WriteToLog(session.ExportIDToError(ctx))
 
 	input := link.Reader
@@ -111,20 +116,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 
 	var conn internet.Connection
 	err := retry.ExponentialBackoff(5, 100).On(func() error {
-		dialDest := destination
-		if h.config.useIP() && dialDest.Address.Family().IsDomain() {
-			ip := h.resolveIP(ctx, dialDest.Address.Domain(), dialer.Address())
-			if ip != nil {
-				dialDest = net.Destination{
-					Network: dialDest.Network,
-					Address: ip,
-					Port:    dialDest.Port,
-				}
-				newError("dialing to ", dialDest).WriteToLog(session.ExportIDToError(ctx))
-			}
-		}
-
-		rawConn, err := dialer.Dial(ctx, dialDest)
+		rawConn, err := dialer.Dial(ctx, destination)
 		if err != nil {
 			return err
 		}
