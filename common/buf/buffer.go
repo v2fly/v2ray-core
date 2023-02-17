@@ -13,6 +13,15 @@ const (
 
 var pool = bytespool.GetPool(Size)
 
+// ownership represents the data owner of the buffer.
+type ownership uint8
+
+const (
+	managed    ownership = 0
+	unmanaged  ownership = 1
+	bytespools ownership = 2
+)
+
 // Buffer is a recyclable allocation of a byte array. Buffer.Release() recycles
 // the buffer into an internal buffer pool, in order to recreate a buffer more
 // quickly.
@@ -20,7 +29,7 @@ type Buffer struct {
 	v         []byte
 	start     int32
 	end       int32
-	unmanaged bool
+	ownership ownership
 }
 
 // New creates a Buffer with 0 length and 2K capacity.
@@ -30,12 +39,20 @@ func New() *Buffer {
 	}
 }
 
+// NewWithSize creates a Buffer with 0 length and capacity with at least the given size.
+func NewWithSize(size int32) *Buffer {
+	return &Buffer{
+		v:         bytespool.Alloc(size),
+		ownership: bytespools,
+	}
+}
+
 // FromBytes creates a Buffer with an existed bytearray
 func FromBytes(data []byte) *Buffer {
 	return &Buffer{
 		v:         data,
 		end:       int32(len(data)),
-		unmanaged: true,
+		ownership: unmanaged,
 	}
 }
 
@@ -49,14 +66,19 @@ func StackNew() Buffer {
 
 // Release recycles the buffer into an internal buffer pool.
 func (b *Buffer) Release() {
-	if b == nil || b.v == nil || b.unmanaged {
+	if b == nil || b.v == nil || b.ownership == unmanaged {
 		return
 	}
 
 	p := b.v
 	b.v = nil
 	b.Clear()
-	pool.Put(p) // nolint: staticcheck
+	switch b.ownership {
+	case managed:
+		pool.Put(p) // nolint: staticcheck
+	case bytespools:
+		bytespool.Free(p) // nolint: staticcheck
+	}
 }
 
 // Clear clears the content of the buffer, results an empty buffer with
@@ -149,6 +171,14 @@ func (b *Buffer) Len() int32 {
 		return 0
 	}
 	return b.end - b.start
+}
+
+// Cap returns the capacity of the buffer content.
+func (b *Buffer) Cap() int32 {
+	if b == nil {
+		return 0
+	}
+	return int32(len(b.v))
 }
 
 // IsEmpty returns true if the buffer is empty.
