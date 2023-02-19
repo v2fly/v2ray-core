@@ -38,7 +38,8 @@ var upgrader = &websocket.Upgrader{
 }
 
 func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	var earlyDataStr string
+	responseHeader := http.Header{}
+
 	var earlyData io.Reader
 	if !h.earlyDataEnabled { // nolint: gocritic
 		if request.URL.Path != h.path {
@@ -50,21 +51,19 @@ func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 			writer.WriteHeader(http.StatusNotFound)
 			return
 		}
-		earlyDataStr = request.Header.Get(h.earlyDataHeaderName)
+		earlyDataStr := request.Header.Get(h.earlyDataHeaderName)
 		earlyData = base64.NewDecoder(base64.RawURLEncoding, bytes.NewReader([]byte(earlyDataStr)))
+		if strings.EqualFold("Sec-WebSocket-Protocol", h.earlyDataHeaderName) {
+			responseHeader.Set(h.earlyDataHeaderName, earlyDataStr)
+		}
 	} else {
 		if strings.HasPrefix(request.URL.RequestURI(), h.path) {
-			earlyDataStr = request.URL.RequestURI()[len(h.path):]
+			earlyDataStr := request.URL.RequestURI()[len(h.path):]
 			earlyData = base64.NewDecoder(base64.RawURLEncoding, bytes.NewReader([]byte(earlyDataStr)))
 		} else {
 			writer.WriteHeader(http.StatusNotFound)
 			return
 		}
-	}
-
-	responseHeader := http.Header{}
-	if h.earlyDataEnabled && h.earlyDataHeaderName != "" {
-		responseHeader.Set(h.earlyDataHeaderName, earlyDataStr)
 	}
 
 	conn, err := upgrader.Upgrade(writer, request, responseHeader)
