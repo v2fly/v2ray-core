@@ -19,7 +19,7 @@ require (
 	github.com/quic-go/qtls-go1-18 v0.2.0
 	github.com/quic-go/qtls-go1-19 v0.2.1
 	github.com/quic-go/qtls-go1-20 v0.1.1
-	github.com/quic-go/quic-go v0.32.0
+	github.com/quic-go/quic-go v0.33.0
 	github.com/refraction-networking/utls v1.2.2
 	github.com/seiflotfy/cuckoofilter v0.0.0-20220411075957-e3b120b3f5fb
 	github.com/stretchr/testify v1.8.1
