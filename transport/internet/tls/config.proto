@@ -60,4 +60,12 @@ message Config {
 
   // If true, the client is required to present a certificate.
   bool verify_client_certificate = 8;
+
+  // Enable this if you want tls client hello encryption.
+  bool enable_ech = 9;
+  ECHSetting ech_setting = 10;
+}
+
+message ECHSetting {
+  string dns_addr = 1;
 }

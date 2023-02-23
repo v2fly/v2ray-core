@@ -68,8 +68,6 @@ func NewServer(ctx context.Context, dest net.Destination, onCreated func(Server)
 			return core.RequireFeatures(ctx, func(dispatcher routing.Dispatcher) error { return onCreatedWithError(NewTCPNameServer(u, dispatcher)) })
 		case strings.EqualFold(u.Scheme, "tcp+local"): // DNS-over-TCP Local mode
 			return onCreatedWithError(NewTCPLocalNameServer(u))
-		case strings.EqualFold(u.Scheme, "quic+local"): // DNS-over-QUIC Local mode
-			return onCreatedWithError(NewQUICNameServer(u))
 		}
 	}
 	if dest.Network == net.Network_Unknown {

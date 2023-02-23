@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/pem"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -216,6 +218,22 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 		newError("failed to load client root certificate").AtError().Base(err).WriteToLog()
 	}
 
+
+	var echConfigs []tls.ECHConfig
+	if c.EnableEch {
+		echPEMKey := fmt.Sprintf("-----BEGIN ECH CONFIGS-----\n%s\n-----END ECH CONFIGS-----", ECH)
+
+		block, rest := pem.Decode([]byte(echPEMKey))
+		if block == nil || block.Type != "ECH CONFIGS" || len(rest) > 0 {
+			newError("failed to PEM-decode the ECH configs").AtError().WriteToLog()
+		}
+
+		echConfigs, err = tls.UnmarshalECHConfigs(block.Bytes)
+		if err != nil {
+			newError("failed to unmarshal ECH configs").AtError().WriteToLog()
+		}
+	}
+
 	config := &tls.Config{
 		ClientSessionCache:     globalSessionCache,
 		RootCAs:                root,
@@ -224,6 +242,8 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 		SessionTicketsDisabled: !c.EnableSessionResumption,
 		VerifyPeerCertificate:  c.verifyPeerCert,
 		ClientCAs:              clientRoot,
+		ECHEnabled:             c.EnableEch,
+		ClientECHConfigs:       echConfigs,
 	}
 
 	for _, opt := range opts {
