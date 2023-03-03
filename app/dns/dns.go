@@ -470,6 +470,7 @@ func init() {
 			NameServer:       nameservers,
 			ClientIp:         net.ParseIP(simplifiedConfig.ClientIp),
 			Tag:              simplifiedConfig.Tag,
+			DomainMatcher:    simplifiedConfig.DomainMatcher,
 			QueryStrategy:    simplifiedConfig.QueryStrategy,
 			CacheStrategy:    simplifiedConfig.CacheStrategy,
 			FallbackStrategy: simplifiedConfig.FallbackStrategy,
