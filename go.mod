@@ -11,7 +11,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/websocket v1.5.0
-	github.com/jhump/protoreflect v1.15.0
+	github.com/jhump/protoreflect v1.15.1
 	github.com/miekg/dns v1.1.51
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
@@ -34,7 +34,7 @@ require (
 	golang.org/x/sync v0.1.0
 	golang.org/x/sys v0.5.0
 	google.golang.org/grpc v1.53.0
-	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8
+	google.golang.org/protobuf v1.28.2-0.20230222093303-bc1253ad3743
 	gopkg.in/yaml.v3 v3.0.1
 	h12.io/socks v1.0.3
 )
@@ -44,7 +44,7 @@ require (
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/boljen/go-bitmap v0.0.0-20151001105940-23cd2fb0ce7d // indirect
-	github.com/bufbuild/protocompile v0.2.1-0.20230123224550-da57cd758c2f // indirect
+	github.com/bufbuild/protocompile v0.4.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-metro v0.0.0-20200812162917-85c65e2d0165 // indirect
 	github.com/ebfe/bcrypt_pbkdf v0.0.0-20140212075826-3c8d2dcb253a // indirect
