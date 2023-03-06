@@ -29,10 +29,10 @@ require (
 	github.com/xiaokangwang/VLite v0.0.0-20220418190619-cff95160a432
 	go.starlark.net v0.0.0-20220817180228-f738f5508c12
 	go4.org/netipx v0.0.0-20220812043211-3cc044ffd68d
-	golang.org/x/crypto v0.6.0
-	golang.org/x/net v0.7.0
+	golang.org/x/crypto v0.7.0
+	golang.org/x/net v0.8.0
 	golang.org/x/sync v0.1.0
-	golang.org/x/sys v0.5.0
+	golang.org/x/sys v0.6.0
 	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8
 	gopkg.in/yaml.v3 v3.0.1
@@ -71,8 +71,8 @@ require (
 	github.com/secure-io/siv-go v0.0.0-20180922214919-5ff40651e2c4 // indirect
 	github.com/xtaci/smux v1.5.15 // indirect
 	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db // indirect
-	golang.org/x/mod v0.7.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
-	golang.org/x/tools v0.3.0 // indirect
+	golang.org/x/mod v0.8.0 // indirect
+	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/tools v0.6.0 // indirect
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
 )
