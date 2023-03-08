@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
@@ -26,6 +27,17 @@ import (
 )
 
 var errSniffingTimeout = newError("timeout on sniffing")
+
+var (
+	pmUserUplinkStatistic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "v2ray_user_traffic_uplink_statistic",
+		Help: "The uplink traffic statistic of users.",
+	}, []string{"email"})
+	pmUserDownlinkStatistic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "v2ray_user_traffic_downlink_statistic",
+		Help: "The downlink traffic statistic of users.",
+	}, []string{"email"})
+)
 
 type cachedReader struct {
 	sync.Mutex
@@ -104,6 +116,10 @@ func init() {
 		}
 		return d, nil
 	}))
+	prometheus.DefaultRegisterer.MustRegister(
+		pmUserUplinkStatistic,
+		pmUserDownlinkStatistic,
+	)
 }
 
 // Init initializes DefaultDispatcher.
@@ -153,7 +169,11 @@ func (d *DefaultDispatcher) getLink(ctx context.Context) (*transport.Link, *tran
 		p := d.policy.ForLevel(user.Level)
 		if p.Stats.UserUplink {
 			name := "user>>>" + user.Email + ">>>traffic>>>uplink"
-			if c, _ := stats.GetOrRegisterCounter(d.stats, name); c != nil {
+			if c, _ := stats.GetOrRegisterCounter(
+				d.stats,
+				name,
+				pmUserUplinkStatistic.WithLabelValues(user.Email),
+			); c != nil {
 				inboundLink.Writer = &SizeStatWriter{
 					Counter: c,
 					Writer:  inboundLink.Writer,
@@ -162,7 +182,11 @@ func (d *DefaultDispatcher) getLink(ctx context.Context) (*transport.Link, *tran
 		}
 		if p.Stats.UserDownlink {
 			name := "user>>>" + user.Email + ">>>traffic>>>downlink"
-			if c, _ := stats.GetOrRegisterCounter(d.stats, name); c != nil {
+			if c, _ := stats.GetOrRegisterCounter(
+				d.stats,
+				name,
+				pmUserDownlinkStatistic.WithLabelValues(user.Email),
+			); c != nil {
 				outboundLink.Writer = &SizeStatWriter{
 					Counter: c,
 					Writer:  outboundLink.Writer,

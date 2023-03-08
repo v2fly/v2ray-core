@@ -5,6 +5,7 @@ package stats
 import (
 	"context"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/features"
 )
@@ -65,7 +66,7 @@ type Manager interface {
 	features.Feature
 
 	// RegisterCounter registers a new counter to the manager. The identifier string must not be empty, and unique among other counters.
-	RegisterCounter(string) (Counter, error)
+	RegisterCounter(string, prometheus.Gauge) (Counter, error)
 	// UnregisterCounter unregisters a counter from the manager by its identifier.
 	UnregisterCounter(string) error
 	// GetCounter returns a counter by its identifier.
@@ -80,13 +81,13 @@ type Manager interface {
 }
 
 // GetOrRegisterCounter tries to get the StatCounter first. If not exist, it then tries to create a new counter.
-func GetOrRegisterCounter(m Manager, name string) (Counter, error) {
+func GetOrRegisterCounter(m Manager, name string, gauge prometheus.Gauge) (Counter, error) {
 	counter := m.GetCounter(name)
 	if counter != nil {
 		return counter, nil
 	}
 
-	return m.RegisterCounter(name)
+	return m.RegisterCounter(name, gauge)
 }
 
 // GetOrRegisterChannel tries to get the StatChannel first. If not exist, it then tries to create a new channel.
@@ -115,7 +116,7 @@ func (NoopManager) Type() interface{} {
 }
 
 // RegisterCounter implements Manager.
-func (NoopManager) RegisterCounter(string) (Counter, error) {
+func (NoopManager) RegisterCounter(string, prometheus.Gauge) (Counter, error) {
 	return nil, newError("not implemented")
 }
 

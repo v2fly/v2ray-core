@@ -5,10 +5,16 @@ package commander
 import (
 	"context"
 	"net"
+	"net/http"
 	"sync"
 
 	"google.golang.org/grpc"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/soheilhy/cmux"
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/serial"
@@ -73,12 +79,30 @@ func (c *Commander) Start() error {
 		buffer: make(chan net.Conn, 4),
 		done:   done.New(),
 	}
+	m := cmux.New(listener)
+
+	grpcLn := m.Match(cmux.HTTP2())
+	httpLn := m.Match(cmux.HTTP1Fast())
 
 	go func() {
-		if err := c.server.Serve(listener); err != nil {
+		if err := c.server.Serve(grpcLn); err != nil {
 			newError("failed to start grpc server").Base(err).AtError().WriteToLog()
 		}
 	}()
+
+	r := chi.NewRouter()
+	r.Use(middleware.Heartbeat("/ping"))
+	r.Get("/metrics", promhttp.HandlerFor(
+		prometheus.DefaultGatherer,
+		promhttp.HandlerOpts{},
+	).ServeHTTP)
+	go func() {
+		err := http.Serve(httpLn, r)
+		if err != nil {
+			newError("unable to serve restful api").WriteToLog()
+		}
+	}()
+	go m.Serve()
 
 	if err := c.ohm.RemoveHandler(context.Background(), c.tag); err != nil {
 		newError("failed to remove existing handler").WriteToLog()

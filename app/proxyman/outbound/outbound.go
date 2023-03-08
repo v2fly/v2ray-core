@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/prometheus/client_golang/prometheus"
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/app/proxyman"
 	"github.com/v2fly/v2ray-core/v5/common"
@@ -165,6 +166,17 @@ func (m *Manager) Select(selectors []string) []string {
 	return tags
 }
 
+var (
+	pmOutboundUplinkStatistic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "v2ray_outbound_traffic_uplink_statistic",
+		Help: "The uplink traffic statistic of outbound.",
+	}, []string{"tag"})
+	pmOutboundDownlinkStatistic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "v2ray_outbound_traffic_downlink_statistic",
+		Help: "The downlink traffic statistic of outbound.",
+	}, []string{"tag"})
+)
+
 func init() {
 	common.Must(common.RegisterConfig((*proxyman.OutboundConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return New(ctx, config.(*proxyman.OutboundConfig))
@@ -172,4 +184,5 @@ func init() {
 	common.Must(common.RegisterConfig((*core.OutboundHandlerConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return NewHandler(ctx, config.(*core.OutboundHandlerConfig))
 	}))
+	prometheus.DefaultRegisterer.MustRegister(pmOutboundUplinkStatistic, pmOutboundDownlinkStatistic)
 }

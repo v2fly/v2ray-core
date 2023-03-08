@@ -6,6 +6,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/v2fly/v2ray-core/v5/features/stats"
@@ -25,7 +26,6 @@ func NewManager(ctx context.Context, config *Config) (*Manager, error) {
 		counters: make(map[string]*Counter),
 		channels: make(map[string]*Channel),
 	}
-
 	return m, nil
 }
 
@@ -35,7 +35,7 @@ func (*Manager) Type() interface{} {
 }
 
 // RegisterCounter implements stats.Manager.
-func (m *Manager) RegisterCounter(name string) (stats.Counter, error) {
+func (m *Manager) RegisterCounter(name string, gauge prometheus.Gauge) (stats.Counter, error) {
 	m.access.Lock()
 	defer m.access.Unlock()
 
@@ -44,6 +44,7 @@ func (m *Manager) RegisterCounter(name string) (stats.Counter, error) {
 	}
 	newError("create new counter ", name).AtDebug().WriteToLog()
 	c := new(Counter)
+	c.gauge = gauge
 	m.counters[name] = c
 	return c, nil
 }

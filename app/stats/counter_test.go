@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
 	. "github.com/v2fly/v2ray-core/v5/app/stats"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/features/stats"
@@ -14,7 +15,7 @@ func TestStatsCounter(t *testing.T) {
 	common.Must(err)
 
 	m := raw.(stats.Manager)
-	c, err := m.RegisterCounter("test.counter")
+	c, err := m.RegisterCounter("test.counter", prometheus.NewGauge(prometheus.GaugeOpts{}))
 	common.Must(err)
 
 	if v := c.Add(1); v != 1 {
