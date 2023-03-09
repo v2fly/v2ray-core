@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
+
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/app/proxyman"
 	"github.com/v2fly/v2ray-core/v5/common"
