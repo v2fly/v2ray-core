@@ -72,14 +72,19 @@ func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		return
 	}
 
-	forwardedAddrs := http_proto.ParseXForwardedFor(request.Header)
 	remoteAddr := conn.RemoteAddr()
-	if len(forwardedAddrs) > 0 && forwardedAddrs[0].Family().IsIP() {
+	if forwardedAddrs := http_proto.ParseXForwardedFor(request.Header.Get("X-Forwarded-For")); len(forwardedAddrs) > 0 && forwardedAddrs[0].Family().IsIP() {
 		remoteAddr = &net.TCPAddr{
 			IP:   forwardedAddrs[0].IP(),
 			Port: int(0),
 		}
+	} else if forwardedAddr := net.ParseAddress(request.Header.Get("X-Real-Ip")); forwardedAddr.Family().IsIP() {
+		remoteAddr = &net.TCPAddr{
+			IP:   forwardedAddr.IP(),
+			Port: int(0),
+		}
 	}
+
 	if earlyData == nil {
 		h.ln.addConn(newConnection(conn, remoteAddr))
 	} else {

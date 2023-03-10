@@ -9,8 +9,7 @@ import (
 )
 
 // ParseXForwardedFor parses X-Forwarded-For header in http headers, and return the IP list in it.
-func ParseXForwardedFor(header http.Header) []net.Address {
-	xff := header.Get("X-Forwarded-For")
+func ParseXForwardedFor(xff string) []net.Address {
 	if xff == "" {
 		return nil
 	}

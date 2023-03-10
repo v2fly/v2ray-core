@@ -92,11 +92,15 @@ func (l *Listener) ServeHTTP(writer http.ResponseWriter, request *http.Request) 
 		}
 	}
 
-	forwardedAddress := http_proto.ParseXForwardedFor(request.Header)
-	if len(forwardedAddress) > 0 && forwardedAddress[0].Family().IsIP() {
+	if forwardedAddrs := http_proto.ParseXForwardedFor(request.Header.Get("X-Forwarded-For")); len(forwardedAddrs) > 0 && forwardedAddrs[0].Family().IsIP() {
 		remoteAddr = &net.TCPAddr{
-			IP:   forwardedAddress[0].IP(),
-			Port: 0,
+			IP:   forwardedAddrs[0].IP(),
+			Port: int(0),
+		}
+	} else if forwardedAddr := net.ParseAddress(request.Header.Get("X-Real-Ip")); forwardedAddr.Family().IsIP() {
+		remoteAddr = &net.TCPAddr{
+			IP:   forwardedAddr.IP(),
+			Port: int(0),
 		}
 	}
 

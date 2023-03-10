@@ -14,9 +14,7 @@ import (
 )
 
 func TestParseXForwardedFor(t *testing.T) {
-	header := http.Header{}
-	header.Add("X-Forwarded-For", "129.78.138.66, 129.78.64.103")
-	addrs := ParseXForwardedFor(header)
+	addrs := ParseXForwardedFor("129.78.138.66, 129.78.64.103")
 	if r := cmp.Diff(addrs, []net.Address{net.ParseAddress("129.78.138.66"), net.ParseAddress("129.78.64.103")}); r != "" {
 		t.Error(r)
 	}

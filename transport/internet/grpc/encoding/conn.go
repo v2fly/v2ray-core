@@ -10,7 +10,11 @@ import (
 	"net"
 	"time"
 
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
+
+	net_common "github.com/v2fly/v2ray-core/v5/common/net"
+	http_proto "github.com/v2fly/v2ray-core/v5/common/protocol/http"
 )
 
 // GunService is the abstract interface of GunService_TunClient and GunService_TunServer
@@ -100,8 +104,34 @@ func NewGunConn(service GunService, over context.CancelFunc) *GunConn {
 		IP:   []byte{0, 0, 0, 0},
 		Port: 0,
 	}
-	pr, ok := peer.FromContext(service.Context())
-	if ok {
+
+	tryMD := func() net.IP {
+		md, ok := metadata.FromIncomingContext(service.Context())
+		if !ok {
+			return nil
+		}
+
+		if forwardedAddrsArr := md.Get("x-forwarded-for"); len(forwardedAddrsArr) > 0 {
+			if forwardedAddrs := http_proto.ParseXForwardedFor(forwardedAddrsArr[0]); len(forwardedAddrs) > 0 && forwardedAddrs[0].Family().IsIP() {
+				return forwardedAddrs[0].IP()
+			}
+		}
+
+		if forwardedAddrArr := md.Get("x-real-ip"); len(forwardedAddrArr) > 0 {
+			if forwardedAddr := net_common.ParseAddress(forwardedAddrArr[0]); forwardedAddr.Family().IsIP() {
+				return forwardedAddr.IP()
+			}
+		}
+
+		return nil
+	}
+
+	if ipaddr := tryMD(); ipaddr != nil {
+		conn.remote = &net.TCPAddr{
+			IP:   ipaddr,
+			Port: 0,
+		}
+	} else if pr, ok := peer.FromContext(service.Context()); ok {
 		conn.remote = pr.Addr
 	} else {
 		conn.remote = &net.TCPAddr{
