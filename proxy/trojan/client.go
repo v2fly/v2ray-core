@@ -155,6 +155,11 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 			return newError("failed to flush payload").Base(err).AtWarning()
 		}
 
+		// Send header if not sent yet
+		if _, err = connWriter.Write([]byte{}); err != nil {
+			return newError("failed to send header").Base(err).AtWarning()
+		}
+
 		if err = buf.Copy(link.Reader, bodyWriter, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer request payload").Base(err).AtInfo()
 		}
