@@ -169,12 +169,14 @@ func (m *Manager) Select(selectors []string) []string {
 
 var (
 	pmOutboundUplinkStatistic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "v2ray_outbound_traffic_uplink_statistic",
-		Help: "The uplink traffic statistic of outbound.",
+		Namespace: "v2ray",
+		Name:      "outbound_traffic_uplink_statistic",
+		Help:      "The uplink traffic statistic of outbound.",
 	}, []string{"tag"})
 	pmOutboundDownlinkStatistic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "v2ray_outbound_traffic_downlink_statistic",
-		Help: "The downlink traffic statistic of outbound.",
+		Namespace: "v2ray",
+		Name:      "outbound_traffic_downlink_statistic",
+		Help:      "The downlink traffic statistic of outbound.",
 	}, []string{"tag"})
 )
 

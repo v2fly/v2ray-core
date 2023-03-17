@@ -31,12 +31,14 @@ var errSniffingTimeout = newError("timeout on sniffing")
 
 var (
 	pmUserUplinkStatistic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "v2ray_user_traffic_uplink_statistic",
-		Help: "The uplink traffic statistic of users.",
+		Namespace: "v2ray",
+		Name:      "user_traffic_uplink_statistic",
+		Help:      "The uplink traffic statistic of users.",
 	}, []string{"email"})
 	pmUserDownlinkStatistic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "v2ray_user_traffic_downlink_statistic",
-		Help: "The downlink traffic statistic of users.",
+		Namespace: "v2ray",
+		Name:      "user_traffic_downlink_statistic",
+		Help:      "The downlink traffic statistic of users.",
 	}, []string{"email"})
 )
 

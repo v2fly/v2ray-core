@@ -174,12 +174,14 @@ func NewHandler(ctx context.Context, config *core.InboundHandlerConfig) (inbound
 
 var (
 	pmInboundUplinkStatistic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "v2ray_inbound_traffic_uplink_statistic",
-		Help: "The uplink traffic statistic of inbound.",
+		Namespace: "v2ray",
+		Name:      "inbound_traffic_uplink_statistic",
+		Help:      "The uplink traffic statistic of inbound.",
 	}, []string{"tag"})
 	pmInboundDownlinkStatistic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "v2ray_inbound_traffic_downlink_statistic",
-		Help: "The downlink traffic statistic of inbound.",
+		Namespace: "v2ray",
+		Name:      "inbound_traffic_downlink_statistic",
+		Help:      "The downlink traffic statistic of inbound.",
 	}, []string{"tag"})
 )
 
