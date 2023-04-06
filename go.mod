@@ -1,6 +1,6 @@
 module github.com/v2fly/v2ray-core/v5
 
-go 1.18
+go 1.19
 
 require (
 	github.com/adrg/xdg v0.4.0
@@ -16,7 +16,6 @@ require (
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pires/go-proxyproto v0.6.2
-	github.com/quic-go/qtls-go1-18 v0.2.0
 	github.com/quic-go/qtls-go1-19 v0.2.1
 	github.com/quic-go/qtls-go1-20 v0.1.1
 	github.com/quic-go/quic-go v0.33.0
