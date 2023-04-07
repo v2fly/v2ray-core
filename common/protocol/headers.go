@@ -103,6 +103,6 @@ func (sc *SecurityConfig) GetSecurityType() SecurityType {
 	return sc.Type
 }
 
-func isDomainTooLong(domain string) bool {
-	return len(domain) > 256
+func IsDomainTooLong(domain string) bool {
+	return len(domain) > 255
 }

@@ -21,7 +21,6 @@ var (
 )
 
 const (
-	maxLength       = 8192
 	commandTCP byte = 1
 	commandUDP byte = 3
 )
@@ -145,13 +144,29 @@ func (w *PacketWriter) WriteTo(payload []byte, addr gonet.Addr) (int, error) {
 }
 
 func (w *PacketWriter) writePacket(payload []byte, dest net.Destination) (int, error) { // nolint: unparam
-	buffer := buf.StackNew()
-	defer buffer.Release()
+	var addrPortLen int32
+	switch dest.Address.Family() {
+	case net.AddressFamilyDomain:
+		if protocol.IsDomainTooLong(dest.Address.Domain()) {
+			return 0, newError("Super long domain is not supported: ", dest.Address.Domain())
+		}
+		addrPortLen = 1 + 1 + int32(len(dest.Address.Domain())) + 2
+	case net.AddressFamilyIPv4:
+		addrPortLen = 1 + 4 + 2
+	case net.AddressFamilyIPv6:
+		addrPortLen = 1 + 16 + 2
+	default:
+		panic("Unknown address type.")
+	}
 
 	length := len(payload)
 	lengthBuf := [2]byte{}
 	binary.BigEndian.PutUint16(lengthBuf[:], uint16(length))
-	if err := addrParser.WriteAddressPort(&buffer, dest.Address, dest.Port); err != nil {
+
+	buffer := buf.NewWithSize(addrPortLen + 2 + 2 + int32(length))
+	defer buffer.Release()
+
+	if err := addrParser.WriteAddressPort(buffer, dest.Address, dest.Port); err != nil {
 		return 0, err
 	}
 	if _, err := buffer.Write(lengthBuf[:]); err != nil {
@@ -264,10 +279,7 @@ func (r *PacketReader) ReadMultiBufferWithMetadata() (*PacketPayload, error) {
 		return nil, newError("failed to read payload length").Base(err)
 	}
 
-	remain := int(binary.BigEndian.Uint16(lengthBuf[:]))
-	if remain > maxLength {
-		return nil, newError("oversize payload")
-	}
+	length := binary.BigEndian.Uint16(lengthBuf[:])
 
 	var crlf [2]byte
 	if _, err := io.ReadFull(r, crlf[:]); err != nil {
@@ -275,25 +287,14 @@ func (r *PacketReader) ReadMultiBufferWithMetadata() (*PacketPayload, error) {
 	}
 
 	dest := net.UDPDestination(addr, port)
-	var mb buf.MultiBuffer
-	for remain > 0 {
-		length := buf.Size
-		if remain < length {
-			length = remain
-		}
 
-		b := buf.New()
-		mb = append(mb, b)
-		n, err := b.ReadFullFrom(r, int32(length))
-		if err != nil {
-			buf.ReleaseMulti(mb)
-			return nil, newError("failed to read payload").Base(err)
-		}
-
-		remain -= int(n)
+	b := buf.NewWithSize(int32(length))
+	_, err = b.ReadFullFrom(r, int32(length))
+	if err != nil {
+		return nil, newError("failed to read payload").Base(err)
 	}
 
-	return &PacketPayload{Target: dest, Buffer: mb}, nil
+	return &PacketPayload{Target: dest, Buffer: buf.MultiBuffer{b}}, nil
 }
 
 type PacketConnectionReader struct {

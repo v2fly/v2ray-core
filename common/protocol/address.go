@@ -239,7 +239,7 @@ func (p *addressParser) writeAddress(writer io.Writer, address net.Address) erro
 		}
 	case net.AddressFamilyDomain:
 		domain := address.Domain()
-		if isDomainTooLong(domain) {
+		if IsDomainTooLong(domain) {
 			return newError("Super long domain is not supported: ", domain)
 		}
 
