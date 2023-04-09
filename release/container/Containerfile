@@ -16,4 +16,5 @@ ENV v2ray.location.asset=/opt/v2ray/share
 
 COPY ./ /opt/v2ray/
 
-CMD ["/opt/v2ray/bin/v2ray"]
+ENTRYPOINT [ "/opt/v2ray/bin/v2ray" ]
+CMD [ "run", "-config", "/etc/v2ray/config.json" ]
