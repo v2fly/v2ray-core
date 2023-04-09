@@ -82,9 +82,6 @@ func (m *Manager) GetDefaultHandler() outbound.Handler {
 	m.access.RLock()
 	defer m.access.RUnlock()
 
-	if m.defaultHandler == nil {
-		return nil
-	}
 	return m.defaultHandler
 }
 
