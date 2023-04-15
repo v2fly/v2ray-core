@@ -61,6 +61,10 @@ func (t *ActivityTimer) SetTimeout(timeout time.Duration) {
 		Execute:  t.check,
 	}
 
+	if checkTask.Interval > 1 {
+		checkTask.Interval /= 2
+	}
+
 	t.Lock()
 
 	if t.checkTask != nil {

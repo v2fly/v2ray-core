@@ -12,6 +12,7 @@ import (
 func TestActivityTimer(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	timer := CancelAfterInactivity(ctx, cancel, time.Second*4)
+	timer.Update()
 	time.Sleep(time.Second * 6)
 	if ctx.Err() == nil {
 		t.Error("expected some error, but got nil")
