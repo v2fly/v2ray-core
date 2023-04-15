@@ -3,7 +3,7 @@ package json
 import (
 	"io"
 
-	"github.com/v2fly/v2ray-core/v4/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
 )
 
 // State is the internal state of parser.
@@ -27,18 +27,29 @@ const (
 type Reader struct {
 	io.Reader
 
-	state State
-	br    *buf.BufferedReader
+	state   State
+	pending []byte
+	br      *buf.BufferedReader
 }
 
-// Read implements io.Reader.Read(). Buffer must be at least 3 bytes.
+// Read implements io.Reader.Read().
 func (v *Reader) Read(b []byte) (int, error) {
 	if v.br == nil {
 		v.br = &buf.BufferedReader{Reader: buf.NewReader(v.Reader)}
 	}
 
 	p := b[:0]
-	for len(p) < len(b)-2 {
+	for len(p) < len(b) {
+		if len(v.pending) > 0 {
+			max := len(b) - len(p)
+			if max > len(v.pending) {
+				max = len(v.pending)
+			}
+			p = append(p, v.pending[:max]...)
+			v.pending = v.pending[max:]
+			continue
+		}
+
 		x, err := v.br.ReadByte()
 		if err != nil {
 			if len(p) == 0 {
@@ -57,6 +68,7 @@ func (v *Reader) Read(b []byte) (int, error) {
 				p = append(p, x)
 			case '\\':
 				v.state = StateEscape
+				p = append(p, x)
 			case '#':
 				v.state = StateComment
 			case '/':
@@ -65,7 +77,7 @@ func (v *Reader) Read(b []byte) (int, error) {
 				p = append(p, x)
 			}
 		case StateEscape:
-			p = append(p, '\\', x)
+			p = append(p, x)
 			v.state = StateContent
 		case StateDoubleQuote:
 			switch x {
@@ -74,11 +86,12 @@ func (v *Reader) Read(b []byte) (int, error) {
 				p = append(p, x)
 			case '\\':
 				v.state = StateDoubleQuoteEscape
+				p = append(p, x)
 			default:
 				p = append(p, x)
 			}
 		case StateDoubleQuoteEscape:
-			p = append(p, '\\', x)
+			p = append(p, x)
 			v.state = StateDoubleQuote
 		case StateSingleQuote:
 			switch x {
@@ -87,16 +100,17 @@ func (v *Reader) Read(b []byte) (int, error) {
 				p = append(p, x)
 			case '\\':
 				v.state = StateSingleQuoteEscape
+				p = append(p, x)
 			default:
 				p = append(p, x)
 			}
 		case StateSingleQuoteEscape:
-			p = append(p, '\\', x)
+			p = append(p, x)
 			v.state = StateSingleQuote
 		case StateComment:
 			if x == '\n' {
 				v.state = StateContent
-				p = append(p, '\n')
+				p = append(p, x)
 			}
 		case StateSlash:
 			switch x {
@@ -105,14 +119,16 @@ func (v *Reader) Read(b []byte) (int, error) {
 			case '*':
 				v.state = StateMultilineComment
 			default:
-				p = append(p, '/', x)
+				v.state = StateContent
+				v.pending = append(v.pending, x)
+				p = append(p, '/')
 			}
 		case StateMultilineComment:
 			switch x {
 			case '*':
 				v.state = StateMultilineCommentStar
 			case '\n':
-				p = append(p, '\n')
+				p = append(p, x)
 			}
 		case StateMultilineCommentStar:
 			switch x {
@@ -121,7 +137,7 @@ func (v *Reader) Read(b []byte) (int, error) {
 			case '*':
 				// Stay
 			case '\n':
-				p = append(p, '\n')
+				p = append(p, x)
 			default:
 				v.state = StateMultilineComment
 			}

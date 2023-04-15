@@ -104,7 +104,7 @@ jobs:
 
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -113,13 +113,13 @@ jobs:
         run: |
           export _NAME=$(jq ".[\"$GOOS-$GOARCH$GOARM\"].friendlyName" -r < release/friendly-filenames.json)
           echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM, RELEASE_NAME: $_NAME"
-          echo "::set-output name=ASSET_NAME::$_NAME"
+          echo "ASSET_NAME=$_NAME" >> $GITHUB_OUTPUT
           echo "ASSET_NAME=$_NAME" >> $GITHUB_ENV
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: ^1.17
+          go-version: ^1.20
 
       - name: Get project dependencies
         run: go mod download
@@ -161,7 +161,7 @@ jobs:
           openssl dgst -sha512 $FILE | sed 's/([^)]*)//g' >>$DGST
 
       - name: Upload ZIP file to Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
           path: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
@@ -180,16 +180,16 @@ jobs:
     needs: build
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: ^1.17
+          go-version: ^1.20
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           path: build_artifacts
 
@@ -224,17 +224,17 @@ jobs:
           openssl dgst -sha256 $FILE | sed 's/([^)]*)//g' >>$DGST
           openssl dgst -sha512 $FILE | sed 's/([^)]*)//g' >>$DGST
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Release.unsigned
           path: build_artifacts/Release.unsigned
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Release.unsigned.dgst
           path: build_artifacts/Release.unsigned.dgst
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: v2ray-extra.zip
           path: build_artifacts/v2ray-extra.zip
@@ -256,3 +256,68 @@ jobs:
           file_glob: true
           file: build_artifacts/v2ray-extra.zip
           tag: ${{ github.ref }}
+  buildContainer:
+    if: github.event_name == 'release'
+    needs: signature
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [std, extra]
+        arch:
+          - v2Name: 32
+            containerName: 386
+          - v2Name: 64
+            containerName: amd64
+          - v2Name: arm32-v6
+            containerName: arm/v6
+          - v2Name: arm32-v7a
+            containerName: arm/v7
+          - v2Name: arm64-v8a
+            containerName: arm64
+          - v2Name: arm64-v8a
+            containerName: arm64/v8
+
+    name: Build And Push image
+    runs-on: ubuntu-latest
+    env:
+      REGISTRY_USER: ${{ github.actor }}
+      REGISTRY_PASSWORD: ${{ github.token }}
+      IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
+      RELEASE_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to ghcr.io
+        uses: redhat-actions/podman-login@v1
+        with:
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ env.REGISTRY_PASSWORD }}
+          registry: ${{ env.IMAGE_REGISTRY }}
+
+      - name: Download Assets
+        run: |
+          bash ./release/container/downloadAssets.sh ${{  github.ref_name }} ${{ matrix.arch.v2Name }} ${{ matrix.arch.containerName }} ${{ matrix.variant }}
+
+      - name: Buildah Action
+        id: build-image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: v2ray
+          tags: ${{  github.ref_name }}-${{ matrix.arch.v2Name }}-${{ matrix.variant }}
+          containerfiles: |
+            ./release/container/Containerfile
+          build-args: |
+            TARGETPLATFORM=${{ matrix.arch.containerName }}
+            VARIANT=${{ matrix.variant }}
+          archs: ${{ matrix.arch.containerName }}
+          context: context/linux/${{ matrix.arch.containerName }}/${{ matrix.variant }}
+          extra-args: |
+            --squash
+            --timestamp 0
+
+      - name: Push To ghcr.io
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build-image.outputs.image }}
+          tags: ${{ steps.build-image.outputs.tags }}
+          registry: ${{ env.IMAGE_REGISTRY }}

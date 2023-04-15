@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package v2ray.core.proxy.dokodemo;
 option csharp_namespace = "V2Ray.Core.Proxy.Dokodemo";
-option go_package = "github.com/v2fly/v2ray-core/v4/proxy/dokodemo";
+option go_package = "github.com/v2fly/v2ray-core/v5/proxy/dokodemo";
 option java_package = "com.v2ray.core.proxy.dokodemo";
 option java_multiple_files = true;
 
@@ -31,6 +31,6 @@ message SimplifiedConfig {
 
   v2ray.core.common.net.IPOrDomain address = 1;
   uint32 port = 2;
-  string network = 3;
+  v2ray.core.common.net.NetworkList networks = 3;
   bool follow_redirect = 4;
 }

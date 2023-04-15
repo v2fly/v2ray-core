@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout default branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Grant it execution permission
         run: |
@@ -18,7 +18,7 @@ jobs:
       - name: Invoke release signing
         env:
           SIGN_SERVICE_PASSWORD: ${{ secrets.SIGN_SERVICE_PASSWORD }}
-          SIGN_SERIVCE_URL: ${{ secrets.SIGN_SERIVCE_URL }}
+          SIGN_SERIVCE_URL: ${{ secrets.SIGN_SERIVCE_URL_V5 }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           export SIGN_VERSION=$(cat $GITHUB_EVENT_PATH| jq -r ".release.tag_name")

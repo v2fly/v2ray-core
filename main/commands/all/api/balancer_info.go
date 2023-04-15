@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	routerService "github.com/v2fly/v2ray-core/v4/app/router/command"
-	"github.com/v2fly/v2ray-core/v4/main/commands/base"
+	routerService "github.com/v2fly/v2ray-core/v5/app/router/command"
+	"github.com/v2fly/v2ray-core/v5/main/commands/base"
 )
 
 // TODO: support "-json" flag for json output
@@ -48,7 +48,7 @@ func executeBalancerInfo(cmd *base.Command, args []string) {
 	defer close()
 
 	client := routerService.NewRoutingServiceClient(conn)
-	r := &routerService.GetBalancerInfoRequest{Tag: args[0]}
+	r := &routerService.GetBalancerInfoRequest{Tag: cmd.Flag.Arg(0)}
 	resp, err := client.GetBalancerInfo(ctx, r)
 	if err != nil {
 		base.Fatalf("failed to get health information: %s", err)

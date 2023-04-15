@@ -3,7 +3,7 @@ package policy
 import (
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/features/policy"
+	"github.com/v2fly/v2ray-core/v5/features/policy"
 )
 
 // Duration converts Second to time.Duration.
@@ -89,5 +89,6 @@ func (p *SystemPolicy) ToCorePolicy() policy.System {
 			OutboundUplink:   p.Stats.OutboundUplink,
 			OutboundDownlink: p.Stats.OutboundDownlink,
 		},
+		OverrideAccessLogDest: p.OverrideAccessLogDest,
 	}
 }

@@ -12,16 +12,16 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/proxyman"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/proxy/freedom"
-	v2http "github.com/v2fly/v2ray-core/v4/proxy/http"
-	v2httptest "github.com/v2fly/v2ray-core/v4/testing/servers/http"
-	"github.com/v2fly/v2ray-core/v4/testing/servers/tcp"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/proxyman"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/proxy/freedom"
+	v2http "github.com/v2fly/v2ray-core/v5/proxy/http"
+	v2httptest "github.com/v2fly/v2ray-core/v5/testing/servers/http"
+	"github.com/v2fly/v2ray-core/v5/testing/servers/tcp"
 )
 
 func TestHttpConformance(t *testing.T) {

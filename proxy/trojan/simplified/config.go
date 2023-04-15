@@ -3,10 +3,10 @@ package simplified
 import (
 	"context"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/proxy/trojan"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/proxy/trojan"
 )
 
 func init() {
@@ -22,6 +22,7 @@ func init() {
 				}
 				return
 			}(),
+			PacketEncoding: simplifiedServer.PacketEncoding,
 		}
 		return common.CreateObject(ctx, fullServer)
 	}))

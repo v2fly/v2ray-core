@@ -13,12 +13,12 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	http_proto "github.com/v2fly/v2ray-core/v4/common/protocol/http"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
-	v2tls "github.com/v2fly/v2ray-core/v4/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	http_proto "github.com/v2fly/v2ray-core/v5/common/protocol/http"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	v2tls "github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
 
 type requestHandler struct {
@@ -38,6 +38,8 @@ var upgrader = &websocket.Upgrader{
 }
 
 func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	responseHeader := http.Header{}
+
 	var earlyData io.Reader
 	if !h.earlyDataEnabled { // nolint: gocritic
 		if request.URL.Path != h.path {
@@ -51,6 +53,9 @@ func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		}
 		earlyDataStr := request.Header.Get(h.earlyDataHeaderName)
 		earlyData = base64.NewDecoder(base64.RawURLEncoding, bytes.NewReader([]byte(earlyDataStr)))
+		if strings.EqualFold("Sec-WebSocket-Protocol", h.earlyDataHeaderName) {
+			responseHeader.Set(h.earlyDataHeaderName, earlyDataStr)
+		}
 	} else {
 		if strings.HasPrefix(request.URL.RequestURI(), h.path) {
 			earlyDataStr := request.URL.RequestURI()[len(h.path):]
@@ -61,7 +66,7 @@ func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		}
 	}
 
-	conn, err := upgrader.Upgrade(writer, request, nil)
+	conn, err := upgrader.Upgrade(writer, request, responseHeader)
 	if err != nil {
 		newError("failed to convert to WebSocket connection").Base(err).WriteToLog()
 		return

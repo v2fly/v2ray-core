@@ -8,8 +8,8 @@ import (
 
 	"github.com/pires/go-proxyproto"
 
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/session"
 )
 
 var effectiveListener = DefaultListener{}
@@ -50,7 +50,7 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 		network = addr.Network()
 		address = addr.String()
 		lc.Control = getControlFunc(ctx, sockopt, dl.controllers)
-		if sockopt != nil && sockopt.TcpKeepAliveIdle != 0 {
+		if sockopt != nil && (sockopt.TcpKeepAliveInterval != 0 || sockopt.TcpKeepAliveIdle != 0) {
 			lc.KeepAlive = time.Duration(-1)
 		}
 	case *net.UnixAddr:

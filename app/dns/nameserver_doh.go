@@ -16,15 +16,15 @@ import (
 
 	"golang.org/x/net/dns/dnsmessage"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol/dns"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/signal/pubsub"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	dns_feature "github.com/v2fly/v2ray-core/v4/features/dns"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol/dns"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal/pubsub"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	dns_feature "github.com/v2fly/v2ray-core/v5/features/dns"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
 )
 
 // DoHNameServer implemented DNS over HTTPS (RFC8484) Wire Format,
@@ -297,20 +297,20 @@ func (s *DoHNameServer) findIPsForDomain(domain string, option dns_feature.IPOpt
 
 	var ips []net.Address
 	var lastErr error
-	if option.IPv6Enable && record.AAAA != nil && record.AAAA.RCode == dnsmessage.RCodeSuccess {
-		aaaa, err := record.AAAA.getIPs()
-		if err != nil {
-			lastErr = err
-		}
-		ips = append(ips, aaaa...)
-	}
-
-	if option.IPv4Enable && record.A != nil && record.A.RCode == dnsmessage.RCodeSuccess {
+	if option.IPv4Enable {
 		a, err := record.A.getIPs()
 		if err != nil {
 			lastErr = err
 		}
 		ips = append(ips, a...)
+	}
+
+	if option.IPv6Enable {
+		aaaa, err := record.AAAA.getIPs()
+		if err != nil {
+			lastErr = err
+		}
+		ips = append(ips, aaaa...)
 	}
 
 	if len(ips) > 0 {
@@ -321,11 +321,7 @@ func (s *DoHNameServer) findIPsForDomain(domain string, option dns_feature.IPOpt
 		return nil, lastErr
 	}
 
-	if (option.IPv4Enable && record.A != nil) || (option.IPv6Enable && record.AAAA != nil) {
-		return nil, dns_feature.ErrEmptyResponse
-	}
-
-	return nil, errRecordNotFound
+	return nil, dns_feature.ErrEmptyResponse
 }
 
 // QueryIP implements Server.

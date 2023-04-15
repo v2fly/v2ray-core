@@ -8,12 +8,12 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/v2fly/v2ray-core/v4/common/environment/envctx"
-	"github.com/v2fly/v2ray-core/v4/common/environment/filesystemcap"
-	"github.com/v2fly/v2ray-core/v4/common/protoext"
+	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
+	"github.com/v2fly/v2ray-core/v5/common/environment/filesystemcap"
+	"github.com/v2fly/v2ray-core/v5/common/protoext"
 )
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 func FilterProtoConfig(ctx context.Context, config proto.Message) error {
 	messageProtoReflect := config.ProtoReflect()
@@ -55,9 +55,12 @@ func filterMessage(ctx context.Context, message protoreflect.Message) error {
 			if v2extension.ConvertTimeParseIp != "" {
 				ipValue := net.ParseIP(value.String())
 				target := message.Descriptor().Fields().ByTextName(v2extension.ConvertTimeParseIp)
+				if ipValue.To4() != nil {
+					ipValue = ipValue.To4()
+				}
 				pendingWriteQueue = append(pendingWriteQueue, pendingWrite{
 					field: target,
-					value: protoreflect.ValueOf(ipValue),
+					value: protoreflect.ValueOf([]byte(ipValue)),
 				})
 			}
 		}

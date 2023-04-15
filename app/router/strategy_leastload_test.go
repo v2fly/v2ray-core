@@ -7,64 +7,64 @@ import (
 /*
 Split into multiple package, need to be tested separately
 
-func TestSelectLeastLoad(t *testing.T) {
-	settings := &StrategyLeastLoadConfig{
-		HealthCheck: &HealthPingConfig{
-			SamplingCount: 10,
-		},
-		Expected: 1,
-		MaxRTT:   int64(time.Millisecond * time.Duration(800)),
+	func TestSelectLeastLoad(t *testing.T) {
+		settings := &StrategyLeastLoadConfig{
+			HealthCheck: &HealthPingConfig{
+				SamplingCount: 10,
+			},
+			Expected: 1,
+			MaxRTT:   int64(time.Millisecond * time.Duration(800)),
+		}
+		strategy := NewLeastLoadStrategy(settings)
+		// std 40
+		strategy.PutResult("a", time.Millisecond*time.Duration(60))
+		strategy.PutResult("a", time.Millisecond*time.Duration(140))
+		strategy.PutResult("a", time.Millisecond*time.Duration(60))
+		strategy.PutResult("a", time.Millisecond*time.Duration(140))
+		// std 60
+		strategy.PutResult("b", time.Millisecond*time.Duration(40))
+		strategy.PutResult("b", time.Millisecond*time.Duration(160))
+		strategy.PutResult("b", time.Millisecond*time.Duration(40))
+		strategy.PutResult("b", time.Millisecond*time.Duration(160))
+		// std 0, but >MaxRTT
+		strategy.PutResult("c", time.Millisecond*time.Duration(1000))
+		strategy.PutResult("c", time.Millisecond*time.Duration(1000))
+		strategy.PutResult("c", time.Millisecond*time.Duration(1000))
+		strategy.PutResult("c", time.Millisecond*time.Duration(1000))
+		expected := "a"
+		actual := strategy.SelectAndPick([]string{"a", "b", "c", "untested"})
+		if actual != expected {
+			t.Errorf("expected: %v, actual: %v", expected, actual)
+		}
 	}
-	strategy := NewLeastLoadStrategy(settings)
-	// std 40
-	strategy.PutResult("a", time.Millisecond*time.Duration(60))
-	strategy.PutResult("a", time.Millisecond*time.Duration(140))
-	strategy.PutResult("a", time.Millisecond*time.Duration(60))
-	strategy.PutResult("a", time.Millisecond*time.Duration(140))
-	// std 60
-	strategy.PutResult("b", time.Millisecond*time.Duration(40))
-	strategy.PutResult("b", time.Millisecond*time.Duration(160))
-	strategy.PutResult("b", time.Millisecond*time.Duration(40))
-	strategy.PutResult("b", time.Millisecond*time.Duration(160))
-	// std 0, but >MaxRTT
-	strategy.PutResult("c", time.Millisecond*time.Duration(1000))
-	strategy.PutResult("c", time.Millisecond*time.Duration(1000))
-	strategy.PutResult("c", time.Millisecond*time.Duration(1000))
-	strategy.PutResult("c", time.Millisecond*time.Duration(1000))
-	expected := "a"
-	actual := strategy.SelectAndPick([]string{"a", "b", "c", "untested"})
-	if actual != expected {
-		t.Errorf("expected: %v, actual: %v", expected, actual)
-	}
-}
 
-func TestSelectLeastLoadWithCost(t *testing.T) {
-	settings := &StrategyLeastLoadConfig{
-		HealthCheck: &HealthPingConfig{
-			SamplingCount: 10,
-		},
-		Costs: []*StrategyWeight{
-			{Match: "a", Value: 9},
-		},
-		Expected: 1,
+	func TestSelectLeastLoadWithCost(t *testing.T) {
+		settings := &StrategyLeastLoadConfig{
+			HealthCheck: &HealthPingConfig{
+				SamplingCount: 10,
+			},
+			Costs: []*StrategyWeight{
+				{Match: "a", Value: 9},
+			},
+			Expected: 1,
+		}
+		strategy := NewLeastLoadStrategy(settings, nil)
+		// std 40, std+c 120
+		strategy.PutResult("a", time.Millisecond*time.Duration(60))
+		strategy.PutResult("a", time.Millisecond*time.Duration(140))
+		strategy.PutResult("a", time.Millisecond*time.Duration(60))
+		strategy.PutResult("a", time.Millisecond*time.Duration(140))
+		// std 60
+		strategy.PutResult("b", time.Millisecond*time.Duration(40))
+		strategy.PutResult("b", time.Millisecond*time.Duration(160))
+		strategy.PutResult("b", time.Millisecond*time.Duration(40))
+		strategy.PutResult("b", time.Millisecond*time.Duration(160))
+		expected := "b"
+		actual := strategy.SelectAndPick([]string{"a", "b", "untested"})
+		if actual != expected {
+			t.Errorf("expected: %v, actual: %v", expected, actual)
+		}
 	}
-	strategy := NewLeastLoadStrategy(settings, nil)
-	// std 40, std+c 120
-	strategy.PutResult("a", time.Millisecond*time.Duration(60))
-	strategy.PutResult("a", time.Millisecond*time.Duration(140))
-	strategy.PutResult("a", time.Millisecond*time.Duration(60))
-	strategy.PutResult("a", time.Millisecond*time.Duration(140))
-	// std 60
-	strategy.PutResult("b", time.Millisecond*time.Duration(40))
-	strategy.PutResult("b", time.Millisecond*time.Duration(160))
-	strategy.PutResult("b", time.Millisecond*time.Duration(40))
-	strategy.PutResult("b", time.Millisecond*time.Duration(160))
-	expected := "b"
-	actual := strategy.SelectAndPick([]string{"a", "b", "untested"})
-	if actual != expected {
-		t.Errorf("expected: %v, actual: %v", expected, actual)
-	}
-}
 */
 func TestSelectLeastExpected(t *testing.T) {
 	strategy := &LeastLoadStrategy{
@@ -118,7 +118,7 @@ func TestSelectLeastExpectedAndBaselines(t *testing.T) {
 		{Tag: "d", RTTDeviationCost: 300},
 		{Tag: "e", RTTDeviationCost: 310},
 	}
-	expected := 4
+	expected := 3
 	ns := strategy.selectLeastLoad(nodes)
 	if len(ns) != expected {
 		t.Errorf("expected: %v, actual: %v", expected, len(ns))
@@ -158,7 +158,7 @@ func TestSelectLeastLoadBaselines(t *testing.T) {
 		{Tag: "b", RTTDeviationCost: 200},
 		{Tag: "c", RTTDeviationCost: 300},
 	}
-	expected := 2
+	expected := 1
 	ns := strategy.selectLeastLoad(nodes)
 	if len(ns) != expected {
 		t.Errorf("expected: %v, actual: %v", expected, len(ns))

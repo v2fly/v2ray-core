@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
-	. "github.com/v2fly/v2ray-core/v4/common/dice"
+	. "github.com/v2fly/v2ray-core/v5/common/dice"
 )
 
 func BenchmarkRoll1(b *testing.B) {
@@ -21,7 +21,7 @@ func BenchmarkRoll20(b *testing.B) {
 
 func BenchmarkIntn1(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		rand.Intn(1)
+		rand.Intn(1) //nolint:staticcheck
 	}
 }
 

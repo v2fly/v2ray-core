@@ -5,8 +5,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/session"
 )
 
 var effectiveSystemDialer SystemDialer = &DefaultSystemDialer{}
@@ -64,7 +64,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 		}, nil
 	}
 	goStdKeepAlive := time.Duration(0)
-	if sockopt != nil && sockopt.TcpKeepAliveIdle != 0 {
+	if sockopt != nil && (sockopt.TcpKeepAliveInterval != 0 || sockopt.TcpKeepAliveIdle != 0) {
 		goStdKeepAlive = time.Duration(-1)
 	}
 	dialer := &net.Dialer{

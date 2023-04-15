@@ -1,17 +1,16 @@
 package command
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 import (
 	"context"
-	"time"
 
 	grpc "google.golang.org/grpc"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/log"
-	"github.com/v2fly/v2ray-core/v4/common"
-	cmlog "github.com/v2fly/v2ray-core/v4/common/log"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/log"
+	"github.com/v2fly/v2ray-core/v5/common"
+	cmlog "github.com/v2fly/v2ray-core/v5/common/log"
 )
 
 // LoggerServer is the implemention of LoggerService
@@ -44,22 +43,20 @@ func (s *LoggerServer) FollowLog(_ *FollowLogRequest, stream LoggerService_Follo
 	if !ok {
 		return newError("logger not support following")
 	}
-	var err error
+	ctx, cancel := context.WithCancel(stream.Context())
+	defer cancel()
 	f := func(msg cmlog.Message) {
-		err = stream.Send(&FollowLogResponse{
+		err := stream.Send(&FollowLogResponse{
 			Message: msg.String(),
 		})
+		if err != nil {
+			cancel()
+		}
 	}
 	follower.AddFollower(f)
 	defer follower.RemoveFollower(f)
-	ticker := time.NewTicker(time.Second)
-	for {
-		<-ticker.C
-		if err != nil {
-			ticker.Stop()
-			return nil
-		}
-	}
+	<-ctx.Done()
+	return nil
 }
 
 func (s *LoggerServer) mustEmbedUnimplementedLoggerServiceServer() {}

@@ -8,15 +8,11 @@ type MphIndexMatcher struct {
 	count uint32
 	mph   *MphMatcherGroup
 	ac    *ACAutomatonMatcherGroup
-	regex SimpleMatcherGroup
+	regex *SimpleMatcherGroup
 }
 
 func NewMphIndexMatcher() *MphIndexMatcher {
-	return &MphIndexMatcher{
-		mph:   nil,
-		ac:    nil,
-		regex: SimpleMatcherGroup{},
-	}
+	return new(MphIndexMatcher)
 }
 
 // Add implements IndexMatcher.Add.
@@ -41,6 +37,9 @@ func (g *MphIndexMatcher) Add(matcher Matcher) uint32 {
 		}
 		g.ac.AddSubstrMatcher(matcher, index)
 	case *RegexMatcher:
+		if g.regex == nil {
+			g.regex = &SimpleMatcherGroup{}
+		}
 		g.regex.AddMatcher(matcher, index)
 	}
 
@@ -59,8 +58,24 @@ func (g *MphIndexMatcher) Build() error {
 }
 
 // Match implements IndexMatcher.Match.
-func (*MphIndexMatcher) Match(string) []uint32 {
-	return nil
+func (g *MphIndexMatcher) Match(input string) []uint32 {
+	result := make([][]uint32, 0, 5)
+	if g.mph != nil {
+		if matches := g.mph.Match(input); len(matches) > 0 {
+			result = append(result, matches)
+		}
+	}
+	if g.ac != nil {
+		if matches := g.ac.Match(input); len(matches) > 0 {
+			result = append(result, matches)
+		}
+	}
+	if g.regex != nil {
+		if matches := g.regex.Match(input); len(matches) > 0 {
+			result = append(result, matches)
+		}
+	}
+	return CompositeMatches(result)
 }
 
 // MatchAny implements IndexMatcher.MatchAny.
@@ -71,7 +86,7 @@ func (g *MphIndexMatcher) MatchAny(input string) bool {
 	if g.ac != nil && g.ac.MatchAny(input) {
 		return true
 	}
-	return g.regex.MatchAny(input)
+	return g.regex != nil && g.regex.MatchAny(input)
 }
 
 // Size implements IndexMatcher.Size.

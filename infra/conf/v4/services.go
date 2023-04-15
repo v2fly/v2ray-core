@@ -8,7 +8,7 @@ import (
 	"github.com/jhump/protoreflect/dynamic"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/v2fly/v2ray-core/v4/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
 )
 
 func (c *Config) BuildServices(service map[string]*json.RawMessage) ([]*anypb.Any, error) {

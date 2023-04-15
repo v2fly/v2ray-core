@@ -1,9 +1,16 @@
 package internet
 
-import "syscall"
+import (
+	"net"
+	"syscall"
+
+	"golang.org/x/sys/windows"
+)
 
 const (
-	TCP_FASTOPEN = 15 // nolint: revive,stylecheck
+	TCP_FASTOPEN    = 15 // nolint: revive,stylecheck
+	IP_UNICAST_IF   = 31 // nolint: revive,stylecheck
+	IPV6_UNICAST_IF = 31 // nolint: revive,stylecheck
 )
 
 func setTFO(fd syscall.Handle, settings SocketConfig_TCPFastOpenState) error {
@@ -25,10 +32,35 @@ func applyOutboundSocketOptions(network string, address string, fd uintptr, conf
 		if err := setTFO(syscall.Handle(fd), config.Tfo); err != nil {
 			return err
 		}
-		if config.TcpKeepAliveInterval > 0 {
+		if config.TcpKeepAliveIdle > 0 {
 			if err := syscall.SetsockoptInt(syscall.Handle(fd), syscall.SOL_SOCKET, syscall.SO_KEEPALIVE, 1); err != nil {
 				return newError("failed to set SO_KEEPALIVE", err)
 			}
+		}
+	}
+
+	if config.BindToDevice != "" {
+		iface, err := net.InterfaceByName(config.BindToDevice)
+		if err != nil {
+			return newError("failed to get interface ", config.BindToDevice).Base(err)
+		}
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.IPPROTO_IP, IP_UNICAST_IF, iface.Index); err != nil {
+			return newError("failed to set IP_UNICAST_IF", err)
+		}
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.IPPROTO_IPV6, IPV6_UNICAST_IF, iface.Index); err != nil {
+			return newError("failed to set IPV6_UNICAST_IF", err)
+		}
+	}
+
+	if config.TxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_SNDBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_SNDBUF").Base(err)
+		}
+	}
+
+	if config.RxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_RCVBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_RCVBUF").Base(err)
 		}
 	}
 
@@ -40,10 +72,22 @@ func applyInboundSocketOptions(network string, fd uintptr, config *SocketConfig)
 		if err := setTFO(syscall.Handle(fd), config.Tfo); err != nil {
 			return err
 		}
-		if config.TcpKeepAliveInterval > 0 {
+		if config.TcpKeepAliveIdle > 0 {
 			if err := syscall.SetsockoptInt(syscall.Handle(fd), syscall.SOL_SOCKET, syscall.SO_KEEPALIVE, 1); err != nil {
 				return newError("failed to set SO_KEEPALIVE", err)
 			}
+		}
+	}
+
+	if config.TxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_SNDBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_SNDBUF").Base(err)
+		}
+	}
+
+	if config.RxBufSize != 0 {
+		if err := windows.SetsockoptInt(windows.Handle(fd), windows.SOL_SOCKET, windows.SO_RCVBUF, int(config.TxBufSize)); err != nil {
+			return newError("failed to set SO_RCVBUF").Base(err)
 		}
 	}
 

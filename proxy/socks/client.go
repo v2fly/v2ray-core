@@ -4,19 +4,21 @@ import (
 	"context"
 	"time"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/retry"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/signal"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/features/dns"
-	"github.com/v2fly/v2ray-core/v4/features/policy"
-	"github.com/v2fly/v2ray-core/v4/transport"
-	"github.com/v2fly/v2ray-core/v4/transport/internet"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/retry"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/signal"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
+	"github.com/v2fly/v2ray-core/v5/features/policy"
+	"github.com/v2fly/v2ray-core/v5/transport"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
 )
 
 // Client is a Socks5 client.
@@ -102,17 +104,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	switch c.version {
 	case Version_SOCKS4:
 		if request.Address.Family().IsDomain() {
-			if d, ok := c.dns.(dns.ClientWithIPOption); ok {
-				d.SetFakeDNSOption(false) // Skip FakeDNS
-			} else {
-				newError("DNS client doesn't implement ClientWithIPOption")
-			}
-
-			lookupFunc := c.dns.LookupIP
-			if lookupIPv4, ok := c.dns.(dns.IPv4Lookup); ok {
-				lookupFunc = lookupIPv4.LookupIPv4
-			}
-			ips, err := lookupFunc(request.Address.Domain())
+			ips, err := dns.LookupIPWithOption(c.dns, request.Address.Domain(), dns.IPOption{IPv4Enable: true, IPv6Enable: false, FakeEnable: false})
 			if err != nil {
 				return err
 			} else if len(ips) == 0 {
@@ -144,10 +136,21 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	if err := conn.SetDeadline(time.Now().Add(p.Timeouts.Handshake)); err != nil {
 		newError("failed to set deadline for handshake").Base(err).WriteToLog(session.ExportIDToError(ctx))
 	}
-	udpRequest, err := ClientHandshake(request, conn, conn)
-	if err != nil {
-		return newError("failed to establish connection to server").AtWarning().Base(err)
+
+	var udpRequest *protocol.RequestHeader
+	var err error
+	if request.Version == socks4Version {
+		err = ClientHandshake4(request, conn, conn)
+		if err != nil {
+			return newError("failed to establish connection to server").AtWarning().Base(err)
+		}
+	} else {
+		udpRequest, err = ClientHandshake(request, conn, conn)
+		if err != nil {
+			return newError("failed to establish connection to server").AtWarning().Base(err)
+		}
 	}
+
 	if udpRequest != nil {
 		if udpRequest.Address == net.AnyIP || udpRequest.Address == net.AnyIPv6 {
 			udpRequest.Address = dest.Address
@@ -160,6 +163,30 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, p.Timeouts.ConnectionIdle)
+
+	if packetConn, err := packetaddr.ToPacketAddrConn(link, destination); err == nil {
+		udpConn, err := dialer.Dial(ctx, udpRequest.Destination())
+		if err != nil {
+			return newError("failed to create UDP connection").Base(err)
+		}
+		defer udpConn.Close()
+
+		requestDone := func() error {
+			protocolWriter := NewUDPWriter(request, udpConn)
+			return udp.CopyPacketConn(protocolWriter, packetConn, udp.UpdateActivity(timer))
+		}
+		responseDone := func() error {
+			protocolReader := &UDPReader{
+				reader: udpConn,
+			}
+			return udp.CopyPacketConn(packetConn, protocolReader, udp.UpdateActivity(timer))
+		}
+		responseDoneAndCloseWriter := task.OnSuccess(responseDone, task.Close(link.Writer))
+		if err := task.Run(ctx, requestDone, responseDoneAndCloseWriter); err != nil {
+			return newError("connection ends").Base(err)
+		}
+		return nil
+	}
 
 	var requestFunc func() error
 	var responseFunc func() error

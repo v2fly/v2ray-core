@@ -8,19 +8,20 @@ import (
 	"github.com/miekg/dns"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/dispatcher"
-	. "github.com/v2fly/v2ray-core/v4/app/dns"
-	"github.com/v2fly/v2ray-core/v4/app/policy"
-	"github.com/v2fly/v2ray-core/v4/app/proxyman"
-	_ "github.com/v2fly/v2ray-core/v4/app/proxyman/outbound"
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	feature_dns "github.com/v2fly/v2ray-core/v4/features/dns"
-	"github.com/v2fly/v2ray-core/v4/proxy/freedom"
-	"github.com/v2fly/v2ray-core/v4/testing/servers/udp"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/dispatcher"
+	. "github.com/v2fly/v2ray-core/v5/app/dns"
+	"github.com/v2fly/v2ray-core/v5/app/policy"
+	"github.com/v2fly/v2ray-core/v5/app/proxyman"
+	_ "github.com/v2fly/v2ray-core/v5/app/proxyman/outbound"
+	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/strmatcher"
+	feature_dns "github.com/v2fly/v2ray-core/v5/features/dns"
+	"github.com/v2fly/v2ray-core/v5/proxy/freedom"
+	"github.com/v2fly/v2ray-core/v5/testing/servers/udp"
 )
 
 type staticHandler struct{}
@@ -103,6 +104,16 @@ func (*staticHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 
 		case q.Name == "Mijia\\ Cloud." && q.Qtype == dns.TypeA:
 			rr, _ := dns.NewRR("Mijia\\ Cloud. IN A 127.0.0.1")
+			ans.Answer = append(ans.Answer, rr)
+
+		case q.Name == "xn--vi8h.ws." /* 🍕.ws */ && q.Qtype == dns.TypeA:
+			rr, err := dns.NewRR("xn--vi8h.ws. IN A 208.100.42.200")
+			common.Must(err)
+			ans.Answer = append(ans.Answer, rr)
+
+		case q.Name == "xn--l8jaaa.com." /* ああああ.com */ && q.Qtype == dns.TypeA:
+			rr, err := dns.NewRR("xn--l8jaaa.com. IN AAAA a:a:a:a::aaaa")
+			common.Must(err)
 			ans.Answer = append(ans.Answer, rr)
 		}
 	}
@@ -248,6 +259,28 @@ func TestUDPServer(t *testing.T) {
 		}
 		if len(ips) != 0 {
 			t.Fatal("ips: ", ips)
+		}
+	}
+
+	{
+		ips, err := client.LookupIP(common.Must2(strmatcher.ToDomain("🍕.ws")).(string))
+		if err != nil {
+			t.Fatal("unexpected error: ", err)
+		}
+
+		if r := cmp.Diff(ips, []net.IP{{208, 100, 42, 200}}); r != "" {
+			t.Fatal(r)
+		}
+	}
+
+	{
+		ips, err := client.LookupIP(common.Must2(strmatcher.ToDomain("ああああ.com")).(string))
+		if err != nil {
+			t.Fatal("unexpected error: ", err)
+		}
+
+		if r := cmp.Diff(ips, []net.IP{{0, 0xa, 0, 0xa, 0, 0xa, 0, 0xa, 0, 0, 0, 0, 0, 0, 0xaa, 0xaa}}); r != "" {
+			t.Fatal(r)
 		}
 	}
 

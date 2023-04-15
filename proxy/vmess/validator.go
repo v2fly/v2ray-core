@@ -9,12 +9,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/dice"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/common/task"
-	"github.com/v2fly/v2ray-core/v4/proxy/vmess/aead"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/dice"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/common/task"
+	"github.com/v2fly/v2ray-core/v5/proxy/vmess/aead"
 )
 
 const (
@@ -69,6 +69,11 @@ func NewTimedUserValidator(hasher protocol.IDHash) *TimedUserValidator {
 	}
 	common.Must(tuv.task.Start())
 	return tuv
+}
+
+// visible for testing
+func (v *TimedUserValidator) GetBaseTime() protocol.Timestamp {
+	return v.baseTime
 }
 
 func (v *TimedUserValidator) generateNewHashes(nowSec protocol.Timestamp, user *user) {
@@ -247,7 +252,9 @@ func (v *TimedUserValidator) BurnTaintFuse(userHash []byte) error {
 	return ErrNotFound
 }
 
-/* ShouldShowLegacyWarn will return whether a Legacy Warning should be shown
+/*
+	ShouldShowLegacyWarn will return whether a Legacy Warning should be shown
+
 Not guaranteed to only return true once for every inbound, but it is okay.
 */
 func (v *TimedUserValidator) ShouldShowLegacyWarn() bool {

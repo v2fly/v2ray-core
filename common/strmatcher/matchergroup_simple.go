@@ -32,5 +32,10 @@ func (g *SimpleMatcherGroup) Match(input string) []uint32 {
 
 // MatchAny implements MatcherGroup.MatchAny.
 func (g *SimpleMatcherGroup) MatchAny(input string) bool {
-	return len(g.Match(input)) > 0
+	for _, e := range g.matchers {
+		if e.matcher.Match(input) {
+			return true
+		}
+	}
+	return false
 }

@@ -1,0 +1,19 @@
+FROM docker.io/library/golang@sha256:d19ee8512191c8b8e967246d4a7d0de4f4133a30bd9ce982e9b70a0c596dbf18 AS builder
+
+FROM --platform=${TARGETPLATFORM} scratch
+
+ARG TARGETPLATFORM
+ARG VARIANT
+
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
+COPY --from=builder /tmp /tmp
+COPY --from=builder /dev /dev
+
+ENV v2ray.location.asset=/opt/v2ray/share
+
+COPY ./ /opt/v2ray/
+
+CMD ["/opt/v2ray/bin/v2ray"]

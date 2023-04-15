@@ -4,7 +4,7 @@
 // Package dns is an implementation of core.DNS feature.
 package dns
 
-//go:generate go run github.com/v2fly/v2ray-core/v4/common/errors/errorgen
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 import (
 	"context"
@@ -12,32 +12,31 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/v2fly/v2ray-core/v4/app/router"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/errors"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/platform"
-	"github.com/v2fly/v2ray-core/v4/common/session"
-	"github.com/v2fly/v2ray-core/v4/common/strmatcher"
-	"github.com/v2fly/v2ray-core/v4/features"
-	"github.com/v2fly/v2ray-core/v4/features/dns"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/geodata"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/dns/fakedns"
+	"github.com/v2fly/v2ray-core/v5/app/router"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/platform"
+	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/v2fly/v2ray-core/v5/common/strmatcher"
+	"github.com/v2fly/v2ray-core/v5/features"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/geodata"
 )
 
 // DNS is a DNS rely server.
 type DNS struct {
 	sync.Mutex
-	tag                    string
-	disableCache           bool
-	disableFallback        bool
-	disableFallbackIfMatch bool
-	ipOption               *dns.IPOption
-	hosts                  *StaticHosts
-	clients                []*Client
-	ctx                    context.Context
-	domainMatcher          strmatcher.IndexMatcher
-	matcherInfos           []DomainMatcherInfo
+	hosts         *StaticHosts
+	clients       []*Client
+	ctx           context.Context
+	clientTags    map[string]bool
+	fakeDNSEngine *FakeDNSEngine
+	domainMatcher strmatcher.IndexMatcher
+	matcherInfos  []DomainMatcherInfo
 }
 
 // DomainMatcherInfo contains information attached to index returned by Server.domainMatcher
@@ -48,88 +47,31 @@ type DomainMatcherInfo struct {
 
 // New creates a new DNS server with given configuration.
 func New(ctx context.Context, config *Config) (*DNS, error) {
-	var tag string
-	if len(config.Tag) > 0 {
-		tag = config.Tag
-	} else {
-		tag = generateRandomTag()
-	}
-
-	var clientIP net.IP
-	switch len(config.ClientIp) {
-	case 0, net.IPv4len, net.IPv6len:
-		clientIP = net.IP(config.ClientIp)
-	default:
-		return nil, newError("unexpected client IP length ", len(config.ClientIp))
-	}
-
-	var ipOption *dns.IPOption
-	switch config.QueryStrategy {
-	case QueryStrategy_USE_IP:
-		ipOption = &dns.IPOption{
-			IPv4Enable: true,
-			IPv6Enable: true,
-			FakeEnable: false,
-		}
-	case QueryStrategy_USE_IP4:
-		ipOption = &dns.IPOption{
-			IPv4Enable: true,
-			IPv6Enable: false,
-			FakeEnable: false,
-		}
-	case QueryStrategy_USE_IP6:
-		ipOption = &dns.IPOption{
-			IPv4Enable: false,
-			IPv6Enable: true,
-			FakeEnable: false,
-		}
-	}
-
+	// Create static hosts
 	hosts, err := NewStaticHosts(config.StaticHosts, config.Hosts)
 	if err != nil {
 		return nil, newError("failed to create hosts").Base(err)
 	}
 
+	// Create name servers from legacy configs
 	clients := []*Client{}
-	domainRuleCount := 0
-	for _, ns := range config.NameServer {
-		domainRuleCount += len(ns.PrioritizedDomain)
-	}
-
-	// MatcherInfos is ensured to cover the maximum index domainMatcher could return, where matcher's index starts from 1
-	matcherInfos := make([]DomainMatcherInfo, domainRuleCount+1)
-	domainMatcher := &strmatcher.LinearIndexMatcher{}
-	geoipContainer := router.GeoIPMatcherContainer{}
-
 	for _, endpoint := range config.NameServers {
 		features.PrintDeprecatedFeatureWarning("simple DNS server")
-		client, err := NewSimpleClient(ctx, endpoint, clientIP)
+		client, err := NewClient(ctx, &NameServer{Address: endpoint}, config)
 		if err != nil {
 			return nil, newError("failed to create client").Base(err)
 		}
 		clients = append(clients, client)
 	}
 
-	for _, ns := range config.NameServer {
-		clientIdx := len(clients)
-		updateDomain := func(domainRule strmatcher.Matcher, originalRuleIdx int, matcherInfos []DomainMatcherInfo) error {
-			midx := domainMatcher.Add(domainRule)
-			matcherInfos[midx] = DomainMatcherInfo{
-				clientIdx:     uint16(clientIdx),
-				domainRuleIdx: uint16(originalRuleIdx),
-			}
-			return nil
-		}
-
-		myClientIP := clientIP
-		switch len(ns.ClientIp) {
-		case net.IPv4len, net.IPv6len:
-			myClientIP = net.IP(ns.ClientIp)
-		}
-		client, err := NewClient(ctx, ns, myClientIP, geoipContainer, &matcherInfos, updateDomain)
+	// Create name servers
+	nsClientMap := map[int]int{}
+	for nsIdx, ns := range config.NameServer {
+		client, err := NewClient(ctx, ns, config)
 		if err != nil {
 			return nil, newError("failed to create client").Base(err)
 		}
+		nsClientMap[nsIdx] = len(clients)
 		clients = append(clients, client)
 	}
 
@@ -138,18 +80,147 @@ func New(ctx context.Context, config *Config) (*DNS, error) {
 		clients = append(clients, NewLocalDNSClient())
 	}
 
-	return &DNS{
-		tag:                    tag,
-		hosts:                  hosts,
-		ipOption:               ipOption,
-		clients:                clients,
-		ctx:                    ctx,
-		domainMatcher:          domainMatcher,
-		matcherInfos:           matcherInfos,
-		disableCache:           config.DisableCache,
-		disableFallback:        config.DisableFallback,
-		disableFallbackIfMatch: config.DisableFallbackIfMatch,
-	}, nil
+	s := &DNS{
+		hosts:   hosts,
+		clients: clients,
+		ctx:     ctx,
+	}
+
+	// Establish members related to global DNS state
+	s.clientTags = make(map[string]bool)
+	for _, client := range clients {
+		s.clientTags[client.tag] = true
+	}
+	if err := establishDomainRules(s, config, nsClientMap); err != nil {
+		return nil, err
+	}
+	if err := establishExpectedIPs(s, config, nsClientMap); err != nil {
+		return nil, err
+	}
+	if err := establishFakeDNS(s, config, nsClientMap); err != nil {
+		return nil, err
+	}
+
+	return s, nil
+}
+
+func establishDomainRules(s *DNS, config *Config, nsClientMap map[int]int) error {
+	domainRuleCount := 0
+	for _, ns := range config.NameServer {
+		domainRuleCount += len(ns.PrioritizedDomain)
+	}
+	// MatcherInfos is ensured to cover the maximum index domainMatcher could return, where matcher's index starts from 1
+	matcherInfos := make([]DomainMatcherInfo, domainRuleCount+1)
+	var domainMatcher strmatcher.IndexMatcher
+	switch config.DomainMatcher {
+	case "mph", "hybrid":
+		newError("using mph domain matcher").AtDebug().WriteToLog()
+		domainMatcher = strmatcher.NewMphIndexMatcher()
+	case "linear":
+		fallthrough
+	default:
+		newError("using default domain matcher").AtDebug().WriteToLog()
+		domainMatcher = strmatcher.NewLinearIndexMatcher()
+	}
+	for nsIdx, ns := range config.NameServer {
+		clientIdx := nsClientMap[nsIdx]
+		var rules []string
+		ruleCurr := 0
+		ruleIter := 0
+		for _, domain := range ns.PrioritizedDomain {
+			domainRule, err := toStrMatcher(domain.Type, domain.Domain)
+			if err != nil {
+				return newError("failed to create prioritized domain").Base(err).AtWarning()
+			}
+			originalRuleIdx := ruleCurr
+			if ruleCurr < len(ns.OriginalRules) {
+				rule := ns.OriginalRules[ruleCurr]
+				if ruleCurr >= len(rules) {
+					rules = append(rules, rule.Rule)
+				}
+				ruleIter++
+				if ruleIter >= int(rule.Size) {
+					ruleIter = 0
+					ruleCurr++
+				}
+			} else { // No original rule, generate one according to current domain matcher (majorly for compatibility with tests)
+				rules = append(rules, domainRule.String())
+				ruleCurr++
+			}
+			midx := domainMatcher.Add(domainRule)
+			matcherInfos[midx] = DomainMatcherInfo{
+				clientIdx:     uint16(clientIdx),
+				domainRuleIdx: uint16(originalRuleIdx),
+			}
+			if err != nil {
+				return newError("failed to create prioritized domain").Base(err).AtWarning()
+			}
+		}
+		s.clients[clientIdx].domains = rules
+	}
+	if err := domainMatcher.Build(); err != nil {
+		return err
+	}
+	s.domainMatcher = domainMatcher
+	s.matcherInfos = matcherInfos
+	return nil
+}
+
+func establishExpectedIPs(s *DNS, config *Config, nsClientMap map[int]int) error {
+	geoipContainer := router.GeoIPMatcherContainer{}
+	for nsIdx, ns := range config.NameServer {
+		clientIdx := nsClientMap[nsIdx]
+		var matchers []*router.GeoIPMatcher
+		for _, geoip := range ns.Geoip {
+			matcher, err := geoipContainer.Add(geoip)
+			if err != nil {
+				return newError("failed to create ip matcher").Base(err).AtWarning()
+			}
+			matchers = append(matchers, matcher)
+		}
+		s.clients[clientIdx].expectIPs = matchers
+	}
+	return nil
+}
+
+func establishFakeDNS(s *DNS, config *Config, nsClientMap map[int]int) error {
+	fakeHolders := &fakedns.HolderMulti{}
+	fakeDefault := (*fakedns.HolderMulti)(nil)
+	if config.FakeDns != nil {
+		defaultEngine, err := fakeHolders.AddPoolMulti(config.FakeDns)
+		if err != nil {
+			return newError("fail to create fake dns").Base(err).AtWarning()
+		}
+		fakeDefault = defaultEngine
+	}
+	for nsIdx, ns := range config.NameServer {
+		clientIdx := nsClientMap[nsIdx]
+		if ns.FakeDns == nil {
+			continue
+		}
+		engine, err := fakeHolders.AddPoolMulti(ns.FakeDns)
+		if err != nil {
+			return newError("fail to create fake dns").Base(err).AtWarning()
+		}
+		s.clients[clientIdx].fakeDNS = NewFakeDNSServer(engine)
+		s.clients[clientIdx].queryStrategy.FakeEnable = true
+	}
+	// Do not create FakeDNSEngine feature if no FakeDNS server is configured
+	if fakeHolders.IsEmpty() {
+		return nil
+	}
+	// Add FakeDNSEngine feature when DNS feature is added for the first time
+	s.fakeDNSEngine = &FakeDNSEngine{dns: s, fakeHolders: fakeHolders, fakeDefault: fakeDefault}
+	return core.RequireFeatures(s.ctx, func(client dns.Client) error {
+		v := core.MustFromContext(s.ctx)
+		if v.GetFeature(dns.FakeDNSEngineType()) != nil {
+			return nil
+		}
+		if client, ok := client.(dns.ClientWithFakeDNS); ok {
+			return v.AddFeature(client.AsFakeDNSEngine())
+		}
+		return nil
+	})
 }
 
 // Type implements common.HasType.
@@ -170,32 +241,32 @@ func (s *DNS) Close() error {
 // IsOwnLink implements proxy.dns.ownLinkVerifier
 func (s *DNS) IsOwnLink(ctx context.Context) bool {
 	inbound := session.InboundFromContext(ctx)
-	return inbound != nil && inbound.Tag == s.tag
+	return inbound != nil && s.clientTags[inbound.Tag]
+}
+
+// AsFakeDNSClient implements dns.ClientWithFakeDNS.
+func (s *DNS) AsFakeDNSClient() dns.Client {
+	return &FakeDNSClient{DNS: s}
+}
+
+// AsFakeDNSEngine implements dns.ClientWithFakeDNS.
+func (s *DNS) AsFakeDNSEngine() dns.FakeDNSEngine {
+	return s.fakeDNSEngine
 }
 
 // LookupIP implements dns.Client.
 func (s *DNS) LookupIP(domain string) ([]net.IP, error) {
-	return s.lookupIPInternal(domain, *s.ipOption)
+	return s.lookupIPInternal(domain, dns.IPOption{IPv4Enable: true, IPv6Enable: true, FakeEnable: false})
 }
 
 // LookupIPv4 implements dns.IPv4Lookup.
 func (s *DNS) LookupIPv4(domain string) ([]net.IP, error) {
-	if !s.ipOption.IPv4Enable {
-		return nil, dns.ErrEmptyResponse
-	}
-	o := *s.ipOption
-	o.IPv6Enable = false
-	return s.lookupIPInternal(domain, o)
+	return s.lookupIPInternal(domain, dns.IPOption{IPv4Enable: true, FakeEnable: false})
 }
 
 // LookupIPv6 implements dns.IPv6Lookup.
 func (s *DNS) LookupIPv6(domain string) ([]net.IP, error) {
-	if !s.ipOption.IPv6Enable {
-		return nil, dns.ErrEmptyResponse
-	}
-	o := *s.ipOption
-	o.IPv4Enable = false
-	return s.lookupIPInternal(domain, o)
+	return s.lookupIPInternal(domain, dns.IPOption{IPv6Enable: true, FakeEnable: false})
 }
 
 func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, error) {
@@ -222,92 +293,100 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, er
 
 	// Name servers lookup
 	errs := []error{}
-	ctx := session.ContextWithInbound(s.ctx, &session.Inbound{Tag: s.tag})
-	for _, client := range s.sortClients(domain) {
-		if !option.FakeEnable && strings.EqualFold(client.Name(), "FakeDNS") {
-			newError("skip DNS resolution for domain ", domain, " at server ", client.Name()).AtDebug().WriteToLog()
-			continue
-		}
-		ips, err := client.QueryIP(ctx, domain, option, s.disableCache)
+	for _, client := range s.sortClients(domain, option) {
+		ips, err := client.QueryIP(s.ctx, domain, option)
 		if len(ips) > 0 {
 			return ips, nil
 		}
 		if err != nil {
-			newError("failed to lookup ip for domain ", domain, " at server ", client.Name()).Base(err).WriteToLog()
 			errs = append(errs, err)
 		}
+		if err != dns.ErrEmptyResponse { // ErrEmptyResponse is not seen as failure, so no failed log
+			newError("failed to lookup ip for domain ", domain, " at server ", client.Name()).Base(err).WriteToLog()
+		}
 		if err != context.Canceled && err != context.DeadlineExceeded && err != errExpectedIPNonMatch {
-			return nil, err
+			return nil, err // Only continue lookup for certain errors
 		}
 	}
 
+	if len(errs) == 0 {
+		return nil, dns.ErrEmptyResponse
+	}
 	return nil, newError("returning nil for domain ", domain).Base(errors.Combine(errs...))
 }
 
-// GetIPOption implements ClientWithIPOption.
-func (s *DNS) GetIPOption() *dns.IPOption {
-	return s.ipOption
-}
-
-// SetQueryOption implements ClientWithIPOption.
-func (s *DNS) SetQueryOption(isIPv4Enable, isIPv6Enable bool) {
-	s.ipOption.IPv4Enable = isIPv4Enable
-	s.ipOption.IPv6Enable = isIPv6Enable
-}
-
-// SetFakeDNSOption implements ClientWithIPOption.
-func (s *DNS) SetFakeDNSOption(isFakeEnable bool) {
-	s.ipOption.FakeEnable = isFakeEnable
-}
-
-func (s *DNS) sortClients(domain string) []*Client {
+func (s *DNS) sortClients(domain string, option dns.IPOption) []*Client {
 	clients := make([]*Client, 0, len(s.clients))
 	clientUsed := make([]bool, len(s.clients))
-	clientNames := make([]string, 0, len(s.clients))
+	clientIdxs := make([]int, 0, len(s.clients))
 	domainRules := []string{}
 
 	// Priority domain matching
-	hasMatch := false
 	for _, match := range s.domainMatcher.Match(domain) {
 		info := s.matcherInfos[match]
 		client := s.clients[info.clientIdx]
 		domainRule := client.domains[info.domainRuleIdx]
 		domainRules = append(domainRules, fmt.Sprintf("%s(DNS idx:%d)", domainRule, info.clientIdx))
-		if clientUsed[info.clientIdx] {
+		switch {
+		case clientUsed[info.clientIdx]:
+			continue
+		case !option.FakeEnable && isFakeDNS(client.server):
 			continue
 		}
 		clientUsed[info.clientIdx] = true
 		clients = append(clients, client)
-		clientNames = append(clientNames, client.Name())
-		hasMatch = true
+		clientIdxs = append(clientIdxs, int(info.clientIdx))
 	}
 
-	if !(s.disableFallback || s.disableFallbackIfMatch && hasMatch) {
-		// Default round-robin query
-		for idx, client := range s.clients {
-			if clientUsed[idx] || client.skipFallback {
-				continue
-			}
-			clientUsed[idx] = true
-			clients = append(clients, client)
-			clientNames = append(clientNames, client.Name())
+	// Default round-robin query
+	hasDomainMatch := len(clients) > 0
+	for idx, client := range s.clients {
+		switch {
+		case clientUsed[idx]:
+			continue
+		case !option.FakeEnable && isFakeDNS(client.server):
+			continue
+		case client.fallbackStrategy == FallbackStrategy_Disabled:
+			continue
+		case client.fallbackStrategy == FallbackStrategy_DisabledIfAnyMatch && hasDomainMatch:
+			continue
 		}
+		clientUsed[idx] = true
+		clients = append(clients, client)
+		clientIdxs = append(clientIdxs, idx)
 	}
 
 	if len(domainRules) > 0 {
 		newError("domain ", domain, " matches following rules: ", domainRules).AtDebug().WriteToLog()
 	}
-	if len(clientNames) > 0 {
-		newError("domain ", domain, " will use DNS in order: ", clientNames).AtDebug().WriteToLog()
-	}
-
-	if len(clients) == 0 {
-		clients = append(clients, s.clients[0])
-		clientNames = append(clientNames, s.clients[0].Name())
-		newError("domain ", domain, " will use the first DNS: ", clientNames).AtDebug().WriteToLog()
+	if len(clientIdxs) > 0 {
+		newError("domain ", domain, " will use DNS in order: ", s.formatClientNames(clientIdxs, option), " ", toReqTypes(option)).AtDebug().WriteToLog()
 	}
 
 	return clients
+}
+
+func (s *DNS) formatClientNames(clientIdxs []int, option dns.IPOption) []string {
+	clientNames := make([]string, 0, len(clientIdxs))
+	counter := make(map[string]uint, len(clientIdxs))
+	for _, clientIdx := range clientIdxs {
+		client := s.clients[clientIdx]
+		var name string
+		if option.With(client.queryStrategy).FakeEnable {
+			name = fmt.Sprintf("%s(DNS idx:%d)", client.fakeDNS.Name(), clientIdx)
+		} else {
+			name = client.Name()
+		}
+		counter[name]++
+		clientNames = append(clientNames, name)
+	}
+	for idx, clientIdx := range clientIdxs {
+		name := clientNames[idx]
+		if counter[name] > 1 {
+			clientNames[idx] = fmt.Sprintf("%s(DNS idx:%d)", name, clientIdx)
+		}
+	}
+	return clientNames
 }
 
 func init() {
@@ -315,8 +394,8 @@ func init() {
 		return New(ctx, config.(*Config))
 	}))
 
-	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) { // nolint: staticcheck
-		ctx = cfgcommon.NewConfigureLoadingContext(context.Background()) // nolint: staticcheck
+	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
+		ctx = cfgcommon.NewConfigureLoadingContext(ctx)
 
 		geoloadername := platform.NewEnvFlag("v2ray.conf.geoloader").GetValue(func() string {
 			return "standard"
@@ -354,10 +433,14 @@ func init() {
 
 		for _, v := range simplifiedConfig.NameServer {
 			nameserver := &NameServer{
-				Address:      v.Address,
-				ClientIp:     net.ParseIP(v.ClientIp),
-				SkipFallback: v.SkipFallback,
-				Geoip:        v.Geoip,
+				Address:          v.Address,
+				ClientIp:         net.ParseIP(v.ClientIp),
+				Tag:              v.Tag,
+				QueryStrategy:    v.QueryStrategy,
+				CacheStrategy:    v.CacheStrategy,
+				FallbackStrategy: v.FallbackStrategy,
+				SkipFallback:     v.SkipFallback,
+				Geoip:            v.Geoip,
 			}
 			for _, prioritizedDomain := range v.PrioritizedDomain {
 				nameserver.PrioritizedDomain = append(nameserver.PrioritizedDomain, &NameServer_PriorityDomain{
@@ -368,14 +451,33 @@ func init() {
 			nameservers = append(nameservers, nameserver)
 		}
 
+		var statichosts []*HostMapping
+
+		for _, v := range simplifiedConfig.StaticHosts {
+			statichost := &HostMapping{
+				Type:          v.Type,
+				Domain:        v.Domain,
+				ProxiedDomain: v.ProxiedDomain,
+			}
+			for _, ip := range v.Ip {
+				statichost.Ip = append(statichost.Ip, net.ParseIP(ip))
+			}
+			statichosts = append(statichosts, statichost)
+		}
+
 		fullConfig := &Config{
-			NameServer:      nameservers,
-			ClientIp:        net.ParseIP(simplifiedConfig.ClientIp),
-			StaticHosts:     simplifiedConfig.StaticHosts,
-			Tag:             simplifiedConfig.Tag,
-			DisableCache:    simplifiedConfig.DisableCache,
-			QueryStrategy:   simplifiedConfig.QueryStrategy,
-			DisableFallback: simplifiedConfig.DisableFallback,
+			StaticHosts:      statichosts,
+			NameServer:       nameservers,
+			ClientIp:         net.ParseIP(simplifiedConfig.ClientIp),
+			Tag:              simplifiedConfig.Tag,
+			DomainMatcher:    simplifiedConfig.DomainMatcher,
+			QueryStrategy:    simplifiedConfig.QueryStrategy,
+			CacheStrategy:    simplifiedConfig.CacheStrategy,
+			FallbackStrategy: simplifiedConfig.FallbackStrategy,
+			// Deprecated flags
+			DisableCache:           simplifiedConfig.DisableCache,
+			DisableFallback:        simplifiedConfig.DisableFallback,
+			DisableFallbackIfMatch: simplifiedConfig.DisableFallbackIfMatch,
 		}
 		return common.CreateObject(ctx, fullConfig)
 	}))

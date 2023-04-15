@@ -6,8 +6,8 @@ package router
 import (
 	"context"
 
-	"github.com/v2fly/v2ray-core/v4/features/extension"
-	"github.com/v2fly/v2ray-core/v4/features/outbound"
+	"github.com/v2fly/v2ray-core/v5/features/extension"
+	"github.com/v2fly/v2ray-core/v5/features/outbound"
 )
 
 type BalancingStrategy interface {
@@ -27,7 +27,7 @@ type Balancer struct {
 	override override
 }
 
-// PickOutbound picks the tag of a outbound
+// PickOutbound picks the tag of an outbound
 func (b *Balancer) PickOutbound() (string, error) {
 	candidates, err := b.SelectOutbounds()
 	if err != nil {

@@ -3,11 +3,10 @@ package simplified
 import (
 	"context"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/proxy/shadowsocks"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/proxy/shadowsocks"
 )
 
 func init() {
@@ -17,10 +16,11 @@ func init() {
 			User: &protocol.User{
 				Account: serial.ToTypedMessage(&shadowsocks.Account{
 					Password:   simplifiedServer.Password,
-					CipherType: shadowsocks.CipherFromString(simplifiedServer.Method),
+					CipherType: simplifiedServer.Method,
 				}),
 			},
-			Network: net.ParseNetworks(simplifiedServer.Network),
+			Network:        simplifiedServer.Networks.GetNetwork(),
+			PacketEncoding: simplifiedServer.PacketEncoding,
 		}
 
 		return common.CreateObject(ctx, fullServer)
@@ -36,8 +36,9 @@ func init() {
 					User: []*protocol.User{
 						{
 							Account: serial.ToTypedMessage(&shadowsocks.Account{
-								Password:   simplifiedClient.Password,
-								CipherType: shadowsocks.CipherFromString(simplifiedClient.Method),
+								Password:                       simplifiedClient.Password,
+								CipherType:                     simplifiedClient.Method,
+								ExperimentReducedIvHeadEntropy: simplifiedClient.ExperimentReducedIvHeadEntropy,
 							}),
 						},
 					},

@@ -3,11 +3,11 @@ package formats
 import (
 	"bytes"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/merge"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/mergers"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/serial"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/merge"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/mergers"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/serial"
 )
 
 func init() {

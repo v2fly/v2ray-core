@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v4/common/platform"
-	"github.com/v2fly/v2ray-core/v4/features"
+	"github.com/v2fly/v2ray-core/v5/common/platform"
+	"github.com/v2fly/v2ray-core/v5/features"
 )
 
 // Timeout contains limits for connection timeout.
@@ -49,8 +49,9 @@ type SystemStats struct {
 
 // System contains policy settings at system level.
 type System struct {
-	Stats  SystemStats
-	Buffer Buffer
+	Stats                 SystemStats
+	OverrideAccessLogDest bool
+	Buffer                Buffer
 }
 
 // Session is session based settings for controlling V2Ray requests. It contains various settings (or limits) that may differ for different users in the context.

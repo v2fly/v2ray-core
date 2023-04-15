@@ -2,14 +2,14 @@ package crypto
 
 import (
 	"crypto/cipher"
+	"crypto/rand"
 	"io"
-	"math/rand"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/bytespool"
-	"github.com/v2fly/v2ray-core/v4/common/errors"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/bytespool"
+	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
 )
 
 type BytesGenerator func() []byte
@@ -262,7 +262,8 @@ func (w *AuthenticationWriter) seal(b []byte) (*buf.Buffer, error) {
 		return nil, err
 	}
 	if paddingSize > 0 {
-		// With size of the chunk and padding length encrypted, the content of padding doesn't matter much.
+		// These paddings will send in clear text.
+		// To avoid leakage of PRNG internal state, a cryptographically secure PRNG should be used.
 		paddingBytes := eb.Extend(paddingSize)
 		common.Must2(rand.Read(paddingBytes))
 	}

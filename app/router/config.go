@@ -9,12 +9,12 @@ import (
 
 	"github.com/golang/protobuf/jsonpb"
 
-	"github.com/v2fly/v2ray-core/v4/app/router/routercommon"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/features/outbound"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/v5cfg"
+	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/features/outbound"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/v5cfg"
 )
 
 type Rule struct {
@@ -42,6 +42,18 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 		cond, err := NewDomainMatcher(rr.DomainMatcher, rr.Domain)
 		if err != nil {
 			return nil, newError("failed to build domain condition").Base(err)
+		}
+		conds.Add(cond)
+	}
+
+	var geoDomains []*routercommon.Domain
+	for _, geo := range rr.GeoDomain {
+		geoDomains = append(geoDomains, geo.Domain...)
+	}
+	if len(geoDomains) > 0 {
+		cond, err := NewDomainMatcher(rr.DomainMatcher, geoDomains)
+		if err != nil {
+			return nil, newError("failed to build geo domain condition").Base(err)
 		}
 		conds.Add(cond)
 	}

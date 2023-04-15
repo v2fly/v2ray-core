@@ -15,7 +15,7 @@ const (
 )
 
 // Matcher is the interface to determine a string matches a pattern.
-//   * This is a basic matcher to represent a certain kind of match semantic(full, substr, domain or regex).
+//   - This is a basic matcher to represent a certain kind of match semantic(full, substr, domain or regex).
 type Matcher interface {
 	// Type returns the matcher's type.
 	Type() Type
@@ -34,8 +34,8 @@ type Matcher interface {
 
 // MatcherGroup is an advanced type of matcher to accept a bunch of basic Matchers (of certain type, not all matcher types).
 // For example:
-//   * FullMatcherGroup accepts FullMatcher and uses a hash table to facilitate lookup.
-//   * DomainMatcherGroup accepts DomainMatcher and uses a trie to optimize both memory consumption and lookup speed.
+//   - FullMatcherGroup accepts FullMatcher and uses a hash table to facilitate lookup.
+//   - DomainMatcherGroup accepts DomainMatcher and uses a trie to optimize both memory consumption and lookup speed.
 type MatcherGroup interface {
 	// Match returns all matched matchers with their corresponding values.
 	Match(input string) []uint32
@@ -46,9 +46,9 @@ type MatcherGroup interface {
 
 // IndexMatcher is a general type of matcher thats accepts all kinds of basic matchers.
 // It should:
-//   * Accept all Matcher types with no exception.
-//   * Optimize string matching with a combination of MatcherGroups.
-//   * Obey certain priority order specification when returning matched Matchers.
+//   - Accept all Matcher types with no exception.
+//   - Optimize string matching with a combination of MatcherGroups.
+//   - Obey certain priority order specification when returning matched Matchers.
 type IndexMatcher interface {
 	// Size returns number of matchers added to IndexMatcher.
 	Size() uint32

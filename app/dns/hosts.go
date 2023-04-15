@@ -1,11 +1,11 @@
 package dns
 
 import (
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/strmatcher"
-	"github.com/v2fly/v2ray-core/v4/features"
-	"github.com/v2fly/v2ray-core/v4/features/dns"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/strmatcher"
+	"github.com/v2fly/v2ray-core/v5/features"
+	"github.com/v2fly/v2ray-core/v5/features/dns"
 )
 
 // StaticHosts represents static domain-ip mapping in DNS server.
@@ -65,16 +65,6 @@ func NewStaticHosts(hosts []*HostMapping, legacy map[string]*net.IPOrDomain) (*S
 	}
 
 	return sh, nil
-}
-
-func filterIP(ips []net.Address, option dns.IPOption) []net.Address {
-	filtered := make([]net.Address, 0, len(ips))
-	for _, ip := range ips {
-		if (ip.Family().IsIPv4() && option.IPv4Enable) || (ip.Family().IsIPv6() && option.IPv6Enable) {
-			filtered = append(filtered, ip)
-		}
-	}
-	return filtered
 }
 
 func (h *StaticHosts) lookupInternal(domain string) []net.Address {

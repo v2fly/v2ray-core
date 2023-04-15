@@ -4,18 +4,24 @@ import (
 	"bytes"
 	"context"
 
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/features/routing"
-	"github.com/v2fly/v2ray-core/v4/transport/internet/udp"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
 )
 
 // CreateObject creates a new object based on the given V2Ray instance and config. The V2Ray instance may be nil.
 func CreateObject(v *Instance, config interface{}) (interface{}, error) {
+	return CreateObjectWithEnvironment(v, config, nil)
+}
+
+func CreateObjectWithEnvironment(v *Instance, config, environment interface{}) (interface{}, error) {
 	var ctx context.Context
 	if v != nil {
 		ctx = toContext(v.ctx, v)
 	}
+	ctx = envctx.ContextWithEnvironment(ctx, environment)
 	return common.CreateObject(ctx, config)
 }
 

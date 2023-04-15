@@ -3,10 +3,11 @@ package trojan
 import (
 	"encoding/binary"
 	"io"
+	gonet "net"
 
-	"github.com/v2fly/v2ray-core/v4/common/buf"
-	"github.com/v2fly/v2ray-core/v4/common/net"
-	"github.com/v2fly/v2ray-core/v4/common/protocol"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/protocol"
 )
 
 var (
@@ -126,6 +127,12 @@ func (w *PacketWriter) WriteMultiBufferWithMetadata(mb buf.MultiBuffer, dest net
 	}
 
 	return nil
+}
+
+func (w *PacketWriter) WriteTo(payload []byte, addr gonet.Addr) (int, error) {
+	dest := net.DestinationFromAddr(addr)
+
+	return w.writePacket(payload, dest)
 }
 
 func (w *PacketWriter) writePacket(payload []byte, dest net.Destination) (int, error) { // nolint: unparam
@@ -278,4 +285,27 @@ func (r *PacketReader) ReadMultiBufferWithMetadata() (*PacketPayload, error) {
 	}
 
 	return &PacketPayload{Target: dest, Buffer: mb}, nil
+}
+
+type PacketConnectionReader struct {
+	reader  *PacketReader
+	payload *PacketPayload
+}
+
+func (r *PacketConnectionReader) ReadFrom(p []byte) (n int, addr gonet.Addr, err error) {
+	if r.payload == nil || r.payload.Buffer.IsEmpty() {
+		r.payload, err = r.reader.ReadMultiBufferWithMetadata()
+		if err != nil {
+			return
+		}
+	}
+
+	addr = &gonet.UDPAddr{
+		IP:   r.payload.Target.Address.IP(),
+		Port: int(r.payload.Target.Port),
+	}
+
+	r.payload.Buffer, n = buf.SplitFirstBytes(r.payload.Buffer, p)
+
+	return
 }

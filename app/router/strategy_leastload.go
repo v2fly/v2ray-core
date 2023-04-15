@@ -8,12 +8,12 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/observatory"
-	"github.com/v2fly/v2ray-core/v4/common"
-	"github.com/v2fly/v2ray-core/v4/common/dice"
-	"github.com/v2fly/v2ray-core/v4/features"
-	"github.com/v2fly/v2ray-core/v4/features/extension"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/observatory"
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/dice"
+	"github.com/v2fly/v2ray-core/v5/features"
+	"github.com/v2fly/v2ray-core/v5/features/extension"
 )
 
 // LeastLoadStrategy represents a least load balancing strategy
@@ -118,8 +118,8 @@ func (l *LeastLoadStrategy) selectLeastLoad(nodes []*node) []*node {
 	// go through all base line until find expected selects
 	for _, b := range l.settings.Baselines {
 		baseline := time.Duration(b)
-		for i := 0; i < availableCount; i++ {
-			if nodes[i].RTTDeviationCost > baseline {
+		for i := count; i < availableCount; i++ {
+			if nodes[i].RTTDeviationCost >= baseline {
 				break
 			}
 			count = i + 1

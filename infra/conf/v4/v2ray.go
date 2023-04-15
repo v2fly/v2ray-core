@@ -6,19 +6,20 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	core "github.com/v2fly/v2ray-core/v4"
-	"github.com/v2fly/v2ray-core/v4/app/dispatcher"
-	"github.com/v2fly/v2ray-core/v4/app/proxyman"
-	"github.com/v2fly/v2ray-core/v4/app/stats"
-	"github.com/v2fly/v2ray-core/v4/common/serial"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/loader"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/muxcfg"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/proxycfg"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/cfgcommon/sniffer"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/dns"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/log"
-	"github.com/v2fly/v2ray-core/v4/infra/conf/synthetic/router"
+	core "github.com/v2fly/v2ray-core/v5"
+	"github.com/v2fly/v2ray-core/v5/app/dispatcher"
+	"github.com/v2fly/v2ray-core/v5/app/proxyman"
+	"github.com/v2fly/v2ray-core/v5/app/stats"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/features"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon/loader"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon/muxcfg"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon/proxycfg"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon/sniffer"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/synthetic/dns"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/synthetic/log"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/synthetic/router"
 )
 
 var (
@@ -202,13 +203,14 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 }
 
 type OutboundDetourConfig struct {
-	Protocol      string                `json:"protocol"`
-	SendThrough   *cfgcommon.Address    `json:"sendThrough"`
-	Tag           string                `json:"tag"`
-	Settings      *json.RawMessage      `json:"settings"`
-	StreamSetting *StreamConfig         `json:"streamSettings"`
-	ProxySettings *proxycfg.ProxyConfig `json:"proxySettings"`
-	MuxSettings   *muxcfg.MuxConfig     `json:"mux"`
+	Protocol       string                `json:"protocol"`
+	SendThrough    *cfgcommon.Address    `json:"sendThrough"`
+	Tag            string                `json:"tag"`
+	Settings       *json.RawMessage      `json:"settings"`
+	StreamSetting  *StreamConfig         `json:"streamSettings"`
+	ProxySettings  *proxycfg.ProxyConfig `json:"proxySettings"`
+	MuxSettings    *muxcfg.MuxConfig     `json:"mux"`
+	DomainStrategy string                `json:"domainStrategy"`
 }
 
 // Build implements Buildable.
@@ -241,6 +243,16 @@ func (c *OutboundDetourConfig) Build() (*core.OutboundHandlerConfig, error) {
 
 	if c.MuxSettings != nil {
 		senderSettings.MultiplexSettings = c.MuxSettings.Build()
+	}
+
+	senderSettings.DomainStrategy = proxyman.SenderConfig_AS_IS
+	switch strings.ToLower(c.DomainStrategy) {
+	case "useip", "use_ip", "use-ip":
+		senderSettings.DomainStrategy = proxyman.SenderConfig_USE_IP
+	case "useip4", "useipv4", "use_ip4", "use_ipv4", "use_ip_v4", "use-ip4", "use-ipv4", "use-ip-v4":
+		senderSettings.DomainStrategy = proxyman.SenderConfig_USE_IP4
+	case "useip6", "useipv6", "use_ip6", "use_ipv6", "use_ip_v6", "use-ip6", "use-ipv6", "use-ip-v6":
+		senderSettings.DomainStrategy = proxyman.SenderConfig_USE_IP6
 	}
 
 	settings := []byte("{}")
@@ -302,7 +314,7 @@ type Config struct {
 	API              *APIConfig              `json:"api"`
 	Stats            *StatsConfig            `json:"stats"`
 	Reverse          *ReverseConfig          `json:"reverse"`
-	FakeDNS          *FakeDNSConfig          `json:"fakeDns"`
+	FakeDNS          *dns.FakeDNSConfig      `json:"fakeDns"`
 	BrowserForwarder *BrowserForwarderConfig `json:"browserForwarder"`
 	Observatory      *ObservatoryConfig      `json:"observatory"`
 	BurstObservatory *BurstObservatoryConfig `json:"burstObservatory"`
@@ -399,6 +411,17 @@ func (c *Config) Build() (*core.Config, error) {
 		config.App = append(config.App, serial.ToTypedMessage(routerConfig))
 	}
 
+	if c.FakeDNS != nil {
+		features.PrintDeprecatedFeatureWarning("root fakedns settings")
+		if c.DNSConfig != nil {
+			c.DNSConfig.FakeDNS = c.FakeDNS
+		} else {
+			c.DNSConfig = &dns.DNSConfig{
+				FakeDNS: c.FakeDNS,
+			}
+		}
+	}
+
 	if c.DNSConfig != nil {
 		dnsApp, err := c.DNSConfig.Build()
 		if err != nil {
@@ -417,14 +440,6 @@ func (c *Config) Build() (*core.Config, error) {
 
 	if c.Reverse != nil {
 		r, err := c.Reverse.Build()
-		if err != nil {
-			return nil, err
-		}
-		config.App = append(config.App, serial.ToTypedMessage(r))
-	}
-
-	if c.FakeDNS != nil {
-		r, err := c.FakeDNS.Build()
 		if err != nil {
 			return nil, err
 		}
