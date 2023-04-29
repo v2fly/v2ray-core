@@ -1,0 +1,23 @@
+{
+    "editor.tabSize": 4,
+    "editor.fontSize": 14,
+    "workbench.startupEditor": "none",
+    "workbench.colorTheme": "Visual Studio Dark",
+    "go.gopath": "/Users/zhangzhongjun/code/golang",
+    "go.goroot": "/Users/zhangzhongjun/code/golang/go1.19",
+    "go.gotoSymbol.includeImports": true,
+    "go.buildFlags": [
+        "CGO_ENABLED=0",
+        "COARCH=arm64",
+        "GOOS=linux"
+    ],
+    // 如果要开启 ctrl+点击 跳转到定义，则需要定义如下 4 个设置
+    // 同时需要安装 go install -v golang.org/x/tools/cmd/guru@latest
+    // 同时需要安装 go install -v github.com/zmb3/gogetdoc@latest
+    "editor.multiCursorModifier": "alt",
+    "go.docsTool": "gogetdoc",
+    "go.languageServerExperimentalFeatures": {
+        "diagnostics": false
+    },
+    "go.useLanguageServer": false
+}

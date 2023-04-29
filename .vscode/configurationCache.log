@@ -1,0 +1,1 @@
+{"buildTargets":["all","clean","fund","fund-cli","fund-cli-arm64","fund-darwin"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}

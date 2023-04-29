@@ -1,0 +1,7 @@
+make: Entering directory `/Users/zhangzhongjun/code/golang/src/github.com/zhangzhongjun/fund'
+mkdir -p output/ && GOARCH=amd64 GOOS=darwin CGO_ENABLED=0 go build -ldflags '-w -s -buildid=' -o output/fund-cli ./fund-cli
+mkdir -p output/ && GOARCH=arm64 GOOS=darwin CGO_ENABLED=0 go build -ldflags '-w -s -buildid=' -o output/fund-cli ./fund-cli
+mkdir -p output/ && GOARCH=amd64 GOOS=linux CGO_ENABLED=0 go build -ldflags '-w -s -buildid=' -o output/fund
+mkdir -p output/ && GOARCH=amd64 GOOS=darwin CGO_ENABLED=0 go build -ldflags '-w -s -buildid=' -o output/fund
+make: Leaving directory `/Users/zhangzhongjun/code/golang/src/github.com/zhangzhongjun/fund'
+ 
