@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "测试 bollinger",
+            "name": "测试 subscribe",
             "type": "go",
             "request": "launch",
             "mode": "test",
-            "program": "${workspaceFolder}/bollinger",
+            "program": "${workspaceFolder}/subscribe",
             "args": [
                 "-test.run",
                 "^Test*"

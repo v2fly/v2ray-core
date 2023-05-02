@@ -16,11 +16,13 @@ require (
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pires/go-proxyproto v0.6.2
+	github.com/pkg/errors v0.9.1
 	github.com/quic-go/qtls-go1-19 v0.3.2
 	github.com/quic-go/qtls-go1-20 v0.2.2
 	github.com/quic-go/quic-go v0.33.0
 	github.com/refraction-networking/utls v1.3.1
 	github.com/seiflotfy/cuckoofilter v0.0.0-20220411075957-e3b120b3f5fb
+	github.com/smartystreets/goconvey v1.6.4
 	github.com/stretchr/testify v1.8.2
 	github.com/v2fly/BrowserBridge v0.0.0-20210430233438-0570fc1d7d08
 	github.com/v2fly/VSign v0.0.0-20201108000810-e2adc24bf848
@@ -51,6 +53,8 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
+	github.com/gopherjs/gopherjs v0.0.0-20210420193930-a4630ec28c79 // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
 	github.com/klauspost/cpuid v1.2.3 // indirect
 	github.com/klauspost/reedsolomon v1.9.3 // indirect
@@ -64,10 +68,10 @@ require (
 	github.com/pion/sctp v1.7.6 // indirect
 	github.com/pion/transport/v2 v2.0.0 // indirect
 	github.com/pion/udp v0.1.4 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
 	github.com/secure-io/siv-go v0.0.0-20180922214919-5ff40651e2c4 // indirect
+	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	github.com/xtaci/smux v1.5.15 // indirect
 	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db // indirect
 	golang.org/x/mod v0.7.0 // indirect
