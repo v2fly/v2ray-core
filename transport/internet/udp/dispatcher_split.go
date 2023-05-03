@@ -143,10 +143,6 @@ func DialDispatcher(ctx context.Context, dispatcher routing.Dispatcher) (net.Pac
 
 func (c *dispatcherConn) callback(ctx context.Context, packet *udp.Packet) {
 	select {
-	case <-ctx.Done():
-		c.done.Close()
-		packet.Payload.Release()
-		return
 	case <-c.done.Wait():
 		packet.Payload.Release()
 		return
