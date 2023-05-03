@@ -129,13 +129,17 @@ type dispatcherConn struct {
 	cache      chan *udp.Packet
 	done       *done.Instance
 	ctx        context.Context
+	cancel     context.CancelFunc
 }
 
 func DialDispatcher(ctx context.Context, dispatcher routing.Dispatcher) (net.PacketConn, error) {
+	ctx, cancel := context.WithCancel(ctx)
+
 	c := &dispatcherConn{
-		cache: make(chan *udp.Packet, 16),
-		done:  done.New(),
-		ctx:   ctx,
+		cache:  make(chan *udp.Packet, 16),
+		done:   done.New(),
+		ctx:    ctx,
+		cancel: cancel,
 	}
 
 	d := NewSplitDispatcher(dispatcher, c.callback)
@@ -157,6 +161,8 @@ func (c *dispatcherConn) callback(ctx context.Context, packet *udp.Packet) {
 
 func (c *dispatcherConn) ReadFrom(p []byte) (int, net.Addr, error) {
 	select {
+	case <-c.ctx.Done():
+		fallthrough
 	case <-c.done.Wait():
 		return 0, nil, io.EOF
 	case packet := <-c.cache:
