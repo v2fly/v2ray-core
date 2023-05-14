@@ -6,11 +6,9 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"crypto/sha1"
-	"encoding/json"
 	"io"
 	"strings"
 
-	"github.com/golang/protobuf/jsonpb"
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/hkdf"
 
@@ -212,27 +210,13 @@ func (NoneCipher) DecodePacket(key []byte, b *buf.Buffer) error {
 	return nil
 }
 
-func (c *CipherType) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {
-	var method string
-
-	if err := json.Unmarshal(bytes, &method); err != nil {
-		return err
-	}
-
-	if *c = CipherFromString(method); *c == CipherType_UNKNOWN {
-		return newError("unknown cipher method: ", method)
-	}
-
-	return nil
-}
-
 func CipherFromString(c string) CipherType {
 	switch strings.ToLower(c) {
-	case "aes-128-gcm", "aead_aes_128_gcm":
+	case "aes-128-gcm", "aes_128_gcm", "aead_aes_128_gcm":
 		return CipherType_AES_128_GCM
-	case "aes-256-gcm", "aead_aes_256_gcm":
+	case "aes-256-gcm", "aes_256_gcm", "aead_aes_256_gcm":
 		return CipherType_AES_256_GCM
-	case "chacha20-poly1305", "aead_chacha20_poly1305", "chacha20-ietf-poly1305":
+	case "chacha20-poly1305", "chacha20_poly1305", "aead_chacha20_poly1305", "chacha20-ietf-poly1305":
 		return CipherType_CHACHA20_POLY1305
 	case "none", "plain":
 		return CipherType_NONE
