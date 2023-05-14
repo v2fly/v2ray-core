@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/golang/protobuf/jsonpb"
+
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/protocol"
 	"github.com/v2fly/v2ray-core/v5/common/serial"
@@ -18,7 +19,7 @@ func (c *CipherTypeWrapper) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, byt
 		return err
 	}
 
-	if *&c.Value = shadowsocks.CipherFromString(method); *&c.Value == shadowsocks.CipherType_UNKNOWN {
+	if c.Value = shadowsocks.CipherFromString(method); c.Value == shadowsocks.CipherType_UNKNOWN {
 		return newError("unknown cipher method: ", method)
 	}
 
