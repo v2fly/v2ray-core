@@ -37,7 +37,7 @@ type ConnWriter struct {
 // Write implements io.Writer
 func (c *ConnWriter) Write(p []byte) (n int, err error) {
 	if !c.headerSent {
-		if err := c.writeHeader(); err != nil {
+		if err := c.WriteHeader(); err != nil {
 			return 0, newError("failed to write request header").Base(err)
 		}
 	}
@@ -60,7 +60,7 @@ func (c *ConnWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	return nil
 }
 
-func (c *ConnWriter) writeHeader() error {
+func (c *ConnWriter) WriteHeader() error {
 	buffer := buf.StackNew()
 	defer buffer.Release()
 

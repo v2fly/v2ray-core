@@ -146,7 +146,14 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		}
 
 		// write some request payload to buffer
-		if err = buf.CopyOnceTimeout(link.Reader, bodyWriter, proxy.FirstPayloadTimeout); err != nil && err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
+		err = buf.CopyOnceTimeout(link.Reader, bodyWriter, proxy.FirstPayloadTimeout)
+		switch err {
+		case buf.ErrNotTimeoutReader, buf.ErrReadTimeout:
+			if err := connWriter.WriteHeader(); err != nil {
+				return newError("failed to write request header").Base(err).AtWarning()
+			}
+		case nil:
+		default:
 			return newError("failed to write a request payload").Base(err).AtWarning()
 		}
 
