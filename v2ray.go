@@ -172,17 +172,6 @@ func New(config *Config) (*Instance, error) {
 	return server, nil
 }
 
-func NewWithContext(ctx context.Context, config *Config) (*Instance, error) {
-	server := &Instance{ctx: ctx}
-
-	done, err := initInstanceWithConfig(config, server)
-	if done {
-		return nil, err
-	}
-
-	return server, nil
-}
-
 func initInstanceWithConfig(config *Config, server *Instance) (bool, error) {
 	if config.Transport != nil {
 		features.PrintDeprecatedFeatureWarning("global transport settings")
