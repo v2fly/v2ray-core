@@ -20,4 +20,5 @@ message ClientConfig {
 
   v2ray.core.common.net.IPOrDomain address = 1;
   uint32 port = 2;
+  bool h1_skip_wait_for_reply = 3;
 }

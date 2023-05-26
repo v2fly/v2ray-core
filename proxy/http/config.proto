@@ -25,4 +25,5 @@ message ServerConfig {
 message ClientConfig {
   // Sever is a list of HTTP server addresses.
   repeated v2ray.core.common.protocol.ServerEndpoint server = 1;
+  bool h1_skip_wait_for_reply = 2;
 }
