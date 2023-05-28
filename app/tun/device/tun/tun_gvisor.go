@@ -5,6 +5,9 @@
 package tun
 
 import (
+	"fmt"
+	"unsafe"
+
 	"github.com/v2fly/v2ray-core/v5/app/tun/device"
 	"golang.org/x/sys/unix"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
@@ -12,6 +15,10 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/link/fdbased"
 	"gvisor.dev/gvisor/pkg/tcpip/link/rawfile"
 	"gvisor.dev/gvisor/pkg/tcpip/link/tun"
+)
+
+const (
+	ifReqSize = unix.IFNAMSIZ + 64
 )
 
 type TUN struct {
@@ -36,7 +43,9 @@ func New(options device.Options) (device.Device, error) {
 	}
 	t.fd = fd
 
-	// TODO: set MTU
+	if options.MTU > 0 {
+		setMTU(options.Name, int(options.MTU))
+	}
 
 	mtu, err := rawfile.GetMTU(options.Name)
 	if err != nil {
@@ -65,4 +74,36 @@ func New(options device.Options) (device.Device, error) {
 
 func (t *TUN) Close() error {
 	return unix.Close(t.fd)
+}
+
+// Modified from golang.zx2c4.com/wireguard/tun/tun_linux.go
+func setMTU(name string, n int) error {
+	// open datagram socket
+	fd, err := unix.Socket(
+		unix.AF_INET,
+		unix.SOCK_DGRAM|unix.SOCK_CLOEXEC,
+		0,
+	)
+	if err != nil {
+		return err
+	}
+
+	defer unix.Close(fd)
+
+	// do ioctl call
+	var ifr [ifReqSize]byte
+	copy(ifr[:], name)
+	*(*uint32)(unsafe.Pointer(&ifr[unix.IFNAMSIZ])) = uint32(n)
+	_, _, errno := unix.Syscall(
+		unix.SYS_IOCTL,
+		uintptr(fd),
+		uintptr(unix.SIOCSIFMTU),
+		uintptr(unsafe.Pointer(&ifr[0])),
+	)
+
+	if errno != 0 {
+		return fmt.Errorf("failed to set MTU of TUN device: %w", errno)
+	}
+
+	return nil
 }
