@@ -22,4 +22,6 @@ message Config {
     v2ray.core.net.packetaddr.PacketAddrType packet_encoding = 4;
     string tag = 6;
     repeated v2ray.core.app.router.routercommon.CIDR ips = 7;
+    bool enable_promiscuous_mode = 8;
+    bool enable_spoofing = 9;
 }

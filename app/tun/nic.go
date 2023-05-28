@@ -8,14 +8,32 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 )
 
-func CreateNIC(nicID tcpip.NICID, linkEndpoint stack.LinkEndpoint) StackOption {
+func CreateNIC(id tcpip.NICID, linkEndpoint stack.LinkEndpoint) StackOption {
 	return func(s *stack.Stack) error {
-		if err := s.CreateNICWithOptions(nicID, linkEndpoint,
+		if err := s.CreateNICWithOptions(id, linkEndpoint,
 			stack.NICOptions{
 				Disabled: false,
 				QDisc:    nil,
 			}); err != nil {
 			return newError("failed to create NIC:", err)
+		}
+		return nil
+	}
+}
+
+func SetPromiscuousMode(id tcpip.NICID, enable bool) StackOption {
+	return func(s *stack.Stack) error {
+		if err := s.SetPromiscuousMode(id, enable); err != nil {
+			return newError("failed to set promiscuous mode:", err)
+		}
+		return nil
+	}
+}
+
+func SetSpoofing(id tcpip.NICID, enable bool) StackOption {
+	return func(s *stack.Stack) error {
+		if err := s.SetSpoofing(id, enable); err != nil {
+			return newError("failed to set spoofing:", err)
 		}
 		return nil
 	}

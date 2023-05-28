@@ -34,6 +34,8 @@ func (t *TUN) CreateStack(linkedEndpoint stack.LinkEndpoint) (*stack.Stack, erro
 
 		CreateNIC(nicID, linkedEndpoint),
 		AddProtocolAddress(nicID, t.config.Ips),
+		SetPromiscuousMode(nicID, t.config.EnablePromiscuousMode),
+		SetSpoofing(nicID, t.config.EnableSpoofing),
 	}
 
 	for _, opt := range opts {
