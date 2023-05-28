@@ -57,22 +57,21 @@ func (t *TUN) Close() error {
 	return nil
 }
 
-func NewTUN(ctx context.Context, config *Config, dispatcher routing.Dispatcher) *TUN {
-	v := core.MustFromContext(ctx)
-	return &TUN{
-		ctx:           ctx,
-		dispatcher:    dispatcher,
-		config:        config,
-		policyManager: v.GetFeature(policy.ManagerType()).(policy.Manager),
-	}
+func (t *TUN) Init(ctx context.Context, config *Config, dispatcher routing.Dispatcher, policyManager policy.Manager) error {
+	t.ctx = ctx
+	t.config = config
+	t.dispatcher = dispatcher
+	t.policyManager = policyManager
+
+	return nil
 }
 
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
-		tun := core.RequireFeatures(ctx, func(d routing.Dispatcher) *TUN {
-			return NewTUN(ctx, config.(*Config), d)
+		tun := new(TUN)
+		err := core.RequireFeatures(ctx, func(d routing.Dispatcher, p policy.Manager) error {
+			return tun.Init(ctx, config.(*Config), d, p)
 		})
-
-		return tun, nil
+		return tun, err
 	}))
 }
