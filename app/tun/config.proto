@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package v2ray.core.app.tun;
+option csharp_namespace = "V2Ray.Core.App.Tun";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/tun";
+option java_package = "com.v2ray.core.app.tun";
+option java_multiple_files = true;
+
+
+// import "app/router/routercommon/common.proto";
+
+import "common/protoext/extensions.proto";
+
+message Config {
+    option (v2ray.core.common.protoext.message_opt).type = "service";
+    option (v2ray.core.common.protoext.message_opt).short_name = "tun";
+
+    
+    string name = 1;
+    uint32 mtu = 2;
+    uint32 user_level = 3;
+}
