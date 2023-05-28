@@ -1,6 +1,7 @@
 package tun
 
 import (
+	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv6"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
@@ -11,7 +12,7 @@ import (
 
 type StackOption func(*stack.Stack) error
 
-func (t *TUN) CreateStack(_ stack.LinkEndpoint) (*stack.Stack, error) {
+func (t *TUN) CreateStack(linkedEndpoint stack.LinkEndpoint) (*stack.Stack, error) {
 	s := stack.New(stack.Options{
 		NetworkProtocols: []stack.NetworkProtocolFactory{
 			ipv4.NewProtocol,
@@ -25,8 +26,12 @@ func (t *TUN) CreateStack(_ stack.LinkEndpoint) (*stack.Stack, error) {
 		},
 	})
 
+	nicID := tcpip.NICID(s.UniqueID())
+
 	opts := []StackOption{
 		SetTCPHandler(t.ctx, t.dispatcher, t.policyManager, t.config),
+
+		CreateNIC(nicID, linkedEndpoint),
 	}
 
 	for _, opt := range opts {
@@ -34,8 +39,6 @@ func (t *TUN) CreateStack(_ stack.LinkEndpoint) (*stack.Stack, error) {
 			return nil, err
 		}
 	}
-
-	// nicID := tcpip.NICID(s.UniqueID())
 
 	return s, nil
 }

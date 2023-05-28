@@ -31,7 +31,7 @@ type TCPHandler struct {
 	stack *stack.Stack
 }
 
-func SetTCPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyManager policy.Manager, config *Config) func(*stack.Stack) error {
+func SetTCPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyManager policy.Manager, config *Config) StackOption {
 	return func(s *stack.Stack) error {
 		tcpForwarder := tcp.NewForwarder(s, rcvWnd, maxInFlight, func(r *tcp.ForwarderRequest) {
 			wg := new(waiter.Queue)
