@@ -30,6 +30,7 @@ func (t *TUN) CreateStack(linkedEndpoint stack.LinkEndpoint) (*stack.Stack, erro
 
 	opts := []StackOption{
 		SetTCPHandler(t.ctx, t.dispatcher, t.policyManager, t.config),
+		SetUDPHandler(t.ctx, t.dispatcher, t.policyManager, t.config),
 
 		CreateNIC(nicID, linkedEndpoint),
 	}
