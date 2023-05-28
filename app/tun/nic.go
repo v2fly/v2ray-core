@@ -67,3 +67,24 @@ func AddProtocolAddress(id tcpip.NICID, ips []*routercommon.CIDR) StackOption {
 		return nil
 	}
 }
+
+func SetRouteTable(id tcpip.NICID, routes []*routercommon.CIDR) StackOption {
+	return func(s *stack.Stack) error {
+		s.SetRouteTable(func() (table []tcpip.Route) {
+			for _, cidrs := range routes {
+				subnet := tcpip.AddressWithPrefix{
+					Address:   tcpip.AddrFrom4Slice(cidrs.Ip),
+					PrefixLen: int(cidrs.Prefix),
+				}.Subnet()
+				route := tcpip.Route{
+					Destination: subnet,
+					NIC:         id,
+				}
+				table = append(table, route)
+			}
+			return
+		}())
+
+		return nil
+	}
+}
