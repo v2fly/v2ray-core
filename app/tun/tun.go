@@ -31,9 +31,8 @@ func (t *TUN) Type() interface{} {
 }
 
 func (t *TUN) Start() error {
-	var newDeviceFunc device.NewTUNFunc
-	newDeviceFunc = tun.New
-	device, err := newDeviceFunc(device.Options{
+	DeviceCreator := tun.New
+	device, err := DeviceCreator(device.Options{
 		Name: t.config.Name,
 		MTU:  t.config.Mtu,
 	})

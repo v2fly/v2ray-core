@@ -9,6 +9,8 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/transport/udp"
 )
 
+type StackOption func(*stack.Stack) error
+
 func CreateStack(_ stack.LinkEndpoint) (*stack.Stack, error) {
 	s := stack.New(stack.Options{
 		NetworkProtocols: []stack.NetworkProtocolFactory{
