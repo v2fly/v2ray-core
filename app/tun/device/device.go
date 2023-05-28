@@ -16,4 +16,4 @@ type Options struct {
 	MTU  uint32
 }
 
-type DeviceCreator func(Options) (Device, error)
+type DeviceConstructor func(Options) (Device, error)
