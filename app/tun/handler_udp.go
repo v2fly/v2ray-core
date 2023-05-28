@@ -46,12 +46,12 @@ func HandleUDP(handle func(tun_net.UDPConn)) StackOption {
 				return
 			}
 
-			udpConn := &udpConn{
+			conn := &udpConn{
 				UDPConn: gonet.NewUDPConn(s, wg, linkedEndpoint),
 				id:      r.ID(),
 			}
 
-			handle(udpConn)
+			handle(conn)
 		})
 		s.SetTransportProtocolHandler(gvisor_udp.ProtocolNumber, udpForwarder.HandlePacket)
 		return nil

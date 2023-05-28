@@ -55,12 +55,12 @@ func HandleTCP(handle func(tun_net.TCPConn)) StackOption {
 
 			// TODO: set sockopt
 
-			tcpConn := &tcpConn{
+			conn := &tcpConn{
 				TCPConn: gonet.NewTCPConn(wg, linkedEndpoint),
 				id:      r.ID(),
 			}
 
-			tcpQueue <- tcpConn
+			handle(conn)
 		})
 		s.SetTransportProtocolHandler(tcp.ProtocolNumber, tcpForwarder.HandlePacket)
 

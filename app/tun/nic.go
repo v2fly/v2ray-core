@@ -42,21 +42,21 @@ func SetSpoofing(id tcpip.NICID, enable bool) StackOption {
 func AddProtocolAddress(id tcpip.NICID, ips []*routercommon.CIDR) StackOption {
 	return func(s *stack.Stack) error {
 		for _, ip := range ips {
-			tcpIpAddr := tcpip.AddrFrom4Slice(ip.Ip)
+			tcpIPAddr := tcpip.AddrFrom4Slice(ip.Ip)
 			protocolAddress := tcpip.ProtocolAddress{
 				AddressWithPrefix: tcpip.AddressWithPrefix{
-					Address:   tcpIpAddr,
+					Address:   tcpIPAddr,
 					PrefixLen: int(ip.Prefix),
 				},
 			}
 
-			switch tcpIpAddr.Len() {
+			switch tcpIPAddr.Len() {
 			case 4:
 				protocolAddress.Protocol = ipv4.ProtocolNumber
 			case 16:
 				protocolAddress.Protocol = ipv6.ProtocolNumber
 			default:
-				return newError("invalid IP address length:", tcpIpAddr.Len())
+				return newError("invalid IP address length:", tcpIPAddr.Len())
 			}
 
 			if err := s.AddProtocolAddress(id, protocolAddress, stack.AddressProperties{}); err != nil {
