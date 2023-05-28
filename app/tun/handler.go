@@ -1,31 +1,18 @@
 package tun
 
 import (
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"gvisor.dev/gvisor/pkg/tcpip/stack"
+	tun_net "github.com/v2fly/v2ray-core/v5/app/tun/net"
 )
 
 var (
-	tcpQueue = make(chan TCPConn)
-	udpQueue = make(chan UDPConn)
+	tcpQueue = make(chan tun_net.TCPConn)
+	udpQueue = make(chan tun_net.UDPConn)
 )
 
-type TCPConn interface {
-	net.Conn
-
-	ID() *stack.TransportEndpointID
-}
-
-type UDPConn interface {
-	net.Conn
-
-	ID() *stack.TransportEndpointID
-}
-
-func handleTCP(conn TCPConn) {
+func handleTCP(conn tun_net.TCPConn) {
 	tcpQueue <- conn
 }
 
-func handleUDP(conn UDPConn) {
+func handleUDP(conn tun_net.UDPConn) {
 	udpQueue <- conn
 }

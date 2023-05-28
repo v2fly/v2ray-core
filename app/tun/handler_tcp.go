@@ -3,6 +3,7 @@ package tun
 import (
 	"context"
 
+	tun_net "github.com/v2fly/v2ray-core/v5/app/tun/net"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/log"
@@ -41,7 +42,7 @@ type TCPHandler struct {
 	stack *stack.Stack
 }
 
-func HandleTCP(handle func(TCPConn)) StackOption {
+func HandleTCP(handle func(tun_net.TCPConn)) StackOption {
 	return func(s *stack.Stack) error {
 		tcpForwarder := tcp.NewForwarder(s, rcvWnd, maxInFlight, func(r *tcp.ForwarderRequest) {
 			wg := new(waiter.Queue)
@@ -80,7 +81,7 @@ func HandleTCP(handle func(TCPConn)) StackOption {
 	}
 }
 
-func (h *TCPHandler) HandleQueue(ch chan TCPConn) {
+func (h *TCPHandler) HandleQueue(ch chan tun_net.TCPConn) {
 	for {
 		select {
 		case conn := <-ch:
@@ -93,15 +94,16 @@ func (h *TCPHandler) HandleQueue(ch chan TCPConn) {
 	}
 }
 
-func (h *TCPHandler) Handle(conn TCPConn) error {
+func (h *TCPHandler) Handle(conn tun_net.TCPConn) error {
+	defer conn.Close()
+	id := conn.ID()
 	ctx := session.ContextWithInbound(h.ctx, &session.Inbound{Tag: h.config.Tag})
 	sessionPolicy := h.policyManager.ForLevel(h.config.UserLevel)
 
-	addr := conn.RemoteAddr()
-
-	dest := net.DestinationFromAddr(addr)
-	ctx = log.ContextWithAccessMessage(h.ctx, &log.AccessMessage{
-		From:   addr,
+	dest := net.TCPDestination(tun_net.AddressFromTCPIPAddr(id.LocalAddress), net.Port(id.LocalPort))
+	src := net.TCPDestination(tun_net.AddressFromTCPIPAddr(id.RemoteAddress), net.Port(id.RemotePort))
+	ctx = log.ContextWithAccessMessage(ctx, &log.AccessMessage{
+		From:   src, // Parse IpAddr to Destination
 		To:     dest,
 		Status: log.AccessAccepted,
 		Reason: "",
