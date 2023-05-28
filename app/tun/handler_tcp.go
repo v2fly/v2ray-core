@@ -17,19 +17,22 @@ import (
 	"gvisor.dev/gvisor/pkg/waiter"
 )
 
+const (
+	rcvWnd      = 0 // default settings
+	maxInFlight = 2 << 10
+)
+
 type TCPHandler struct {
 	ctx           context.Context
 	dispatcher    routing.Dispatcher
 	policyManager policy.Manager
 	config        *Config
 
-	stack       *stack.Stack
-	rcvWnd      int
-	maxInFlight int
+	stack *stack.Stack
 }
 
 func (h *TCPHandler) SetHandler() {
-	tcpForwarder := tcp.NewForwarder(h.stack, h.rcvWnd, h.maxInFlight, func(r *tcp.ForwarderRequest) {
+	tcpForwarder := tcp.NewForwarder(h.stack, rcvWnd, maxInFlight, func(r *tcp.ForwarderRequest) {
 		wg := new(waiter.Queue)
 		linkedEndpoint, err := r.CreateEndpoint(wg)
 		if err != nil {
