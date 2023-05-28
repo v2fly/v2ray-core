@@ -33,6 +33,7 @@ func (t *TUN) CreateStack(linkedEndpoint stack.LinkEndpoint) (*stack.Stack, erro
 		SetUDPHandler(t.ctx, t.dispatcher, t.policyManager, t.config),
 
 		CreateNIC(nicID, linkedEndpoint),
+		AddProtocolAddress(nicID, t.config.Ips),
 	}
 
 	for _, opt := range opts {
