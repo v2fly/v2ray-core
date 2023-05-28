@@ -23,6 +23,15 @@ const (
 	maxInFlight = 2 << 10
 )
 
+type tcpConn struct {
+	*gonet.TCPConn
+	id stack.TransportEndpointID
+}
+
+func (c *tcpConn) ID() *stack.TransportEndpointID {
+	return &c.id
+}
+
 type TCPHandler struct {
 	ctx           context.Context
 	dispatcher    routing.Dispatcher
@@ -32,7 +41,7 @@ type TCPHandler struct {
 	stack *stack.Stack
 }
 
-func SetTCPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyManager policy.Manager, config *Config) StackOption {
+func HandleTCP(handle func(TCPConn)) StackOption {
 	return func(s *stack.Stack) error {
 		tcpForwarder := tcp.NewForwarder(s, rcvWnd, maxInFlight, func(r *tcp.ForwarderRequest) {
 			wg := new(waiter.Queue)
@@ -45,19 +54,25 @@ func SetTCPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyMan
 
 			// TODO: set sockopt
 
-			tcpHandler := &TCPHandler{
-				ctx:           ctx,
-				dispatcher:    dispatcher,
-				policyManager: policyManager,
-				config:        config,
-				stack:         s,
+			// tcpHandler := &TCPHandler{
+			// 	ctx:           ctx,
+			// 	dispatcher:    dispatcher,
+			// 	policyManager: policyManager,
+			// 	config:        config,
+			// 	stack:         s,
+			// }
+
+			// if err := tcpHandler.Handle(gonet.NewTCPConn(wg, linkedEndpoint)); err != nil {
+			// 	// TODO: log
+			// 	// return newError("failed to handle tcp connection").Base(err)
+			// }
+
+			tcpConn := &tcpConn{
+				TCPConn: gonet.NewTCPConn(wg, linkedEndpoint),
+				id:      r.ID(),
 			}
 
-			if err := tcpHandler.Handle(gonet.NewTCPConn(wg, linkedEndpoint)); err != nil {
-				// TODO: log
-				// return newError("failed to handle tcp connection").Base(err)
-			}
-
+			tcpQueue <- tcpConn
 		})
 		s.SetTransportProtocolHandler(tcp.ProtocolNumber, tcpForwarder.HandlePacket)
 
@@ -65,7 +80,20 @@ func SetTCPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyMan
 	}
 }
 
-func (h *TCPHandler) Handle(conn net.Conn) error {
+func (h *TCPHandler) HandleQueue(ch chan TCPConn) {
+	for {
+		select {
+		case conn := <-ch:
+			if err := h.Handle(conn); err != nil {
+				newError(err).AtError().WriteToLog(session.ExportIDToError(h.ctx))
+			}
+		case <-h.ctx.Done():
+			return
+		}
+	}
+}
+
+func (h *TCPHandler) Handle(conn TCPConn) error {
 	ctx := session.ContextWithInbound(h.ctx, &session.Inbound{Tag: h.config.Tag})
 	sessionPolicy := h.policyManager.ForLevel(h.config.UserLevel)
 

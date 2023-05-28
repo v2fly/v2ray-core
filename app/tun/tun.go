@@ -46,6 +46,24 @@ func (t *TUN) Start() error {
 	}
 	t.stack = stack
 
+	tcpHandler := &TCPHandler{
+		ctx:           t.ctx,
+		dispatcher:    t.dispatcher,
+		policyManager: t.policyManager,
+		config:        t.config,
+		stack:         stack,
+	}
+	go tcpHandler.Handle(<-tcpQueue)
+
+	udpHander := &UDPHandler{
+		ctx:           t.ctx,
+		dispatcher:    t.dispatcher,
+		policyManager: t.policyManager,
+		config:        t.config,
+		stack:         stack,
+	}
+	go udpHander.Handle(<-udpQueue)
+
 	return nil
 }
 
