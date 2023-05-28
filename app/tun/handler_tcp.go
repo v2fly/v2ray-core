@@ -55,19 +55,6 @@ func HandleTCP(handle func(tun_net.TCPConn)) StackOption {
 
 			// TODO: set sockopt
 
-			// tcpHandler := &TCPHandler{
-			// 	ctx:           ctx,
-			// 	dispatcher:    dispatcher,
-			// 	policyManager: policyManager,
-			// 	config:        config,
-			// 	stack:         s,
-			// }
-
-			// if err := tcpHandler.Handle(gonet.NewTCPConn(wg, linkedEndpoint)); err != nil {
-			// 	// TODO: log
-			// 	// return newError("failed to handle tcp connection").Base(err)
-			// }
-
 			tcpConn := &tcpConn{
 				TCPConn: gonet.NewTCPConn(wg, linkedEndpoint),
 				id:      r.ID(),
@@ -103,7 +90,7 @@ func (h *TCPHandler) Handle(conn tun_net.TCPConn) error {
 	dest := net.TCPDestination(tun_net.AddressFromTCPIPAddr(id.LocalAddress), net.Port(id.LocalPort))
 	src := net.TCPDestination(tun_net.AddressFromTCPIPAddr(id.RemoteAddress), net.Port(id.RemotePort))
 	ctx = log.ContextWithAccessMessage(ctx, &log.AccessMessage{
-		From:   src, // Parse IpAddr to Destination
+		From:   src,
 		To:     dest,
 		Status: log.AccessAccepted,
 		Reason: "",

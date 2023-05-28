@@ -75,7 +75,6 @@ func (h *UDPHandler) Handle(conn tun_net.UDPConn) error {
 	defer conn.Close()
 	id := conn.ID()
 	ctx := session.ContextWithInbound(h.ctx, &session.Inbound{Tag: h.config.Tag})
-	packetConn := conn.(net.PacketConn)
 
 	udpDispatcherConstructor := udp.NewSplitDispatcher
 	switch h.config.PacketEncoding {
@@ -90,7 +89,7 @@ func (h *UDPHandler) Handle(conn tun_net.UDPConn) error {
 	src := net.UDPDestination(tun_net.AddressFromTCPIPAddr(id.RemoteAddress), net.Port(id.RemotePort))
 
 	udpServer := udpDispatcherConstructor(h.dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
-		if _, err := packetConn.WriteTo(packet.Payload.Bytes(), &net.UDPAddr{
+		if _, err := conn.WriteTo(packet.Payload.Bytes(), &net.UDPAddr{
 			IP:   src.Address.IP(),
 			Port: int(src.Port),
 		}); err != nil {
@@ -104,7 +103,7 @@ func (h *UDPHandler) Handle(conn tun_net.UDPConn) error {
 			return nil
 		default:
 			var buffer [2048]byte
-			n, _, err := packetConn.ReadFrom(buffer[:])
+			n, _, err := conn.ReadFrom(buffer[:])
 			if err != nil {
 				return newError("failed to read UDP packet").Base(err)
 			}
