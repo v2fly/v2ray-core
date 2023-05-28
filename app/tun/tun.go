@@ -40,21 +40,11 @@ func (t *TUN) Start() error {
 		return newError("failed to create device").Base(err).AtError()
 	}
 
-	stack, err := CreateStack(device)
+	stack, err := t.CreateStack(device)
 	if err != nil {
 		return newError("failed to create stack").Base(err).AtError()
 	}
 	t.stack = stack
-
-	tcpHandler := &TCPHandler{
-		ctx:           t.ctx,
-		dispatcher:    t.dispatcher,
-		policyManager: t.policyManager,
-		config:        t.config,
-		stack:         stack,
-	}
-
-	tcpHandler.SetHandler()
 
 	return nil
 }

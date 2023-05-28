@@ -31,25 +31,40 @@ type TCPHandler struct {
 	stack *stack.Stack
 }
 
-func (h *TCPHandler) SetHandler() {
-	tcpForwarder := tcp.NewForwarder(h.stack, rcvWnd, maxInFlight, func(r *tcp.ForwarderRequest) {
-		wg := new(waiter.Queue)
-		linkedEndpoint, err := r.CreateEndpoint(wg)
-		if err != nil {
-			r.Complete(true)
-			return
-		}
-		defer r.Complete(false)
+func SetTCPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyManager policy.Manager, config *Config) func(*stack.Stack) error {
+	return func(s *stack.Stack) error {
+		tcpForwarder := tcp.NewForwarder(s, rcvWnd, maxInFlight, func(r *tcp.ForwarderRequest) {
+			wg := new(waiter.Queue)
+			linkedEndpoint, err := r.CreateEndpoint(wg)
+			if err != nil {
+				r.Complete(true)
+				return
+			}
+			defer r.Complete(false)
 
-		// TODO: set sockopt
+			// TODO: set sockopt
 
-		h.handle(gonet.NewTCPConn(wg, linkedEndpoint))
+			tcpHandler := &TCPHandler{
+				ctx:           ctx,
+				dispatcher:    dispatcher,
+				policyManager: policyManager,
+				config:        config,
+				stack:         s,
+			}
 
-	})
-	h.stack.SetTransportProtocolHandler(tcp.ProtocolNumber, tcpForwarder.HandlePacket)
+			if err := tcpHandler.Handle(gonet.NewTCPConn(wg, linkedEndpoint)); err != nil {
+				// TODO: log
+				// return newError("failed to handle tcp connection").Base(err)
+			}
+
+		})
+		s.SetTransportProtocolHandler(tcp.ProtocolNumber, tcpForwarder.HandlePacket)
+
+		return nil
+	}
 }
 
-func (h *TCPHandler) handle(conn *gonet.TCPConn) error {
+func (h *TCPHandler) Handle(conn net.Conn) error {
 	sessionPolicy := h.policyManager.ForLevel(h.config.UserLevel)
 
 	addr := conn.RemoteAddr()

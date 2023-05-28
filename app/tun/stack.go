@@ -11,7 +11,7 @@ import (
 
 type StackOption func(*stack.Stack) error
 
-func CreateStack(_ stack.LinkEndpoint) (*stack.Stack, error) {
+func (t *TUN) CreateStack(_ stack.LinkEndpoint) (*stack.Stack, error) {
 	s := stack.New(stack.Options{
 		NetworkProtocols: []stack.NetworkProtocolFactory{
 			ipv4.NewProtocol,
@@ -24,6 +24,16 @@ func CreateStack(_ stack.LinkEndpoint) (*stack.Stack, error) {
 			icmp.NewProtocol6,
 		},
 	})
+
+	opts := []StackOption{
+		SetTCPHandler(t.ctx, t.dispatcher, t.policyManager, t.config),
+	}
+
+	for _, opt := range opts {
+		if err := opt(s); err != nil {
+			return nil, err
+		}
+	}
 
 	// nicID := tcpip.NICID(s.UniqueID())
 
