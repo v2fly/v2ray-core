@@ -7,6 +7,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
 	udp_proto "github.com/v2fly/v2ray-core/v5/common/protocol/udp"
+	"github.com/v2fly/v2ray-core/v5/common/session"
 	"github.com/v2fly/v2ray-core/v5/features/policy"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
@@ -50,7 +51,7 @@ func SetUDPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyMan
 	}
 }
 func (h *UDPHandler) Handle(conn net.Conn) error {
-	ctx := h.ctx
+	ctx := session.ContextWithInbound(h.ctx, &session.Inbound{Tag: h.config.Tag})
 	packetConn := conn.(net.PacketConn)
 
 	udpDispatcherConstructor := udp.NewSplitDispatcher
