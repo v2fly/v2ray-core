@@ -166,6 +166,8 @@ func (p *proxyEnvImpl) NarrowScopeToTransport(key string) (TransportEnvironment,
 	return &transportEnvImpl{
 		ctx:              p.ctx,
 		transientStorage: transientStorage,
+		systemDialer:     p.systemDialer,
+		systemListener:   p.systemListener,
 	}, nil
 }
 
@@ -190,11 +192,11 @@ func (t *transportEnvImpl) RecordLog() interface{} {
 }
 
 func (t *transportEnvImpl) Dialer() internet.SystemDialer {
-	panic("implement me")
+	return t.systemDialer
 }
 
 func (t *transportEnvImpl) Listener() internet.SystemListener {
-	panic("implement me")
+	return t.systemListener
 }
 
 func (t *transportEnvImpl) OutboundDialer() tagged.DialFunc {
