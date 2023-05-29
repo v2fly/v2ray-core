@@ -17,6 +17,13 @@ type Conn struct {
 	*tls.Conn
 }
 
+func (c *Conn) GetConnectionApplicationProtocol() (string, error) {
+	if err := c.Handshake(); err != nil {
+		return "", err
+	}
+	return c.ConnectionState().NegotiatedProtocol, nil
+}
+
 func (c *Conn) WriteMultiBuffer(mb buf.MultiBuffer) error {
 	mb = buf.Compact(mb)
 	mb, err := buf.WriteMultiBuffer(c, mb)

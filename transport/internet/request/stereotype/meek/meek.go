@@ -38,7 +38,8 @@ func meekDial(ctx context.Context, dest net.Destination, streamSettings *interne
 	}
 	httprtSetting := &httprt.ClientConfig{Http: &httprt.HTTPConfig{
 		UrlPrefix: meekSetting.Url,
-	}}
+	},
+	}
 	request := &assembly.Config{
 		Assembler:    serial.ToTypedMessage(simpleAssembler),
 		Roundtripper: serial.ToTypedMessage(httprtSetting),

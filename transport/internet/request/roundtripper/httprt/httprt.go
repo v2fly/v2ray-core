@@ -7,10 +7,12 @@ import (
 	"context"
 	"encoding/base64"
 	"io"
+	gonet "net"
 	"net/http"
 
-	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/transportcommon"
 
+	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/request"
 )
@@ -25,20 +27,22 @@ type httpTripperClient struct {
 	assembly request.TransportClientAssembly
 }
 
+type unimplementedBackDrop struct {
+}
+
+func (u unimplementedBackDrop) RoundTrip(r *http.Request) (*http.Response, error) {
+	return nil, newError("unimplemented")
+}
+
 func (h *httpTripperClient) OnTransportClientAssemblyReady(assembly request.TransportClientAssembly) {
 	h.assembly = assembly
 }
 
 func (h *httpTripperClient) RoundTrip(ctx context.Context, req request.Request, opts ...request.RoundTripperOption) (resp request.Response, err error) {
 	if h.httpRTT == nil {
-		h.httpRTT = &http.Transport{
-			DialContext: func(dialCtx context.Context, network, addr string) (net.Conn, error) {
-				return h.assembly.AutoImplDialer().Dial(ctx)
-			},
-			DialTLSContext: func(dialCtx context.Context, network, addr string) (net.Conn, error) {
-				return h.assembly.AutoImplDialer().Dial(ctx)
-			},
-		}
+		h.httpRTT = transportcommon.NewALPNAwareHTTPRoundTripper(ctx, func(ctx context.Context, addr string) (gonet.Conn, error) {
+			return h.assembly.AutoImplDialer().Dial(ctx)
+		}, unimplementedBackDrop{})
 	}
 
 	connectionTagStr := base64.RawURLEncoding.EncodeToString(req.ConnectionTag)

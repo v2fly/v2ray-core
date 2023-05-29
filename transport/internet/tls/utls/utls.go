@@ -90,7 +90,18 @@ func (e Engine) Client(conn net.Conn, opts ...security.Option) (security.Conn, e
 	if err != nil {
 		return nil, newError("unable to finish utls handshake").Base(err)
 	}
-	return utlsClientConn, nil
+	return uTLSClientConnection{utlsClientConn}, nil
+}
+
+type uTLSClientConnection struct {
+	*utls.UConn
+}
+
+func (u uTLSClientConnection) GetConnectionApplicationProtocol() (string, error) {
+	if err := u.Handshake(); err != nil {
+		return "", err
+	}
+	return u.ConnectionState().NegotiatedProtocol, nil
 }
 
 func uTLSConfigFromTLSConfig(config *systls.Config) (*utls.Config, error) { // nolint: unparam
