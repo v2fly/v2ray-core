@@ -8,7 +8,7 @@ import (
 
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/app/tun/device"
-	"github.com/v2fly/v2ray-core/v5/app/tun/device/tun"
+	"github.com/v2fly/v2ray-core/v5/app/tun/device/gvisor"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/features/policy"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
@@ -31,7 +31,7 @@ func (t *TUN) Type() interface{} {
 }
 
 func (t *TUN) Start() error {
-	DeviceConstructor := tun.New
+	DeviceConstructor := gvisor.New
 	device, err := DeviceConstructor(device.Options{
 		Name: t.config.Name,
 		MTU:  t.config.Mtu,
