@@ -71,6 +71,8 @@ import (
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/request/assembler/simple"
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/request/roundtripper/httprt"
 
+	_ "github.com/v2fly/v2ray-core/v5/transport/internet/request/stereotype/meek"
+
 	// Transport headers
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/headers/http"
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/headers/noop"
