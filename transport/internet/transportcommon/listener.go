@@ -23,7 +23,8 @@ func (l *combinedListener) Close() error {
 }
 
 func ListenWithSecuritySettings(ctx context.Context, address net.Address, port net.Port, streamSettings *internet.MemoryStreamConfig) (
-	net.Listener, error) {
+	net.Listener, error,
+) {
 	var l combinedListener
 
 	transportEnvironment := envctx.EnvironmentFromContext(ctx).(environment.TransportEnvironment)

@@ -34,7 +34,8 @@ func (s *simpleAssemblerClient) NewSession(ctx context.Context, opts ...request.
 	sessionContext, finish := context.WithCancel(ctx)
 	session := &simpleAssemblerClientSession{
 		sessionID: sessionID, tripper: s.assembly.Tripper(), readBuffer: bytes.NewBuffer(nil),
-		ctx: sessionContext, finish: finish, writerChan: make(chan []byte), readerChan: make(chan []byte, 16), assembler: s}
+		ctx: sessionContext, finish: finish, writerChan: make(chan []byte), readerChan: make(chan []byte, 16), assembler: s,
+	}
 	go session.keepRunning()
 	return session, nil
 }

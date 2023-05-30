@@ -36,9 +36,10 @@ func meekDial(ctx context.Context, dest net.Destination, streamSettings *interne
 		BackoffFactor:            1.5,
 		FailedRetryIntervalMs:    1000,
 	}
-	httprtSetting := &httprt.ClientConfig{Http: &httprt.HTTPConfig{
-		UrlPrefix: meekSetting.Url,
-	},
+	httprtSetting := &httprt.ClientConfig{
+		Http: &httprt.HTTPConfig{
+			UrlPrefix: meekSetting.Url,
+		},
 	}
 	request := &assembly.Config{
 		Assembler:    serial.ToTypedMessage(simpleAssembler),

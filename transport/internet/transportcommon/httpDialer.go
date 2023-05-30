@@ -10,8 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v5/transport/internet/security"
 	"golang.org/x/net/http2"
+
+	"github.com/v2fly/v2ray-core/v5/transport/internet/security"
 )
 
 type DialerFunc func(ctx context.Context, addr string) (net.Conn, error)
@@ -19,7 +20,8 @@ type DialerFunc func(ctx context.Context, addr string) (net.Conn, error)
 // NewALPNAwareHTTPRoundTripper creates an instance of RoundTripper that dial to remote HTTPS endpoint with
 // an alternative version of TLS implementation.
 func NewALPNAwareHTTPRoundTripper(ctx context.Context, dialer DialerFunc,
-	backdropTransport http.RoundTripper) http.RoundTripper {
+	backdropTransport http.RoundTripper,
+) http.RoundTripper {
 	rtImpl := &alpnAwareHTTPRoundTripperImpl{
 		connectWithH1:     map[string]bool{},
 		backdropTransport: backdropTransport,
@@ -51,9 +53,11 @@ type pendingConnKey struct {
 	dest string
 }
 
-var errEAGAIN = errors.New("incorrect ALPN negotiated, try again with another ALPN")
-var errEAGAINTooMany = errors.New("incorrect ALPN negotiated")
-var errExpired = errors.New("connection have expired")
+var (
+	errEAGAIN        = errors.New("incorrect ALPN negotiated, try again with another ALPN")
+	errEAGAINTooMany = errors.New("incorrect ALPN negotiated")
+	errExpired       = errors.New("connection have expired")
+)
 
 func (r *alpnAwareHTTPRoundTripperImpl) RoundTrip(req *http.Request) (*http.Response, error) {
 	if req.URL.Scheme != "https" {
@@ -106,19 +110,21 @@ func getPendingConnectionID(dest string, alpnIsH2 bool) pendingConnKey {
 }
 
 func (r *alpnAwareHTTPRoundTripperImpl) putConn(addr string, alpnIsH2 bool, conn net.Conn) {
-	connId := getPendingConnectionID(addr, alpnIsH2)
-	r.pendingConn[connId] = NewUnclaimedConnection(conn, time.Minute)
+	connID := getPendingConnectionID(addr, alpnIsH2)
+	r.pendingConn[connID] = NewUnclaimedConnection(conn, time.Minute)
 }
+
 func (r *alpnAwareHTTPRoundTripperImpl) getConn(addr string, alpnIsH2 bool) net.Conn {
-	connId := getPendingConnectionID(addr, alpnIsH2)
-	if conn, ok := r.pendingConn[connId]; ok {
-		delete(r.pendingConn, connId)
+	connID := getPendingConnectionID(addr, alpnIsH2)
+	if conn, ok := r.pendingConn[connID]; ok {
+		delete(r.pendingConn, connID)
 		if claimedConnection, err := conn.claimConnection(); err == nil {
 			return claimedConnection
 		}
 	}
 	return nil
 }
+
 func (r *alpnAwareHTTPRoundTripperImpl) dialOrGetTLSWithExpectedALPN(ctx context.Context, addr string, expectedH2 bool) (net.Conn, error) {
 	r.accessDialingConnection.Lock()
 	defer r.accessDialingConnection.Unlock()
@@ -127,7 +133,7 @@ func (r *alpnAwareHTTPRoundTripperImpl) dialOrGetTLSWithExpectedALPN(ctx context
 		return nil, errEAGAIN
 	}
 
-	//Get a cached connection if possible to reduce preflight connection closed without sending data
+	// Get a cached connection if possible to reduce preflight connection closed without sending data
 	if gconn := r.getConn(addr, expectedH2); gconn != nil {
 		return gconn, nil
 	}
@@ -164,6 +170,7 @@ func (r *alpnAwareHTTPRoundTripperImpl) dialOrGetTLSWithExpectedALPN(ctx context
 }
 
 func (r *alpnAwareHTTPRoundTripperImpl) dialTLS(ctx context.Context, addr string) (net.Conn, error) {
+	_ = ctx
 	return r.dialer(r.ctx, addr)
 }
 
