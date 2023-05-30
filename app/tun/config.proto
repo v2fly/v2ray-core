@@ -8,7 +8,6 @@ option java_multiple_files = true;
 
 
 import "app/router/routercommon/common.proto";
-import "common/net/packetaddr/config.proto";
 import "common/protoext/extensions.proto";
 
 message Config {
@@ -19,7 +18,7 @@ message Config {
     string name = 1;
     uint32 mtu = 2;
     uint32 user_level = 3;
-    v2ray.core.net.packetaddr.PacketAddrType packet_encoding = 4;
+    reserved 4;
     string tag = 5;
     repeated v2ray.core.app.router.routercommon.CIDR ips = 6;
     repeated v2ray.core.app.router.routercommon.CIDR routes = 7;
