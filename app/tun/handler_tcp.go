@@ -67,7 +67,7 @@ func SetTCPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyMan
 				config:        config,
 			}
 
-			handler.Handle(conn)
+			go handler.Handle(conn)
 		})
 
 		s.SetTransportProtocolHandler(tcp.ProtocolNumber, tcpForwarder.HandlePacket)

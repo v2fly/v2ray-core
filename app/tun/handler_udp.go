@@ -57,7 +57,7 @@ func SetUDPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyMan
 				policyManager: policyManager,
 				config:        config,
 			}
-			handler.Handle(conn)
+			go handler.Handle(conn)
 		})
 		s.SetTransportProtocolHandler(gvisor_udp.ProtocolNumber, udpForwarder.HandlePacket)
 		return nil
