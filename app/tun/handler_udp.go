@@ -22,8 +22,6 @@ type UDPHandler struct {
 	dispatcher    routing.Dispatcher
 	policyManager policy.Manager
 	config        *Config
-
-	stack *stack.Stack
 }
 
 type udpConn struct {
@@ -41,7 +39,7 @@ func SetUDPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyMan
 			wg := new(waiter.Queue)
 			linkedEndpoint, err := r.CreateEndpoint(wg)
 			if err != nil {
-				// TODO: log
+				newError("failed to create endpoint: ", err).WriteToLog(session.ExportIDToError(ctx))
 				return
 			}
 

@@ -38,8 +38,6 @@ type TCPHandler struct {
 	dispatcher    routing.Dispatcher
 	policyManager policy.Manager
 	config        *Config
-
-	stack *stack.Stack
 }
 
 func SetTCPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyManager policy.Manager, config *Config) StackOption {
