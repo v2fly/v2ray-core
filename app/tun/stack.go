@@ -29,8 +29,8 @@ func (t *TUN) CreateStack(linkedEndpoint stack.LinkEndpoint) (*stack.Stack, erro
 	nicID := tcpip.NICID(s.UniqueID())
 
 	opts := []StackOption{
-		HandleTCP(handleTCP),
-		HandleUDP(handleUDP),
+		SetTCPHandler(t.ctx, t.dispatcher, t.policyManager, t.config),
+		SetUDPHandler(t.ctx, t.dispatcher, t.policyManager, t.config),
 
 		CreateNIC(nicID, linkedEndpoint),
 		AddProtocolAddress(nicID, t.config.Ips),

@@ -36,7 +36,7 @@ func (c *udpConn) ID() *stack.TransportEndpointID {
 	return &c.id
 }
 
-func HandleUDP(handle func(tun_net.UDPConn)) StackOption {
+func SetUDPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyManager policy.Manager, config *Config) StackOption {
 	return func(s *stack.Stack) error {
 		udpForwarder := gvisor_udp.NewForwarder(s, func(r *gvisor_udp.ForwarderRequest) {
 			wg := new(waiter.Queue)
@@ -51,23 +51,16 @@ func HandleUDP(handle func(tun_net.UDPConn)) StackOption {
 				id:      r.ID(),
 			}
 
-			handle(conn)
+			handler := &UDPHandler{
+				ctx:           ctx,
+				dispatcher:    dispatcher,
+				policyManager: policyManager,
+				config:        config,
+			}
+			handler.Handle(conn)
 		})
 		s.SetTransportProtocolHandler(gvisor_udp.ProtocolNumber, udpForwarder.HandlePacket)
 		return nil
-	}
-}
-
-func (h *UDPHandler) HandleQueue(ch chan tun_net.UDPConn) {
-	for {
-		select {
-		case <-h.ctx.Done():
-			return
-		case conn := <-ch:
-			if err := h.Handle(conn); err != nil {
-				newError(err).AtError().WriteToLog(session.ExportIDToError(h.ctx))
-			}
-		}
 	}
 }
 

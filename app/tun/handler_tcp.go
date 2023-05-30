@@ -42,7 +42,7 @@ type TCPHandler struct {
 	stack *stack.Stack
 }
 
-func HandleTCP(handle func(tun_net.TCPConn)) StackOption {
+func SetTCPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyManager policy.Manager, config *Config) StackOption {
 	return func(s *stack.Stack) error {
 		tcpForwarder := tcp.NewForwarder(s, rcvWnd, maxInFlight, func(r *tcp.ForwarderRequest) {
 			wg := new(waiter.Queue)
@@ -60,24 +60,19 @@ func HandleTCP(handle func(tun_net.TCPConn)) StackOption {
 				id:      r.ID(),
 			}
 
-			handle(conn)
+			handler := &TCPHandler{
+				ctx:           ctx,
+				dispatcher:    dispatcher,
+				policyManager: policyManager,
+				config:        config,
+			}
+
+			handler.Handle(conn)
 		})
+
 		s.SetTransportProtocolHandler(tcp.ProtocolNumber, tcpForwarder.HandlePacket)
 
 		return nil
-	}
-}
-
-func (h *TCPHandler) HandleQueue(ch chan tun_net.TCPConn) {
-	for {
-		select {
-		case conn := <-ch:
-			if err := h.Handle(conn); err != nil {
-				newError(err).AtError().WriteToLog(session.ExportIDToError(h.ctx))
-			}
-		case <-h.ctx.Done():
-			return
-		}
 	}
 }
 
