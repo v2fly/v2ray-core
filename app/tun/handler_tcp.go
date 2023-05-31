@@ -2,6 +2,7 @@ package tun
 
 import (
 	"context"
+	"time"
 
 	tun_net "github.com/v2fly/v2ray-core/v5/app/tun/net"
 	"github.com/v2fly/v2ray-core/v5/common"
@@ -13,7 +14,10 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/task"
 	"github.com/v2fly/v2ray-core/v5/features/policy"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
+	internet "github.com/v2fly/v2ray-core/v5/transport/internet"
+	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
+	"gvisor.dev/gvisor/pkg/tcpip/header"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
 	"gvisor.dev/gvisor/pkg/waiter"
@@ -51,7 +55,9 @@ func SetTCPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyMan
 			}
 			defer r.Complete(false)
 
-			// TODO: set sockopt
+			if err := applySocketOptions(s, linkedEndpoint, config.SocketSettings); err != nil {
+				newError("failed to apply socket options: ", err).WriteToLog(session.ExportIDToError(ctx))
+			}
 
 			conn := &tcpConn{
 				TCPConn: gonet.NewTCPConn(wg, linkedEndpoint),
@@ -120,6 +126,40 @@ func (h *TCPHandler) Handle(conn tun_net.TCPConn) error {
 		common.Interrupt(link.Reader)
 		common.Interrupt(link.Writer)
 		return newError("connection ends").Base(err)
+	}
+
+	return nil
+}
+
+func applySocketOptions(s *stack.Stack, endpoint tcpip.Endpoint, config *internet.SocketConfig) tcpip.Error {
+	if config.TcpKeepAliveInterval > 0 {
+		interval := tcpip.KeepaliveIntervalOption(time.Duration(config.TcpKeepAliveInterval) * time.Second)
+		if err := endpoint.SetSockOpt(&interval); err != nil {
+			return err
+		}
+	}
+
+	if config.TcpKeepAliveIdle > 0 {
+		idle := tcpip.KeepaliveIdleOption(time.Duration(config.TcpKeepAliveIdle) * time.Second)
+		if err := endpoint.SetSockOpt(&idle); err != nil {
+			return err
+		}
+	}
+
+	if config.TcpKeepAliveInterval > 0 || config.TcpKeepAliveIdle > 0 {
+		endpoint.SocketOptions().SetKeepAlive(true)
+
+	}
+	{
+		var sendBufferSizeRangeOption tcpip.TCPSendBufferSizeRangeOption
+		if err := s.TransportProtocolOption(header.TCPProtocolNumber, &sendBufferSizeRangeOption); err == nil {
+			endpoint.SocketOptions().SetReceiveBufferSize(int64(sendBufferSizeRangeOption.Default), false)
+		}
+
+		var receiveBufferSizeRangeOption tcpip.TCPReceiveBufferSizeRangeOption
+		if err := s.TransportProtocolOption(header.TCPProtocolNumber, &receiveBufferSizeRangeOption); err == nil {
+			endpoint.SocketOptions().SetSendBufferSize(int64(receiveBufferSizeRangeOption.Default), false)
+		}
 	}
 
 	return nil

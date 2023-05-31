@@ -9,6 +9,7 @@ option java_multiple_files = true;
 
 import "app/router/routercommon/common.proto";
 import "common/protoext/extensions.proto";
+import "transport/internet/config.proto";
 
 message Config {
     option (v2ray.core.common.protoext.message_opt).type = "service";
@@ -18,10 +19,11 @@ message Config {
     string name = 1;
     uint32 mtu = 2;
     uint32 user_level = 3;
-    reserved 4;
+    reserved 4; // Reserved for PacketEncode
     string tag = 5;
     repeated v2ray.core.app.router.routercommon.CIDR ips = 6;
     repeated v2ray.core.app.router.routercommon.CIDR routes = 7;
     bool enable_promiscuous_mode = 8;
     bool enable_spoofing = 9;
+    v2ray.core.transport.internet.SocketConfig socket_settings = 10;
 }

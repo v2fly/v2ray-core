@@ -6,6 +6,7 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv6"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
+	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
 )
 
 func CreateNIC(id tcpip.NICID, linkEndpoint stack.LinkEndpoint) StackOption {
@@ -85,6 +86,26 @@ func SetRouteTable(id tcpip.NICID, routes []*routercommon.CIDR) StackOption {
 			return
 		}())
 
+		return nil
+	}
+}
+
+func SetTCPSendBufferSize(size int) StackOption {
+	return func(s *stack.Stack) error {
+		sendBufferSizeRangeOption := tcpip.TCPSendBufferSizeRangeOption{Min: tcp.MinBufferSize, Default: size, Max: tcp.MaxBufferSize}
+		if err := s.SetTransportProtocolOption(tcp.ProtocolNumber, &sendBufferSizeRangeOption); err != nil {
+			return newError("failed to set tcp send buffer size:", err)
+		}
+		return nil
+	}
+}
+
+func SetTCPReceiveBufferSize(size int) StackOption {
+	return func(s *stack.Stack) error {
+		receiveBufferSizeRangeOption := tcpip.TCPReceiveBufferSizeRangeOption{Min: tcp.MinBufferSize, Default: size, Max: tcp.MaxBufferSize}
+		if err := s.SetTransportProtocolOption(tcp.ProtocolNumber, &receiveBufferSizeRangeOption); err != nil {
+			return newError("failed to set tcp receive buffer size:", err)
+		}
 		return nil
 	}
 }

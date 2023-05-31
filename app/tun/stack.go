@@ -39,6 +39,14 @@ func (t *TUN) CreateStack(linkedEndpoint stack.LinkEndpoint) (*stack.Stack, erro
 		SetSpoofing(nicID, t.config.EnableSpoofing),
 	}
 
+	if size := t.config.SocketSettings.TxBufSize; size != 0 {
+		opts = append(opts, SetTCPSendBufferSize(int(size)))
+	}
+
+	if size := t.config.SocketSettings.RxBufSize; size != 0 {
+		opts = append(opts, SetTCPReceiveBufferSize(int(size)))
+	}
+
 	for _, opt := range opts {
 		if err := opt(s); err != nil {
 			return nil, err
