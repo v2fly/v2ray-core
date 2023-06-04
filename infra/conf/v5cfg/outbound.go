@@ -2,6 +2,7 @@ package v5cfg
 
 import (
 	"context"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 
@@ -40,6 +41,16 @@ func (c OutboundConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 
 	if c.MuxSettings != nil {
 		senderSettings.MultiplexSettings = c.MuxSettings.Build()
+	}
+	
+	senderSettings.DomainStrategy = proxyman.SenderConfig_AS_IS
+	switch strings.ToLower(c.DomainStrategy) {
+	case "useip", "use_ip", "use-ip":
+		senderSettings.DomainStrategy = proxyman.SenderConfig_USE_IP
+	case "useip4", "useipv4", "use_ip4", "use_ipv4", "use_ip_v4", "use-ip4", "use-ipv4", "use-ip-v4":
+		senderSettings.DomainStrategy = proxyman.SenderConfig_USE_IP4
+	case "useip6", "useipv6", "use_ip6", "use_ipv6", "use_ip_v6", "use-ip6", "use-ipv6", "use-ip-v6":
+		senderSettings.DomainStrategy = proxyman.SenderConfig_USE_IP6
 	}
 
 	if c.Settings == nil {
