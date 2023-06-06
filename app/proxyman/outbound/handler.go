@@ -151,6 +151,18 @@ func (h *Handler) Tag() string {
 
 // Dispatch implements proxy.Outbound.Dispatch.
 func (h *Handler) Dispatch(ctx context.Context, link *transport.Link) {
+	if h.senderSettings != nil && h.senderSettings.DomainStrategy != proxyman.SenderConfig_AS_IS {
+		outbound := session.OutboundFromContext(ctx)
+		if outbound == nil {
+			outbound = new(session.Outbound)
+			ctx = session.ContextWithOutbound(ctx, outbound)
+		}
+		if outbound.Target.Address != nil && outbound.Target.Address.Family().IsDomain() {
+			if addr := h.resolveIP(ctx, outbound.Target.Address.Domain(), h.Address()); addr != nil {
+				outbound.Target.Address = addr
+			}
+		}
+	}
 	if h.mux != nil && (h.mux.Enabled || session.MuxPreferedFromContext(ctx)) {
 		if err := h.mux.Dispatch(ctx, link); err != nil {
 			err := newError("failed to process mux outbound traffic").Base(err)
