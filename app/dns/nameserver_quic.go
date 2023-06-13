@@ -377,7 +377,9 @@ func (s *QUICNameServer) getConnection(ctx context.Context) (quic.Connection, er
 }
 
 func (s *QUICNameServer) openConnection(ctx context.Context) (quic.Connection, error) {
-	tlsConfig := tls.Config{}
+	tlsConfig := tls.Config{
+		ServerName: s.destination.Address.Domain(),
+	}
 	quicConfig := &quic.Config{
 		HandshakeIdleTimeout: handshakeIdleTimeout,
 	}
