@@ -17,7 +17,7 @@ import (
 // Listener is an internet.Listener that listens for TCP connections.
 type Listener struct {
 	rawConn  *sysConn
-	listener quic.Listener
+	listener *quic.Listener
 	done     *done.Instance
 	addConn  internet.ConnHandler
 }
@@ -102,7 +102,6 @@ func Listen(ctx context.Context, address net.Address, port net.Port, streamSetti
 	}
 
 	quicConfig := &quic.Config{
-		ConnectionIDLength:    12,
 		HandshakeIdleTimeout:  time.Second * 8,
 		MaxIdleTimeout:        time.Second * 45,
 		MaxIncomingStreams:    32,
@@ -116,7 +115,12 @@ func Listen(ctx context.Context, address net.Address, port net.Port, streamSetti
 		return nil, err
 	}
 
-	qListener, err := quic.Listen(conn, tlsConfig.GetTLSConfig(), quicConfig)
+	tr := quic.Transport{
+		Conn:               conn,
+		ConnectionIDLength: 12,
+	}
+
+	qListener, err := tr.Listen(tlsConfig.GetTLSConfig(), quicConfig)
 	if err != nil {
 		conn.Close()
 		return nil, err
