@@ -377,12 +377,14 @@ func (s *QUICNameServer) getConnection(ctx context.Context) (quic.Connection, er
 }
 
 func (s *QUICNameServer) openConnection(ctx context.Context) (quic.Connection, error) {
-	tlsConfig := tls.Config{}
+	tlsConfig := tls.Config{
+		ServerName: s.destination.Address.Domain(),
+	}
 	quicConfig := &quic.Config{
 		HandshakeIdleTimeout: handshakeIdleTimeout,
 	}
 
-	conn, err := quic.DialAddrContext(ctx, s.destination.NetAddr(), tlsConfig.GetTLSConfig(tls.WithNextProto(NextProtoDQ)), quicConfig)
+	conn, err := quic.DialAddr(ctx, s.destination.NetAddr(), tlsConfig.GetTLSConfig(tls.WithNextProto(NextProtoDQ)), quicConfig)
 	if err != nil {
 		return nil, err
 	}
