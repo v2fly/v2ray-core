@@ -18,7 +18,7 @@ require (
 	github.com/pires/go-proxyproto v0.7.0
 	github.com/quic-go/qtls-go1-19 v0.3.2
 	github.com/quic-go/qtls-go1-20 v0.2.2
-	github.com/quic-go/quic-go v0.36.0
+	github.com/quic-go/quic-go v0.36.1
 	github.com/refraction-networking/utls v1.3.2
 	github.com/seiflotfy/cuckoofilter v0.0.0-20220411075957-e3b120b3f5fb
 	github.com/stretchr/testify v1.8.4
