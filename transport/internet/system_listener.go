@@ -2,7 +2,10 @@ package internet
 
 import (
 	"context"
+	"os"
 	"runtime"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -66,6 +69,24 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 				address = string(fullAddr)
 			}
 		} else {
+			// normal unix domain socket
+			// parse file mode from address
+			if s := strings.Split(address, ","); len(s) == 2 {
+				fMode, err := strconv.ParseUint(s[1], 8, 32)
+				if err != nil {
+					return nil, newError("failed to parse file mode").Base(err)
+				}
+				address = s[0]
+				// set file mode for unix domain socket when it is created
+				defer func(name string, mode os.FileMode) {
+					if err != nil {
+						return
+					}
+					if cerr := os.Chmod(name, mode); cerr != nil {
+						err = newError("failed to set file mode for file: ", name).Base(cerr)
+					}
+				}(address, os.FileMode(fMode))
+			}
 			// normal unix domain socket needs lock
 			locker := &FileLocker{
 				path: address + ".lock",
