@@ -23,6 +23,19 @@ type DefaultListener struct {
 	controllers []controller
 }
 
+type combinedListener struct {
+	net.Listener
+	locker *FileLocker // for unix domain socket
+}
+
+func (l *combinedListener) Close() error {
+	if l.locker != nil {
+		l.locker.Release()
+		l.locker = nil
+	}
+	return l.Listener.Close()
+}
+
 func getControlFunc(ctx context.Context, sockopt *SocketConfig, controllers []controller) func(network, address string, c syscall.RawConn) error {
 	return func(network, address string, c syscall.RawConn) error {
 		return c.Control(func(fd uintptr) {
@@ -43,10 +56,8 @@ func getControlFunc(ctx context.Context, sockopt *SocketConfig, controllers []co
 	}
 }
 
-func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *SocketConfig) (net.Listener, error) {
+func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *SocketConfig) (l net.Listener, err error) {
 	var lc net.ListenConfig
-	var l net.Listener
-	var err error
 	var network, address string
 	switch addr := addr.(type) {
 	case *net.TCPAddr:
@@ -83,6 +94,9 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 						return
 					}
 					if cerr := os.Chmod(name, mode); cerr != nil {
+						// failed to set file mode, close the listener
+						l.Close()
+						l = nil
 						err = newError("failed to set file mode for file: ", name).Base(cerr)
 					}
 				}(address, os.FileMode(fMode))
@@ -91,11 +105,18 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 			locker := &FileLocker{
 				path: address + ".lock",
 			}
-			err := locker.Acquire()
-			if err != nil {
+			if err := locker.Acquire(); err != nil {
 				return nil, err
 			}
-			ctx = context.WithValue(ctx, address, locker) // nolint: revive,staticcheck
+			defer func(locker *FileLocker) {
+				// combine listener and locker
+				if err == nil {
+					l = &combinedListener{Listener: l, locker: locker}
+				} else {
+					// failed to create listener, release the locker
+					locker.Release()
+				}
+			}(locker)
 		}
 	}
 
