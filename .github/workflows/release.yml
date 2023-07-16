@@ -74,6 +74,8 @@ jobs:
             goarch: arm64
           - goos: linux
             goarch: riscv64
+          - goos: linux
+            goarch: loongarch64
           - goos: windows
             goarch: arm64
           - goos: android
