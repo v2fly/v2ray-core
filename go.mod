@@ -16,15 +16,12 @@ require (
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pires/go-proxyproto v0.7.0
-<<<<<<< HEAD
 	github.com/quic-go/quic-go v0.36.2
 	github.com/refraction-networking/utls v1.3.2
-=======
 	github.com/quic-go/qtls-go1-19 v0.3.2
 	github.com/quic-go/qtls-go1-20 v0.2.2
 	github.com/quic-go/quic-go v0.36.0
 	github.com/refraction-networking/utls v1.3.3
->>>>>>> CI: add Linux loongarch64 build tasks
 	github.com/seiflotfy/cuckoofilter v0.0.0-20220411075957-e3b120b3f5fb
 	github.com/stretchr/testify v1.8.4
 	github.com/v2fly/BrowserBridge v0.0.0-20210430233438-0570fc1d7d08
