@@ -18,6 +18,7 @@
   "linux-mipsle": { "friendlyName": "linux-mips32le" },
   "linux-mips": { "friendlyName": "linux-mips32" },
   "linux-riscv64": { "friendlyName": "linux-riscv64" },
+  "linux-loong64": { "friendlyName": "linux-loong64" },
   "openbsd-386": { "friendlyName": "openbsd-32" },
   "openbsd-amd64": { "friendlyName": "openbsd-64" },
   "openbsd-arm6": { "friendlyName": "openbsd-arm32-v6" },

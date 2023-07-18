@@ -95,7 +95,7 @@ PKGSUFFIX=
 
 for arg in "$@"; do
 	case $arg in
-	386 | arm* | mips* | ppc64* | riscv64 | s390x)
+	386 | arm* | mips* | ppc64* | riscv64 | loong64 | s390x)
 		GOARCH=$arg
 		;;
 	windows)
