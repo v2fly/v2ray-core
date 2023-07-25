@@ -31,6 +31,7 @@ func makeMergeLoader(formatName string) (*core.ConfigFormat, error) {
 	return &core.ConfigFormat{
 		Name:      []string{formatName},
 		Extension: extensions,
+		Priority:  -2,
 		Loader:    makeLoaderFunc(formatName),
 	}, nil
 }

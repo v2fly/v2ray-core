@@ -14,6 +14,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/cmdarg"
+	"github.com/v2fly/v2ray-core/v5/common/pq"
 )
 
 const (
@@ -35,6 +36,7 @@ const (
 type ConfigFormat struct {
 	Name      []string
 	Extension []string
+	Priority  int
 	Loader    ConfigLoader
 }
 
@@ -42,7 +44,7 @@ type ConfigFormat struct {
 type ConfigLoader func(input interface{}) (*Config, error)
 
 var (
-	configLoaders      = make([]*ConfigFormat, 0)
+	configLoaders      = pq.NewMaxPriorityQueue[*ConfigFormat, int]()
 	configLoaderByName = make(map[string]*ConfigFormat)
 	configLoaderByExt  = make(map[string]*ConfigFormat)
 )
@@ -63,7 +65,7 @@ func RegisterConfigLoader(format *ConfigFormat) error {
 		}
 		configLoaderByExt[lext] = format
 	}
-	configLoaders = append(configLoaders, format)
+	configLoaders.Push(format, format.Priority)
 	return nil
 }
 
@@ -167,7 +169,11 @@ func loadSingleConfigAutoFormatFromFile(file string) (*Config, error) {
 func loadSingleConfigByTryingAllLoaders(input interface{}) (*Config, error) {
 	var errorReasons strings.Builder
 
-	for _, f := range configLoaders {
+	queue := configLoaders.Clone()
+	size := queue.Size()
+
+	for i := 0; i < int(size); i++ {
+		f, _, _ := queue.Pop()
 		if f.Name[0] == FormatAuto {
 			continue
 		}
