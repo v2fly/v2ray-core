@@ -16,7 +16,7 @@ message ServerConfig{
   option (v2ray.core.common.protoext.message_opt).type = "inbound";
   option (v2ray.core.common.protoext.message_opt).short_name = "shadowsocks";
 
-  v2ray.core.proxy.shadowsocks.CipherType method = 1;
+  CipherTypeWrapper method = 1;
   string password = 2;
   v2ray.core.common.net.NetworkList networks = 3;
   v2ray.core.net.packetaddr.PacketAddrType packet_encoding = 4;
@@ -28,7 +28,11 @@ message ClientConfig {
 
   v2ray.core.common.net.IPOrDomain address = 1;
   uint32 port = 2;
-  v2ray.core.proxy.shadowsocks.CipherType method = 3;
+  CipherTypeWrapper method = 3;
   string password = 4;
   bool experiment_reduced_iv_head_entropy = 90001;
+}
+
+message CipherTypeWrapper {
+  v2ray.core.proxy.shadowsocks.CipherType value = 1;
 }
