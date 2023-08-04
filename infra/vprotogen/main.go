@@ -119,7 +119,7 @@ func getInstalledProtocVersion(protocPath string) (string, error) {
 	if cmdErr != nil {
 		return "", cmdErr
 	}
-	versionRegexp := regexp.MustCompile(`protoc\s*(\d+\.\d+\.\d+)`)
+	versionRegexp := regexp.MustCompile(`protoc\s*(\d+\.\d+(\.\d)*)`)
 	matched := versionRegexp.FindStringSubmatch(string(output))
 	return matched[1], nil
 }
@@ -128,6 +128,9 @@ func parseVersion(s string, width int) int64 {
 	strList := strings.Split(s, ".")
 	format := fmt.Sprintf("%%s%%0%ds", width)
 	v := ""
+	if len(strList) == 2 {
+		strList = append([]string{"4"}, strList...)
+	}
 	for _, value := range strList {
 		v = fmt.Sprintf(format, v, value)
 	}
