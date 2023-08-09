@@ -43,7 +43,7 @@ func (c *Conn) HandshakeAddress() net.Address {
 }
 
 // Client initiates a TLS client handshake on the given connection.
-func Client(c net.Conn, config *tls.Config) net.Conn {
+func Client(c net.Conn, config *tls.Config) *Conn {
 	tlsConn := tls.Client(c, config)
 	return &Conn{Conn: tlsConn}
 }
