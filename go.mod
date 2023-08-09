@@ -1,6 +1,6 @@
 module github.com/v2fly/v2ray-core/v5
 
-go 1.19
+go 1.20
 
 require (
 	github.com/adrg/xdg v0.4.0
