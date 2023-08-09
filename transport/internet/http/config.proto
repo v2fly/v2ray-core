@@ -6,9 +6,15 @@ option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/http";
 option java_package = "com.v2ray.core.transport.internet.http";
 option java_multiple_files = true;
 
+import "common/protoext/extensions.proto";
+
 import "transport/internet/headers/http/config.proto";
 
 message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "transport";
+  option (v2ray.core.common.protoext.message_opt).short_name = "h2";
+
+  option (v2ray.core.common.protoext.message_opt).transport_original_name = "http";
   repeated string host = 1;
   string path = 2;
   string method = 3;
