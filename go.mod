@@ -11,7 +11,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/websocket v1.5.0
-	github.com/jhump/protoreflect v1.15.1
+	github.com/jhump/protoreflect v1.15.2
 	github.com/miekg/dns v1.1.54
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
@@ -28,7 +28,7 @@ require (
 	go4.org/netipx v0.0.0-20230303233057-f1b76eb4bb35
 	golang.org/x/crypto v0.12.0
 	golang.org/x/net v0.14.0
-	golang.org/x/sync v0.2.0
+	golang.org/x/sync v0.3.0
 	golang.org/x/sys v0.11.0
 	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
@@ -41,7 +41,7 @@ require (
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/boljen/go-bitmap v0.0.0-20151001105940-23cd2fb0ce7d // indirect
-	github.com/bufbuild/protocompile v0.5.1 // indirect
+	github.com/bufbuild/protocompile v0.6.0 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-metro v0.0.0-20211217172704-adc40b04c140 // indirect
