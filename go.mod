@@ -17,7 +17,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pires/go-proxyproto v0.7.0
 	github.com/quic-go/quic-go v0.38.1
-	github.com/refraction-networking/utls v1.5.2
+	github.com/refraction-networking/utls v1.5.3
 	github.com/seiflotfy/cuckoofilter v0.0.0-20220411075957-e3b120b3f5fb
 	github.com/stretchr/testify v1.8.4
 	github.com/v2fly/BrowserBridge v0.0.0-20210430233438-0570fc1d7d08
