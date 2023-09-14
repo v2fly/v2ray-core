@@ -11,25 +11,12 @@ import (
 
 type version byte
 
-const (
-	HTTP1 version = iota
-	HTTP2
-)
-
 type SniffHeader struct {
-	version version
-	host    string
+	host string
 }
 
 func (h *SniffHeader) Protocol() string {
-	switch h.version {
-	case HTTP1:
-		return "http1"
-	case HTTP2:
-		return "http2"
-	default:
-		return "unknown"
-	}
+	return "http1"
 }
 
 func (h *SniffHeader) Domain() string {
@@ -62,9 +49,7 @@ func SniffHTTP(b []byte) (*SniffHeader, error) {
 		return nil, err
 	}
 
-	sh := &SniffHeader{
-		version: HTTP1,
-	}
+	sh := &SniffHeader{}
 
 	headers := bytes.Split(b, []byte{'\n'})
 	for i := 1; i < len(headers); i++ {

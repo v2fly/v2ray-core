@@ -242,9 +242,7 @@ func (s *Server) handlePlainHTTP(ctx context.Context, request *http.Request, wri
 		request.Header.Set("User-Agent", "")
 	}
 
-	content := &session.Content{
-		Protocol: "http/1.1",
-	}
+	content := &session.Content{}
 
 	content.SetAttribute(":method", strings.ToUpper(request.Method))
 	content.SetAttribute(":path", request.URL.Path)
