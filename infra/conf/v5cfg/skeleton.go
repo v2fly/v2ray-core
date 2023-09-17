@@ -11,13 +11,14 @@ import (
 )
 
 type RootConfig struct {
-	LogConfig    json.RawMessage            `json:"log"`
-	DNSConfig    json.RawMessage            `json:"dns"`
-	RouterConfig json.RawMessage            `json:"router"`
-	Inbounds     []InboundConfig            `json:"inbounds"`
-	Outbounds    []OutboundConfig           `json:"outbounds"`
-	Services     map[string]json.RawMessage `json:"services"`
-	Extensions   []json.RawMessage          `json:"extension"`
+	LogConfig     json.RawMessage            `json:"log"`
+	DNSConfig     json.RawMessage            `json:"dns"`
+	RouterConfig  json.RawMessage            `json:"router"`
+	ReverseConfig json.RawMessage            `json:"reverse"`
+	Inbounds      []InboundConfig            `json:"inbounds"`
+	Outbounds     []OutboundConfig           `json:"outbounds"`
+	Services      map[string]json.RawMessage `json:"services"`
+	Extensions    []json.RawMessage          `json:"extension"`
 }
 
 type InboundConfig struct {
