@@ -3,6 +3,7 @@ package v5cfg
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -30,7 +31,7 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	if c.LogConfig != nil {
 		logConfMsgUnpacked, err := loadHeterogeneousConfigFromRawJSON("service", "log", c.LogConfig)
 		if err != nil {
-			return nil, err
+			return nil, newError("failed to parse Log config").Base(err)
 		}
 		logConfMsg = serial.ToTypedMessage(logConfMsgUnpacked)
 	} else {
@@ -43,7 +44,7 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	if c.RouterConfig != nil {
 		routerConfig, err := loadHeterogeneousConfigFromRawJSON("service", "router", c.RouterConfig)
 		if err != nil {
-			return nil, err
+			return nil, newError("failed to parse Router config").Base(err)
 		}
 		config.App = append(config.App, serial.ToTypedMessage(routerConfig))
 	}
@@ -75,7 +76,7 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	for serviceName, service := range c.Services {
 		servicePackedConfig, err := loadHeterogeneousConfigFromRawJSON("service", serviceName, service)
 		if err != nil {
-			return nil, err
+			return nil, newError(fmt.Sprintf("failed to parse %v config in Services", serviceName)).Base(err)
 		}
 		config.App = append(config.App, serial.ToTypedMessage(servicePackedConfig))
 	}
