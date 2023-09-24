@@ -52,3 +52,9 @@ linters-settings:
       - name: blank-imports
         severity: warning
         disabled: true
+  depguard:
+    rules:
+      Main:
+        deny:
+          - pkg: "github.com/pkg/errors"
+            desc: Should be replaced by standard lib errors package
