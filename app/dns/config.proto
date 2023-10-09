@@ -223,4 +223,5 @@ message SimplifiedNameServer {
   optional QueryStrategy query_strategy = 8;
   optional CacheStrategy cache_strategy = 9;
   optional FallbackStrategy fallback_strategy = 10;
+  repeated v2ray.core.app.router.routercommon.GeoSite geo_domain = 68001;
 }
