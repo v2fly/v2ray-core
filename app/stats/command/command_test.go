@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/v2fly/v2ray-core/v5/app/stats"
 	. "github.com/v2fly/v2ray-core/v5/app/stats/command"
@@ -16,7 +17,7 @@ func TestGetStats(t *testing.T) {
 	m, err := stats.NewManager(context.Background(), &stats.Config{})
 	common.Must(err)
 
-	sc, err := m.RegisterCounter("test_counter")
+	sc, err := m.RegisterCounter("test_counter", prometheus.NewGauge(prometheus.GaugeOpts{}))
 	common.Must(err)
 
 	sc.Set(1)
@@ -65,15 +66,15 @@ func TestQueryStats(t *testing.T) {
 	m, err := stats.NewManager(context.Background(), &stats.Config{})
 	common.Must(err)
 
-	sc1, err := m.RegisterCounter("test_counter")
+	sc1, err := m.RegisterCounter("test_counter", prometheus.NewGauge(prometheus.GaugeOpts{}))
 	common.Must(err)
 	sc1.Set(1)
 
-	sc2, err := m.RegisterCounter("test_counter_2")
+	sc2, err := m.RegisterCounter("test_counter_2", prometheus.NewGauge(prometheus.GaugeOpts{}))
 	common.Must(err)
 	sc2.Set(2)
 
-	sc3, err := m.RegisterCounter("test_counter_3")
+	sc3, err := m.RegisterCounter("test_counter_3", prometheus.NewGauge(prometheus.GaugeOpts{}))
 	common.Must(err)
 	sc3.Set(3)
 

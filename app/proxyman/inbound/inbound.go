@@ -6,6 +6,8 @@ import (
 	"context"
 	"sync"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/app/proxyman"
 	"github.com/v2fly/v2ray-core/v5/common"
@@ -170,6 +172,19 @@ func NewHandler(ctx context.Context, config *core.InboundHandlerConfig) (inbound
 	return nil, newError("unknown allocation strategy: ", receiverSettings.AllocationStrategy.Type).AtError()
 }
 
+var (
+	pmInboundUplinkStatistic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "v2ray",
+		Name:      "inbound_traffic_uplink_statistic",
+		Help:      "The uplink traffic statistic of inbound.",
+	}, []string{"tag"})
+	pmInboundDownlinkStatistic = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "v2ray",
+		Name:      "inbound_traffic_downlink_statistic",
+		Help:      "The downlink traffic statistic of inbound.",
+	}, []string{"tag"})
+)
+
 func init() {
 	common.Must(common.RegisterConfig((*proxyman.InboundConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return New(ctx, config.(*proxyman.InboundConfig))
@@ -177,4 +192,5 @@ func init() {
 	common.Must(common.RegisterConfig((*core.InboundHandlerConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return NewHandler(ctx, config.(*core.InboundHandlerConfig))
 	}))
+	prometheus.DefaultRegisterer.MustRegister(pmInboundUplinkStatistic, pmInboundDownlinkStatistic)
 }
