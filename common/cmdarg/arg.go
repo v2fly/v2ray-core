@@ -3,7 +3,7 @@ package cmdarg
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
+	"os"
 )
 
 // LoadArg loads one arg, maybe an remote url, or local file path
@@ -18,7 +18,7 @@ func LoadArg(arg string) (out io.Reader, err error) {
 
 // LoadArgToBytes loads one arg to []byte, maybe an remote url, or local file path
 func LoadArgToBytes(arg string) (out []byte, err error) {
-	out, err = ioutil.ReadFile(arg)
+	out, err = os.ReadFile(arg)
 	if err != nil {
 		return
 	}

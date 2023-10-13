@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,7 +9,7 @@ import (
 
 // ReadDir finds files according to extensions in the dir
 func ReadDir(dir string, extensions []string) ([]string, error) {
-	confs, err := ioutil.ReadDir(dir)
+	confs, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}

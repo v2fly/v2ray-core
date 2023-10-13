@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
@@ -113,7 +112,7 @@ func dirExists(file string) bool {
 }
 
 func readConfDir(dirPath string, extension []string) cmdarg.Arg {
-	confs, err := ioutil.ReadDir(dirPath)
+	confs, err := os.ReadDir(dirPath)
 	if err != nil {
 		base.Fatalf("failed to read dir %s: %s", dirPath, err)
 	}
