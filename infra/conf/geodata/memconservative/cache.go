@@ -1,7 +1,7 @@
 package memconservative
 
 import (
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"google.golang.org/protobuf/proto"
@@ -53,7 +53,7 @@ func (g GeoIPCache) Unmarshal(filename, code string) (*routercommon.GeoIP, error
 	case errFailedToReadBytes, errFailedToReadExpectedLenBytes,
 		errInvalidGeodataFile, errInvalidGeodataVarintLength:
 		newError("failed to decode geoip file: ", filename, ", fallback to the original ReadFile method")
-		geoipBytes, err = ioutil.ReadFile(asset)
+		geoipBytes, err = os.ReadFile(asset)
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +118,7 @@ func (g GeoSiteCache) Unmarshal(filename, code string) (*routercommon.GeoSite, e
 	case errFailedToReadBytes, errFailedToReadExpectedLenBytes,
 		errInvalidGeodataFile, errInvalidGeodataVarintLength:
 		newError("failed to decode geoip file: ", filename, ", fallback to the original ReadFile method")
-		geositeBytes, err = ioutil.ReadFile(asset)
+		geositeBytes, err = os.ReadFile(asset)
 		if err != nil {
 			return nil, err
 		}
