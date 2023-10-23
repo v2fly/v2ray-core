@@ -5,11 +5,12 @@ package tun
 
 import (
 	"context"
-
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/app/tun/device"
 	"github.com/v2fly/v2ray-core/v5/app/tun/device/gvisor"
+	"github.com/v2fly/v2ray-core/v5/app/tun/tunsorter"
 	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
 	"github.com/v2fly/v2ray-core/v5/features/policy"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
@@ -32,7 +33,7 @@ func (t *TUN) Type() interface{} {
 
 func (t *TUN) Start() error {
 	DeviceConstructor := gvisor.New
-	device, err := DeviceConstructor(device.Options{
+	tunDevice, err := DeviceConstructor(device.Options{
 		Name: t.config.Name,
 		MTU:  t.config.Mtu,
 	})
@@ -40,7 +41,14 @@ func (t *TUN) Start() error {
 		return newError("failed to create device").Base(err).AtError()
 	}
 
-	stack, err := t.CreateStack(device)
+	if t.config.PacketEncoding != packetaddr.PacketAddrType_None {
+		writer := device.NewLinkWriterToWriter(tunDevice)
+		sorter := tunsorter.NewTunSorter(writer, t.dispatcher, t.config.PacketEncoding, t.ctx)
+		tunDeviceLayered := NewDeviceWithSorter(tunDevice, sorter)
+		tunDevice = tunDeviceLayered
+	}
+
+	stack, err := t.CreateStack(tunDevice)
 	if err != nil {
 		return newError("failed to create stack").Base(err).AtError()
 	}

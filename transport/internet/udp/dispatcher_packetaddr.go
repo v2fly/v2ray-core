@@ -17,6 +17,9 @@ type PacketAddrDispatcher struct {
 }
 
 func (p PacketAddrDispatcher) Close() error {
+	if p.ctx.Value(DispatcherConnectionTerminationSignalReceiverMark) != nil {
+		p.ctx.Value(DispatcherConnectionTerminationSignalReceiverMark).(DispatcherConnectionTerminationSignalReceiver).Close()
+	}
 	return p.conn.Close()
 }
 
