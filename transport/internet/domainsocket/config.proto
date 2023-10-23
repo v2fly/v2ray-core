@@ -6,7 +6,12 @@ option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/domainsoc
 option java_package = "com.v2ray.core.transport.internet.domainsocket";
 option java_multiple_files = true;
 
+import "common/protoext/extensions.proto";
+
 message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "transport";
+  option (v2ray.core.common.protoext.message_opt).short_name = "domainsocket";
+
   // Path of the domain socket. This overrides the IP/Port parameter from
   // upstream caller.
   string path = 1;
