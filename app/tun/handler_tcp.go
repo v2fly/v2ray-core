@@ -4,6 +4,13 @@ import (
 	"context"
 	"time"
 
+	"gvisor.dev/gvisor/pkg/tcpip"
+	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
+	"gvisor.dev/gvisor/pkg/tcpip/header"
+	"gvisor.dev/gvisor/pkg/tcpip/stack"
+	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
+	"gvisor.dev/gvisor/pkg/waiter"
+
 	tun_net "github.com/v2fly/v2ray-core/v5/app/tun/net"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
@@ -15,12 +22,6 @@ import (
 	"github.com/v2fly/v2ray-core/v5/features/policy"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
 	internet "github.com/v2fly/v2ray-core/v5/transport/internet"
-	"gvisor.dev/gvisor/pkg/tcpip"
-	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
-	"gvisor.dev/gvisor/pkg/tcpip/header"
-	"gvisor.dev/gvisor/pkg/tcpip/stack"
-	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
-	"gvisor.dev/gvisor/pkg/waiter"
 )
 
 const (
@@ -150,7 +151,6 @@ func applySocketOptions(s *stack.Stack, endpoint tcpip.Endpoint, config *interne
 
 	if config.TcpKeepAliveInterval > 0 || config.TcpKeepAliveIdle > 0 {
 		endpoint.SocketOptions().SetKeepAlive(true)
-
 	}
 	{
 		var sendBufferSizeRangeOption tcpip.TCPSendBufferSizeRangeOption
