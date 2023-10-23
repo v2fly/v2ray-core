@@ -55,8 +55,10 @@ func SetTCPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyMan
 			}
 			defer r.Complete(false)
 
-			if err := applySocketOptions(s, linkedEndpoint, config.SocketSettings); err != nil {
-				newError("failed to apply socket options: ", err).WriteToLog(session.ExportIDToError(ctx))
+			if config.SocketSettings != nil {
+				if err := applySocketOptions(s, linkedEndpoint, config.SocketSettings); err != nil {
+					newError("failed to apply socket options: ", err).WriteToLog(session.ExportIDToError(ctx))
+				}
 			}
 
 			conn := &tcpConn{
