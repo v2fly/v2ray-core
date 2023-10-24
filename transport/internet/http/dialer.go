@@ -45,7 +45,7 @@ func getHTTPClient(ctx context.Context, dest net.Destination, securityEngine *se
 	}
 
 	transport := &http2.Transport{
-		DialTLSContext: func(ctx context.Context, network, addr string, tlsConfig *gotls.Config) (gonet.Conn, error) {
+		DialTLSContext: func(_ context.Context, network, addr string, tlsConfig *gotls.Config) (gonet.Conn, error) {
 			rawHost, rawPort, err := net.SplitHostPort(addr)
 			if err != nil {
 				return nil, err
