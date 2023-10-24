@@ -185,7 +185,7 @@ type TransportConfig struct {
 	// Type of network that this settings supports.
 	// Deprecated. Use the string form below.
 	//
-	// Deprecated: Do not use.
+	// Deprecated: Marked as deprecated in transport/internet/config.proto.
 	Protocol TransportProtocol `protobuf:"varint,1,opt,name=protocol,proto3,enum=v2ray.core.transport.internet.TransportProtocol" json:"protocol,omitempty"`
 	// Type of network that this settings supports.
 	ProtocolName string `protobuf:"bytes,3,opt,name=protocol_name,json=protocolName,proto3" json:"protocol_name,omitempty"`
@@ -225,7 +225,7 @@ func (*TransportConfig) Descriptor() ([]byte, []int) {
 	return file_transport_internet_config_proto_rawDescGZIP(), []int{0}
 }
 
-// Deprecated: Do not use.
+// Deprecated: Marked as deprecated in transport/internet/config.proto.
 func (x *TransportConfig) GetProtocol() TransportProtocol {
 	if x != nil {
 		return x.Protocol
@@ -254,7 +254,7 @@ type StreamConfig struct {
 
 	// Effective network. Deprecated. Use the string form below.
 	//
-	// Deprecated: Do not use.
+	// Deprecated: Marked as deprecated in transport/internet/config.proto.
 	Protocol TransportProtocol `protobuf:"varint,1,opt,name=protocol,proto3,enum=v2ray.core.transport.internet.TransportProtocol" json:"protocol,omitempty"`
 	// Effective network.
 	ProtocolName      string             `protobuf:"bytes,5,opt,name=protocol_name,json=protocolName,proto3" json:"protocol_name,omitempty"`
@@ -298,7 +298,7 @@ func (*StreamConfig) Descriptor() ([]byte, []int) {
 	return file_transport_internet_config_proto_rawDescGZIP(), []int{1}
 }
 
-// Deprecated: Do not use.
+// Deprecated: Marked as deprecated in transport/internet/config.proto.
 func (x *StreamConfig) GetProtocol() TransportProtocol {
 	if x != nil {
 		return x.Protocol

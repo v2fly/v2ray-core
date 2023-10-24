@@ -18,7 +18,7 @@ const (
 // Global transport settings. This affects all type of connections that go
 // through V2Ray. Deprecated. Use each settings in StreamConfig.
 //
-// Deprecated: Do not use.
+// Deprecated: Marked as deprecated in transport/config.proto.
 type Config struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

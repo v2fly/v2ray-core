@@ -18,7 +18,7 @@ type Network int32
 
 const (
 	Network_Unknown Network = 0
-	// Deprecated: Do not use.
+	// Deprecated: Marked as deprecated in common/net/network.proto.
 	Network_RawTCP Network = 1
 	Network_TCP    Network = 2
 	Network_UDP    Network = 3

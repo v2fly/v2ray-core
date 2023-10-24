@@ -12,6 +12,12 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
+const (
+	InstanceManagementService_ListInstance_FullMethodName  = "/v2ray.core.app.instman.command.InstanceManagementService/ListInstance"
+	InstanceManagementService_AddInstance_FullMethodName   = "/v2ray.core.app.instman.command.InstanceManagementService/AddInstance"
+	InstanceManagementService_StartInstance_FullMethodName = "/v2ray.core.app.instman.command.InstanceManagementService/StartInstance"
+)
+
 // InstanceManagementServiceClient is the client API for InstanceManagementService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
@@ -31,7 +37,7 @@ func NewInstanceManagementServiceClient(cc grpc.ClientConnInterface) InstanceMan
 
 func (c *instanceManagementServiceClient) ListInstance(ctx context.Context, in *ListInstanceReq, opts ...grpc.CallOption) (*ListInstanceResp, error) {
 	out := new(ListInstanceResp)
-	err := c.cc.Invoke(ctx, "/v2ray.core.app.instman.command.InstanceManagementService/ListInstance", in, out, opts...)
+	err := c.cc.Invoke(ctx, InstanceManagementService_ListInstance_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +46,7 @@ func (c *instanceManagementServiceClient) ListInstance(ctx context.Context, in *
 
 func (c *instanceManagementServiceClient) AddInstance(ctx context.Context, in *AddInstanceReq, opts ...grpc.CallOption) (*AddInstanceResp, error) {
 	out := new(AddInstanceResp)
-	err := c.cc.Invoke(ctx, "/v2ray.core.app.instman.command.InstanceManagementService/AddInstance", in, out, opts...)
+	err := c.cc.Invoke(ctx, InstanceManagementService_AddInstance_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +55,7 @@ func (c *instanceManagementServiceClient) AddInstance(ctx context.Context, in *A
 
 func (c *instanceManagementServiceClient) StartInstance(ctx context.Context, in *StartInstanceReq, opts ...grpc.CallOption) (*StartInstanceResp, error) {
 	out := new(StartInstanceResp)
-	err := c.cc.Invoke(ctx, "/v2ray.core.app.instman.command.InstanceManagementService/StartInstance", in, out, opts...)
+	err := c.cc.Invoke(ctx, InstanceManagementService_StartInstance_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +109,7 @@ func _InstanceManagementService_ListInstance_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v2ray.core.app.instman.command.InstanceManagementService/ListInstance",
+		FullMethod: InstanceManagementService_ListInstance_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(InstanceManagementServiceServer).ListInstance(ctx, req.(*ListInstanceReq))
@@ -121,7 +127,7 @@ func _InstanceManagementService_AddInstance_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v2ray.core.app.instman.command.InstanceManagementService/AddInstance",
+		FullMethod: InstanceManagementService_AddInstance_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(InstanceManagementServiceServer).AddInstance(ctx, req.(*AddInstanceReq))
@@ -139,7 +145,7 @@ func _InstanceManagementService_StartInstance_Handler(srv interface{}, ctx conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v2ray.core.app.instman.command.InstanceManagementService/StartInstance",
+		FullMethod: InstanceManagementService_StartInstance_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(InstanceManagementServiceServer).StartInstance(ctx, req.(*StartInstanceReq))

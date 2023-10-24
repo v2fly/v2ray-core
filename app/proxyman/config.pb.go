@@ -355,7 +355,7 @@ type ReceiverConfig struct {
 	// Override domains for the given protocol.
 	// Deprecated. Use sniffing_settings.
 	//
-	// Deprecated: Do not use.
+	// Deprecated: Marked as deprecated in app/proxyman/config.proto.
 	DomainOverride   []KnownProtocols `protobuf:"varint,7,rep,packed,name=domain_override,json=domainOverride,proto3,enum=v2ray.core.app.proxyman.KnownProtocols" json:"domain_override,omitempty"`
 	SniffingSettings *SniffingConfig  `protobuf:"bytes,8,opt,name=sniffing_settings,json=sniffingSettings,proto3" json:"sniffing_settings,omitempty"`
 }
@@ -427,7 +427,7 @@ func (x *ReceiverConfig) GetReceiveOriginalDestination() bool {
 	return false
 }
 
-// Deprecated: Do not use.
+// Deprecated: Marked as deprecated in app/proxyman/config.proto.
 func (x *ReceiverConfig) GetDomainOverride() []KnownProtocols {
 	if x != nil {
 		return x.DomainOverride

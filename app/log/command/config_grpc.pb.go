@@ -12,6 +12,11 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
+const (
+	LoggerService_RestartLogger_FullMethodName = "/v2ray.core.app.log.command.LoggerService/RestartLogger"
+	LoggerService_FollowLog_FullMethodName     = "/v2ray.core.app.log.command.LoggerService/FollowLog"
+)
+
 // LoggerServiceClient is the client API for LoggerService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
@@ -31,7 +36,7 @@ func NewLoggerServiceClient(cc grpc.ClientConnInterface) LoggerServiceClient {
 
 func (c *loggerServiceClient) RestartLogger(ctx context.Context, in *RestartLoggerRequest, opts ...grpc.CallOption) (*RestartLoggerResponse, error) {
 	out := new(RestartLoggerResponse)
-	err := c.cc.Invoke(ctx, "/v2ray.core.app.log.command.LoggerService/RestartLogger", in, out, opts...)
+	err := c.cc.Invoke(ctx, LoggerService_RestartLogger_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +44,7 @@ func (c *loggerServiceClient) RestartLogger(ctx context.Context, in *RestartLogg
 }
 
 func (c *loggerServiceClient) FollowLog(ctx context.Context, in *FollowLogRequest, opts ...grpc.CallOption) (LoggerService_FollowLogClient, error) {
-	stream, err := c.cc.NewStream(ctx, &LoggerService_ServiceDesc.Streams[0], "/v2ray.core.app.log.command.LoggerService/FollowLog", opts...)
+	stream, err := c.cc.NewStream(ctx, &LoggerService_ServiceDesc.Streams[0], LoggerService_FollowLog_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +118,7 @@ func _LoggerService_RestartLogger_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v2ray.core.app.log.command.LoggerService/RestartLogger",
+		FullMethod: LoggerService_RestartLogger_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(LoggerServiceServer).RestartLogger(ctx, req.(*RestartLoggerRequest))

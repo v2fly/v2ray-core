@@ -12,6 +12,10 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
+const (
+	ObservatoryService_GetOutboundStatus_FullMethodName = "/v2ray.core.app.observatory.command.ObservatoryService/GetOutboundStatus"
+)
+
 // ObservatoryServiceClient is the client API for ObservatoryService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
@@ -29,7 +33,7 @@ func NewObservatoryServiceClient(cc grpc.ClientConnInterface) ObservatoryService
 
 func (c *observatoryServiceClient) GetOutboundStatus(ctx context.Context, in *GetOutboundStatusRequest, opts ...grpc.CallOption) (*GetOutboundStatusResponse, error) {
 	out := new(GetOutboundStatusResponse)
-	err := c.cc.Invoke(ctx, "/v2ray.core.app.observatory.command.ObservatoryService/GetOutboundStatus", in, out, opts...)
+	err := c.cc.Invoke(ctx, ObservatoryService_GetOutboundStatus_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +78,7 @@ func _ObservatoryService_GetOutboundStatus_Handler(srv interface{}, ctx context.
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v2ray.core.app.observatory.command.ObservatoryService/GetOutboundStatus",
+		FullMethod: ObservatoryService_GetOutboundStatus_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObservatoryServiceServer).GetOutboundStatus(ctx, req.(*GetOutboundStatusRequest))
