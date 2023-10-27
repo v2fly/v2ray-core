@@ -17,7 +17,7 @@ require (
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pires/go-proxyproto v0.7.0
-	github.com/quic-go/quic-go v0.39.0
+	github.com/quic-go/quic-go v0.39.3
 	github.com/refraction-networking/utls v1.5.4
 	github.com/seiflotfy/cuckoofilter v0.0.0-20220411075957-e3b120b3f5fb
 	github.com/stretchr/testify v1.8.4
