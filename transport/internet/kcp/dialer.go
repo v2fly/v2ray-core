@@ -49,7 +49,10 @@ func DialKCP(ctx context.Context, dest net.Destination, streamSettings *internet
 	dest.Network = net.Network_UDP
 	newError("dialing mKCP to ", dest).WriteToLog()
 
-	rawConn, err := internet.DialSystem(ctx, dest, streamSettings.SocketSettings)
+	transportEnvironment := envctx.EnvironmentFromContext(ctx).(environment.TransportEnvironment)
+	dialer := transportEnvironment.Dialer()
+
+	rawConn, err := dialer.Dial(ctx, nil, dest, streamSettings.SocketSettings)
 	if err != nil {
 		return nil, newError("failed to dial to dest: ", err).AtWarning().Base(err)
 	}
