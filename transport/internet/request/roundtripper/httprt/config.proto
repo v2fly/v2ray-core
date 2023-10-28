@@ -13,6 +13,8 @@ message ClientConfig {
   option (v2ray.core.common.protoext.message_opt).short_name = "httprt";
 
   HTTPConfig http = 1;
+  bool allow_http = 2;
+  int32 h2_pool_size = 3;
 }
 
 message ServerConfig {

@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package v2ray.core.transport.internet.request.assembler.packetconn;
+option csharp_namespace = "V2Ray.Core.Transport.Internet.Request.Assembler.Packetconn";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/request/assembler/packetconn";
+option java_package = "com.v2ray.core.transport.internet.request.assembler.packetconn";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+import "google/protobuf/any.proto";
+
+message ClientConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "transport.request.assembler.client";
+  option (v2ray.core.common.protoext.message_opt).short_name = "packetconn";
+
+  google.protobuf.Any underlying_transport_setting = 1;
+  string underlying_transport_name = 2;
+
+  int32 max_write_delay = 3;
+  int32 max_request_size = 4;
+  int32 polling_interval_initial = 5;
+}
+
+message ServerConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "transport.request.assembler.server";
+  option (v2ray.core.common.protoext.message_opt).short_name = "packetconn";
+
+  google.protobuf.Any underlying_transport_setting = 1;
+  string underlying_transport_name = 2;
+
+  int32 max_write_size = 3;
+  int32 max_write_duration_ms = 4;
+  int32 max_simultaneous_write_connection = 5;
+  int32 packet_writing_buffer = 6;
+}
