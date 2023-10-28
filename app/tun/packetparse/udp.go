@@ -78,6 +78,7 @@ func constructIPv4UDPPacket(src, dst net.Destination, data []byte) ([]byte, erro
 		Protocol: layers.IPProtocolUDP,
 		SrcIP:    src.Address.IP(),
 		DstIP:    dst.Address.IP(),
+		TTL:      64, // set TTL to a reasonable non-zero value to allow non-local routing
 	}
 	udp := &layers.UDP{
 		SrcPort: layers.UDPPort(src.Port),
@@ -103,6 +104,7 @@ func constructIPv6UDPPacket(src, dst net.Destination, data []byte) ([]byte, erro
 		NextHeader: layers.IPProtocolUDP,
 		SrcIP:      src.Address.IP(),
 		DstIP:      dst.Address.IP(),
+		HopLimit:   64,
 	}
 	udp := &layers.UDP{
 		SrcPort: layers.UDPPort(src.Port),
