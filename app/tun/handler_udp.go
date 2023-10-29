@@ -66,6 +66,13 @@ func (h *UDPHandler) Handle(conn tun_net.UDPConn) error {
 	defer conn.Close()
 	id := conn.ID()
 	ctx := session.ContextWithInbound(h.ctx, &session.Inbound{Tag: h.config.Tag})
+	content := new(session.Content)
+	if h.config.SniffingSettings != nil {
+		content.SniffingRequest.Enabled = h.config.SniffingSettings.Enabled
+		content.SniffingRequest.OverrideDestinationForProtocol = h.config.SniffingSettings.DestinationOverride
+		content.SniffingRequest.MetadataOnly = h.config.SniffingSettings.MetadataOnly
+	}
+	ctx = session.ContextWithContent(ctx, content)
 
 	udpDispatcherConstructor := udp.NewSplitDispatcher
 
