@@ -97,6 +97,13 @@ func (h *TCPHandler) Handle(conn tun_net.TCPConn) error {
 		Status: log.AccessAccepted,
 		Reason: "",
 	})
+	content := new(session.Content)
+	if h.config.SniffingSettings != nil {
+		content.SniffingRequest.Enabled = h.config.SniffingSettings.Enabled
+		content.SniffingRequest.OverrideDestinationForProtocol = h.config.SniffingSettings.DestinationOverride
+		content.SniffingRequest.MetadataOnly = h.config.SniffingSettings.MetadataOnly
+	}
+	ctx = session.ContextWithContent(ctx, content)
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
 	link, err := h.dispatcher.Dispatch(ctx, dest)
