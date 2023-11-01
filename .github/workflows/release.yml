@@ -106,7 +106,7 @@ jobs:
 
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -182,7 +182,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -287,7 +287,7 @@ jobs:
       IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
       RELEASE_REPO: ${{ github.repository }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Log in to ghcr.io
         uses: redhat-actions/podman-login@v1
