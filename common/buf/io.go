@@ -25,6 +25,7 @@ type TimeoutReader interface {
 // Writer extends io.Writer with MultiBuffer.
 type Writer interface {
 	// WriteMultiBuffer writes a MultiBuffer into underlying writer.
+	// Caller relinquish the ownership of MultiBuffer after calling this method.
 	WriteMultiBuffer(MultiBuffer) error
 }
 
