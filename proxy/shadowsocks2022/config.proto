@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package v2ray.core.proxy.shadowsocks2022;
+option csharp_namespace = "V2Ray.Core.Proxy.Shadowsocks2022";
+option go_package = "github.com/v2fly/v2ray-core/v5/proxy/shadowsocks2022";
+option java_package = "com.v2ray.core.proxy.shadowsocks2022";
+option java_multiple_files = true;
+
+import "common/net/address.proto";
+import "common/protoext/extensions.proto";
+
+message ClientConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "outbound";
+  option (v2ray.core.common.protoext.message_opt).short_name = "shadowsocks2022";
+
+  string method = 1;
+  bytes psk = 2;
+  repeated bytes ipsk = 4;
+
+  v2ray.core.common.net.IPOrDomain address = 5;
+  uint32 port = 6;
+}
