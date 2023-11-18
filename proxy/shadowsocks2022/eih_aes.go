@@ -1,6 +1,7 @@
 package shadowsocks2022
 
 import (
+	"crypto/subtle"
 	"github.com/lunixbochs/struc"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"io"
@@ -78,18 +79,33 @@ func newAESEIHGeneratorContainer(size int, effectivePsk []byte, ipsk [][]byte) *
 }
 
 func (a *aesEIHGenerator) GenerateEIH(derivation KeyDerivation, method Method, salt []byte) (ExtensibleIdentityHeaders, error) {
+	return a.generateEIHWithMask(derivation, method, salt, nil)
+}
+
+func (a *aesEIHGenerator) GenerateEIHUDP(derivation KeyDerivation, method Method, mask []byte) (ExtensibleIdentityHeaders, error) {
+	return a.generateEIHWithMask(derivation, method, nil, mask)
+}
+
+func (a *aesEIHGenerator) generateEIHWithMask(derivation KeyDerivation, method Method, salt, mask []byte) (ExtensibleIdentityHeaders, error) {
 	eih := make([][16]byte, a.length)
 	current := a.length - 1
 	currentPskHash := a.pskHash
 	for {
 		identityKeyBuf := buf.New()
 		identityKey := identityKeyBuf.Extend(int32(method.GetSessionSubKeyAndSaltLength()))
-		err := derivation.GetIdentitySubKey(a.ipsk[current], salt, identityKey)
-		if err != nil {
-			return nil, newError("failed to get identity sub key").Base(err)
+		if mask == nil {
+			err := derivation.GetIdentitySubKey(a.ipsk[current], salt, identityKey)
+			if err != nil {
+				return nil, newError("failed to get identity sub key").Base(err)
+			}
+		} else {
+			copy(identityKey, a.ipsk[current])
 		}
 		eih[current] = [16]byte{}
-		err = method.GenerateEIH(identityKey, currentPskHash[:], eih[current][:])
+		if mask != nil {
+			subtle.XORBytes(currentPskHash[:], mask, currentPskHash[:])
+		}
+		err := method.GenerateEIH(identityKey, currentPskHash[:], eih[current][:])
 		if err != nil {
 			return nil, newError("failed to generate EIH").Base(err)
 		}
