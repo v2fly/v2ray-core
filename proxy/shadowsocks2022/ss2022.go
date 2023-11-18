@@ -3,6 +3,7 @@ package shadowsocks2022
 import (
 	"crypto/cipher"
 	"github.com/lunixbochs/struc"
+	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/protocol"
 	"io"
@@ -19,6 +20,7 @@ type Method interface {
 	GetSessionSubKeyAndSaltLength() int
 	GetStreamAEAD(SessionSubKey []byte) (cipher.AEAD, error)
 	GenerateEIH(CurrentIdentitySubKey []byte, nextPskHash []byte, out []byte) error
+	GetUDPClientProcessor(ipsk [][]byte, psk []byte, derivation KeyDerivation) (UDPClientPacketProcessor, error)
 }
 
 type ExtensibleIdentityHeaders interface {
@@ -86,3 +88,27 @@ var addrParser = protocol.NewAddressParser(
 	protocol.AddressFamilyByte(0x04, net.AddressFamilyIPv6),
 	protocol.AddressFamilyByte(0x03, net.AddressFamilyDomain),
 )
+
+type UDPRequest struct {
+	SessionID [8]byte
+	PacketID  uint64
+	TimeStamp uint64
+	Address   DestinationAddress
+	Port      int
+	Payload   *buf.Buffer
+}
+
+type UDPResponse struct {
+	UDPRequest
+	ClientSessionID [8]byte
+}
+
+const UDPHeaderTypeClientToServerStream = byte(0x00)
+const UDPHeaderTypeServerToClientStream = byte(0x01)
+
+// UDPClientPacketProcessor
+// Caller retain and receive all ownership of the buffer
+type UDPClientPacketProcessor interface {
+	EncodeUDPRequest(request *UDPRequest, out *buf.Buffer) error
+	DecodeUDPResp(input []byte, resp *UDPResponse) error
+}
