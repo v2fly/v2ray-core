@@ -203,7 +203,7 @@ func (t *TCPRequest) DecodeTCPResponseHeader(effectivePsk []byte, In io.Reader) 
 		return newError("unexpected TCP header type")
 	}
 	timeDifference := int64(fixedLengthHeader.Timestamp) - time.Now().Unix()
-	if timeDifference < -60 || timeDifference > 60 {
+	if timeDifference < -30 || timeDifference > 30 {
 		return newError("timestamp is too far away")
 	}
 

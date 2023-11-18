@@ -73,6 +73,15 @@ func (c *ClientUDPSession) KeepReading() {
 				newError("unable to decode udp response").Base(err).WriteToLog()
 				continue
 			}
+
+			{
+				timeDifference := int64(udpResp.TimeStamp) - time.Now().Unix()
+				if timeDifference < -30 || timeDifference > 30 {
+					newError("udp packet timestamp difference too large, packet discarded").WriteToLog()
+					continue
+				}
+			}
+
 			c.locker.Lock()
 			session, ok := c.sessionMap[string(udpResp.ClientSessionID[:])]
 			if ok {
