@@ -2,8 +2,9 @@ package shadowsocks2022
 
 import (
 	"encoding/hex"
-	"github.com/lunixbochs/struc"
 	"io"
+
+	"github.com/lunixbochs/struc"
 )
 
 func newRequestSaltWithLength(length int) RequestSalt {

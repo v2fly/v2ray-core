@@ -2,6 +2,10 @@ package shadowsocks2022
 
 import (
 	"context"
+	gonet "net"
+	"sync"
+	"time"
+
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/environment"
@@ -15,9 +19,6 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
-	gonet "net"
-	"sync"
-	"time"
 )
 
 type Client struct {
@@ -33,17 +34,17 @@ type ClientUDPConnState struct {
 }
 
 func (c *ClientUDPConnState) GetOrCreateSession(create func() (*ClientUDPSession, error)) (*ClientUDPSession, error) {
-	var err error
+	var errOuter error
 	c.initOnce.Do(func() {
 		sessionState, err := create()
 		if err != nil {
-			err = newError("failed to create UDP session").Base(err)
+			errOuter = newError("failed to create UDP session").Base(err)
 			return
 		}
 		c.session = sessionState
 	})
-	if err != nil {
-		return nil, newError("failed to initialize UDP State").Base(err)
+	if errOuter != nil {
+		return nil, newError("failed to initialize UDP State").Base(errOuter)
 	}
 	return c.session, nil
 }
@@ -60,7 +61,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	destination := outbound.Target
 	network := destination.Network
 
-	var keyDerivation = newBLAKE3KeyDerivation()
+	keyDerivation := newBLAKE3KeyDerivation()
 	var method Method
 	switch c.config.Method {
 	case "2022-blake3-aes-128-gcm":
@@ -107,7 +108,6 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 
 			return nil
 		})
-
 		if err != nil {
 			return newError("failed to find an available destination").AtWarning().Base(err)
 		}
@@ -222,7 +222,6 @@ func (c *Client) getUDPSession(ctx context.Context, network net.Network, dialer 
 }
 
 func NewClient(ctx context.Context, config *ClientConfig) (*Client, error) {
-
 	storage := envctx.EnvironmentFromContext(ctx).(environment.ProxyEnvironment).TransientStorage()
 
 	udpState, err := NewClientUDPConnState()

@@ -9,15 +9,14 @@ func newAES128GCMMethod() *AES128GCMMethod {
 	return &AES128GCMMethod{}
 }
 
-type AES128GCMMethod struct {
-}
+type AES128GCMMethod struct{}
 
-func (A AES128GCMMethod) GetSessionSubKeyAndSaltLength() int {
+func (a AES128GCMMethod) GetSessionSubKeyAndSaltLength() int {
 	return 16
 }
 
-func (A AES128GCMMethod) GetStreamAEAD(SessionSubKey []byte) (cipher.AEAD, error) {
-	aesCipher, err := aes.NewCipher(SessionSubKey)
+func (a AES128GCMMethod) GetStreamAEAD(sessionSubKey []byte) (cipher.AEAD, error) {
+	aesCipher, err := aes.NewCipher(sessionSubKey)
 	if err != nil {
 		return nil, newError("failed to create AES cipher").Base(err)
 	}
@@ -28,8 +27,8 @@ func (A AES128GCMMethod) GetStreamAEAD(SessionSubKey []byte) (cipher.AEAD, error
 	return aead, nil
 }
 
-func (A AES128GCMMethod) GenerateEIH(CurrentIdentitySubKey []byte, nextPskHash []byte, out []byte) error {
-	aesCipher, err := aes.NewCipher(CurrentIdentitySubKey)
+func (a AES128GCMMethod) GenerateEIH(currentIdentitySubKey []byte, nextPskHash []byte, out []byte) error {
+	aesCipher, err := aes.NewCipher(currentIdentitySubKey)
 	if err != nil {
 		return newError("failed to create AES cipher").Base(err)
 	}
@@ -37,7 +36,7 @@ func (A AES128GCMMethod) GenerateEIH(CurrentIdentitySubKey []byte, nextPskHash [
 	return nil
 }
 
-func (A AES128GCMMethod) GetUDPClientProcessor(ipsk [][]byte, psk []byte, derivation KeyDerivation) (UDPClientPacketProcessor, error) {
+func (a AES128GCMMethod) GetUDPClientProcessor(ipsk [][]byte, psk []byte, derivation KeyDerivation) (UDPClientPacketProcessor, error) {
 	reqSeparateHeaderPsk := psk
 	if ipsk != nil {
 		reqSeparateHeaderPsk = ipsk[0]
@@ -51,9 +50,12 @@ func (A AES128GCMMethod) GetUDPClientProcessor(ipsk [][]byte, psk []byte, deriva
 		return nil, newError("failed to create AES cipher").Base(err)
 	}
 	getPacketAEAD := func(sessionID []byte) cipher.AEAD {
-		sessionKey := make([]byte, A.GetSessionSubKeyAndSaltLength())
+		sessionKey := make([]byte, a.GetSessionSubKeyAndSaltLength())
 		derivation.GetSessionSubKey(psk, sessionID, sessionKey)
 		block, err := aes.NewCipher(sessionKey)
+		if err != nil {
+			panic(err)
+		}
 		aead, err := cipher.NewGCM(block)
 		if err != nil {
 			panic(err)
@@ -62,7 +64,7 @@ func (A AES128GCMMethod) GetUDPClientProcessor(ipsk [][]byte, psk []byte, deriva
 	}
 	eihGenerator := newAESEIHGeneratorContainer(len(ipsk), psk, ipsk)
 	getEIH := func(mask []byte) ExtensibleIdentityHeaders {
-		eih, err := eihGenerator.GenerateEIHUDP(derivation, A, mask)
+		eih, err := eihGenerator.GenerateEIHUDP(derivation, a, mask)
 		if err != nil {
 			newError("failed to generate EIH").Base(err).WriteToLog()
 		}
