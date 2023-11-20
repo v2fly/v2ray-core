@@ -112,9 +112,16 @@ const (
 	UDPHeaderTypeServerToClientStream = byte(0x01)
 )
 
+type UDPClientPacketProcessorCachedStateContainer interface {
+	GetCachedState(sessionID string) UDPClientPacketProcessorCachedState
+	PutCachedState(sessionID string, cache UDPClientPacketProcessorCachedState)
+}
+
+type UDPClientPacketProcessorCachedState interface{}
+
 // UDPClientPacketProcessor
 // Caller retain and receive all ownership of the buffer
 type UDPClientPacketProcessor interface {
-	EncodeUDPRequest(request *UDPRequest, out *buf.Buffer) error
-	DecodeUDPResp(input []byte, resp *UDPResponse) error
+	EncodeUDPRequest(request *UDPRequest, out *buf.Buffer, cache UDPClientPacketProcessorCachedStateContainer) error
+	DecodeUDPResp(input []byte, resp *UDPResponse, cache UDPClientPacketProcessorCachedStateContainer) error
 }

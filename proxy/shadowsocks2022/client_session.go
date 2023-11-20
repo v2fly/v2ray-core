@@ -11,6 +11,8 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
+
+	"github.com/pion/transport/v2/replaydetector"
 )
 
 func NewClientUDPSession(ctx context.Context, conn io.ReadWriteCloser, packetProcessor UDPClientPacketProcessor) *ClientUDPSession {
@@ -37,6 +39,28 @@ type ClientUDPSession struct {
 	finish func()
 }
 
+func (c *ClientUDPSession) GetCachedState(sessionID string) UDPClientPacketProcessorCachedState {
+	c.locker.Lock()
+	defer c.locker.Unlock()
+
+	state, ok := c.sessionMap[sessionID]
+	if !ok {
+		return nil
+	}
+	return state.cachedProcessorState
+}
+
+func (c *ClientUDPSession) PutCachedState(sessionID string, cache UDPClientPacketProcessorCachedState) {
+	c.locker.Lock()
+	defer c.locker.Unlock()
+
+	state, ok := c.sessionMap[sessionID]
+	if !ok {
+		return
+	}
+	state.cachedProcessorState = cache
+}
+
 func (c *ClientUDPSession) Close() error {
 	c.finish()
 	return c.conn.Close()
@@ -45,7 +69,7 @@ func (c *ClientUDPSession) Close() error {
 func (c *ClientUDPSession) WriteUDPRequest(request *UDPRequest) error {
 	buffer := buf.New()
 	defer buffer.Release()
-	err := c.packetProcessor.EncodeUDPRequest(request, buffer)
+	err := c.packetProcessor.EncodeUDPRequest(request, buffer, c)
 	if request.Payload != nil {
 		request.Payload.Release()
 	}
@@ -69,7 +93,7 @@ func (c *ClientUDPSession) KeepReading() {
 			return
 		}
 		if n != 0 {
-			err := c.packetProcessor.DecodeUDPResp(buffer[:n], udpResp)
+			err := c.packetProcessor.DecodeUDPResp(buffer[:n], udpResp, c)
 			if err != nil {
 				newError("unable to decode udp response").Base(err).WriteToLog()
 				continue
@@ -78,7 +102,7 @@ func (c *ClientUDPSession) KeepReading() {
 			{
 				timeDifference := int64(udpResp.TimeStamp) - time.Now().Unix()
 				if timeDifference < -30 || timeDifference > 30 {
-					newError("udp packet timestamp difference too large, packet discarded").WriteToLog()
+					newError("udp packet timestamp difference too large, packet discarded, time diff = ", timeDifference).WriteToLog()
 					continue
 				}
 			}
@@ -114,6 +138,7 @@ func (c *ClientUDPSession) NewSessionConn() (internet.AbstractPacketConn, error)
 		ctx:               connctx,
 		finish:            connfinish,
 		nextWritePacketID: 0,
+		rxReplayDetector:  replaydetector.New(128, ^uint64(0)),
 	}
 	c.locker.Lock()
 	c.sessionMap[sessionConn.sessionID] = sessionConn
@@ -127,6 +152,9 @@ type ClientUDPSessionConn struct {
 	parent    *ClientUDPSession
 
 	nextWritePacketID uint64
+	rxReplayDetector  replaydetector.ReplayDetector
+
+	cachedProcessorState UDPClientPacketProcessorCachedState
 
 	ctx    context.Context
 	finish func()
@@ -160,13 +188,21 @@ func (c *ClientUDPSessionConn) WriteTo(p []byte, addr gonet.Addr) (n int, err er
 }
 
 func (c *ClientUDPSessionConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
-	select {
-	case <-c.ctx.Done():
-		return 0, nil, io.EOF
-	case resp := <-c.readChan:
-		n = copy(p, resp.Payload.Bytes())
-		resp.Payload.Release()
-		addr = &net.UDPAddr{IP: resp.Address.IP(), Port: resp.Port}
+	for {
+		select {
+		case <-c.ctx.Done():
+			return 0, nil, io.EOF
+		case resp := <-c.readChan:
+			n = copy(p, resp.Payload.Bytes())
+			resp.Payload.Release()
+			if accept, ok := c.rxReplayDetector.Check(resp.PacketID); ok {
+				accept()
+			} else {
+				newError("misbehaving server: replayed packet").Base(err).WriteToLog()
+				continue
+			}
+			addr = &net.UDPAddr{IP: resp.Address.IP(), Port: resp.Port}
+		}
+		return
 	}
-	return
 }

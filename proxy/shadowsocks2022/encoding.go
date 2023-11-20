@@ -59,7 +59,7 @@ func (t *TCPRequest) EncodeTCPRequestHeader(effectivePsk []byte,
 	paddingLength := TCPMinPaddingLength
 	if initialPayload == nil {
 		initialPayload = []byte{}
-		paddingLength += rand.Intn(TCPMaxPaddingLength) // TODO INSECURE RANDOM USED
+		paddingLength += 1 + rand.Intn(TCPMaxPaddingLength) // TODO INSECURE RANDOM USED
 	}
 
 	variableLengthHeader := &TCPRequestHeader3VariableLength{
@@ -206,7 +206,7 @@ func (t *TCPRequest) DecodeTCPResponseHeader(effectivePsk []byte, in io.Reader) 
 	}
 	timeDifference := int64(fixedLengthHeader.Timestamp) - time.Now().Unix()
 	if timeDifference < -30 || timeDifference > 30 {
-		return newError("timestamp is too far away")
+		return newError("timestamp is too far away, timeDifference = ", timeDifference)
 	}
 
 	t.s2cSaltAssert = fixedLengthHeader.RequestSalt

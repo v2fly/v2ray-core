@@ -2,6 +2,7 @@ package v5cfg
 
 import (
 	"context"
+
 	"github.com/golang/protobuf/proto"
 
 	core "github.com/v2fly/v2ray-core/v5"
