@@ -73,12 +73,21 @@ func (o *Observer) background() {
 
 		o.updateStatus(outbounds)
 
+		slept := false
 		for _, v := range outbounds {
 			result := o.probe(v)
 			o.updateStatusForResult(v, &result)
 			if o.finished.Done() {
 				return
 			}
+			sleepTime := time.Second * 10
+			if o.config.ProbeInterval != 0 {
+				sleepTime = time.Duration(o.config.ProbeInterval)
+			}
+			time.Sleep(sleepTime)
+			slept = true
+		}
+		if !slept {
 			sleepTime := time.Second * 10
 			if o.config.ProbeInterval != 0 {
 				sleepTime = time.Duration(o.config.ProbeInterval)

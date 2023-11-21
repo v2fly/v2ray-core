@@ -58,6 +58,14 @@ func (r *rootEnvImpl) ProxyEnvironment(tag string) ProxyEnvironment {
 	}
 }
 
+func (r *rootEnvImpl) DropProxyEnvironment(tag string) error {
+	transientStorage, err := r.transientStorage.NarrowScope(r.ctx, tag)
+	if err != nil {
+		return err
+	}
+	return transientStorage.DropScope(r.ctx, tag)
+}
+
 type appEnvImpl struct {
 	transientStorage storage.ScopedTransientStorage
 	systemDialer     internet.SystemDialer
@@ -83,7 +91,7 @@ func (a *appEnvImpl) Listener() internet.SystemListener {
 }
 
 func (a *appEnvImpl) OutboundDialer() tagged.DialFunc {
-	panic("implement me")
+	return internet.DialTaggedOutbound
 }
 
 func (a *appEnvImpl) OpenFileForReadSeek() fsifce.FileSeekerFunc {

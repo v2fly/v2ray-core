@@ -1,0 +1,35 @@
+{{if assertExists . "root_!kind" | not}} Unknown environment {{end}}
+{{if assertIsOneOf . "root_!kind" "json" | not}} This template only works for json input. {{end}}
+
+{{ $methodName := tryGet . "root_!json_method_!unquoted" "root_!json_protocol_!unquoted" "root_!json_cipher_!unquoted"}}
+{{if assertValueIsOneOf $methodName "chacha20-ietf-poly1305" "chacha20-poly1305" "aes-128-gcm" "aes-256-gcm" | not}}
+    This template only works for ss. {{end}}
+
+{{ $server_address := tryGet . "root_!json_server" "root_!json_address" "root_!json_endpoint"}}
+{{ $server_port := tryGet . "root_!json_port" "root_!json_server_port" "root_!json_endpoint"}}
+{{if $server_address | splitAndGetAfterNth ":" 0 | len | gt 1}}
+    {{ $server_addressport_unquoted := tryGet . "root_!json_endpoint_!unquoted"}}
+    {{ $server_port = $server_addressport_unquoted | splitAndGetAfterNth ":" -1}}
+
+    {{ $server_portWithSep := printf ":%v" $server_port}}
+    {{ $server_address = $server_addressport_unquoted | stringCutSuffix $server_portWithSep | jsonEncode}}
+{{end}}
+
+{{ $name_annotation := tryGet . "root_!json_name_!unquoted" "root_!json_id_!unquoted" "root_!json_tag_!unquoted" "root_!json_remarks_!unquoted" "<default>"}}
+
+{{$password := tryGet . "root_!json_password" "root_!json_psk"}}
+
+{
+    "protocol": "shadowsocks",
+    "settings": {
+        "address": {{$server_address}},
+        "port": {{$server_port}},
+        "method": {{$methodName | jsonEncode}},
+        "password": {{$password}}
+        },
+    "metadata":{
+
+        "TagName": {{print $name_annotation "_" $server_address | jsonEncode}}
+
+    }
+}

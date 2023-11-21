@@ -142,6 +142,18 @@ func AddOutboundHandler(server *Instance, config *OutboundHandlerConfig) error {
 	return nil
 }
 
+func RemoveOutboundHandler(server *Instance, tag string) error {
+	outboundManager := server.GetFeature(outbound.ManagerType()).(outbound.Manager)
+	if err := outboundManager.RemoveHandler(server.ctx, tag); err != nil {
+		return err
+	}
+
+	if err := server.env.DropProxyEnvironment("o" + tag); err != nil {
+		return err
+	}
+	return nil
+}
+
 func addOutboundHandlers(server *Instance, configs []*OutboundHandlerConfig) error {
 	for _, outboundConfig := range configs {
 		if err := AddOutboundHandler(server, outboundConfig); err != nil {

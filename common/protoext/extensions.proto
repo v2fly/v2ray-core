@@ -21,6 +21,10 @@ message MessageOpt{
   repeated string short_name = 2;
 
   string transport_original_name = 86001;
+
+  // allow_restricted_mode_load allow this config to be loaded in restricted mode
+  // this is typically used when a an attacker can control the content
+  bool allow_restricted_mode_load = 86002;
 }
 
 message FieldOpt{

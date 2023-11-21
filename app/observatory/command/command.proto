@@ -6,6 +6,7 @@ option go_package = "github.com/v2fly/v2ray-core/v5/app/observatory/command";
 option java_package = "com.v2ray.core.app.observatory.command";
 option java_multiple_files = true;
 
+import "common/protoext/extensions.proto";
 import "app/observatory/config.proto";
 
 message GetOutboundStatusRequest {
@@ -22,4 +23,7 @@ service ObservatoryService {
 }
 
 
-message Config {}
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "grpcservice";
+  option (v2ray.core.common.protoext.message_opt).short_name = "observatory";
+}

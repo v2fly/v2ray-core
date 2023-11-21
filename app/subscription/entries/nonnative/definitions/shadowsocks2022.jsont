@@ -1,0 +1,51 @@
+{{if assertExists . "root_!kind" | not}} Unknown environment {{end}}
+{{if assertIsOneOf . "root_!kind" "json" | not}} This template only works for json input. {{end}}
+
+{{ $methodName := tryGet . "root_!json_method_!unquoted" "root_!json_protocol_!unquoted"}}
+{{if assertValueIsOneOf $methodName "2022-blake3-aes-128-gcm" "2022-blake3-aes-256-gcm" | not}}
+    This template only works for ss2022. {{end}}
+
+{{ $server_address := tryGet . "root_!json_server" "root_!json_address" "root_!json_endpoint"}}
+{{ $server_port := tryGet . "root_!json_port" "root_!json_server_port" "root_!json_endpoint"}}
+{{if $server_address | splitAndGetAfterNth ":" 0 | len | gt 1}}
+    {{ $server_addressport_unquoted := tryGet . "root_!json_endpoint_!unquoted"}}
+    {{ $server_port = $server_addressport_unquoted | splitAndGetAfterNth ":" -1}}
+
+    {{ $server_portWithSep := printf ":%v" $server_port}}
+    {{ $server_address = $server_addressport_unquoted | stringCutSuffix $server_portWithSep | jsonEncode}}
+{{end}}
+
+{{ $name_annotation := tryGet . "root_!json_name_!unquoted" "root_!json_id_!unquoted" "root_!json_tag_!unquoted" "root_!json_remarks_!unquoted" "<default>"}}
+
+{{ $psk := tryGet . "root_!json_password_!unquoted" "root_!json_psk_!unquoted"}}
+{{ $ipsk_encoded := "" }}
+{{if $psk | splitAndGetAfterNth ":" 0 | len | ne 1}}
+    {{ $origpsk := $psk }}
+    {{ $psk = $psk | splitAndGetNth ":" -1 }}
+    {{ $pskWithSep := printf ":%v" $psk}}
+    {{ $ipsk_encoded = $origpsk | stringCutSuffix $pskWithSep | splitAndGetAfterNth ":" 0 | jsonEncode}}
+{{else}}
+    {{$ipsk_encoded = tryGet . "root_!json_iPSKs" "<default>"}}
+{{end}}
+
+
+    {
+      "protocol": "shadowsocks2022",
+      "settings": {
+        "address": {{$server_address}},
+        "port": {{$server_port}},
+        "method": {{$methodName | jsonEncode}},
+        "psk": {{$psk | jsonEncode}}
+        {{if $ipsk_encoded|len|ne 0}}
+                ,
+                "ipsk": {{$ipsk_encoded}}
+        {{end}}
+      },
+
+    "metadata":{
+
+    "TagName": {{print $name_annotation "_" $server_address | jsonEncode}}
+
+    }
+
+    }

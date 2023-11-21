@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package v2ray.core.app.subscription;
+
+option csharp_namespace = "V2Ray.Core.App.Subscription";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/subscription";
+option java_package = "com.v2ray.core.app.subscription";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+
+message ImportSource {
+  string name = 1;
+  string url = 2;
+  string tag_prefix = 3;
+
+  string import_network_tag = 4;
+
+  uint64 default_expire_seconds = 5;
+}
+
+// Config is the settings for Subscription Manager.
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "service";
+  option (v2ray.core.common.protoext.message_opt).short_name = "subscription";
+
+  repeated ImportSource imports = 1;
+
+  bytes nonnative_converter_overlay = 2;
+  string nonnative_converter_overlay_file = 96002 [(v2ray.core.common.protoext.field_opt).convert_time_read_file_into = "nonnative_converter_overlay"];
+}
