@@ -147,18 +147,8 @@ func (p *AESUDPClientPacketProcessor) DecodeUDPResp(input []byte, resp *UDPRespo
 	resp.PacketID = separateHeaderStruct.PacketID
 	resp.SessionID = separateHeaderStruct.SessionID
 	{
-		// Since we need to decrypt the main packet to see client session id, we
-		// have no way to know where should this key be found in the cache indexed
-		// by client session id.
-		// Luckily, V2Ray's implementation of shadowsocks2022-aes will always generate
-		// server session id based on client session id to allow client map it back
-		// to client session id.
-		var generatedCacheBytes [8]byte
-		copy(generatedCacheBytes[:], separateHeaderStruct.SessionID[:])
-		generatedCacheBytes[7] = ^generatedCacheBytes[7]
 		cacheKey := string(separateHeaderBuffer.Bytes()[0:8])
-
-		receivedCacheInterface := cache.GetCachedState(cacheKey)
+		receivedCacheInterface := cache.GetCachedServerState(cacheKey)
 		cachedState := &cachedUDPState{}
 		if receivedCacheInterface != nil {
 			cachedState = receivedCacheInterface.(*cachedUDPState)
@@ -166,7 +156,7 @@ func (p *AESUDPClientPacketProcessor) DecodeUDPResp(input []byte, resp *UDPRespo
 
 		if cachedState.sessionRecvAEAD == nil {
 			cachedState.sessionRecvAEAD = p.mainPacketAEAD(separateHeaderBuffer.Bytes()[0:8])
-			cache.PutCachedState(cacheKey, cachedState)
+			cache.PutCachedServerState(cacheKey, cachedState)
 		}
 
 		mainPacketAEADMaterialized := cachedState.sessionRecvAEAD

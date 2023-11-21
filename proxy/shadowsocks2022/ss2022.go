@@ -115,6 +115,8 @@ const (
 type UDPClientPacketProcessorCachedStateContainer interface {
 	GetCachedState(sessionID string) UDPClientPacketProcessorCachedState
 	PutCachedState(sessionID string, cache UDPClientPacketProcessorCachedState)
+	GetCachedServerState(serverSessionID string) UDPClientPacketProcessorCachedState
+	PutCachedServerState(serverSessionID string, cache UDPClientPacketProcessorCachedState)
 }
 
 type UDPClientPacketProcessorCachedState interface{}

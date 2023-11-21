@@ -17,10 +17,11 @@ import (
 
 func NewClientUDPSession(ctx context.Context, conn io.ReadWriteCloser, packetProcessor UDPClientPacketProcessor) *ClientUDPSession {
 	session := &ClientUDPSession{
-		locker:          &sync.Mutex{},
+		locker:          &sync.RWMutex{},
 		conn:            conn,
 		packetProcessor: packetProcessor,
 		sessionMap:      make(map[string]*ClientUDPSessionConn),
+		sessionMapAlias: make(map[string]string),
 	}
 	session.ctx, session.finish = context.WithCancel(ctx)
 
@@ -29,19 +30,21 @@ func NewClientUDPSession(ctx context.Context, conn io.ReadWriteCloser, packetPro
 }
 
 type ClientUDPSession struct {
-	locker *sync.Mutex
+	locker *sync.RWMutex
 
 	conn            io.ReadWriteCloser
 	packetProcessor UDPClientPacketProcessor
 	sessionMap      map[string]*ClientUDPSessionConn
+
+	sessionMapAlias map[string]string
 
 	ctx    context.Context
 	finish func()
 }
 
 func (c *ClientUDPSession) GetCachedState(sessionID string) UDPClientPacketProcessorCachedState {
-	c.locker.Lock()
-	defer c.locker.Unlock()
+	c.locker.RLock()
+	defer c.locker.RUnlock()
 
 	state, ok := c.sessionMap[sessionID]
 	if !ok {
@@ -50,15 +53,62 @@ func (c *ClientUDPSession) GetCachedState(sessionID string) UDPClientPacketProce
 	return state.cachedProcessorState
 }
 
+func (c *ClientUDPSession) GetCachedServerState(serverSessionID string) UDPClientPacketProcessorCachedState {
+	c.locker.RLock()
+	defer c.locker.RUnlock()
+
+	clientSessionID := c.getCachedStateAlias(serverSessionID)
+	if clientSessionID == "" {
+		return nil
+	}
+	state, ok := c.sessionMap[clientSessionID]
+	if !ok {
+		return nil
+	}
+
+	if serverState, ok := state.trackedServerSessionID[serverSessionID]; !ok {
+		return nil
+	} else {
+		return serverState.cachedRecvProcessorState
+	}
+}
+
+func (c *ClientUDPSession) getCachedStateAlias(serverSessionID string) string {
+	state, ok := c.sessionMapAlias[serverSessionID]
+	if !ok {
+		return ""
+	}
+	return state
+}
+
 func (c *ClientUDPSession) PutCachedState(sessionID string, cache UDPClientPacketProcessorCachedState) {
-	c.locker.Lock()
-	defer c.locker.Unlock()
+	c.locker.RLock()
+	defer c.locker.RUnlock()
 
 	state, ok := c.sessionMap[sessionID]
 	if !ok {
 		return
 	}
 	state.cachedProcessorState = cache
+}
+
+func (c *ClientUDPSession) PutCachedServerState(serverSessionID string, cache UDPClientPacketProcessorCachedState) {
+	c.locker.RLock()
+	defer c.locker.RUnlock()
+
+	clientSessionID := c.getCachedStateAlias(serverSessionID)
+	if clientSessionID == "" {
+		return
+	}
+	state, ok := c.sessionMap[clientSessionID]
+	if !ok {
+		return
+	}
+
+	if serverState, ok := state.trackedServerSessionID[serverSessionID]; ok {
+		serverState.cachedRecvProcessorState = cache
+		return
+	}
 }
 
 func (c *ClientUDPSession) Close() error {
@@ -107,8 +157,9 @@ func (c *ClientUDPSession) KeepReading() {
 				}
 			}
 
-			c.locker.Lock()
+			c.locker.RLock()
 			session, ok := c.sessionMap[string(udpResp.ClientSessionID[:])]
+			c.locker.RUnlock()
 			if ok {
 				select {
 				case session.readChan <- udpResp:
@@ -117,7 +168,6 @@ func (c *ClientUDPSession) KeepReading() {
 			} else {
 				newError("misbehaving server: unknown client session ID").Base(err).WriteToLog()
 			}
-			c.locker.Unlock()
 		}
 	}
 }
@@ -132,13 +182,13 @@ func (c *ClientUDPSession) NewSessionConn() (internet.AbstractPacketConn, error)
 	connctx, connfinish := context.WithCancel(c.ctx)
 
 	sessionConn := &ClientUDPSessionConn{
-		sessionID:         string(sessionID),
-		readChan:          make(chan *UDPResponse, 16),
-		parent:            c,
-		ctx:               connctx,
-		finish:            connfinish,
-		nextWritePacketID: 0,
-		rxReplayDetector:  replaydetector.New(128, ^uint64(0)),
+		sessionID:              string(sessionID),
+		readChan:               make(chan *UDPResponse, 16),
+		parent:                 c,
+		ctx:                    connctx,
+		finish:                 connfinish,
+		nextWritePacketID:      0,
+		trackedServerSessionID: make(map[string]*ClientUDPSessionServerTracker),
 	}
 	c.locker.Lock()
 	c.sessionMap[sessionConn.sessionID] = sessionConn
@@ -146,13 +196,19 @@ func (c *ClientUDPSession) NewSessionConn() (internet.AbstractPacketConn, error)
 	return sessionConn, nil
 }
 
+type ClientUDPSessionServerTracker struct {
+	cachedRecvProcessorState UDPClientPacketProcessorCachedState
+	rxReplayDetector         replaydetector.ReplayDetector
+	lastSeen                 time.Time
+}
+
 type ClientUDPSessionConn struct {
 	sessionID string
 	readChan  chan *UDPResponse
 	parent    *ClientUDPSession
 
-	nextWritePacketID uint64
-	rxReplayDetector  replaydetector.ReplayDetector
+	nextWritePacketID      uint64
+	trackedServerSessionID map[string]*ClientUDPSessionServerTracker
 
 	cachedProcessorState UDPClientPacketProcessorCachedState
 
@@ -161,7 +217,12 @@ type ClientUDPSessionConn struct {
 }
 
 func (c *ClientUDPSessionConn) Close() error {
+	c.parent.locker.Lock()
 	delete(c.parent.sessionMap, c.sessionID)
+	for k := range c.trackedServerSessionID {
+		delete(c.parent.sessionMapAlias, k)
+	}
+	c.parent.locker.Unlock()
 	c.finish()
 	return nil
 }
@@ -195,14 +256,41 @@ func (c *ClientUDPSessionConn) ReadFrom(p []byte) (n int, addr net.Addr, err err
 		case resp := <-c.readChan:
 			n = copy(p, resp.Payload.Bytes())
 			resp.Payload.Release()
-			if accept, ok := c.rxReplayDetector.Check(resp.PacketID); ok {
+
+			var trackedState *ClientUDPSessionServerTracker
+			if trackedStateReceived, ok := c.trackedServerSessionID[string(resp.SessionID[:])]; !ok {
+				expiredServerSessionID := make([]string, 0)
+				for key, value := range c.trackedServerSessionID {
+					if time.Since(value.lastSeen) > 125*time.Second {
+						expiredServerSessionID = append(expiredServerSessionID, key)
+					}
+				}
+				for _, key := range expiredServerSessionID {
+					delete(c.trackedServerSessionID, key)
+				}
+
+				state := &ClientUDPSessionServerTracker{
+					rxReplayDetector: replaydetector.New(1024, ^uint64(0)),
+				}
+				c.trackedServerSessionID[string(resp.SessionID[:])] = state
+				c.parent.locker.RLock()
+				c.parent.sessionMapAlias[string(resp.SessionID[:])] = string(resp.ClientSessionID[:])
+				c.parent.locker.RUnlock()
+				trackedState = state
+			} else {
+				trackedState = trackedStateReceived
+			}
+
+			if accept, ok := trackedState.rxReplayDetector.Check(resp.PacketID); ok {
 				accept()
 			} else {
 				newError("misbehaving server: replayed packet").Base(err).WriteToLog()
 				continue
 			}
+			trackedState.lastSeen = time.Now()
+
 			addr = &net.UDPAddr{IP: resp.Address.IP(), Port: resp.Port}
 		}
-		return
+		return n, addr, nil
 	}
 }
