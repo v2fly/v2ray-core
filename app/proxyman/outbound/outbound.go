@@ -11,6 +11,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/app/proxyman"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/v2fly/v2ray-core/v5/common/session"
 	"github.com/v2fly/v2ray-core/v5/features/outbound"
 )
 
@@ -131,12 +132,18 @@ func (m *Manager) RemoveHandler(ctx context.Context, tag string) error {
 	m.access.Lock()
 	defer m.access.Unlock()
 
-	delete(m.taggedHandler, tag)
-	if m.defaultHandler != nil && m.defaultHandler.Tag() == tag {
-		m.defaultHandler = nil
+	if handler, found := m.taggedHandler[tag]; found {
+		if err := handler.Close(); err != nil {
+			newError("failed to close handler ", tag).Base(err).AtWarning().WriteToLog(session.ExportIDToError(ctx))
+		}
+		delete(m.taggedHandler, tag)
+		if m.defaultHandler != nil && m.defaultHandler.Tag() == tag {
+			m.defaultHandler = nil
+		}
+		return nil
 	}
 
-	return nil
+	return common.ErrNoClue
 }
 
 // Select implements outbound.HandlerSelector.

@@ -1,0 +1,66 @@
+{{if assertExists . "root_!kind" | not}} Unknown environment {{end}}
+{{ $protocol_name := tryGet . "root_!link_protocol" "root_!json_type_!unquoted"}}
+{{if assertValueIsOneOf $protocol_name "vmess" | not}} This template will only handle vmess link {{end}}
+
+{{ $server_address := tryGet . "root_!link_host_!base64_!json_add" "root_!json_server"}}
+{{ $server_uuid := tryGet . "root_!link_host_!base64_!json_id" "root_!json_uuid"}}
+{{ $server_port := tryGet . "root_!link_host_!base64_!json_port_!unquoted" "root_!link_host_!base64_!json_port" "root_!json_port_!unquoted" "root_!json_port"}}
+
+{{ $transport_type := tryGet . "root_!link_host_!base64_!json_net_!unquoted" "root_!json_network_!unquoted" "<default>"}}
+{{ $transport_type = $transport_type | unalias "tcp" ""}}
+
+{{ $name_annotation := tryGet . "root_!link_host_!base64_!json_ps_!unquoted" "root_!json_name_!unquoted" "<default>"}}
+
+{{if assertValueIsOneOf $transport_type "tcp" "kcp" "ws" "h2" "quic" "grpc"| not }}
+    unknown transport type {{end}}
+
+    {{$transport_grpc_service_name := ""}}
+    {{ if $transport_type | eq "grpc"}}
+        {{ $transport_grpc_service_name = tryGet . "root_!link_host_!base64_!json_path" "<default>"}}
+    {{end}}
+
+    {{$transport_ws_path := ""}}
+    {{ if $transport_type | eq "ws"}}
+        {{ $transport_ws_path = tryGet . "root_!link_host_!base64_!json_path" "root_!json_ws-opts_!json_path" "<default>"}}
+    {{end}}
+
+{{ $security_type := tryGet . "root_!link_host_!base64_!json_tls_!unquoted" "root_!json_tls" "<default>"}}
+{{ $security_type = $security_type | unalias "none" "" "false"}}
+
+{{if assertValueIsOneOf $security_type "tls" "utls" "none"| not }}
+    unknown security type {{end}}
+
+{{ $security_tlsmmon_sni := tryGet . "root_!link_host_!base64_!json_sni" "<default>"}}
+{{ $security_tlsmmon_sni = $security_tlsmmon_sni | unalias $server_address ""}}
+
+{
+ "protocol": "vmess",
+ "settings":{
+    "address":{{$server_address}},
+    "port":{{$server_port}},
+    "uuid":{{$server_uuid}}
+    },
+    "streamSettings":{
+        "transport":{{$transport_type|jsonEncode}},
+        "security":{{$security_type|jsonEncode}},
+        "transportSettings":{
+        {{ if $transport_type | eq "grpc"}}
+            "serviceName":{{$transport_grpc_service_name}}
+        {{end}}
+        {{ if $transport_type | eq "ws"}}
+            "path":{{$transport_ws_path}}
+        {{end}}
+        },
+
+        "securitySettings":{
+        {{ if $security_type | eq "tls"}}
+            "serverName":{{$security_tlsmmon_sni}}
+        {{end}}
+        }
+    },
+  "metadata":{
+
+    "TagName": {{print $name_annotation "_" $server_address | jsonEncode}}
+
+  }
+}

@@ -107,7 +107,7 @@ func (s *handlerServer) AddOutbound(ctx context.Context, request *AddOutboundReq
 }
 
 func (s *handlerServer) RemoveOutbound(ctx context.Context, request *RemoveOutboundRequest) (*RemoveOutboundResponse, error) {
-	return &RemoveOutboundResponse{}, s.ohm.RemoveHandler(ctx, request.Tag)
+	return &RemoveOutboundResponse{}, core.RemoveOutboundHandler(s.s, request.Tag)
 }
 
 func (s *handlerServer) AlterOutbound(ctx context.Context, request *AlterOutboundRequest) (*AlterOutboundResponse, error) {

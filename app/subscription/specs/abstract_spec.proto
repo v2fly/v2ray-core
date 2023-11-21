@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package v2ray.core.app.subscription.specs;
+
+option csharp_namespace = "V2Ray.Core.App.Subscription.Specs";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/subscription/specs";
+option java_package = "com.v2ray.core.app.subscription.specs";
+option java_multiple_files = true;
+
+import "google/protobuf/any.proto";
+
+message ServerConfiguration{
+  string protocol = 1;
+  google.protobuf.Any protocol_settings = 2;
+  string transport = 3;
+  google.protobuf.Any transport_settings = 4;
+  string security = 5;
+  google.protobuf.Any security_settings = 6;
+}
+
+message SubscriptionServerConfig{
+  string id = 1;
+  map<string, string> metadata = 2;
+  ServerConfiguration configuration = 3;
+}
+
+message SubscriptionDocument {
+  map<string, string> metadata = 2;
+  repeated SubscriptionServerConfig server = 3;
+}

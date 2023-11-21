@@ -85,8 +85,11 @@ func filterMessage(ctx context.Context, message protoreflect.Message) error {
 	}
 
 	fsenvironment := envctx.EnvironmentFromContext(ctx)
-	fsifce := fsenvironment.(filesystemcap.FileSystemCapabilitySet)
+	fsifce, fsifceOk := fsenvironment.(filesystemcap.FileSystemCapabilitySet)
 	for _, v := range fileReadingQueue {
+		if !fsifceOk {
+			return newError("unable to read file as filesystem capability is not given")
+		}
 		field := message.Descriptor().Fields().ByTextName(v.field)
 		if v.filename == "" {
 			continue
