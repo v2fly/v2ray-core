@@ -1,0 +1,19 @@
+name: Sync Fork
+
+on:
+  schedule:
+    - cron: '*/30 * * * *' # every 30 minutes
+  workflow_dispatch: # on button click
+
+jobs:
+  sync:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: tgymnich/fork-sync@v1.8
+        with:
+          token: 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
+          owner: V2Fly
+          base: morphohelenaml/v2ray-core
+          head: V2Fly/v2ray-core
