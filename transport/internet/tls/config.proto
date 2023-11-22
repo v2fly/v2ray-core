@@ -31,6 +31,7 @@ message Certificate {
 message Config {
   option (v2ray.core.common.protoext.message_opt).type = "security";
   option (v2ray.core.common.protoext.message_opt).short_name = "tls";
+  option (v2ray.core.common.protoext.message_opt).allow_restricted_mode_load = true;
 
   // Whether or not to allow self-signed certificates.
   bool allow_insecure = 1 [(v2ray.core.common.protoext.field_opt).forbidden = true];
