@@ -18,6 +18,7 @@ message Config {
 message SimplifiedConfig {
   option (v2ray.core.common.protoext.message_opt).type = "outbound";
   option (v2ray.core.common.protoext.message_opt).short_name = "vmess";
+  option (v2ray.core.common.protoext.message_opt).allow_restricted_mode_load = true;
 
   v2ray.core.common.net.IPOrDomain address = 1;
   uint32 port = 2;

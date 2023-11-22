@@ -18,6 +18,7 @@ enum ForcedALPN{
 message Config {
   option (v2ray.core.common.protoext.message_opt).type = "security";
   option (v2ray.core.common.protoext.message_opt).short_name = "utls";
+  option (v2ray.core.common.protoext.message_opt).allow_restricted_mode_load = true;
 
   v2ray.core.transport.internet.tls.Config tls_config = 1;
   string imitate = 2;
