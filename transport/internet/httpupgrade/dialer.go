@@ -20,7 +20,7 @@ func dialhttpUpgrade(ctx context.Context, dest net.Destination, streamSettings *
 	if err != nil {
 		return nil, newError("failed to dial request to ", dest).Base(err)
 	}
-	req, err := http.NewRequest("GET", "/"+transportConfiguration.Path, nil)
+	req, err := http.NewRequest("GET", transportConfiguration.GetNormalizedPath(), nil)
 	if err != nil {
 		return nil, err
 	}
