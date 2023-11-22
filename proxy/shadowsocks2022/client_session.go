@@ -183,7 +183,7 @@ func (c *ClientUDPSession) NewSessionConn() (internet.AbstractPacketConn, error)
 
 	sessionConn := &ClientUDPSessionConn{
 		sessionID:              string(sessionID),
-		readChan:               make(chan *UDPResponse, 16),
+		readChan:               make(chan *UDPResponse, 128),
 		parent:                 c,
 		ctx:                    connctx,
 		finish:                 connfinish,
@@ -261,7 +261,7 @@ func (c *ClientUDPSessionConn) ReadFrom(p []byte) (n int, addr net.Addr, err err
 			if trackedStateReceived, ok := c.trackedServerSessionID[string(resp.SessionID[:])]; !ok {
 				expiredServerSessionID := make([]string, 0)
 				for key, value := range c.trackedServerSessionID {
-					if time.Since(value.lastSeen) > 125*time.Second {
+					if time.Since(value.lastSeen) > 65*time.Second {
 						expiredServerSessionID = append(expiredServerSessionID, key)
 					}
 				}
