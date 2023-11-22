@@ -110,10 +110,14 @@ func (t *TCPRequest) EncodeTCPRequestHeader(effectivePsk []byte,
 			return newError("failed to pack fixed length header").Base(err)
 		}
 	}
-	eihGenerator := newAESEIHGeneratorContainer(len(eih), effectivePsk, eih)
-	eihHeader, err := eihGenerator.GenerateEIH(t.keyDerivation, t.method, requestSalt.Bytes())
-	if err != nil {
-		return newError("failed to construct EIH").Base(err)
+	eihHeader := ExtensibleIdentityHeaders(newAESEIH(0))
+	if len(eih) != 0 {
+		eihGenerator := newAESEIHGeneratorContainer(len(eih), effectivePsk, eih)
+		eihHeaderGenerated, err := eihGenerator.GenerateEIH(t.keyDerivation, t.method, requestSalt.Bytes())
+		if err != nil {
+			return newError("failed to construct EIH").Base(err)
+		}
+		eihHeader = eihHeaderGenerated
 	}
 	preSessionKeyHeader := &TCPRequestHeader1PreSessionKey{
 		Salt: requestSalt,
