@@ -259,14 +259,10 @@ func (c *ClientUDPSessionConn) ReadFrom(p []byte) (n int, addr net.Addr, err err
 
 			var trackedState *ClientUDPSessionServerTracker
 			if trackedStateReceived, ok := c.trackedServerSessionID[string(resp.SessionID[:])]; !ok {
-				expiredServerSessionID := make([]string, 0)
 				for key, value := range c.trackedServerSessionID {
 					if time.Since(value.lastSeen) > 65*time.Second {
-						expiredServerSessionID = append(expiredServerSessionID, key)
+						delete(c.trackedServerSessionID, key)
 					}
-				}
-				for _, key := range expiredServerSessionID {
-					delete(c.trackedServerSessionID, key)
 				}
 
 				state := &ClientUDPSessionServerTracker{
