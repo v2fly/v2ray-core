@@ -6,15 +6,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: returntocorp/semgrep-action@v1
-        env: # Optional environment variable for inline PR comments (beta)
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          config: |
-            p/golang
-            p/r2c-ci
-            p/r2c-security-audit
-            p/insecure-transport
-            p/secrets
-          publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
-          publishDeployment: 241
+      - run: semgrep ci
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
