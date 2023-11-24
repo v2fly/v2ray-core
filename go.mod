@@ -17,7 +17,7 @@ require (
 	github.com/miekg/dns v1.1.57
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
-	github.com/pion/transport/v2 v2.2.1
+	github.com/pion/transport/v2 v2.2.4
 	github.com/pires/go-proxyproto v0.7.0
 	github.com/quic-go/quic-go v0.40.0
 	github.com/refraction-networking/utls v1.5.4
