@@ -4,6 +4,9 @@ jobs:
   semgrep:
     name: Scan
     runs-on: ubuntu-latest
+    container:
+    	image: returntocorp/semgrep
+    if: (github.actor != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@v3
       - run: semgrep ci
