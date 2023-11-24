@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"crypto/cipher"
 	cryptoRand "crypto/rand"
+	"encoding/binary"
 	"io"
 	"math/rand"
 	"time"
+
+	"github.com/v2fly/v2ray-core/v5/common"
 
 	"github.com/lunixbochs/struc"
 
@@ -59,7 +62,7 @@ func (t *TCPRequest) EncodeTCPRequestHeader(effectivePsk []byte,
 	paddingLength := TCPMinPaddingLength
 	if initialPayload == nil {
 		initialPayload = []byte{}
-		paddingLength += rand.Intn(TCPMaxPaddingLength) // TODO INSECURE RANDOM USED
+		paddingLength += 1 + rand.Intn(TCPMaxPaddingLength) // TODO INSECURE RANDOM USED
 	}
 
 	variableLengthHeader := &TCPRequestHeader3VariableLength{
@@ -110,10 +113,14 @@ func (t *TCPRequest) EncodeTCPRequestHeader(effectivePsk []byte,
 			return newError("failed to pack fixed length header").Base(err)
 		}
 	}
-	eihGenerator := newAESEIHGeneratorContainer(len(eih), effectivePsk, eih)
-	eihHeader, err := eihGenerator.GenerateEIH(t.keyDerivation, t.method, requestSalt.Bytes())
-	if err != nil {
-		return newError("failed to construct EIH").Base(err)
+	eihHeader := ExtensibleIdentityHeaders(newAESEIH(0))
+	if len(eih) != 0 {
+		eihGenerator := newAESEIHGeneratorContainer(len(eih), effectivePsk, eih)
+		eihHeaderGenerated, err := eihGenerator.GenerateEIH(t.keyDerivation, t.method, requestSalt.Bytes())
+		if err != nil {
+			return newError("failed to construct EIH").Base(err)
+		}
+		eihHeader = eihHeaderGenerated
 	}
 	preSessionKeyHeader := &TCPRequestHeader1PreSessionKey{
 		Salt: requestSalt,
@@ -206,7 +213,7 @@ func (t *TCPRequest) DecodeTCPResponseHeader(effectivePsk []byte, in io.Reader) 
 	}
 	timeDifference := int64(fixedLengthHeader.Timestamp) - time.Now().Unix()
 	if timeDifference < -30 || timeDifference > 30 {
-		return newError("timestamp is too far away")
+		return newError("timestamp is too far away, timeDifference = ", timeDifference)
 	}
 
 	t.s2cSaltAssert = fixedLengthHeader.RequestSalt
@@ -239,7 +246,7 @@ func (t *TCPRequest) CreateClientS2CReader(in io.Reader, initialPayload *buf.Buf
 	if err != nil {
 		return nil, newError("failed to decrypt initial payload").Base(err)
 	}
-	return crypto.NewAuthenticationReader(AEADAuthenticator, &crypto.AEADChunkSizeParser{
+	return crypto.NewAuthenticationReader(AEADAuthenticator, &AEADChunkSizeParser{
 		Auth: AEADAuthenticator,
 	}, in, protocol.TransferTypeStream, nil), nil
 }
@@ -254,4 +261,31 @@ func (t *TCPRequest) CreateClientC2SWriter(writer io.Writer) buf.Writer {
 		Auth: AEADAuthenticator,
 	}
 	return crypto.NewAuthenticationWriter(AEADAuthenticator, sizeParser, writer, protocol.TransferTypeStream, nil)
+}
+
+type AEADChunkSizeParser struct {
+	Auth *crypto.AEADAuthenticator
+}
+
+func (p *AEADChunkSizeParser) HasConstantOffset() uint16 {
+	return uint16(p.Auth.Overhead())
+}
+
+func (p *AEADChunkSizeParser) SizeBytes() int32 {
+	return 2 + int32(p.Auth.Overhead())
+}
+
+func (p *AEADChunkSizeParser) Encode(size uint16, b []byte) []byte {
+	binary.BigEndian.PutUint16(b, size-uint16(p.Auth.Overhead()))
+	b, err := p.Auth.Seal(b[:0], b[:2])
+	common.Must(err)
+	return b
+}
+
+func (p *AEADChunkSizeParser) Decode(b []byte) (uint16, error) {
+	b, err := p.Auth.Open(b[:0], b)
+	if err != nil {
+		return 0, err
+	}
+	return binary.BigEndian.Uint16(b), nil
 }

@@ -47,7 +47,14 @@ type respHeader struct {
 	Padding         []byte
 }
 
-func (p *AESUDPClientPacketProcessor) EncodeUDPRequest(request *UDPRequest, out *buf.Buffer) error {
+type cachedUDPState struct {
+	sessionAEAD     cipher.AEAD
+	sessionRecvAEAD cipher.AEAD
+}
+
+func (p *AESUDPClientPacketProcessor) EncodeUDPRequest(request *UDPRequest, out *buf.Buffer,
+	cache UDPClientPacketProcessorCachedStateContainer,
+) error {
 	separateHeaderStruct := separateHeader{PacketID: request.PacketID, SessionID: request.SessionID}
 	separateHeaderBuffer := buf.New()
 	defer separateHeaderBuffer.Release()
@@ -102,14 +109,28 @@ func (p *AESUDPClientPacketProcessor) EncodeUDPRequest(request *UDPRequest, out 
 		}
 	}
 	{
-		mainPacketAEADMaterialized := p.mainPacketAEAD(separateHeaderBufferBytes[0:8])
+		cacheKey := string(separateHeaderBufferBytes[0:8])
+		receivedCacheInterface := cache.GetCachedState(cacheKey)
+		cachedState := &cachedUDPState{}
+		if receivedCacheInterface != nil {
+			cachedState = receivedCacheInterface.(*cachedUDPState)
+		}
+		if cachedState.sessionAEAD == nil {
+			cachedState.sessionAEAD = p.mainPacketAEAD(separateHeaderBufferBytes[0:8])
+			cache.PutCachedState(cacheKey, cachedState)
+		}
+
+		mainPacketAEADMaterialized := cachedState.sessionAEAD
+
 		encryptedDest := out.Extend(int32(mainPacketAEADMaterialized.Overhead()) + requestBodyBuffer.Len())
 		mainPacketAEADMaterialized.Seal(encryptedDest[:0], separateHeaderBuffer.Bytes()[4:16], requestBodyBuffer.Bytes(), nil)
 	}
 	return nil
 }
 
-func (p *AESUDPClientPacketProcessor) DecodeUDPResp(input []byte, resp *UDPResponse) error {
+func (p *AESUDPClientPacketProcessor) DecodeUDPResp(input []byte, resp *UDPResponse,
+	cache UDPClientPacketProcessorCachedStateContainer,
+) error {
 	separateHeaderBuffer := buf.New()
 	defer separateHeaderBuffer.Release()
 	{
@@ -126,7 +147,19 @@ func (p *AESUDPClientPacketProcessor) DecodeUDPResp(input []byte, resp *UDPRespo
 	resp.PacketID = separateHeaderStruct.PacketID
 	resp.SessionID = separateHeaderStruct.SessionID
 	{
-		mainPacketAEADMaterialized := p.mainPacketAEAD(separateHeaderBuffer.Bytes()[0:8])
+		cacheKey := string(separateHeaderBuffer.Bytes()[0:8])
+		receivedCacheInterface := cache.GetCachedServerState(cacheKey)
+		cachedState := &cachedUDPState{}
+		if receivedCacheInterface != nil {
+			cachedState = receivedCacheInterface.(*cachedUDPState)
+		}
+
+		if cachedState.sessionRecvAEAD == nil {
+			cachedState.sessionRecvAEAD = p.mainPacketAEAD(separateHeaderBuffer.Bytes()[0:8])
+			cache.PutCachedServerState(cacheKey, cachedState)
+		}
+
+		mainPacketAEADMaterialized := cachedState.sessionRecvAEAD
 		decryptedDestBuffer := buf.New()
 		decryptedDest := decryptedDestBuffer.Extend(int32(len(input)) - 16 - int32(mainPacketAEADMaterialized.Overhead()))
 		_, err := mainPacketAEADMaterialized.Open(decryptedDest[:0], separateHeaderBuffer.Bytes()[4:16], input[16:], nil)

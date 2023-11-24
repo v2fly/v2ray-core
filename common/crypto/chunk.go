@@ -15,6 +15,13 @@ type ChunkSizeDecoder interface {
 	Decode([]byte) (uint16, error)
 }
 
+type ChunkSizeDecoderWithOffset interface {
+	ChunkSizeDecoder
+	// HasConstantOffset set the constant offset of Decode
+	// The effective size should be HasConstantOffset() + Decode(_).[0](uint64)
+	HasConstantOffset() uint16
+}
+
 // ChunkSizeEncoder is a utility class to encode size value into bytes.
 type ChunkSizeEncoder interface {
 	SizeBytes() int32
