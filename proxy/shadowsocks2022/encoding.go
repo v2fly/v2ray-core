@@ -5,10 +5,11 @@ import (
 	"crypto/cipher"
 	cryptoRand "crypto/rand"
 	"encoding/binary"
-	"github.com/v2fly/v2ray-core/v5/common"
 	"io"
 	"math/rand"
 	"time"
+
+	"github.com/v2fly/v2ray-core/v5/common"
 
 	"github.com/lunixbochs/struc"
 
