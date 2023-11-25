@@ -37,7 +37,7 @@ func (h *httpFetcher) DownloadDocument(ctx context.Context, source *subscription
 			if err != nil {
 				return nil, newError("unable to parse destination")
 			}
-			return outboundDialer(ctx, dest, source.ImportNetworkTag)
+			return outboundDialer(ctx, dest, source.ImportUsingTag)
 		},
 	}
 	request, err := http.NewRequest("GET", source.Url, nil)

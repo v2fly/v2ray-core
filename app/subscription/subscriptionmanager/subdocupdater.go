@@ -51,7 +51,7 @@ func (s *SubscriptionManagerImpl) updateSubscription(subscriptionName string) er
 		serverConfigHashName := fmt.Sprintf("%x", documentHash)
 		parsed, err := s.converter.TryAllConverters(server.Content, "outbound", server.KindHint)
 		if err != nil {
-			trackedSub.originalServerConfig[serverConfigHashName] = &originalServerConfig{data: server.Content}
+			trackedSub.originalServerConfig["!!!"+serverConfigHashName] = &originalServerConfig{data: server.Content}
 			continue
 		}
 		s.polyfillServerConfig(parsed, serverConfigHashName)
