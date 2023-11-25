@@ -14,7 +14,7 @@ message ImportSource {
   string url = 2;
   string tag_prefix = 3;
 
-  string import_network_tag = 4;
+  string import_using_tag = 4;
 
   uint64 default_expire_seconds = 5;
 }
