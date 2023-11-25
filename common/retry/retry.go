@@ -3,6 +3,8 @@ package retry
 //go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 import (
+	"math"
+	"math/rand"
 	"time"
 )
 
@@ -57,6 +59,24 @@ func ExponentialBackoff(attempts int, delay uint32) Strategy {
 			r := nextDelay
 			nextDelay += delay
 			return r
+		},
+	}
+}
+
+// ExponentialBackoffWithJitter return a retry exponential backoff strategy with jitter
+// http://www.awsarchitectureblog.com/2015/03/backoff.html
+func ExponentialBackoffWithJitter(attempts int, delay uint32) Strategy {
+	rr := rand.New(rand.NewSource(time.Now().UnixNano()))
+	capLevel := delay * 5
+	epoch := 0
+	return &retryer{
+		totalAttempt: attempts,
+		nextDelay: func() uint32 {
+			temp := math.Min(float64(capLevel), float64(delay)*math.Exp2(float64(epoch)))
+			ri := int64(temp / 2)
+			epoch += 1
+			jitter := rr.Int63n(ri)
+			return uint32(ri + jitter)
 		},
 	}
 }
