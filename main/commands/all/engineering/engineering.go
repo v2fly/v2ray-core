@@ -12,6 +12,7 @@ var cmdEngineering = &base.Command{
 		cmdNonNativeLinkExtract,
 		cmdNonNativeLinkExec,
 		cmdSubscriptionEntriesExtract,
+		cmdEncodeDataURL,
 	},
 }
 
