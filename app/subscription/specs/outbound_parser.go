@@ -55,7 +55,7 @@ func (p *OutboundParser) toAbstractServerSpec(config *OutboundConfig) (*ServerCo
 			}
 			serverConfig.TransportSettings = serial.ToTypedMessage(transportSettings)
 		}
-		{
+		if config.StreamSetting.Security != "none" {
 			securitySettings, err := loadHeterogeneousConfigFromRawJSONRestricted(
 				"security", config.StreamSetting.Security, config.StreamSetting.SecuritySettings)
 			if err != nil {
@@ -72,7 +72,7 @@ func (p *OutboundParser) toAbstractServerSpec(config *OutboundConfig) (*ServerCo
 func (p *OutboundParser) ToSubscriptionServerConfig(config *OutboundConfig) (*SubscriptionServerConfig, error) {
 	serverSpec, err := p.toAbstractServerSpec(config)
 	if err != nil {
-		return nil, newError("unable to parse server specification")
+		return nil, newError("unable to parse server specification").Base(err)
 	}
 	return &SubscriptionServerConfig{
 		Configuration: serverSpec,
