@@ -21,10 +21,15 @@ func (s *SubscriptionManagerImpl) updateSubscription(subscriptionName string) er
 		trackedSub = trackedSubFound
 	}
 	importSource := trackedSub.importSource
-
 	docFetcher, err := documentfetcher.GetFetcher("http")
 	if err != nil {
 		return newError("failed to get fetcher: ", err)
+	}
+	if strings.HasPrefix(importSource.Url, "data:") {
+		docFetcher, err = documentfetcher.GetFetcher("dataurl")
+		if err != nil {
+			return newError("failed to get fetcher: ", err)
+		}
 	}
 
 	downloadedDocument, err := docFetcher.DownloadDocument(s.ctx, importSource)
