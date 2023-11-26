@@ -35,7 +35,9 @@ func init() {
 	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		simplifiedServer := config.(*SimplifiedConfig)
 		_ = simplifiedServer
-		fullConfig := &Config{}
+		fullConfig := &Config{
+			DestinationOverride: simplifiedServer.DestinationOverride,
+		}
 		return common.CreateObject(ctx, fullConfig)
 	}))
 }
