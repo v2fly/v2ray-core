@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package v2ray.core.transport.internet.dtls;
+option csharp_namespace = "V2Ray.Core.Transport.Internet.Dtls";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/dtls";
+option java_package = "com.v2ray.core.transport.internet.dtls";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+
+enum DTLSMode {
+  INVALID = 0;
+  PSK = 1;
+}
+
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "transport";
+  option (v2ray.core.common.protoext.message_opt).short_name = "dtls";
+
+  DTLSMode mode = 1;
+  bytes psk = 2;
+
+  uint32 mtu = 3;
+  uint32 replay_protection_window = 4;
+}
