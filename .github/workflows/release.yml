@@ -2,7 +2,9 @@ name: Release
 
 on:
   release:
-    types: [prereleased]
+    types:
+      - prereleased
+      - released
   push:
     branches:
       - master
@@ -176,6 +178,7 @@ jobs:
           file_glob: true
           file: ./v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip*
           tag: ${{ github.ref }}
+          overwrite: true
 
   signature:
     runs-on: ubuntu-latest
@@ -249,6 +252,7 @@ jobs:
           file_glob: true
           file: build_artifacts/Release.unsigned*
           tag: ${{ github.ref }}
+          overwrite: true
 
       - name: Upload extra package
         uses: svenstaro/upload-release-action@v2
@@ -258,27 +262,10 @@ jobs:
           file_glob: true
           file: build_artifacts/v2ray-extra.zip
           tag: ${{ github.ref }}
+          overwrite: true
   buildContainer:
     if: github.event_name == 'release'
     needs: signature
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: [std, extra]
-        arch:
-          - v2Name: 32
-            containerName: 386
-          - v2Name: 64
-            containerName: amd64
-          - v2Name: arm32-v6
-            containerName: arm/v6
-          - v2Name: arm32-v7a
-            containerName: arm/v7
-          - v2Name: arm64-v8a
-            containerName: arm64
-          - v2Name: arm64-v8a
-            containerName: arm64/v8
-
     name: Build And Push image
     runs-on: ubuntu-latest
     env:
@@ -286,6 +273,19 @@ jobs:
       REGISTRY_PASSWORD: ${{ github.token }}
       IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
       RELEASE_REPO: ${{ github.repository }}
+      VERSION: ${{ github.event.release.tag_name }}
+      TIMESTAMP: ${{ github.event.release.created_at }}
+      PRERELEASE: ${{ github.event.release.prerelease }}
+      VARIANTS: | # <v2ray variant>:<image tag suffix>
+        std:
+        extra:-extra
+      ARCHS: | # <v2ray arch name>:<container arch name>
+        32:386
+        64:amd64
+        arm32-v6:arm/v6
+        arm32-v7a:arm/v7
+        arm64-v8a:arm64
+        arm64-v8a:arm64/v8
     steps:
       - uses: actions/checkout@v3
 
@@ -296,26 +296,47 @@ jobs:
           password: ${{ env.REGISTRY_PASSWORD }}
           registry: ${{ env.IMAGE_REGISTRY }}
 
-      - name: Download Assets
-        run: |
-          bash ./release/container/downloadAssets.sh ${{  github.ref_name }} ${{ matrix.arch.v2Name }} ${{ matrix.arch.containerName }} ${{ matrix.variant }}
-
-      - name: Buildah Action
+      - name: Build Images
         id: build-image
-        uses: redhat-actions/buildah-build@v2
-        with:
-          image: v2ray
-          tags: ${{  github.ref_name }}-${{ matrix.arch.v2Name }}-${{ matrix.variant }}
-          containerfiles: |
-            ./release/container/Containerfile
-          build-args: |
-            TARGETPLATFORM=${{ matrix.arch.containerName }}
-            VARIANT=${{ matrix.variant }}
-          archs: ${{ matrix.arch.containerName }}
-          context: context/linux/${{ matrix.arch.containerName }}/${{ matrix.variant }}
-          extra-args: |
-            --squash
-            --timestamp 0
+        run: |
+          image=v2ray
+          tags=
+
+          timestamp=$(date -d $TIMESTAMP +%s)
+          versions="$VERSION" # full version (v1.2.3)
+          versions="$versions $(echo $VERSION | cut -d. -f1,2)" # minor version (v1.2)
+          if [ $PRERELEASE = false ]; then
+            versions="$versions $(echo $VERSION | cut -d. -f1)" # major version (v1)
+            versions="$versions latest"
+          fi
+
+          formatEach() {
+            format=$1
+            shift 1
+            echo "$@" | xargs -n1 | xargs -i echo "$format" | xargs
+          }
+
+          for variant in $VARIANTS; do
+            v2Variant=$(echo $variant | cut -d: -f1)
+            containerVariant=$(echo $variant | cut -d: -f2)
+            variantTags=$(formatEach "{}$containerVariant" $versions)
+            tags="$tags $variantTags"
+            for arch in $ARCHS; do
+              v2Arch=$(echo $arch | cut -d: -f1)
+              containerArch=$(echo $arch | cut -d: -f2)
+              bash ./release/container/downloadAssets.sh $VERSION $v2Arch $containerArch $v2Variant
+              buildah bud \
+                $(formatEach "--tag $image:{}" $variantTags) \
+                --file ./release/container/Containerfile \
+                --platform linux/$containerArch \
+                --timestamp $timestamp \
+                --squash \
+                ./context/linux/$containerArch/$v2Variant
+            done
+          done
+
+          echo image=$image >> $GITHUB_OUTPUT
+          echo tags=$tags >> $GITHUB_OUTPUT
 
       - name: Push To ghcr.io
         uses: redhat-actions/push-to-registry@v2
