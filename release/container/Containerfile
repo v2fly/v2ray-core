@@ -1,9 +1,6 @@
-FROM docker.io/library/golang@sha256:d19ee8512191c8b8e967246d4a7d0de4f4133a30bd9ce982e9b70a0c596dbf18 AS builder
-
-FROM --platform=${TARGETPLATFORM} scratch
-
-ARG TARGETPLATFORM
-ARG VARIANT
+# golang:1.21.4 linux/amd64
+FROM docker.io/library/golang@sha256:337543447173c2238c78d4851456760dcc57c1dfa8c3bcd94cbee8b0f7b32ad0 AS builder
+FROM scratch
 
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
