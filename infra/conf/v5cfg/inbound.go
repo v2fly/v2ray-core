@@ -2,6 +2,7 @@ package v5cfg
 
 import (
 	"context"
+	"path/filepath"
 
 	"github.com/golang/protobuf/proto"
 
@@ -24,7 +25,7 @@ func (c InboundConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 	} else {
 		// Listen on specific IP or Unix Domain Socket
 		receiverSettings.Listen = c.ListenOn.Build()
-		listenDS := c.ListenOn.Family().IsDomain() && (c.ListenOn.Domain()[0] == '/' || c.ListenOn.Domain()[0] == '@')
+		listenDS := c.ListenOn.Family().IsDomain() && (filepath.IsAbs(c.ListenOn.Domain()) || c.ListenOn.Domain()[0] == '@')
 		listenIP := c.ListenOn.Family().IsIP() || (c.ListenOn.Family().IsDomain() && c.ListenOn.Domain() == "localhost")
 		switch {
 		case listenIP:
