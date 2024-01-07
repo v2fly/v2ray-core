@@ -3,8 +3,9 @@ package v4
 import (
 	"strings"
 
-	"github.com/jhump/protoreflect/desc"
-	"github.com/jhump/protoreflect/dynamic"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/v2fly/v2ray-core/v5/app/commander"
@@ -45,12 +46,20 @@ func (c *APIConfig) Build() (*commander.Config, error) {
 			if !strings.HasPrefix(s, "#") {
 				continue
 			}
-			message, err := desc.LoadMessageDescriptor(s[1:])
-			if err != nil || message == nil {
+			mt, err := protoregistry.GlobalFiles.FindDescriptorByName(protoreflect.FullName(s[1:]))
+			if err != nil {
 				return nil, newError("Cannot find API", s, "").Base(err)
 			}
-			serviceConfig := dynamic.NewMessage(message)
-			services = append(services, serial.ToTypedMessage(serviceConfig))
+
+			message, ok := mt.(protoreflect.MessageDescriptor)
+			if !ok {
+				return nil, newError("Cannot find API", s, "").Base(err)
+			}
+
+			serviceConfig := dynamicpb.NewMessage(message)
+			protoMsg := serviceConfig.Interface()
+
+			services = append(services, serial.ToTypedMessage(protoMsg))
 		}
 	}
 

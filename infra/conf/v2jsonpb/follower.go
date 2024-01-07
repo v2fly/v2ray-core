@@ -47,7 +47,7 @@ func (v *V2JsonProtobufFollower) Range(f func(protoreflect.FieldDescriptor, prot
 				if err != nil {
 					panic(err)
 				}
-				unmarshaler := proto.UnmarshalOptions{AllowPartial: true, Resolver: anyresolverv2{backgroundResolver: serial.GetResolver()}}
+				unmarshaler := proto.UnmarshalOptions{AllowPartial: true, Resolver: serial.GetResolver()}
 				err = unmarshaler.Unmarshal(bytesout, instance.(proto.Message))
 				if err != nil {
 					panic(err)

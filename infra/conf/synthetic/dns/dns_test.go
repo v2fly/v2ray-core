@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"google.golang.org/protobuf/runtime/protoiface"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"github.com/v2fly/v2ray-core/v5/app/dns"
 	"github.com/v2fly/v2ray-core/v5/app/dns/fakedns"
@@ -50,8 +50,8 @@ func init() {
 }
 
 func TestDNSConfigParsing(t *testing.T) {
-	parserCreator := func() func(string) (protoiface.MessageV1, error) {
-		return func(s string) (protoiface.MessageV1, error) {
+	parserCreator := func() func(string) (protoreflect.ProtoMessage, error) {
+		return func(s string) (protoreflect.ProtoMessage, error) {
 			config := new(dns2.DNSConfig)
 			if err := json.Unmarshal([]byte(s), config); err != nil {
 				return nil, err

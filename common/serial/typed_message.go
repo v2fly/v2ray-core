@@ -2,10 +2,11 @@ package serial
 
 import (
 	"errors"
-	"reflect"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -25,16 +26,18 @@ func ToTypedMessage(message proto.Message) *anypb.Any {
 
 // GetMessageType returns the name of this proto Message.
 func GetMessageType(message proto.Message) string {
-	return proto.MessageName(message)
+	return string(message.ProtoReflect().Descriptor().FullName())
 }
 
 // GetInstance creates a new instance of the message with messageType.
 func GetInstance(messageType string) (interface{}, error) {
-	mType := proto.MessageType(messageType)
-	if mType == nil || mType.Elem() == nil {
+	// mType := proto.MessageType(messageType)
+	mType, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(messageType))
+	if err != nil {
 		return nil, errors.New("Serial: Unknown type: " + messageType)
 	}
-	return reflect.New(mType.Elem()).Interface(), nil
+
+	return mType.New().Interface(), nil
 }
 
 func GetInstanceOf(v *anypb.Any) (proto.Message, error) {

@@ -1,7 +1,7 @@
 package v4
 
 import (
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v5/proxy/dokodemo"

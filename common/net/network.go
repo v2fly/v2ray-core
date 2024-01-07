@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/golang/protobuf/jsonpb"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func (n Network) SystemString() string {
@@ -20,7 +20,7 @@ func (n Network) SystemString() string {
 	}
 }
 
-func (nl *NetworkList) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {
+func (nl *NetworkList) UnmarshalJSONPB(unmarshaler *protojson.UnmarshalOptions, bytes []byte) error {
 	var networkStrList []string
 	if err := json.Unmarshal(bytes, &networkStrList); err == nil {
 		nl.Network = ParseNetworkStringList(networkStrList)

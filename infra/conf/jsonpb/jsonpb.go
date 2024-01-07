@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"
@@ -16,10 +16,16 @@ import (
 
 //go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
-func loadJSONPB(data io.Reader) (*core.Config, error) {
+func loadJSONPB(reader io.Reader) (*core.Config, error) {
 	coreconf := &core.Config{}
-	jsonpbloader := &jsonpb.Unmarshaler{AnyResolver: serial.GetResolver()}
-	err := jsonpbloader.Unmarshal(data, coreconf)
+	jsonpbloader := &protojson.UnmarshalOptions{Resolver: serial.GetResolver()}
+	data := buf.New()
+	defer data.Release()
+	_, err := data.ReadFrom(reader)
+	if err != nil {
+		return nil, err
+	}
+	err = jsonpbloader.Unmarshal(data.Bytes(), coreconf)
 	if err != nil {
 		return nil, err
 	}
@@ -27,12 +33,13 @@ func loadJSONPB(data io.Reader) (*core.Config, error) {
 }
 
 func dumpJSONPb(config proto.Message, w io.Writer) error {
-	jsonpbdumper := &jsonpb.Marshaler{AnyResolver: serial.GetResolver()}
-	err := jsonpbdumper.Marshal(w, config)
+	jsonpbdumper := &protojson.MarshalOptions{Resolver: serial.GetResolver()}
+	data, err := jsonpbdumper.Marshal(config)
 	if err != nil {
 		return err
 	}
-	return nil
+	_, err = w.Write(data)
+	return err
 }
 
 func DumpJSONPb(config proto.Message, w io.Writer) error {
