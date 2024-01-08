@@ -30,7 +30,7 @@ func GetMessageType(message proto.Message) string {
 }
 
 // GetInstance creates a new instance of the message with messageType.
-func GetInstance(messageType string) (interface{}, error) {
+func GetInstance(messageType string) (proto.Message, error) {
 	// mType := proto.MessageType(messageType)
 	mType, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(messageType))
 	if err != nil {
@@ -45,11 +45,10 @@ func GetInstanceOf(v *anypb.Any) (proto.Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	protoMessage := instance.(proto.Message)
-	if err := proto.Unmarshal(v.Value, protoMessage); err != nil {
+	if err := proto.Unmarshal(v.Value, instance); err != nil {
 		return nil, err
 	}
-	return protoMessage, nil
+	return instance, nil
 }
 
 func V2Type(v *anypb.Any) string {

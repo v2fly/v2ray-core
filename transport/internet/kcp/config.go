@@ -3,6 +3,8 @@ package kcp
 import (
 	"crypto/cipher"
 
+	"google.golang.org/protobuf/proto"
+
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
@@ -103,7 +105,7 @@ func (c *Config) GetReceivingBufferSize() uint32 {
 }
 
 func init() {
-	common.Must(internet.RegisterProtocolConfigCreator(protocolName, func() interface{} {
+	common.Must(internet.RegisterProtocolConfigCreator(protocolName, func() proto.Message {
 		return new(Config)
 	}))
 }

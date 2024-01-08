@@ -4,10 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	. "github.com/v2fly/v2ray-core/v5/common"
 )
 
 type TConfig struct {
+	emptypb.Empty
 	value int
 }
 

@@ -3,15 +3,15 @@ package internet
 import (
 	"context"
 
+	"google.golang.org/protobuf/proto"
+
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/protoext"
 	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"github.com/v2fly/v2ray-core/v5/features"
-
-	"google.golang.org/protobuf/proto"
 )
 
-type ConfigCreator func() interface{}
+type ConfigCreator func() proto.Message
 
 var (
 	globalTransportConfigCreatorCache = make(map[string]ConfigCreator)
@@ -51,7 +51,7 @@ func RegisterProtocolConfigCreator(name string, creator ConfigCreator) error {
 	return nil
 }
 
-func CreateTransportConfig(name string) (interface{}, error) {
+func CreateTransportConfig(name string) (proto.Message, error) {
 	creator, ok := globalTransportConfigCreatorCache[name]
 	if !ok {
 		return nil, newError("unknown transport protocol: ", name)
@@ -59,7 +59,7 @@ func CreateTransportConfig(name string) (interface{}, error) {
 	return creator(), nil
 }
 
-func (c *TransportConfig) GetTypedSettings() (interface{}, error) {
+func (c *TransportConfig) GetTypedSettings() (proto.Message, error) {
 	return serial.GetInstanceOf(c.Settings)
 }
 
@@ -83,12 +83,12 @@ func (c *StreamConfig) GetEffectiveProtocol() string {
 	return transportProtocolToString(c.Protocol)
 }
 
-func (c *StreamConfig) GetEffectiveTransportSettings() (interface{}, error) {
+func (c *StreamConfig) GetEffectiveTransportSettings() (proto.Message, error) {
 	protocol := c.GetEffectiveProtocol()
 	return c.GetTransportSettingsFor(protocol)
 }
 
-func (c *StreamConfig) GetTransportSettingsFor(protocol string) (interface{}, error) {
+func (c *StreamConfig) GetTransportSettingsFor(protocol string) (proto.Message, error) {
 	if c != nil {
 		for _, settings := range c.TransportSettings {
 			if settings.GetUnifiedProtocolName() == protocol {
@@ -106,7 +106,7 @@ func (c *StreamConfig) GetTransportSettingsFor(protocol string) (interface{}, er
 	return CreateTransportConfig(protocol)
 }
 
-func (c *StreamConfig) GetEffectiveSecuritySettings() (interface{}, error) {
+func (c *StreamConfig) GetEffectiveSecuritySettings() (proto.Message, error) {
 	for _, settings := range c.SecuritySettings {
 		if serial.V2Type(settings) == c.SecurityType {
 			return serial.GetInstanceOf(settings)
@@ -134,10 +134,7 @@ func (m SocketConfig_TProxyMode) IsEnabled() bool {
 }
 
 func getOriginalMessageName(streamSettings *MemoryStreamConfig) string {
-	settings, ok := streamSettings.ProtocolSettings.(proto.Message)
-	if !ok {
-		return ""
-	}
+	settings := streamSettings.ProtocolSettings
 	msgOpts, err := protoext.GetMessageOptions(settings.ProtoReflect().Descriptor())
 	if err == nil {
 		if msgOpts.TransportOriginalName != "" {

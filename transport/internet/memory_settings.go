@@ -1,11 +1,13 @@
 package internet
 
+import "google.golang.org/protobuf/proto"
+
 // MemoryStreamConfig is a parsed form of StreamConfig. This is used to reduce number of Protobuf parsing.
 type MemoryStreamConfig struct {
 	ProtocolName     string
-	ProtocolSettings interface{}
+	ProtocolSettings proto.Message
 	SecurityType     string
-	SecuritySettings interface{}
+	SecuritySettings proto.Message
 	SocketSettings   *SocketConfig
 }
 

@@ -2,7 +2,6 @@ package registry
 
 import (
 	"context"
-	"reflect"
 	"strings"
 	"sync"
 
@@ -63,28 +62,23 @@ func (i *implementationRegistry) LoadImplementationByAlias(ctx context.Context, 
 		return nil, newError("unable to create implementation config instance").Base(err)
 	}
 
-	implementationConfigInstancev2, ok := implementationConfigInstance.(proto.Message)
-	if !ok {
-		return nil, newError("unable to cast implementation config instance to proto.Message")
-	}
-
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: false}
-	err = unmarshaler.Unmarshal(data, implementationConfigInstancev2)
+	err = unmarshaler.Unmarshal(data, implementationConfigInstance)
 	if err != nil {
 		return nil, newError("unable to parse json content").Base(err)
 	}
 
 	if isRestrictedModeContext(ctx) {
-		if err := enforceRestriction(implementationConfigInstancev2); err != nil {
+		if err := enforceRestriction(implementationConfigInstance); err != nil {
 			return nil, err
 		}
 	}
 
-	if err := protofilter.FilterProtoConfig(ctx, implementationConfigInstancev2); err != nil {
+	if err := protofilter.FilterProtoConfig(ctx, implementationConfigInstance); err != nil {
 		return nil, err
 	}
 
-	return implementationConfigInstancev2, nil
+	return implementationConfigInstance, nil
 }
 
 func newImplementationRegistry() *implementationRegistry {
@@ -96,7 +90,7 @@ var globalImplementationRegistry = newImplementationRegistry()
 var initialized = &sync.Once{}
 
 type registerRequest struct {
-	proto  interface{}
+	proto  proto.Message
 	loader CustomLoader
 }
 
@@ -104,7 +98,7 @@ var registerRequests []registerRequest
 
 // RegisterImplementation register an implementation of a type of interface
 // loader(CustomLoader) is a private API, its interface is subject to breaking changes
-func RegisterImplementation(proto interface{}, loader CustomLoader) error {
+func RegisterImplementation(proto proto.Message, loader CustomLoader) error {
 	registerRequests = append(registerRequests, registerRequest{
 		proto:  proto,
 		loader: loader,
@@ -112,13 +106,8 @@ func RegisterImplementation(proto interface{}, loader CustomLoader) error {
 	return nil
 }
 
-func registerImplementation(protoMsg interface{}, loader CustomLoader) error {
-	protoReflect := reflect.New(reflect.TypeOf(protoMsg).Elem())
-	proto2, ok := protoReflect.Interface().(proto.Message)
-	if !ok {
-		return newError("unable to cast proto to proto.Message")
-	}
-	msgDesc := proto2.ProtoReflect().Descriptor()
+func registerImplementation(proto proto.Message, loader CustomLoader) error {
+	msgDesc := proto.ProtoReflect().Descriptor()
 	fullName := string(msgDesc.FullName())
 	msgOpts, err := protoext.GetMessageOptions(msgDesc)
 	if err != nil {
