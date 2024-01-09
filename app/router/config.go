@@ -161,19 +161,22 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 			ohm:       ohm, fallbackTag: br.FallbackTag,
 			strategy: leastLoadStrategy,
 		}, nil
-	case "randomalive":
-		return &Balancer{
-			selectors: br.OutboundSelector,
-			ohm:       ohm, fallbackTag: br.FallbackTag,
-			strategy: &RandomAliveStrategy{},
-		}, nil
 	case "random":
 		fallthrough
 	case "":
+		i, err := serial.GetInstanceOf(br.StrategySettings)
+		if err != nil {
+			return nil, err
+		}
+		s, ok := i.(*StrategyRandomConfig)
+		if !ok {
+			return nil, newError("not a StrategyRandomConfig").AtError()
+		}
+		randomStrategy := NewRandomStrategy(s)
 		return &Balancer{
 			selectors: br.OutboundSelector,
 			ohm:       ohm, fallbackTag: br.FallbackTag,
-			strategy: &RandomStrategy{},
+			strategy: randomStrategy,
 		}, nil
 	default:
 		return nil, newError("unrecognized balancer type")

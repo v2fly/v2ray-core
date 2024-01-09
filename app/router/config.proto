@@ -87,13 +87,9 @@ message StrategyWeight {
 message StrategyRandomConfig {
   option (v2ray.core.common.protoext.message_opt).type = "balancer";
   option (v2ray.core.common.protoext.message_opt).short_name = "random";
-}
 
-message StrategyRandomAliveConfig {
-  option (v2ray.core.common.protoext.message_opt).type = "balancer";
-  option (v2ray.core.common.protoext.message_opt).short_name = "randomalive";
-  
   string observer_tag = 7;
+  bool aliveOnly = 8;
 }
 
 message StrategyLeastPingConfig {
