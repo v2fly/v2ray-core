@@ -29,6 +29,20 @@ func GetMessageType(message proto.Message) string {
 	return string(message.ProtoReflect().Descriptor().FullName())
 }
 
+// GetMessageDescriptor returns the MessageDescriptor of the message with fullName.
+func GetMessageDescriptor(fullName string) (protoreflect.MessageDescriptor, error) {
+	mt, err := protoregistry.GlobalFiles.FindDescriptorByName(protoreflect.FullName(fullName))
+	if err != nil {
+		return nil, errors.New("Serial: Unknown message name: " + fullName)
+	}
+
+	message, ok := mt.(protoreflect.MessageDescriptor)
+	if !ok {
+		return nil, errors.New("Serial: Message with name: " + fullName + " is not a MessageDescriptor")
+	}
+	return message, nil
+}
+
 // GetInstance creates a new instance of the message with messageType.
 func GetInstance(messageType string) (proto.Message, error) {
 	// mType := proto.MessageType(messageType)

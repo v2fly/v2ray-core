@@ -22,3 +22,19 @@ func TestConvertingNilMessage(t *testing.T) {
 		t.Error("expect nil, but actually not")
 	}
 }
+
+func TestGetMessageDescriptor(t *testing.T) {
+	_, err := GetMessageDescriptor("")
+	if err == nil {
+		t.Error("expect non-nil error, but got nil")
+	}
+
+	md, err := GetMessageDescriptor("google.protobuf.Any")
+	if err != nil {
+		t.Error("expect nil error, but got ", err)
+	}
+
+	if md == nil || md.FullName() != "google.protobuf.Any" {
+		t.Error("expect google.protobuf.Any, but got ", md)
+	}
+}

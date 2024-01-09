@@ -3,8 +3,6 @@ package v4
 import (
 	"strings"
 
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -46,14 +44,10 @@ func (c *APIConfig) Build() (*commander.Config, error) {
 			if !strings.HasPrefix(s, "#") {
 				continue
 			}
-			mt, err := protoregistry.GlobalFiles.FindDescriptorByName(protoreflect.FullName(s[1:]))
-			if err != nil {
-				return nil, newError("Cannot find API", s, "").Base(err)
-			}
 
-			message, ok := mt.(protoreflect.MessageDescriptor)
-			if !ok {
-				return nil, newError("Cannot find API", s, "").Base(err)
+			message, err := serial.GetMessageDescriptor(s[1:])
+			if err != nil {
+				return nil, newError("Cannot find API", s[1:]).Base(err)
 			}
 
 			serviceConfig := dynamicpb.NewMessage(message)
