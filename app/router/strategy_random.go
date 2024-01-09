@@ -36,6 +36,7 @@ func (s *RandomStrategy) InjectContext(ctx context.Context) {
 
 func (s *RandomStrategy) PickOutbound(candidates []string) string {
 	if s.settings.AliveOnly {
+		// candidates are considered alive unless observed otherwise
 		if s.observatory == nil {
 			core.RequireFeatures(s.ctx, func(observatory extension.Observatory) error {
 				s.observatory = observatory
@@ -51,16 +52,24 @@ func (s *RandomStrategy) PickOutbound(candidates []string) string {
 				observeReport, err = common.Must2(s.observatory.(features.TaggedFeatures).GetFeaturesByTag(s.settings.ObserverTag)).(extension.Observatory).GetObservation(s.ctx)
 			}
 			if err == nil {
-				outboundsList := outboundList(candidates)
 				aliveTags := make([]string, 0)
 				if result, ok := observeReport.(*observatory.ObservationResult); ok {
 					status := result.Status
-					for _, v := range status {
-						// outbound is alive unless proven not
-						if !(outboundsList.contains(v.OutboundTag) && !v.Alive) {
-							aliveTags = append(aliveTags, v.OutboundTag)
+					statusMap := make(map[string]*observatory.OutboundStatus)
+					for _, outboundStatus := range status {
+						statusMap[outboundStatus.OutboundTag] = outboundStatus
+					}
+					for _, candidate := range candidates {
+						if outboundStatus, found := statusMap[candidate]; found {
+							if outboundStatus.Alive {
+								aliveTags = append(aliveTags, candidate)
+							}
+						} else {
+							// unfound candidate is considered alive
+							aliveTags = append(aliveTags, candidate)
 						}
 					}
+
 					candidates = aliveTags
 				}
 			}
