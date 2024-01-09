@@ -10,15 +10,17 @@ import (
 )
 
 const (
-	strategyRandom    string = "random"
-	strategyLeastLoad string = "leastload"
-	strategyLeastPing string = "leastping"
+	strategyRandom      string = "random"
+	strategyRandomAlive string = "randomalive"
+	strategyLeastLoad   string = "leastload"
+	strategyLeastPing   string = "leastping"
 )
 
 var strategyConfigLoader = loader.NewJSONConfigLoader(loader.ConfigCreatorCache{
-	strategyRandom:    func() interface{} { return new(strategyEmptyConfig) },
-	strategyLeastLoad: func() interface{} { return new(strategyLeastLoadConfig) },
-	strategyLeastPing: func() interface{} { return new(strategyLeastPingConfig) },
+	strategyRandom:      func() interface{} { return new(strategyEmptyConfig) },
+	strategyRandomAlive: func() interface{} { return new(strategyRandomAliveConfig) },
+	strategyLeastLoad:   func() interface{} { return new(strategyLeastLoadConfig) },
+	strategyLeastPing:   func() interface{} { return new(strategyLeastPingConfig) },
 }, "type", "settings")
 
 type strategyEmptyConfig struct{}
@@ -97,4 +99,12 @@ type strategyLeastPingConfig struct {
 
 func (s strategyLeastPingConfig) Build() (proto.Message, error) {
 	return &router.StrategyLeastPingConfig{ObserverTag: s.ObserverTag}, nil
+}
+
+type strategyRandomAliveConfig struct {
+	ObserverTag string `json:"observerTag,omitempty"`
+}
+
+func (s strategyRandomAliveConfig) Build() (proto.Message, error) {
+	return &router.StrategyRandomAliveConfig{ObserverTag: s.ObserverTag}, nil
 }

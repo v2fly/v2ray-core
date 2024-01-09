@@ -49,6 +49,8 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 	case strategyRandom, "":
 		r.Strategy.Type = strategyRandom
 		strategy = strategyRandom
+	case strategyRandomAlive:
+		strategy = strategyRandomAlive
 	case strategyLeastLoad:
 		strategy = strategyLeastLoad
 	case strategyLeastPing:

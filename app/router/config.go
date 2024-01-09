@@ -161,6 +161,12 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 			ohm:       ohm, fallbackTag: br.FallbackTag,
 			strategy: leastLoadStrategy,
 		}, nil
+	case "randomalive":
+		return &Balancer{
+			selectors: br.OutboundSelector,
+			ohm:       ohm, fallbackTag: br.FallbackTag,
+			strategy: &RandomAliveStrategy{},
+		}, nil
 	case "random":
 		fallthrough
 	case "":
