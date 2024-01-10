@@ -31,11 +31,13 @@ func NewRandomStrategy(settings *StrategyRandomConfig) *RandomStrategy {
 }
 
 func (s *RandomStrategy) InjectContext(ctx context.Context) {
-	s.ctx = ctx
+	if s != nil {
+		s.ctx = ctx
+	}
 }
 
 func (s *RandomStrategy) PickOutbound(candidates []string) string {
-	if s.settings.AliveOnly {
+	if s != nil && s.settings.AliveOnly {
 		// candidates are considered alive unless observed otherwise
 		if s.observatory == nil {
 			core.RequireFeatures(s.ctx, func(observatory extension.Observatory) error {
