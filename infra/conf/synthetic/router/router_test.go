@@ -113,6 +113,7 @@ func TestRouterConfig(t *testing.T) {
 						Tag:              "b1",
 						OutboundSelector: []string{"test"},
 						Strategy:         "random",
+						StrategySettings: serial.ToTypedMessage(&router.StrategyRandomConfig{}),
 					},
 					{
 						Tag:              "b2",
