@@ -89,7 +89,7 @@ message StrategyRandomConfig {
   option (v2ray.core.common.protoext.message_opt).short_name = "random";
 
   string observer_tag = 7;
-  bool aliveOnly = 8;
+  bool alive_only = 8;
 }
 
 message StrategyLeastPingConfig {
