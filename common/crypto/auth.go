@@ -5,6 +5,8 @@ import (
 	"crypto/rand"
 	"io"
 
+	"golang.org/x/crypto/sha3"
+
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/bytespool"
@@ -233,6 +235,7 @@ type AuthenticationWriter struct {
 	sizeParser   ChunkSizeEncoder
 	transferType protocol.TransferType
 	padding      PaddingLengthGenerator
+	prng         io.Reader
 }
 
 func NewAuthenticationWriter(auth Authenticator, sizeParser ChunkSizeEncoder, writer io.Writer, transferType protocol.TransferType, padding PaddingLengthGenerator) *AuthenticationWriter {
@@ -241,10 +244,15 @@ func NewAuthenticationWriter(auth Authenticator, sizeParser ChunkSizeEncoder, wr
 		writer:       buf.NewWriter(writer),
 		sizeParser:   sizeParser,
 		transferType: transferType,
+		prng:         sha3.NewShake128(),
 	}
 	if padding != nil {
 		w.padding = padding
 	}
+
+	// need to seed with at least 32 bytes (256 bits) random bytes
+	common.Must2(io.CopyN(w.prng.(sha3.ShakeHash), rand.Reader, 32))
+
 	return w
 }
 
@@ -271,7 +279,7 @@ func (w *AuthenticationWriter) seal(b []byte) (*buf.Buffer, error) {
 		// These paddings will send in clear text.
 		// To avoid leakage of PRNG internal state, a cryptographically secure PRNG should be used.
 		paddingBytes := eb.Extend(paddingSize)
-		common.Must2(rand.Read(paddingBytes))
+		common.Must2(w.prng.Read(paddingBytes))
 	}
 
 	return eb, nil
