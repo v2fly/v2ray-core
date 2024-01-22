@@ -49,6 +49,7 @@ message SysStatsResponse {
   uint64 LiveObjects = 8;
   uint64 PauseTotalNs = 9;
   uint32 Uptime = 10;
+  string Version = 11;
 }
 
 service StatsService {
