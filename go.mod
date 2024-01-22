@@ -12,7 +12,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/gopacket v1.1.19
 	github.com/gorilla/websocket v1.5.1
-	github.com/jhump/protoreflect v1.15.3
+	github.com/jhump/protoreflect v1.15.5
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/miekg/dns v1.1.57
 	github.com/mustafaturan/bus v1.0.2
@@ -35,7 +35,7 @@ require (
 	golang.org/x/sync v0.5.0
 	golang.org/x/sys v0.15.0
 	google.golang.org/grpc v1.59.0
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/protobuf v1.31.1-0.20231027082548-f4a6c1f6e5c1
 	gopkg.in/yaml.v3 v3.0.1
 	gvisor.dev/gvisor v0.0.0-20231020174304-b8a429915ff1
 	h12.io/socks v1.0.3
@@ -47,7 +47,7 @@ require (
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/boljen/go-bitmap v0.0.0-20151001105940-23cd2fb0ce7d // indirect
-	github.com/bufbuild/protocompile v0.6.0 // indirect
+	github.com/bufbuild/protocompile v0.8.0 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-metro v0.0.0-20211217172704-adc40b04c140 // indirect
