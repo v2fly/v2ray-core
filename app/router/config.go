@@ -131,6 +131,12 @@ func (rr *RoutingRule) BuildCondition() (Condition, error) {
 
 // Build builds the balancing rule
 func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatcher) (*Balancer, error) {
+	b := &Balancer{
+		selectors:   br.OutboundSelector,
+		ohm:         ohm,
+		fallbackTag: br.FallbackTag,
+	}
+
 	switch br.Strategy {
 	case "leastping":
 		i, err := serial.GetInstanceOf(br.StrategySettings)
@@ -141,11 +147,8 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 		if !ok {
 			return nil, newError("not a StrategyLeastPingConfig").AtError()
 		}
-		return &Balancer{
-			selectors: br.OutboundSelector,
-			strategy:  &LeastPingStrategy{config: s},
-			ohm:       ohm,
-		}, nil
+		b.strategy = &LeastPingStrategy{config: s}
+		return b, nil
 	case "leastload":
 		i, err := serial.GetInstanceOf(br.StrategySettings)
 		if err != nil {
@@ -155,20 +158,13 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 		if !ok {
 			return nil, newError("not a StrategyLeastLoadConfig").AtError()
 		}
-		leastLoadStrategy := NewLeastLoadStrategy(s)
-		return &Balancer{
-			selectors: br.OutboundSelector,
-			ohm:       ohm, fallbackTag: br.FallbackTag,
-			strategy: leastLoadStrategy,
-		}, nil
+		b.strategy = NewLeastLoadStrategy(s)
+		return b, nil
 	case "random":
 		fallthrough
 	case "":
-		return &Balancer{
-			selectors: br.OutboundSelector,
-			ohm:       ohm, fallbackTag: br.FallbackTag,
-			strategy: &RandomStrategy{},
-		}, nil
+		b.strategy = &RandomStrategy{}
+		return b, nil
 	default:
 		return nil, newError("unrecognized balancer type")
 	}
