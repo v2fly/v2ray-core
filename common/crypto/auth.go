@@ -181,7 +181,7 @@ func (r *AuthenticationReader) readInternal(soft bool, mb *buf.MultiBuffer) erro
 	if size <= buf.Size {
 		b, err := r.readBuffer(effectiveSize, int32(padding))
 		if err != nil {
-			return nil
+			return err
 		}
 		*mb = append(*mb, b)
 		return nil
