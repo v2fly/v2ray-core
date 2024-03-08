@@ -1,7 +1,9 @@
 package v4
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -21,6 +23,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/infra/conf/synthetic/dns"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/synthetic/log"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/synthetic/router"
+	"github.com/v2fly/v2ray-core/v5/infra/conf/v5cfg"
 )
 
 var (
@@ -481,15 +484,12 @@ func (c *Config) Build() (*core.Config, error) {
 
 	// Load Additional Services that do not have a json translator
 
-	if msg, err := c.BuildServices(c.Services); err != nil {
-		developererr := newError("Loading a V2Ray Features as a service is intended for developers only. " +
-			"This is used for developers to prototype new features or for an advanced client to use special features in V2Ray," +
-			" instead of allowing end user to enable it without special tool and knowledge.")
-		sb := strings.Builder{}
-		return nil, newError("Cannot load service").Base(developererr).Base(err).Base(newError(sb.String()))
-	} else { // nolint: revive
-		// Using a else here is required to keep msg in scope
-		config.App = append(config.App, msg...)
+	for serviceName, service := range c.Services {
+		servicePackedConfig, err := v5cfg.LoadHeterogeneousConfigFromRawJSON(context.Background(), "service", serviceName, *service)
+		if err != nil {
+			return nil, newError(fmt.Sprintf("failed to parse %v config in Services", serviceName)).Base(err)
+		}
+		config.App = append(config.App, serial.ToTypedMessage(servicePackedConfig))
 	}
 
 	var inbounds []InboundDetourConfig
