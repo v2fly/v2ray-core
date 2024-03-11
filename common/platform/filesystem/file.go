@@ -45,12 +45,12 @@ func ReadAsset(file string) ([]byte, error) {
 	return ReadFile(platform.GetAssetLocation(file))
 }
 
-func CopyFile(dst string, src string) error {
+func CopyFile(dst string, src string, perm os.FileMode) error {
 	bytes, err := ReadFile(src)
 	if err != nil {
 		return err
 	}
-	f, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY, 0o644)
+	f, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY, perm)
 	if err != nil {
 		return err
 	}
