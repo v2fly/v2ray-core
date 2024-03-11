@@ -39,7 +39,7 @@ func init() {
 func TestToCidrList(t *testing.T) {
 	t.Log(os.Getenv("v2ray.location.asset"))
 
-	common.Must(filesystem.CopyFile(platform.GetAssetLocation("geoiptestrouter.dat"), platform.GetAssetLocation("geoip.dat")))
+	common.Must(filesystem.CopyFile(platform.GetAssetLocation("geoiptestrouter.dat"), platform.GetAssetLocation("geoip.dat"), 0o600))
 
 	ips := cfgcommon.StringList([]string{
 		"geoip:us",
