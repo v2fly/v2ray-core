@@ -101,7 +101,7 @@ func (c *ClientSession) EncodeRequestHeader(header *protocol.RequestHeader, writ
 	common.Must(buffer.WriteByte(c.responseHeader))
 	common.Must(buffer.WriteByte(byte(header.Option)))
 
-	paddingLen := dice.Roll(16)
+	paddingLen := dice.RollWith(16, rand.Reader)
 	security := byte(paddingLen<<4) | byte(header.Security)
 	common.Must2(buffer.Write([]byte{security, byte(0), byte(header.Command)}))
 
