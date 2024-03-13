@@ -90,7 +90,7 @@ func (c *VLessInboundConfig) Build() (proto.Message, error) {
 			return nil, newError(`VLESS fallbacks: "path" must be empty or start with "/"`)
 		}
 		if fb.Type == "" && fb.Dest != "" {
-			if fb.Dest == "serve-ws-none" {
+			if fb.Dest == "serve-ws-none" { // nolint:gocritic
 				fb.Type = "serve"
 			} else if filepath.IsAbs(fb.Dest) || fb.Dest[0] == '@' {
 				fb.Type = "unix"

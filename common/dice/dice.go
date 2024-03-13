@@ -4,11 +4,12 @@ package dice
 
 import (
 	crand "crypto/rand"
-	"github.com/v2fly/v2ray-core/v5/common"
 	"io"
 	"math/big"
 	"math/rand"
 	"time"
+
+	"github.com/v2fly/v2ray-core/v5/common"
 )
 
 // Roll returns a non-negative number between 0 (inclusive) and n (exclusive).
