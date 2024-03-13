@@ -5,8 +5,8 @@ import (
 	"crypto/cipher"
 	cryptoRand "crypto/rand"
 	"encoding/binary"
+	"github.com/v2fly/v2ray-core/v5/common/dice"
 	"io"
-	"math/rand"
 	"time"
 
 	"github.com/v2fly/v2ray-core/v5/common"
@@ -62,7 +62,7 @@ func (t *TCPRequest) EncodeTCPRequestHeader(effectivePsk []byte,
 	paddingLength := TCPMinPaddingLength
 	if initialPayload == nil {
 		initialPayload = []byte{}
-		paddingLength += 1 + rand.Intn(TCPMaxPaddingLength) // TODO INSECURE RANDOM USED
+		paddingLength += 1 + dice.RollWith(TCPMaxPaddingLength, cryptoRand.Reader)
 	}
 
 	variableLengthHeader := &TCPRequestHeader3VariableLength{
