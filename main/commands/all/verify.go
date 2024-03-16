@@ -45,7 +45,6 @@ func executeVerify(cmd *base.Command, args []string) {
 	files := cmdVerify.Flag.Args()
 
 	err = signerVerify.OutputAndJudge(signerVerify.CheckSignaturesV2Fly(sigReader, files))
-
 	if err != nil {
 		base.Fatalf("file is not officially signed by V2Ray: %s", err)
 	}
