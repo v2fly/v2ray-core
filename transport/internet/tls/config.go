@@ -251,24 +251,24 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 	}
 
 	switch c.MinVersion {
-	case tls.VersionTLS10:
+	case Config_TLS1_0:
 		config.MinVersion = tls.VersionTLS10
-	case tls.VersionTLS11:
+	case Config_TLS1_1:
 		config.MinVersion = tls.VersionTLS11
-	case tls.VersionTLS12:
+	case Config_TLS1_2:
 		config.MinVersion = tls.VersionTLS12
-	case tls.VersionTLS13:
+	case Config_TLS1_3:
 		config.MinVersion = tls.VersionTLS13
 	}
 
 	switch c.MaxVersion {
-	case tls.VersionTLS10:
+	case Config_TLS1_0:
 		config.MaxVersion = tls.VersionTLS10
-	case tls.VersionTLS11:
+	case Config_TLS1_1:
 		config.MaxVersion = tls.VersionTLS11
-	case tls.VersionTLS12:
+	case Config_TLS1_2:
 		config.MaxVersion = tls.VersionTLS12
-	case tls.VersionTLS13:
+	case Config_TLS1_3:
 		config.MaxVersion = tls.VersionTLS13
 	}
 	return config
