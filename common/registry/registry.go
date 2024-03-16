@@ -49,7 +49,7 @@ func (i *implementationRegistry) LoadImplementationByAlias(ctx context.Context, 
 
 	if strings.HasPrefix(alias, "#") {
 		// skip resolution for full name
-		implementationFullName = alias
+		implementationFullName, _ = strings.CutPrefix(alias, "#")
 	} else {
 		registryResult, customLoader, err := i.findImplementationByAlias(interfaceType, alias)
 		if err != nil {
