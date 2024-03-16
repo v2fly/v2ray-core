@@ -48,4 +48,6 @@ message ClientConfig {
   // Sever is a list of Socks server addresses.
   repeated v2ray.core.common.protocol.ServerEndpoint server = 1;
   Version version = 2;
+
+  bool delay_auth_write = 3;
 }
