@@ -249,6 +249,28 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 	if c.VerifyClientCertificate {
 		config.ClientAuth = tls.RequireAndVerifyClientCert
 	}
+
+	switch c.MinVersion {
+	case Config_TLS1_0:
+		config.MinVersion = tls.VersionTLS10
+	case Config_TLS1_1:
+		config.MinVersion = tls.VersionTLS11
+	case Config_TLS1_2:
+		config.MinVersion = tls.VersionTLS12
+	case Config_TLS1_3:
+		config.MinVersion = tls.VersionTLS13
+	}
+
+	switch c.MaxVersion {
+	case Config_TLS1_0:
+		config.MaxVersion = tls.VersionTLS10
+	case Config_TLS1_1:
+		config.MaxVersion = tls.VersionTLS11
+	case Config_TLS1_2:
+		config.MaxVersion = tls.VersionTLS12
+	case Config_TLS1_3:
+		config.MaxVersion = tls.VersionTLS13
+	}
 	return config
 }
 

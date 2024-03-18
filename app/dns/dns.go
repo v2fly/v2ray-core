@@ -15,6 +15,7 @@ import (
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/app/dns/fakedns"
 	"github.com/v2fly/v2ray-core/v5/app/router"
+	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -389,6 +390,13 @@ func (s *DNS) formatClientNames(clientIdxs []int, option dns.IPOption) []string 
 	return clientNames
 }
 
+var matcherTypeMap = map[routercommon.Domain_Type]DomainMatchingType{
+	routercommon.Domain_Plain:      DomainMatchingType_Keyword,
+	routercommon.Domain_Regex:      DomainMatchingType_Regex,
+	routercommon.Domain_RootDomain: DomainMatchingType_Subdomain,
+	routercommon.Domain_Full:       DomainMatchingType_Full,
+}
+
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return New(ctx, config.(*Config))
@@ -425,6 +433,25 @@ func init() {
 					if err != nil {
 						return nil, newError("unable to load geoip").Base(err)
 					}
+				}
+			}
+			for _, geo := range v.GeoDomain {
+				if geo.Code != "" {
+					filepath := "geosite.dat"
+					if geo.FilePath != "" {
+						filepath = geo.FilePath
+					}
+					var err error
+					geo.Domain, err = geoLoader.LoadGeoSiteWithAttr(filepath, geo.Code)
+					if err != nil {
+						return nil, newError("unable to load geodomain").Base(err)
+					}
+				}
+				for _, domain := range geo.Domain {
+					v.PrioritizedDomain = append(v.PrioritizedDomain, &SimplifiedNameServer_PriorityDomain{
+						Type:   matcherTypeMap[domain.Type],
+						Domain: domain.Value,
+					})
 				}
 			}
 		}

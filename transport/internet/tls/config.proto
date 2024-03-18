@@ -61,4 +61,19 @@ message Config {
 
   // If true, the client is required to present a certificate.
   bool verify_client_certificate = 8;
+
+  enum TLSVersion {
+    Default = 0;
+    TLS1_0 = 1;
+    TLS1_1 = 2;
+    TLS1_2 = 3;
+    TLS1_3 = 4;
+  }
+
+  // Minimum TLS version to support.
+  TLSVersion min_version = 9;
+
+  // Maximum TLS version to support.
+  TLSVersion max_version = 10;
+
 }

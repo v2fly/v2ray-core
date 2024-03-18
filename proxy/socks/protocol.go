@@ -447,7 +447,7 @@ func (w *UDPWriter) WriteTo(payload []byte, addr gonet.Addr) (n int, err error) 
 	return len(payload), err
 }
 
-func ClientHandshake(request *protocol.RequestHeader, reader io.Reader, writer io.Writer) (*protocol.RequestHeader, error) {
+func ClientHandshake(request *protocol.RequestHeader, reader io.Reader, writer io.Writer, delayAuthWrite bool) (*protocol.RequestHeader, error) {
 	authByte := byte(authNotRequired)
 	if request.User != nil {
 		authByte = byte(authPassword)
@@ -457,14 +457,15 @@ func ClientHandshake(request *protocol.RequestHeader, reader io.Reader, writer i
 	defer b.Release()
 
 	common.Must2(b.Write([]byte{socks5Version, 0x01, authByte}))
-	if authByte == authPassword {
-		account := request.User.Account.(*Account)
-
-		common.Must(b.WriteByte(0x01))
-		common.Must(b.WriteByte(byte(len(account.Username))))
-		common.Must2(b.WriteString(account.Username))
-		common.Must(b.WriteByte(byte(len(account.Password))))
-		common.Must2(b.WriteString(account.Password))
+	if !delayAuthWrite {
+		if authByte == authPassword {
+			account := request.User.Account.(*Account)
+			common.Must(b.WriteByte(0x01))
+			common.Must(b.WriteByte(byte(len(account.Username))))
+			common.Must2(b.WriteString(account.Username))
+			common.Must(b.WriteByte(byte(len(account.Password))))
+			common.Must2(b.WriteString(account.Password))
+		}
 	}
 
 	if err := buf.WriteAllBytes(writer, b.Bytes()); err != nil {
@@ -485,6 +486,18 @@ func ClientHandshake(request *protocol.RequestHeader, reader io.Reader, writer i
 
 	if authByte == authPassword {
 		b.Clear()
+		if delayAuthWrite {
+			account := request.User.Account.(*Account)
+			common.Must(b.WriteByte(0x01))
+			common.Must(b.WriteByte(byte(len(account.Username))))
+			common.Must2(b.WriteString(account.Username))
+			common.Must(b.WriteByte(byte(len(account.Password))))
+			common.Must2(b.WriteString(account.Password))
+			if err := buf.WriteAllBytes(writer, b.Bytes()); err != nil {
+				return nil, err
+			}
+			b.Clear()
+		}
 		if _, err := b.ReadFullFrom(reader, 2); err != nil {
 			return nil, err
 		}
