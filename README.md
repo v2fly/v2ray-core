@@ -36,7 +36,6 @@ This repo relies on the following third-party projects:
   - [pires/go-proxyproto](https://github.com/pires/go-proxyproto)
   - [seiflotfy/cuckoofilter](https://github.com/seiflotfy/cuckoofilter)
   - [google/starlark-go](https://github.com/google/starlark-go)
-  - [jhump/protoreflect](https://github.com/jhump/protoreflect)
   - [inetaf/netaddr](https://github.com/inetaf/netaddr)
 
 - For testing only:
