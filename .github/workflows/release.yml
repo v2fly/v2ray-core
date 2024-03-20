@@ -325,13 +325,15 @@ jobs:
               v2Arch=$(echo $arch | cut -d: -f1)
               containerArch=$(echo $arch | cut -d: -f2)
               bash ./release/container/downloadAssets.sh $VERSION $v2Arch $containerArch $v2Variant
-              buildah bud \
-                $(formatEach "--tag $image:{}" $variantTags) \
-                --file ./release/container/Containerfile \
-                --platform linux/$containerArch \
-                --timestamp $timestamp \
-                --squash \
-                ./context/linux/$containerArch/$v2Variant
+              for tag in $variantTags; do
+                buildah bud \
+                  --manifest $image:$tag \
+                  --file ./release/container/Containerfile \
+                  --platform linux/$containerArch \
+                  --timestamp $timestamp \
+                  --squash \
+                  ./context/linux/$containerArch/$v2Variant
+              done
             done
           done
 
