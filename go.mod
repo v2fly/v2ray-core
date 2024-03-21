@@ -1,8 +1,6 @@
 module github.com/v2fly/v2ray-core/v5
 
-go 1.21
-
-toolchain go1.21.4
+go 1.21.7
 
 require (
 	github.com/adrg/xdg v0.4.0
@@ -52,6 +50,7 @@ require (
 	github.com/bufbuild/protocompile v0.8.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dchest/siphash v1.2.3 // indirect
 	github.com/dgryski/go-metro v0.0.0-20211217172704-adc40b04c140 // indirect
 	github.com/ebfe/bcrypt_pbkdf v0.0.0-20140212075826-3c8d2dcb253a // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
@@ -74,6 +73,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
 	github.com/secure-io/siv-go v0.0.0-20180922214919-5ff40651e2c4 // indirect
+	github.com/v2fly/riverrun v0.0.0-20240316204402-8447e4fd9049 // indirect
 	github.com/xtaci/smux v1.5.24 // indirect
 	go.uber.org/mock v0.3.0 // indirect
 	golang.org/x/exp v0.0.0-20230725093048-515e97ebf090 // indirect
