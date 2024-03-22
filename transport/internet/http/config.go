@@ -1,6 +1,8 @@
 package http
 
 import (
+	"google.golang.org/protobuf/proto"
+
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/dice"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
@@ -41,7 +43,7 @@ func (c *Config) getNormalizedPath() string {
 }
 
 func init() {
-	common.Must(internet.RegisterProtocolConfigCreator(protocolName, func() interface{} {
+	common.Must(internet.RegisterProtocolConfigCreator(protocolName, func() proto.Message {
 		return new(Config)
 	}))
 }

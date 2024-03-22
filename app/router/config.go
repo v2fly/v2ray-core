@@ -7,7 +7,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/golang/protobuf/jsonpb"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -186,7 +186,7 @@ func (br *BalancingRule) Build(ohm outbound.Manager, dispatcher routing.Dispatch
 	}
 }
 
-func (br *BalancingRule) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {
+func (br *BalancingRule) UnmarshalJSONPB(unmarshaler *protojson.UnmarshalOptions, bytes []byte) error {
 	type BalancingRuleStub struct {
 		Tag              string          `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
 		OutboundSelector []string        `protobuf:"bytes,2,rep,name=outbound_selector,json=outboundSelector,proto3" json:"outbound_selector,omitempty"`

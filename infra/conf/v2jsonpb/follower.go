@@ -47,13 +47,13 @@ func (v *V2JsonProtobufFollower) Range(f func(protoreflect.FieldDescriptor, prot
 				if err != nil {
 					panic(err)
 				}
-				unmarshaler := proto.UnmarshalOptions{AllowPartial: true, Resolver: anyresolverv2{backgroundResolver: serial.GetResolver()}}
-				err = unmarshaler.Unmarshal(bytesout, instance.(proto.Message))
+				unmarshaler := proto.UnmarshalOptions{AllowPartial: true, Resolver: serial.GetResolver()}
+				err = unmarshaler.Unmarshal(bytesout, instance)
 				if err != nil {
 					panic(err)
 				}
 
-				return f(fd, protoreflect.ValueOfMessage(&V2JsonProtobufFollower{instance.(proto.Message).ProtoReflect()}))
+				return f(fd, protoreflect.ValueOfMessage(&V2JsonProtobufFollower{instance.ProtoReflect()}))
 			default:
 				panic("unexpected any value")
 			}
@@ -128,7 +128,7 @@ func (v *V2JsonProtobufFollower) NewField(descriptor protoreflect.FieldDescripto
 		if err != nil {
 			panic(err)
 		}
-		newvalue := protoreflect.ValueOfMessage(&V2JsonProtobufFollower{instance.(proto.Message).ProtoReflect()})
+		newvalue := protoreflect.ValueOfMessage(&V2JsonProtobufFollower{instance.ProtoReflect()})
 		return newvalue
 	}
 

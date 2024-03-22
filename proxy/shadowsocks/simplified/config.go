@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/golang/protobuf/jsonpb"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/protocol"
@@ -12,7 +12,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/proxy/shadowsocks"
 )
 
-func (c *CipherTypeWrapper) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {
+func (c *CipherTypeWrapper) UnmarshalJSONPB(unmarshaler *protojson.UnmarshalOptions, bytes []byte) error {
 	var method string
 
 	if err := json.Unmarshal(bytes, &method); err != nil {

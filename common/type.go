@@ -4,6 +4,8 @@ import (
 	"context"
 	"reflect"
 
+	"google.golang.org/protobuf/proto"
+
 	"github.com/v2fly/v2ray-core/v5/common/registry"
 )
 
@@ -13,7 +15,7 @@ type ConfigCreator func(ctx context.Context, config interface{}) (interface{}, e
 var typeCreatorRegistry = make(map[reflect.Type]ConfigCreator)
 
 // RegisterConfig registers a global config creator. The config can be nil but must have a type.
-func RegisterConfig(config interface{}, configCreator ConfigCreator) error {
+func RegisterConfig(config proto.Message, configCreator ConfigCreator) error {
 	configType := reflect.TypeOf(config)
 	if _, found := typeCreatorRegistry[configType]; found {
 		return newError(configType.Name() + " is already registered").AtError()

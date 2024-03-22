@@ -2,10 +2,11 @@ package serial
 
 import (
 	"errors"
-	"reflect"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -25,16 +26,32 @@ func ToTypedMessage(message proto.Message) *anypb.Any {
 
 // GetMessageType returns the name of this proto Message.
 func GetMessageType(message proto.Message) string {
-	return proto.MessageName(message)
+	return string(message.ProtoReflect().Descriptor().FullName())
+}
+
+// GetMessageDescriptor returns the MessageDescriptor of the message with fullName.
+func GetMessageDescriptor(fullName string) (protoreflect.MessageDescriptor, error) {
+	mt, err := protoregistry.GlobalFiles.FindDescriptorByName(protoreflect.FullName(fullName))
+	if err != nil {
+		return nil, errors.New("Serial: Unknown message name: " + fullName)
+	}
+
+	message, ok := mt.(protoreflect.MessageDescriptor)
+	if !ok {
+		return nil, errors.New("Serial: Message with name: " + fullName + " is not a MessageDescriptor")
+	}
+	return message, nil
 }
 
 // GetInstance creates a new instance of the message with messageType.
-func GetInstance(messageType string) (interface{}, error) {
-	mType := proto.MessageType(messageType)
-	if mType == nil || mType.Elem() == nil {
+func GetInstance(messageType string) (proto.Message, error) {
+	// mType := proto.MessageType(messageType)
+	mType, err := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(messageType))
+	if err != nil {
 		return nil, errors.New("Serial: Unknown type: " + messageType)
 	}
-	return reflect.New(mType.Elem()).Interface(), nil
+
+	return mType.New().Interface(), nil
 }
 
 func GetInstanceOf(v *anypb.Any) (proto.Message, error) {
@@ -42,11 +59,10 @@ func GetInstanceOf(v *anypb.Any) (proto.Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	protoMessage := instance.(proto.Message)
-	if err := proto.Unmarshal(v.Value, protoMessage); err != nil {
+	if err := proto.Unmarshal(v.Value, instance); err != nil {
 		return nil, err
 	}
-	return protoMessage, nil
+	return instance, nil
 }
 
 func V2Type(v *anypb.Any) string {

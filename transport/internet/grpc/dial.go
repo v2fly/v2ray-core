@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"
@@ -48,11 +49,13 @@ func dialgRPC(ctx context.Context, dest net.Destination, streamSettings *interne
 	grpcSettings := streamSettings.ProtocolSettings.(*Config)
 
 	config := tls.ConfigFromStreamSettings(streamSettings)
-	dialOption := grpc.WithInsecure()
+	creds := insecure.NewCredentials()
 
 	if config != nil {
-		dialOption = grpc.WithTransportCredentials(credentials.NewTLS(config.GetTLSConfig()))
+		creds = credentials.NewTLS(config.GetTLSConfig())
 	}
+
+	dialOption := grpc.WithTransportCredentials(creds)
 
 	conn, canceller, err := getGrpcClient(ctx, dest, dialOption, streamSettings)
 	if err != nil {
