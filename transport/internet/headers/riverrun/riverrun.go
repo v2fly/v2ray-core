@@ -31,11 +31,11 @@ func (e errConn) Close() error {
 }
 
 func (e errConn) LocalAddr() gonet.Addr {
-	return nil
+	return &gonet.UnixAddr{Name: "error"}
 }
 
 func (e errConn) RemoteAddr() gonet.Addr {
-	return nil
+	return &gonet.UnixAddr{Name: "error"}
 }
 
 func (e errConn) SetDeadline(t time.Time) error {
@@ -55,11 +55,11 @@ type riverrunConnectionFactory struct {
 }
 
 func (p riverrunConnectionFactory) Infof(format string, a ...interface{}) {
-	newError(fmt.Scanf(format, a...)).AtInfo().WriteToLog()
+	newError(fmt.Sprintf(format, a...)).AtInfo().WriteToLog()
 }
 
 func (p riverrunConnectionFactory) Debugf(format string, a ...interface{}) {
-	newError(fmt.Scanf(format, a...)).AtDebug().WriteToLog()
+	newError(fmt.Sprintf(format, a...)).AtDebug().WriteToLog()
 }
 
 func (p riverrunConnectionFactory) Client(conn net.Conn) net.Conn {
