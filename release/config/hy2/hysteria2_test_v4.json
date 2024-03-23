@@ -1,0 +1,60 @@
+{
+  "log": {
+    "loglevel": "debug"
+  },
+  "inbounds": [{
+    "port": 1080,
+    "listen": "127.0.0.1",
+    "tag": "http",
+    "protocol": "http"
+  }, {
+    "port": 1280,
+    "listen": "127.0.0.1",
+    "tag": "hy2_in",
+    "protocol": "vmess",
+    "settings": {
+      "clients": [{
+        "id": "23ad6b10-8d1a-40f7-8ad0-e3e35cd38297",
+        "alterId": 0
+      }]
+    },
+    "streamSettings": {
+      "network": "hysteria2",
+      "security": "tls"
+    }
+  }],
+  "outbounds": [{
+    "protocol": "freedom",
+    "tag": "direct"
+  }, {
+    "tag": "hy2_out",
+    "protocol": "vmess",
+    "settings": {
+      "vnext": [{
+        "address": "127.0.0.1",
+        "port": 1280,
+        "users": [{
+          "id": "23ad6b10-8d1a-40f7-8ad0-e3e35cd38297",
+          "security": "auto"
+        }]
+      }]
+    },
+    "streamSettings": {
+      "network": "hysteria2",
+      "security": "tls"
+    }
+  }],
+  "routing": {
+    "rules": [{
+        "type": "field",
+        "outboundTag": "direct",
+        "inboundTag": ["hy2_in"]
+      },
+      {
+        "type": "field",
+        "outboundTag": "hy2_out",
+        "inboundTag": ["http"]
+      }
+    ]
+  }
+}
