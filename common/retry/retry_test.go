@@ -94,3 +94,20 @@ func TestExponentialBackoff(t *testing.T) {
 		t.Error("duration: ", v)
 	}
 }
+
+func TestExponentialBackoffWithJitter(t *testing.T) {
+	startTime := time.Now()
+	called := 0
+	err := ExponentialBackoffWithJitter(10, 100).On(func() error {
+		called++
+		return errorTestOnly
+	})
+	duration := time.Since(startTime)
+
+	if errors.Cause(err) != ErrRetryFailed {
+		t.Error("cause: ", err)
+	}
+	if v := int64(duration / time.Millisecond); v < 2000 {
+		t.Error("duration: ", v)
+	}
+}
