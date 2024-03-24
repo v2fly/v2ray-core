@@ -108,6 +108,7 @@ func (s *statsServer) GetSysStats(ctx context.Context, request *SysStatsRequest)
 		LiveObjects:  rtm.Mallocs - rtm.Frees,
 		NumGC:        rtm.NumGC,
 		PauseTotalNs: rtm.PauseTotalNs,
+		Version:      core.Version(),
 	}
 
 	return response, nil
