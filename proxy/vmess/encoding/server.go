@@ -20,6 +20,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/crypto"
 	"github.com/v2fly/v2ray-core/v5/common/drain"
 	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/net/packetstream"
 	"github.com/v2fly/v2ray-core/v5/common/protocol"
 	"github.com/v2fly/v2ray-core/v5/common/task"
 	"github.com/v2fly/v2ray-core/v5/proxy/vmess"
@@ -333,7 +334,11 @@ func (s *ServerSession) DecodeRequestBody(request *protocol.RequestHeader, reade
 			}
 			return crypto.NewAuthenticationReader(auth, sizeParser, reader, protocol.TransferTypePacket, padding), nil
 		}
-		return buf.NewReader(reader), nil
+		if request.Command == protocol.RequestCommandUDP {
+			return &packetstream.PacketStreamReader{Reader: reader}, nil
+		} else {
+			return buf.NewReader(reader), nil
+		}
 
 	case protocol.SecurityType_LEGACY:
 		aesStream := crypto.NewAesDecryptionStream(s.requestBodyKey[:], s.requestBodyIV[:])
@@ -480,7 +485,11 @@ func (s *ServerSession) EncodeResponseBody(request *protocol.RequestHeader, writ
 			}
 			return crypto.NewAuthenticationWriter(auth, sizeParser, writer, protocol.TransferTypePacket, padding), nil
 		}
-		return buf.NewWriter(writer), nil
+		if request.Command == protocol.RequestCommandUDP {
+			return buf.NewWriter(&packetstream.PacketStreamWriter{Writer: writer}), nil
+		} else {
+			return buf.NewWriter(writer), nil
+		}
 
 	case protocol.SecurityType_LEGACY:
 		if request.Option.Has(protocol.RequestOptionChunkStream) {
