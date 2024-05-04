@@ -9,6 +9,7 @@ import (
 	"io"
 	gonet "net"
 	"net/http"
+	"time"
 
 	"github.com/v2fly/v2ray-core/v5/transport/internet/transportcommon"
 
@@ -119,7 +120,14 @@ func (h *httpTripperServer) Start() error {
 	}
 	h.listener = listener
 	go func() {
-		err := http.Serve(listener, h)
+		httpServer := http.Server{
+			ReadHeaderTimeout: 15 * time.Second,
+			ReadTimeout:       15 * time.Second,
+			WriteTimeout:      10 * time.Second,
+			IdleTimeout:       30 * time.Second,
+		}
+		httpServer.Handler = h
+		err := httpServer.Serve(h.listener)
 		if err != nil {
 			newError("unable to serve listener for http tripper server").Base(err).WriteToLog()
 		}
