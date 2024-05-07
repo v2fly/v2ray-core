@@ -78,7 +78,7 @@ func TestMergeTag(t *testing.T) {
 				"outboundTag": "out-2"
 			}]
 		}
-	}	
+	}
 `
 	expected := `
 	{
@@ -188,6 +188,108 @@ func TestMergeTagDeep(t *testing.T) {
 	}
 	`
 	m, err := merge.JSONs([][]byte{[]byte(json1), []byte(json2)})
+	if err != nil {
+		t.Error(err)
+	}
+	assertResult(t, m, expected)
+}
+
+func TestNoMergeDnsServers(t *testing.T) {
+	json1 := `
+	{
+		"dns": {
+			"queryStrategy": "UseIPv4",
+			"fallbackStrategy": "disabled-if-any-match",
+			"domainMatcher": "mph",
+			"servers": [
+				{
+					"address": "aaa.bbb.ccc.ddd",
+					"port": 53,
+					"domains": [
+						"geosite:cn"
+					],
+					"tag": "dns-domestic"
+				},
+				{
+					"address": "114.114.114.114",
+					"port": 53,
+					"domains": [
+						"geosite:cn"
+					],
+					"tag": "dns-domestic"
+				},
+				{
+					"address": "https://1.1.1.1/dns-query",
+					"tag": "dns-international"
+				}
+			]
+		},
+		"routing": {
+			"domainStrategy": "IPIfNonMatch",
+			"domainMatcher": "mph",
+			"rules": [
+				{
+					"type": "field",
+					"inboundTag": "dns-domestic",
+					"outboundTag": "direct"
+				},
+				{
+					"type": "field",
+					"inboundTag": "dns-international",
+					"outboundTag": "proxy"
+				}
+			]
+		}
+	}
+`
+	expected := `
+	{
+		"dns": {
+			"queryStrategy": "UseIPv4",
+			"fallbackStrategy": "disabled-if-any-match",
+			"domainMatcher": "mph",
+			"servers": [
+				{
+					"address": "aaa.bbb.ccc.ddd",
+					"port": 53,
+					"domains": [
+						"geosite:cn"
+					],
+					"tag": "dns-domestic"
+				},
+				{
+					"address": "114.114.114.114",
+					"port": 53,
+					"domains": [
+						"geosite:cn"
+					],
+					"tag": "dns-domestic"
+				},
+				{
+					"address": "https://1.1.1.1/dns-query",
+					"tag": "dns-international"
+				}
+			]
+		},
+		"routing": {
+			"domainStrategy": "IPIfNonMatch",
+			"domainMatcher": "mph",
+			"rules": [
+				{
+					"type": "field",
+					"inboundTag": "dns-domestic",
+					"outboundTag": "direct"
+				},
+				{
+					"type": "field",
+					"inboundTag": "dns-international",
+					"outboundTag": "proxy"
+				}
+			]
+		}
+	}
+`
+	m, err := merge.JSONs([][]byte{[]byte(json1)})
 	if err != nil {
 		t.Error(err)
 	}
