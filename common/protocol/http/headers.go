@@ -35,6 +35,7 @@ func RemoveHopByHopHeaders(header http.Header) {
 	header.Del("Trailers")
 	header.Del("Transfer-Encoding")
 	header.Del("Upgrade")
+	header.Del("Keep-Alive")
 
 	connections := header.Get("Connection")
 	header.Del("Connection")

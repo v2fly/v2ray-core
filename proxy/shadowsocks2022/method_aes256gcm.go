@@ -62,6 +62,9 @@ func (a AES256GCMMethod) GetUDPClientProcessor(ipsk [][]byte, psk []byte, deriva
 		}
 		return aead
 	}
+	if len(ipsk) == 0 {
+		return NewAESUDPClientPacketProcessor(reqSeparateHeaderCipher, respSeparateHeaderCipher, getPacketAEAD, nil), nil
+	}
 	eihGenerator := newAESEIHGeneratorContainer(len(ipsk), psk, ipsk)
 	getEIH := func(mask []byte) ExtensibleIdentityHeaders {
 		eih, err := eihGenerator.GenerateEIHUDP(derivation, a, mask)

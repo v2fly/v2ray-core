@@ -131,6 +131,16 @@ jobs:
       - name: Build V2Ray
         run: |
           mkdir -p build_assets
+          EXTRA_ARG=""
+          case "$GOOS-$GOARCH" in
+            "linux-386")
+              ;&
+            "linux-amd64")
+              ;&
+            "linux-arm64")
+              EXTRA_ARG=EXTRA_ARG+"-buildmode=pie"
+              ;;
+          esac
           go build -v -o build_assets/v2ray -trimpath -ldflags "-s -w -buildid=" ./main
 
       - name: Rename Windows V2Ray
@@ -325,13 +335,15 @@ jobs:
               v2Arch=$(echo $arch | cut -d: -f1)
               containerArch=$(echo $arch | cut -d: -f2)
               bash ./release/container/downloadAssets.sh $VERSION $v2Arch $containerArch $v2Variant
-              buildah bud \
-                $(formatEach "--tag $image:{}" $variantTags) \
-                --file ./release/container/Containerfile \
-                --platform linux/$containerArch \
-                --timestamp $timestamp \
-                --squash \
-                ./context/linux/$containerArch/$v2Variant
+              for tag in $variantTags; do
+                buildah bud \
+                  --manifest $image:$tag \
+                  --file ./release/container/Containerfile \
+                  --platform linux/$containerArch \
+                  --timestamp $timestamp \
+                  --squash \
+                  ./context/linux/$containerArch/$v2Variant
+              done
             done
           done
 
