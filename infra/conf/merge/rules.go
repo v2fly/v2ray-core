@@ -31,9 +31,9 @@ func sortMergeSlices(target map[string]interface{}, path string) error {
 				return err
 			}
 			target[key] = s
-			for i, item := range s {
+			for _, item := range s {
 				if m, ok := item.(map[string]interface{}); ok {
-					sortMergeSlices(m, fmt.Sprintf("%s.%s.%d", path, key, i))
+					sortMergeSlices(m, fmt.Sprintf("%s.%s[]", path, key))
 				}
 			}
 		} else if field, ok := value.(map[string]interface{}); ok {
