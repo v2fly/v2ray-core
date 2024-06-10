@@ -13,7 +13,7 @@ require (
 	github.com/golang/protobuf v1.5.4
 	github.com/google/go-cmp v0.6.0
 	github.com/google/gopacket v1.1.19
-	github.com/gorilla/websocket v1.5.1
+	github.com/gorilla/websocket v1.5.2
 	github.com/jhump/protoreflect v1.16.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/miekg/dns v1.1.59
