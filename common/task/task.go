@@ -44,11 +44,10 @@ func Run(ctx context.Context, tasks ...func() error) error {
 		case err := <-done:
 			return err
 		case <-ctx.Done():
-			close(done)
 			return ctx.Err()
 		case <-s.Wait():
 		}
 	}
-
+	close(done)
 	return nil
 }
