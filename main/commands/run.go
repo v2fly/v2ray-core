@@ -3,6 +3,8 @@ package commands
 import (
 	"fmt"
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -61,11 +63,14 @@ var (
 	configDirs           cmdarg.Arg
 	configFormat         *string
 	configDirRecursively *bool
+
+	configPprof *string
 )
 
 func setConfigFlags(cmd *base.Command) {
 	configFormat = cmd.Flag.String("format", core.FormatAuto, "")
 	configDirRecursively = cmd.Flag.Bool("r", false, "")
+	configPprof = cmd.Flag.String("pprof", "", "")
 
 	cmd.Flag.Var(&configFiles, "config", "")
 	cmd.Flag.Var(&configFiles, "c", "")
@@ -81,6 +86,14 @@ func executeRun(cmd *base.Command, args []string) {
 	server, err := startV2Ray()
 	if err != nil {
 		base.Fatalf("Failed to start: %s", err)
+	}
+
+	if addr := *configPprof; addr != "" {
+		go func() {
+			if err := http.ListenAndServe(addr, nil); err != nil {
+				log.Print(err)
+			}
+		}()
 	}
 
 	if err := server.Start(); err != nil {
