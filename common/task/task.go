@@ -25,6 +25,7 @@ func Run(ctx context.Context, tasks ...func() error) error {
 	for _, task := range tasks {
 		<-s.Wait()
 		go func(f func() error) {
+			defer func() { recover() }()
 			err := f()
 			if err == nil {
 				s.Signal()
@@ -43,6 +44,7 @@ func Run(ctx context.Context, tasks ...func() error) error {
 		case err := <-done:
 			return err
 		case <-ctx.Done():
+			close(done)
 			return ctx.Err()
 		case <-s.Wait():
 		}
