@@ -18,6 +18,7 @@ type RandomStrategy struct {
 	ctx         context.Context
 	settings    *StrategyRandomConfig
 	observatory extension.Observatory
+	statusMap   map[string]*observatory.OutboundStatus
 }
 
 func (s *RandomStrategy) GetPrincipleTarget(strings []string) []string {
@@ -27,7 +28,8 @@ func (s *RandomStrategy) GetPrincipleTarget(strings []string) []string {
 // NewRandomStrategy creates a new RandomStrategy with settings
 func NewRandomStrategy(settings *StrategyRandomConfig) *RandomStrategy {
 	return &RandomStrategy{
-		settings: settings,
+		settings:  settings,
+		statusMap: make(map[string]*observatory.OutboundStatus),
 	}
 }
 
@@ -45,8 +47,7 @@ func (s *RandomStrategy) PickOutbound(candidates []string) string {
 				s.observatory = observatory
 				return nil
 			})
-		}
-		if s.observatory != nil {
+		} else {
 			var observeReport protoiface.MessageV1
 			var err error
 			if s.settings.ObserverTag == "" {
@@ -58,12 +59,11 @@ func (s *RandomStrategy) PickOutbound(candidates []string) string {
 				aliveTags := make([]string, 0)
 				if result, ok := observeReport.(*observatory.ObservationResult); ok {
 					status := result.Status
-					statusMap := make(map[string]*observatory.OutboundStatus)
 					for _, outboundStatus := range status {
-						statusMap[outboundStatus.OutboundTag] = outboundStatus
+						s.statusMap[outboundStatus.OutboundTag] = outboundStatus
 					}
 					for _, candidate := range candidates {
-						if outboundStatus, found := statusMap[candidate]; found {
+						if outboundStatus, found := s.statusMap[candidate]; found {
 							if outboundStatus.Alive {
 								aliveTags = append(aliveTags, candidate)
 							}
