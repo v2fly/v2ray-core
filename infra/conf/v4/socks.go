@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
+	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
 	"github.com/v2fly/v2ray-core/v5/common/protocol"
 	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
@@ -30,12 +31,13 @@ const (
 )
 
 type SocksServerConfig struct {
-	AuthMethod string             `json:"auth"`
-	Accounts   []*SocksAccount    `json:"accounts"`
-	UDP        bool               `json:"udp"`
-	Host       *cfgcommon.Address `json:"ip"`
-	Timeout    uint32             `json:"timeout"`
-	UserLevel  uint32             `json:"userLevel"`
+	AuthMethod     string             `json:"auth"`
+	Accounts       []*SocksAccount    `json:"accounts"`
+	UDP            bool               `json:"udp"`
+	Host           *cfgcommon.Address `json:"ip"`
+	Timeout        uint32             `json:"timeout"`
+	UserLevel      uint32             `json:"userLevel"`
+	PacketEncoding string             `json:"packetEncoding"`
 }
 
 func (v *SocksServerConfig) Build() (proto.Message, error) {
@@ -64,6 +66,14 @@ func (v *SocksServerConfig) Build() (proto.Message, error) {
 
 	config.Timeout = v.Timeout
 	config.UserLevel = v.UserLevel
+
+	switch v.PacketEncoding {
+	case "Packet":
+		config.PacketEncoding = packetaddr.PacketAddrType_Packet
+	case "", "None":
+		config.PacketEncoding = packetaddr.PacketAddrType_None
+	}
+
 	return config, nil
 }
 
