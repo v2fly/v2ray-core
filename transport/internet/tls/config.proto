@@ -34,7 +34,7 @@ message Config {
   option (v2ray.core.common.protoext.message_opt).allow_restricted_mode_load = true;
 
   // Whether or not to allow self-signed certificates.
-  bool allow_insecure = 1 [(v2ray.core.common.protoext.field_opt).forbidden = true];
+  bool allow_insecure = 1;
 
   // List of certificates to be served on server.
   repeated Certificate certificate = 2;
@@ -54,7 +54,7 @@ message Config {
 
   /* @Document A pinned certificate chain sha256 hash.
      @Document If the server's hash does not match this value, the connection will be aborted.
-     @Document This value replace allow_insecure.
+     @Document This reduces risk of allow_insecure.
      @Critical
   */
   repeated bytes pinned_peer_certificate_chain_sha256 = 7;
