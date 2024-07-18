@@ -12,7 +12,7 @@ import "common/net/packetaddr/config.proto";
 
 message ServerConfig{
   option (v2ray.core.common.protoext.message_opt).type = "inbound";
-  option (v2ray.core.common.protoext.message_opt).short_name = "trojan";
+  option (v2ray.core.common.protoext.message_opt).short_name = "trojan_simplified";
 
   repeated string users = 1;
   v2ray.core.net.packetaddr.PacketAddrType packet_encoding = 2;
@@ -20,7 +20,7 @@ message ServerConfig{
 
 message ClientConfig {
   option (v2ray.core.common.protoext.message_opt).type = "outbound";
-  option (v2ray.core.common.protoext.message_opt).short_name = "trojan";
+  option (v2ray.core.common.protoext.message_opt).short_name = "trojan_simplified";
 
   v2ray.core.common.net.IPOrDomain address = 1;
   uint32 port = 2;

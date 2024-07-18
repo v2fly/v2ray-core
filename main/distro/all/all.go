@@ -113,6 +113,10 @@ import (
 	_ "github.com/v2fly/v2ray-core/v5/proxy/socks/simplified"
 	_ "github.com/v2fly/v2ray-core/v5/proxy/trojan/simplified"
 
+	// Config
+
+	_ "github.com/v2fly/v2ray-core/v5/proxy/trojan/config"
+
 	// Subscription Supports
 	_ "github.com/v2fly/v2ray-core/v5/app/subscription/subscriptionmanager"
 
