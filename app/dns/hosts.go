@@ -79,12 +79,17 @@ func (h *StaticHosts) lookup(domain string, option dns.IPOption, maxDepth int) [
 	switch addrs := h.lookupInternal(domain); {
 	case len(addrs) == 0: // Not recorded in static hosts, return nil
 		return nil
-	case len(addrs) == 1 && addrs[0].Family().IsDomain(): // Try to unwrap domain
-		newError("found replaced domain: ", domain, " -> ", addrs[0].Domain(), ". Try to unwrap it").AtDebug().WriteToLog()
-		if maxDepth > 0 {
-			unwrapped := h.lookup(addrs[0].Domain(), option, maxDepth-1)
-			if unwrapped != nil {
-				return unwrapped
+	case len(addrs) == 1 && addrs[0].Family().IsDomain():
+		switch addrs[0].Domain() {
+		case IP4_ONLY, IP6_ONLY:
+			return addrs
+		default: // Try to unwrap domain
+			newError("found replaced domain: ", domain, " -> ", addrs[0].Domain(), ". Try to unwrap it").AtDebug().WriteToLog()
+			if maxDepth > 0 {
+				unwrapped := h.lookup(addrs[0].Domain(), option, maxDepth-1)
+				if unwrapped != nil {
+					return unwrapped
+				}
 			}
 		}
 		return addrs

@@ -28,6 +28,11 @@ import (
 	"github.com/v2fly/v2ray-core/v5/infra/conf/geodata"
 )
 
+const (
+	IP4_ONLY = "ip4.only"
+	IP6_ONLY = "ip6.only"
+)
+
 // DNS is a DNS rely server.
 type DNS struct {
 	sync.Mutex
@@ -285,8 +290,17 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, er
 	case len(addrs) == 0: // Domain recorded, but no valid IP returned (e.g. IPv4 address with only IPv6 enabled)
 		return nil, dns.ErrEmptyResponse
 	case len(addrs) == 1 && addrs[0].Family().IsDomain(): // Domain replacement
-		newError("domain replaced: ", domain, " -> ", addrs[0].Domain()).WriteToLog()
-		domain = addrs[0].Domain()
+		switch addrs[0].Domain() {
+		case IP4_ONLY:
+			newError("ip4 only: ", domain).WriteToLog()
+			option.IPv6Enable = false
+		case IP6_ONLY:
+			newError("ip6 only: ", domain).WriteToLog()
+			option.IPv4Enable = false
+		default:
+			newError("domain replaced: ", domain, " -> ", addrs[0].Domain()).WriteToLog()
+			domain = addrs[0].Domain()
+		}
 	default: // Successfully found ip records in static host
 		newError("returning ", len(addrs), " IP(s) for domain ", domain, " -> ", addrs).WriteToLog()
 		return toNetIP(addrs)
