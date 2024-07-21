@@ -75,6 +75,14 @@ func (*staticHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 			common.Must(err)
 			ans.Answer = append(ans.Answer, rr)
 
+		case q.Name == "only.google.com." && q.Qtype == dns.TypeA:
+			rr, _ := dns.NewRR("only.google.com. IN A 8.8.8.8")
+			ans.Answer = append(ans.Answer, rr)
+
+		case q.Name == "only.google.com." && q.Qtype == dns.TypeAAAA:
+			rr, _ := dns.NewRR("only.google.com. IN AAAA 2001:4860:4860::8888")
+			ans.Answer = append(ans.Answer, rr)
+
 		case q.Name == "notexist.google.com." && q.Qtype == dns.TypeAAAA:
 			ans.MsgHdr.Rcode = dns.RcodeNameError
 
@@ -1001,4 +1009,136 @@ func TestMultiMatchPrioritizedDomain(t *testing.T) {
 	if startTime.After(endTime.Add(time.Second * 2)) {
 		t.Error("DNS query doesn't finish in 2 seconds.")
 	}
+}
+
+func TestStaticHostDomainWithIP4Only(t *testing.T) {
+	port := udp.PickPort()
+
+	dnsServer := dns.Server{
+		Addr:    "127.0.0.1:" + port.String(),
+		Net:     "udp",
+		Handler: &staticHandler{},
+		UDPSize: 1200,
+	}
+
+	go dnsServer.ListenAndServe()
+	time.Sleep(time.Second)
+
+	config := &core.Config{
+		App: []*anypb.Any{
+			serial.ToTypedMessage(&Config{
+				NameServers: []*net.Endpoint{
+					{
+						Network: net.Network_UDP,
+						Address: &net.IPOrDomain{
+							Address: &net.IPOrDomain_Ip{
+								Ip: []byte{127, 0, 0, 1},
+							},
+						},
+						Port: uint32(port),
+					},
+				},
+				StaticHosts: []*HostMapping{
+					{
+						Type:          DomainMatchingType_Full,
+						Domain:        "only.google.com",
+						ProxiedDomain: IP4_ONLY,
+					},
+				},
+			}),
+			serial.ToTypedMessage(&dispatcher.Config{}),
+			serial.ToTypedMessage(&proxyman.OutboundConfig{}),
+			serial.ToTypedMessage(&policy.Config{}),
+		},
+		Outbound: []*core.OutboundHandlerConfig{
+			{
+				ProxySettings: serial.ToTypedMessage(&freedom.Config{}),
+			},
+		},
+	}
+
+	v, err := core.New(config)
+	common.Must(err)
+
+	client := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
+
+	{
+		ips, err := client.LookupIP("only.google.com")
+		t.Log(ips)
+		if err != nil {
+			t.Fatal("unexpected error: ", err)
+		}
+
+		if r := cmp.Diff(ips, []net.IP{{8, 8, 8, 8}}); r != "" {
+			t.Fatal(r)
+		}
+	}
+
+	dnsServer.Shutdown()
+}
+
+func TestStaticHostDomainWithIP6Only(t *testing.T) {
+	port := udp.PickPort()
+
+	dnsServer := dns.Server{
+		Addr:    "127.0.0.1:" + port.String(),
+		Net:     "udp",
+		Handler: &staticHandler{},
+		UDPSize: 1200,
+	}
+
+	go dnsServer.ListenAndServe()
+	time.Sleep(time.Second)
+
+	config := &core.Config{
+		App: []*anypb.Any{
+			serial.ToTypedMessage(&Config{
+				NameServers: []*net.Endpoint{
+					{
+						Network: net.Network_UDP,
+						Address: &net.IPOrDomain{
+							Address: &net.IPOrDomain_Ip{
+								Ip: []byte{127, 0, 0, 1},
+							},
+						},
+						Port: uint32(port),
+					},
+				},
+				StaticHosts: []*HostMapping{
+					{
+						Type:          DomainMatchingType_Full,
+						Domain:        "only.google.com",
+						ProxiedDomain: IP6_ONLY,
+					},
+				},
+			}),
+			serial.ToTypedMessage(&dispatcher.Config{}),
+			serial.ToTypedMessage(&proxyman.OutboundConfig{}),
+			serial.ToTypedMessage(&policy.Config{}),
+		},
+		Outbound: []*core.OutboundHandlerConfig{
+			{
+				ProxySettings: serial.ToTypedMessage(&freedom.Config{}),
+			},
+		},
+	}
+
+	v, err := core.New(config)
+	common.Must(err)
+
+	client := v.GetFeature(feature_dns.ClientType()).(feature_dns.Client)
+
+	{
+		ips, err := client.LookupIP("only.google.com")
+		t.Log(ips)
+		if err != nil {
+			t.Fatal("unexpected error: ", err)
+		}
+
+		if r := cmp.Diff(ips, []net.IP{{32, 1, 72, 96, 72, 96, 0, 0, 0, 0, 0, 0, 0, 0, 136, 136}}); r != "" {
+			t.Fatal(r)
+		}
+	}
+
+	dnsServer.Shutdown()
 }
