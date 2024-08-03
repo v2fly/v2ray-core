@@ -27,7 +27,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/proxy"
 	"github.com/v2fly/v2ray-core/v5/transport"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/security"
 )
 
 type Client struct {
@@ -288,12 +288,12 @@ func setUpHTTPTunnel(ctx context.Context, dest net.Destination, target string, u
 	}
 
 	nextProto := ""
-	if tlsConn, ok := iConn.(*tls.Conn); ok {
-		if err := tlsConn.Handshake(); err != nil {
+	if connALPNGetter, ok := iConn.(security.ConnectionApplicationProtocol); ok {
+		nextProto, err = connALPNGetter.GetConnectionApplicationProtocol()
+		if err != nil {
 			rawConn.Close()
 			return nil, nil, err
 		}
-		nextProto = tlsConn.ConnectionState().NegotiatedProtocol
 	}
 
 	switch nextProto {
