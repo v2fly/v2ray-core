@@ -73,6 +73,15 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 		KeepAlive: goStdKeepAlive,
 	}
 
+	if sockopt != nil {
+		switch sockopt.Mptcp {
+		case MPTCPState_Enable:
+			dialer.SetMultipathTCP(true)
+		case MPTCPState_Disable:
+			dialer.SetMultipathTCP(false)
+		}
+	}
+
 	if sockopt != nil || len(d.controllers) > 0 {
 		dialer.Control = func(network, address string, c syscall.RawConn) error {
 			return c.Control(func(fd uintptr) {

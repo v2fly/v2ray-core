@@ -53,6 +53,17 @@ message ProxyConfig {
   bool transportLayerProxy = 2;
 }
 
+// MPTCP is the state of MPTCP settings.
+// Define it here to avoid conflict with TCPFastOpenState.
+enum MPTCPState {
+  // AsIs is to leave the current MPTCP state as is, unmodified.
+  AsIs = 0;
+  // Enable is for enabling MPTCP explictly.
+  Enable = 1;
+  // Disable is for disabling MPTCP explictly.
+  Disable = 2;
+}
+
 // SocketConfig is options to be applied on network sockets.
 message SocketConfig {
   // Mark of the connection. If non-zero, the value will be set to SO_MARK.
@@ -103,4 +114,7 @@ message SocketConfig {
   int64 rx_buf_size = 12;
   int64 tx_buf_size = 13;
   bool force_buf_size = 14;
+
+
+  MPTCPState mptcp = 15;
 }
