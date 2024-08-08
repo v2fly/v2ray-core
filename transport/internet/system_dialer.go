@@ -73,7 +73,7 @@ func (d *DefaultSystemDialer) Dial(ctx context.Context, src net.Address, dest ne
 		KeepAlive: goStdKeepAlive,
 	}
 
-	if sockopt != nil {
+	if dest.Network == net.Network_TCP && sockopt != nil {
 		switch sockopt.Mptcp {
 		case MPTCPState_Enable:
 			dialer.SetMultipathTCP(true)
