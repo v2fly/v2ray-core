@@ -261,6 +261,7 @@ var debugStats struct {
 	packetDropped int
 }
 
+/*
 var _ = func() bool {
 	go func() {
 		for {
@@ -269,7 +270,7 @@ var _ = func() bool {
 		}
 	}()
 	return true
-}()
+}()*/
 
 func (r *requestToPacketConnServerSession) Write(p []byte) (n int, err error) {
 	buf := make([]byte, len(p))
@@ -301,6 +302,7 @@ type writingConnection struct {
 func (r *requestToPacketConnServerSession) OnRoundTrip(ctx context.Context, req request.Request,
 	opts ...request.RoundTripperOption,
 ) (resp request.Response, err error) {
+	// TODO: fix connection graceful close
 	var streamingRespWriter io.Writer
 	var streamingRespWriterFlusher request.OptionSupportsStreamingResponseExtensionFlusher
 	for _, opt := range opts {
@@ -385,6 +387,8 @@ func (r *requestToPacketConnServerSession) OnRoundTrip(ctx context.Context, req 
 		return true
 	}
 
+	finishWriteTimer := time.NewTimer(time.Millisecond * time.Duration(r.maxWriteDuration))
+
 	if !progressiveSend {
 		select {
 		case <-onFocusCtx.Done():
@@ -401,7 +405,6 @@ func (r *requestToPacketConnServerSession) OnRoundTrip(ctx context.Context, req 
 		}
 	}
 	firstRead := true
-	finishWriteTimer := time.NewTimer(time.Minute)
 	for {
 		select {
 		case <-onFinishCtx.Done():
@@ -412,7 +415,6 @@ func (r *requestToPacketConnServerSession) OnRoundTrip(ctx context.Context, req 
 			keepSending := onReceivePacket(packet)
 			if firstRead {
 				firstRead = false
-				finishWriteTimer.Reset(time.Millisecond * time.Duration(r.maxWriteDuration))
 			}
 			if !keepSending {
 				finishWrite()

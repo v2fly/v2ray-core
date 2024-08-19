@@ -34,6 +34,8 @@ func dialDTLS(ctx context.Context, dest net.Destination, streamSettings *interne
 		config.PSK = func(bytes []byte) ([]byte, error) {
 			return transportConfiguration.Psk, nil
 		}
+		config.PSKIdentityHint = []byte("")
+		config.CipherSuites = []dtls.CipherSuiteID{dtls.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256}
 	default:
 		return nil, newError("unknow dtls mode")
 	}

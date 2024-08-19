@@ -106,7 +106,7 @@ func (s *serverSession) start() {
 			default:
 				buf := make([]byte, 2000)
 				n, err := s.session.Read(buf)
-				if err != nil {
+				if err != nil || n > 2000 {
 					return
 				}
 				s.listener.readChan <- packet{s.name, buf[:n]}

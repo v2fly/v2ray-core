@@ -275,7 +275,7 @@ func file_transport_internet_request_assembler_packetconn_packetConn_proto_rawDe
 }
 
 var file_transport_internet_request_assembler_packetconn_packetConn_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_transport_internet_request_assembler_packetconn_packetConn_proto_goTypes = []interface{}{
+var file_transport_internet_request_assembler_packetconn_packetConn_proto_goTypes = []any{
 	(*ClientConfig)(nil), // 0: v2ray.core.transport.internet.request.assembler.packetconn.ClientConfig
 	(*ServerConfig)(nil), // 1: v2ray.core.transport.internet.request.assembler.packetconn.ServerConfig
 	(*anypb.Any)(nil),    // 2: google.protobuf.Any
@@ -296,7 +296,7 @@ func file_transport_internet_request_assembler_packetconn_packetConn_proto_init(
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_transport_internet_request_assembler_packetconn_packetConn_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_transport_internet_request_assembler_packetconn_packetConn_proto_msgTypes[0].Exporter = func(v any, i int) any {
 			switch v := v.(*ClientConfig); i {
 			case 0:
 				return &v.state
@@ -308,7 +308,7 @@ func file_transport_internet_request_assembler_packetconn_packetConn_proto_init(
 				return nil
 			}
 		}
-		file_transport_internet_request_assembler_packetconn_packetConn_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_transport_internet_request_assembler_packetconn_packetConn_proto_msgTypes[1].Exporter = func(v any, i int) any {
 			switch v := v.(*ServerConfig); i {
 			case 0:
 				return &v.state

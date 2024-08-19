@@ -9,6 +9,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/render v1.0.3
 	github.com/go-playground/validator/v10 v10.20.0
+	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/go-cmp v0.6.0
@@ -19,6 +20,7 @@ require (
 	github.com/miekg/dns v1.1.59
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
+	github.com/pion/dtls/v2 v2.2.7
 	github.com/pion/transport/v2 v2.2.5
 	github.com/pires/go-proxyproto v0.7.0
 	github.com/quic-go/quic-go v0.43.0
@@ -67,7 +69,6 @@ require (
 	github.com/mustafaturan/monoton v1.0.0 // indirect
 	github.com/onsi/ginkgo/v2 v2.10.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
-	github.com/pion/dtls/v2 v2.2.7 // indirect
 	github.com/pion/logging v0.2.2 // indirect
 	github.com/pion/randutil v0.1.0 // indirect
 	github.com/pion/sctp v1.8.7 // indirect

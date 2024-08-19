@@ -40,10 +40,14 @@ type ConnectionID struct {
 }
 
 func newDTLSServerConn(src net.Destination, parent *Listener) *dTLSConn {
+	ctx := context.Background()
+	ctx, finish := context.WithCancel(ctx)
 	return &dTLSConn{
 		src:      src,
 		parent:   parent,
 		readChan: make(chan *buf.Buffer, 256),
+		ctx:      ctx,
+		finish:   finish,
 	}
 }
 
@@ -122,8 +126,9 @@ func NewListener(ctx context.Context, address net.Address, port net.Port, stream
 		return nil, err
 	}
 	l := &Listener{
-		addConn: addConn,
-		config:  transportConfiguration,
+		addConn:  addConn,
+		config:   transportConfiguration,
+		sessions: make(map[ConnectionID]*dTLSConnWrapped),
 	}
 	l.Lock()
 	l.hub = hub
@@ -141,7 +146,7 @@ func (l *Listener) handlePackets() {
 	}
 }
 
-func newDTLSConnWrapped(unencryptedConnection *dTLSConn, transportConfiguration *Config) (*dTLSConnWrapped, error) {
+func newDTLSConnWrapped(unencryptedConnection *dTLSConn, transportConfiguration *Config) (*dtls.Conn, error) {
 	config := &dtls.Config{}
 	config.MTU = int(transportConfiguration.Mtu)
 	config.ReplayProtectionWindow = int(transportConfiguration.ReplayProtectionWindow)
@@ -151,6 +156,8 @@ func newDTLSConnWrapped(unencryptedConnection *dTLSConn, transportConfiguration 
 		config.PSK = func(bytes []byte) ([]byte, error) {
 			return transportConfiguration.Psk, nil
 		}
+		config.PSKIdentityHint = []byte("")
+		config.CipherSuites = []dtls.CipherSuiteID{dtls.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256}
 	default:
 		newError("unknown dtls mode").WriteToLog()
 	}
@@ -158,8 +165,7 @@ func newDTLSConnWrapped(unencryptedConnection *dTLSConn, transportConfiguration 
 	if err != nil {
 		return nil, newError("unable to create dtls server conn").Base(err)
 	}
-	dtlsWrapped := &dTLSConnWrapped{unencryptedConn: unencryptedConnection, dTLSConn: dtlsConn}
-	return dtlsWrapped, err
+	return dtlsConn, err
 }
 
 func (l *Listener) OnReceive(payload *buf.Buffer, src net.Destination) {
@@ -173,13 +179,16 @@ func (l *Listener) OnReceive(payload *buf.Buffer, src net.Destination) {
 	if !found {
 		var err error
 		unEncryptedConn := newDTLSServerConn(src, l)
-		conn, err = newDTLSConnWrapped(unEncryptedConn, l.config)
-		if err != nil {
-			newError("unable to accept new dtls connection").Base(err).WriteToLog()
-			return
-		}
+		conn = &dTLSConnWrapped{unencryptedConn: unEncryptedConn}
 		l.sessions[id] = conn
-		l.addConn(unEncryptedConn)
+		go func() {
+			conn.dTLSConn, err = newDTLSConnWrapped(unEncryptedConn, l.config)
+			if err != nil {
+				newError("unable to accept new dtls connection").Base(err).WriteToLog()
+				return
+			}
+			l.addConn(internet.Connection(conn.dTLSConn))
+		}()
 	}
 	conn.unencryptedConn.OnReceive(payload)
 }
