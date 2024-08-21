@@ -7,6 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/v2fly/v2ray-core/v5/common/environment"
+	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
+	"github.com/v2fly/v2ray-core/v5/common/environment/systemnetworkimpl"
+	"github.com/v2fly/v2ray-core/v5/common/environment/transientstorageimpl"
+
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/sync/errgroup"
 
@@ -18,7 +23,17 @@ import (
 )
 
 func TestDialAndListen(t *testing.T) {
-	listener, err := NewListener(context.Background(), net.LocalHostIP, net.Port(0), &internet.MemoryStreamConfig{
+	ctx := context.Background()
+	defaultNetworkImpl := systemnetworkimpl.NewSystemNetworkDefault()
+	rootEnv := environment.NewRootEnvImpl(ctx, transientstorageimpl.NewScopedTransientStorageImpl(), defaultNetworkImpl.Dialer(), defaultNetworkImpl.Listener())
+	proxyEnvironment := rootEnv.ProxyEnvironment("o")
+	transportEnvironment, err := proxyEnvironment.NarrowScopeToTransport("kcp")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx = envctx.ContextWithEnvironment(ctx, transportEnvironment)
+
+	listener, err := NewListener(ctx, net.LocalHostIP, net.Port(0), &internet.MemoryStreamConfig{
 		ProtocolName:     "mkcp",
 		ProtocolSettings: &Config{},
 	}, func(conn internet.Connection) {
@@ -45,7 +60,7 @@ func TestDialAndListen(t *testing.T) {
 	var errg errgroup.Group
 	for i := 0; i < 10; i++ {
 		errg.Go(func() error {
-			clientConn, err := DialKCP(context.Background(), net.UDPDestination(net.LocalHostIP, port), &internet.MemoryStreamConfig{
+			clientConn, err := DialKCP(ctx, net.UDPDestination(net.LocalHostIP, port), &internet.MemoryStreamConfig{
 				ProtocolName:     "mkcp",
 				ProtocolSettings: &Config{},
 			})
