@@ -126,7 +126,7 @@
   },
 
   // Stats enables internal stats counter.
-  // This setting can be used together with Policy and Api. 
+  // This setting can be used together with Policy and Api.
   //"stats":{},
 
   // Api enables gRPC APIs for external programs to communicate with V2Ray instance.
