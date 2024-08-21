@@ -82,7 +82,7 @@ v2ray-core (4.34.0-1) unstable; urgency=medium
 
   * TLS Session Resumption is now disabled by default (#569).
     See #557 for more information.
-  * Support for the legacy Shadowsocks protocol with stream ciphers has been removed (#566). 
+  * Support for the legacy Shadowsocks protocol with stream ciphers has been removed (#566).
     If you are still using the unsecure stream ciphers, migrate to Shadowsocks AEAD (ChaCha20Poly1305 and AES-GCM) immediately.
   * We have added preliminary support for DNS over QUIC (#534).
     Currently only non-proxied lookup is supported.
