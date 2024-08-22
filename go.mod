@@ -23,7 +23,7 @@ require (
 	github.com/pion/dtls/v2 v2.2.7
 	github.com/pion/transport/v2 v2.2.5
 	github.com/pires/go-proxyproto v0.7.0
-	github.com/quic-go/quic-go v0.43.0
+	github.com/quic-go/quic-go v0.46.0
 	github.com/refraction-networking/utls v1.6.5
 	github.com/seiflotfy/cuckoofilter v0.0.0-20220411075957-e3b120b3f5fb
 	github.com/stretchr/testify v1.9.0
@@ -77,7 +77,7 @@ require (
 	github.com/secure-io/siv-go v0.0.0-20180922214919-5ff40651e2c4 // indirect
 	github.com/xtaci/smux v1.5.24 // indirect
 	go.uber.org/mock v0.4.0 // indirect
-	golang.org/x/exp v0.0.0-20230725093048-515e97ebf090 // indirect
+	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
 	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
