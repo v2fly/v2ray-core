@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -192,6 +193,16 @@ func (c *Config) verifyPeerCert(rawCerts [][]byte, verifiedChains [][]*x509.Cert
 		return newError("peer cert is unrecognized: ", base64.StdEncoding.EncodeToString(hashValue))
 	}
 	return nil
+}
+
+type alwaysFlushWriter struct {
+	file *os.File
+}
+
+func (a *alwaysFlushWriter) Write(p []byte) (n int, err error) {
+	n, err = a.file.Write(p)
+	a.file.Sync()
+	return n, err
 }
 
 // GetTLSConfig converts this Config into tls.Config.

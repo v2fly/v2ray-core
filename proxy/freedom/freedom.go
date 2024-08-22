@@ -35,7 +35,10 @@ func init() {
 	common.Must(common.RegisterConfig((*SimplifiedConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		simplifiedServer := config.(*SimplifiedConfig)
 		_ = simplifiedServer
-		fullConfig := &Config{}
+		fullConfig := &Config{
+			DestinationOverride: simplifiedServer.DestinationOverride,
+			ProtocolReplacement: simplifiedServer.ProtocolReplacement,
+		}
 		return common.CreateObject(ctx, fullConfig)
 	}))
 }
@@ -104,6 +107,14 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 			destination.Port = net.Port(server.Port)
 		}
 	}
+	if h.config.ProtocolReplacement != ProtocolReplacement_IDENTITY {
+		if h.config.ProtocolReplacement == ProtocolReplacement_FORCE_TCP {
+			destination.Network = net.Network_TCP
+		}
+		if h.config.ProtocolReplacement == ProtocolReplacement_FORCE_UDP {
+			destination.Network = net.Network_UDP
+		}
+	}
 	if h.config.useIP() {
 		outbound.Resolver = func(ctx context.Context, domain string) net.Address {
 			return h.resolveIP(ctx, domain, dialer.Address())
@@ -153,7 +164,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 		defer timer.SetTimeout(plcy.Timeouts.UplinkOnly)
 
 		var reader buf.Reader
-		if destination.Network == net.Network_TCP {
+		if destination.Network == net.Network_TCP && h.config.ProtocolReplacement == ProtocolReplacement_IDENTITY {
 			reader = buf.NewReader(conn)
 		} else {
 			reader = buf.NewPacketReader(conn)

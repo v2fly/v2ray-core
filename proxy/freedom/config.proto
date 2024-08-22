@@ -13,6 +13,12 @@ message DestinationOverride {
   v2ray.core.common.protocol.ServerEndpoint server = 1;
 }
 
+enum ProtocolReplacement {
+  IDENTITY = 0;
+  FORCE_TCP = 1;
+  FORCE_UDP = 2;
+}
+
 message Config {
   enum DomainStrategy {
     AS_IS = 0;
@@ -24,9 +30,13 @@ message Config {
   uint32 timeout = 2 [deprecated = true];
   DestinationOverride destination_override = 3;
   uint32 user_level = 4;
+  ProtocolReplacement protocol_replacement = 5;
 }
 
 message SimplifiedConfig {
   option (v2ray.core.common.protoext.message_opt).type = "outbound";
   option (v2ray.core.common.protoext.message_opt).short_name = "freedom";
+
+  DestinationOverride destination_override = 3;
+  ProtocolReplacement protocol_replacement = 5;
 }

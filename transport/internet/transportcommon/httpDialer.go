@@ -17,10 +17,17 @@ import (
 
 type DialerFunc func(ctx context.Context, addr string) (net.Conn, error)
 
-// NewALPNAwareHTTPRoundTripper creates an instance of RoundTripper that dial to remote HTTPS endpoint with
-// an alternative version of TLS implementation.
 func NewALPNAwareHTTPRoundTripper(ctx context.Context, dialer DialerFunc,
 	backdropTransport http.RoundTripper,
+) http.RoundTripper {
+	return NewALPNAwareHTTPRoundTripperWithH2Pool(ctx, dialer, backdropTransport, 1)
+}
+
+// NewALPNAwareHTTPRoundTripperWithH2Pool creates an instance of RoundTripper that dial to remote HTTPS endpoint with
+// an alternative version of TLS implementation.
+func NewALPNAwareHTTPRoundTripperWithH2Pool(ctx context.Context, dialer DialerFunc,
+	backdropTransport http.RoundTripper,
+	h2PoolSize int,
 ) http.RoundTripper {
 	rtImpl := &alpnAwareHTTPRoundTripperImpl{
 		connectWithH1:     map[string]bool{},
@@ -46,6 +53,8 @@ type alpnAwareHTTPRoundTripperImpl struct {
 
 	ctx    context.Context
 	dialer DialerFunc
+
+	h2PoolSize int
 }
 
 type pendingConnKey struct {
@@ -175,10 +184,20 @@ func (r *alpnAwareHTTPRoundTripperImpl) dialTLS(ctx context.Context, addr string
 }
 
 func (r *alpnAwareHTTPRoundTripperImpl) init() {
-	r.httpsH2Transport = &http2.Transport{
-		DialTLS: func(network, addr string, cfg *tls.Config) (net.Conn, error) {
-			return r.dialOrGetTLSWithExpectedALPN(context.Background(), addr, true)
-		},
+	if r.h2PoolSize >= 2 {
+		r.httpsH2Transport = newH2TransportPool(int64(r.h2PoolSize), func() *http2.Transport {
+			return &http2.Transport{
+				DialTLS: func(network, addr string, cfg *tls.Config) (net.Conn, error) {
+					return r.dialOrGetTLSWithExpectedALPN(context.Background(), addr, true)
+				},
+			}
+		})
+	} else {
+		r.httpsH2Transport = &http2.Transport{
+			DialTLS: func(network, addr string, cfg *tls.Config) (net.Conn, error) {
+				return r.dialOrGetTLSWithExpectedALPN(context.Background(), addr, true)
+			},
+		}
 	}
 	r.httpsH1Transport = &http.Transport{
 		DialTLSContext: func(ctx context.Context, network string, addr string) (net.Conn, error) {
@@ -219,4 +238,30 @@ func (c *unclaimedConnection) tick() {
 		c.Conn.Close()
 		c.Conn = nil
 	}
+}
+
+type h2TransportFactory func() *http2.Transport
+
+func newH2TransportPool(size int64, h2factory h2TransportFactory) *h2TransportPool {
+	return &h2TransportPool{
+		pool:      make([]*http2.Transport, size),
+		size:      size,
+		h2factory: h2factory,
+	}
+}
+
+type h2TransportPool struct {
+	pool       []*http2.Transport
+	h2factory  h2TransportFactory
+	usageCount int64
+	size       int64
+}
+
+func (h *h2TransportPool) RoundTrip(request *http.Request) (*http.Response, error) {
+	currentSlot := h.usageCount % h.size
+	h.usageCount++
+	if h.pool[currentSlot] == nil {
+		h.pool[currentSlot] = h.h2factory()
+	}
+	return h.pool[currentSlot].RoundTrip(request)
 }

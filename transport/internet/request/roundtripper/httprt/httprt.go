@@ -40,31 +40,55 @@ func (h *httpTripperClient) OnTransportClientAssemblyReady(assembly request.Tran
 }
 
 func (h *httpTripperClient) RoundTrip(ctx context.Context, req request.Request, opts ...request.RoundTripperOption) (resp request.Response, err error) {
+	var streamingWriter io.Writer
+	for _, v := range opts {
+		if streamingResp, ok := v.(request.OptionSupportsStreamingResponse); ok {
+			streamingWriter = streamingResp.GetResponseWriter()
+		}
+	}
 	if h.httpRTT == nil {
-		h.httpRTT = transportcommon.NewALPNAwareHTTPRoundTripper(ctx, func(ctx context.Context, addr string) (gonet.Conn, error) {
+		var backDrop http.RoundTripper = unimplementedBackDrop{}
+		if h.config.AllowHttp {
+			backDrop = &http.Transport{
+				DialContext: func(_ context.Context, network, addr string) (gonet.Conn, error) {
+					return h.assembly.AutoImplDialer().Dial(ctx)
+				},
+				DialTLSContext: func(_ context.Context, network, addr string) (gonet.Conn, error) {
+					return nil, newError("unexpected dial of TLS")
+				},
+			}
+		}
+		h.httpRTT = transportcommon.NewALPNAwareHTTPRoundTripperWithH2Pool(ctx, func(ctx context.Context, addr string) (gonet.Conn, error) {
 			return h.assembly.AutoImplDialer().Dial(ctx)
-		}, unimplementedBackDrop{})
+		}, backDrop, int(h.config.H2PoolSize))
 	}
 
 	connectionTagStr := base64.RawURLEncoding.EncodeToString(req.ConnectionTag)
 
 	httpRequest, err := http.NewRequest("POST", h.config.Http.UrlPrefix+h.config.Http.Path, bytes.NewReader(req.Data))
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	httpRequest.Header.Set("X-Session-ID", connectionTagStr)
 
 	httpResp, err := h.httpRTT.RoundTrip(httpRequest)
 	if err != nil {
-		return
+		return resp, err
 	}
 	defer httpResp.Body.Close()
-	result, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		return
+	if streamingWriter == nil {
+		result, err := io.ReadAll(httpResp.Body)
+		if err != nil {
+			return request.Response{}, err
+		}
+		return request.Response{Data: result}, err
 	}
-	return request.Response{Data: result}, err
+	_, err = io.Copy(streamingWriter, httpResp.Body)
+	if err != nil {
+		return request.Response{}, newError("unable to copy response").Base(err)
+	}
+	return request.Response{}, nil
 }
 
 func newHTTPRoundTripperServer(ctx context.Context, config *ServerConfig) request.RoundTripperServer {
@@ -87,6 +111,25 @@ func (h *httpTripperServer) ServeHTTP(writer http.ResponseWriter, r *http.Reques
 	h.onRequest(writer, r)
 }
 
+type httpRespStreamWriting struct {
+	resp http.ResponseWriter
+	used bool
+}
+
+func (h *httpRespStreamWriting) RoundTripperOption() {
+}
+
+func (h *httpRespStreamWriting) GetResponseWriter() io.Writer {
+	h.used = true
+	return h.resp
+}
+
+func (h *httpRespStreamWriting) Flush() {
+	if f, ok := h.resp.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
 func (h *httpTripperServer) onRequest(resp http.ResponseWriter, req *http.Request) {
 	tail := req.Header.Get("X-Session-ID")
 	data := []byte(tail)
@@ -103,9 +146,15 @@ func (h *httpTripperServer) onRequest(resp http.ResponseWriter, req *http.Reques
 	if err != nil {
 		newError("unable to read body").Base(err).AtInfo().WriteToLog()
 	}
-	recvResp, err := h.assembly.TripperReceiver().OnRoundTrip(h.ctx, request.Request{Data: body, ConnectionTag: data})
+
+	streamingRespOption := &httpRespStreamWriting{resp: resp}
+	recvResp, err := h.assembly.TripperReceiver().OnRoundTrip(h.ctx, request.Request{Data: body, ConnectionTag: data},
+		streamingRespOption)
 	if err != nil {
 		newError("unable to process roundtrip").Base(err).AtInfo().WriteToLog()
+	}
+	if streamingRespOption.used {
+		return
 	}
 	_, err = io.Copy(resp, bytes.NewReader(recvResp.Data))
 	if err != nil {
