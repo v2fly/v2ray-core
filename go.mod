@@ -38,8 +38,8 @@ require (
 	golang.org/x/net v0.28.0
 	golang.org/x/sync v0.8.0
 	golang.org/x/sys v0.24.0
-	google.golang.org/grpc v1.63.2
-	google.golang.org/protobuf v1.34.0
+	google.golang.org/grpc v1.65.0
+	google.golang.org/protobuf v1.34.1
 	gopkg.in/yaml.v3 v3.0.1
 	gvisor.dev/gvisor v0.0.0-20231020174304-b8a429915ff1
 	h12.io/socks v1.0.3
@@ -82,7 +82,7 @@ require (
 	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.22.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240227224415-6ceb2ff114de // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
 )
 
 replace github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40 => github.com/xiaokangwang/struc v0.0.0-20231031203518-0e381172f248
