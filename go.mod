@@ -21,7 +21,7 @@ require (
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pion/dtls/v2 v2.2.12
-	github.com/pion/transport/v2 v2.2.5
+	github.com/pion/transport/v2 v2.2.10
 	github.com/pires/go-proxyproto v0.7.0
 	github.com/quic-go/quic-go v0.46.0
 	github.com/refraction-networking/utls v1.6.7
@@ -72,6 +72,7 @@ require (
 	github.com/pion/logging v0.2.2 // indirect
 	github.com/pion/randutil v0.1.0 // indirect
 	github.com/pion/sctp v1.8.7 // indirect
+	github.com/pion/transport/v3 v3.0.7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
 	github.com/secure-io/siv-go v0.0.0-20180922214919-5ff40651e2c4 // indirect
