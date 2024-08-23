@@ -6,7 +6,7 @@ toolchain go1.21.4
 
 require (
 	github.com/adrg/xdg v0.5.0
-	github.com/go-chi/chi/v5 v5.0.12
+	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/render v1.0.3
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259
