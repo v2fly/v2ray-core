@@ -59,6 +59,8 @@ func getControlFunc(ctx context.Context, sockopt *SocketConfig, controllers []co
 func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *SocketConfig) (net.Listener, error) {
 	var lc net.ListenConfig
 	var network, address string
+	var l net.Listener
+	var err error
 	// callback is called after the Listen function returns
 	// this is used to wrap the listener and do some post processing
 	callback := func(l net.Listener, err error) (net.Listener, error) {
@@ -92,6 +94,16 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 				fullAddr := make([]byte, len(syscall.RawSockaddrUnix{}.Path))
 				copy(fullAddr, address[1:])
 				address = string(fullAddr)
+			}
+		} else if strings.HasPrefix(address, "/dev/fd/") {
+			fd, err := strconv.Atoi(address[8:])
+			if err != nil {
+				return nil, err
+			}
+			_ = syscall.SetNonblock(fd, true)
+			l, err = net.FileListener(os.NewFile(uintptr(fd), address))
+			if err != nil {
+				return nil, err
 			}
 		} else {
 			// normal unix domain socket
@@ -133,13 +145,18 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 		}
 	}
 
-	l, err := lc.Listen(ctx, network, address)
-	l, err = callback(l, err)
-	if err == nil && sockopt != nil && sockopt.AcceptProxyProtocol {
+	if l == nil {
+		l, err = lc.Listen(ctx, network, address)
+		l, err = callback(l, err)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if sockopt != nil && sockopt.AcceptProxyProtocol {
 		policyFunc := func(upstream net.Addr) (proxyproto.Policy, error) { return proxyproto.REQUIRE, nil }
 		l = &proxyproto.Listener{Listener: l, Policy: policyFunc}
 	}
-	return l, err
+	return l, nil
 }
 
 func (dl *DefaultListener) ListenPacket(ctx context.Context, addr net.Addr, sockopt *SocketConfig) (net.PacketConn, error) {
