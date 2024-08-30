@@ -96,12 +96,8 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 				address = string(fullAddr)
 			}
 		} else if strings.HasPrefix(address, "/dev/fd/") {
-			fd, err := strconv.Atoi(address[8:])
-			if err != nil {
-				return nil, err
-			}
-			_ = syscall.SetNonblock(fd, true)
-			l, err = net.FileListener(os.NewFile(uintptr(fd), address))
+			// socket activation
+			l, err = activate_socket(address)
 			if err != nil {
 				return nil, err
 			}
