@@ -97,7 +97,7 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 			}
 		} else if strings.HasPrefix(address, "/dev/fd/") {
 			// socket activation
-			l, err = activate_socket(address)
+			l, err = activateSocket(address)
 			if err != nil {
 				return nil, err
 			}
