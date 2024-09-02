@@ -36,23 +36,27 @@ func (l *combinedListener) Close() error {
 	return l.Listener.Close()
 }
 
+func getRawControlFunc(network, address string, ctx context.Context, sockopt *SocketConfig, controllers []controller) func(fd uintptr) {
+	return func(fd uintptr) {
+		if sockopt != nil {
+			if err := applyInboundSocketOptions(network, fd, sockopt); err != nil {
+				newError("failed to apply socket options to incoming connection").Base(err).WriteToLog(session.ExportIDToError(ctx))
+			}
+		}
+
+		setReusePort(fd) // nolint: staticcheck
+
+		for _, controller := range controllers {
+			if err := controller(network, address, fd); err != nil {
+				newError("failed to apply external controller").Base(err).WriteToLog(session.ExportIDToError(ctx))
+			}
+		}
+	}
+}
+
 func getControlFunc(ctx context.Context, sockopt *SocketConfig, controllers []controller) func(network, address string, c syscall.RawConn) error {
 	return func(network, address string, c syscall.RawConn) error {
-		return c.Control(func(fd uintptr) {
-			if sockopt != nil {
-				if err := applyInboundSocketOptions(network, fd, sockopt); err != nil {
-					newError("failed to apply socket options to incoming connection").Base(err).WriteToLog(session.ExportIDToError(ctx))
-				}
-			}
-
-			setReusePort(fd) // nolint: staticcheck
-
-			for _, controller := range controllers {
-				if err := controller(network, address, fd); err != nil {
-					newError("failed to apply external controller").Base(err).WriteToLog(session.ExportIDToError(ctx))
-				}
-			}
-		})
+		return c.Control(getRawControlFunc(network, address, ctx, sockopt, controllers))
 	}
 }
 
@@ -97,7 +101,9 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 			}
 		} else if strings.HasPrefix(address, "/dev/fd/") {
 			// socket activation
-			l, err = activateSocket(address)
+			l, err = activateSocket(address, func(network, address string, fd uintptr) {
+				getRawControlFunc(network, address, ctx, sockopt, dl.controllers)(fd)
+			})
 			if err != nil {
 				return nil, err
 			}
