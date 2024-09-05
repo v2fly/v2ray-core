@@ -76,4 +76,6 @@ message Config {
   // Maximum TLS version to support.
   TLSVersion max_version = 10;
 
+  // Whether or not to allow self-signed certificates when pinned_peer_certificate_chain_sha256 is present.
+  bool allow_insecure_if_pinned_peer_certificate = 11;
 }
