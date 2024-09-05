@@ -237,6 +237,10 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 		ClientCAs:              clientRoot,
 	}
 
+	if c.AllowInsecureIfPinnedPeerCertificate && c.PinnedPeerCertificateChainSha256 != nil {
+		config.InsecureSkipVerify = true
+	}
+
 	for _, opt := range opts {
 		opt(config)
 	}
