@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package v2ray.core.proxy.hysteria2;
+option csharp_namespace = "V2Ray.Core.Proxy.Hysteria2";
+option go_package = "github.com/v2fly/v2ray-core/v5/proxy/hysteria2";
+option java_package = "com.v2ray.core.proxy.hysteria2";
+option java_multiple_files = true;
+
+import "common/protocol/user.proto";
+import "common/protocol/server_spec.proto";
+import "common/protoext/extensions.proto";
+
+message OBFS {
+  string type = 1;
+  string password = 2;
+}
+
+message Account {
+  OBFS obfs = 1;
+}
+
+message ClientConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "outbound";
+  option (v2ray.core.common.protoext.message_opt).short_name = "hysteria2";
+
+  repeated v2ray.core.common.protocol.ServerEndpoint server = 1;
+}
+
+message ServerConfig {
+  option (v2ray.core.common.protoext.message_opt).type = "inbound";
+  option (v2ray.core.common.protoext.message_opt).short_name = "hysteria2";
+
+  repeated v2ray.core.common.protocol.User users = 1;
+}

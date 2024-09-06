@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"go/build"
 	"io"
@@ -121,7 +122,17 @@ func getInstalledProtocVersion(protocPath string) (string, error) {
 	}
 	versionRegexp := regexp.MustCompile(`protoc\s*(\d+\.\d+(\.\d)*)`)
 	matched := versionRegexp.FindStringSubmatch(string(output))
-	return matched[1], nil
+	installedVersion := ""
+	if len(matched) == 0 {
+		return "", errors.New("Can not parse protoc version.")
+	}
+
+	if len(matched) == 2 {
+		installedVersion += "4." // in contrast to getProjectProtocVersion()
+	}
+	installedVersion += matched[1]
+	fmt.Println("Using protoc version: " + installedVersion)
+	return installedVersion, nil
 }
 
 func parseVersion(s string, width int) int64 {
