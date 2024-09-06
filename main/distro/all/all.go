@@ -33,7 +33,6 @@ import (
 	// Developer preview features
 	_ "github.com/v2fly/v2ray-core/v5/app/instman"
 	_ "github.com/v2fly/v2ray-core/v5/app/observatory"
-	_ "github.com/v2fly/v2ray-core/v5/app/restfulapi"
 	_ "github.com/v2fly/v2ray-core/v5/app/tun"
 
 	// Inbound and outbound proxies.
