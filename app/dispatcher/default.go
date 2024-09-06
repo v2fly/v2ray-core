@@ -183,7 +183,7 @@ func shouldOverride(result SniffResult, domainOverride []string) bool {
 		protocolString = resComp.ProtocolForDomainResult()
 	}
 	for _, p := range domainOverride {
-		if strings.HasPrefix(protocolString, p) || strings.HasSuffix(protocolString, p) {
+		if strings.HasPrefix(protocolString, p) || strings.HasPrefix(p, protocolString) {
 			return true
 		}
 		if resultSubset, ok := result.(SnifferIsProtoSubsetOf); ok {
@@ -223,6 +223,9 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 			result, err := sniffer(ctx, cReader, sniffingRequest.MetadataOnly, destination.Network)
 			if err == nil {
 				content.Protocol = result.Protocol()
+				if resultSubset, ok := result.(SnifferGetProtoSubset); ok {
+					content.Protocol = resultSubset.GetProtoSubset()
+				}
 			}
 			if err == nil && shouldOverride(result, sniffingRequest.OverrideDestinationForProtocol) {
 				if domain, err := strmatcher.ToDomain(result.Domain()); err == nil {

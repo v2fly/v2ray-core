@@ -76,7 +76,11 @@ type DNSThenOthersSniffResult struct {
 }
 
 func (f DNSThenOthersSniffResult) IsProtoSubsetOf(protocolName string) bool {
-	return strings.HasPrefix(protocolName, f.protocolOriginalName)
+	return strings.HasPrefix(f.protocolOriginalName, protocolName)
+}
+
+func (f DNSThenOthersSniffResult) GetProtoSubset() string {
+	return f.protocolOriginalName
 }
 
 func (DNSThenOthersSniffResult) Protocol() string {

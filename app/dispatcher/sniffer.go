@@ -61,7 +61,7 @@ func (s *Sniffer) Sniff(c context.Context, payload []byte, network net.Network) 
 		if si.metadataSniffer {
 			continue
 		}
-		if si.network != network {
+		if si.network != network && si.network != net.Network_Unknown {
 			continue
 		}
 		result, err := s(c, payload)
@@ -137,4 +137,8 @@ type SnifferResultComposite interface {
 
 type SnifferIsProtoSubsetOf interface {
 	IsProtoSubsetOf(protocolName string) bool
+}
+
+type SnifferGetProtoSubset interface {
+	GetProtoSubset() string
 }
