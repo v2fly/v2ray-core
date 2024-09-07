@@ -245,13 +245,7 @@ func testHysteria2Offical(t *testing.T, isUDP bool) {
 						},
 					},
 				}),
-				ProxySettings: serial.ToTypedMessage(&hysteria2.ServerConfig{
-					Users: []*protocol.User{
-						{
-							Account: serial.ToTypedMessage(&hysteria2.Account{}),
-						},
-					},
-				}),
+				ProxySettings: serial.ToTypedMessage(&hysteria2.ServerConfig{}),
 			},
 		},
 		Outbound: []*core.OutboundHandlerConfig{
@@ -385,13 +379,7 @@ func TestHysteria2OnTCP(t *testing.T) {
 						},
 					},
 				}),
-				ProxySettings: serial.ToTypedMessage(&hysteria2.ServerConfig{
-					Users: []*protocol.User{
-						{
-							Account: serial.ToTypedMessage(&hysteria2.Account{}),
-						},
-					},
-				}),
+				ProxySettings: serial.ToTypedMessage(&hysteria2.ServerConfig{}),
 			},
 		},
 		Outbound: []*core.OutboundHandlerConfig{

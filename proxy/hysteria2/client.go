@@ -90,12 +90,11 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	defer conn.Close()
 
 	user := server.PickUser()
-	account, ok := user.Account.(*MemoryAccount)
-	if !ok {
-		return newError("user account is not valid")
+	userLevel := uint32(0)
+	if user != nil {
+		userLevel = user.Level
 	}
-
-	sessionPolicy := c.policyManager.ForLevel(user.Level)
+	sessionPolicy := c.policyManager.ForLevel(userLevel)
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
 
@@ -104,7 +103,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 
 		var bodyWriter buf.Writer
 		bufferWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
-		connWriter := &ConnWriter{Writer: bufferWriter, Target: destination, Account: account}
+		connWriter := &ConnWriter{Writer: bufferWriter, Target: destination}
 		bodyWriter = connWriter
 
 		if network == net.Network_UDP {

@@ -59,29 +59,11 @@ func (c *Hysteria2ClientConfig) Build() (proto.Message, error) {
 	return config, nil
 }
 
-// Hysteria2UserConfig is user configuration
-type Hysteria2UserConfig struct {
-	Level byte   `json:"level"`
-	Email string `json:"email"`
-}
-
 // Hysteria2ServerConfig is Inbound configuration
-type Hysteria2ServerConfig struct {
-	Clients []*Hysteria2UserConfig `json:"clients"`
-}
+type Hysteria2ServerConfig struct{}
 
 // Build implements Buildable
 func (c *Hysteria2ServerConfig) Build() (proto.Message, error) {
 	config := new(hysteria2.ServerConfig)
-	config.Users = make([]*protocol.User, len(c.Clients))
-	for idx, rawUser := range c.Clients {
-		user := new(protocol.User)
-		account := &hysteria2.Account{}
-
-		user.Email = rawUser.Email
-		user.Level = uint32(rawUser.Level)
-		user.Account = serial.ToTypedMessage(account)
-		config.Users[idx] = user
-	}
 	return config, nil
 }

@@ -6,8 +6,6 @@ option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2
 option java_package = "com.v2ray.core.transport.internet.hysteria2";
 option java_multiple_files = true;
 
-import "common/protocol/headers.proto";
-
 import "common/protoext/extensions.proto";
 
 message Congestion{
@@ -21,8 +19,6 @@ message Config {
   option (v2ray.core.common.protoext.message_opt).type = "transport";
   option (v2ray.core.common.protoext.message_opt).short_name = "hysteria2";
 
-  string key = 1;
-  v2ray.core.common.protocol.SecurityConfig security = 2;
   string password = 3;
   Congestion congestion = 4;
   bool ignore_client_bandwidth = 5;

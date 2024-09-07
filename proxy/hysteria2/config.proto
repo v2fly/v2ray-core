@@ -10,13 +10,8 @@ import "common/protocol/user.proto";
 import "common/protocol/server_spec.proto";
 import "common/protoext/extensions.proto";
 
-message OBFS {
-  string type = 1;
-  string password = 2;
-}
 
 message Account {
-  OBFS obfs = 1;
 }
 
 message ClientConfig {
@@ -29,6 +24,4 @@ message ClientConfig {
 message ServerConfig {
   option (v2ray.core.common.protoext.message_opt).type = "inbound";
   option (v2ray.core.common.protoext.message_opt).short_name = "hysteria2";
-
-  repeated v2ray.core.common.protocol.User users = 1;
 }
