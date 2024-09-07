@@ -31,7 +31,7 @@ func (c *gunServiceClient) TunCustomName(ctx context.Context, name string, opts 
 	if err != nil {
 		return nil, err
 	}
-	x := &gunServiceTunClient{stream}
+	x := &grpc.GenericClientStream[Hunk, Hunk]{ClientStream: stream}
 	return x, nil
 }
 
