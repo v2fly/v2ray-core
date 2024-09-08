@@ -8,7 +8,6 @@ import (
 	hyServer "github.com/apernet/hysteria/core/v2/server"
 	"github.com/apernet/quic-go"
 
-	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 )
 
@@ -20,7 +19,6 @@ type HyConn struct {
 	IsServer         bool
 	ClientUDPSession hyClient.HyUDPConn
 	ServerUDPSession *hyServer.UdpSessionEntry
-	Target           net.Destination
 
 	stream quic.Stream
 	local  net.Addr
@@ -34,13 +32,6 @@ func (c *HyConn) Read(b []byte) (int, error) {
 		return n, err
 	}
 	return c.stream.Read(b)
-}
-
-func (c *HyConn) WriteMultiBuffer(mb buf.MultiBuffer) error {
-	mb = buf.Compact(mb)
-	mb, err := buf.WriteMultiBuffer(c, mb)
-	buf.ReleaseMulti(mb)
-	return err
 }
 
 func (c *HyConn) Write(b []byte) (int, error) {

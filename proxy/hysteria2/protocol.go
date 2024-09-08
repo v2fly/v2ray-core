@@ -2,7 +2,6 @@ package hysteria2
 
 import (
 	"io"
-	gonet "net"
 
 	hyProtocol "github.com/apernet/hysteria/core/v2/international/protocol"
 	"github.com/apernet/quic-go/quicvarint"
@@ -120,7 +119,7 @@ func (w *PacketWriter) WriteMultiBufferWithMetadata(mb buf.MultiBuffer, dest net
 	return nil
 }
 
-func (w *PacketWriter) WriteTo(payload []byte, addr gonet.Addr) (int, error) {
+func (w *PacketWriter) WriteTo(payload []byte, addr net.Addr) (int, error) {
 	dest := net.DestinationFromAddr(addr)
 
 	return w.writePacket(payload, dest)
@@ -177,27 +176,4 @@ func (r *PacketReader) ReadMultiBufferWithMetadata() (*PacketPayload, error) {
 	}
 	b := buf.FromBytes(data)
 	return &PacketPayload{Target: *dest, Buffer: buf.MultiBuffer{b}}, nil
-}
-
-type PacketConnectionReader struct {
-	reader  *PacketReader
-	payload *PacketPayload
-}
-
-func (r *PacketConnectionReader) ReadFrom(p []byte) (n int, addr gonet.Addr, err error) {
-	if r.payload == nil || r.payload.Buffer.IsEmpty() {
-		r.payload, err = r.reader.ReadMultiBufferWithMetadata()
-		if err != nil {
-			return
-		}
-	}
-
-	addr = &gonet.UDPAddr{
-		IP:   r.payload.Target.Address.IP(),
-		Port: int(r.payload.Target.Port),
-	}
-
-	r.payload.Buffer, n = buf.SplitFirstBytes(r.payload.Buffer, p)
-
-	return
 }

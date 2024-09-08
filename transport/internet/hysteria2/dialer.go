@@ -165,7 +165,6 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 	network := net.Network_TCP
 	if outbound != nil {
 		network = outbound.Target.Network
-		conn.Target = outbound.Target
 	}
 
 	if network == net.Network_UDP && config.GetUseUdpExtension() { // only hysteria2 can use udpExtension
