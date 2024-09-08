@@ -2,7 +2,7 @@ package hysteria2
 
 import (
 	"io"
-	gonet "net"
+	"math/rand"
 
 	hyProtocol "github.com/apernet/hysteria/core/v2/international/protocol"
 	"github.com/apernet/quic-go/quicvarint"
@@ -10,6 +10,10 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	hyTransport "github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2"
+)
+
+const (
+	paddingChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
 // ConnWriter is TCP Connection Writer Wrapper
@@ -61,17 +65,17 @@ func QuicLen(s int) int {
 func (c *ConnWriter) writeTCPHeader() error {
 	c.TCPHeaderSent = true
 
-	// TODO: the padding length here should be randomized
-
-	padding := "Jimmy Was Here"
-	paddingLen := len(padding)
+	paddingLen := 64 + rand.Intn(512-64)
+	padding := make([]byte, paddingLen)
+	for i := range padding {
+		padding[i] = paddingChars[rand.Intn(len(paddingChars))]
+	}
 	addressAndPort := c.Target.NetAddr()
 	addressLen := len(addressAndPort)
-	size := QuicLen(addressLen) + addressLen + QuicLen(paddingLen) + paddingLen
-
-	if size > hyProtocol.MaxAddressLength+hyProtocol.MaxPaddingLength {
-		return newError("invalid header length")
+	if addressLen > hyProtocol.MaxAddressLength {
+		return newError("address length too large: ", addressLen)
 	}
+	size := QuicLen(addressLen) + addressLen + QuicLen(paddingLen) + paddingLen
 
 	buf := make([]byte, size)
 	i := hyProtocol.VarintPut(buf, uint64(addressLen))
@@ -120,7 +124,7 @@ func (w *PacketWriter) WriteMultiBufferWithMetadata(mb buf.MultiBuffer, dest net
 	return nil
 }
 
-func (w *PacketWriter) WriteTo(payload []byte, addr gonet.Addr) (int, error) {
+func (w *PacketWriter) WriteTo(payload []byte, addr net.Addr) (int, error) {
 	dest := net.DestinationFromAddr(addr)
 
 	return w.writePacket(payload, dest)
@@ -145,7 +149,10 @@ func (c *ConnReader) Read(p []byte) (int, error) {
 func (c *ConnReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	b := buf.New()
 	_, err := b.ReadFrom(c)
-	return buf.MultiBuffer{b}, err
+	if err != nil {
+		return nil, err
+	}
+	return buf.MultiBuffer{b}, nil
 }
 
 // PacketPayload combines udp payload and destination
@@ -177,27 +184,4 @@ func (r *PacketReader) ReadMultiBufferWithMetadata() (*PacketPayload, error) {
 	}
 	b := buf.FromBytes(data)
 	return &PacketPayload{Target: *dest, Buffer: buf.MultiBuffer{b}}, nil
-}
-
-type PacketConnectionReader struct {
-	reader  *PacketReader
-	payload *PacketPayload
-}
-
-func (r *PacketConnectionReader) ReadFrom(p []byte) (n int, addr gonet.Addr, err error) {
-	if r.payload == nil || r.payload.Buffer.IsEmpty() {
-		r.payload, err = r.reader.ReadMultiBufferWithMetadata()
-		if err != nil {
-			return
-		}
-	}
-
-	addr = &gonet.UDPAddr{
-		IP:   r.payload.Target.Address.IP(),
-		Port: int(r.payload.Target.Port),
-	}
-
-	r.payload.Buffer, n = buf.SplitFirstBytes(r.payload.Buffer, p)
-
-	return
 }
