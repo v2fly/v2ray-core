@@ -188,7 +188,11 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 	frameSize := int(quicvarint.Len(hyProtocol.FrameTypeTCPRequest))
 	buf := make([]byte, frameSize)
 	hyProtocol.VarintPut(buf, hyProtocol.FrameTypeTCPRequest)
-	conn.stream.Write(buf)
+	_, err = conn.stream.Write(buf)
+	if err != nil {
+		CloseHyClient(serverAddr)
+		return nil, err
+	}
 	return conn, nil
 }
 

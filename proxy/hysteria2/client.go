@@ -76,6 +76,8 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	}
 	newError("tunneling request to ", destination, " via ", server.Destination().NetAddr()).WriteToLog(session.ExportIDToError(ctx))
 
+	defer conn.Close()
+
 	iConn := conn
 	if statConn, ok := conn.(*internet.StatCouterConnection); ok {
 		iConn = statConn.Connection // will not count the UDP traffic.
@@ -86,8 +88,6 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		// hysteria2 need to use udp extension to proxy UDP.
 		return newError(hyTransport.CanNotUseUdpExtension)
 	}
-
-	defer conn.Close()
 
 	user := server.PickUser()
 	userLevel := uint32(0)

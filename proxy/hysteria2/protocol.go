@@ -144,7 +144,10 @@ func (c *ConnReader) Read(p []byte) (int, error) {
 func (c *ConnReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
 	b := buf.New()
 	_, err := b.ReadFrom(c)
-	return buf.MultiBuffer{b}, err
+	if err != nil {
+		return nil, err
+	}
+	return buf.MultiBuffer{b}, nil
 }
 
 // PacketPayload combines udp payload and destination
