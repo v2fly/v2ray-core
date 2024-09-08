@@ -2,6 +2,7 @@ package hysteria2
 
 import (
 	"io"
+	"math/rand"
 
 	hyProtocol "github.com/apernet/hysteria/core/v2/international/protocol"
 	"github.com/apernet/quic-go/quicvarint"
@@ -9,6 +10,10 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	hyTransport "github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2"
+)
+
+const (
+	paddingChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
 // ConnWriter is TCP Connection Writer Wrapper
@@ -60,17 +65,17 @@ func QuicLen(s int) int {
 func (c *ConnWriter) writeTCPHeader() error {
 	c.TCPHeaderSent = true
 
-	// TODO: the padding length here should be randomized
-
-	padding := "Jimmy Was Here"
-	paddingLen := len(padding)
+	paddingLen := 64 + rand.Intn(512-64)
+	padding := make([]byte, paddingLen)
+	for i := range padding {
+		padding[i] = paddingChars[rand.Intn(len(paddingChars))]
+	}
 	addressAndPort := c.Target.NetAddr()
 	addressLen := len(addressAndPort)
-	size := QuicLen(addressLen) + addressLen + QuicLen(paddingLen) + paddingLen
-
-	if size > hyProtocol.MaxAddressLength+hyProtocol.MaxPaddingLength {
-		return newError("invalid header length")
+	if addressLen > hyProtocol.MaxAddressLength {
+		return newError("address length too large: ", addressLen)
 	}
+	size := QuicLen(addressLen) + addressLen + QuicLen(paddingLen) + paddingLen
 
 	buf := make([]byte, size)
 	i := hyProtocol.VarintPut(buf, uint64(addressLen))
