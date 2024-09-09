@@ -185,3 +185,26 @@ func (r *PacketReader) ReadMultiBufferWithMetadata() (*PacketPayload, error) {
 	b := buf.FromBytes(data)
 	return &PacketPayload{Target: *dest, Buffer: buf.MultiBuffer{b}}, nil
 }
+
+type PacketConnectionReader struct {
+	reader  *PacketReader
+	payload *PacketPayload
+}
+
+func (r *PacketConnectionReader) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
+	if r.payload == nil || r.payload.Buffer.IsEmpty() {
+		r.payload, err = r.reader.ReadMultiBufferWithMetadata()
+		if err != nil {
+			return
+		}
+	}
+
+	addr = &net.UDPAddr{
+		IP:   r.payload.Target.Address.IP(),
+		Port: int(r.payload.Target.Port),
+	}
+
+	r.payload.Buffer, n = buf.SplitFirstBytes(r.payload.Buffer, p)
+
+	return
+}
