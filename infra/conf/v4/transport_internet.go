@@ -145,9 +145,10 @@ type Hy2ConfigCongestion struct {
 }
 
 type Hy2Config struct {
-	Password        string              `json:"password"`
-	Congestion      Hy2ConfigCongestion `json:"congestion"`
-	UseUdpExtension bool                `json:"use_udp_extension"`
+	Password              string              `json:"password"`
+	Congestion            Hy2ConfigCongestion `json:"congestion"`
+	UseUdpExtension       bool                `json:"use_udp_extension"`
+	IgnoreClientBandwidth bool                `json:"ignore_client_bandwidth"`
 }
 
 // Build implements Buildable.
@@ -158,7 +159,9 @@ func (c *Hy2Config) Build() (proto.Message, error) {
 			DownMbps: c.Congestion.DownMbps,
 			UpMbps:   c.Congestion.UpMbps,
 		},
-		UseUdpExtension: c.UseUdpExtension}, nil
+		UseUdpExtension:       c.UseUdpExtension,
+		IgnoreClientBandwidth: c.IgnoreClientBandwidth,
+	}, nil
 }
 
 type WebSocketConfig struct {
