@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package v2ray.core.transport.internet.headers.riverrun;
+option csharp_namespace = "V2Ray.Core.Transport.Internet.Headers.Riverrun";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/headers/riverrun";
+option java_package = "com.v2ray.core.transport.internet.headers.riverrun";
+option java_multiple_files = true;
+
+message Config {
+  string seed = 4;
+}
