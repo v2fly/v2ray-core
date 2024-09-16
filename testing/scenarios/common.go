@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"fmt"
+	"golang.org/x/net/proxy"
 	"io"
 	"os"
 	"os/exec"
@@ -166,6 +167,26 @@ func withDefaultApps(config *core.Config) *core.Config {
 	config.App = append(config.App, serial.ToTypedMessage(&proxyman.InboundConfig{}))
 	config.App = append(config.App, serial.ToTypedMessage(&proxyman.OutboundConfig{}))
 	return config
+}
+
+func testTCPConnViaSocks(socksPort, testPort net.Port, payloadSize int, timeout time.Duration) func() error {
+	return func() error {
+		socksDialer, err := proxy.SOCKS5("tcp", "127.0.0.1:"+socksPort.String(), nil, nil)
+		if err != nil {
+			return err
+		}
+		destAddr := &net.TCPAddr{
+			IP:   []byte{127, 0, 0, 1},
+			Port: int(testPort),
+		}
+		conn, err := socksDialer.Dial("tcp", destAddr.String())
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
+
+		return testTCPConn2(conn, payloadSize, timeout)()
+	}
 }
 
 func testTCPConn(port net.Port, payloadSize int, timeout time.Duration) func() error {
