@@ -22,6 +22,8 @@ type TLSConfig struct {
 	DisableSystemRoot                bool                  `json:"disableSystemRoot"`
 	PinnedPeerCertificateChainSha256 *[]string             `json:"pinnedPeerCertificateChainSha256"`
 	VerifyClientCertificate          bool                  `json:"verifyClientCertificate"`
+	ECHConfig                        string                `json:"echConfig"`
+	ECHDOHServer                     string                `json:"echDohServer"`
 }
 
 // Build implements Buildable.
@@ -57,6 +59,9 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 			config.PinnedPeerCertificateChainSha256 = append(config.PinnedPeerCertificateChainSha256, hashValue)
 		}
 	}
+
+	config.EchConfig = c.ECHConfig
+	config.Ech_DOHserver = c.ECHDOHServer
 
 	return config, nil
 }
