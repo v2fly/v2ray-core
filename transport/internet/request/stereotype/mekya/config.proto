@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package v2ray.core.transport.internet.request.stereotype.mekya;
+option csharp_namespace = "V2Ray.Core.Transport.Internet.Request.Stereotype.Mekya";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/request/stereotype/mekya";
+option java_package = "com.v2ray.core.transport.internet.request.stereotype.mekya";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+
+import "transport/internet/kcp/config.proto";
+
+message Config{
+  option (v2ray.core.common.protoext.message_opt).type = "transport";
+  option (v2ray.core.common.protoext.message_opt).short_name = "mekya";
+  option (v2ray.core.common.protoext.message_opt).allow_restricted_mode_load = true;
+
+
+  v2ray.core.transport.internet.kcp.Config kcp = 1;
+
+  // Client
+  int32 max_write_delay = 1003;
+  int32 max_request_size = 1004;
+  int32 polling_interval_initial = 1005;
+
+  // Server
+  int32 max_write_size = 2003;
+  int32 max_write_duration_ms = 2004;
+  int32 max_simultaneous_write_connection = 2005;
+  int32 packet_writing_buffer = 2006;
+
+  // Roundtripper
+  string url = 3001;
+  int32 h2_pool_size = 3003;
+}
