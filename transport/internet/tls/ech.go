@@ -9,11 +9,14 @@ import (
 	"encoding/base64"
 	"io"
 	"net/http"
+	"context"
 	"regexp"
 	"sync"
 	"time"
 
 	"github.com/miekg/dns"
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/transport/internet"
 )
 
 func ApplyECH(c *Config, config *tls.Config) error {
@@ -57,6 +60,7 @@ func QueryRecord(domain string, server string) (string, error) {
 	}
 	mutex.Lock()
 	defer mutex.Unlock()
+	newError("Tring to query ECH config for domain: ", domain, " with DOH server: ", server).AtDebug().WriteToLog()
 	record, ttl, err := dohQuery(server, domain)
 	if err != nil {
 		return "", err
@@ -78,8 +82,24 @@ func dohQuery(server string, domain string) (string, uint32, error) {
 	if err != nil {
 		return "", 0, err
 	}
+	tr := &http.Transport{
+		IdleConnTimeout:   90 * time.Second,
+		ForceAttemptHTTP2: true,
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			dest, err := net.ParseDestination(network + ":" + addr)
+			if err != nil {
+				return nil, err
+			}
+			conn, err := internet.DialSystem(ctx, dest, nil)
+			if err != nil {
+				return nil, err
+			}
+			return conn, nil
+		},
+	}
 	client := &http.Client{
-		Timeout: 5 * time.Second,
+		Timeout:   5 * time.Second,
+		Transport: tr,
 	}
 	req, err := http.NewRequest("POST", server, bytes.NewReader(msg))
 	if err != nil {
@@ -107,6 +127,7 @@ func dohQuery(server string, domain string) (string, uint32, error) {
 		re := regexp.MustCompile(`ech="([^"]+)"`)
 		match := re.FindStringSubmatch(respMsg.Answer[0].String())
 		if match[1] != "" {
+			newError("Get ECH config:", match[1], " TTL:", respMsg.Answer[0].Header().Ttl).AtDebug().WriteToLog()
 			return match[1], respMsg.Answer[0].Header().Ttl, nil
 		}
 	}
