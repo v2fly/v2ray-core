@@ -26,6 +26,12 @@ func (c *CipherTypeWrapper) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, byt
 	return nil
 }
 
+func (c *CipherTypeWrapper) MarshalJSONPB(marshaler *jsonpb.Marshaler) ([]byte, error) {
+	method := c.Value.String()
+
+	return json.Marshal(method)
+}
+
 func init() {
 	common.Must(common.RegisterConfig((*ServerConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		simplifiedServer := config.(*ServerConfig)
