@@ -60,7 +60,14 @@ func (c *TLSConfig) Build() (proto.Message, error) {
 		}
 	}
 
-	config.EchConfig = c.ECHConfig
+	if c.ECHConfig != "" {
+		ECHConfig, err := base64.StdEncoding.DecodeString(c.ECHConfig)
+		if err != nil {
+			return nil, newError("invalid ECH Config", c.ECHConfig)
+		}
+		config.EchConfig = ECHConfig
+	}
+
 	config.Ech_DOHserver = c.ECHDOHServer
 
 	return config, nil

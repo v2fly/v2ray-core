@@ -5,12 +5,10 @@ package tls
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
-	"encoding/base64"
 	"io"
 	"net/http"
-	"context"
-	"regexp"
 	"sync"
 	"time"
 
@@ -24,19 +22,15 @@ func ApplyECH(c *Config, config *tls.Config) error {
 	var err error
 
 	if len(c.EchConfig) > 0 {
-		ECHConfig, err = base64.StdEncoding.DecodeString(c.EchConfig)
-		if err != nil {
-			return newError("invalid ECH config")
-		}
+		ECHConfig = c.EchConfig
 	} else { // ECH config > DOH lookup
-		if c.ServerName == "" {
+		if config.ServerName == "" {
 			return newError("Using DOH for ECH needs serverName")
 		}
-		ECHRecord, err := QueryRecord(c.ServerName, c.Ech_DOHserver)
+		ECHConfig, err = QueryRecord(c.ServerName, c.Ech_DOHserver)
 		if err != nil {
 			return err
 		}
-		ECHConfig, _ = base64.StdEncoding.DecodeString(ECHRecord)
 	}
 
 	config.EncryptedClientHelloConfigList = ECHConfig
@@ -44,7 +38,7 @@ func ApplyECH(c *Config, config *tls.Config) error {
 }
 
 type record struct {
-	record string
+	record []byte
 	expire time.Time
 }
 
@@ -53,34 +47,40 @@ var (
 	mutex    sync.RWMutex
 )
 
-func QueryRecord(domain string, server string) (string, error) {
+func QueryRecord(domain string, server string) ([]byte, error) {
+	mutex.Lock()
 	rec, found := dnsCache[domain]
 	if found && rec.expire.After(time.Now()) {
+		mutex.Unlock()
 		return rec.record, nil
 	}
-	mutex.Lock()
-	defer mutex.Unlock()
-	newError("Tring to query ECH config for domain: ", domain, " with DOH server: ", server).AtDebug().WriteToLog()
+	mutex.Unlock()
+
+	newError("Trying to query ECH config for domain: ", domain, " with ECH server: ", server).AtDebug().WriteToLog()
 	record, ttl, err := dohQuery(server, domain)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
-	// Use TTL for good, but many HTTPS records have TTL 60, too short
+
 	if ttl < 600 {
 		ttl = 600
 	}
+
+	mutex.Lock()
+	defer mutex.Unlock()
 	rec.record = record
 	rec.expire = time.Now().Add(time.Second * time.Duration(ttl))
 	dnsCache[domain] = rec
 	return record, nil
 }
 
-func dohQuery(server string, domain string) (string, uint32, error) {
+func dohQuery(server string, domain string) ([]byte, uint32, error) {
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(domain), dns.TypeHTTPS)
+	m.Id = 0
 	msg, err := m.Pack()
 	if err != nil {
-		return "", 0, err
+		return []byte{}, 0, err
 	}
 	tr := &http.Transport{
 		IdleConnTimeout:   90 * time.Second,
@@ -103,33 +103,37 @@ func dohQuery(server string, domain string) (string, uint32, error) {
 	}
 	req, err := http.NewRequest("POST", server, bytes.NewReader(msg))
 	if err != nil {
-		return "", 0, err
+		return []byte{}, 0, err
 	}
 	req.Header.Set("Content-Type", "application/dns-message")
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", 0, err
+		return []byte{}, 0, err
 	}
 	defer resp.Body.Close()
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", 0, err
+		return []byte{}, 0, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return "", 0, newError("query failed with response code:", resp.StatusCode)
+		return []byte{}, 0, newError("query failed with response code:", resp.StatusCode)
 	}
 	respMsg := new(dns.Msg)
 	err = respMsg.Unpack(respBody)
 	if err != nil {
-		return "", 0, err
+		return []byte{}, 0, err
 	}
 	if len(respMsg.Answer) > 0 {
-		re := regexp.MustCompile(`ech="([^"]+)"`)
-		match := re.FindStringSubmatch(respMsg.Answer[0].String())
-		if match[1] != "" {
-			newError("Get ECH config:", match[1], " TTL:", respMsg.Answer[0].Header().Ttl).AtDebug().WriteToLog()
-			return match[1], respMsg.Answer[0].Header().Ttl, nil
+		for _, answer := range respMsg.Answer {
+			if https, ok := answer.(*dns.HTTPS); ok && https.Hdr.Name == dns.Fqdn(domain) {
+				for _, v := range https.Value {
+					if echConfig, ok := v.(*dns.SVCBECHConfig); ok {
+						newError(context.Background(), "Get ECH config:", echConfig.String(), " TTL:", respMsg.Answer[0].Header().Ttl).AtDebug().WriteToLog()
+						return echConfig.ECH, answer.Header().Ttl, nil
+					}
+				}
+			}
 		}
 	}
-	return "", 0, newError("no ech record found")
+	return []byte{}, 0, newError("no ech record found")
 }
