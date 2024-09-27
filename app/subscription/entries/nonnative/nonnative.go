@@ -53,6 +53,7 @@ func (a *AbstractNonNativeLink) extractValue(content, prefix string) {
 		decoded, err := base64.RawStdEncoding.DecodeString(content)
 		if err == nil {
 			a.Values[prefix+"_!kind"] = "base64"
+			a.Values[prefix+"_!rawContent"] = string(decoded)
 			a.extractValue(string(decoded), prefix+"_!base64")
 			return
 		}
@@ -63,6 +64,7 @@ func (a *AbstractNonNativeLink) extractValue(content, prefix string) {
 		decoded, err := base64.RawURLEncoding.DecodeString(content)
 		if err == nil {
 			a.Values[prefix+"_!kind"] = "base64url"
+			a.Values[prefix+"_!rawContent"] = string(decoded)
 			a.extractValue(string(decoded), prefix+"_!base64")
 			return
 		}
@@ -87,6 +89,7 @@ func (a *AbstractNonNativeLink) extractLink(content *url.URL, prefix string) {
 	a.Values[prefix+"_!link_query"] = content.RawQuery
 	a.Values[prefix+"_!link_fragment"] = content.Fragment
 	a.Values[prefix+"_!link_userinfo"] = content.User.String()
+	a.extractValue(content.User.String(), prefix+"_!link_userinfo_!value")
 	a.Values[prefix+"_!link_opaque"] = content.Opaque
 }
 
