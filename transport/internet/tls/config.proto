@@ -78,4 +78,10 @@ message Config {
 
   // Whether or not to allow self-signed certificates when pinned_peer_certificate_chain_sha256 is present.
   bool allow_insecure_if_pinned_peer_certificate = 11;
+
+  // ECH Config in bytes format
+  bytes ech_config = 16;
+
+  // DOH server to query HTTPS record for ECH
+  string ech_DOHserver = 17;
 }
