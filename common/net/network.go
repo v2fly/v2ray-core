@@ -37,6 +37,16 @@ func (nl *NetworkList) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []
 	return newError("unknown format of a string list: " + string(bytes))
 }
 
+func (nl *NetworkList) MarshalJSONPB(marshaler *jsonpb.Marshaler) ([]byte, error) {
+	networkStrList := make([]string, len(nl.Network))
+
+	for idx, network := range nl.Network {
+		networkStrList[idx] = network.String()
+	}
+
+	return json.Marshal(networkStrList)
+}
+
 // HasNetwork returns true if the network list has a certain network.
 func HasNetwork(list []Network, network Network) bool {
 	for _, value := range list {
