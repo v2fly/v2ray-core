@@ -21,6 +21,9 @@ func ListenWithSecuritySettings(ctx context.Context, address net.Address, port n
 	transportListener := transportEnvironment.Listener()
 
 	if port == net.Port(0) { // unix
+		if !address.Family().IsDomain() {
+			return nil, newError("invalid address for unix domain socket: ", address)
+		}
 		listener, err := transportListener.Listen(ctx, &net.UnixAddr{
 			Name: address.Domain(),
 			Net:  "unix",
