@@ -24,12 +24,12 @@ var RunningClient map[dialerConf](hyClient.Client)
 var ClientMutex sync.Mutex
 var MBps uint64 = 1000000 / 8 // MByte
 
-func GetClientTLSConfig(streamSettings *internet.MemoryStreamConfig) (*hyClient.TLSConfig, error) {
+func GetClientTLSConfig(dest net.Destination, streamSettings *internet.MemoryStreamConfig) (*hyClient.TLSConfig, error) {
 	config := tls.ConfigFromStreamSettings(streamSettings)
 	if config == nil {
 		return nil, newError(Hy2MustNeedTLS)
 	}
-	tlsConfig := config.GetTLSConfig()
+	tlsConfig := config.GetTLSConfig(tls.WithDestination(dest))
 
 	return &hyClient.TLSConfig{
 		RootCAs:               tlsConfig.RootCAs,
@@ -67,7 +67,7 @@ func (f *connFactory) New(addr net.Addr) (net.PacketConn, error) {
 }
 
 func NewHyClient(dest net.Destination, streamSettings *internet.MemoryStreamConfig) (hyClient.Client, error) {
-	tlsConfig, err := GetClientTLSConfig(streamSettings)
+	tlsConfig, err := GetClientTLSConfig(dest, streamSettings)
 	if err != nil {
 		return nil, err
 	}

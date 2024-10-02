@@ -52,7 +52,7 @@ func dialgRPC(ctx context.Context, dest net.Destination, streamSettings *interne
 
 	transportCredentials := insecure.NewCredentials()
 	if config != nil {
-		transportCredentials = credentials.NewTLS(config.GetTLSConfig())
+		transportCredentials = credentials.NewTLS(config.GetTLSConfig(tls.WithDestination(dest)))
 	}
 	dialOption := grpc.WithTransportCredentials(transportCredentials)
 
