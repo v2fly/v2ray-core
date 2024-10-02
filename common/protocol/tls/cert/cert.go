@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
@@ -73,6 +74,12 @@ func DNSNames(names ...string) Option {
 func CommonName(name string) Option {
 	return func(c *x509.Certificate) {
 		c.Subject.CommonName = name
+	}
+}
+
+func IPAddresses(ip ...net.IP) Option {
+	return func(c *x509.Certificate) {
+		c.IPAddresses = ip
 	}
 }
 
