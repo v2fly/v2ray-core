@@ -303,8 +303,13 @@ type Option func(*tls.Config)
 // WithDestination sets the server name in TLS config.
 func WithDestination(dest net.Destination) Option {
 	return func(config *tls.Config) {
-		if dest.Address.Family().IsDomain() && config.ServerName == "" {
-			config.ServerName = dest.Address.Domain()
+		if config.ServerName == "" {
+			switch dest.Address.Family() {
+			case net.AddressFamilyDomain:
+				config.ServerName = dest.Address.Domain()
+			case net.AddressFamilyIPv4, net.AddressFamilyIPv6:
+				config.ServerName = dest.Address.IP().String()
+			}
 		}
 	}
 }
