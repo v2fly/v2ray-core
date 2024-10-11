@@ -38,6 +38,7 @@ func mekyaDial(ctx context.Context, dest net.Destination, streamSettings *intern
 		Http: &httprt.HTTPConfig{
 			UrlPrefix: mekyaSetting.Url,
 		},
+		H2PoolSize: mekyaSetting.H2PoolSize,
 	}
 
 	request := &assembly.Config{
