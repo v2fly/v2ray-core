@@ -1,0 +1,71 @@
+{
+  "log": {
+    "error": {
+      "level": "Debug",
+      "type": "Console"
+    },
+    "access": {
+      "type": "None"
+    }
+  },
+  "outbounds": [
+    {
+      "protocol": "vmess",
+      "settings": {
+        "address": "127.0.0.1",
+        "port": 17773,
+        "uuid": "bcc71618-e552-42c2-a2a3-d4c17a9df764"
+      },
+      "streamSettings": {
+        "transport": "mekya",
+        "transportSettings": {
+          "url": "https://127.0.0.1:17773/mrss48bvxrkfq1qzeqte5o61mmvc9gx6hq51",
+          "maxWriteDelay": 80,
+          "maxRequestSize": 96000,
+          "pollingIntervalInitial": 200,
+          "h2_pool_size": 8,
+          "kcp": {
+            "mtu": {
+              "value": 1450
+            },
+            "tti": {
+              "value": 15
+            },
+            "uplink_capacity": {
+              "value": 40
+            },
+            "downlink_capacity": {
+              "value": 2000
+            },
+            "congestion": false,
+            "write_buffer": {
+              "size": 671088640
+            },
+            "read_buffer": {
+              "size": 671088640
+            }
+          }
+        },
+        "security": "tls",
+        "securitySettings": {
+          "pinnedPeerCertificateChainSha256": [
+            "kqHyvea27Pn+JiSqA72lhu9IKAKeGR+3yCyA8JR1mug="
+          ],
+          "allowInsecureIfPinnedPeerCertificate": true
+        }
+      }
+    }
+  ],
+  "inbounds": [
+    {
+      "protocol": "socks",
+      "settings": {
+        "udpEnabled": false,
+        "address": "127.0.0.1",
+        "packetEncoding": "Packet"
+      },
+      "port": 17774,
+      "listen": "127.0.0.1"
+    }
+  ]
+}
