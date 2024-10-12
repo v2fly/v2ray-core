@@ -79,6 +79,11 @@ func (c *packetConnectionAdaptor) ReadFrom(p []byte) (n int, addr gonet.Addr, er
 }
 
 func (c *packetConnectionAdaptor) WriteTo(p []byte, addr gonet.Addr) (n int, err error) {
+	_, ok := addr.(*gonet.UDPAddr)
+	if !ok {
+		// address other than UDPAddr is not supported, and will be dropped.
+		return 0, nil
+	}
 	payloadLen := len(p)
 	var buffer *buf.Buffer
 	buffer, err = AttachAddressToPacket(buf.FromBytes(p), addr)
