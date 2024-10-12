@@ -221,3 +221,9 @@ func (d *IPOrDomain) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []by
 	d.Address = result.Address
 	return nil
 }
+
+func (d *IPOrDomain) MarshalJSONPB(marshaler *jsonpb.Marshaler) ([]byte, error) {
+	ipod := d.AsAddress().String()
+
+	return json.Marshal(ipod)
+}
