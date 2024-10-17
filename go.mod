@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.7
 
 require (
-	github.com/adrg/xdg v0.5.0
+	github.com/adrg/xdg v0.5.1
 	github.com/apernet/hysteria/core/v2 v2.4.5
 	github.com/apernet/quic-go v0.45.2-0.20240702221538-ed74cfbe8b6e
 	github.com/go-chi/chi/v5 v5.1.0
