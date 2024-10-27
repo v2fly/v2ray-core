@@ -17,8 +17,8 @@ github.com/FlowerWrong/water v0.0.0-20180301012659-01a4eaa1f6f2/go.mod h1:xrG5L7
 github.com/JimmyHuang454/hysteria/core/v2 v2.0.0-20240724161647-b3347cf6334d h1:DN3vqWeuVa1anRkwCueIqPEUPnSyFCk4PR2LcyJKrZk=
 github.com/JimmyHuang454/hysteria/core/v2 v2.0.0-20240724161647-b3347cf6334d/go.mod h1:3OIt9vhWrxoHUMPm6WcpAg7jUEqfy6Q4IyFZA67Azcg=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
-github.com/adrg/xdg v0.5.0 h1:dDaZvhMXatArP1NPHhnfaQUqWBLBsmx1h1HXQdMoFCY=
-github.com/adrg/xdg v0.5.0/go.mod h1:dDdY4M4DF9Rjy4kHPeNL+ilVF+p2lK8IdM9/rTSGcI4=
+github.com/adrg/xdg v0.5.1 h1:Im8iDbEFARltY09yOJlSGu4Asjk2vF85+3Dyru8uJ0U=
+github.com/adrg/xdg v0.5.1/go.mod h1:nlTsY+NNiCBGCK2tpm09vRqfVzrc2fLmXGpBLF0zlTQ=
 github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1 h1:+JkXLHME8vLJafGhOH4aoV2Iu8bR55nU6iKMVfYVLjY=
 github.com/aead/cmac v0.0.0-20160719120800-7af84192f0b1/go.mod h1:nuudZmJhzWtx2212z+pkuy7B6nkBqa+xwNXZHL1j8cg=
 github.com/ajg/form v1.5.1 h1:t9c7v8JUKu/XxOGBU0yjNpaMloxGEJhUkqFRq0ibGeU=
