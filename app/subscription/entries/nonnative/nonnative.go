@@ -30,6 +30,10 @@ func (a *AbstractNonNativeLink) fromBytes(bytes []byte) {
 }
 
 func (a *AbstractNonNativeLink) extractValue(content, prefix string) {
+	if content == "" {
+		return
+	}
+
 	{
 		// check if the content is a link
 		match, err := regexp.Match("[a-zA-Z0-9]+:((\\/\\/)|\\?)", []byte(content))
