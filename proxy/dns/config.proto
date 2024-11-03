@@ -14,6 +14,7 @@ message Config {
   // original one.
   v2ray.core.common.net.Endpoint server = 1;
   uint32 user_level = 2;
+  string non_IP_query = 3;
 }
 
 message SimplifiedConfig {

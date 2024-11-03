@@ -237,11 +237,9 @@ type NameServer struct {
 
 func (x *NameServer) Reset() {
 	*x = NameServer{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_dns_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_dns_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *NameServer) String() string {
@@ -252,7 +250,7 @@ func (*NameServer) ProtoMessage() {}
 
 func (x *NameServer) ProtoReflect() protoreflect.Message {
 	mi := &file_app_dns_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -360,11 +358,9 @@ type HostMapping struct {
 
 func (x *HostMapping) Reset() {
 	*x = HostMapping{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_dns_config_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_dns_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *HostMapping) String() string {
@@ -375,7 +371,7 @@ func (*HostMapping) ProtoMessage() {}
 
 func (x *HostMapping) ProtoReflect() protoreflect.Message {
 	mi := &file_app_dns_config_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -470,11 +466,9 @@ type Config struct {
 
 func (x *Config) Reset() {
 	*x = Config{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_dns_config_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_dns_config_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Config) String() string {
@@ -485,7 +479,7 @@ func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
 	mi := &file_app_dns_config_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -644,11 +638,9 @@ type SimplifiedConfig struct {
 
 func (x *SimplifiedConfig) Reset() {
 	*x = SimplifiedConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_dns_config_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_dns_config_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *SimplifiedConfig) String() string {
@@ -659,7 +651,7 @@ func (*SimplifiedConfig) ProtoMessage() {}
 
 func (x *SimplifiedConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_dns_config_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -776,11 +768,9 @@ type SimplifiedHostMapping struct {
 
 func (x *SimplifiedHostMapping) Reset() {
 	*x = SimplifiedHostMapping{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_dns_config_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_dns_config_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *SimplifiedHostMapping) String() string {
@@ -791,7 +781,7 @@ func (*SimplifiedHostMapping) ProtoMessage() {}
 
 func (x *SimplifiedHostMapping) ProtoReflect() protoreflect.Message {
 	mi := &file_app_dns_config_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -858,11 +848,9 @@ type SimplifiedNameServer struct {
 
 func (x *SimplifiedNameServer) Reset() {
 	*x = SimplifiedNameServer{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_dns_config_proto_msgTypes[5]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_dns_config_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *SimplifiedNameServer) String() string {
@@ -873,7 +861,7 @@ func (*SimplifiedNameServer) ProtoMessage() {}
 
 func (x *SimplifiedNameServer) ProtoReflect() protoreflect.Message {
 	mi := &file_app_dns_config_proto_msgTypes[5]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -984,11 +972,9 @@ type NameServer_PriorityDomain struct {
 
 func (x *NameServer_PriorityDomain) Reset() {
 	*x = NameServer_PriorityDomain{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_dns_config_proto_msgTypes[6]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_dns_config_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *NameServer_PriorityDomain) String() string {
@@ -999,7 +985,7 @@ func (*NameServer_PriorityDomain) ProtoMessage() {}
 
 func (x *NameServer_PriorityDomain) ProtoReflect() protoreflect.Message {
 	mi := &file_app_dns_config_proto_msgTypes[6]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -1039,11 +1025,9 @@ type NameServer_OriginalRule struct {
 
 func (x *NameServer_OriginalRule) Reset() {
 	*x = NameServer_OriginalRule{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_dns_config_proto_msgTypes[7]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_dns_config_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *NameServer_OriginalRule) String() string {
@@ -1054,7 +1038,7 @@ func (*NameServer_OriginalRule) ProtoMessage() {}
 
 func (x *NameServer_OriginalRule) ProtoReflect() protoreflect.Message {
 	mi := &file_app_dns_config_proto_msgTypes[7]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -1094,11 +1078,9 @@ type SimplifiedNameServer_PriorityDomain struct {
 
 func (x *SimplifiedNameServer_PriorityDomain) Reset() {
 	*x = SimplifiedNameServer_PriorityDomain{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_dns_config_proto_msgTypes[9]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_dns_config_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *SimplifiedNameServer_PriorityDomain) String() string {
@@ -1109,7 +1091,7 @@ func (*SimplifiedNameServer_PriorityDomain) ProtoMessage() {}
 
 func (x *SimplifiedNameServer_PriorityDomain) ProtoReflect() protoreflect.Message {
 	mi := &file_app_dns_config_proto_msgTypes[9]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -1149,11 +1131,9 @@ type SimplifiedNameServer_OriginalRule struct {
 
 func (x *SimplifiedNameServer_OriginalRule) Reset() {
 	*x = SimplifiedNameServer_OriginalRule{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_dns_config_proto_msgTypes[10]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_dns_config_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *SimplifiedNameServer_OriginalRule) String() string {
@@ -1164,7 +1144,7 @@ func (*SimplifiedNameServer_OriginalRule) ProtoMessage() {}
 
 func (x *SimplifiedNameServer_OriginalRule) ProtoReflect() protoreflect.Message {
 	mi := &file_app_dns_config_proto_msgTypes[10]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -1495,7 +1475,7 @@ func file_app_dns_config_proto_rawDescGZIP() []byte {
 
 var file_app_dns_config_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
 var file_app_dns_config_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
-var file_app_dns_config_proto_goTypes = []interface{}{
+var file_app_dns_config_proto_goTypes = []any{
 	(DomainMatchingType)(0),                     // 0: v2ray.core.app.dns.DomainMatchingType
 	(QueryStrategy)(0),                          // 1: v2ray.core.app.dns.QueryStrategy
 	(CacheStrategy)(0),                          // 2: v2ray.core.app.dns.CacheStrategy
@@ -1566,130 +1546,8 @@ func file_app_dns_config_proto_init() {
 	if File_app_dns_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_app_dns_config_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NameServer); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_dns_config_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*HostMapping); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_dns_config_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_dns_config_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SimplifiedConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_dns_config_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SimplifiedHostMapping); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_dns_config_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SimplifiedNameServer); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_dns_config_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NameServer_PriorityDomain); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_dns_config_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NameServer_OriginalRule); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_dns_config_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SimplifiedNameServer_PriorityDomain); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_dns_config_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SimplifiedNameServer_OriginalRule); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
-	file_app_dns_config_proto_msgTypes[0].OneofWrappers = []interface{}{}
-	file_app_dns_config_proto_msgTypes[5].OneofWrappers = []interface{}{}
+	file_app_dns_config_proto_msgTypes[0].OneofWrappers = []any{}
+	file_app_dns_config_proto_msgTypes[5].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
