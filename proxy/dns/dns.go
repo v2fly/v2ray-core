@@ -57,6 +57,8 @@ type Handler struct {
 	timeout         time.Duration
 
 	config *Config
+
+	nonIPQuery      string
 }
 
 func (h *Handler) Init(config *Config, dnsClient dns.Client, policyManager policy.Manager) error {
@@ -86,8 +88,13 @@ func (h *Handler) Init(config *Config, dnsClient dns.Client, policyManager polic
 	if config.Server != nil {
 		h.server = config.Server.AsDestination()
 	}
+<<<<<<< HEAD
 
 	h.config = config
+=======
+	h.nonIPQuery = config.Non_IPQuery
+
+>>>>>>> ff1eb9f2 (add nonIPQuery for dns config)
 	return nil
 }
 
@@ -200,7 +207,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 
 			if !h.isOwnLink(ctx) {
 				isIPQuery, domain, id, qType := parseIPQuery(b.Bytes())
-				if isIPQuery {
+				if isIPQuery || h.nonIPQuery != "drop" {
 					if domain, err := strmatcher.ToDomain(domain); err == nil {
 						go h.handleIPQuery(id, qType, domain, writer)
 					} else {
