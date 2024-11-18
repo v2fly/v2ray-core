@@ -10,7 +10,7 @@ require (
 	github.com/apernet/quic-go v0.45.2-0.20240702221538-ed74cfbe8b6e
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/render v1.0.3
-	github.com/go-playground/validator/v10 v10.22.1
+	github.com/go-playground/validator/v10 v10.23.0
 	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
