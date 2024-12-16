@@ -8,7 +8,7 @@ require (
 	github.com/adrg/xdg v0.5.3
 	github.com/apernet/hysteria/core/v2 v2.4.5
 	github.com/apernet/quic-go v0.45.2-0.20240702221538-ed74cfbe8b6e
-	github.com/go-chi/chi/v5 v5.1.0
+	github.com/go-chi/chi/v5 v5.2.0
 	github.com/go-chi/render v1.0.3
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259
