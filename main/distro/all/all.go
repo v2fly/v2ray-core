@@ -15,6 +15,7 @@ import (
 	_ "github.com/v2fly/v2ray-core/v5/app/stats/command"
 
 	// Developer preview services
+	_ "github.com/v2fly/v2ray-core/v5/app/commander/webcommander"
 	_ "github.com/v2fly/v2ray-core/v5/app/instman/command"
 	_ "github.com/v2fly/v2ray-core/v5/app/observatory/command"
 
