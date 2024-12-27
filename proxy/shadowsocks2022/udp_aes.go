@@ -5,7 +5,7 @@ import (
 	"crypto/cipher"
 	"io"
 
-	"github.com/lunixbochs/struc"
+	"github.com/v2fly/struc"
 
 	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/net"
