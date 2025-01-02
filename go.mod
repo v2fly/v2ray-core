@@ -7,7 +7,7 @@ toolchain go1.22.7
 require (
 	github.com/adrg/xdg v0.5.3
 	github.com/apernet/hysteria/core/v2 v2.4.5
-	github.com/apernet/quic-go v0.45.2-0.20240702221538-ed74cfbe8b6e
+	github.com/apernet/quic-go v0.48.2-0.20241104191913-cb103fcecfe7
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/render v1.0.3
 	github.com/go-playground/validator/v10 v10.22.1
@@ -91,4 +91,4 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
 )
 
-replace github.com/apernet/hysteria/core/v2 v2.4.5 => github.com/JimmyHuang454/hysteria/core/v2 v2.0.0-20240724161647-b3347cf6334d
+replace github.com/apernet/hysteria/core/v2 v2.4.5 => github.com/JimmyHuang454/hysteria/core/v2 v2.0.0-20250101234611-6079a636852c

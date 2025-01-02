@@ -329,7 +329,7 @@ func testHysteria2Offical(t *testing.T, isUDP bool) {
 	var errg errgroup.Group
 	for i := 0; i < 10; i++ {
 		if isUDP {
-			errg.Go(testUDPConn(clientPort, 1024, time.Second*4))
+			errg.Go(testUDPConn(clientPort, 1500, time.Second*4))
 		} else {
 			errg.Go(testTCPConn(clientPort, 10240*1024, time.Second*40))
 		}

@@ -14,8 +14,8 @@ dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/FlowerWrong/water v0.0.0-20180301012659-01a4eaa1f6f2/go.mod h1:xrG5L7lq7T2DLnPr2frMnL906CNEoKRwLB+VYFhPq2w=
-github.com/JimmyHuang454/hysteria/core/v2 v2.0.0-20240724161647-b3347cf6334d h1:DN3vqWeuVa1anRkwCueIqPEUPnSyFCk4PR2LcyJKrZk=
-github.com/JimmyHuang454/hysteria/core/v2 v2.0.0-20240724161647-b3347cf6334d/go.mod h1:3OIt9vhWrxoHUMPm6WcpAg7jUEqfy6Q4IyFZA67Azcg=
+github.com/JimmyHuang454/hysteria/core/v2 v2.0.0-20250101234611-6079a636852c h1:SP9yk4RiDXwy3Atp1uSd2JJhfKbYJSJiocmtH8tG024=
+github.com/JimmyHuang454/hysteria/core/v2 v2.0.0-20250101234611-6079a636852c/go.mod h1:e5Eq51IB+vT8wI0T9eTf8oqnpMdeag1n0U/fdgszWco=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/adrg/xdg v0.5.3 h1:xRnxJXne7+oWDatRhR1JLnvuccuIeCoBu2rtuLqQB78=
 github.com/adrg/xdg v0.5.3/go.mod h1:nlTsY+NNiCBGCK2tpm09vRqfVzrc2fLmXGpBLF0zlTQ=
@@ -27,8 +27,8 @@ github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuy
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/andybalholm/brotli v1.0.6 h1:Yf9fFpf49Zrxb9NlQaluyE92/+X7UVHlhMNJN2sxfOI=
 github.com/andybalholm/brotli v1.0.6/go.mod h1:fO7iG3H7G2nSZ7m0zPUDn85XEX2GTukHGRSepvi9Eig=
-github.com/apernet/quic-go v0.45.2-0.20240702221538-ed74cfbe8b6e h1:KBs8aBfKl5AKPKGpfn3bl0joDJXDq5fnH+AjFODiU+A=
-github.com/apernet/quic-go v0.45.2-0.20240702221538-ed74cfbe8b6e/go.mod h1:MjGWpXA31DZZWESdX3/PjIpSWIT1fOm8FNCqyXXFZFU=
+github.com/apernet/quic-go v0.48.2-0.20241104191913-cb103fcecfe7 h1:zO38yBOvQ1dLHbSuaU5BFZ8zalnSDQslj+i/9AGOk9s=
+github.com/apernet/quic-go v0.48.2-0.20241104191913-cb103fcecfe7/go.mod h1:LoSUY2chVqNQCDyi4IZGqPpXLy1FuCkE37PKwtJvNGg=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
