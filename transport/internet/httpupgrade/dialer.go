@@ -32,6 +32,12 @@ func dialhttpUpgrade(ctx context.Context, dest net.Destination, streamSettings *
 		req.Header.Set("Upgrade", "websocket")
 		req.Host = transportConfiguration.Host
 
+		if transportConfiguration.Header != nil {
+			for _, value := range transportConfiguration.Header {
+				req.Header.Set(value.Key, value.Value)
+			}
+		}
+
 		earlyDataSize := len(earlyData)
 		if earlyDataSize > int(transportConfiguration.MaxEarlyData) {
 			earlyDataSize = int(transportConfiguration.MaxEarlyData)
