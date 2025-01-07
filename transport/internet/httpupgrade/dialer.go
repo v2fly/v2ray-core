@@ -3,6 +3,7 @@ package httpupgrade
 import (
 	"bufio"
 	"context"
+	"io"
 	"net/http"
 	"strings"
 
@@ -34,8 +35,8 @@ func dialhttpUpgrade(ctx context.Context, dest net.Destination, streamSettings *
 		return nil, err
 	}
 
-	// TODO The bufio usage here is unreliable
-	resp, err := http.ReadResponse(bufio.NewReader(conn), req) // nolint:bodyclose
+	bufferedConn := bufio.NewReader(conn)
+	resp, err := http.ReadResponse(bufferedConn, req) // nolint:bodyclose
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +44,10 @@ func dialhttpUpgrade(ctx context.Context, dest net.Destination, streamSettings *
 	if resp.Status == "101 Switching Protocols" &&
 		strings.ToLower(resp.Header.Get("Upgrade")) == "websocket" &&
 		strings.ToLower(resp.Header.Get("Connection")) == "upgrade" {
-		return conn, nil
+
+		remoteAddr := conn.RemoteAddr()
+		earlyReplyReader := io.LimitReader(bufferedConn, int64(bufferedConn.Buffered()))
+		return newConnectionWithEarlyReply(conn, remoteAddr, earlyReplyReader), nil
 	}
 	return nil, newError("unrecognized reply")
 }
