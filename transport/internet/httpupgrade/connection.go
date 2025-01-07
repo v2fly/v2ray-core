@@ -1,7 +1,6 @@
 package httpupgrade
 
 import (
-	"bytes"
 	"context"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -18,18 +17,26 @@ type connection struct {
 	shouldWait        bool
 	delayedDialFinish context.Context
 	finishedDial      context.CancelFunc
-	dialer            DelayedDialer
+	dialer            delayedDialer
 }
 
-type DelayedDialer interface {
-	Dial(earlyData []byte) (conn net.Conn, earlyReply []byte, err error)
-}
+type delayedDialer func(earlyData []byte) (conn net.Conn, earlyReply io.Reader, err error)
 
-func newConnectionWithEarlyReply(conn net.Conn, remoteAddr net.Addr, earlyReplyReader io.Reader) *connection {
+func newConnectionWithPendingRead(conn net.Conn, remoteAddr net.Addr, earlyReplyReader io.Reader) *connection {
 	return &connection{
 		conn:       conn,
 		remoteAddr: remoteAddr,
 		reader:     earlyReplyReader,
+	}
+}
+
+func newConnectionWithDelayedDial(dialer delayedDialer) *connection {
+	ctx, cancel := context.WithCancel(context.Background())
+	return &connection{
+		shouldWait:        true,
+		delayedDialFinish: ctx,
+		finishedDial:      cancel,
+		dialer:            dialer,
 	}
 }
 
@@ -57,10 +64,10 @@ func (c *connection) Read(b []byte) (int, error) {
 func (c *connection) Write(b []byte) (int, error) {
 	if c.shouldWait {
 		var err error
-		var earlyReply []byte
-		c.conn, earlyReply, err = c.dialer.Dial(b)
+		var earlyReply io.Reader
+		c.conn, earlyReply, err = c.dialer(b)
 		if earlyReply != nil {
-			c.reader = bytes.NewReader(earlyReply)
+			c.reader = earlyReply
 		}
 		c.finishedDial()
 		if err != nil {
