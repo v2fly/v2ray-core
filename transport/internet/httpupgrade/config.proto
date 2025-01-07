@@ -15,4 +15,6 @@ message Config {
 
   string path = 1;
   string host = 2;
+  int32 max_early_data = 3;
+  string early_data_header_name = 4;
 }
