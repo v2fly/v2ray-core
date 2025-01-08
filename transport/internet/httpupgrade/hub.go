@@ -2,7 +2,9 @@ package httpupgrade
 
 import (
 	"bufio"
+	"bytes"
 	"context"
+	"encoding/base64"
 	"net/http"
 	"strings"
 
@@ -13,6 +15,8 @@ import (
 )
 
 type server struct {
+	config *Config
+
 	addConn        internet.ConnHandler
 	innnerListener net.Listener
 }
@@ -52,6 +56,19 @@ func (s *server) Handle(conn net.Conn) (internet.Connection, error) {
 		_ = conn.Close()
 		return nil, err
 	}
+	if s.config.MaxEarlyData != 0 {
+		if s.config.EarlyDataHeaderName == "" {
+			return nil, newError("EarlyDataHeaderName is not set")
+		}
+		earlyData := req.Header.Get(s.config.EarlyDataHeaderName)
+		if earlyData != "" {
+			earlyDataBytes, err := base64.URLEncoding.DecodeString(earlyData)
+			if err != nil {
+				return nil, err
+			}
+			return newConnectionWithPendingRead(conn, conn.RemoteAddr(), bytes.NewReader(earlyDataBytes)), nil
+		}
+	}
 	return internet.Connection(conn), nil
 }
 
@@ -72,8 +89,7 @@ func (s *server) keepAccepting() {
 
 func listenHTTPUpgrade(ctx context.Context, address net.Address, port net.Port, streamSettings *internet.MemoryStreamConfig, addConn internet.ConnHandler) (internet.Listener, error) {
 	transportConfiguration := streamSettings.ProtocolSettings.(*Config)
-	_ = transportConfiguration
-	serverInstance := &server{addConn: addConn}
+	serverInstance := &server{config: transportConfiguration, addConn: addConn}
 
 	listener, err := transportcommon.ListenWithSecuritySettings(ctx, address, port, streamSettings)
 	if err != nil {

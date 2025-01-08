@@ -1,0 +1,46 @@
+{
+  "log": {
+    "error": {
+      "level": "Debug",
+      "type": "Console"
+    },
+    "access": {
+      "type": "None"
+    }
+  },
+  "outbounds": [
+    {
+      "protocol": "freedom"
+    }
+  ],
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 17793,
+      "protocol": "vmess",
+      "settings": {
+        "users": [
+          "bcc71618-e552-42c2-a2a3-d4c17a9df764"
+        ]
+      },
+      "streamSettings": {
+        "transport": "httpupgrade",
+        "transportSettings": {
+          "path": "b66efc0c7752",
+          "maxEarlyData": 32,
+          "earlyDataHeaderName": "Sec-Websocket-Key"
+        },
+        "security": "tls",
+        "securitySettings": {
+          "certificate": [
+            {
+              "usage": "ENCIPHERMENT",
+              "certificateFile": "cert/self-signed_cert.pem",
+              "keyFile": "cert/self-signed_key.pem"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

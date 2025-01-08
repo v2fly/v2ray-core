@@ -8,6 +8,11 @@ option java_multiple_files = true;
 
 import "common/protoext/extensions.proto";
 
+message Header {
+  string key = 1;
+  string value = 2;
+}
+
 message Config {
   option (v2ray.core.common.protoext.message_opt).type = "transport";
   option (v2ray.core.common.protoext.message_opt).short_name = "httpupgrade";
@@ -15,4 +20,7 @@ message Config {
 
   string path = 1;
   string host = 2;
+  int32 max_early_data = 3;
+  string early_data_header_name = 4;
+  repeated Header header = 5;
 }
