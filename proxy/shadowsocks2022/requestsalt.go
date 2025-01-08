@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"io"
 
-	"github.com/v2fly/struc"
+	"github.com/lunixbochs/struc"
 )
 
 func newRequestSaltWithLength(length int) RequestSalt {
