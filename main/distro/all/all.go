@@ -15,7 +15,6 @@ import (
 	_ "github.com/v2fly/v2ray-core/v5/app/stats/command"
 
 	// Developer preview services
-	_ "github.com/v2fly/v2ray-core/v5/app/commander/webcommander"
 	_ "github.com/v2fly/v2ray-core/v5/app/instman/command"
 	_ "github.com/v2fly/v2ray-core/v5/app/observatory/command"
 
@@ -32,6 +31,7 @@ import (
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/tagged/taggedimpl"
 
 	// Developer preview features
+	_ "github.com/v2fly/v2ray-core/v5/app/commander/webcommander"
 	_ "github.com/v2fly/v2ray-core/v5/app/instman"
 	_ "github.com/v2fly/v2ray-core/v5/app/observatory"
 	_ "github.com/v2fly/v2ray-core/v5/app/tun"
@@ -123,6 +123,8 @@ import (
 
 	// Subscription Supports
 	_ "github.com/v2fly/v2ray-core/v5/app/subscription/subscriptionmanager"
+
+	_ "github.com/v2fly/v2ray-core/v5/app/subscription/subscriptionmanager/command"
 
 	// Subscription Containers: general purpose
 	_ "github.com/v2fly/v2ray-core/v5/app/subscription/containers/base64urlline"
