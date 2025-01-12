@@ -1,8 +1,12 @@
 package webcommander
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
+	"io/fs"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -24,7 +28,16 @@ func newWebCommander(ctx context.Context, config *Config) (*WebCommander, error)
 	if config.Tag == "" {
 		return nil, newError("config.Tag is empty")
 	}
-	return &WebCommander{ctx: ctx, config: config}, nil
+	var webRootfs fs.FS
+	if config.WebRoot != nil {
+		zipReader, err := zip.NewReader(bytes.NewReader(config.WebRoot), int64(len(config.WebRoot)))
+		if err != nil {
+			return nil, newError("failed to create zip reader").Base(err)
+		}
+		webRootfs = zipReader
+	}
+
+	return &WebCommander{ctx: ctx, config: config, webRootfs: webRootfs}, nil
 
 }
 
@@ -37,13 +50,22 @@ type WebCommander struct {
 
 	server      *http.Server
 	wrappedGrpc *grpcweb.WrappedGrpcServer
+	webRootfs   fs.FS
 
 	config *Config
 }
 
 func (w *WebCommander) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	if w.wrappedGrpc.IsGrpcWebRequest(request) {
-		w.wrappedGrpc.ServeHTTP(writer, request)
+	api_path := w.config.ApiMountpoint
+	if strings.HasPrefix(request.URL.Path, api_path) {
+		request.URL.Path = strings.TrimPrefix(request.URL.Path, api_path)
+		if w.wrappedGrpc.IsGrpcWebRequest(request) {
+			w.wrappedGrpc.ServeHTTP(writer, request)
+			return
+		}
+	}
+	if w.webRootfs != nil {
+		http.ServeFileFS(writer, request, w.webRootfs, request.URL.Path)
 		return
 	}
 	writer.WriteHeader(http.StatusNotFound)

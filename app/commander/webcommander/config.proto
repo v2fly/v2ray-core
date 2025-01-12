@@ -13,4 +13,9 @@ message Config {
   option (v2ray.core.common.protoext.message_opt).short_name = "webcommander";
 
   string tag = 1;
+
+  bytes web_root = 2;
+  string web_root_file = 96002 [(v2ray.core.common.protoext.field_opt).convert_time_read_file_into = "web_root"];
+
+  string api_mountpoint = 3;
 }
