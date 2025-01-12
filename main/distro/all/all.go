@@ -131,6 +131,7 @@ import (
 	_ "github.com/v2fly/v2ray-core/v5/app/subscription/containers/dataurlsingle"
 	_ "github.com/v2fly/v2ray-core/v5/app/subscription/containers/jsonfieldarray"
 	_ "github.com/v2fly/v2ray-core/v5/app/subscription/containers/jsonfieldarray/jsonified"
+	_ "github.com/v2fly/v2ray-core/v5/app/subscription/containers/urlline"
 
 	// Subscription Fetchers
 	_ "github.com/v2fly/v2ray-core/v5/app/subscription/documentfetcher/dataurlfetcher"
