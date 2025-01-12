@@ -51,7 +51,7 @@ func (p parser) ParseSubscriptionContainerDocument(rawConfig []byte) (*container
 		})
 	}
 
-	if failedLine > parsedLine {
+	if failedLine > parsedLine || parsedLine == 0 {
 		return nil, newError("failed to parse as URLLine").Base(newError("too many failed lines"))
 	}
 
