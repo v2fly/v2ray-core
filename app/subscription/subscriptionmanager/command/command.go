@@ -10,6 +10,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
+
 type SubscriptionManagerService struct {
 	UnimplementedSubscriptionManagerServiceServer
 	manager subscription.SubscriptionManager
@@ -20,11 +22,17 @@ func NewSubscriptionManagerService(manager subscription.SubscriptionManager) *Su
 }
 
 func (s *SubscriptionManagerService) ListTrackedSubscription(ctx context.Context, req *ListTrackedSubscriptionRequest) (*ListTrackedSubscriptionResponse, error) {
+	if s.manager == nil {
+		return nil, newError("subscription manager is not available")
+	}
 	names := s.manager.ListTrackedSubscriptions()
 	return &ListTrackedSubscriptionResponse{Names: names}, nil
 }
 
 func (s *SubscriptionManagerService) AddTrackedSubscription(ctx context.Context, req *AddTrackedSubscriptionRequest) (*AddTrackedSubscriptionResponse, error) {
+	if s.manager == nil {
+		return nil, newError("subscription manager is not available")
+	}
 	err := s.manager.AddTrackedSubscriptionFromImportSource(req.Source)
 	if err != nil {
 		return nil, err
@@ -33,6 +41,9 @@ func (s *SubscriptionManagerService) AddTrackedSubscription(ctx context.Context,
 }
 
 func (s *SubscriptionManagerService) RemoveTrackedSubscription(ctx context.Context, req *RemoveTrackedSubscriptionRequest) (*RemoveTrackedSubscriptionResponse, error) {
+	if s.manager == nil {
+		return nil, newError("subscription manager is not available")
+	}
 	err := s.manager.RemoveTrackedSubscription(req.Name)
 	if err != nil {
 		return nil, err
@@ -41,6 +52,9 @@ func (s *SubscriptionManagerService) RemoveTrackedSubscription(ctx context.Conte
 }
 
 func (s *SubscriptionManagerService) GetTrackedSubscriptionStatus(ctx context.Context, req *GetTrackedSubscriptionStatusRequest) (*GetTrackedSubscriptionStatusResponse, error) {
+	if s.manager == nil {
+		return nil, newError("subscription manager is not available")
+	}
 	status, err := s.manager.GetTrackedSubscriptionStatus(req.Name)
 	if err != nil {
 		return nil, err
