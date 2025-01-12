@@ -39,6 +39,11 @@ type WebCommander struct {
 }
 
 func (w *WebCommander) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	defer func() {
+		if x := recover(); x != nil {
+			newError("panic in WebCommander:", x).WriteToLog()
+		}
+	}()
 	if w.wrappedGrpc.IsGrpcWebRequest(request) {
 		w.wrappedGrpc.ServeHTTP(writer, request)
 		return
