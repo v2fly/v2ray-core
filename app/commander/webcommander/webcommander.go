@@ -2,13 +2,14 @@ package webcommander
 
 import (
 	"context"
-	"net/http"
-	"sync"
-
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/app/commander"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/features/outbound"
+	"google.golang.org/grpc"
+	"net/http"
+	"sync"
+	"time"
 
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 )
@@ -31,6 +32,7 @@ type WebCommander struct {
 
 	ctx context.Context
 	ohm outbound.Manager
+	cm  commander.CommanderIfce
 
 	server      *http.Server
 	wrappedGrpc *grpcweb.WrappedGrpcServer
@@ -39,16 +41,44 @@ type WebCommander struct {
 }
 
 func (w *WebCommander) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	defer func() {
-		if x := recover(); x != nil {
-			newError("panic in WebCommander:", x).WriteToLog()
-		}
-	}()
 	if w.wrappedGrpc.IsGrpcWebRequest(request) {
 		w.wrappedGrpc.ServeHTTP(writer, request)
 		return
 	}
 	writer.WriteHeader(http.StatusNotFound)
+}
+
+func (w *WebCommander) asyncStart() {
+	var grpcServer *grpc.Server
+	for {
+		grpcServer = w.cm.ExtractGrpcServer()
+		if grpcServer != nil {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+
+	listener := commander.NewOutboundListener()
+
+	wrappedGrpc := grpcweb.WrapServer(grpcServer)
+	w.server = &http.Server{}
+	w.wrappedGrpc = wrappedGrpc
+	w.server.Handler = w
+
+	go func() {
+		err := w.server.Serve(listener)
+		if err != nil {
+			newError("failed to serve HTTP").Base(err).WriteToLog()
+		}
+	}()
+
+	if err := w.ohm.RemoveHandler(context.Background(), w.config.Tag); err != nil {
+		newError("failed to remove existing handler").WriteToLog()
+	}
+
+	if err := w.ohm.AddHandler(context.Background(), commander.NewOutbound(w.config.Tag, listener)); err != nil {
+		newError("failed to add handler").Base(err).WriteToLog()
+	}
 }
 
 func (w *WebCommander) Type() interface{} {
@@ -61,31 +91,11 @@ func (w *WebCommander) Start() error {
 		w.Lock()
 		defer w.Unlock()
 
-		grpcServer := cm.ExtractGrpcServer()
-
-		listener := commander.NewOutboundListener()
-
-		wrappedGrpc := grpcweb.WrapServer(grpcServer)
-		w.server = &http.Server{}
-		w.wrappedGrpc = wrappedGrpc
-		w.server.Handler = w
-
-		go func() {
-			err := w.server.Serve(listener)
-			if err != nil {
-				newError("failed to serve HTTP").Base(err).WriteToLog()
-			}
-		}()
-
+		w.cm = cm
 		w.ohm = om
 
-		if err := w.ohm.RemoveHandler(context.Background(), w.config.Tag); err != nil {
-			newError("failed to remove existing handler").WriteToLog()
-		}
+		go w.asyncStart()
 
-		if err := w.ohm.AddHandler(context.Background(), commander.NewOutbound(w.config.Tag, listener)); err != nil {
-			newError("failed to add handler").Base(err).WriteToLog()
-		}
 	}); err != nil {
 		return err
 	}
