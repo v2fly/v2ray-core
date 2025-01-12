@@ -78,6 +78,10 @@ type materializedServer struct {
 }
 
 func (s *trackedSubscription) fillStatus(status *subscription.TrackedSubscriptionStatus) error {
+	status.ImportSource = s.importSource
+	if s.currentDocument == nil {
+		return nil
+	}
 	status.DocumentMetadata = s.currentDocument.Metadata
 	status.Servers = make(map[string]*subscription.SubscriptionServer)
 	for _, v := range s.currentDocument.Server {
