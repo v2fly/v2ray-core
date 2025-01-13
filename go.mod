@@ -6,7 +6,6 @@ toolchain go1.22.7
 
 require (
 	github.com/adrg/xdg v0.5.3
-	github.com/apernet/hysteria/core/v2 v2.4.5
 	github.com/apernet/quic-go v0.48.2-0.20241104191913-cb103fcecfe7
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/render v1.0.3
@@ -30,6 +29,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/v2fly/BrowserBridge v0.0.0-20210430233438-0570fc1d7d08
 	github.com/v2fly/VSign v0.0.0-20201108000810-e2adc24bf848
+	github.com/v2fly/hysteria/core/v2 v2.4.5
 	github.com/v2fly/ss-bloomring v0.0.0-20210312155135-28617310f63e
 	github.com/v2fly/struc v0.0.0-20241227015403-8e8fa1badfd6
 	github.com/vincent-petithory/dataurl v1.0.0
@@ -90,5 +90,3 @@ require (
 	golang.org/x/tools v0.22.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
 )
-
-replace github.com/apernet/hysteria/core/v2 v2.4.5 => github.com/JimmyHuang454/hysteria/core/v2 v2.0.0-20250101234611-6079a636852c

@@ -3,9 +3,9 @@ package hysteria2
 import (
 	"time"
 
-	hyClient "github.com/apernet/hysteria/core/v2/client"
-	"github.com/apernet/hysteria/core/v2/international/protocol"
-	hyServer "github.com/apernet/hysteria/core/v2/server"
+	hyClient "github.com/v2fly/hysteria/core/v2/client"
+	"github.com/v2fly/hysteria/core/v2/international/protocol"
+	hyServer "github.com/v2fly/hysteria/core/v2/server"
 	"github.com/apernet/quic-go"
 
 	"github.com/v2fly/v2ray-core/v5/common/net"

@@ -3,7 +3,7 @@ package hysteria2
 import (
 	"context"
 
-	hyServer "github.com/apernet/hysteria/core/v2/server"
+	hyServer "github.com/v2fly/hysteria/core/v2/server"
 	"github.com/apernet/quic-go"
 	"github.com/apernet/quic-go/http3"
 

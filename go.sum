@@ -14,8 +14,6 @@ dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/FlowerWrong/water v0.0.0-20180301012659-01a4eaa1f6f2/go.mod h1:xrG5L7lq7T2DLnPr2frMnL906CNEoKRwLB+VYFhPq2w=
-github.com/JimmyHuang454/hysteria/core/v2 v2.0.0-20250101234611-6079a636852c h1:SP9yk4RiDXwy3Atp1uSd2JJhfKbYJSJiocmtH8tG024=
-github.com/JimmyHuang454/hysteria/core/v2 v2.0.0-20250101234611-6079a636852c/go.mod h1:e5Eq51IB+vT8wI0T9eTf8oqnpMdeag1n0U/fdgszWco=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/adrg/xdg v0.5.3 h1:xRnxJXne7+oWDatRhR1JLnvuccuIeCoBu2rtuLqQB78=
 github.com/adrg/xdg v0.5.3/go.mod h1:nlTsY+NNiCBGCK2tpm09vRqfVzrc2fLmXGpBLF0zlTQ=
