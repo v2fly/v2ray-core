@@ -36,10 +36,10 @@ require (
 	github.com/xiaokangwang/VLite v0.0.0-20220418190619-cff95160a432
 	go.starlark.net v0.0.0-20230612165344-9532f5667272
 	go4.org/netipx v0.0.0-20230303233057-f1b76eb4bb35
-	golang.org/x/crypto v0.30.0
+	golang.org/x/crypto v0.32.0
 	golang.org/x/net v0.32.0
 	golang.org/x/sync v0.10.0
-	golang.org/x/sys v0.28.0
+	golang.org/x/sys v0.29.0
 	google.golang.org/grpc v1.68.1
 	google.golang.org/protobuf v1.35.2
 	gopkg.in/yaml.v3 v3.0.1
