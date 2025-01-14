@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package v2ray.core.app.subscription;
+
+option csharp_namespace = "V2Ray.Core.App.Subscription";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/subscription";
+option java_package = "com.v2ray.core.app.subscription";
+option java_multiple_files = true;
+
+import "app/subscription/config.proto";
+
+message SubscriptionServer {
+  map<string, string> serverMetadata = 2;
+  string tag = 3;
+}
+
+message TrackedSubscriptionStatus {
+  map<string, SubscriptionServer> servers = 1;
+  map<string, string> documentMetadata = 2;
+  v2ray.core.app.subscription.ImportSource importSource = 3;
+}

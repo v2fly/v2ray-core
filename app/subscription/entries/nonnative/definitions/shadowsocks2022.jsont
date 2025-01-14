@@ -44,8 +44,8 @@
 
     "metadata":{
 
-    "TagName": {{print $name_annotation "_" $server_address | jsonEncode}}
-
+    "TagName": {{print $name_annotation "_" $server_address | jsonEncode}},
+    "DisplayName": {{print $name_annotation | jsonEncode}}
     }
 
     }

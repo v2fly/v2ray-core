@@ -40,6 +40,11 @@ func (l *LeastPingStrategy) PickOutbound(strings []string) string {
 		}))
 	}
 
+	if l.observatory == nil {
+		newError("cannot find observatory").WriteToLog()
+		return ""
+	}
+
 	observeReport, err := l.observatory.GetObservation(l.ctx)
 	if err != nil {
 		newError("cannot get observe report").Base(err).WriteToLog()

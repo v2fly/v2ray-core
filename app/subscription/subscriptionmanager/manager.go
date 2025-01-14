@@ -4,20 +4,22 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"sync"
 	"time"
 
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/app/subscription"
 	"github.com/v2fly/v2ray-core/v5/app/subscription/entries"
 	"github.com/v2fly/v2ray-core/v5/app/subscription/entries/nonnative/nonnativeifce"
+	"github.com/v2fly/v2ray-core/v5/app/subscription/specs"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/task"
-	"github.com/v2fly/v2ray-core/v5/features/extension"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 type SubscriptionManagerImpl struct {
+	sync.Mutex
 	config *subscription.Config
 	ctx    context.Context
 
@@ -30,28 +32,52 @@ type SubscriptionManagerImpl struct {
 }
 
 func (s *SubscriptionManagerImpl) Type() interface{} {
-	return extension.SubscriptionManagerType()
+	return subscription.SubscriptionManagerType()
 }
 
 func (s *SubscriptionManagerImpl) housekeeping() error {
 	for subscriptionName := range s.trackedSubscriptions {
+		s.Lock()
 		if err := s.checkupSubscription(subscriptionName); err != nil {
 			newError("failed to checkup subscription: ", err).AtWarning().WriteToLog()
 		}
+		s.Unlock()
 	}
 	return nil
 }
 
 func (s *SubscriptionManagerImpl) Start() error {
-	if err := s.refreshTask.Start(); err != nil {
-		return err
-	}
+	go func() {
+		if err := s.refreshTask.Start(); err != nil {
+			return
+		}
+	}()
 	return nil
 }
 
 func (s *SubscriptionManagerImpl) Close() error {
 	if err := s.refreshTask.Close(); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (s *SubscriptionManagerImpl) addTrackedSubscriptionFromImportSource(importSource *subscription.ImportSource) error {
+	tracked, err := newTrackedSubscription(importSource)
+	if err != nil {
+		return newError("failed to init subscription ", importSource.Name, ": ", err)
+	}
+	s.trackedSubscriptions[importSource.Name] = tracked
+	return nil
+}
+
+func (s *SubscriptionManagerImpl) removeTrackedSubscription(subscriptionName string) error {
+	if _, ok := s.trackedSubscriptions[subscriptionName]; ok {
+		err := s.applySubscriptionTo(subscriptionName, &specs.SubscriptionDocument{Server: make([]*specs.SubscriptionServerConfig, 0)})
+		if err != nil {
+			return newError("failed to apply empty subscription: ", err)
+		}
+		delete(s.trackedSubscriptions, subscriptionName)
 	}
 	return nil
 }
@@ -78,11 +104,9 @@ func (s *SubscriptionManagerImpl) init() error {
 	}
 
 	for _, v := range s.config.Imports {
-		tracked, err := newTrackedSubscription(v)
-		if err != nil {
-			return newError("failed to init subscription ", v.Name, ": ", err)
+		if err := s.addTrackedSubscriptionFromImportSource(v); err != nil {
+			return newError("failed to add tracked subscription: ", err)
 		}
-		s.trackedSubscriptions[v.Name] = tracked
 	}
 	return nil
 }

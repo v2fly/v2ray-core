@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package v2ray.core.app.commander.webcommander;
+option csharp_namespace = "V2Ray.Core.App.Commander.WebCommander";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/commander/webcommander";
+option java_package = "com.v2ray.core.app.commander.webcommander";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "service";
+  option (v2ray.core.common.protoext.message_opt).short_name = "webcommander";
+
+  string tag = 1;
+
+  bytes web_root = 2;
+  string web_root_file = 96002 [(v2ray.core.common.protoext.field_opt).convert_time_read_file_into = "web_root"];
+
+  string api_mountpoint = 3;
+}
