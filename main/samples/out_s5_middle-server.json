@@ -1,0 +1,24 @@
+{
+  "outbounds": [
+    {
+      "protocol": "socks",
+      "settings": {
+        "auth": "password",
+        "servers": [
+          {
+            "address": "106.75.239.178",
+            "port": 20000,
+            "users": [
+              {
+                "user": "test",
+                "pass": "password",
+                "level": 0
+              }
+            ]
+          }
+        ]
+      },
+      "tag": "middle-server"
+    }
+  ]
+}
