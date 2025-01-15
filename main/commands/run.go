@@ -21,9 +21,9 @@ import (
 var CmdRun = &base.Command{
 	CustomFlags: true,
 	UsageLine:   "{{.Exec}} run [-c config.json] [-d dir]",
-	Short:       "run V2Ray with config",
+	Short:       "run Elink with config",
 	Long: `
-Run V2Ray with config.
+Run Elink with config.
 
 {{.Exec}} will also use the config directory specified by environment 
 variable "v2ray.location.confdir". If no config found, it tries 
@@ -36,7 +36,7 @@ to load config from one of below:
 Arguments:
 
 	-c, -config <file>
-		Config file for V2Ray. Multiple assign is accepted.
+		Config file for Elink. Multiple assign is accepted.
 
 	-d, -confdir <dir>
 		A directory with config files. Multiple assign is accepted.

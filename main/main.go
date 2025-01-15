@@ -6,8 +6,12 @@ import (
 	_ "github.com/v2fly/v2ray-core/v5/main/distro/all"
 )
 
+var (
+	Version = "1.0.0"
+)
+
 func main() {
-	base.RootCommand.Long = "A unified platform for anti-censorship."
+	base.RootCommand.Long = "Elink_" + Version
 	base.RegisterCommand(commands.CmdRun)
 	base.RegisterCommand(commands.CmdVersion)
 	base.RegisterCommand(commands.CmdTest)

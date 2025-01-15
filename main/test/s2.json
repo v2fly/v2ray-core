@@ -1,0 +1,31 @@
+{
+    "log": {
+        "loglevel": "debug"
+    },
+
+    "inbounds": [
+        {
+            "protocol": "socks",
+            "ip": "106.75.239.178",
+            "port": 20000,
+            "settings": {
+              "auth": "password",
+              "accounts": [
+                {
+                  "user": "test",
+                  "pass": "password"
+                }
+              ],
+              "udp": true,
+              "userLevel": 0
+            }
+          }
+    ],
+
+    "outbounds": [
+      {
+        "protocol": "freedom", 
+        "settings": {}
+      }
+    ]
+  }
