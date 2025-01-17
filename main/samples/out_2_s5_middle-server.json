@@ -3,6 +3,7 @@
     {
       "protocol": "socks",
       "settings": {
+        "domainStrategy": "UseIP4",
         "auth": "password",
         "servers": [
           {
@@ -18,7 +19,7 @@
           }
         ]
       },
-      "tag": "middle-server"
+      "tag": "middle-server-s5"
     }
   ]
 }

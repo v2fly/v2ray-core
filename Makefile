@@ -10,4 +10,12 @@ export LDFlag="-s -w -X main.Version=$(Version)"
 
 
 all:
-	go build -ldflags $(LDFlag) -o dist/$(Version)/proxier ./main
+	go build -ldflags $(LDFlag) -o dist/$(Version)/elink ./main
+	cp -rf main/samples dist/$(Version)/
+
+dat:
+	echo ">>> Download latest geoip..."
+	curl -s -L -o dist/$(Version)/geoip.dat "https://github.com/v2fly/geoip/raw/release/geoip.dat"
+	echo ">>> Download latest geosite..."
+	curl -s -L -o dist/$(Version)/geosite.dat "https://github.com/v2fly/domain-list-community/raw/release/dlc.dat"
+

@@ -1,12 +1,18 @@
 {
   "outbounds": [
     {
-      "tag": "direct",
+      "tag": "proxy-s5",
       "protocol": "socks",
       "proxySettings": {
-        "tag": "middle-server"
+        "tag": "middle-server-s5"
+      },
+      "streamSettings": {
+        "sockopt": {
+          "mark": 255
+        }
       },
       "settings": {
+        "domainStrategy": "UseIP4",
         "auth": "password",
         "servers": [
           {
