@@ -29,7 +29,7 @@
       {
         "type": "field",
         "domain": ["geosite:category-ads-all"],
-        "outboundTag": "block"
+        "outboundTag": "direct"
       },
       {
         "type": "field",
