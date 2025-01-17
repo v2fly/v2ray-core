@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package v2ray.core.app.subscription.subscriptionmanager.command;
+option csharp_namespace = "V2Ray.Core.App.Subscription.Subscriptionmanager.Command";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/subscription/subscriptionmanager/command";
+option java_package = "com.v2ray.core.subscription.subscriptionmanager.command";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+import "app/subscription/config.proto";
+import "app/subscription/subscription_rpc.proto";
+
+message ListTrackedSubscriptionRequest {
+}
+
+message ListTrackedSubscriptionResponse {
+  repeated string names = 1;
+}
+
+message AddTrackedSubscriptionRequest{
+  v2ray.core.app.subscription.ImportSource source = 1;
+}
+message AddTrackedSubscriptionResponse{
+
+}
+message RemoveTrackedSubscriptionRequest{
+  string name = 1;
+}
+message RemoveTrackedSubscriptionResponse{
+
+}
+
+message GetTrackedSubscriptionStatusRequest {
+  string name = 1;
+}
+
+message GetTrackedSubscriptionStatusResponse {
+  v2ray.core.app.subscription.TrackedSubscriptionStatus status = 1;
+}
+
+
+service SubscriptionManagerService {
+  rpc ListTrackedSubscription(ListTrackedSubscriptionRequest)
+      returns (ListTrackedSubscriptionResponse) {}
+  rpc AddTrackedSubscription(AddTrackedSubscriptionRequest)
+      returns (AddTrackedSubscriptionResponse) {}
+  rpc RemoveTrackedSubscription(RemoveTrackedSubscriptionRequest)
+      returns (RemoveTrackedSubscriptionResponse) {}
+  rpc GetTrackedSubscriptionStatus(GetTrackedSubscriptionStatusRequest)
+      returns (GetTrackedSubscriptionStatusResponse) {}
+}
+
+
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "grpcservice";
+  option (v2ray.core.common.protoext.message_opt).short_name = "subscriptionmanager";
+}
