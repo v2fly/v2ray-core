@@ -1,0 +1,27 @@
+{
+    "routing": {
+      "domainStrategy": "IPOnDemand",
+      "rules": [
+        {
+          "type": "field",
+          "inboundTag": ["transparent"],
+          "port": 53,
+          "network": "udp",
+          "outboundTag": "dns-out"
+        },
+        {
+          "type": "field",
+          "inboundTag": ["transparent"],
+          "port": 123,
+          "network": "udp",
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": ["223.5.5.5", "114.114.114.114"],
+          "outboundTag": "direct"
+        }
+      ]
+    }
+  }
+  

@@ -1,0 +1,14 @@
+{
+    "outbounds": [
+      {
+        "tag": "dns-out",
+        "protocol": "dns",
+        "streamSettings": {
+          "sockopt": {
+            "mark": 255
+          }
+        }
+      }
+    ]
+  }
+  

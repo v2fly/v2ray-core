@@ -1,0 +1,29 @@
+{
+    "routing": {
+      "domainStrategy": "IPOnDemand",
+      "rules": [
+
+        {
+          "type": "field",
+          "domain": ["geosite:category-ads-all"],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "protocol": ["bittorrent"],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": ["geoip:private", "geoip:cn"],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "domain": ["geosite:cn"],
+          "outboundTag": "direct"
+        }
+      ]
+    }
+  }
+  
