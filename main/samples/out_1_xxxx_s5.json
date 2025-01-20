@@ -1,0 +1,33 @@
+{
+  "outbounds": [
+    {
+      "tag": "proxy-s5-xxxx",
+      "protocol": "socks",
+      "proxySettings": {
+        "tag": "middle-server-s5"
+      },
+      "streamSettings": {
+        "sockopt": {
+          "mark": 255
+        }
+      },
+      "settings": {
+        "domainStrategy": "UseIP4",
+        "auth": "password",
+        "servers": [
+          {
+            "address": "106.75.239.178",
+            "port": 20000,
+            "users": [
+              {
+                "user": "test",
+                "pass": "password",
+                "level": 0
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
