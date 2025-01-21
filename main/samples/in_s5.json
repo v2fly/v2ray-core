@@ -1,6 +1,7 @@
 {
   "inbounds": [
     {
+      "tag": "transparent-s5-xxxx",
       "port": 1080,
       "protocol": "socks",
       "sniffing": {
