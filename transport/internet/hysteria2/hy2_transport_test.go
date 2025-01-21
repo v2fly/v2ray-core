@@ -127,6 +127,7 @@ func TestUDP(t *testing.T) {
 	time.Sleep(time.Second)
 
 	address, err := net.ParseDestination("udp:127.0.0.1:1180")
+	common.Must(err)
 	dctx := session.ContextWithOutbound(context.Background(), &session.Outbound{Target: address})
 
 	conn, err := hysteria2.Dial(dctx, net.TCPDestination(net.LocalHostIP, port), &internet.MemoryStreamConfig{

@@ -4,8 +4,8 @@ import (
 	"io"
 	"math/rand"
 
-	hyProtocol "github.com/v2fly/hysteria/core/v2/international/protocol"
 	"github.com/apernet/quic-go/quicvarint"
+	hyProtocol "github.com/v2fly/hysteria/core/v2/international/protocol"
 
 	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -59,7 +59,7 @@ func (c *ConnWriter) WriteTCPHeader() error {
 }
 
 func QuicLen(s int) int {
-	return int(quicvarint.Len(uint64(s)))
+	return quicvarint.Len(uint64(s))
 }
 
 func (c *ConnWriter) writeTCPHeader() error {

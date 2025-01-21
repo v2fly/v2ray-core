@@ -288,8 +288,8 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 	}
 
 	if len(c.EchConfig) > 0 || len(c.Ech_DOHserver) > 0 {
-		err := ApplyECH(c, config)
-		if err != nil {
+		err := ApplyECH(c, config) //nolint: staticcheck
+		if err != nil {            //nolint: staticcheck
 			newError("unable to set ECH").AtError().Base(err).WriteToLog()
 		}
 	}

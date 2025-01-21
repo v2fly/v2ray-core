@@ -3,10 +3,11 @@ package urlline
 import (
 	"bufio"
 	"bytes"
-	"github.com/v2fly/v2ray-core/v5/app/subscription/containers"
-	"github.com/v2fly/v2ray-core/v5/common"
 	"net/url"
 	"strings"
+
+	"github.com/v2fly/v2ray-core/v5/app/subscription/containers"
+	"github.com/v2fly/v2ray-core/v5/common"
 )
 
 func newURLLineParser() containers.SubscriptionContainerDocumentParser {

@@ -93,7 +93,7 @@ Command "%s" not found.
 Make sure that %s is in your system path or current path.
 Download %s v%s or later from https://github.com/protocolbuffers/protobuf/releases
 `, protoc, protoc, protoc, targetedVersion)
-		return "", fmt.Errorf(errStr)
+		return "", fmt.Errorf("%v", errStr)
 	}
 	return path, nil
 }
@@ -124,7 +124,7 @@ func getInstalledProtocVersion(protocPath string) (string, error) {
 	matched := versionRegexp.FindStringSubmatch(string(output))
 	installedVersion := ""
 	if len(matched) == 0 {
-		return "", errors.New("Can not parse protoc version.")
+		return "", errors.New("can not parse protoc version")
 	}
 
 	if len(matched) == 2 {

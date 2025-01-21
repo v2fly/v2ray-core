@@ -77,7 +77,7 @@ type materializedServer struct {
 	serverConfig *specs.SubscriptionServerConfig
 }
 
-func (s *trackedSubscription) fillStatus(status *subscription.TrackedSubscriptionStatus) error {
+func (s *trackedSubscription) fillStatus(status *subscription.TrackedSubscriptionStatus) error { //nolint: unparam
 	status.ImportSource = s.importSource
 	if s.currentDocument == nil {
 		return nil

@@ -43,7 +43,7 @@ func dialhttpUpgrade(ctx context.Context, dest net.Destination, streamSettings *
 			earlyDataSize = int(transportConfiguration.MaxEarlyData)
 		}
 
-		if earlyData != nil && len(earlyData) > 0 {
+		if len(earlyData) > 0 {
 			if transportConfiguration.EarlyDataHeaderName == "" {
 				return nil, nil, newError("EarlyDataHeaderName is not set")
 			}
@@ -71,7 +71,6 @@ func dialhttpUpgrade(ctx context.Context, dest net.Destination, streamSettings *
 		if resp.Status == "101 Switching Protocols" &&
 			strings.ToLower(resp.Header.Get("Upgrade")) == "websocket" &&
 			strings.ToLower(resp.Header.Get("Connection")) == "upgrade" {
-
 			earlyReplyReader := io.LimitReader(bufferedConn, int64(bufferedConn.Buffered()))
 			return conn, earlyReplyReader, nil
 		}

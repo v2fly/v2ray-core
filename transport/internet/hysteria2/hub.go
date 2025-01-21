@@ -3,9 +3,9 @@ package hysteria2
 import (
 	"context"
 
-	hyServer "github.com/v2fly/hysteria/core/v2/server"
 	"github.com/apernet/quic-go"
 	"github.com/apernet/quic-go/http3"
+	hyServer "github.com/v2fly/hysteria/core/v2/server"
 
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -42,7 +42,7 @@ func (l *Listener) StreamHijacker(ft http3.FrameType, conn quic.Connection, stre
 	return true, nil
 }
 
-func (l *Listener) UdpHijacker(entry *hyServer.UdpSessionEntry, originalAddr string) {
+func (l *Listener) UDPHijacker(entry *hyServer.UdpSessionEntry, originalAddr string) {
 	addr, err := net.ResolveUDPAddr("udp", originalAddr)
 	if err != nil {
 		return
@@ -90,7 +90,7 @@ func Listen(ctx context.Context, address net.Address, port net.Port, streamSetti
 		Authenticator:         &Authenticator{Password: config.GetPassword()},
 		StreamHijacker:        listener.StreamHijacker, // acceptStreams
 		BandwidthConfig:       hyServer.BandwidthConfig{MaxTx: config.Congestion.GetUpMbps() * MBps, MaxRx: config.GetCongestion().GetDownMbps() * MBps},
-		UdpSessionHijacker:    listener.UdpHijacker, // acceptUDPSession
+		UdpSessionHijacker:    listener.UDPHijacker, // acceptUDPSession
 		IgnoreClientBandwidth: config.GetIgnoreClientBandwidth(),
 	})
 	if err != nil {

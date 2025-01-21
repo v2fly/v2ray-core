@@ -88,7 +88,7 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 
 	if !IsHy2Transport && network == net.Network_UDP {
 		// hysteria2 need to use udp extension to proxy UDP.
-		return newError(hyTransport.CanNotUseUdpExtension)
+		return newError(hyTransport.CanNotUseUDPExtension)
 	}
 
 	user := server.PickUser()
