@@ -9,9 +9,11 @@ export Version=$(strip $(Ver))
 export LDFlag="-s -w -X main.Version=$(Version)"
 
 
-all:
+gateway:
 	go build -ldflags $(LDFlag) -o dist/$(Version)/elink ./main
 	cp -rf main/samples dist/$(Version)/
+
+release:gateway router dat
 
 router:
 	GCC=/opt/openwrt-sdk/staging_dir/toolchain-x86_64_gcc-11.3.0_musl/bin/x86_64-openwrt-linux-gcc \
