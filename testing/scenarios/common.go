@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"fmt"
-	"golang.org/x/net/proxy"
 	"io"
 	"os"
 	"os/exec"
@@ -13,6 +12,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"golang.org/x/net/proxy"
 
 	"google.golang.org/protobuf/proto"
 
@@ -169,7 +170,7 @@ func withDefaultApps(config *core.Config) *core.Config {
 	return config
 }
 
-func testTCPConnViaSocks(socksPort, testPort net.Port, payloadSize int, timeout time.Duration) func() error {
+func testTCPConnViaSocks(socksPort, testPort net.Port, payloadSize int, timeout time.Duration) func() error { //nolint: unparam
 	return func() error {
 		socksDialer, err := proxy.SOCKS5("tcp", "127.0.0.1:"+socksPort.String(), nil, nil)
 		if err != nil {

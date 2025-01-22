@@ -57,7 +57,7 @@ func TestWrongErrorCheckOnOSStat(t *testing.T) {
 			// be discovered by the Go runtime, which will lead to failure to
 			// find & read geoip & geosite files.
 			// The correct code is `errors.Is(err, fs.ErrNotExist)`
-			if _, err := os.Stat(p); err != nil && errors.Is(fs.ErrNotExist, err) {
+			if _, err := os.Stat(p); err != nil && errors.Is(fs.ErrNotExist, err) { //nolint: staticcheck
 				continue
 			}
 			// asset found

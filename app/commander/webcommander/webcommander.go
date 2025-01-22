@@ -38,7 +38,6 @@ func newWebCommander(ctx context.Context, config *Config) (*WebCommander, error)
 	}
 
 	return &WebCommander{ctx: ctx, config: config, webRootfs: webRootfs}, nil
-
 }
 
 type WebCommander struct {
@@ -56,9 +55,9 @@ type WebCommander struct {
 }
 
 func (w *WebCommander) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	api_path := w.config.ApiMountpoint
-	if strings.HasPrefix(request.URL.Path, api_path) {
-		request.URL.Path = strings.TrimPrefix(request.URL.Path, api_path)
+	apiPath := w.config.ApiMountpoint
+	if strings.HasPrefix(request.URL.Path, apiPath) {
+		request.URL.Path = strings.TrimPrefix(request.URL.Path, apiPath)
 		if w.wrappedGrpc.IsGrpcWebRequest(request) {
 			w.wrappedGrpc.ServeHTTP(writer, request)
 			return
@@ -109,7 +108,6 @@ func (w *WebCommander) Type() interface{} {
 }
 
 func (w *WebCommander) Start() error {
-
 	if err := core.RequireFeatures(w.ctx, func(cm commander.CommanderIfce, om outbound.Manager) {
 		w.Lock()
 		defer w.Unlock()
@@ -118,7 +116,6 @@ func (w *WebCommander) Start() error {
 		w.ohm = om
 
 		go w.asyncStart()
-
 	}); err != nil {
 		return err
 	}

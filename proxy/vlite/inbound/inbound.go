@@ -146,7 +146,7 @@ func createStatusFromConfig(config *UDPProtocolConfig) (*status, error) { //noli
 	return s, nil
 }
 
-func enableInterface(s *status) error {
+func enableInterface(s *status) error { //nolint: unparam
 	s.transport = s
 	if s.config.EnableStabilization {
 		s.transport = uniserver.NewUnifiedConnectionTransportHub(s, s.ctx)
