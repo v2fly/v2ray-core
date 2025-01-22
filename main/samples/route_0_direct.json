@@ -4,14 +4,13 @@
       "rules": [
         {
           "type": "field",
-          "inboundTag": ["transparent"],
+          "inboundTag": ["transparent","localside-s5-xxxx"],
           "port": 53,
           "network": "udp",
           "outboundTag": "dns-out"
         },
         {
           "type": "field",
-          "inboundTag": ["transparent"],
           "port": 123,
           "network": "udp",
           "outboundTag": "direct"

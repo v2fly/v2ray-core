@@ -3,7 +3,7 @@
     "domainStrategy": "IPOnDemand",
     "rules": [
       {
-        "inboundTag": ["transparent-xxxx"],
+        "inboundTag": ["transparent-xxxx","localside-s5-xxxx"],
         "type": "field",
         "ip": ["8.8.8.8", "1.1.1.1"],
         "outboundTag": "proxy-s5-xxxx"
