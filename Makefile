@@ -29,3 +29,6 @@ dat:
 	echo ">>> Download latest geosite..."
 	curl -s -L -o dist/$(Version)/geosite.dat "https://github.com/v2fly/domain-list-community/raw/release/dlc.dat"
 
+clean:
+	rm -rf dist/*
+

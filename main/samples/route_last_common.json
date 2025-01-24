@@ -2,8 +2,8 @@
     "routing": {
       "domainStrategy": "IPOnDemand",
       "rules": [
-
         {
+          "domainMatcher": "mph",
           "type": "field",
           "domain": ["geosite:category-ads-all"],
           "outboundTag": "direct"
@@ -20,8 +20,14 @@
         },
         {
           "type": "field",
+          "domainMatcher": "mph",
           "domain": ["geosite:cn"],
           "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": ["geoip:!private", "geoip:!cn"],
+          "outboundTag": "proxy-s5-xxxx"
         }
       ]
     }

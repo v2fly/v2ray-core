@@ -4,7 +4,7 @@
 ## 透明代理
 https://toutyrater.github.io/app/tproxy.html
 
-
+https://www.v2fly.org/config/dns.html#dnsobject
 ## 代理转发
 https://guide.v2fly.org/advanced/outboundproxy.html
 
