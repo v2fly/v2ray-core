@@ -7,6 +7,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -17,20 +18,17 @@ const (
 )
 
 type DetourConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	To            string                 `protobuf:"bytes,1,opt,name=to,proto3" json:"to,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	To string `protobuf:"bytes,1,opt,name=to,proto3" json:"to,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *DetourConfig) Reset() {
 	*x = DetourConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_proxy_vmess_inbound_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_proxy_vmess_inbound_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *DetourConfig) String() string {
@@ -41,7 +39,7 @@ func (*DetourConfig) ProtoMessage() {}
 
 func (x *DetourConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_proxy_vmess_inbound_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -64,21 +62,18 @@ func (x *DetourConfig) GetTo() string {
 }
 
 type DefaultConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AlterId       uint32                 `protobuf:"varint,1,opt,name=alter_id,json=alterId,proto3" json:"alter_id,omitempty"`
+	Level         uint32                 `protobuf:"varint,2,opt,name=level,proto3" json:"level,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	AlterId uint32 `protobuf:"varint,1,opt,name=alter_id,json=alterId,proto3" json:"alter_id,omitempty"`
-	Level   uint32 `protobuf:"varint,2,opt,name=level,proto3" json:"level,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *DefaultConfig) Reset() {
 	*x = DefaultConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_proxy_vmess_inbound_config_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_proxy_vmess_inbound_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *DefaultConfig) String() string {
@@ -89,7 +84,7 @@ func (*DefaultConfig) ProtoMessage() {}
 
 func (x *DefaultConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_proxy_vmess_inbound_config_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -119,23 +114,20 @@ func (x *DefaultConfig) GetLevel() uint32 {
 }
 
 type Config struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	User                 []*protocol.User `protobuf:"bytes,1,rep,name=user,proto3" json:"user,omitempty"`
-	Default              *DefaultConfig   `protobuf:"bytes,2,opt,name=default,proto3" json:"default,omitempty"`
-	Detour               *DetourConfig    `protobuf:"bytes,3,opt,name=detour,proto3" json:"detour,omitempty"`
-	SecureEncryptionOnly bool             `protobuf:"varint,4,opt,name=secure_encryption_only,json=secureEncryptionOnly,proto3" json:"secure_encryption_only,omitempty"`
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	User                 []*protocol.User       `protobuf:"bytes,1,rep,name=user,proto3" json:"user,omitempty"`
+	Default              *DefaultConfig         `protobuf:"bytes,2,opt,name=default,proto3" json:"default,omitempty"`
+	Detour               *DetourConfig          `protobuf:"bytes,3,opt,name=detour,proto3" json:"detour,omitempty"`
+	SecureEncryptionOnly bool                   `protobuf:"varint,4,opt,name=secure_encryption_only,json=secureEncryptionOnly,proto3" json:"secure_encryption_only,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_proxy_vmess_inbound_config_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_proxy_vmess_inbound_config_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Config) String() string {
@@ -146,7 +138,7 @@ func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
 	mi := &file_proxy_vmess_inbound_config_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -190,20 +182,17 @@ func (x *Config) GetSecureEncryptionOnly() bool {
 }
 
 type SimplifiedConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Users         []string               `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Users []string `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SimplifiedConfig) Reset() {
 	*x = SimplifiedConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_proxy_vmess_inbound_config_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_proxy_vmess_inbound_config_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *SimplifiedConfig) String() string {
@@ -214,7 +203,7 @@ func (*SimplifiedConfig) ProtoMessage() {}
 
 func (x *SimplifiedConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_proxy_vmess_inbound_config_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -238,7 +227,7 @@ func (x *SimplifiedConfig) GetUsers() []string {
 
 var File_proxy_vmess_inbound_config_proto protoreflect.FileDescriptor
 
-var file_proxy_vmess_inbound_config_proto_rawDesc = []byte{
+var file_proxy_vmess_inbound_config_proto_rawDesc = string([]byte{
 	0x0a, 0x20, 0x70, 0x72, 0x6f, 0x78, 0x79, 0x2f, 0x76, 0x6d, 0x65, 0x73, 0x73, 0x2f, 0x69, 0x6e,
 	0x62, 0x6f, 0x75, 0x6e, 0x64, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x12, 0x1e, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x70,
@@ -282,22 +271,22 @@ var file_proxy_vmess_inbound_config_proto_rawDesc = []byte{
 	0x6f, 0x75, 0x6e, 0x64, 0xaa, 0x02, 0x1e, 0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72,
 	0x65, 0x2e, 0x50, 0x72, 0x6f, 0x78, 0x79, 0x2e, 0x56, 0x6d, 0x65, 0x73, 0x73, 0x2e, 0x49, 0x6e,
 	0x62, 0x6f, 0x75, 0x6e, 0x64, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_proxy_vmess_inbound_config_proto_rawDescOnce sync.Once
-	file_proxy_vmess_inbound_config_proto_rawDescData = file_proxy_vmess_inbound_config_proto_rawDesc
+	file_proxy_vmess_inbound_config_proto_rawDescData []byte
 )
 
 func file_proxy_vmess_inbound_config_proto_rawDescGZIP() []byte {
 	file_proxy_vmess_inbound_config_proto_rawDescOnce.Do(func() {
-		file_proxy_vmess_inbound_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_proxy_vmess_inbound_config_proto_rawDescData)
+		file_proxy_vmess_inbound_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proxy_vmess_inbound_config_proto_rawDesc), len(file_proxy_vmess_inbound_config_proto_rawDesc)))
 	})
 	return file_proxy_vmess_inbound_config_proto_rawDescData
 }
 
 var file_proxy_vmess_inbound_config_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_proxy_vmess_inbound_config_proto_goTypes = []interface{}{
+var file_proxy_vmess_inbound_config_proto_goTypes = []any{
 	(*DetourConfig)(nil),     // 0: v2ray.core.proxy.vmess.inbound.DetourConfig
 	(*DefaultConfig)(nil),    // 1: v2ray.core.proxy.vmess.inbound.DefaultConfig
 	(*Config)(nil),           // 2: v2ray.core.proxy.vmess.inbound.Config
@@ -320,61 +309,11 @@ func file_proxy_vmess_inbound_config_proto_init() {
 	if File_proxy_vmess_inbound_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_proxy_vmess_inbound_config_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DetourConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_proxy_vmess_inbound_config_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DefaultConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_proxy_vmess_inbound_config_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_proxy_vmess_inbound_config_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SimplifiedConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_proxy_vmess_inbound_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proxy_vmess_inbound_config_proto_rawDesc), len(file_proxy_vmess_inbound_config_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   4,
 			NumExtensions: 0,
@@ -385,7 +324,6 @@ func file_proxy_vmess_inbound_config_proto_init() {
 		MessageInfos:      file_proxy_vmess_inbound_config_proto_msgTypes,
 	}.Build()
 	File_proxy_vmess_inbound_config_proto = out.File
-	file_proxy_vmess_inbound_config_proto_rawDesc = nil
 	file_proxy_vmess_inbound_config_proto_goTypes = nil
 	file_proxy_vmess_inbound_config_proto_depIdxs = nil
 }

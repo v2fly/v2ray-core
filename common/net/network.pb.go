@@ -5,6 +5,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -72,20 +73,17 @@ func (Network) EnumDescriptor() ([]byte, []int) {
 
 // NetworkList is a list of Networks.
 type NetworkList struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Network       []Network              `protobuf:"varint,1,rep,packed,name=network,proto3,enum=v2ray.core.common.net.Network" json:"network,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Network []Network `protobuf:"varint,1,rep,packed,name=network,proto3,enum=v2ray.core.common.net.Network" json:"network,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *NetworkList) Reset() {
 	*x = NetworkList{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_common_net_network_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_common_net_network_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *NetworkList) String() string {
@@ -96,7 +94,7 @@ func (*NetworkList) ProtoMessage() {}
 
 func (x *NetworkList) ProtoReflect() protoreflect.Message {
 	mi := &file_common_net_network_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -120,7 +118,7 @@ func (x *NetworkList) GetNetwork() []Network {
 
 var File_common_net_network_proto protoreflect.FileDescriptor
 
-var file_common_net_network_proto_rawDesc = []byte{
+var file_common_net_network_proto_rawDesc = string([]byte{
 	0x0a, 0x18, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2f, 0x6e, 0x65, 0x74, 0x2f, 0x6e, 0x65, 0x74,
 	0x77, 0x6f, 0x72, 0x6b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x15, 0x76, 0x32, 0x72, 0x61,
 	0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x6e, 0x65,
@@ -140,23 +138,23 @@ var file_common_net_network_proto_rawDesc = []byte{
 	0x6d, 0x6d, 0x6f, 0x6e, 0x2f, 0x6e, 0x65, 0x74, 0xaa, 0x02, 0x15, 0x56, 0x32, 0x52, 0x61, 0x79,
 	0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x4e, 0x65, 0x74,
 	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_common_net_network_proto_rawDescOnce sync.Once
-	file_common_net_network_proto_rawDescData = file_common_net_network_proto_rawDesc
+	file_common_net_network_proto_rawDescData []byte
 )
 
 func file_common_net_network_proto_rawDescGZIP() []byte {
 	file_common_net_network_proto_rawDescOnce.Do(func() {
-		file_common_net_network_proto_rawDescData = protoimpl.X.CompressGZIP(file_common_net_network_proto_rawDescData)
+		file_common_net_network_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_net_network_proto_rawDesc), len(file_common_net_network_proto_rawDesc)))
 	})
 	return file_common_net_network_proto_rawDescData
 }
 
 var file_common_net_network_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_common_net_network_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_common_net_network_proto_goTypes = []interface{}{
+var file_common_net_network_proto_goTypes = []any{
 	(Network)(0),        // 0: v2ray.core.common.net.Network
 	(*NetworkList)(nil), // 1: v2ray.core.common.net.NetworkList
 }
@@ -174,25 +172,11 @@ func file_common_net_network_proto_init() {
 	if File_common_net_network_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_common_net_network_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NetworkList); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_common_net_network_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_net_network_proto_rawDesc), len(file_common_net_network_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   1,
 			NumExtensions: 0,
@@ -204,7 +188,6 @@ func file_common_net_network_proto_init() {
 		MessageInfos:      file_common_net_network_proto_msgTypes,
 	}.Build()
 	File_common_net_network_proto = out.File
-	file_common_net_network_proto_rawDesc = nil
 	file_common_net_network_proto_goTypes = nil
 	file_common_net_network_proto_depIdxs = nil
 }

@@ -5,6 +5,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -71,7 +72,7 @@ func (Severity) EnumDescriptor() ([]byte, []int) {
 
 var File_common_log_log_proto protoreflect.FileDescriptor
 
-var file_common_log_log_proto_rawDesc = []byte{
+var file_common_log_log_proto_rawDesc = string([]byte{
 	0x0a, 0x14, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2f, 0x6c, 0x6f, 0x67, 0x2f, 0x6c, 0x6f, 0x67,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x15, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f,
 	0x72, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x6c, 0x6f, 0x67, 0x2a, 0x44, 0x0a,
@@ -86,22 +87,22 @@ var file_common_log_log_proto_rawDesc = []byte{
 	0x76, 0x35, 0x2f, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2f, 0x6c, 0x6f, 0x67, 0xaa, 0x02, 0x15,
 	0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x6f,
 	0x6e, 0x2e, 0x4c, 0x6f, 0x67, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_common_log_log_proto_rawDescOnce sync.Once
-	file_common_log_log_proto_rawDescData = file_common_log_log_proto_rawDesc
+	file_common_log_log_proto_rawDescData []byte
 )
 
 func file_common_log_log_proto_rawDescGZIP() []byte {
 	file_common_log_log_proto_rawDescOnce.Do(func() {
-		file_common_log_log_proto_rawDescData = protoimpl.X.CompressGZIP(file_common_log_log_proto_rawDescData)
+		file_common_log_log_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_log_log_proto_rawDesc), len(file_common_log_log_proto_rawDesc)))
 	})
 	return file_common_log_log_proto_rawDescData
 }
 
 var file_common_log_log_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_common_log_log_proto_goTypes = []interface{}{
+var file_common_log_log_proto_goTypes = []any{
 	(Severity)(0), // 0: v2ray.core.common.log.Severity
 }
 var file_common_log_log_proto_depIdxs = []int32{
@@ -121,7 +122,7 @@ func file_common_log_log_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_common_log_log_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_log_log_proto_rawDesc), len(file_common_log_log_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   0,
 			NumExtensions: 0,
@@ -132,7 +133,6 @@ func file_common_log_log_proto_init() {
 		EnumInfos:         file_common_log_log_proto_enumTypes,
 	}.Build()
 	File_common_log_log_proto = out.File
-	file_common_log_log_proto_rawDesc = nil
 	file_common_log_log_proto_goTypes = nil
 	file_common_log_log_proto_depIdxs = nil
 }

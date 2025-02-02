@@ -6,6 +6,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -16,21 +17,18 @@ const (
 )
 
 type FakeDnsPool struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	IpPool        string                 `protobuf:"bytes,1,opt,name=ip_pool,json=ipPool,proto3" json:"ip_pool,omitempty"` //CIDR of IP pool used as fake DNS IP
+	LruSize       int64                  `protobuf:"varint,2,opt,name=lruSize,proto3" json:"lruSize,omitempty"`            //Size of Pool for remembering relationship between domain name and IP address
 	unknownFields protoimpl.UnknownFields
-
-	IpPool  string `protobuf:"bytes,1,opt,name=ip_pool,json=ipPool,proto3" json:"ip_pool,omitempty"` //CIDR of IP pool used as fake DNS IP
-	LruSize int64  `protobuf:"varint,2,opt,name=lruSize,proto3" json:"lruSize,omitempty"`            //Size of Pool for remembering relationship between domain name and IP address
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *FakeDnsPool) Reset() {
 	*x = FakeDnsPool{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_dns_fakedns_fakedns_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_dns_fakedns_fakedns_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *FakeDnsPool) String() string {
@@ -41,7 +39,7 @@ func (*FakeDnsPool) ProtoMessage() {}
 
 func (x *FakeDnsPool) ProtoReflect() protoreflect.Message {
 	mi := &file_app_dns_fakedns_fakedns_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -71,20 +69,17 @@ func (x *FakeDnsPool) GetLruSize() int64 {
 }
 
 type FakeDnsPoolMulti struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Pools         []*FakeDnsPool         `protobuf:"bytes,1,rep,name=pools,proto3" json:"pools,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Pools []*FakeDnsPool `protobuf:"bytes,1,rep,name=pools,proto3" json:"pools,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *FakeDnsPoolMulti) Reset() {
 	*x = FakeDnsPoolMulti{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_dns_fakedns_fakedns_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_dns_fakedns_fakedns_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *FakeDnsPoolMulti) String() string {
@@ -95,7 +90,7 @@ func (*FakeDnsPoolMulti) ProtoMessage() {}
 
 func (x *FakeDnsPoolMulti) ProtoReflect() protoreflect.Message {
 	mi := &file_app_dns_fakedns_fakedns_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -119,7 +114,7 @@ func (x *FakeDnsPoolMulti) GetPools() []*FakeDnsPool {
 
 var File_app_dns_fakedns_fakedns_proto protoreflect.FileDescriptor
 
-var file_app_dns_fakedns_fakedns_proto_rawDesc = []byte{
+var file_app_dns_fakedns_fakedns_proto_rawDesc = string([]byte{
 	0x0a, 0x1d, 0x61, 0x70, 0x70, 0x2f, 0x64, 0x6e, 0x73, 0x2f, 0x66, 0x61, 0x6b, 0x65, 0x64, 0x6e,
 	0x73, 0x2f, 0x66, 0x61, 0x6b, 0x65, 0x64, 0x6e, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12,
 	0x1a, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x61, 0x70, 0x70, 0x2e,
@@ -146,22 +141,22 @@ var file_app_dns_fakedns_fakedns_proto_rawDesc = []byte{
 	0x64, 0x6e, 0x73, 0x2f, 0x66, 0x61, 0x6b, 0x65, 0x64, 0x6e, 0x73, 0xaa, 0x02, 0x1a, 0x56, 0x32,
 	0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x41, 0x70, 0x70, 0x2e, 0x44, 0x6e, 0x73,
 	0x2e, 0x46, 0x61, 0x6b, 0x65, 0x64, 0x6e, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_app_dns_fakedns_fakedns_proto_rawDescOnce sync.Once
-	file_app_dns_fakedns_fakedns_proto_rawDescData = file_app_dns_fakedns_fakedns_proto_rawDesc
+	file_app_dns_fakedns_fakedns_proto_rawDescData []byte
 )
 
 func file_app_dns_fakedns_fakedns_proto_rawDescGZIP() []byte {
 	file_app_dns_fakedns_fakedns_proto_rawDescOnce.Do(func() {
-		file_app_dns_fakedns_fakedns_proto_rawDescData = protoimpl.X.CompressGZIP(file_app_dns_fakedns_fakedns_proto_rawDescData)
+		file_app_dns_fakedns_fakedns_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_app_dns_fakedns_fakedns_proto_rawDesc), len(file_app_dns_fakedns_fakedns_proto_rawDesc)))
 	})
 	return file_app_dns_fakedns_fakedns_proto_rawDescData
 }
 
 var file_app_dns_fakedns_fakedns_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_app_dns_fakedns_fakedns_proto_goTypes = []interface{}{
+var file_app_dns_fakedns_fakedns_proto_goTypes = []any{
 	(*FakeDnsPool)(nil),      // 0: v2ray.core.app.dns.fakedns.FakeDnsPool
 	(*FakeDnsPoolMulti)(nil), // 1: v2ray.core.app.dns.fakedns.FakeDnsPoolMulti
 }
@@ -179,37 +174,11 @@ func file_app_dns_fakedns_fakedns_proto_init() {
 	if File_app_dns_fakedns_fakedns_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_app_dns_fakedns_fakedns_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FakeDnsPool); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_dns_fakedns_fakedns_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FakeDnsPoolMulti); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_app_dns_fakedns_fakedns_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_dns_fakedns_fakedns_proto_rawDesc), len(file_app_dns_fakedns_fakedns_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
@@ -220,7 +189,6 @@ func file_app_dns_fakedns_fakedns_proto_init() {
 		MessageInfos:      file_app_dns_fakedns_fakedns_proto_msgTypes,
 	}.Build()
 	File_app_dns_fakedns_fakedns_proto = out.File
-	file_app_dns_fakedns_fakedns_proto_rawDesc = nil
 	file_app_dns_fakedns_fakedns_proto_goTypes = nil
 	file_app_dns_fakedns_fakedns_proto_depIdxs = nil
 }

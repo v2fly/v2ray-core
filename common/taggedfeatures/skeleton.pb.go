@@ -6,6 +6,7 @@ import (
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -16,20 +17,17 @@ const (
 )
 
 type Config struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Features      map[string]*anypb.Any  `protobuf:"bytes,1,rep,name=features,proto3" json:"features,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
-
-	Features map[string]*anypb.Any `protobuf:"bytes,1,rep,name=features,proto3" json:"features,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_common_taggedfeatures_skeleton_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_common_taggedfeatures_skeleton_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Config) String() string {
@@ -40,7 +38,7 @@ func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
 	mi := &file_common_taggedfeatures_skeleton_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -64,7 +62,7 @@ func (x *Config) GetFeatures() map[string]*anypb.Any {
 
 var File_common_taggedfeatures_skeleton_proto protoreflect.FileDescriptor
 
-var file_common_taggedfeatures_skeleton_proto_rawDesc = []byte{
+var file_common_taggedfeatures_skeleton_proto_rawDesc = string([]byte{
 	0x0a, 0x24, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2f, 0x74, 0x61, 0x67, 0x67, 0x65, 0x64, 0x66,
 	0x65, 0x61, 0x74, 0x75, 0x72, 0x65, 0x73, 0x2f, 0x73, 0x6b, 0x65, 0x6c, 0x65, 0x74, 0x6f, 0x6e,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x20, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f,
@@ -92,22 +90,22 @@ var file_common_taggedfeatures_skeleton_proto_rawDesc = []byte{
 	0x6f, 0x72, 0x65, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x54, 0x61, 0x67, 0x67, 0x65,
 	0x64, 0x66, 0x65, 0x61, 0x74, 0x75, 0x72, 0x65, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x33,
-}
+})
 
 var (
 	file_common_taggedfeatures_skeleton_proto_rawDescOnce sync.Once
-	file_common_taggedfeatures_skeleton_proto_rawDescData = file_common_taggedfeatures_skeleton_proto_rawDesc
+	file_common_taggedfeatures_skeleton_proto_rawDescData []byte
 )
 
 func file_common_taggedfeatures_skeleton_proto_rawDescGZIP() []byte {
 	file_common_taggedfeatures_skeleton_proto_rawDescOnce.Do(func() {
-		file_common_taggedfeatures_skeleton_proto_rawDescData = protoimpl.X.CompressGZIP(file_common_taggedfeatures_skeleton_proto_rawDescData)
+		file_common_taggedfeatures_skeleton_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_taggedfeatures_skeleton_proto_rawDesc), len(file_common_taggedfeatures_skeleton_proto_rawDesc)))
 	})
 	return file_common_taggedfeatures_skeleton_proto_rawDescData
 }
 
 var file_common_taggedfeatures_skeleton_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_common_taggedfeatures_skeleton_proto_goTypes = []interface{}{
+var file_common_taggedfeatures_skeleton_proto_goTypes = []any{
 	(*Config)(nil),    // 0: v2ray.core.common.taggedfeatures.Config
 	nil,               // 1: v2ray.core.common.taggedfeatures.Config.FeaturesEntry
 	(*anypb.Any)(nil), // 2: google.protobuf.Any
@@ -127,25 +125,11 @@ func file_common_taggedfeatures_skeleton_proto_init() {
 	if File_common_taggedfeatures_skeleton_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_common_taggedfeatures_skeleton_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_common_taggedfeatures_skeleton_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_taggedfeatures_skeleton_proto_rawDesc), len(file_common_taggedfeatures_skeleton_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
@@ -156,7 +140,6 @@ func file_common_taggedfeatures_skeleton_proto_init() {
 		MessageInfos:      file_common_taggedfeatures_skeleton_proto_msgTypes,
 	}.Build()
 	File_common_taggedfeatures_skeleton_proto = out.File
-	file_common_taggedfeatures_skeleton_proto_rawDesc = nil
 	file_common_taggedfeatures_skeleton_proto_goTypes = nil
 	file_common_taggedfeatures_skeleton_proto_depIdxs = nil
 }

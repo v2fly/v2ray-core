@@ -8,6 +8,7 @@ import (
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -168,18 +169,16 @@ func (SenderConfig_DomainStrategy) EnumDescriptor() ([]byte, []int) {
 }
 
 type InboundConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *InboundConfig) Reset() {
 	*x = InboundConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_proxyman_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_proxyman_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *InboundConfig) String() string {
@@ -190,7 +189,7 @@ func (*InboundConfig) ProtoMessage() {}
 
 func (x *InboundConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_proxyman_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -206,26 +205,23 @@ func (*InboundConfig) Descriptor() ([]byte, []int) {
 }
 
 type AllocationStrategy struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Type AllocationStrategy_Type `protobuf:"varint,1,opt,name=type,proto3,enum=v2ray.core.app.proxyman.AllocationStrategy_Type" json:"type,omitempty"`
+	state protoimpl.MessageState  `protogen:"open.v1"`
+	Type  AllocationStrategy_Type `protobuf:"varint,1,opt,name=type,proto3,enum=v2ray.core.app.proxyman.AllocationStrategy_Type" json:"type,omitempty"`
 	// Number of handlers (ports) running in parallel.
 	// Default value is 3 if unset.
 	Concurrency *AllocationStrategy_AllocationStrategyConcurrency `protobuf:"bytes,2,opt,name=concurrency,proto3" json:"concurrency,omitempty"`
 	// Number of minutes before a handler is regenerated.
 	// Default value is 5 if unset.
-	Refresh *AllocationStrategy_AllocationStrategyRefresh `protobuf:"bytes,3,opt,name=refresh,proto3" json:"refresh,omitempty"`
+	Refresh       *AllocationStrategy_AllocationStrategyRefresh `protobuf:"bytes,3,opt,name=refresh,proto3" json:"refresh,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AllocationStrategy) Reset() {
 	*x = AllocationStrategy{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_proxyman_config_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_proxyman_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *AllocationStrategy) String() string {
@@ -236,7 +232,7 @@ func (*AllocationStrategy) ProtoMessage() {}
 
 func (x *AllocationStrategy) ProtoReflect() protoreflect.Message {
 	mi := &file_app_proxyman_config_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -273,10 +269,7 @@ func (x *AllocationStrategy) GetRefresh() *AllocationStrategy_AllocationStrategy
 }
 
 type SniffingConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// Whether or not to enable content sniffing on an inbound connection.
 	Enabled bool `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
 	// Override target destination if sniff'ed protocol is in the given list.
@@ -284,16 +277,16 @@ type SniffingConfig struct {
 	DestinationOverride []string `protobuf:"bytes,2,rep,name=destination_override,json=destinationOverride,proto3" json:"destination_override,omitempty"`
 	// Whether should only try to sniff metadata without waiting for client input.
 	// Can be used to support SMTP like protocol where server send the first message.
-	MetadataOnly bool `protobuf:"varint,3,opt,name=metadata_only,json=metadataOnly,proto3" json:"metadata_only,omitempty"`
+	MetadataOnly  bool `protobuf:"varint,3,opt,name=metadata_only,json=metadataOnly,proto3" json:"metadata_only,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SniffingConfig) Reset() {
 	*x = SniffingConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_proxyman_config_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_proxyman_config_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *SniffingConfig) String() string {
@@ -304,7 +297,7 @@ func (*SniffingConfig) ProtoMessage() {}
 
 func (x *SniffingConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_proxyman_config_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -341,10 +334,7 @@ func (x *SniffingConfig) GetMetadataOnly() bool {
 }
 
 type ReceiverConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// PortRange specifies the ports which the Receiver should listen on.
 	PortRange *net.PortRange `protobuf:"bytes,1,opt,name=port_range,json=portRange,proto3" json:"port_range,omitempty"`
 	// Listen specifies the IP address that the Receiver should listen on.
@@ -358,15 +348,15 @@ type ReceiverConfig struct {
 	// Deprecated: Marked as deprecated in app/proxyman/config.proto.
 	DomainOverride   []KnownProtocols `protobuf:"varint,7,rep,packed,name=domain_override,json=domainOverride,proto3,enum=v2ray.core.app.proxyman.KnownProtocols" json:"domain_override,omitempty"`
 	SniffingSettings *SniffingConfig  `protobuf:"bytes,8,opt,name=sniffing_settings,json=sniffingSettings,proto3" json:"sniffing_settings,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *ReceiverConfig) Reset() {
 	*x = ReceiverConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_proxyman_config_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_proxyman_config_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ReceiverConfig) String() string {
@@ -377,7 +367,7 @@ func (*ReceiverConfig) ProtoMessage() {}
 
 func (x *ReceiverConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_proxyman_config_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -443,22 +433,19 @@ func (x *ReceiverConfig) GetSniffingSettings() *SniffingConfig {
 }
 
 type InboundHandlerConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Tag              string     `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
-	ReceiverSettings *anypb.Any `protobuf:"bytes,2,opt,name=receiver_settings,json=receiverSettings,proto3" json:"receiver_settings,omitempty"`
-	ProxySettings    *anypb.Any `protobuf:"bytes,3,opt,name=proxy_settings,json=proxySettings,proto3" json:"proxy_settings,omitempty"`
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Tag              string                 `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+	ReceiverSettings *anypb.Any             `protobuf:"bytes,2,opt,name=receiver_settings,json=receiverSettings,proto3" json:"receiver_settings,omitempty"`
+	ProxySettings    *anypb.Any             `protobuf:"bytes,3,opt,name=proxy_settings,json=proxySettings,proto3" json:"proxy_settings,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *InboundHandlerConfig) Reset() {
 	*x = InboundHandlerConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_proxyman_config_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_proxyman_config_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *InboundHandlerConfig) String() string {
@@ -469,7 +456,7 @@ func (*InboundHandlerConfig) ProtoMessage() {}
 
 func (x *InboundHandlerConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_proxyman_config_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -506,18 +493,16 @@ func (x *InboundHandlerConfig) GetProxySettings() *anypb.Any {
 }
 
 type OutboundConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *OutboundConfig) Reset() {
 	*x = OutboundConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_proxyman_config_proto_msgTypes[5]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_proxyman_config_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *OutboundConfig) String() string {
@@ -528,7 +513,7 @@ func (*OutboundConfig) ProtoMessage() {}
 
 func (x *OutboundConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_proxyman_config_proto_msgTypes[5]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -544,25 +529,22 @@ func (*OutboundConfig) Descriptor() ([]byte, []int) {
 }
 
 type SenderConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// Send traffic through the given IP. Only IP is allowed.
 	Via               *net.IPOrDomain             `protobuf:"bytes,1,opt,name=via,proto3" json:"via,omitempty"`
 	StreamSettings    *internet.StreamConfig      `protobuf:"bytes,2,opt,name=stream_settings,json=streamSettings,proto3" json:"stream_settings,omitempty"`
 	ProxySettings     *internet.ProxyConfig       `protobuf:"bytes,3,opt,name=proxy_settings,json=proxySettings,proto3" json:"proxy_settings,omitempty"`
 	MultiplexSettings *MultiplexingConfig         `protobuf:"bytes,4,opt,name=multiplex_settings,json=multiplexSettings,proto3" json:"multiplex_settings,omitempty"`
 	DomainStrategy    SenderConfig_DomainStrategy `protobuf:"varint,5,opt,name=domain_strategy,json=domainStrategy,proto3,enum=v2ray.core.app.proxyman.SenderConfig_DomainStrategy" json:"domain_strategy,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *SenderConfig) Reset() {
 	*x = SenderConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_proxyman_config_proto_msgTypes[6]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_proxyman_config_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *SenderConfig) String() string {
@@ -573,7 +555,7 @@ func (*SenderConfig) ProtoMessage() {}
 
 func (x *SenderConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_proxyman_config_proto_msgTypes[6]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -624,23 +606,20 @@ func (x *SenderConfig) GetDomainStrategy() SenderConfig_DomainStrategy {
 }
 
 type MultiplexingConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// Whether or not Mux is enabled.
 	Enabled bool `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
 	// Max number of concurrent connections that one Mux connection can handle.
-	Concurrency uint32 `protobuf:"varint,2,opt,name=concurrency,proto3" json:"concurrency,omitempty"`
+	Concurrency   uint32 `protobuf:"varint,2,opt,name=concurrency,proto3" json:"concurrency,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *MultiplexingConfig) Reset() {
 	*x = MultiplexingConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_proxyman_config_proto_msgTypes[7]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_proxyman_config_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *MultiplexingConfig) String() string {
@@ -651,7 +630,7 @@ func (*MultiplexingConfig) ProtoMessage() {}
 
 func (x *MultiplexingConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_proxyman_config_proto_msgTypes[7]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -681,20 +660,17 @@ func (x *MultiplexingConfig) GetConcurrency() uint32 {
 }
 
 type AllocationStrategy_AllocationStrategyConcurrency struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Value         uint32                 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AllocationStrategy_AllocationStrategyConcurrency) Reset() {
 	*x = AllocationStrategy_AllocationStrategyConcurrency{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_proxyman_config_proto_msgTypes[8]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_proxyman_config_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *AllocationStrategy_AllocationStrategyConcurrency) String() string {
@@ -705,7 +681,7 @@ func (*AllocationStrategy_AllocationStrategyConcurrency) ProtoMessage() {}
 
 func (x *AllocationStrategy_AllocationStrategyConcurrency) ProtoReflect() protoreflect.Message {
 	mi := &file_app_proxyman_config_proto_msgTypes[8]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -728,20 +704,17 @@ func (x *AllocationStrategy_AllocationStrategyConcurrency) GetValue() uint32 {
 }
 
 type AllocationStrategy_AllocationStrategyRefresh struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Value         uint32                 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AllocationStrategy_AllocationStrategyRefresh) Reset() {
 	*x = AllocationStrategy_AllocationStrategyRefresh{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_proxyman_config_proto_msgTypes[9]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_proxyman_config_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *AllocationStrategy_AllocationStrategyRefresh) String() string {
@@ -752,7 +725,7 @@ func (*AllocationStrategy_AllocationStrategyRefresh) ProtoMessage() {}
 
 func (x *AllocationStrategy_AllocationStrategyRefresh) ProtoReflect() protoreflect.Message {
 	mi := &file_app_proxyman_config_proto_msgTypes[9]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -776,7 +749,7 @@ func (x *AllocationStrategy_AllocationStrategyRefresh) GetValue() uint32 {
 
 var File_app_proxyman_config_proto protoreflect.FileDescriptor
 
-var file_app_proxyman_config_proto_rawDesc = []byte{
+var file_app_proxyman_config_proto_rawDesc = string([]byte{
 	0x0a, 0x19, 0x61, 0x70, 0x70, 0x2f, 0x70, 0x72, 0x6f, 0x78, 0x79, 0x6d, 0x61, 0x6e, 0x2f, 0x63,
 	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x17, 0x76, 0x32, 0x72,
 	0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x78,
@@ -918,23 +891,23 @@ var file_app_proxyman_config_proto_rawDesc = []byte{
 	0xaa, 0x02, 0x17, 0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x41, 0x70,
 	0x70, 0x2e, 0x50, 0x72, 0x6f, 0x78, 0x79, 0x6d, 0x61, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x33,
-}
+})
 
 var (
 	file_app_proxyman_config_proto_rawDescOnce sync.Once
-	file_app_proxyman_config_proto_rawDescData = file_app_proxyman_config_proto_rawDesc
+	file_app_proxyman_config_proto_rawDescData []byte
 )
 
 func file_app_proxyman_config_proto_rawDescGZIP() []byte {
 	file_app_proxyman_config_proto_rawDescOnce.Do(func() {
-		file_app_proxyman_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_app_proxyman_config_proto_rawDescData)
+		file_app_proxyman_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_app_proxyman_config_proto_rawDesc), len(file_app_proxyman_config_proto_rawDesc)))
 	})
 	return file_app_proxyman_config_proto_rawDescData
 }
 
 var file_app_proxyman_config_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
 var file_app_proxyman_config_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
-var file_app_proxyman_config_proto_goTypes = []interface{}{
+var file_app_proxyman_config_proto_goTypes = []any{
 	(KnownProtocols)(0),                                      // 0: v2ray.core.app.proxyman.KnownProtocols
 	(AllocationStrategy_Type)(0),                             // 1: v2ray.core.app.proxyman.AllocationStrategy.Type
 	(SenderConfig_DomainStrategy)(0),                         // 2: v2ray.core.app.proxyman.SenderConfig.DomainStrategy
@@ -983,133 +956,11 @@ func file_app_proxyman_config_proto_init() {
 	if File_app_proxyman_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_app_proxyman_config_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*InboundConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_proxyman_config_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AllocationStrategy); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_proxyman_config_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SniffingConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_proxyman_config_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ReceiverConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_proxyman_config_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*InboundHandlerConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_proxyman_config_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OutboundConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_proxyman_config_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SenderConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_proxyman_config_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MultiplexingConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_proxyman_config_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AllocationStrategy_AllocationStrategyConcurrency); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_proxyman_config_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AllocationStrategy_AllocationStrategyRefresh); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_app_proxyman_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_proxyman_config_proto_rawDesc), len(file_app_proxyman_config_proto_rawDesc)),
 			NumEnums:      3,
 			NumMessages:   10,
 			NumExtensions: 0,
@@ -1121,7 +972,6 @@ func file_app_proxyman_config_proto_init() {
 		MessageInfos:      file_app_proxyman_config_proto_msgTypes,
 	}.Build()
 	File_app_proxyman_config_proto = out.File
-	file_app_proxyman_config_proto_rawDesc = nil
 	file_app_proxyman_config_proto_goTypes = nil
 	file_app_proxyman_config_proto_depIdxs = nil
 }

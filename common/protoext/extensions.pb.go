@@ -6,6 +6,7 @@ import (
 	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -16,25 +17,22 @@ const (
 )
 
 type MessageOpt struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Type                  []string `protobuf:"bytes,1,rep,name=type,proto3" json:"type,omitempty"`
-	ShortName             []string `protobuf:"bytes,2,rep,name=short_name,json=shortName,proto3" json:"short_name,omitempty"`
-	TransportOriginalName string   `protobuf:"bytes,86001,opt,name=transport_original_name,json=transportOriginalName,proto3" json:"transport_original_name,omitempty"`
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	Type                  []string               `protobuf:"bytes,1,rep,name=type,proto3" json:"type,omitempty"`
+	ShortName             []string               `protobuf:"bytes,2,rep,name=short_name,json=shortName,proto3" json:"short_name,omitempty"`
+	TransportOriginalName string                 `protobuf:"bytes,86001,opt,name=transport_original_name,json=transportOriginalName,proto3" json:"transport_original_name,omitempty"`
 	// allow_restricted_mode_load allow this config to be loaded in restricted mode
 	// this is typically used when a an attacker can control the content
 	AllowRestrictedModeLoad bool `protobuf:"varint,86002,opt,name=allow_restricted_mode_load,json=allowRestrictedModeLoad,proto3" json:"allow_restricted_mode_load,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *MessageOpt) Reset() {
 	*x = MessageOpt{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_common_protoext_extensions_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_common_protoext_extensions_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *MessageOpt) String() string {
@@ -45,7 +43,7 @@ func (*MessageOpt) ProtoMessage() {}
 
 func (x *MessageOpt) ProtoReflect() protoreflect.Message {
 	mi := &file_common_protoext_extensions_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -89,13 +87,10 @@ func (x *MessageOpt) GetAllowRestrictedModeLoad() bool {
 }
 
 type FieldOpt struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	AnyWants          []string `protobuf:"bytes,1,rep,name=any_wants,json=anyWants,proto3" json:"any_wants,omitempty"`
-	AllowedValues     []string `protobuf:"bytes,2,rep,name=allowed_values,json=allowedValues,proto3" json:"allowed_values,omitempty"`
-	AllowedValueTypes []string `protobuf:"bytes,3,rep,name=allowed_value_types,json=allowedValueTypes,proto3" json:"allowed_value_types,omitempty"`
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	AnyWants          []string               `protobuf:"bytes,1,rep,name=any_wants,json=anyWants,proto3" json:"any_wants,omitempty"`
+	AllowedValues     []string               `protobuf:"bytes,2,rep,name=allowed_values,json=allowedValues,proto3" json:"allowed_values,omitempty"`
+	AllowedValueTypes []string               `protobuf:"bytes,3,rep,name=allowed_value_types,json=allowedValueTypes,proto3" json:"allowed_value_types,omitempty"`
 	// convert_time_read_file_into read a file into another field, and clear this field during input parsing
 	ConvertTimeReadFileInto string `protobuf:"bytes,4,opt,name=convert_time_read_file_into,json=convertTimeReadFileInto,proto3" json:"convert_time_read_file_into,omitempty"`
 	// forbidden marks a boolean to be inaccessible to user
@@ -104,15 +99,15 @@ type FieldOpt struct {
 	ConvertTimeResourceLoading string `protobuf:"bytes,6,opt,name=convert_time_resource_loading,json=convertTimeResourceLoading,proto3" json:"convert_time_resource_loading,omitempty"`
 	// convert_time_parse_ip parse a string ip address, and put its binary representation into another field
 	ConvertTimeParseIp string `protobuf:"bytes,7,opt,name=convert_time_parse_ip,json=convertTimeParseIp,proto3" json:"convert_time_parse_ip,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *FieldOpt) Reset() {
 	*x = FieldOpt{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_common_protoext_extensions_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_common_protoext_extensions_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *FieldOpt) String() string {
@@ -123,7 +118,7 @@ func (*FieldOpt) ProtoMessage() {}
 
 func (x *FieldOpt) ProtoReflect() protoreflect.Message {
 	mi := &file_common_protoext_extensions_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -220,7 +215,7 @@ var (
 
 var File_common_protoext_extensions_proto protoreflect.FileDescriptor
 
-var file_common_protoext_extensions_proto_rawDesc = []byte{
+var file_common_protoext_extensions_proto_rawDesc = string([]byte{
 	0x0a, 0x20, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x65, 0x78,
 	0x74, 0x2f, 0x65, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x73, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x12, 0x1a, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x63,
@@ -281,22 +276,22 @@ var file_common_protoext_extensions_proto_rawDesc = []byte{
 	0x78, 0x74, 0xaa, 0x02, 0x1a, 0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e,
 	0x43, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x45, 0x78, 0x74, 0x62,
 	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_common_protoext_extensions_proto_rawDescOnce sync.Once
-	file_common_protoext_extensions_proto_rawDescData = file_common_protoext_extensions_proto_rawDesc
+	file_common_protoext_extensions_proto_rawDescData []byte
 )
 
 func file_common_protoext_extensions_proto_rawDescGZIP() []byte {
 	file_common_protoext_extensions_proto_rawDescOnce.Do(func() {
-		file_common_protoext_extensions_proto_rawDescData = protoimpl.X.CompressGZIP(file_common_protoext_extensions_proto_rawDescData)
+		file_common_protoext_extensions_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_protoext_extensions_proto_rawDesc), len(file_common_protoext_extensions_proto_rawDesc)))
 	})
 	return file_common_protoext_extensions_proto_rawDescData
 }
 
 var file_common_protoext_extensions_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_common_protoext_extensions_proto_goTypes = []interface{}{
+var file_common_protoext_extensions_proto_goTypes = []any{
 	(*MessageOpt)(nil),                  // 0: v2ray.core.common.protoext.MessageOpt
 	(*FieldOpt)(nil),                    // 1: v2ray.core.common.protoext.FieldOpt
 	(*descriptorpb.MessageOptions)(nil), // 2: google.protobuf.MessageOptions
@@ -319,37 +314,11 @@ func file_common_protoext_extensions_proto_init() {
 	if File_common_protoext_extensions_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_common_protoext_extensions_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessageOpt); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_common_protoext_extensions_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FieldOpt); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_common_protoext_extensions_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_protoext_extensions_proto_rawDesc), len(file_common_protoext_extensions_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 2,
@@ -361,7 +330,6 @@ func file_common_protoext_extensions_proto_init() {
 		ExtensionInfos:    file_common_protoext_extensions_proto_extTypes,
 	}.Build()
 	File_common_protoext_extensions_proto = out.File
-	file_common_protoext_extensions_proto_rawDesc = nil
 	file_common_protoext_extensions_proto_goTypes = nil
 	file_common_protoext_extensions_proto_depIdxs = nil
 }

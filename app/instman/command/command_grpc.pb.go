@@ -9,8 +9,8 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-// Requires gRPC-Go v1.32.0 or later.
-const _ = grpc.SupportPackageIsVersion7
+// Requires gRPC-Go v1.64.0 or later.
+const _ = grpc.SupportPackageIsVersion9
 
 const (
 	InstanceManagementService_ListInstance_FullMethodName  = "/v2ray.core.app.instman.command.InstanceManagementService/ListInstance"
@@ -36,8 +36,9 @@ func NewInstanceManagementServiceClient(cc grpc.ClientConnInterface) InstanceMan
 }
 
 func (c *instanceManagementServiceClient) ListInstance(ctx context.Context, in *ListInstanceReq, opts ...grpc.CallOption) (*ListInstanceResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListInstanceResp)
-	err := c.cc.Invoke(ctx, InstanceManagementService_ListInstance_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, InstanceManagementService_ListInstance_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -45,8 +46,9 @@ func (c *instanceManagementServiceClient) ListInstance(ctx context.Context, in *
 }
 
 func (c *instanceManagementServiceClient) AddInstance(ctx context.Context, in *AddInstanceReq, opts ...grpc.CallOption) (*AddInstanceResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AddInstanceResp)
-	err := c.cc.Invoke(ctx, InstanceManagementService_AddInstance_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, InstanceManagementService_AddInstance_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -54,8 +56,9 @@ func (c *instanceManagementServiceClient) AddInstance(ctx context.Context, in *A
 }
 
 func (c *instanceManagementServiceClient) StartInstance(ctx context.Context, in *StartInstanceReq, opts ...grpc.CallOption) (*StartInstanceResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(StartInstanceResp)
-	err := c.cc.Invoke(ctx, InstanceManagementService_StartInstance_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, InstanceManagementService_StartInstance_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +67,7 @@ func (c *instanceManagementServiceClient) StartInstance(ctx context.Context, in 
 
 // InstanceManagementServiceServer is the server API for InstanceManagementService service.
 // All implementations must embed UnimplementedInstanceManagementServiceServer
-// for forward compatibility
+// for forward compatibility.
 type InstanceManagementServiceServer interface {
 	ListInstance(context.Context, *ListInstanceReq) (*ListInstanceResp, error)
 	AddInstance(context.Context, *AddInstanceReq) (*AddInstanceResp, error)
@@ -72,9 +75,12 @@ type InstanceManagementServiceServer interface {
 	mustEmbedUnimplementedInstanceManagementServiceServer()
 }
 
-// UnimplementedInstanceManagementServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedInstanceManagementServiceServer struct {
-}
+// UnimplementedInstanceManagementServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedInstanceManagementServiceServer struct{}
 
 func (UnimplementedInstanceManagementServiceServer) ListInstance(context.Context, *ListInstanceReq) (*ListInstanceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstance not implemented")
@@ -87,6 +93,7 @@ func (UnimplementedInstanceManagementServiceServer) StartInstance(context.Contex
 }
 func (UnimplementedInstanceManagementServiceServer) mustEmbedUnimplementedInstanceManagementServiceServer() {
 }
+func (UnimplementedInstanceManagementServiceServer) testEmbeddedByValue() {}
 
 // UnsafeInstanceManagementServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to InstanceManagementServiceServer will
@@ -96,6 +103,13 @@ type UnsafeInstanceManagementServiceServer interface {
 }
 
 func RegisterInstanceManagementServiceServer(s grpc.ServiceRegistrar, srv InstanceManagementServiceServer) {
+	// If the following call pancis, it indicates UnimplementedInstanceManagementServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
 	s.RegisterService(&InstanceManagementService_ServiceDesc, srv)
 }
 

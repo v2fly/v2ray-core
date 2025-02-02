@@ -5,6 +5,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -15,20 +16,17 @@ const (
 )
 
 type Hunk struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Data          []byte                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Data []byte `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Hunk) Reset() {
 	*x = Hunk{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_transport_internet_grpc_encoding_stream_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_transport_internet_grpc_encoding_stream_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Hunk) String() string {
@@ -39,7 +37,7 @@ func (*Hunk) ProtoMessage() {}
 
 func (x *Hunk) ProtoReflect() protoreflect.Message {
 	mi := &file_transport_internet_grpc_encoding_stream_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -63,7 +61,7 @@ func (x *Hunk) GetData() []byte {
 
 var File_transport_internet_grpc_encoding_stream_proto protoreflect.FileDescriptor
 
-var file_transport_internet_grpc_encoding_stream_proto_rawDesc = []byte{
+var file_transport_internet_grpc_encoding_stream_proto_rawDesc = string([]byte{
 	0x0a, 0x2d, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x70, 0x6f, 0x72, 0x74, 0x2f, 0x69, 0x6e, 0x74, 0x65,
 	0x72, 0x6e, 0x65, 0x74, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x65, 0x6e, 0x63, 0x6f, 0x64, 0x69,
 	0x6e, 0x67, 0x2f, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12,
@@ -91,16 +89,16 @@ var file_transport_internet_grpc_encoding_stream_proto_rawDesc = []byte{
 	0x6f, 0x72, 0x74, 0x2e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x65, 0x74, 0x2e, 0x47, 0x72, 0x70,
 	0x63, 0x2e, 0x45, 0x6e, 0x63, 0x6f, 0x64, 0x69, 0x6e, 0x67, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x33,
-}
+})
 
 var (
 	file_transport_internet_grpc_encoding_stream_proto_rawDescOnce sync.Once
-	file_transport_internet_grpc_encoding_stream_proto_rawDescData = file_transport_internet_grpc_encoding_stream_proto_rawDesc
+	file_transport_internet_grpc_encoding_stream_proto_rawDescData []byte
 )
 
 func file_transport_internet_grpc_encoding_stream_proto_rawDescGZIP() []byte {
 	file_transport_internet_grpc_encoding_stream_proto_rawDescOnce.Do(func() {
-		file_transport_internet_grpc_encoding_stream_proto_rawDescData = protoimpl.X.CompressGZIP(file_transport_internet_grpc_encoding_stream_proto_rawDescData)
+		file_transport_internet_grpc_encoding_stream_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_transport_internet_grpc_encoding_stream_proto_rawDesc), len(file_transport_internet_grpc_encoding_stream_proto_rawDesc)))
 	})
 	return file_transport_internet_grpc_encoding_stream_proto_rawDescData
 }
@@ -124,25 +122,11 @@ func file_transport_internet_grpc_encoding_stream_proto_init() {
 	if File_transport_internet_grpc_encoding_stream_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_transport_internet_grpc_encoding_stream_proto_msgTypes[0].Exporter = func(v any, i int) any {
-			switch v := v.(*Hunk); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_transport_internet_grpc_encoding_stream_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_transport_internet_grpc_encoding_stream_proto_rawDesc), len(file_transport_internet_grpc_encoding_stream_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
@@ -153,7 +137,6 @@ func file_transport_internet_grpc_encoding_stream_proto_init() {
 		MessageInfos:      file_transport_internet_grpc_encoding_stream_proto_msgTypes,
 	}.Build()
 	File_transport_internet_grpc_encoding_stream_proto = out.File
-	file_transport_internet_grpc_encoding_stream_proto_rawDesc = nil
 	file_transport_internet_grpc_encoding_stream_proto_goTypes = nil
 	file_transport_internet_grpc_encoding_stream_proto_depIdxs = nil
 }

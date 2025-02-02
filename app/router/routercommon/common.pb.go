@@ -6,6 +6,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -74,25 +75,22 @@ func (Domain_Type) EnumDescriptor() ([]byte, []int) {
 
 // Domain for routing decision.
 type Domain struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// Domain matching type.
 	Type Domain_Type `protobuf:"varint,1,opt,name=type,proto3,enum=v2ray.core.app.router.routercommon.Domain_Type" json:"type,omitempty"`
 	// Domain value.
 	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	// Attributes of this domain. May be used for filtering.
-	Attribute []*Domain_Attribute `protobuf:"bytes,3,rep,name=attribute,proto3" json:"attribute,omitempty"`
+	Attribute     []*Domain_Attribute `protobuf:"bytes,3,rep,name=attribute,proto3" json:"attribute,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Domain) Reset() {
 	*x = Domain{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_routercommon_common_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_routercommon_common_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Domain) String() string {
@@ -103,7 +101,7 @@ func (*Domain) ProtoMessage() {}
 
 func (x *Domain) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_routercommon_common_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -141,24 +139,21 @@ func (x *Domain) GetAttribute() []*Domain_Attribute {
 
 // IP for routing decision, in CIDR form.
 type CIDR struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// IP address, should be either 4 or 16 bytes.
 	Ip []byte `protobuf:"bytes,1,opt,name=ip,proto3" json:"ip,omitempty"`
 	// Number of leading ones in the network mask.
-	Prefix uint32 `protobuf:"varint,2,opt,name=prefix,proto3" json:"prefix,omitempty"`
-	IpAddr string `protobuf:"bytes,68000,opt,name=ip_addr,json=ipAddr,proto3" json:"ip_addr,omitempty"`
+	Prefix        uint32 `protobuf:"varint,2,opt,name=prefix,proto3" json:"prefix,omitempty"`
+	IpAddr        string `protobuf:"bytes,68000,opt,name=ip_addr,json=ipAddr,proto3" json:"ip_addr,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CIDR) Reset() {
 	*x = CIDR{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_routercommon_common_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_routercommon_common_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *CIDR) String() string {
@@ -169,7 +164,7 @@ func (*CIDR) ProtoMessage() {}
 
 func (x *CIDR) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_routercommon_common_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -206,26 +201,23 @@ func (x *CIDR) GetIpAddr() string {
 }
 
 type GeoIP struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	CountryCode  string  `protobuf:"bytes,1,opt,name=country_code,json=countryCode,proto3" json:"country_code,omitempty"`
-	Cidr         []*CIDR `protobuf:"bytes,2,rep,name=cidr,proto3" json:"cidr,omitempty"`
-	InverseMatch bool    `protobuf:"varint,3,opt,name=inverse_match,json=inverseMatch,proto3" json:"inverse_match,omitempty"`
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	CountryCode  string                 `protobuf:"bytes,1,opt,name=country_code,json=countryCode,proto3" json:"country_code,omitempty"`
+	Cidr         []*CIDR                `protobuf:"bytes,2,rep,name=cidr,proto3" json:"cidr,omitempty"`
+	InverseMatch bool                   `protobuf:"varint,3,opt,name=inverse_match,json=inverseMatch,proto3" json:"inverse_match,omitempty"`
 	// resource_hash instruct simplified config converter to load domain from geo file.
-	ResourceHash []byte `protobuf:"bytes,4,opt,name=resource_hash,json=resourceHash,proto3" json:"resource_hash,omitempty"`
-	Code         string `protobuf:"bytes,5,opt,name=code,proto3" json:"code,omitempty"`
-	FilePath     string `protobuf:"bytes,68000,opt,name=file_path,json=filePath,proto3" json:"file_path,omitempty"`
+	ResourceHash  []byte `protobuf:"bytes,4,opt,name=resource_hash,json=resourceHash,proto3" json:"resource_hash,omitempty"`
+	Code          string `protobuf:"bytes,5,opt,name=code,proto3" json:"code,omitempty"`
+	FilePath      string `protobuf:"bytes,68000,opt,name=file_path,json=filePath,proto3" json:"file_path,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GeoIP) Reset() {
 	*x = GeoIP{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_routercommon_common_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_routercommon_common_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *GeoIP) String() string {
@@ -236,7 +228,7 @@ func (*GeoIP) ProtoMessage() {}
 
 func (x *GeoIP) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_routercommon_common_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -294,20 +286,17 @@ func (x *GeoIP) GetFilePath() string {
 }
 
 type GeoIPList struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Entry         []*GeoIP               `protobuf:"bytes,1,rep,name=entry,proto3" json:"entry,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Entry []*GeoIP `protobuf:"bytes,1,rep,name=entry,proto3" json:"entry,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GeoIPList) Reset() {
 	*x = GeoIPList{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_routercommon_common_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_routercommon_common_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *GeoIPList) String() string {
@@ -318,7 +307,7 @@ func (*GeoIPList) ProtoMessage() {}
 
 func (x *GeoIPList) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_routercommon_common_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -341,25 +330,22 @@ func (x *GeoIPList) GetEntry() []*GeoIP {
 }
 
 type GeoSite struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	CountryCode string    `protobuf:"bytes,1,opt,name=country_code,json=countryCode,proto3" json:"country_code,omitempty"`
-	Domain      []*Domain `protobuf:"bytes,2,rep,name=domain,proto3" json:"domain,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	CountryCode string                 `protobuf:"bytes,1,opt,name=country_code,json=countryCode,proto3" json:"country_code,omitempty"`
+	Domain      []*Domain              `protobuf:"bytes,2,rep,name=domain,proto3" json:"domain,omitempty"`
 	// resource_hash instruct simplified config converter to load domain from geo file.
-	ResourceHash []byte `protobuf:"bytes,3,opt,name=resource_hash,json=resourceHash,proto3" json:"resource_hash,omitempty"`
-	Code         string `protobuf:"bytes,4,opt,name=code,proto3" json:"code,omitempty"`
-	FilePath     string `protobuf:"bytes,68000,opt,name=file_path,json=filePath,proto3" json:"file_path,omitempty"`
+	ResourceHash  []byte `protobuf:"bytes,3,opt,name=resource_hash,json=resourceHash,proto3" json:"resource_hash,omitempty"`
+	Code          string `protobuf:"bytes,4,opt,name=code,proto3" json:"code,omitempty"`
+	FilePath      string `protobuf:"bytes,68000,opt,name=file_path,json=filePath,proto3" json:"file_path,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GeoSite) Reset() {
 	*x = GeoSite{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_routercommon_common_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_routercommon_common_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *GeoSite) String() string {
@@ -370,7 +356,7 @@ func (*GeoSite) ProtoMessage() {}
 
 func (x *GeoSite) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_routercommon_common_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -421,20 +407,17 @@ func (x *GeoSite) GetFilePath() string {
 }
 
 type GeoSiteList struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Entry         []*GeoSite             `protobuf:"bytes,1,rep,name=entry,proto3" json:"entry,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Entry []*GeoSite `protobuf:"bytes,1,rep,name=entry,proto3" json:"entry,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GeoSiteList) Reset() {
 	*x = GeoSiteList{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_routercommon_common_proto_msgTypes[5]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_routercommon_common_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *GeoSiteList) String() string {
@@ -445,7 +428,7 @@ func (*GeoSiteList) ProtoMessage() {}
 
 func (x *GeoSiteList) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_routercommon_common_proto_msgTypes[5]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -468,25 +451,22 @@ func (x *GeoSiteList) GetEntry() []*GeoSite {
 }
 
 type Domain_Attribute struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	// Types that are assignable to TypedValue:
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Key   string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	// Types that are valid to be assigned to TypedValue:
 	//
 	//	*Domain_Attribute_BoolValue
 	//	*Domain_Attribute_IntValue
-	TypedValue isDomain_Attribute_TypedValue `protobuf_oneof:"typed_value"`
+	TypedValue    isDomain_Attribute_TypedValue `protobuf_oneof:"typed_value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Domain_Attribute) Reset() {
 	*x = Domain_Attribute{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_routercommon_common_proto_msgTypes[6]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_routercommon_common_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Domain_Attribute) String() string {
@@ -497,7 +477,7 @@ func (*Domain_Attribute) ProtoMessage() {}
 
 func (x *Domain_Attribute) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_routercommon_common_proto_msgTypes[6]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -519,23 +499,27 @@ func (x *Domain_Attribute) GetKey() string {
 	return ""
 }
 
-func (m *Domain_Attribute) GetTypedValue() isDomain_Attribute_TypedValue {
-	if m != nil {
-		return m.TypedValue
+func (x *Domain_Attribute) GetTypedValue() isDomain_Attribute_TypedValue {
+	if x != nil {
+		return x.TypedValue
 	}
 	return nil
 }
 
 func (x *Domain_Attribute) GetBoolValue() bool {
-	if x, ok := x.GetTypedValue().(*Domain_Attribute_BoolValue); ok {
-		return x.BoolValue
+	if x != nil {
+		if x, ok := x.TypedValue.(*Domain_Attribute_BoolValue); ok {
+			return x.BoolValue
+		}
 	}
 	return false
 }
 
 func (x *Domain_Attribute) GetIntValue() int64 {
-	if x, ok := x.GetTypedValue().(*Domain_Attribute_IntValue); ok {
-		return x.IntValue
+	if x != nil {
+		if x, ok := x.TypedValue.(*Domain_Attribute_IntValue); ok {
+			return x.IntValue
+		}
 	}
 	return 0
 }
@@ -558,7 +542,7 @@ func (*Domain_Attribute_IntValue) isDomain_Attribute_TypedValue() {}
 
 var File_app_router_routercommon_common_proto protoreflect.FileDescriptor
 
-var file_app_router_routercommon_common_proto_rawDesc = []byte{
+var file_app_router_routercommon_common_proto_rawDesc = string([]byte{
 	0x0a, 0x24, 0x61, 0x70, 0x70, 0x2f, 0x72, 0x6f, 0x75, 0x74, 0x65, 0x72, 0x2f, 0x72, 0x6f, 0x75,
 	0x74, 0x65, 0x72, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2f, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x22, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f,
@@ -642,23 +626,23 @@ var file_app_router_routercommon_common_proto_rawDesc = []byte{
 	0x6d, 0x6f, 0x6e, 0xaa, 0x02, 0x22, 0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65,
 	0x2e, 0x41, 0x70, 0x70, 0x2e, 0x52, 0x6f, 0x75, 0x74, 0x65, 0x72, 0x2e, 0x52, 0x6f, 0x75, 0x74,
 	0x65, 0x72, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_app_router_routercommon_common_proto_rawDescOnce sync.Once
-	file_app_router_routercommon_common_proto_rawDescData = file_app_router_routercommon_common_proto_rawDesc
+	file_app_router_routercommon_common_proto_rawDescData []byte
 )
 
 func file_app_router_routercommon_common_proto_rawDescGZIP() []byte {
 	file_app_router_routercommon_common_proto_rawDescOnce.Do(func() {
-		file_app_router_routercommon_common_proto_rawDescData = protoimpl.X.CompressGZIP(file_app_router_routercommon_common_proto_rawDescData)
+		file_app_router_routercommon_common_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_app_router_routercommon_common_proto_rawDesc), len(file_app_router_routercommon_common_proto_rawDesc)))
 	})
 	return file_app_router_routercommon_common_proto_rawDescData
 }
 
 var file_app_router_routercommon_common_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_app_router_routercommon_common_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
-var file_app_router_routercommon_common_proto_goTypes = []interface{}{
+var file_app_router_routercommon_common_proto_goTypes = []any{
 	(Domain_Type)(0),         // 0: v2ray.core.app.router.routercommon.Domain.Type
 	(*Domain)(nil),           // 1: v2ray.core.app.router.routercommon.Domain
 	(*CIDR)(nil),             // 2: v2ray.core.app.router.routercommon.CIDR
@@ -687,93 +671,7 @@ func file_app_router_routercommon_common_proto_init() {
 	if File_app_router_routercommon_common_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_app_router_routercommon_common_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Domain); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_routercommon_common_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CIDR); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_routercommon_common_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GeoIP); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_routercommon_common_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GeoIPList); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_routercommon_common_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GeoSite); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_routercommon_common_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GeoSiteList); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_routercommon_common_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Domain_Attribute); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
-	file_app_router_routercommon_common_proto_msgTypes[6].OneofWrappers = []interface{}{
+	file_app_router_routercommon_common_proto_msgTypes[6].OneofWrappers = []any{
 		(*Domain_Attribute_BoolValue)(nil),
 		(*Domain_Attribute_IntValue)(nil),
 	}
@@ -781,7 +679,7 @@ func file_app_router_routercommon_common_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_app_router_routercommon_common_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_router_routercommon_common_proto_rawDesc), len(file_app_router_routercommon_common_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   7,
 			NumExtensions: 0,
@@ -793,7 +691,6 @@ func file_app_router_routercommon_common_proto_init() {
 		MessageInfos:      file_app_router_routercommon_common_proto_msgTypes,
 	}.Build()
 	File_app_router_routercommon_common_proto = out.File
-	file_app_router_routercommon_common_proto_rawDesc = nil
 	file_app_router_routercommon_common_proto_goTypes = nil
 	file_app_router_routercommon_common_proto_depIdxs = nil
 }

@@ -6,6 +6,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -16,22 +17,19 @@ const (
 )
 
 type Config struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// @Document The selectors for outbound under observation
 	SubjectSelector []string          `protobuf:"bytes,2,rep,name=subject_selector,json=subjectSelector,proto3" json:"subject_selector,omitempty"`
 	PingConfig      *HealthPingConfig `protobuf:"bytes,3,opt,name=ping_config,json=pingConfig,proto3" json:"ping_config,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_observatory_burst_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_observatory_burst_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Config) String() string {
@@ -42,7 +40,7 @@ func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
 	mi := &file_app_observatory_burst_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -72,10 +70,7 @@ func (x *Config) GetPingConfig() *HealthPingConfig {
 }
 
 type HealthPingConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// destination url, need 204 for success return
 	// default https://connectivitycheck.gstatic.com/generate_204
 	Destination string `protobuf:"bytes,1,opt,name=destination,proto3" json:"destination,omitempty"`
@@ -86,16 +81,16 @@ type HealthPingConfig struct {
 	// sampling count is the amount of recent ping results which are kept for calculation
 	SamplingCount int32 `protobuf:"varint,4,opt,name=samplingCount,proto3" json:"samplingCount,omitempty"`
 	// ping timeout, int64 values of time.Duration
-	Timeout int64 `protobuf:"varint,5,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	Timeout       int64 `protobuf:"varint,5,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *HealthPingConfig) Reset() {
 	*x = HealthPingConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_observatory_burst_config_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_observatory_burst_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *HealthPingConfig) String() string {
@@ -106,7 +101,7 @@ func (*HealthPingConfig) ProtoMessage() {}
 
 func (x *HealthPingConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_observatory_burst_config_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -158,7 +153,7 @@ func (x *HealthPingConfig) GetTimeout() int64 {
 
 var File_app_observatory_burst_config_proto protoreflect.FileDescriptor
 
-var file_app_observatory_burst_config_proto_rawDesc = []byte{
+var file_app_observatory_burst_config_proto_rawDesc = string([]byte{
 	0x0a, 0x22, 0x61, 0x70, 0x70, 0x2f, 0x6f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x6f, 0x72,
 	0x79, 0x2f, 0x62, 0x75, 0x72, 0x73, 0x74, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x12, 0x20, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65,
@@ -197,22 +192,22 @@ var file_app_observatory_burst_config_proto_rawDesc = []byte{
 	0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x41, 0x70, 0x70, 0x2e, 0x4f, 0x62,
 	0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x42, 0x75, 0x72, 0x73, 0x74, 0x62,
 	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_app_observatory_burst_config_proto_rawDescOnce sync.Once
-	file_app_observatory_burst_config_proto_rawDescData = file_app_observatory_burst_config_proto_rawDesc
+	file_app_observatory_burst_config_proto_rawDescData []byte
 )
 
 func file_app_observatory_burst_config_proto_rawDescGZIP() []byte {
 	file_app_observatory_burst_config_proto_rawDescOnce.Do(func() {
-		file_app_observatory_burst_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_app_observatory_burst_config_proto_rawDescData)
+		file_app_observatory_burst_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_app_observatory_burst_config_proto_rawDesc), len(file_app_observatory_burst_config_proto_rawDesc)))
 	})
 	return file_app_observatory_burst_config_proto_rawDescData
 }
 
 var file_app_observatory_burst_config_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_app_observatory_burst_config_proto_goTypes = []interface{}{
+var file_app_observatory_burst_config_proto_goTypes = []any{
 	(*Config)(nil),           // 0: v2ray.core.app.observatory.burst.Config
 	(*HealthPingConfig)(nil), // 1: v2ray.core.app.observatory.burst.HealthPingConfig
 }
@@ -230,37 +225,11 @@ func file_app_observatory_burst_config_proto_init() {
 	if File_app_observatory_burst_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_app_observatory_burst_config_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_observatory_burst_config_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*HealthPingConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_app_observatory_burst_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_observatory_burst_config_proto_rawDesc), len(file_app_observatory_burst_config_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
@@ -271,7 +240,6 @@ func file_app_observatory_burst_config_proto_init() {
 		MessageInfos:      file_app_observatory_burst_config_proto_msgTypes,
 	}.Build()
 	File_app_observatory_burst_config_proto = out.File
-	file_app_observatory_burst_config_proto_rawDesc = nil
 	file_app_observatory_burst_config_proto_goTypes = nil
 	file_app_observatory_burst_config_proto_depIdxs = nil
 }

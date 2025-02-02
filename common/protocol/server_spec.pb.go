@@ -6,6 +6,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -16,22 +17,19 @@ const (
 )
 
 type ServerEndpoint struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Address       *net.IPOrDomain        `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Port          uint32                 `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
+	User          []*User                `protobuf:"bytes,3,rep,name=user,proto3" json:"user,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Address *net.IPOrDomain `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	Port    uint32          `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
-	User    []*User         `protobuf:"bytes,3,rep,name=user,proto3" json:"user,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ServerEndpoint) Reset() {
 	*x = ServerEndpoint{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_common_protocol_server_spec_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_common_protocol_server_spec_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ServerEndpoint) String() string {
@@ -42,7 +40,7 @@ func (*ServerEndpoint) ProtoMessage() {}
 
 func (x *ServerEndpoint) ProtoReflect() protoreflect.Message {
 	mi := &file_common_protocol_server_spec_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -80,7 +78,7 @@ func (x *ServerEndpoint) GetUser() []*User {
 
 var File_common_protocol_server_spec_proto protoreflect.FileDescriptor
 
-var file_common_protocol_server_spec_proto_rawDesc = []byte{
+var file_common_protocol_server_spec_proto_rawDesc = string([]byte{
 	0x0a, 0x21, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
 	0x6c, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x73, 0x70, 0x65, 0x63, 0x2e, 0x70, 0x72,
 	0x6f, 0x74, 0x6f, 0x12, 0x1a, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e,
@@ -106,22 +104,22 @@ var file_common_protocol_server_spec_proto_rawDesc = []byte{
 	0x63, 0x6f, 0x6c, 0xaa, 0x02, 0x1a, 0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65,
 	0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
 	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_common_protocol_server_spec_proto_rawDescOnce sync.Once
-	file_common_protocol_server_spec_proto_rawDescData = file_common_protocol_server_spec_proto_rawDesc
+	file_common_protocol_server_spec_proto_rawDescData []byte
 )
 
 func file_common_protocol_server_spec_proto_rawDescGZIP() []byte {
 	file_common_protocol_server_spec_proto_rawDescOnce.Do(func() {
-		file_common_protocol_server_spec_proto_rawDescData = protoimpl.X.CompressGZIP(file_common_protocol_server_spec_proto_rawDescData)
+		file_common_protocol_server_spec_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_protocol_server_spec_proto_rawDesc), len(file_common_protocol_server_spec_proto_rawDesc)))
 	})
 	return file_common_protocol_server_spec_proto_rawDescData
 }
 
 var file_common_protocol_server_spec_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_common_protocol_server_spec_proto_goTypes = []interface{}{
+var file_common_protocol_server_spec_proto_goTypes = []any{
 	(*ServerEndpoint)(nil), // 0: v2ray.core.common.protocol.ServerEndpoint
 	(*net.IPOrDomain)(nil), // 1: v2ray.core.common.net.IPOrDomain
 	(*User)(nil),           // 2: v2ray.core.common.protocol.User
@@ -142,25 +140,11 @@ func file_common_protocol_server_spec_proto_init() {
 		return
 	}
 	file_common_protocol_user_proto_init()
-	if !protoimpl.UnsafeEnabled {
-		file_common_protocol_server_spec_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ServerEndpoint); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_common_protocol_server_spec_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_protocol_server_spec_proto_rawDesc), len(file_common_protocol_server_spec_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
@@ -171,7 +155,6 @@ func file_common_protocol_server_spec_proto_init() {
 		MessageInfos:      file_common_protocol_server_spec_proto_msgTypes,
 	}.Build()
 	File_common_protocol_server_spec_proto = out.File
-	file_common_protocol_server_spec_proto_rawDesc = nil
 	file_common_protocol_server_spec_proto_goTypes = nil
 	file_common_protocol_server_spec_proto_depIdxs = nil
 }

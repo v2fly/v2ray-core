@@ -6,6 +6,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -17,21 +18,18 @@ const (
 
 // Config is the settings for BrowserForwarder.
 type Config struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ListenAddr    string                 `protobuf:"bytes,1,opt,name=listen_addr,json=listenAddr,proto3" json:"listen_addr,omitempty"`
+	ListenPort    int32                  `protobuf:"varint,2,opt,name=listen_port,json=listenPort,proto3" json:"listen_port,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	ListenAddr string `protobuf:"bytes,1,opt,name=listen_addr,json=listenAddr,proto3" json:"listen_addr,omitempty"`
-	ListenPort int32  `protobuf:"varint,2,opt,name=listen_port,json=listenPort,proto3" json:"listen_port,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_browserforwarder_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_browserforwarder_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Config) String() string {
@@ -42,7 +40,7 @@ func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
 	mi := &file_app_browserforwarder_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -73,7 +71,7 @@ func (x *Config) GetListenPort() int32 {
 
 var File_app_browserforwarder_config_proto protoreflect.FileDescriptor
 
-var file_app_browserforwarder_config_proto_rawDesc = []byte{
+var file_app_browserforwarder_config_proto_rawDesc = string([]byte{
 	0x0a, 0x21, 0x61, 0x70, 0x70, 0x2f, 0x62, 0x72, 0x6f, 0x77, 0x73, 0x65, 0x72, 0x66, 0x6f, 0x72,
 	0x77, 0x61, 0x72, 0x64, 0x65, 0x72, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2e, 0x70, 0x72,
 	0x6f, 0x74, 0x6f, 0x12, 0x1f, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e,
@@ -96,22 +94,22 @@ var file_app_browserforwarder_config_proto_rawDesc = []byte{
 	0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x41, 0x70, 0x70, 0x2e, 0x42, 0x72, 0x6f, 0x77, 0x73, 0x65,
 	0x72, 0x66, 0x6f, 0x72, 0x77, 0x61, 0x72, 0x64, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x33,
-}
+})
 
 var (
 	file_app_browserforwarder_config_proto_rawDescOnce sync.Once
-	file_app_browserforwarder_config_proto_rawDescData = file_app_browserforwarder_config_proto_rawDesc
+	file_app_browserforwarder_config_proto_rawDescData []byte
 )
 
 func file_app_browserforwarder_config_proto_rawDescGZIP() []byte {
 	file_app_browserforwarder_config_proto_rawDescOnce.Do(func() {
-		file_app_browserforwarder_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_app_browserforwarder_config_proto_rawDescData)
+		file_app_browserforwarder_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_app_browserforwarder_config_proto_rawDesc), len(file_app_browserforwarder_config_proto_rawDesc)))
 	})
 	return file_app_browserforwarder_config_proto_rawDescData
 }
 
 var file_app_browserforwarder_config_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_app_browserforwarder_config_proto_goTypes = []interface{}{
+var file_app_browserforwarder_config_proto_goTypes = []any{
 	(*Config)(nil), // 0: v2ray.core.app.browserforwarder.Config
 }
 var file_app_browserforwarder_config_proto_depIdxs = []int32{
@@ -127,25 +125,11 @@ func file_app_browserforwarder_config_proto_init() {
 	if File_app_browserforwarder_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_app_browserforwarder_config_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_app_browserforwarder_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_browserforwarder_config_proto_rawDesc), len(file_app_browserforwarder_config_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
@@ -156,7 +140,6 @@ func file_app_browserforwarder_config_proto_init() {
 		MessageInfos:      file_app_browserforwarder_config_proto_msgTypes,
 	}.Build()
 	File_app_browserforwarder_config_proto = out.File
-	file_app_browserforwarder_config_proto_rawDesc = nil
 	file_app_browserforwarder_config_proto_goTypes = nil
 	file_app_browserforwarder_config_proto_depIdxs = nil
 }
