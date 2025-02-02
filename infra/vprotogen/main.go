@@ -108,9 +108,9 @@ func getProjectProtocVersion(url string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("can not read from body")
 	}
-	versionRegexp := regexp.MustCompile(`\/\/\s*protoc\s*v(\d+\.\d+\.\d+)`)
+	versionRegexp := regexp.MustCompile(`\/\/\s*protoc\s*v(\d+\.(\d+\.\d+))`)
 	matched := versionRegexp.FindStringSubmatch(string(body))
-	return matched[1], nil
+	return matched[2], nil
 }
 
 func getInstalledProtocVersion(protocPath string) (string, error) {
@@ -126,10 +126,6 @@ func getInstalledProtocVersion(protocPath string) (string, error) {
 	if len(matched) == 0 {
 		return "", errors.New("can not parse protoc version")
 	}
-
-	if len(matched) == 2 {
-		installedVersion += "4." // in contrast to getProjectProtocVersion()
-	}
 	installedVersion += matched[1]
 	fmt.Println("Using protoc version: " + installedVersion)
 	return installedVersion, nil
@@ -139,9 +135,6 @@ func parseVersion(s string, width int) int64 {
 	strList := strings.Split(s, ".")
 	format := fmt.Sprintf("%%s%%0%ds", width)
 	v := ""
-	if len(strList) == 2 {
-		strList = append([]string{"4"}, strList...)
-	}
 	for _, value := range strList {
 		v = fmt.Sprintf(format, v, value)
 	}
