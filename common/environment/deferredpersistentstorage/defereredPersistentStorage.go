@@ -83,6 +83,7 @@ func (d *deferredPersistentStorage) DropScope(ctx context.Context, key []byte) e
 	}
 	return d.inner.DropScope(ctx, key)
 }
+
 func (d *deferredPersistentStorage) ProvideInner(ctx context.Context, inner persistentstorage.ScopedPersistentStorage) {
 	d.inner = inner
 	if inner != nil {

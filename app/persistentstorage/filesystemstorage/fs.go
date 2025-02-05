@@ -9,7 +9,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/v2fly/v2ray-core/v5/app/persistentstorage/protoStorage"
+	"github.com/v2fly/v2ray-core/v5/app/persistentstorage/protostorage"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/environment"
 	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
@@ -25,14 +25,14 @@ func newFileSystemStorage(ctx context.Context, config *Config) storage.ScopedPer
 		config:          config,
 	}
 
-	protoStorageInst := protoStorage.NewProtoStorage(fss, config.Protojson)
+	protoStorageInst := protostorage.NewProtoStorage(fss, config.Protojson)
 	fss.proto = protoStorageInst
 	return fss
 }
 
 type fileSystemStorage struct {
 	fs    environment.FileSystemCapabilitySet
-	proto protoStorage.ProtoPersistentStorage
+	proto protostorage.ProtoPersistentStorage
 
 	pathRoot        string
 	currentLocation []string
@@ -118,7 +118,7 @@ func (f *fileSystemStorage) NarrowScope(ctx context.Context, key []byte) (storag
 		currentLocation: append(f.currentLocation, escapedKey),
 		config:          f.config,
 	}
-	fss.proto = protoStorage.NewProtoStorage(fss, f.config.Protojson)
+	fss.proto = protostorage.NewProtoStorage(fss, f.config.Protojson)
 	return fss, nil
 }
 

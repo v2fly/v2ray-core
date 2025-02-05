@@ -2,11 +2,12 @@ package core
 
 import (
 	"context"
+	"reflect"
+	sync "sync"
+
 	"github.com/v2fly/v2ray-core/v5/common/environment/deferredpersistentstorage"
 	"github.com/v2fly/v2ray-core/v5/common/environment/filesystemimpl"
 	"github.com/v2fly/v2ray-core/v5/features/extension/storage"
-	"reflect"
-	sync "sync"
 
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/environment"

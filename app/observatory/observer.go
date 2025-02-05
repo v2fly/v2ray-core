@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/v2fly/v2ray-core/v5/app/persistentstorage"
-	"github.com/v2fly/v2ray-core/v5/app/persistentstorage/protoStorage"
+	"github.com/v2fly/v2ray-core/v5/app/persistentstorage/protostorage"
 	"github.com/v2fly/v2ray-core/v5/common/environment"
 	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
 
@@ -42,7 +42,7 @@ type Observer struct {
 	ohm            outbound.Manager
 	persistStorage persistentstorage.ScopedPersistentStorage
 
-	persistOutboundStatusProtoStorage protoStorage.ProtoPersistentStorage
+	persistOutboundStatusProtoStorage protostorage.ProtoPersistentStorage
 }
 
 func (o *Observer) GetObservation(ctx context.Context) (proto.Message, error) {
@@ -63,7 +63,7 @@ func (o *Observer) Start() error {
 			if err != nil {
 				return newError("failed to get persistent storage for outbound_status").Base(err)
 			}
-			o.persistOutboundStatusProtoStorage = outboundStatusStorage.(protoStorage.ProtoPersistentStorage)
+			o.persistOutboundStatusProtoStorage = outboundStatusStorage.(protostorage.ProtoPersistentStorage)
 			list, err := outboundStatusStorage.List(o.ctx, []byte(""))
 			if err != nil {
 				newError("failed to list persisted outbound status").Base(err).WriteToLog()

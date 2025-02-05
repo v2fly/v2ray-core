@@ -1,4 +1,4 @@
-package protoStorage
+package protostorage
 
 import (
 	"context"
