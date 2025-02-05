@@ -12,6 +12,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/v2fly/v2ray-core/v5/app/persistentstorage"
+	"github.com/v2fly/v2ray-core/v5/app/persistentstorage/protostorage"
+	"github.com/v2fly/v2ray-core/v5/common/environment"
+	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
+
 	"github.com/golang/protobuf/proto"
 
 	core "github.com/v2fly/v2ray-core/v5"
@@ -34,7 +39,10 @@ type Observer struct {
 
 	finished *done.Instance
 
-	ohm outbound.Manager
+	ohm            outbound.Manager
+	persistStorage persistentstorage.ScopedPersistentStorage
+
+	persistOutboundStatusProtoStorage protostorage.ProtoPersistentStorage
 }
 
 func (o *Observer) GetObservation(ctx context.Context) (proto.Message, error) {
@@ -47,6 +55,24 @@ func (o *Observer) Type() interface{} {
 
 func (o *Observer) Start() error {
 	if o.config != nil && len(o.config.SubjectSelector) != 0 {
+		if o.config.PersistentProbeResult {
+			appEnvironment := envctx.EnvironmentFromContext(o.ctx).(environment.AppEnvironment)
+			o.persistStorage = appEnvironment.PersistentStorage()
+
+			outboundStatusStorage, err := o.persistStorage.NarrowScope(o.ctx, []byte("outbound_status"))
+			if err != nil {
+				return newError("failed to get persistent storage for outbound_status").Base(err)
+			}
+			o.persistOutboundStatusProtoStorage = outboundStatusStorage.(protostorage.ProtoPersistentStorage)
+			list, err := outboundStatusStorage.List(o.ctx, []byte(""))
+			if err != nil {
+				newError("failed to list persisted outbound status").Base(err).WriteToLog()
+			} else {
+				for _, v := range list {
+					o.loadOutboundStatus(string(v))
+				}
+			}
+		}
 		o.finished = done.New()
 		go o.background()
 	}
@@ -195,6 +221,12 @@ func (o *Observer) updateStatusForResult(outbound string, result *ProbeResult) {
 		status.LastErrorReason = result.LastErrorReason
 		status.Delay = 99999999
 	}
+	if o.config.PersistentProbeResult {
+		err := o.persistOutboundStatusProtoStorage.PutProto(o.ctx, outbound, status)
+		if err != nil {
+			newError("failed to persist outbound status").Base(err).WriteToLog()
+		}
+	}
 }
 
 func (o *Observer) findStatusLocationLockHolderOnly(outbound string) int {
@@ -206,19 +238,33 @@ func (o *Observer) findStatusLocationLockHolderOnly(outbound string) int {
 	return -1
 }
 
+func (o *Observer) loadOutboundStatus(name string) {
+	if o.persistOutboundStatusProtoStorage == nil {
+		return
+	}
+	status := &OutboundStatus{}
+	err := o.persistOutboundStatusProtoStorage.GetProto(o.ctx, name, status)
+	if err != nil {
+		newError("failed to load outbound status").Base(err).WriteToLog()
+		return
+	}
+	o.status = append(o.status, status)
+}
+
 func New(ctx context.Context, config *Config) (*Observer, error) {
-	var outboundManager outbound.Manager
+	obs := &Observer{
+		config: config,
+		ctx:    ctx,
+	}
+
 	err := core.RequireFeatures(ctx, func(om outbound.Manager) {
-		outboundManager = om
+		obs.ohm = om
 	})
 	if err != nil {
 		return nil, newError("Cannot get depended features").Base(err)
 	}
-	return &Observer{
-		config: config,
-		ctx:    ctx,
-		ohm:    outboundManager,
-	}, nil
+
+	return obs, nil
 }
 
 func init() {

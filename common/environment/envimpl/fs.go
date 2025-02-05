@@ -8,6 +8,14 @@ import (
 
 type fileSystemDefaultImpl struct{}
 
+func (f fileSystemDefaultImpl) ReadDir() fsifce.FileReadDirFunc {
+	return filesystem.NewFileReadDir
+}
+
+func (f fileSystemDefaultImpl) RemoveFile() fsifce.FileRemoveFunc {
+	return filesystem.NewFileRemover
+}
+
 func (f fileSystemDefaultImpl) OpenFileForReadSeek() fsifce.FileSeekerFunc {
 	return filesystem.NewFileSeeker
 }

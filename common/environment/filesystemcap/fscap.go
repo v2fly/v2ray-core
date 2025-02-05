@@ -6,4 +6,6 @@ type FileSystemCapabilitySet interface {
 	OpenFileForReadSeek() fsifce.FileSeekerFunc
 	OpenFileForRead() fsifce.FileReaderFunc
 	OpenFileForWrite() fsifce.FileWriterFunc
+	ReadDir() fsifce.FileReadDirFunc
+	RemoveFile() fsifce.FileRemoveFunc
 }
