@@ -7,6 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/v2fly/v2ray-core/v5/common/environment/deferredpersistentstorage"
+	"github.com/v2fly/v2ray-core/v5/common/environment/filesystemimpl"
+
 	"github.com/v2fly/v2ray-core/v5/common/environment"
 	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
 	"github.com/v2fly/v2ray-core/v5/common/environment/systemnetworkimpl"
@@ -25,7 +28,11 @@ import (
 func TestDialAndListen(t *testing.T) {
 	ctx := context.Background()
 	defaultNetworkImpl := systemnetworkimpl.NewSystemNetworkDefault()
-	rootEnv := environment.NewRootEnvImpl(ctx, transientstorageimpl.NewScopedTransientStorageImpl(), defaultNetworkImpl.Dialer(), defaultNetworkImpl.Listener())
+	defaultFilesystemImpl := filesystemimpl.NewDefaultFileSystemDefaultImpl()
+	deferredPersistentStorageImpl := deferredpersistentstorage.NewDeferredPersistentStorage(ctx)
+	rootEnv := environment.NewRootEnvImpl(ctx,
+		transientstorageimpl.NewScopedTransientStorageImpl(), defaultNetworkImpl.Dialer(), defaultNetworkImpl.Listener(),
+		defaultFilesystemImpl, deferredPersistentStorageImpl)
 	proxyEnvironment := rootEnv.ProxyEnvironment("o")
 	transportEnvironment, err := proxyEnvironment.NarrowScopeToTransport("kcp")
 	if err != nil {

@@ -11,19 +11,24 @@ import (
 
 func NewRootEnvImpl(ctx context.Context, transientStorage storage.ScopedTransientStorage,
 	systemDialer internet.SystemDialer, systemListener internet.SystemListener,
+	filesystem FileSystemCapabilitySet, persistStorage storage.ScopedPersistentStorage,
 ) RootEnvironment {
 	return &rootEnvImpl{
 		transientStorage: transientStorage,
 		systemListener:   systemListener,
 		systemDialer:     systemDialer,
+		filesystem:       filesystem,
+		persistStorage:   persistStorage,
 		ctx:              ctx,
 	}
 }
 
 type rootEnvImpl struct {
+	persistStorage   storage.ScopedPersistentStorage
 	transientStorage storage.ScopedTransientStorage
 	systemDialer     internet.SystemDialer
 	systemListener   internet.SystemListener
+	filesystem       FileSystemCapabilitySet
 
 	ctx context.Context
 }
@@ -37,10 +42,16 @@ func (r *rootEnvImpl) AppEnvironment(tag string) AppEnvironment {
 	if err != nil {
 		return nil
 	}
+	persistStorage, err := r.persistStorage.NarrowScope(r.ctx, []byte(tag))
+	if err != nil {
+		return nil
+	}
 	return &appEnvImpl{
 		transientStorage: transientStorage,
+		persistStorage:   persistStorage,
 		systemListener:   r.systemListener,
 		systemDialer:     r.systemDialer,
+		filesystem:       r.filesystem,
 		ctx:              r.ctx,
 	}
 }
@@ -67,9 +78,11 @@ func (r *rootEnvImpl) DropProxyEnvironment(tag string) error {
 }
 
 type appEnvImpl struct {
+	persistStorage   storage.ScopedPersistentStorage
 	transientStorage storage.ScopedTransientStorage
 	systemDialer     internet.SystemDialer
 	systemListener   internet.SystemListener
+	filesystem       FileSystemCapabilitySet
 
 	ctx context.Context
 }
@@ -95,19 +108,27 @@ func (a *appEnvImpl) OutboundDialer() tagged.DialFunc {
 }
 
 func (a *appEnvImpl) OpenFileForReadSeek() fsifce.FileSeekerFunc {
-	panic("implement me")
+	return a.filesystem.OpenFileForReadSeek()
 }
 
 func (a *appEnvImpl) OpenFileForRead() fsifce.FileReaderFunc {
-	panic("implement me")
+	return a.filesystem.OpenFileForRead()
 }
 
 func (a *appEnvImpl) OpenFileForWrite() fsifce.FileWriterFunc {
-	panic("implement me")
+	return a.filesystem.OpenFileForWrite()
+}
+
+func (a *appEnvImpl) ReadDir() fsifce.FileReadDirFunc {
+	return a.filesystem.ReadDir()
+}
+
+func (a *appEnvImpl) RemoveFile() fsifce.FileRemoveFunc {
+	return a.filesystem.RemoveFile()
 }
 
 func (a *appEnvImpl) PersistentStorage() storage.ScopedPersistentStorage {
-	panic("implement me")
+	return a.persistStorage
 }
 
 func (a *appEnvImpl) TransientStorage() storage.ScopedTransientStorage {

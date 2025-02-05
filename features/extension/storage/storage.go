@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v5/features"
 )
 
 type ScopedPersistentStorage interface {
@@ -23,3 +24,10 @@ type ScopedTransientStorage interface {
 	NarrowScope(ctx context.Context, key string) (ScopedTransientStorage, error)
 	DropScope(ctx context.Context, key string) error
 }
+
+type ScopedPersistentStorageService interface {
+	ScopedPersistentStorage
+	features.Feature
+}
+
+var ScopedPersistentStorageServiceType = (*ScopedPersistentStorageService)(nil)

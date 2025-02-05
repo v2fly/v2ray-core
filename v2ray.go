@@ -2,6 +2,9 @@ package core
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v5/common/environment/deferredpersistentstorage"
+	"github.com/v2fly/v2ray-core/v5/common/environment/filesystemimpl"
+	"github.com/v2fly/v2ray-core/v5/features/extension/storage"
 	"reflect"
 	sync "sync"
 
@@ -205,7 +208,14 @@ func initInstanceWithConfig(config *Config, server *Instance) (bool, error) {
 	}
 
 	defaultNetworkImpl := systemnetworkimpl.NewSystemNetworkDefault()
-	server.env = environment.NewRootEnvImpl(server.ctx, transientstorageimpl.NewScopedTransientStorageImpl(), defaultNetworkImpl.Dialer(), defaultNetworkImpl.Listener())
+	defaultFilesystemImpl := filesystemimpl.NewDefaultFileSystemDefaultImpl()
+	deferredPersistentStorageImpl := deferredpersistentstorage.NewDeferredPersistentStorage(server.ctx)
+	server.env = environment.NewRootEnvImpl(server.ctx,
+		transientstorageimpl.NewScopedTransientStorageImpl(),
+		defaultNetworkImpl.Dialer(),
+		defaultNetworkImpl.Listener(),
+		defaultFilesystemImpl,
+		deferredPersistentStorageImpl)
 
 	for _, appSettings := range config.App {
 		settings, err := serial.GetInstanceOf(appSettings)
@@ -245,6 +255,12 @@ func initInstanceWithConfig(config *Config, server *Instance) (bool, error) {
 
 	if server.featureResolutions != nil {
 		return true, newError("not all dependency are resolved.")
+	}
+
+	if persistentStorageService := server.GetFeature(storage.ScopedPersistentStorageServiceType); persistentStorageService != nil {
+		deferredPersistentStorageImpl.ProvideInner(server.ctx, persistentStorageService.(storage.ScopedPersistentStorage))
+	} else {
+		deferredPersistentStorageImpl.ProvideInner(server.ctx, nil)
 	}
 
 	if err := addInboundHandlers(server, config.Inbound); err != nil {
