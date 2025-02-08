@@ -16,9 +16,8 @@ gateway:
 release:gateway router dat
 
 router:
-	GCC=/opt/openwrt-sdk/staging_dir/toolchain-x86_64_gcc-11.3.0_musl/bin/x86_64-openwrt-linux-gcc \
       CGO_ENABLED=1 \
-      CC=${GCC}\
+       CC=/opt/openwrt-sdk/staging_dir/toolchain-x86_64_gcc-11.3.0_musl/bin/x86_64-openwrt-linux-gcc\
        GOOS=linux \
        GOARCH=amd64 \
         go build -ldflags $(LDFlag) -o dist/$(Version)/elink_embed ./main
