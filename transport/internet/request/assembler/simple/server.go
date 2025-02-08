@@ -104,7 +104,7 @@ func (s *simpleAssemblerServerSession) Close() error {
 
 func (s *simpleAssemblerServerSession) OnRoundTrip(ctx context.Context, req request.Request, opts ...request.RoundTripperOption,
 ) (resp request.Response, err error) {
-	if req.Data != nil && len(req.Data) > 0 {
+	if len(req.Data) > 0 {
 		select {
 		case <-s.ctx.Done():
 			return request.Response{}, s.ctx.Err()

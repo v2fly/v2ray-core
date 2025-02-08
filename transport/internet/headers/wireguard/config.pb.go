@@ -5,6 +5,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -15,18 +16,16 @@ const (
 )
 
 type WireguardConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *WireguardConfig) Reset() {
 	*x = WireguardConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_transport_internet_headers_wireguard_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_transport_internet_headers_wireguard_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *WireguardConfig) String() string {
@@ -37,7 +36,7 @@ func (*WireguardConfig) ProtoMessage() {}
 
 func (x *WireguardConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_transport_internet_headers_wireguard_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -54,7 +53,7 @@ func (*WireguardConfig) Descriptor() ([]byte, []int) {
 
 var File_transport_internet_headers_wireguard_config_proto protoreflect.FileDescriptor
 
-var file_transport_internet_headers_wireguard_config_proto_rawDesc = []byte{
+var file_transport_internet_headers_wireguard_config_proto_rawDesc = string([]byte{
 	0x0a, 0x31, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x70, 0x6f, 0x72, 0x74, 0x2f, 0x69, 0x6e, 0x74, 0x65,
 	0x72, 0x6e, 0x65, 0x74, 0x2f, 0x68, 0x65, 0x61, 0x64, 0x65, 0x72, 0x73, 0x2f, 0x77, 0x69, 0x72,
 	0x65, 0x67, 0x75, 0x61, 0x72, 0x64, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2e, 0x70, 0x72,
@@ -74,22 +73,22 @@ var file_transport_internet_headers_wireguard_config_proto_rawDesc = []byte{
 	0x6f, 0x72, 0x65, 0x2e, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x70, 0x6f, 0x72, 0x74, 0x2e, 0x49, 0x6e,
 	0x74, 0x65, 0x72, 0x6e, 0x65, 0x74, 0x2e, 0x48, 0x65, 0x61, 0x64, 0x65, 0x72, 0x73, 0x2e, 0x57,
 	0x69, 0x72, 0x65, 0x67, 0x75, 0x61, 0x72, 0x64, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_transport_internet_headers_wireguard_config_proto_rawDescOnce sync.Once
-	file_transport_internet_headers_wireguard_config_proto_rawDescData = file_transport_internet_headers_wireguard_config_proto_rawDesc
+	file_transport_internet_headers_wireguard_config_proto_rawDescData []byte
 )
 
 func file_transport_internet_headers_wireguard_config_proto_rawDescGZIP() []byte {
 	file_transport_internet_headers_wireguard_config_proto_rawDescOnce.Do(func() {
-		file_transport_internet_headers_wireguard_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_transport_internet_headers_wireguard_config_proto_rawDescData)
+		file_transport_internet_headers_wireguard_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_transport_internet_headers_wireguard_config_proto_rawDesc), len(file_transport_internet_headers_wireguard_config_proto_rawDesc)))
 	})
 	return file_transport_internet_headers_wireguard_config_proto_rawDescData
 }
 
 var file_transport_internet_headers_wireguard_config_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_transport_internet_headers_wireguard_config_proto_goTypes = []interface{}{
+var file_transport_internet_headers_wireguard_config_proto_goTypes = []any{
 	(*WireguardConfig)(nil), // 0: v2ray.core.transport.internet.headers.wireguard.WireguardConfig
 }
 var file_transport_internet_headers_wireguard_config_proto_depIdxs = []int32{
@@ -105,25 +104,11 @@ func file_transport_internet_headers_wireguard_config_proto_init() {
 	if File_transport_internet_headers_wireguard_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_transport_internet_headers_wireguard_config_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*WireguardConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_transport_internet_headers_wireguard_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_transport_internet_headers_wireguard_config_proto_rawDesc), len(file_transport_internet_headers_wireguard_config_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
@@ -134,7 +119,6 @@ func file_transport_internet_headers_wireguard_config_proto_init() {
 		MessageInfos:      file_transport_internet_headers_wireguard_config_proto_msgTypes,
 	}.Build()
 	File_transport_internet_headers_wireguard_config_proto = out.File
-	file_transport_internet_headers_wireguard_config_proto_rawDesc = nil
 	file_transport_internet_headers_wireguard_config_proto_goTypes = nil
 	file_transport_internet_headers_wireguard_config_proto_depIdxs = nil
 }

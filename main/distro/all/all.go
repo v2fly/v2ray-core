@@ -31,8 +31,10 @@ import (
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/tagged/taggedimpl"
 
 	// Developer preview features
+	_ "github.com/v2fly/v2ray-core/v5/app/commander/webcommander"
 	_ "github.com/v2fly/v2ray-core/v5/app/instman"
 	_ "github.com/v2fly/v2ray-core/v5/app/observatory"
+	_ "github.com/v2fly/v2ray-core/v5/app/persistentstorage/filesystemstorage"
 	_ "github.com/v2fly/v2ray-core/v5/app/tun"
 
 	// Inbound and outbound proxies.
@@ -123,11 +125,14 @@ import (
 	// Subscription Supports
 	_ "github.com/v2fly/v2ray-core/v5/app/subscription/subscriptionmanager"
 
+	_ "github.com/v2fly/v2ray-core/v5/app/subscription/subscriptionmanager/command"
+
 	// Subscription Containers: general purpose
 	_ "github.com/v2fly/v2ray-core/v5/app/subscription/containers/base64urlline"
 	_ "github.com/v2fly/v2ray-core/v5/app/subscription/containers/dataurlsingle"
 	_ "github.com/v2fly/v2ray-core/v5/app/subscription/containers/jsonfieldarray"
 	_ "github.com/v2fly/v2ray-core/v5/app/subscription/containers/jsonfieldarray/jsonified"
+	_ "github.com/v2fly/v2ray-core/v5/app/subscription/containers/urlline"
 
 	// Subscription Fetchers
 	_ "github.com/v2fly/v2ray-core/v5/app/subscription/documentfetcher/dataurlfetcher"

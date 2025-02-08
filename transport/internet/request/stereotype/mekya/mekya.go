@@ -56,6 +56,7 @@ func mekyaDial(ctx context.Context, dest net.Destination, streamSettings *intern
 
 	return internet.Dial(ctx, dest, constructedSetting)
 }
+
 func mekyaListen(ctx context.Context, address net.Address, port net.Port, streamSettings *internet.MemoryStreamConfig, callback internet.ConnHandler) (internet.Listener, error) {
 	mekyaSetting := streamSettings.ProtocolSettings.(*Config)
 	packetConnAssembler := &packetconn.ServerConfig{}

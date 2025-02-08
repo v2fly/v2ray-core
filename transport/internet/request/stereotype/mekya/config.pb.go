@@ -7,6 +7,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -17,11 +18,8 @@ const (
 )
 
 type Config struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Kcp *kcp.Config `protobuf:"bytes,1,opt,name=kcp,proto3" json:"kcp,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Kcp   *kcp.Config            `protobuf:"bytes,1,opt,name=kcp,proto3" json:"kcp,omitempty"`
 	// Client
 	MaxWriteDelay          int32 `protobuf:"varint,1003,opt,name=max_write_delay,json=maxWriteDelay,proto3" json:"max_write_delay,omitempty"`
 	MaxRequestSize         int32 `protobuf:"varint,1004,opt,name=max_request_size,json=maxRequestSize,proto3" json:"max_request_size,omitempty"`
@@ -32,17 +30,17 @@ type Config struct {
 	MaxSimultaneousWriteConnection int32 `protobuf:"varint,2005,opt,name=max_simultaneous_write_connection,json=maxSimultaneousWriteConnection,proto3" json:"max_simultaneous_write_connection,omitempty"`
 	PacketWritingBuffer            int32 `protobuf:"varint,2006,opt,name=packet_writing_buffer,json=packetWritingBuffer,proto3" json:"packet_writing_buffer,omitempty"`
 	// Roundtripper
-	Url        string `protobuf:"bytes,3001,opt,name=url,proto3" json:"url,omitempty"`
-	H2PoolSize int32  `protobuf:"varint,3003,opt,name=h2_pool_size,json=h2PoolSize,proto3" json:"h2_pool_size,omitempty"`
+	Url           string `protobuf:"bytes,3001,opt,name=url,proto3" json:"url,omitempty"`
+	H2PoolSize    int32  `protobuf:"varint,3003,opt,name=h2_pool_size,json=h2PoolSize,proto3" json:"h2_pool_size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_transport_internet_request_stereotype_mekya_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_transport_internet_request_stereotype_mekya_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Config) String() string {
@@ -53,7 +51,7 @@ func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
 	mi := &file_transport_internet_request_stereotype_mekya_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -140,7 +138,7 @@ func (x *Config) GetH2PoolSize() int32 {
 
 var File_transport_internet_request_stereotype_mekya_config_proto protoreflect.FileDescriptor
 
-var file_transport_internet_request_stereotype_mekya_config_proto_rawDesc = []byte{
+var file_transport_internet_request_stereotype_mekya_config_proto_rawDesc = string([]byte{
 	0x0a, 0x38, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x70, 0x6f, 0x72, 0x74, 0x2f, 0x69, 0x6e, 0x74, 0x65,
 	0x72, 0x6e, 0x65, 0x74, 0x2f, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2f, 0x73, 0x74, 0x65,
 	0x72, 0x65, 0x6f, 0x74, 0x79, 0x70, 0x65, 0x2f, 0x6d, 0x65, 0x6b, 0x79, 0x61, 0x2f, 0x63, 0x6f,
@@ -198,16 +196,16 @@ var file_transport_internet_request_stereotype_mekya_config_proto_rawDesc = []by
 	0x72, 0x74, 0x2e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x65, 0x74, 0x2e, 0x52, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x2e, 0x53, 0x74, 0x65, 0x72, 0x65, 0x6f, 0x74, 0x79, 0x70, 0x65, 0x2e, 0x4d,
 	0x65, 0x6b, 0x79, 0x61, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_transport_internet_request_stereotype_mekya_config_proto_rawDescOnce sync.Once
-	file_transport_internet_request_stereotype_mekya_config_proto_rawDescData = file_transport_internet_request_stereotype_mekya_config_proto_rawDesc
+	file_transport_internet_request_stereotype_mekya_config_proto_rawDescData []byte
 )
 
 func file_transport_internet_request_stereotype_mekya_config_proto_rawDescGZIP() []byte {
 	file_transport_internet_request_stereotype_mekya_config_proto_rawDescOnce.Do(func() {
-		file_transport_internet_request_stereotype_mekya_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_transport_internet_request_stereotype_mekya_config_proto_rawDescData)
+		file_transport_internet_request_stereotype_mekya_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_transport_internet_request_stereotype_mekya_config_proto_rawDesc), len(file_transport_internet_request_stereotype_mekya_config_proto_rawDesc)))
 	})
 	return file_transport_internet_request_stereotype_mekya_config_proto_rawDescData
 }
@@ -231,25 +229,11 @@ func file_transport_internet_request_stereotype_mekya_config_proto_init() {
 	if File_transport_internet_request_stereotype_mekya_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_transport_internet_request_stereotype_mekya_config_proto_msgTypes[0].Exporter = func(v any, i int) any {
-			switch v := v.(*Config); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_transport_internet_request_stereotype_mekya_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_transport_internet_request_stereotype_mekya_config_proto_rawDesc), len(file_transport_internet_request_stereotype_mekya_config_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
@@ -260,7 +244,6 @@ func file_transport_internet_request_stereotype_mekya_config_proto_init() {
 		MessageInfos:      file_transport_internet_request_stereotype_mekya_config_proto_msgTypes,
 	}.Build()
 	File_transport_internet_request_stereotype_mekya_config_proto = out.File
-	file_transport_internet_request_stereotype_mekya_config_proto_rawDesc = nil
 	file_transport_internet_request_stereotype_mekya_config_proto_goTypes = nil
 	file_transport_internet_request_stereotype_mekya_config_proto_depIdxs = nil
 }

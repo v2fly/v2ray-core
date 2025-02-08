@@ -97,7 +97,6 @@ func TestServiceSubscribeRoutingStats(t *testing.T) {
 			grpc.WithContextDialer(bufDialer),
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
-
 		if err != nil {
 			errCh <- err
 			return

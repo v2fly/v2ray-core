@@ -6,6 +6,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -16,21 +17,18 @@ const (
 )
 
 type Account struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
-	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Account) Reset() {
 	*x = Account{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_proxy_http_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_proxy_http_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Account) String() string {
@@ -41,7 +39,7 @@ func (*Account) ProtoMessage() {}
 
 func (x *Account) ProtoReflect() protoreflect.Message {
 	mi := &file_proxy_http_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -72,24 +70,21 @@ func (x *Account) GetPassword() string {
 
 // Config for HTTP proxy server.
 type ServerConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// Deprecated: Marked as deprecated in proxy/http/config.proto.
 	Timeout          uint32            `protobuf:"varint,1,opt,name=timeout,proto3" json:"timeout,omitempty"`
-	Accounts         map[string]string `protobuf:"bytes,2,rep,name=accounts,proto3" json:"accounts,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Accounts         map[string]string `protobuf:"bytes,2,rep,name=accounts,proto3" json:"accounts,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	AllowTransparent bool              `protobuf:"varint,3,opt,name=allow_transparent,json=allowTransparent,proto3" json:"allow_transparent,omitempty"`
 	UserLevel        uint32            `protobuf:"varint,4,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *ServerConfig) Reset() {
 	*x = ServerConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_proxy_http_config_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_proxy_http_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ServerConfig) String() string {
@@ -100,7 +95,7 @@ func (*ServerConfig) ProtoMessage() {}
 
 func (x *ServerConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_proxy_http_config_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -146,22 +141,19 @@ func (x *ServerConfig) GetUserLevel() uint32 {
 
 // ClientConfig is the protobuf config for HTTP proxy client.
 type ClientConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// Sever is a list of HTTP server addresses.
 	Server             []*protocol.ServerEndpoint `protobuf:"bytes,1,rep,name=server,proto3" json:"server,omitempty"`
 	H1SkipWaitForReply bool                       `protobuf:"varint,2,opt,name=h1_skip_wait_for_reply,json=h1SkipWaitForReply,proto3" json:"h1_skip_wait_for_reply,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *ClientConfig) Reset() {
 	*x = ClientConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_proxy_http_config_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_proxy_http_config_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ClientConfig) String() string {
@@ -172,7 +164,7 @@ func (*ClientConfig) ProtoMessage() {}
 
 func (x *ClientConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_proxy_http_config_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -203,7 +195,7 @@ func (x *ClientConfig) GetH1SkipWaitForReply() bool {
 
 var File_proxy_http_config_proto protoreflect.FileDescriptor
 
-var file_proxy_http_config_proto_rawDesc = []byte{
+var file_proxy_http_config_proto_rawDesc = string([]byte{
 	0x0a, 0x17, 0x70, 0x72, 0x6f, 0x78, 0x79, 0x2f, 0x68, 0x74, 0x74, 0x70, 0x2f, 0x63, 0x6f, 0x6e,
 	0x66, 0x69, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x15, 0x76, 0x32, 0x72, 0x61, 0x79,
 	0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x78, 0x79, 0x2e, 0x68, 0x74, 0x74, 0x70,
@@ -245,22 +237,22 @@ var file_proxy_http_config_proto_rawDesc = []byte{
 	0x72, 0x65, 0x2f, 0x76, 0x35, 0x2f, 0x70, 0x72, 0x6f, 0x78, 0x79, 0x2f, 0x68, 0x74, 0x74, 0x70,
 	0xaa, 0x02, 0x15, 0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x50, 0x72,
 	0x6f, 0x78, 0x79, 0x2e, 0x48, 0x74, 0x74, 0x70, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_proxy_http_config_proto_rawDescOnce sync.Once
-	file_proxy_http_config_proto_rawDescData = file_proxy_http_config_proto_rawDesc
+	file_proxy_http_config_proto_rawDescData []byte
 )
 
 func file_proxy_http_config_proto_rawDescGZIP() []byte {
 	file_proxy_http_config_proto_rawDescOnce.Do(func() {
-		file_proxy_http_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_proxy_http_config_proto_rawDescData)
+		file_proxy_http_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proxy_http_config_proto_rawDesc), len(file_proxy_http_config_proto_rawDesc)))
 	})
 	return file_proxy_http_config_proto_rawDescData
 }
 
 var file_proxy_http_config_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_proxy_http_config_proto_goTypes = []interface{}{
+var file_proxy_http_config_proto_goTypes = []any{
 	(*Account)(nil),                 // 0: v2ray.core.proxy.http.Account
 	(*ServerConfig)(nil),            // 1: v2ray.core.proxy.http.ServerConfig
 	(*ClientConfig)(nil),            // 2: v2ray.core.proxy.http.ClientConfig
@@ -282,49 +274,11 @@ func file_proxy_http_config_proto_init() {
 	if File_proxy_http_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_proxy_http_config_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Account); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_proxy_http_config_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ServerConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_proxy_http_config_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ClientConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_proxy_http_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proxy_http_config_proto_rawDesc), len(file_proxy_http_config_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   4,
 			NumExtensions: 0,
@@ -335,7 +289,6 @@ func file_proxy_http_config_proto_init() {
 		MessageInfos:      file_proxy_http_config_proto_msgTypes,
 	}.Build()
 	File_proxy_http_config_proto = out.File
-	file_proxy_http_config_proto_rawDesc = nil
 	file_proxy_http_config_proto_goTypes = nil
 	file_proxy_http_config_proto_depIdxs = nil
 }

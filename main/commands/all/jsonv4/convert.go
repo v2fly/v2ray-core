@@ -119,7 +119,7 @@ func executeConvert(cmd *base.Command, args []string) {
 		r := bytes.NewReader(data)
 		pbConfig, err := core.LoadConfig(inputFormat, r)
 		if err != nil {
-			base.Fatalf(err.Error())
+			base.Fatalf("%v", err.Error())
 		}
 		out, err = proto.Marshal(pbConfig)
 		if err != nil {
@@ -133,12 +133,12 @@ func executeConvert(cmd *base.Command, args []string) {
 		r := bytes.NewReader(data)
 		pbConfig, err := core.LoadConfig(inputFormat, r)
 		if err != nil {
-			base.Fatalf(err.Error())
+			base.Fatalf("%v", err.Error())
 		}
 		w := bytes.NewBuffer(nil)
 		err = jsonpb.DumpJSONPb(pbConfig, w)
 		if err != nil {
-			base.Fatalf(err.Error())
+			base.Fatalf("%v", err.Error())
 		}
 		out = w.Bytes()
 	case v2jsonpb.FormatProtobufV2JSONPB:
@@ -149,11 +149,11 @@ func executeConvert(cmd *base.Command, args []string) {
 		r := bytes.NewReader(data)
 		pbConfig, err := core.LoadConfig(inputFormat, r)
 		if err != nil {
-			base.Fatalf(err.Error())
+			base.Fatalf("%v", err.Error())
 		}
 		out, err = v2jsonpb.DumpV2JsonPb(pbConfig)
 		if err != nil {
-			base.Fatalf(err.Error())
+			base.Fatalf("%v", err.Error())
 		}
 	default:
 		base.Errorf("invalid output format: %s", outputFormat)

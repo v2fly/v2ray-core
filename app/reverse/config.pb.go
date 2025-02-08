@@ -6,6 +6,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -62,21 +63,18 @@ func (Control_State) EnumDescriptor() ([]byte, []int) {
 }
 
 type Control struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	State         Control_State          `protobuf:"varint,1,opt,name=state,proto3,enum=v2ray.core.app.reverse.Control_State" json:"state,omitempty"`
+	Random        []byte                 `protobuf:"bytes,99,opt,name=random,proto3" json:"random,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	State  Control_State `protobuf:"varint,1,opt,name=state,proto3,enum=v2ray.core.app.reverse.Control_State" json:"state,omitempty"`
-	Random []byte        `protobuf:"bytes,99,opt,name=random,proto3" json:"random,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Control) Reset() {
 	*x = Control{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_reverse_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_reverse_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Control) String() string {
@@ -87,7 +85,7 @@ func (*Control) ProtoMessage() {}
 
 func (x *Control) ProtoReflect() protoreflect.Message {
 	mi := &file_app_reverse_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -117,21 +115,18 @@ func (x *Control) GetRandom() []byte {
 }
 
 type BridgeConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tag           string                 `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+	Domain        string                 `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Tag    string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
-	Domain string `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *BridgeConfig) Reset() {
 	*x = BridgeConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_reverse_config_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_reverse_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *BridgeConfig) String() string {
@@ -142,7 +137,7 @@ func (*BridgeConfig) ProtoMessage() {}
 
 func (x *BridgeConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_reverse_config_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -172,21 +167,18 @@ func (x *BridgeConfig) GetDomain() string {
 }
 
 type PortalConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tag           string                 `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+	Domain        string                 `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Tag    string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
-	Domain string `protobuf:"bytes,2,opt,name=domain,proto3" json:"domain,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PortalConfig) Reset() {
 	*x = PortalConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_reverse_config_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_reverse_config_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *PortalConfig) String() string {
@@ -197,7 +189,7 @@ func (*PortalConfig) ProtoMessage() {}
 
 func (x *PortalConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_reverse_config_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -227,21 +219,18 @@ func (x *PortalConfig) GetDomain() string {
 }
 
 type Config struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BridgeConfig  []*BridgeConfig        `protobuf:"bytes,1,rep,name=bridge_config,json=bridgeConfig,proto3" json:"bridge_config,omitempty"`
+	PortalConfig  []*PortalConfig        `protobuf:"bytes,2,rep,name=portal_config,json=portalConfig,proto3" json:"portal_config,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	BridgeConfig []*BridgeConfig `protobuf:"bytes,1,rep,name=bridge_config,json=bridgeConfig,proto3" json:"bridge_config,omitempty"`
-	PortalConfig []*PortalConfig `protobuf:"bytes,2,rep,name=portal_config,json=portalConfig,proto3" json:"portal_config,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_reverse_config_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_reverse_config_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Config) String() string {
@@ -252,7 +241,7 @@ func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
 	mi := &file_app_reverse_config_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -283,7 +272,7 @@ func (x *Config) GetPortalConfig() []*PortalConfig {
 
 var File_app_reverse_config_proto protoreflect.FileDescriptor
 
-var file_app_reverse_config_proto_rawDesc = []byte{
+var file_app_reverse_config_proto_rawDesc = string([]byte{
 	0x0a, 0x18, 0x61, 0x70, 0x70, 0x2f, 0x72, 0x65, 0x76, 0x65, 0x72, 0x73, 0x65, 0x2f, 0x63, 0x6f,
 	0x6e, 0x66, 0x69, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x16, 0x76, 0x32, 0x72, 0x61,
 	0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x72, 0x65, 0x76, 0x65, 0x72,
@@ -324,23 +313,23 @@ var file_app_reverse_config_proto_rawDesc = []byte{
 	0x02, 0x18, 0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x50, 0x72, 0x6f,
 	0x78, 0x79, 0x2e, 0x52, 0x65, 0x76, 0x65, 0x72, 0x73, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x33,
-}
+})
 
 var (
 	file_app_reverse_config_proto_rawDescOnce sync.Once
-	file_app_reverse_config_proto_rawDescData = file_app_reverse_config_proto_rawDesc
+	file_app_reverse_config_proto_rawDescData []byte
 )
 
 func file_app_reverse_config_proto_rawDescGZIP() []byte {
 	file_app_reverse_config_proto_rawDescOnce.Do(func() {
-		file_app_reverse_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_app_reverse_config_proto_rawDescData)
+		file_app_reverse_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_app_reverse_config_proto_rawDesc), len(file_app_reverse_config_proto_rawDesc)))
 	})
 	return file_app_reverse_config_proto_rawDescData
 }
 
 var file_app_reverse_config_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_app_reverse_config_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_app_reverse_config_proto_goTypes = []interface{}{
+var file_app_reverse_config_proto_goTypes = []any{
 	(Control_State)(0),   // 0: v2ray.core.app.reverse.Control.State
 	(*Control)(nil),      // 1: v2ray.core.app.reverse.Control
 	(*BridgeConfig)(nil), // 2: v2ray.core.app.reverse.BridgeConfig
@@ -363,61 +352,11 @@ func file_app_reverse_config_proto_init() {
 	if File_app_reverse_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_app_reverse_config_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Control); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_reverse_config_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BridgeConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_reverse_config_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PortalConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_reverse_config_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_app_reverse_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_reverse_config_proto_rawDesc), len(file_app_reverse_config_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   4,
 			NumExtensions: 0,
@@ -429,7 +368,6 @@ func file_app_reverse_config_proto_init() {
 		MessageInfos:      file_app_reverse_config_proto_msgTypes,
 	}.Build()
 	File_app_reverse_config_proto = out.File
-	file_app_reverse_config_proto_rawDesc = nil
 	file_app_reverse_config_proto_goTypes = nil
 	file_app_reverse_config_proto_depIdxs = nil
 }

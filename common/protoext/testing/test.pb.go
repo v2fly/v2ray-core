@@ -6,6 +6,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -16,20 +17,17 @@ const (
 )
 
 type TestingMessage struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TestField     string                 `protobuf:"bytes,1,opt,name=test_field,json=testField,proto3" json:"test_field,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	TestField string `protobuf:"bytes,1,opt,name=test_field,json=testField,proto3" json:"test_field,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *TestingMessage) Reset() {
 	*x = TestingMessage{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_common_protoext_testing_test_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_common_protoext_testing_test_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *TestingMessage) String() string {
@@ -40,7 +38,7 @@ func (*TestingMessage) ProtoMessage() {}
 
 func (x *TestingMessage) ProtoReflect() protoreflect.Message {
 	mi := &file_common_protoext_testing_test_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -64,7 +62,7 @@ func (x *TestingMessage) GetTestField() string {
 
 var File_common_protoext_testing_test_proto protoreflect.FileDescriptor
 
-var file_common_protoext_testing_test_proto_rawDesc = []byte{
+var file_common_protoext_testing_test_proto_rawDesc = string([]byte{
 	0x0a, 0x22, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x65, 0x78,
 	0x74, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x12, 0x22, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65,
@@ -86,22 +84,22 @@ var file_common_protoext_testing_test_proto_rawDesc = []byte{
 	0x69, 0x6e, 0x67, 0xaa, 0x02, 0x22, 0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65,
 	0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x45, 0x78, 0x74,
 	0x2e, 0x54, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_common_protoext_testing_test_proto_rawDescOnce sync.Once
-	file_common_protoext_testing_test_proto_rawDescData = file_common_protoext_testing_test_proto_rawDesc
+	file_common_protoext_testing_test_proto_rawDescData []byte
 )
 
 func file_common_protoext_testing_test_proto_rawDescGZIP() []byte {
 	file_common_protoext_testing_test_proto_rawDescOnce.Do(func() {
-		file_common_protoext_testing_test_proto_rawDescData = protoimpl.X.CompressGZIP(file_common_protoext_testing_test_proto_rawDescData)
+		file_common_protoext_testing_test_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_protoext_testing_test_proto_rawDesc), len(file_common_protoext_testing_test_proto_rawDesc)))
 	})
 	return file_common_protoext_testing_test_proto_rawDescData
 }
 
 var file_common_protoext_testing_test_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_common_protoext_testing_test_proto_goTypes = []interface{}{
+var file_common_protoext_testing_test_proto_goTypes = []any{
 	(*TestingMessage)(nil), // 0: v2ray.core.common.protoext.testing.TestingMessage
 }
 var file_common_protoext_testing_test_proto_depIdxs = []int32{
@@ -117,25 +115,11 @@ func file_common_protoext_testing_test_proto_init() {
 	if File_common_protoext_testing_test_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_common_protoext_testing_test_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TestingMessage); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_common_protoext_testing_test_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_protoext_testing_test_proto_rawDesc), len(file_common_protoext_testing_test_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
@@ -146,7 +130,6 @@ func file_common_protoext_testing_test_proto_init() {
 		MessageInfos:      file_common_protoext_testing_test_proto_msgTypes,
 	}.Build()
 	File_common_protoext_testing_test_proto = out.File
-	file_common_protoext_testing_test_proto_rawDesc = nil
 	file_common_protoext_testing_test_proto_goTypes = nil
 	file_common_protoext_testing_test_proto_depIdxs = nil
 }

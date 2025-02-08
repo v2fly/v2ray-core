@@ -7,6 +7,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -20,31 +21,28 @@ const (
 // It conforms to the structure of v2ray.core.features.routing.Context and
 // v2ray.core.features.routing.Route.
 type RoutingContext struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	InboundTag        string            `protobuf:"bytes,1,opt,name=InboundTag,proto3" json:"InboundTag,omitempty"`
-	Network           net.Network       `protobuf:"varint,2,opt,name=Network,proto3,enum=v2ray.core.common.net.Network" json:"Network,omitempty"`
-	SourceIPs         [][]byte          `protobuf:"bytes,3,rep,name=SourceIPs,proto3" json:"SourceIPs,omitempty"`
-	TargetIPs         [][]byte          `protobuf:"bytes,4,rep,name=TargetIPs,proto3" json:"TargetIPs,omitempty"`
-	SourcePort        uint32            `protobuf:"varint,5,opt,name=SourcePort,proto3" json:"SourcePort,omitempty"`
-	TargetPort        uint32            `protobuf:"varint,6,opt,name=TargetPort,proto3" json:"TargetPort,omitempty"`
-	TargetDomain      string            `protobuf:"bytes,7,opt,name=TargetDomain,proto3" json:"TargetDomain,omitempty"`
-	Protocol          string            `protobuf:"bytes,8,opt,name=Protocol,proto3" json:"Protocol,omitempty"`
-	User              string            `protobuf:"bytes,9,opt,name=User,proto3" json:"User,omitempty"`
-	Attributes        map[string]string `protobuf:"bytes,10,rep,name=Attributes,proto3" json:"Attributes,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	OutboundGroupTags []string          `protobuf:"bytes,11,rep,name=OutboundGroupTags,proto3" json:"OutboundGroupTags,omitempty"`
-	OutboundTag       string            `protobuf:"bytes,12,opt,name=OutboundTag,proto3" json:"OutboundTag,omitempty"`
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	InboundTag        string                 `protobuf:"bytes,1,opt,name=InboundTag,proto3" json:"InboundTag,omitempty"`
+	Network           net.Network            `protobuf:"varint,2,opt,name=Network,proto3,enum=v2ray.core.common.net.Network" json:"Network,omitempty"`
+	SourceIPs         [][]byte               `protobuf:"bytes,3,rep,name=SourceIPs,proto3" json:"SourceIPs,omitempty"`
+	TargetIPs         [][]byte               `protobuf:"bytes,4,rep,name=TargetIPs,proto3" json:"TargetIPs,omitempty"`
+	SourcePort        uint32                 `protobuf:"varint,5,opt,name=SourcePort,proto3" json:"SourcePort,omitempty"`
+	TargetPort        uint32                 `protobuf:"varint,6,opt,name=TargetPort,proto3" json:"TargetPort,omitempty"`
+	TargetDomain      string                 `protobuf:"bytes,7,opt,name=TargetDomain,proto3" json:"TargetDomain,omitempty"`
+	Protocol          string                 `protobuf:"bytes,8,opt,name=Protocol,proto3" json:"Protocol,omitempty"`
+	User              string                 `protobuf:"bytes,9,opt,name=User,proto3" json:"User,omitempty"`
+	Attributes        map[string]string      `protobuf:"bytes,10,rep,name=Attributes,proto3" json:"Attributes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	OutboundGroupTags []string               `protobuf:"bytes,11,rep,name=OutboundGroupTags,proto3" json:"OutboundGroupTags,omitempty"`
+	OutboundTag       string                 `protobuf:"bytes,12,opt,name=OutboundTag,proto3" json:"OutboundTag,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *RoutingContext) Reset() {
 	*x = RoutingContext{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_command_command_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_command_command_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *RoutingContext) String() string {
@@ -55,7 +53,7 @@ func (*RoutingContext) ProtoMessage() {}
 
 func (x *RoutingContext) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_command_command_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -173,20 +171,17 @@ func (x *RoutingContext) GetOutboundTag() string {
 //
 // * If FieldSelectors is left empty, all fields will be returned.
 type SubscribeRoutingStatsRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	FieldSelectors []string `protobuf:"bytes,1,rep,name=FieldSelectors,proto3" json:"FieldSelectors,omitempty"`
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	FieldSelectors []string               `protobuf:"bytes,1,rep,name=FieldSelectors,proto3" json:"FieldSelectors,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *SubscribeRoutingStatsRequest) Reset() {
 	*x = SubscribeRoutingStatsRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_command_command_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_command_command_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *SubscribeRoutingStatsRequest) String() string {
@@ -197,7 +192,7 @@ func (*SubscribeRoutingStatsRequest) ProtoMessage() {}
 
 func (x *SubscribeRoutingStatsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_command_command_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -227,22 +222,19 @@ func (x *SubscribeRoutingStatsRequest) GetFieldSelectors() []string {
 // * PublishResult broadcasts the routing result to routing statistics channel
 // if set true.
 type TestRouteRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	RoutingContext *RoutingContext `protobuf:"bytes,1,opt,name=RoutingContext,proto3" json:"RoutingContext,omitempty"`
-	FieldSelectors []string        `protobuf:"bytes,2,rep,name=FieldSelectors,proto3" json:"FieldSelectors,omitempty"`
-	PublishResult  bool            `protobuf:"varint,3,opt,name=PublishResult,proto3" json:"PublishResult,omitempty"`
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	RoutingContext *RoutingContext        `protobuf:"bytes,1,opt,name=RoutingContext,proto3" json:"RoutingContext,omitempty"`
+	FieldSelectors []string               `protobuf:"bytes,2,rep,name=FieldSelectors,proto3" json:"FieldSelectors,omitempty"`
+	PublishResult  bool                   `protobuf:"varint,3,opt,name=PublishResult,proto3" json:"PublishResult,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *TestRouteRequest) Reset() {
 	*x = TestRouteRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_command_command_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_command_command_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *TestRouteRequest) String() string {
@@ -253,7 +245,7 @@ func (*TestRouteRequest) ProtoMessage() {}
 
 func (x *TestRouteRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_command_command_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -290,20 +282,17 @@ func (x *TestRouteRequest) GetPublishResult() bool {
 }
 
 type PrincipleTargetInfo struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tag           []string               `protobuf:"bytes,1,rep,name=tag,proto3" json:"tag,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Tag []string `protobuf:"bytes,1,rep,name=tag,proto3" json:"tag,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PrincipleTargetInfo) Reset() {
 	*x = PrincipleTargetInfo{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_command_command_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_command_command_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *PrincipleTargetInfo) String() string {
@@ -314,7 +303,7 @@ func (*PrincipleTargetInfo) ProtoMessage() {}
 
 func (x *PrincipleTargetInfo) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_command_command_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -337,20 +326,17 @@ func (x *PrincipleTargetInfo) GetTag() []string {
 }
 
 type OverrideInfo struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Target        string                 `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Target string `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *OverrideInfo) Reset() {
 	*x = OverrideInfo{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_command_command_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_command_command_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *OverrideInfo) String() string {
@@ -361,7 +347,7 @@ func (*OverrideInfo) ProtoMessage() {}
 
 func (x *OverrideInfo) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_command_command_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -384,21 +370,18 @@ func (x *OverrideInfo) GetTarget() string {
 }
 
 type BalancerMsg struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Override        *OverrideInfo        `protobuf:"bytes,5,opt,name=override,proto3" json:"override,omitempty"`
-	PrincipleTarget *PrincipleTargetInfo `protobuf:"bytes,6,opt,name=principle_target,json=principleTarget,proto3" json:"principle_target,omitempty"`
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Override        *OverrideInfo          `protobuf:"bytes,5,opt,name=override,proto3" json:"override,omitempty"`
+	PrincipleTarget *PrincipleTargetInfo   `protobuf:"bytes,6,opt,name=principle_target,json=principleTarget,proto3" json:"principle_target,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *BalancerMsg) Reset() {
 	*x = BalancerMsg{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_command_command_proto_msgTypes[5]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_command_command_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *BalancerMsg) String() string {
@@ -409,7 +392,7 @@ func (*BalancerMsg) ProtoMessage() {}
 
 func (x *BalancerMsg) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_command_command_proto_msgTypes[5]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -439,20 +422,17 @@ func (x *BalancerMsg) GetPrincipleTarget() *PrincipleTargetInfo {
 }
 
 type GetBalancerInfoRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Tag           string                 `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Tag string `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetBalancerInfoRequest) Reset() {
 	*x = GetBalancerInfoRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_command_command_proto_msgTypes[6]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_command_command_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *GetBalancerInfoRequest) String() string {
@@ -463,7 +443,7 @@ func (*GetBalancerInfoRequest) ProtoMessage() {}
 
 func (x *GetBalancerInfoRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_command_command_proto_msgTypes[6]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -486,20 +466,17 @@ func (x *GetBalancerInfoRequest) GetTag() string {
 }
 
 type GetBalancerInfoResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Balancer      *BalancerMsg           `protobuf:"bytes,1,opt,name=balancer,proto3" json:"balancer,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Balancer *BalancerMsg `protobuf:"bytes,1,opt,name=balancer,proto3" json:"balancer,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetBalancerInfoResponse) Reset() {
 	*x = GetBalancerInfoResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_command_command_proto_msgTypes[7]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_command_command_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *GetBalancerInfoResponse) String() string {
@@ -510,7 +487,7 @@ func (*GetBalancerInfoResponse) ProtoMessage() {}
 
 func (x *GetBalancerInfoResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_command_command_proto_msgTypes[7]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -533,21 +510,18 @@ func (x *GetBalancerInfoResponse) GetBalancer() *BalancerMsg {
 }
 
 type OverrideBalancerTargetRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BalancerTag   string                 `protobuf:"bytes,1,opt,name=balancerTag,proto3" json:"balancerTag,omitempty"`
+	Target        string                 `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	BalancerTag string `protobuf:"bytes,1,opt,name=balancerTag,proto3" json:"balancerTag,omitempty"`
-	Target      string `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *OverrideBalancerTargetRequest) Reset() {
 	*x = OverrideBalancerTargetRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_command_command_proto_msgTypes[8]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_command_command_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *OverrideBalancerTargetRequest) String() string {
@@ -558,7 +532,7 @@ func (*OverrideBalancerTargetRequest) ProtoMessage() {}
 
 func (x *OverrideBalancerTargetRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_command_command_proto_msgTypes[8]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -588,18 +562,16 @@ func (x *OverrideBalancerTargetRequest) GetTarget() string {
 }
 
 type OverrideBalancerTargetResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *OverrideBalancerTargetResponse) Reset() {
 	*x = OverrideBalancerTargetResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_command_command_proto_msgTypes[9]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_command_command_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *OverrideBalancerTargetResponse) String() string {
@@ -610,7 +582,7 @@ func (*OverrideBalancerTargetResponse) ProtoMessage() {}
 
 func (x *OverrideBalancerTargetResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_command_command_proto_msgTypes[9]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -626,18 +598,16 @@ func (*OverrideBalancerTargetResponse) Descriptor() ([]byte, []int) {
 }
 
 type Config struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_command_command_proto_msgTypes[10]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_command_command_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Config) String() string {
@@ -648,7 +618,7 @@ func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_command_command_proto_msgTypes[10]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -665,7 +635,7 @@ func (*Config) Descriptor() ([]byte, []int) {
 
 var File_app_router_command_command_proto protoreflect.FileDescriptor
 
-var file_app_router_command_command_proto_rawDesc = []byte{
+var file_app_router_command_command_proto_rawDesc = string([]byte{
 	0x0a, 0x20, 0x61, 0x70, 0x70, 0x2f, 0x72, 0x6f, 0x75, 0x74, 0x65, 0x72, 0x2f, 0x63, 0x6f, 0x6d,
 	0x6d, 0x61, 0x6e, 0x64, 0x2f, 0x63, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x12, 0x1d, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x61,
@@ -804,22 +774,22 @@ var file_app_router_command_command_proto_rawDesc = []byte{
 	0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x41, 0x70, 0x70, 0x2e, 0x52, 0x6f, 0x75, 0x74, 0x65,
 	0x72, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x33,
-}
+})
 
 var (
 	file_app_router_command_command_proto_rawDescOnce sync.Once
-	file_app_router_command_command_proto_rawDescData = file_app_router_command_command_proto_rawDesc
+	file_app_router_command_command_proto_rawDescData []byte
 )
 
 func file_app_router_command_command_proto_rawDescGZIP() []byte {
 	file_app_router_command_command_proto_rawDescOnce.Do(func() {
-		file_app_router_command_command_proto_rawDescData = protoimpl.X.CompressGZIP(file_app_router_command_command_proto_rawDescData)
+		file_app_router_command_command_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_app_router_command_command_proto_rawDesc), len(file_app_router_command_command_proto_rawDesc)))
 	})
 	return file_app_router_command_command_proto_rawDescData
 }
 
 var file_app_router_command_command_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
-var file_app_router_command_command_proto_goTypes = []interface{}{
+var file_app_router_command_command_proto_goTypes = []any{
 	(*RoutingContext)(nil),                 // 0: v2ray.core.app.router.command.RoutingContext
 	(*SubscribeRoutingStatsRequest)(nil),   // 1: v2ray.core.app.router.command.SubscribeRoutingStatsRequest
 	(*TestRouteRequest)(nil),               // 2: v2ray.core.app.router.command.TestRouteRequest
@@ -861,145 +831,11 @@ func file_app_router_command_command_proto_init() {
 	if File_app_router_command_command_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_app_router_command_command_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RoutingContext); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_command_command_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SubscribeRoutingStatsRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_command_command_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TestRouteRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_command_command_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PrincipleTargetInfo); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_command_command_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OverrideInfo); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_command_command_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BalancerMsg); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_command_command_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetBalancerInfoRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_command_command_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetBalancerInfoResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_command_command_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OverrideBalancerTargetRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_command_command_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OverrideBalancerTargetResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_command_command_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_app_router_command_command_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_router_command_command_proto_rawDesc), len(file_app_router_command_command_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   12,
 			NumExtensions: 0,
@@ -1010,7 +846,6 @@ func file_app_router_command_command_proto_init() {
 		MessageInfos:      file_app_router_command_command_proto_msgTypes,
 	}.Build()
 	File_app_router_command_command_proto = out.File
-	file_app_router_command_command_proto_rawDesc = nil
 	file_app_router_command_command_proto_goTypes = nil
 	file_app_router_command_command_proto_depIdxs = nil
 }

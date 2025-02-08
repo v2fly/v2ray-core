@@ -10,6 +10,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -20,10 +21,7 @@ const (
 )
 
 type Config struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state                 protoimpl.MessageState    `protogen:"open.v1"`
 	Name                  string                    `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Mtu                   uint32                    `protobuf:"varint,2,opt,name=mtu,proto3" json:"mtu,omitempty"`
 	UserLevel             uint32                    `protobuf:"varint,3,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitempty"`
@@ -35,15 +33,15 @@ type Config struct {
 	EnableSpoofing        bool                      `protobuf:"varint,9,opt,name=enable_spoofing,json=enableSpoofing,proto3" json:"enable_spoofing,omitempty"`
 	SocketSettings        *internet.SocketConfig    `protobuf:"bytes,10,opt,name=socket_settings,json=socketSettings,proto3" json:"socket_settings,omitempty"`
 	SniffingSettings      *proxyman.SniffingConfig  `protobuf:"bytes,11,opt,name=sniffing_settings,json=sniffingSettings,proto3" json:"sniffing_settings,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_tun_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_tun_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Config) String() string {
@@ -54,7 +52,7 @@ func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
 	mi := &file_app_tun_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -148,7 +146,7 @@ func (x *Config) GetSniffingSettings() *proxyman.SniffingConfig {
 
 var File_app_tun_config_proto protoreflect.FileDescriptor
 
-var file_app_tun_config_proto_rawDesc = []byte{
+var file_app_tun_config_proto_rawDesc = string([]byte{
 	0x0a, 0x14, 0x61, 0x70, 0x70, 0x2f, 0x74, 0x75, 0x6e, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x12, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f,
 	0x72, 0x65, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x74, 0x75, 0x6e, 0x1a, 0x19, 0x61, 0x70, 0x70, 0x2f,
@@ -206,22 +204,22 @@ var file_app_tun_config_proto_rawDesc = []byte{
 	0x2f, 0x76, 0x35, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x74, 0x75, 0x6e, 0xaa, 0x02, 0x12, 0x56, 0x32,
 	0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x41, 0x70, 0x70, 0x2e, 0x54, 0x75, 0x6e,
 	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_app_tun_config_proto_rawDescOnce sync.Once
-	file_app_tun_config_proto_rawDescData = file_app_tun_config_proto_rawDesc
+	file_app_tun_config_proto_rawDescData []byte
 )
 
 func file_app_tun_config_proto_rawDescGZIP() []byte {
 	file_app_tun_config_proto_rawDescOnce.Do(func() {
-		file_app_tun_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_app_tun_config_proto_rawDescData)
+		file_app_tun_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_app_tun_config_proto_rawDesc), len(file_app_tun_config_proto_rawDesc)))
 	})
 	return file_app_tun_config_proto_rawDescData
 }
 
 var file_app_tun_config_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_app_tun_config_proto_goTypes = []interface{}{
+var file_app_tun_config_proto_goTypes = []any{
 	(*Config)(nil),                  // 0: v2ray.core.app.tun.Config
 	(packetaddr.PacketAddrType)(0),  // 1: v2ray.core.net.packetaddr.PacketAddrType
 	(*routercommon.CIDR)(nil),       // 2: v2ray.core.app.router.routercommon.CIDR
@@ -246,25 +244,11 @@ func file_app_tun_config_proto_init() {
 	if File_app_tun_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_app_tun_config_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_app_tun_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_tun_config_proto_rawDesc), len(file_app_tun_config_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
@@ -275,7 +259,6 @@ func file_app_tun_config_proto_init() {
 		MessageInfos:      file_app_tun_config_proto_msgTypes,
 	}.Build()
 	File_app_tun_config_proto = out.File
-	file_app_tun_config_proto_rawDesc = nil
 	file_app_tun_config_proto_goTypes = nil
 	file_app_tun_config_proto_depIdxs = nil
 }

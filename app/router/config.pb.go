@@ -9,6 +9,7 @@ import (
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -75,11 +76,8 @@ func (DomainStrategy) EnumDescriptor() ([]byte, []int) {
 }
 
 type RoutingRule struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// Types that are assignable to TargetTag:
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to TargetTag:
 	//
 	//	*RoutingRule_Tag
 	//	*RoutingRule_BalancingTag
@@ -124,16 +122,16 @@ type RoutingRule struct {
 	Attributes     string        `protobuf:"bytes,15,opt,name=attributes,proto3" json:"attributes,omitempty"`
 	DomainMatcher  string        `protobuf:"bytes,17,opt,name=domain_matcher,json=domainMatcher,proto3" json:"domain_matcher,omitempty"`
 	// geo_domain instruct simplified config loader to load geo domain rule and fill in domain field.
-	GeoDomain []*routercommon.GeoSite `protobuf:"bytes,68001,rep,name=geo_domain,json=geoDomain,proto3" json:"geo_domain,omitempty"`
+	GeoDomain     []*routercommon.GeoSite `protobuf:"bytes,68001,rep,name=geo_domain,json=geoDomain,proto3" json:"geo_domain,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RoutingRule) Reset() {
 	*x = RoutingRule{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *RoutingRule) String() string {
@@ -144,7 +142,7 @@ func (*RoutingRule) ProtoMessage() {}
 
 func (x *RoutingRule) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -159,23 +157,27 @@ func (*RoutingRule) Descriptor() ([]byte, []int) {
 	return file_app_router_config_proto_rawDescGZIP(), []int{0}
 }
 
-func (m *RoutingRule) GetTargetTag() isRoutingRule_TargetTag {
-	if m != nil {
-		return m.TargetTag
+func (x *RoutingRule) GetTargetTag() isRoutingRule_TargetTag {
+	if x != nil {
+		return x.TargetTag
 	}
 	return nil
 }
 
 func (x *RoutingRule) GetTag() string {
-	if x, ok := x.GetTargetTag().(*RoutingRule_Tag); ok {
-		return x.Tag
+	if x != nil {
+		if x, ok := x.TargetTag.(*RoutingRule_Tag); ok {
+			return x.Tag
+		}
 	}
 	return ""
 }
 
 func (x *RoutingRule) GetBalancingTag() string {
-	if x, ok := x.GetTargetTag().(*RoutingRule_BalancingTag); ok {
-		return x.BalancingTag
+	if x != nil {
+		if x, ok := x.TargetTag.(*RoutingRule_BalancingTag); ok {
+			return x.BalancingTag
+		}
 	}
 	return ""
 }
@@ -315,24 +317,21 @@ func (*RoutingRule_Tag) isRoutingRule_TargetTag() {}
 func (*RoutingRule_BalancingTag) isRoutingRule_TargetTag() {}
 
 type BalancingRule struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Tag              string     `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
-	OutboundSelector []string   `protobuf:"bytes,2,rep,name=outbound_selector,json=outboundSelector,proto3" json:"outbound_selector,omitempty"`
-	Strategy         string     `protobuf:"bytes,3,opt,name=strategy,proto3" json:"strategy,omitempty"`
-	StrategySettings *anypb.Any `protobuf:"bytes,4,opt,name=strategy_settings,json=strategySettings,proto3" json:"strategy_settings,omitempty"`
-	FallbackTag      string     `protobuf:"bytes,5,opt,name=fallback_tag,json=fallbackTag,proto3" json:"fallback_tag,omitempty"`
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Tag              string                 `protobuf:"bytes,1,opt,name=tag,proto3" json:"tag,omitempty"`
+	OutboundSelector []string               `protobuf:"bytes,2,rep,name=outbound_selector,json=outboundSelector,proto3" json:"outbound_selector,omitempty"`
+	Strategy         string                 `protobuf:"bytes,3,opt,name=strategy,proto3" json:"strategy,omitempty"`
+	StrategySettings *anypb.Any             `protobuf:"bytes,4,opt,name=strategy_settings,json=strategySettings,proto3" json:"strategy_settings,omitempty"`
+	FallbackTag      string                 `protobuf:"bytes,5,opt,name=fallback_tag,json=fallbackTag,proto3" json:"fallback_tag,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *BalancingRule) Reset() {
 	*x = BalancingRule{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_config_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *BalancingRule) String() string {
@@ -343,7 +342,7 @@ func (*BalancingRule) ProtoMessage() {}
 
 func (x *BalancingRule) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_config_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -394,22 +393,19 @@ func (x *BalancingRule) GetFallbackTag() string {
 }
 
 type StrategyWeight struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Regexp        bool                   `protobuf:"varint,1,opt,name=regexp,proto3" json:"regexp,omitempty"`
+	Match         string                 `protobuf:"bytes,2,opt,name=match,proto3" json:"match,omitempty"`
+	Value         float32                `protobuf:"fixed32,3,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Regexp bool    `protobuf:"varint,1,opt,name=regexp,proto3" json:"regexp,omitempty"`
-	Match  string  `protobuf:"bytes,2,opt,name=match,proto3" json:"match,omitempty"`
-	Value  float32 `protobuf:"fixed32,3,opt,name=value,proto3" json:"value,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *StrategyWeight) Reset() {
 	*x = StrategyWeight{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_config_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_config_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *StrategyWeight) String() string {
@@ -420,7 +416,7 @@ func (*StrategyWeight) ProtoMessage() {}
 
 func (x *StrategyWeight) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_config_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -457,21 +453,18 @@ func (x *StrategyWeight) GetValue() float32 {
 }
 
 type StrategyRandomConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ObserverTag   string                 `protobuf:"bytes,7,opt,name=observer_tag,json=observerTag,proto3" json:"observer_tag,omitempty"`
+	AliveOnly     bool                   `protobuf:"varint,8,opt,name=alive_only,json=aliveOnly,proto3" json:"alive_only,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	ObserverTag string `protobuf:"bytes,7,opt,name=observer_tag,json=observerTag,proto3" json:"observer_tag,omitempty"`
-	AliveOnly   bool   `protobuf:"varint,8,opt,name=alive_only,json=aliveOnly,proto3" json:"alive_only,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *StrategyRandomConfig) Reset() {
 	*x = StrategyRandomConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_config_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_config_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *StrategyRandomConfig) String() string {
@@ -482,7 +475,7 @@ func (*StrategyRandomConfig) ProtoMessage() {}
 
 func (x *StrategyRandomConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_config_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -512,20 +505,17 @@ func (x *StrategyRandomConfig) GetAliveOnly() bool {
 }
 
 type StrategyLeastPingConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ObserverTag   string                 `protobuf:"bytes,7,opt,name=observer_tag,json=observerTag,proto3" json:"observer_tag,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	ObserverTag string `protobuf:"bytes,7,opt,name=observer_tag,json=observerTag,proto3" json:"observer_tag,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *StrategyLeastPingConfig) Reset() {
 	*x = StrategyLeastPingConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_config_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_config_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *StrategyLeastPingConfig) String() string {
@@ -536,7 +526,7 @@ func (*StrategyLeastPingConfig) ProtoMessage() {}
 
 func (x *StrategyLeastPingConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_config_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -559,10 +549,7 @@ func (x *StrategyLeastPingConfig) GetObserverTag() string {
 }
 
 type StrategyLeastLoadConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// weight settings
 	Costs []*StrategyWeight `protobuf:"bytes,2,rep,name=costs,proto3" json:"costs,omitempty"`
 	// RTT baselines for selecting, int64 values of time.Duration
@@ -572,17 +559,17 @@ type StrategyLeastLoadConfig struct {
 	// max acceptable rtt, filter away high delay nodes. defalut 0
 	MaxRTT int64 `protobuf:"varint,5,opt,name=maxRTT,proto3" json:"maxRTT,omitempty"`
 	// acceptable failure rate
-	Tolerance   float32 `protobuf:"fixed32,6,opt,name=tolerance,proto3" json:"tolerance,omitempty"`
-	ObserverTag string  `protobuf:"bytes,7,opt,name=observer_tag,json=observerTag,proto3" json:"observer_tag,omitempty"`
+	Tolerance     float32 `protobuf:"fixed32,6,opt,name=tolerance,proto3" json:"tolerance,omitempty"`
+	ObserverTag   string  `protobuf:"bytes,7,opt,name=observer_tag,json=observerTag,proto3" json:"observer_tag,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *StrategyLeastLoadConfig) Reset() {
 	*x = StrategyLeastLoadConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_config_proto_msgTypes[5]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_config_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *StrategyLeastLoadConfig) String() string {
@@ -593,7 +580,7 @@ func (*StrategyLeastLoadConfig) ProtoMessage() {}
 
 func (x *StrategyLeastLoadConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_config_proto_msgTypes[5]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -651,22 +638,19 @@ func (x *StrategyLeastLoadConfig) GetObserverTag() string {
 }
 
 type Config struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	DomainStrategy DomainStrategy   `protobuf:"varint,1,opt,name=domain_strategy,json=domainStrategy,proto3,enum=v2ray.core.app.router.DomainStrategy" json:"domain_strategy,omitempty"`
-	Rule           []*RoutingRule   `protobuf:"bytes,2,rep,name=rule,proto3" json:"rule,omitempty"`
-	BalancingRule  []*BalancingRule `protobuf:"bytes,3,rep,name=balancing_rule,json=balancingRule,proto3" json:"balancing_rule,omitempty"`
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	DomainStrategy DomainStrategy         `protobuf:"varint,1,opt,name=domain_strategy,json=domainStrategy,proto3,enum=v2ray.core.app.router.DomainStrategy" json:"domain_strategy,omitempty"`
+	Rule           []*RoutingRule         `protobuf:"bytes,2,rep,name=rule,proto3" json:"rule,omitempty"`
+	BalancingRule  []*BalancingRule       `protobuf:"bytes,3,rep,name=balancing_rule,json=balancingRule,proto3" json:"balancing_rule,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_config_proto_msgTypes[6]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_config_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Config) String() string {
@@ -677,7 +661,7 @@ func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_config_proto_msgTypes[6]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -714,11 +698,8 @@ func (x *Config) GetBalancingRule() []*BalancingRule {
 }
 
 type SimplifiedRoutingRule struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// Types that are assignable to TargetTag:
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to TargetTag:
 	//
 	//	*SimplifiedRoutingRule_Tag
 	//	*SimplifiedRoutingRule_BalancingTag
@@ -745,16 +726,16 @@ type SimplifiedRoutingRule struct {
 	Attributes     string   `protobuf:"bytes,15,opt,name=attributes,proto3" json:"attributes,omitempty"`
 	DomainMatcher  string   `protobuf:"bytes,17,opt,name=domain_matcher,json=domainMatcher,proto3" json:"domain_matcher,omitempty"`
 	// geo_domain instruct simplified config loader to load geo domain rule and fill in domain field.
-	GeoDomain []*routercommon.GeoSite `protobuf:"bytes,68001,rep,name=geo_domain,json=geoDomain,proto3" json:"geo_domain,omitempty"`
+	GeoDomain     []*routercommon.GeoSite `protobuf:"bytes,68001,rep,name=geo_domain,json=geoDomain,proto3" json:"geo_domain,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SimplifiedRoutingRule) Reset() {
 	*x = SimplifiedRoutingRule{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_config_proto_msgTypes[7]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_config_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *SimplifiedRoutingRule) String() string {
@@ -765,7 +746,7 @@ func (*SimplifiedRoutingRule) ProtoMessage() {}
 
 func (x *SimplifiedRoutingRule) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_config_proto_msgTypes[7]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -780,23 +761,27 @@ func (*SimplifiedRoutingRule) Descriptor() ([]byte, []int) {
 	return file_app_router_config_proto_rawDescGZIP(), []int{7}
 }
 
-func (m *SimplifiedRoutingRule) GetTargetTag() isSimplifiedRoutingRule_TargetTag {
-	if m != nil {
-		return m.TargetTag
+func (x *SimplifiedRoutingRule) GetTargetTag() isSimplifiedRoutingRule_TargetTag {
+	if x != nil {
+		return x.TargetTag
 	}
 	return nil
 }
 
 func (x *SimplifiedRoutingRule) GetTag() string {
-	if x, ok := x.GetTargetTag().(*SimplifiedRoutingRule_Tag); ok {
-		return x.Tag
+	if x != nil {
+		if x, ok := x.TargetTag.(*SimplifiedRoutingRule_Tag); ok {
+			return x.Tag
+		}
 	}
 	return ""
 }
 
 func (x *SimplifiedRoutingRule) GetBalancingTag() string {
-	if x, ok := x.GetTargetTag().(*SimplifiedRoutingRule_BalancingTag); ok {
-		return x.BalancingTag
+	if x != nil {
+		if x, ok := x.TargetTag.(*SimplifiedRoutingRule_BalancingTag); ok {
+			return x.BalancingTag
+		}
 	}
 	return ""
 }
@@ -904,22 +889,19 @@ func (*SimplifiedRoutingRule_Tag) isSimplifiedRoutingRule_TargetTag() {}
 func (*SimplifiedRoutingRule_BalancingTag) isSimplifiedRoutingRule_TargetTag() {}
 
 type SimplifiedConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state          protoimpl.MessageState   `protogen:"open.v1"`
 	DomainStrategy DomainStrategy           `protobuf:"varint,1,opt,name=domain_strategy,json=domainStrategy,proto3,enum=v2ray.core.app.router.DomainStrategy" json:"domain_strategy,omitempty"`
 	Rule           []*SimplifiedRoutingRule `protobuf:"bytes,2,rep,name=rule,proto3" json:"rule,omitempty"`
 	BalancingRule  []*BalancingRule         `protobuf:"bytes,3,rep,name=balancing_rule,json=balancingRule,proto3" json:"balancing_rule,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *SimplifiedConfig) Reset() {
 	*x = SimplifiedConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_router_config_proto_msgTypes[8]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_router_config_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *SimplifiedConfig) String() string {
@@ -930,7 +912,7 @@ func (*SimplifiedConfig) ProtoMessage() {}
 
 func (x *SimplifiedConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_app_router_config_proto_msgTypes[8]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -968,7 +950,7 @@ func (x *SimplifiedConfig) GetBalancingRule() []*BalancingRule {
 
 var File_app_router_config_proto protoreflect.FileDescriptor
 
-var file_app_router_config_proto_rawDesc = []byte{
+var file_app_router_config_proto_rawDesc = string([]byte{
 	0x0a, 0x17, 0x61, 0x70, 0x70, 0x2f, 0x72, 0x6f, 0x75, 0x74, 0x65, 0x72, 0x2f, 0x63, 0x6f, 0x6e,
 	0x66, 0x69, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x15, 0x76, 0x32, 0x72, 0x61, 0x79,
 	0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x72, 0x6f, 0x75, 0x74, 0x65, 0x72,
@@ -1178,23 +1160,23 @@ var file_app_router_config_proto_rawDesc = []byte{
 	0x2f, 0x76, 0x35, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x72, 0x6f, 0x75, 0x74, 0x65, 0x72, 0xaa, 0x02,
 	0x15, 0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x41, 0x70, 0x70, 0x2e,
 	0x52, 0x6f, 0x75, 0x74, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_app_router_config_proto_rawDescOnce sync.Once
-	file_app_router_config_proto_rawDescData = file_app_router_config_proto_rawDesc
+	file_app_router_config_proto_rawDescData []byte
 )
 
 func file_app_router_config_proto_rawDescGZIP() []byte {
 	file_app_router_config_proto_rawDescOnce.Do(func() {
-		file_app_router_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_app_router_config_proto_rawDescData)
+		file_app_router_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_app_router_config_proto_rawDesc), len(file_app_router_config_proto_rawDesc)))
 	})
 	return file_app_router_config_proto_rawDescData
 }
 
 var file_app_router_config_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_app_router_config_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
-var file_app_router_config_proto_goTypes = []interface{}{
+var file_app_router_config_proto_goTypes = []any{
 	(DomainStrategy)(0),             // 0: v2ray.core.app.router.DomainStrategy
 	(*RoutingRule)(nil),             // 1: v2ray.core.app.router.RoutingRule
 	(*BalancingRule)(nil),           // 2: v2ray.core.app.router.BalancingRule
@@ -1252,121 +1234,11 @@ func file_app_router_config_proto_init() {
 	if File_app_router_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_app_router_config_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RoutingRule); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_config_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BalancingRule); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_config_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StrategyWeight); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_config_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StrategyRandomConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_config_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StrategyLeastPingConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_config_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StrategyLeastLoadConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_config_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_config_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SimplifiedRoutingRule); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_router_config_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SimplifiedConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
-	file_app_router_config_proto_msgTypes[0].OneofWrappers = []interface{}{
+	file_app_router_config_proto_msgTypes[0].OneofWrappers = []any{
 		(*RoutingRule_Tag)(nil),
 		(*RoutingRule_BalancingTag)(nil),
 	}
-	file_app_router_config_proto_msgTypes[7].OneofWrappers = []interface{}{
+	file_app_router_config_proto_msgTypes[7].OneofWrappers = []any{
 		(*SimplifiedRoutingRule_Tag)(nil),
 		(*SimplifiedRoutingRule_BalancingTag)(nil),
 	}
@@ -1374,7 +1246,7 @@ func file_app_router_config_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_app_router_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_router_config_proto_rawDesc), len(file_app_router_config_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   9,
 			NumExtensions: 0,
@@ -1386,7 +1258,6 @@ func file_app_router_config_proto_init() {
 		MessageInfos:      file_app_router_config_proto_msgTypes,
 	}.Build()
 	File_app_router_config_proto = out.File
-	file_app_router_config_proto_rawDesc = nil
 	file_app_router_config_proto_goTypes = nil
 	file_app_router_config_proto_depIdxs = nil
 }

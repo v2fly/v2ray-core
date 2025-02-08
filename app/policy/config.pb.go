@@ -6,6 +6,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -16,20 +17,17 @@ const (
 )
 
 type Second struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Value         uint32                 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Value uint32 `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Second) Reset() {
 	*x = Second{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_policy_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_policy_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Second) String() string {
@@ -40,7 +38,7 @@ func (*Second) ProtoMessage() {}
 
 func (x *Second) ProtoReflect() protoreflect.Message {
 	mi := &file_app_policy_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -63,22 +61,19 @@ func (x *Second) GetValue() uint32 {
 }
 
 type Policy struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Timeout       *Policy_Timeout        `protobuf:"bytes,1,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	Stats         *Policy_Stats          `protobuf:"bytes,2,opt,name=stats,proto3" json:"stats,omitempty"`
+	Buffer        *Policy_Buffer         `protobuf:"bytes,3,opt,name=buffer,proto3" json:"buffer,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Timeout *Policy_Timeout `protobuf:"bytes,1,opt,name=timeout,proto3" json:"timeout,omitempty"`
-	Stats   *Policy_Stats   `protobuf:"bytes,2,opt,name=stats,proto3" json:"stats,omitempty"`
-	Buffer  *Policy_Buffer  `protobuf:"bytes,3,opt,name=buffer,proto3" json:"buffer,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Policy) Reset() {
 	*x = Policy{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_policy_config_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_policy_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Policy) String() string {
@@ -89,7 +84,7 @@ func (*Policy) ProtoMessage() {}
 
 func (x *Policy) ProtoReflect() protoreflect.Message {
 	mi := &file_app_policy_config_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -126,21 +121,18 @@ func (x *Policy) GetBuffer() *Policy_Buffer {
 }
 
 type SystemPolicy struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Stats                 *SystemPolicy_Stats `protobuf:"bytes,1,opt,name=stats,proto3" json:"stats,omitempty"`
-	OverrideAccessLogDest bool                `protobuf:"varint,2,opt,name=override_access_log_dest,json=overrideAccessLogDest,proto3" json:"override_access_log_dest,omitempty"`
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	Stats                 *SystemPolicy_Stats    `protobuf:"bytes,1,opt,name=stats,proto3" json:"stats,omitempty"`
+	OverrideAccessLogDest bool                   `protobuf:"varint,2,opt,name=override_access_log_dest,json=overrideAccessLogDest,proto3" json:"override_access_log_dest,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *SystemPolicy) Reset() {
 	*x = SystemPolicy{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_policy_config_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_policy_config_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *SystemPolicy) String() string {
@@ -151,7 +143,7 @@ func (*SystemPolicy) ProtoMessage() {}
 
 func (x *SystemPolicy) ProtoReflect() protoreflect.Message {
 	mi := &file_app_policy_config_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -181,21 +173,18 @@ func (x *SystemPolicy) GetOverrideAccessLogDest() bool {
 }
 
 type Config struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Level         map[uint32]*Policy     `protobuf:"bytes,1,rep,name=level,proto3" json:"level,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	System        *SystemPolicy          `protobuf:"bytes,2,opt,name=system,proto3" json:"system,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Level  map[uint32]*Policy `protobuf:"bytes,1,rep,name=level,proto3" json:"level,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	System *SystemPolicy      `protobuf:"bytes,2,opt,name=system,proto3" json:"system,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_policy_config_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_policy_config_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Config) String() string {
@@ -206,7 +195,7 @@ func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
 	mi := &file_app_policy_config_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -237,23 +226,20 @@ func (x *Config) GetSystem() *SystemPolicy {
 
 // Timeout is a message for timeout settings in various stages, in seconds.
 type Policy_Timeout struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Handshake      *Second `protobuf:"bytes,1,opt,name=handshake,proto3" json:"handshake,omitempty"`
-	ConnectionIdle *Second `protobuf:"bytes,2,opt,name=connection_idle,json=connectionIdle,proto3" json:"connection_idle,omitempty"`
-	UplinkOnly     *Second `protobuf:"bytes,3,opt,name=uplink_only,json=uplinkOnly,proto3" json:"uplink_only,omitempty"`
-	DownlinkOnly   *Second `protobuf:"bytes,4,opt,name=downlink_only,json=downlinkOnly,proto3" json:"downlink_only,omitempty"`
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Handshake      *Second                `protobuf:"bytes,1,opt,name=handshake,proto3" json:"handshake,omitempty"`
+	ConnectionIdle *Second                `protobuf:"bytes,2,opt,name=connection_idle,json=connectionIdle,proto3" json:"connection_idle,omitempty"`
+	UplinkOnly     *Second                `protobuf:"bytes,3,opt,name=uplink_only,json=uplinkOnly,proto3" json:"uplink_only,omitempty"`
+	DownlinkOnly   *Second                `protobuf:"bytes,4,opt,name=downlink_only,json=downlinkOnly,proto3" json:"downlink_only,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Policy_Timeout) Reset() {
 	*x = Policy_Timeout{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_policy_config_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_policy_config_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Policy_Timeout) String() string {
@@ -264,7 +250,7 @@ func (*Policy_Timeout) ProtoMessage() {}
 
 func (x *Policy_Timeout) ProtoReflect() protoreflect.Message {
 	mi := &file_app_policy_config_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -308,21 +294,18 @@ func (x *Policy_Timeout) GetDownlinkOnly() *Second {
 }
 
 type Policy_Stats struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserUplink    bool                   `protobuf:"varint,1,opt,name=user_uplink,json=userUplink,proto3" json:"user_uplink,omitempty"`
+	UserDownlink  bool                   `protobuf:"varint,2,opt,name=user_downlink,json=userDownlink,proto3" json:"user_downlink,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	UserUplink   bool `protobuf:"varint,1,opt,name=user_uplink,json=userUplink,proto3" json:"user_uplink,omitempty"`
-	UserDownlink bool `protobuf:"varint,2,opt,name=user_downlink,json=userDownlink,proto3" json:"user_downlink,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Policy_Stats) Reset() {
 	*x = Policy_Stats{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_policy_config_proto_msgTypes[5]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_policy_config_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Policy_Stats) String() string {
@@ -333,7 +316,7 @@ func (*Policy_Stats) ProtoMessage() {}
 
 func (x *Policy_Stats) ProtoReflect() protoreflect.Message {
 	mi := &file_app_policy_config_proto_msgTypes[5]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -363,21 +346,18 @@ func (x *Policy_Stats) GetUserDownlink() bool {
 }
 
 type Policy_Buffer struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// Buffer size per connection, in bytes. -1 for unlimited buffer.
-	Connection int32 `protobuf:"varint,1,opt,name=connection,proto3" json:"connection,omitempty"`
+	Connection    int32 `protobuf:"varint,1,opt,name=connection,proto3" json:"connection,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Policy_Buffer) Reset() {
 	*x = Policy_Buffer{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_policy_config_proto_msgTypes[6]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_policy_config_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Policy_Buffer) String() string {
@@ -388,7 +368,7 @@ func (*Policy_Buffer) ProtoMessage() {}
 
 func (x *Policy_Buffer) ProtoReflect() protoreflect.Message {
 	mi := &file_app_policy_config_proto_msgTypes[6]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -411,23 +391,20 @@ func (x *Policy_Buffer) GetConnection() int32 {
 }
 
 type SystemPolicy_Stats struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	InboundUplink    bool `protobuf:"varint,1,opt,name=inbound_uplink,json=inboundUplink,proto3" json:"inbound_uplink,omitempty"`
-	InboundDownlink  bool `protobuf:"varint,2,opt,name=inbound_downlink,json=inboundDownlink,proto3" json:"inbound_downlink,omitempty"`
-	OutboundUplink   bool `protobuf:"varint,3,opt,name=outbound_uplink,json=outboundUplink,proto3" json:"outbound_uplink,omitempty"`
-	OutboundDownlink bool `protobuf:"varint,4,opt,name=outbound_downlink,json=outboundDownlink,proto3" json:"outbound_downlink,omitempty"`
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	InboundUplink    bool                   `protobuf:"varint,1,opt,name=inbound_uplink,json=inboundUplink,proto3" json:"inbound_uplink,omitempty"`
+	InboundDownlink  bool                   `protobuf:"varint,2,opt,name=inbound_downlink,json=inboundDownlink,proto3" json:"inbound_downlink,omitempty"`
+	OutboundUplink   bool                   `protobuf:"varint,3,opt,name=outbound_uplink,json=outboundUplink,proto3" json:"outbound_uplink,omitempty"`
+	OutboundDownlink bool                   `protobuf:"varint,4,opt,name=outbound_downlink,json=outboundDownlink,proto3" json:"outbound_downlink,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *SystemPolicy_Stats) Reset() {
 	*x = SystemPolicy_Stats{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_policy_config_proto_msgTypes[7]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_policy_config_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *SystemPolicy_Stats) String() string {
@@ -438,7 +415,7 @@ func (*SystemPolicy_Stats) ProtoMessage() {}
 
 func (x *SystemPolicy_Stats) ProtoReflect() protoreflect.Message {
 	mi := &file_app_policy_config_proto_msgTypes[7]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -483,7 +460,7 @@ func (x *SystemPolicy_Stats) GetOutboundDownlink() bool {
 
 var File_app_policy_config_proto protoreflect.FileDescriptor
 
-var file_app_policy_config_proto_rawDesc = []byte{
+var file_app_policy_config_proto_rawDesc = string([]byte{
 	0x0a, 0x17, 0x61, 0x70, 0x70, 0x2f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x2f, 0x63, 0x6f, 0x6e,
 	0x66, 0x69, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x15, 0x76, 0x32, 0x72, 0x61, 0x79,
 	0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79,
@@ -571,22 +548,22 @@ var file_app_policy_config_proto_rawDesc = []byte{
 	0x6c, 0x69, 0x63, 0x79, 0xaa, 0x02, 0x15, 0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72,
 	0x65, 0x2e, 0x41, 0x70, 0x70, 0x2e, 0x50, 0x6f, 0x6c, 0x69, 0x63, 0x79, 0x62, 0x06, 0x70, 0x72,
 	0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_app_policy_config_proto_rawDescOnce sync.Once
-	file_app_policy_config_proto_rawDescData = file_app_policy_config_proto_rawDesc
+	file_app_policy_config_proto_rawDescData []byte
 )
 
 func file_app_policy_config_proto_rawDescGZIP() []byte {
 	file_app_policy_config_proto_rawDescOnce.Do(func() {
-		file_app_policy_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_app_policy_config_proto_rawDescData)
+		file_app_policy_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_app_policy_config_proto_rawDesc), len(file_app_policy_config_proto_rawDesc)))
 	})
 	return file_app_policy_config_proto_rawDescData
 }
 
 var file_app_policy_config_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
-var file_app_policy_config_proto_goTypes = []interface{}{
+var file_app_policy_config_proto_goTypes = []any{
 	(*Second)(nil),             // 0: v2ray.core.app.policy.Second
 	(*Policy)(nil),             // 1: v2ray.core.app.policy.Policy
 	(*SystemPolicy)(nil),       // 2: v2ray.core.app.policy.SystemPolicy
@@ -621,109 +598,11 @@ func file_app_policy_config_proto_init() {
 	if File_app_policy_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_app_policy_config_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Second); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_policy_config_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Policy); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_policy_config_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SystemPolicy); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_policy_config_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_policy_config_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Policy_Timeout); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_policy_config_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Policy_Stats); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_policy_config_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Policy_Buffer); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_policy_config_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SystemPolicy_Stats); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_app_policy_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_policy_config_proto_rawDesc), len(file_app_policy_config_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   9,
 			NumExtensions: 0,
@@ -734,7 +613,6 @@ func file_app_policy_config_proto_init() {
 		MessageInfos:      file_app_policy_config_proto_msgTypes,
 	}.Build()
 	File_app_policy_config_proto = out.File
-	file_app_policy_config_proto_rawDesc = nil
 	file_app_policy_config_proto_goTypes = nil
 	file_app_policy_config_proto_depIdxs = nil
 }

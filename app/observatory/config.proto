@@ -84,4 +84,6 @@ message Config {
   string probe_url = 3;
 
   int64 probe_interval = 4;
+
+  bool persistent_probe_result = 5;
 }

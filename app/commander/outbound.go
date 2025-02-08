@@ -10,6 +10,13 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport"
 )
 
+func NewOutboundListener() *OutboundListener {
+	return &OutboundListener{
+		buffer: make(chan net.Conn, 4),
+		done:   done.New(),
+	}
+}
+
 // OutboundListener is a net.Listener for listening gRPC connections.
 type OutboundListener struct {
 	buffer chan net.Conn
@@ -56,6 +63,13 @@ func (l *OutboundListener) Addr() net.Addr {
 	return &net.TCPAddr{
 		IP:   net.IP{0, 0, 0, 0},
 		Port: 0,
+	}
+}
+
+func NewOutbound(tag string, listener *OutboundListener) *Outbound {
+	return &Outbound{
+		tag:      tag,
+		listener: listener,
 	}
 }
 

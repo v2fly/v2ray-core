@@ -6,6 +6,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -16,24 +17,21 @@ const (
 )
 
 type ImportSource struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Name                 string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Url                  string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
-	TagPrefix            string `protobuf:"bytes,3,opt,name=tag_prefix,json=tagPrefix,proto3" json:"tag_prefix,omitempty"`
-	ImportUsingTag       string `protobuf:"bytes,4,opt,name=import_using_tag,json=importUsingTag,proto3" json:"import_using_tag,omitempty"`
-	DefaultExpireSeconds uint64 `protobuf:"varint,5,opt,name=default_expire_seconds,json=defaultExpireSeconds,proto3" json:"default_expire_seconds,omitempty"`
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	Name                 string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Url                  string                 `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	TagPrefix            string                 `protobuf:"bytes,3,opt,name=tag_prefix,json=tagPrefix,proto3" json:"tag_prefix,omitempty"`
+	ImportUsingTag       string                 `protobuf:"bytes,4,opt,name=import_using_tag,json=importUsingTag,proto3" json:"import_using_tag,omitempty"`
+	DefaultExpireSeconds uint64                 `protobuf:"varint,5,opt,name=default_expire_seconds,json=defaultExpireSeconds,proto3" json:"default_expire_seconds,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *ImportSource) Reset() {
 	*x = ImportSource{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_subscription_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_subscription_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ImportSource) String() string {
@@ -44,7 +42,7 @@ func (*ImportSource) ProtoMessage() {}
 
 func (x *ImportSource) ProtoReflect() protoreflect.Message {
 	mi := &file_app_subscription_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -96,22 +94,19 @@ func (x *ImportSource) GetDefaultExpireSeconds() uint64 {
 
 // Config is the settings for Subscription Manager.
 type Config struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Imports                       []*ImportSource `protobuf:"bytes,1,rep,name=imports,proto3" json:"imports,omitempty"`
-	NonnativeConverterOverlay     []byte          `protobuf:"bytes,2,opt,name=nonnative_converter_overlay,json=nonnativeConverterOverlay,proto3" json:"nonnative_converter_overlay,omitempty"`
-	NonnativeConverterOverlayFile string          `protobuf:"bytes,96002,opt,name=nonnative_converter_overlay_file,json=nonnativeConverterOverlayFile,proto3" json:"nonnative_converter_overlay_file,omitempty"`
+	state                         protoimpl.MessageState `protogen:"open.v1"`
+	Imports                       []*ImportSource        `protobuf:"bytes,1,rep,name=imports,proto3" json:"imports,omitempty"`
+	NonnativeConverterOverlay     []byte                 `protobuf:"bytes,2,opt,name=nonnative_converter_overlay,json=nonnativeConverterOverlay,proto3" json:"nonnative_converter_overlay,omitempty"`
+	NonnativeConverterOverlayFile string                 `protobuf:"bytes,96002,opt,name=nonnative_converter_overlay_file,json=nonnativeConverterOverlayFile,proto3" json:"nonnative_converter_overlay_file,omitempty"`
+	unknownFields                 protoimpl.UnknownFields
+	sizeCache                     protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_subscription_config_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_subscription_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Config) String() string {
@@ -122,7 +117,7 @@ func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
 	mi := &file_app_subscription_config_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -160,7 +155,7 @@ func (x *Config) GetNonnativeConverterOverlayFile() string {
 
 var File_app_subscription_config_proto protoreflect.FileDescriptor
 
-var file_app_subscription_config_proto_rawDesc = []byte{
+var file_app_subscription_config_proto_rawDesc = string([]byte{
 	0x0a, 0x1d, 0x61, 0x70, 0x70, 0x2f, 0x73, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69,
 	0x6f, 0x6e, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12,
 	0x1b, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x61, 0x70, 0x70, 0x2e,
@@ -204,22 +199,22 @@ var file_app_subscription_config_proto_rawDesc = []byte{
 	0x70, 0x74, 0x69, 0x6f, 0x6e, 0xaa, 0x02, 0x1b, 0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f,
 	0x72, 0x65, 0x2e, 0x41, 0x70, 0x70, 0x2e, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74,
 	0x69, 0x6f, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_app_subscription_config_proto_rawDescOnce sync.Once
-	file_app_subscription_config_proto_rawDescData = file_app_subscription_config_proto_rawDesc
+	file_app_subscription_config_proto_rawDescData []byte
 )
 
 func file_app_subscription_config_proto_rawDescGZIP() []byte {
 	file_app_subscription_config_proto_rawDescOnce.Do(func() {
-		file_app_subscription_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_app_subscription_config_proto_rawDescData)
+		file_app_subscription_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_app_subscription_config_proto_rawDesc), len(file_app_subscription_config_proto_rawDesc)))
 	})
 	return file_app_subscription_config_proto_rawDescData
 }
 
 var file_app_subscription_config_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_app_subscription_config_proto_goTypes = []interface{}{
+var file_app_subscription_config_proto_goTypes = []any{
 	(*ImportSource)(nil), // 0: v2ray.core.app.subscription.ImportSource
 	(*Config)(nil),       // 1: v2ray.core.app.subscription.Config
 }
@@ -237,37 +232,11 @@ func file_app_subscription_config_proto_init() {
 	if File_app_subscription_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_app_subscription_config_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ImportSource); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_subscription_config_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_app_subscription_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_subscription_config_proto_rawDesc), len(file_app_subscription_config_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
@@ -278,7 +247,6 @@ func file_app_subscription_config_proto_init() {
 		MessageInfos:      file_app_subscription_config_proto_msgTypes,
 	}.Build()
 	File_app_subscription_config_proto = out.File
-	file_app_subscription_config_proto_rawDesc = nil
 	file_app_subscription_config_proto_goTypes = nil
 	file_app_subscription_config_proto_depIdxs = nil
 }

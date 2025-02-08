@@ -127,7 +127,7 @@ jobs:
       - name: Show workflow information
         id: get_filename
         run: |
-          export _NAME=$(jq ".[\"$GOOS-$GOARCH$GOARM\"].friendlyName" -r < release/friendly-filenames.json)
+          export _NAME=$(jq ".[\"$GOOS-$GOARCH$GOARM$PIE_ENABLED\"].friendlyName" -r < release/friendly-filenames.json)
           echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM, RELEASE_NAME: $_NAME"
           echo "ASSET_NAME=$_NAME" >> $GITHUB_OUTPUT
           echo "ASSET_NAME=$_NAME" >> $GITHUB_ENV
@@ -148,7 +148,7 @@ jobs:
             "linux-amd64")
               ;&
             "linux-arm64")
-            if [ -z $PIE_ENABLED ]
+            if [ ! -z $PIE_ENABLED ]
             then
               EXTRA_ARG=$EXTRA_ARG" -buildmode=pie"
             fi
@@ -188,7 +188,7 @@ jobs:
           openssl dgst -sha512 $FILE | sed 's/([^)]*)//g' >>$DGST
 
       - name: Upload ZIP file to Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
           path: v2ray-${{ steps.get_filename.outputs.ASSET_NAME }}.zip
@@ -217,7 +217,7 @@ jobs:
         with:
           go-version: ^1.23
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           path: build_artifacts
 
@@ -252,17 +252,17 @@ jobs:
           openssl dgst -sha256 $FILE | sed 's/([^)]*)//g' >>$DGST
           openssl dgst -sha512 $FILE | sed 's/([^)]*)//g' >>$DGST
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Release.unsigned
           path: build_artifacts/Release.unsigned
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Release.unsigned.dgst
           path: build_artifacts/Release.unsigned.dgst
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: v2ray-extra.zip
           path: build_artifacts/v2ray-extra.zip

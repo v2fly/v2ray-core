@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	version  = "5.24.0"
+	version  = "5.27.0"
 	build    = "Custom"
 	codename = "Elink, a community-driven edition of V2fly."
 	intro    = "Elink help you love the world."

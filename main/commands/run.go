@@ -166,7 +166,7 @@ func readConfDirRecursively(dirPath string, extension []string) cmdarg.Arg {
 func getConfigFilePath() cmdarg.Arg {
 	extension, err := core.GetLoaderExtensions(*configFormat)
 	if err != nil {
-		base.Fatalf(err.Error())
+		base.Fatalf("%v", err.Error())
 	}
 	dirReader := readConfDir
 	if *configDirRecursively {

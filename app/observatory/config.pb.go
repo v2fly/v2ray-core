@@ -6,6 +6,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -16,20 +17,17 @@ const (
 )
 
 type ObservationResult struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        []*OutboundStatus      `protobuf:"bytes,1,rep,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Status []*OutboundStatus `protobuf:"bytes,1,rep,name=status,proto3" json:"status,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ObservationResult) Reset() {
 	*x = ObservationResult{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_observatory_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_observatory_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ObservationResult) String() string {
@@ -40,7 +38,7 @@ func (*ObservationResult) ProtoMessage() {}
 
 func (x *ObservationResult) ProtoReflect() protoreflect.Message {
 	mi := &file_app_observatory_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -63,25 +61,22 @@ func (x *ObservationResult) GetStatus() []*OutboundStatus {
 }
 
 type HealthPingMeasurementResult struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	All           int64                  `protobuf:"varint,1,opt,name=all,proto3" json:"all,omitempty"`
+	Fail          int64                  `protobuf:"varint,2,opt,name=fail,proto3" json:"fail,omitempty"`
+	Deviation     int64                  `protobuf:"varint,3,opt,name=deviation,proto3" json:"deviation,omitempty"`
+	Average       int64                  `protobuf:"varint,4,opt,name=average,proto3" json:"average,omitempty"`
+	Max           int64                  `protobuf:"varint,5,opt,name=max,proto3" json:"max,omitempty"`
+	Min           int64                  `protobuf:"varint,6,opt,name=min,proto3" json:"min,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	All       int64 `protobuf:"varint,1,opt,name=all,proto3" json:"all,omitempty"`
-	Fail      int64 `protobuf:"varint,2,opt,name=fail,proto3" json:"fail,omitempty"`
-	Deviation int64 `protobuf:"varint,3,opt,name=deviation,proto3" json:"deviation,omitempty"`
-	Average   int64 `protobuf:"varint,4,opt,name=average,proto3" json:"average,omitempty"`
-	Max       int64 `protobuf:"varint,5,opt,name=max,proto3" json:"max,omitempty"`
-	Min       int64 `protobuf:"varint,6,opt,name=min,proto3" json:"min,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *HealthPingMeasurementResult) Reset() {
 	*x = HealthPingMeasurementResult{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_observatory_config_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_observatory_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *HealthPingMeasurementResult) String() string {
@@ -92,7 +87,7 @@ func (*HealthPingMeasurementResult) ProtoMessage() {}
 
 func (x *HealthPingMeasurementResult) ProtoReflect() protoreflect.Message {
 	mi := &file_app_observatory_config_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -150,10 +145,7 @@ func (x *HealthPingMeasurementResult) GetMin() int64 {
 }
 
 type OutboundStatus struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// @Document Whether this outbound is usable
 	// @Restriction ReadOnlyForUser
 	Alive bool `protobuf:"varint,1,opt,name=alive,proto3" json:"alive,omitempty"`
@@ -172,17 +164,17 @@ type OutboundStatus struct {
 	LastSeenTime int64 `protobuf:"varint,5,opt,name=last_seen_time,json=lastSeenTime,proto3" json:"last_seen_time,omitempty"`
 	// @Document The time this outbound is tried
 	// @Type id.outboundTag
-	LastTryTime int64                        `protobuf:"varint,6,opt,name=last_try_time,json=lastTryTime,proto3" json:"last_try_time,omitempty"`
-	HealthPing  *HealthPingMeasurementResult `protobuf:"bytes,7,opt,name=health_ping,json=healthPing,proto3" json:"health_ping,omitempty"`
+	LastTryTime   int64                        `protobuf:"varint,6,opt,name=last_try_time,json=lastTryTime,proto3" json:"last_try_time,omitempty"`
+	HealthPing    *HealthPingMeasurementResult `protobuf:"bytes,7,opt,name=health_ping,json=healthPing,proto3" json:"health_ping,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *OutboundStatus) Reset() {
 	*x = OutboundStatus{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_observatory_config_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_observatory_config_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *OutboundStatus) String() string {
@@ -193,7 +185,7 @@ func (*OutboundStatus) ProtoMessage() {}
 
 func (x *OutboundStatus) ProtoReflect() protoreflect.Message {
 	mi := &file_app_observatory_config_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -258,10 +250,7 @@ func (x *OutboundStatus) GetHealthPing() *HealthPingMeasurementResult {
 }
 
 type ProbeResult struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// @Document Whether this outbound is usable
 	// @Restriction ReadOnlyForUser
 	Alive bool `protobuf:"varint,1,opt,name=alive,proto3" json:"alive,omitempty"`
@@ -272,15 +261,15 @@ type ProbeResult struct {
 	// @Document The error caused this outbound failed to relay probe request
 	// @Restriction NotMachineReadable
 	LastErrorReason string `protobuf:"bytes,3,opt,name=last_error_reason,json=lastErrorReason,proto3" json:"last_error_reason,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *ProbeResult) Reset() {
 	*x = ProbeResult{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_observatory_config_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_observatory_config_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ProbeResult) String() string {
@@ -291,7 +280,7 @@ func (*ProbeResult) ProtoMessage() {}
 
 func (x *ProbeResult) ProtoReflect() protoreflect.Message {
 	mi := &file_app_observatory_config_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -328,22 +317,19 @@ func (x *ProbeResult) GetLastErrorReason() string {
 }
 
 type Intensity struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// @Document The time interval for a probe request in ms.
 	// @Type time.ms
 	ProbeInterval uint32 `protobuf:"varint,1,opt,name=probe_interval,json=probeInterval,proto3" json:"probe_interval,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Intensity) Reset() {
 	*x = Intensity{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_observatory_config_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_observatory_config_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Intensity) String() string {
@@ -354,7 +340,7 @@ func (*Intensity) ProtoMessage() {}
 
 func (x *Intensity) ProtoReflect() protoreflect.Message {
 	mi := &file_app_observatory_config_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -377,23 +363,21 @@ func (x *Intensity) GetProbeInterval() uint32 {
 }
 
 type Config struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// @Document The selectors for outbound under observation
-	SubjectSelector []string `protobuf:"bytes,2,rep,name=subject_selector,json=subjectSelector,proto3" json:"subject_selector,omitempty"`
-	ProbeUrl        string   `protobuf:"bytes,3,opt,name=probe_url,json=probeUrl,proto3" json:"probe_url,omitempty"`
-	ProbeInterval   int64    `protobuf:"varint,4,opt,name=probe_interval,json=probeInterval,proto3" json:"probe_interval,omitempty"`
+	SubjectSelector       []string `protobuf:"bytes,2,rep,name=subject_selector,json=subjectSelector,proto3" json:"subject_selector,omitempty"`
+	ProbeUrl              string   `protobuf:"bytes,3,opt,name=probe_url,json=probeUrl,proto3" json:"probe_url,omitempty"`
+	ProbeInterval         int64    `protobuf:"varint,4,opt,name=probe_interval,json=probeInterval,proto3" json:"probe_interval,omitempty"`
+	PersistentProbeResult bool     `protobuf:"varint,5,opt,name=persistent_probe_result,json=persistentProbeResult,proto3" json:"persistent_probe_result,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_app_observatory_config_proto_msgTypes[5]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_app_observatory_config_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Config) String() string {
@@ -404,7 +388,7 @@ func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
 	mi := &file_app_observatory_config_proto_msgTypes[5]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -440,9 +424,16 @@ func (x *Config) GetProbeInterval() int64 {
 	return 0
 }
 
+func (x *Config) GetPersistentProbeResult() bool {
+	if x != nil {
+		return x.PersistentProbeResult
+	}
+	return false
+}
+
 var File_app_observatory_config_proto protoreflect.FileDescriptor
 
-var file_app_observatory_config_proto_rawDesc = []byte{
+var file_app_observatory_config_proto_rawDesc = string([]byte{
 	0x0a, 0x1c, 0x61, 0x70, 0x70, 0x2f, 0x6f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x6f, 0x72,
 	0x79, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x1a,
 	0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x6f,
@@ -493,40 +484,44 @@ var file_app_observatory_config_proto_rawDesc = []byte{
 	0x22, 0x32, 0x0a, 0x09, 0x49, 0x6e, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x74, 0x79, 0x12, 0x25, 0x0a,
 	0x0e, 0x70, 0x72, 0x6f, 0x62, 0x65, 0x5f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0d, 0x70, 0x72, 0x6f, 0x62, 0x65, 0x49, 0x6e, 0x74, 0x65,
-	0x72, 0x76, 0x61, 0x6c, 0x22, 0x9d, 0x01, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12,
+	0x72, 0x76, 0x61, 0x6c, 0x22, 0xd5, 0x01, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12,
 	0x29, 0x0a, 0x10, 0x73, 0x75, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x5f, 0x73, 0x65, 0x6c, 0x65, 0x63,
 	0x74, 0x6f, 0x72, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0f, 0x73, 0x75, 0x62, 0x6a, 0x65,
 	0x63, 0x74, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x12, 0x1b, 0x0a, 0x09, 0x70, 0x72,
 	0x6f, 0x62, 0x65, 0x5f, 0x75, 0x72, 0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70,
 	0x72, 0x6f, 0x62, 0x65, 0x55, 0x72, 0x6c, 0x12, 0x25, 0x0a, 0x0e, 0x70, 0x72, 0x6f, 0x62, 0x65,
 	0x5f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52,
-	0x0d, 0x70, 0x72, 0x6f, 0x62, 0x65, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x3a, 0x24,
-	0x82, 0xb5, 0x18, 0x20, 0x0a, 0x07, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x15, 0x62,
-	0x61, 0x63, 0x6b, 0x67, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61,
-	0x74, 0x6f, 0x72, 0x79, 0x42, 0x6f, 0x0a, 0x1e, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x32, 0x72, 0x61,
-	0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x6f, 0x62, 0x73, 0x65, 0x72,
-	0x76, 0x61, 0x74, 0x6f, 0x72, 0x79, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
-	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x76, 0x32, 0x66, 0x6c, 0x79, 0x2f, 0x76, 0x32, 0x72, 0x61, 0x79,
-	0x2d, 0x63, 0x6f, 0x72, 0x65, 0x2f, 0x76, 0x35, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x6f, 0x62, 0x73,
-	0x65, 0x72, 0x76, 0x61, 0x74, 0x6f, 0x72, 0x79, 0xaa, 0x02, 0x1a, 0x56, 0x32, 0x52, 0x61, 0x79,
-	0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x41, 0x70, 0x70, 0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76,
-	0x61, 0x74, 0x6f, 0x72, 0x79, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+	0x0d, 0x70, 0x72, 0x6f, 0x62, 0x65, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x12, 0x36,
+	0x0a, 0x17, 0x70, 0x65, 0x72, 0x73, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x74, 0x5f, 0x70, 0x72, 0x6f,
+	0x62, 0x65, 0x5f, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x08, 0x52,
+	0x15, 0x70, 0x65, 0x72, 0x73, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x74, 0x50, 0x72, 0x6f, 0x62, 0x65,
+	0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x3a, 0x24, 0x82, 0xb5, 0x18, 0x20, 0x0a, 0x07, 0x73, 0x65,
+	0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x15, 0x62, 0x61, 0x63, 0x6b, 0x67, 0x72, 0x6f, 0x75, 0x6e,
+	0x64, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x6f, 0x72, 0x79, 0x42, 0x6f, 0x0a, 0x1e,
+	0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x61,
+	0x70, 0x70, 0x2e, 0x6f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x6f, 0x72, 0x79, 0x50, 0x01,
+	0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x76, 0x32, 0x66,
+	0x6c, 0x79, 0x2f, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2d, 0x63, 0x6f, 0x72, 0x65, 0x2f, 0x76, 0x35,
+	0x2f, 0x61, 0x70, 0x70, 0x2f, 0x6f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x6f, 0x72, 0x79,
+	0xaa, 0x02, 0x1a, 0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x41, 0x70,
+	0x70, 0x2e, 0x4f, 0x62, 0x73, 0x65, 0x72, 0x76, 0x61, 0x74, 0x6f, 0x72, 0x79, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
+})
 
 var (
 	file_app_observatory_config_proto_rawDescOnce sync.Once
-	file_app_observatory_config_proto_rawDescData = file_app_observatory_config_proto_rawDesc
+	file_app_observatory_config_proto_rawDescData []byte
 )
 
 func file_app_observatory_config_proto_rawDescGZIP() []byte {
 	file_app_observatory_config_proto_rawDescOnce.Do(func() {
-		file_app_observatory_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_app_observatory_config_proto_rawDescData)
+		file_app_observatory_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_app_observatory_config_proto_rawDesc), len(file_app_observatory_config_proto_rawDesc)))
 	})
 	return file_app_observatory_config_proto_rawDescData
 }
 
 var file_app_observatory_config_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
-var file_app_observatory_config_proto_goTypes = []interface{}{
+var file_app_observatory_config_proto_goTypes = []any{
 	(*ObservationResult)(nil),           // 0: v2ray.core.app.observatory.ObservationResult
 	(*HealthPingMeasurementResult)(nil), // 1: v2ray.core.app.observatory.HealthPingMeasurementResult
 	(*OutboundStatus)(nil),              // 2: v2ray.core.app.observatory.OutboundStatus
@@ -549,85 +544,11 @@ func file_app_observatory_config_proto_init() {
 	if File_app_observatory_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_app_observatory_config_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ObservationResult); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_observatory_config_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*HealthPingMeasurementResult); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_observatory_config_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OutboundStatus); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_observatory_config_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ProbeResult); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_observatory_config_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Intensity); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_app_observatory_config_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_app_observatory_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_observatory_config_proto_rawDesc), len(file_app_observatory_config_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   6,
 			NumExtensions: 0,
@@ -638,7 +559,6 @@ func file_app_observatory_config_proto_init() {
 		MessageInfos:      file_app_observatory_config_proto_msgTypes,
 	}.Build()
 	File_app_observatory_config_proto = out.File
-	file_app_observatory_config_proto_rawDesc = nil
 	file_app_observatory_config_proto_goTypes = nil
 	file_app_observatory_config_proto_depIdxs = nil
 }

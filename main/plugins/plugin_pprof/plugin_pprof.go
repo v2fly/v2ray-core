@@ -1,11 +1,11 @@
-package plugin_pprof
+package plugin_pprof //nolint: stylecheck
 
 import (
-	"github.com/v2fly/v2ray-core/v5/main/plugins"
 	"net/http"
 	"net/http/pprof"
 
 	"github.com/v2fly/v2ray-core/v5/main/commands/base"
+	"github.com/v2fly/v2ray-core/v5/main/plugins"
 )
 
 var pprofPlugin plugins.Plugin = func(cmd *base.Command) func() error {

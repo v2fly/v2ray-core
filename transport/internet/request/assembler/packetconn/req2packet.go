@@ -122,7 +122,7 @@ copyFromChan:
 				return
 			}
 		}
-		if resp.Data != nil && len(resp.Data) != 0 {
+		if len(resp.Data) != 0 {
 			respReader := bytes.NewReader(resp.Data)
 			for respReader.Len() != 0 {
 				packet, err := packetBundler.ReadFromBundle(respReader)

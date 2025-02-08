@@ -8,6 +8,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -18,22 +19,19 @@ const (
 )
 
 type ServerConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state          protoimpl.MessageState    `protogen:"open.v1"`
 	Address        *net.IPOrDomain           `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
 	UdpEnabled     bool                      `protobuf:"varint,4,opt,name=udp_enabled,json=udpEnabled,proto3" json:"udp_enabled,omitempty"`
 	PacketEncoding packetaddr.PacketAddrType `protobuf:"varint,7,opt,name=packet_encoding,json=packetEncoding,proto3,enum=v2ray.core.net.packetaddr.PacketAddrType" json:"packet_encoding,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *ServerConfig) Reset() {
 	*x = ServerConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_proxy_socks_simplified_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_proxy_socks_simplified_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ServerConfig) String() string {
@@ -44,7 +42,7 @@ func (*ServerConfig) ProtoMessage() {}
 
 func (x *ServerConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_proxy_socks_simplified_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -81,21 +79,18 @@ func (x *ServerConfig) GetPacketEncoding() packetaddr.PacketAddrType {
 }
 
 type ClientConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Address       *net.IPOrDomain        `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Port          uint32                 `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Address *net.IPOrDomain `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	Port    uint32          `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ClientConfig) Reset() {
 	*x = ClientConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_proxy_socks_simplified_config_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_proxy_socks_simplified_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ClientConfig) String() string {
@@ -106,7 +101,7 @@ func (*ClientConfig) ProtoMessage() {}
 
 func (x *ClientConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_proxy_socks_simplified_config_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -137,7 +132,7 @@ func (x *ClientConfig) GetPort() uint32 {
 
 var File_proxy_socks_simplified_config_proto protoreflect.FileDescriptor
 
-var file_proxy_socks_simplified_config_proto_rawDesc = []byte{
+var file_proxy_socks_simplified_config_proto_rawDesc = string([]byte{
 	0x0a, 0x23, 0x70, 0x72, 0x6f, 0x78, 0x79, 0x2f, 0x73, 0x6f, 0x63, 0x6b, 0x73, 0x2f, 0x73, 0x69,
 	0x6d, 0x70, 0x6c, 0x69, 0x66, 0x69, 0x65, 0x64, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x21, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72,
@@ -179,22 +174,22 @@ var file_proxy_socks_simplified_config_proto_rawDesc = []byte{
 	0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x50, 0x72, 0x6f, 0x78, 0x79, 0x2e,
 	0x53, 0x6f, 0x63, 0x6b, 0x73, 0x2e, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x69, 0x66, 0x69, 0x65, 0x64,
 	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_proxy_socks_simplified_config_proto_rawDescOnce sync.Once
-	file_proxy_socks_simplified_config_proto_rawDescData = file_proxy_socks_simplified_config_proto_rawDesc
+	file_proxy_socks_simplified_config_proto_rawDescData []byte
 )
 
 func file_proxy_socks_simplified_config_proto_rawDescGZIP() []byte {
 	file_proxy_socks_simplified_config_proto_rawDescOnce.Do(func() {
-		file_proxy_socks_simplified_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_proxy_socks_simplified_config_proto_rawDescData)
+		file_proxy_socks_simplified_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proxy_socks_simplified_config_proto_rawDesc), len(file_proxy_socks_simplified_config_proto_rawDesc)))
 	})
 	return file_proxy_socks_simplified_config_proto_rawDescData
 }
 
 var file_proxy_socks_simplified_config_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_proxy_socks_simplified_config_proto_goTypes = []interface{}{
+var file_proxy_socks_simplified_config_proto_goTypes = []any{
 	(*ServerConfig)(nil),           // 0: v2ray.core.proxy.socks.simplified.ServerConfig
 	(*ClientConfig)(nil),           // 1: v2ray.core.proxy.socks.simplified.ClientConfig
 	(*net.IPOrDomain)(nil),         // 2: v2ray.core.common.net.IPOrDomain
@@ -216,37 +211,11 @@ func file_proxy_socks_simplified_config_proto_init() {
 	if File_proxy_socks_simplified_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_proxy_socks_simplified_config_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ServerConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_proxy_socks_simplified_config_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ClientConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_proxy_socks_simplified_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proxy_socks_simplified_config_proto_rawDesc), len(file_proxy_socks_simplified_config_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
@@ -257,7 +226,6 @@ func file_proxy_socks_simplified_config_proto_init() {
 		MessageInfos:      file_proxy_socks_simplified_config_proto_msgTypes,
 	}.Build()
 	File_proxy_socks_simplified_config_proto = out.File
-	file_proxy_socks_simplified_config_proto_rawDesc = nil
 	file_proxy_socks_simplified_config_proto_goTypes = nil
 	file_proxy_socks_simplified_config_proto_depIdxs = nil
 }

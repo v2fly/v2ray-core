@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package v2ray.core.app.persistentstorage.filesystemstorage;
+option csharp_namespace = "V2Ray.Core.App.Persistentstorage.Filesystemstorage";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/persistentstorage/filesystemstorage";
+option java_package = "com.v2ray.core.persistentstorage.filesystemstorage";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+
+enum StateStorageRoot {
+  WorkDir = 0;
+}
+
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "service";
+  option (v2ray.core.common.protoext.message_opt).short_name = "filesystemstorage";
+
+  StateStorageRoot state_storage_root = 1;
+  string instance_name = 4;
+
+  bool protojson = 5;
+}

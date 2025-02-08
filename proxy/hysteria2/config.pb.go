@@ -8,6 +8,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -18,18 +19,16 @@ const (
 )
 
 type Account struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Account) Reset() {
 	*x = Account{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_proxy_hysteria2_config_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_proxy_hysteria2_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Account) String() string {
@@ -40,7 +39,7 @@ func (*Account) ProtoMessage() {}
 
 func (x *Account) ProtoReflect() protoreflect.Message {
 	mi := &file_proxy_hysteria2_config_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -56,20 +55,17 @@ func (*Account) Descriptor() ([]byte, []int) {
 }
 
 type ClientConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState     `protogen:"open.v1"`
+	Server        []*protocol.ServerEndpoint `protobuf:"bytes,1,rep,name=server,proto3" json:"server,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Server []*protocol.ServerEndpoint `protobuf:"bytes,1,rep,name=server,proto3" json:"server,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ClientConfig) Reset() {
 	*x = ClientConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_proxy_hysteria2_config_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_proxy_hysteria2_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ClientConfig) String() string {
@@ -80,7 +76,7 @@ func (*ClientConfig) ProtoMessage() {}
 
 func (x *ClientConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_proxy_hysteria2_config_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -103,20 +99,17 @@ func (x *ClientConfig) GetServer() []*protocol.ServerEndpoint {
 }
 
 type ServerConfig struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state          protoimpl.MessageState    `protogen:"open.v1"`
 	PacketEncoding packetaddr.PacketAddrType `protobuf:"varint,1,opt,name=packet_encoding,json=packetEncoding,proto3,enum=v2ray.core.net.packetaddr.PacketAddrType" json:"packet_encoding,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *ServerConfig) Reset() {
 	*x = ServerConfig{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_proxy_hysteria2_config_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_proxy_hysteria2_config_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ServerConfig) String() string {
@@ -127,7 +120,7 @@ func (*ServerConfig) ProtoMessage() {}
 
 func (x *ServerConfig) ProtoReflect() protoreflect.Message {
 	mi := &file_proxy_hysteria2_config_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -151,7 +144,7 @@ func (x *ServerConfig) GetPacketEncoding() packetaddr.PacketAddrType {
 
 var File_proxy_hysteria2_config_proto protoreflect.FileDescriptor
 
-var file_proxy_hysteria2_config_proto_rawDesc = []byte{
+var file_proxy_hysteria2_config_proto_rawDesc = string([]byte{
 	0x0a, 0x1c, 0x70, 0x72, 0x6f, 0x78, 0x79, 0x2f, 0x68, 0x79, 0x73, 0x74, 0x65, 0x72, 0x69, 0x61,
 	0x32, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x1a,
 	0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x78, 0x79,
@@ -186,16 +179,16 @@ var file_proxy_hysteria2_config_proto_rawDesc = []byte{
 	0x02, 0x1a, 0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x50, 0x72, 0x6f,
 	0x78, 0x79, 0x2e, 0x48, 0x79, 0x73, 0x74, 0x65, 0x72, 0x69, 0x61, 0x32, 0x62, 0x06, 0x70, 0x72,
 	0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_proxy_hysteria2_config_proto_rawDescOnce sync.Once
-	file_proxy_hysteria2_config_proto_rawDescData = file_proxy_hysteria2_config_proto_rawDesc
+	file_proxy_hysteria2_config_proto_rawDescData []byte
 )
 
 func file_proxy_hysteria2_config_proto_rawDescGZIP() []byte {
 	file_proxy_hysteria2_config_proto_rawDescOnce.Do(func() {
-		file_proxy_hysteria2_config_proto_rawDescData = protoimpl.X.CompressGZIP(file_proxy_hysteria2_config_proto_rawDescData)
+		file_proxy_hysteria2_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proxy_hysteria2_config_proto_rawDesc), len(file_proxy_hysteria2_config_proto_rawDesc)))
 	})
 	return file_proxy_hysteria2_config_proto_rawDescData
 }
@@ -223,49 +216,11 @@ func file_proxy_hysteria2_config_proto_init() {
 	if File_proxy_hysteria2_config_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_proxy_hysteria2_config_proto_msgTypes[0].Exporter = func(v any, i int) any {
-			switch v := v.(*Account); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_proxy_hysteria2_config_proto_msgTypes[1].Exporter = func(v any, i int) any {
-			switch v := v.(*ClientConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_proxy_hysteria2_config_proto_msgTypes[2].Exporter = func(v any, i int) any {
-			switch v := v.(*ServerConfig); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_proxy_hysteria2_config_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proxy_hysteria2_config_proto_rawDesc), len(file_proxy_hysteria2_config_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
@@ -276,7 +231,6 @@ func file_proxy_hysteria2_config_proto_init() {
 		MessageInfos:      file_proxy_hysteria2_config_proto_msgTypes,
 	}.Build()
 	File_proxy_hysteria2_config_proto = out.File
-	file_proxy_hysteria2_config_proto_rawDesc = nil
 	file_proxy_hysteria2_config_proto_goTypes = nil
 	file_proxy_hysteria2_config_proto_depIdxs = nil
 }

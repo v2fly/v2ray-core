@@ -5,6 +5,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -16,23 +17,20 @@ const (
 
 // PortRange represents a range of ports.
 type PortRange struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// The port that this range starts from.
 	From uint32 `protobuf:"varint,1,opt,name=From,proto3" json:"From,omitempty"`
 	// The port that this range ends with (inclusive).
-	To uint32 `protobuf:"varint,2,opt,name=To,proto3" json:"To,omitempty"`
+	To            uint32 `protobuf:"varint,2,opt,name=To,proto3" json:"To,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PortRange) Reset() {
 	*x = PortRange{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_common_net_port_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_common_net_port_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *PortRange) String() string {
@@ -43,7 +41,7 @@ func (*PortRange) ProtoMessage() {}
 
 func (x *PortRange) ProtoReflect() protoreflect.Message {
 	mi := &file_common_net_port_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -74,20 +72,17 @@ func (x *PortRange) GetTo() uint32 {
 
 // PortList is a list of ports.
 type PortList struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Range         []*PortRange           `protobuf:"bytes,1,rep,name=range,proto3" json:"range,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Range []*PortRange `protobuf:"bytes,1,rep,name=range,proto3" json:"range,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PortList) Reset() {
 	*x = PortList{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_common_net_port_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_common_net_port_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *PortList) String() string {
@@ -98,7 +93,7 @@ func (*PortList) ProtoMessage() {}
 
 func (x *PortList) ProtoReflect() protoreflect.Message {
 	mi := &file_common_net_port_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -122,7 +117,7 @@ func (x *PortList) GetRange() []*PortRange {
 
 var File_common_net_port_proto protoreflect.FileDescriptor
 
-var file_common_net_port_proto_rawDesc = []byte{
+var file_common_net_port_proto_rawDesc = string([]byte{
 	0x0a, 0x15, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2f, 0x6e, 0x65, 0x74, 0x2f, 0x70, 0x6f, 0x72,
 	0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x15, 0x76, 0x32, 0x72, 0x61, 0x79, 0x2e, 0x63,
 	0x6f, 0x72, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x6e, 0x65, 0x74, 0x22, 0x2f,
@@ -140,22 +135,22 @@ var file_common_net_port_proto_rawDesc = []byte{
 	0x76, 0x35, 0x2f, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2f, 0x6e, 0x65, 0x74, 0xaa, 0x02, 0x15,
 	0x56, 0x32, 0x52, 0x61, 0x79, 0x2e, 0x43, 0x6f, 0x72, 0x65, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x6f,
 	0x6e, 0x2e, 0x4e, 0x65, 0x74, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+})
 
 var (
 	file_common_net_port_proto_rawDescOnce sync.Once
-	file_common_net_port_proto_rawDescData = file_common_net_port_proto_rawDesc
+	file_common_net_port_proto_rawDescData []byte
 )
 
 func file_common_net_port_proto_rawDescGZIP() []byte {
 	file_common_net_port_proto_rawDescOnce.Do(func() {
-		file_common_net_port_proto_rawDescData = protoimpl.X.CompressGZIP(file_common_net_port_proto_rawDescData)
+		file_common_net_port_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_net_port_proto_rawDesc), len(file_common_net_port_proto_rawDesc)))
 	})
 	return file_common_net_port_proto_rawDescData
 }
 
 var file_common_net_port_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_common_net_port_proto_goTypes = []interface{}{
+var file_common_net_port_proto_goTypes = []any{
 	(*PortRange)(nil), // 0: v2ray.core.common.net.PortRange
 	(*PortList)(nil),  // 1: v2ray.core.common.net.PortList
 }
@@ -173,37 +168,11 @@ func file_common_net_port_proto_init() {
 	if File_common_net_port_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_common_net_port_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PortRange); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_common_net_port_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PortList); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_common_net_port_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_net_port_proto_rawDesc), len(file_common_net_port_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
@@ -214,7 +183,6 @@ func file_common_net_port_proto_init() {
 		MessageInfos:      file_common_net_port_proto_msgTypes,
 	}.Build()
 	File_common_net_port_proto = out.File
-	file_common_net_port_proto_rawDesc = nil
 	file_common_net_port_proto_goTypes = nil
 	file_common_net_port_proto_depIdxs = nil
 }
