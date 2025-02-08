@@ -15,5 +15,10 @@ https://guide.v2fly.org/advanced/outboundproxy.html
 ./elink convert  samples/in_*.json  samples/out_*.json samples/log.json samples/route.json samples/dns.json 
 ```
 
+## 测试代理
+```
+curl --socks5 test:password@127.0.0.1:1080 https://www.baidu.com 
+```
+
 
 

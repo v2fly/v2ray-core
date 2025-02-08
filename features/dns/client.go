@@ -12,6 +12,9 @@ type IPOption struct {
 	IPv4Enable bool
 	IPv6Enable bool
 	FakeEnable bool
+
+	//add by b1gcat
+	InBoundTag string
 }
 
 func (opt IPOption) With(other IPOption) IPOption {

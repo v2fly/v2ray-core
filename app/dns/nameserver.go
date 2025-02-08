@@ -101,6 +101,7 @@ func NewClient(ctx context.Context, ns *NameServer, dns *Config) (*Client, error
 			ns.Tag = generateRandomTag()
 		}
 	}
+
 	if len(ns.ClientIp) == 0 {
 		ns.ClientIp = dns.ClientIp
 	}
@@ -191,7 +192,14 @@ func (c *Client) QueryIP(ctx context.Context, domain string, option dns.IPOption
 	}
 	disableCache := c.cacheStrategy == CacheStrategy_CacheDisabled
 
-	ctx = session.ContextWithInbound(ctx, &session.Inbound{Tag: c.tag})
+	//fuck by b1gcat start
+	inBoundTag := c.tag
+	if option.InBoundTag != "" {
+		inBoundTag = option.InBoundTag
+	}
+	//fuck by b1gcat end
+
+	ctx = session.ContextWithInbound(ctx, &session.Inbound{Tag: inBoundTag})
 	ctx, cancel := context.WithTimeout(ctx, 4*time.Second)
 	ips, err := server.QueryIP(ctx, domain, c.clientIP, queryOption, disableCache)
 	cancel()

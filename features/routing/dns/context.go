@@ -3,6 +3,8 @@ package dns
 //go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 import (
+	"fmt"
+
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/features/dns"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
@@ -26,6 +28,13 @@ func (ctx *ResolvableContext) GetTargetIPs() []net.IP {
 	}
 
 	if domain := ctx.GetTargetDomain(); len(domain) != 0 {
+		//add by b1gcat start
+		inboundTag := ctx.GetInboundTag()
+		if inboundTag != "" {
+			domain = fmt.Sprintf("dns-%s:%s", inboundTag, domain)
+		}
+		// add by b1gcat end
+
 		ips, err := ctx.dnsClient.LookupIP(domain)
 		if err == nil {
 			ctx.resolvedIPs = ips

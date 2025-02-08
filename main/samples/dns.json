@@ -1,6 +1,5 @@
 {
     "dns": {
-    "tag": "dns-xxxx",
     "disableFallback":false,
     "queryStrategy": "UseIPv4",
     "disableCache": true,

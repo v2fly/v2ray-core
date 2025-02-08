@@ -257,6 +257,14 @@ func (s *DNS) AsFakeDNSEngine() dns.FakeDNSEngine {
 
 // LookupIP implements dns.Client.
 func (s *DNS) LookupIP(domain string) ([]net.IP, error) {
+	//add by b1gcat start
+	info := strings.SplitN(domain, ":", 2)
+	if len(info) == 2 {
+		domain = info[1]
+		return s.lookupIPInternal(domain, dns.IPOption{IPv4Enable: true, IPv6Enable: true, FakeEnable: false, InBoundTag: info[0]})
+	}
+	//add by b1gcat end
+
 	return s.lookupIPInternal(domain, dns.IPOption{IPv4Enable: true, IPv6Enable: true, FakeEnable: false})
 }
 
