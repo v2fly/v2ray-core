@@ -28,4 +28,6 @@ message Config {
 
   bytes nonnative_converter_overlay = 2;
   string nonnative_converter_overlay_file = 96002 [(v2ray.core.common.protoext.field_opt).convert_time_read_file_into = "nonnative_converter_overlay"];
+
+  bool persistence = 3;
 }

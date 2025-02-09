@@ -18,4 +18,6 @@ message TrackedSubscriptionStatus {
   map<string, SubscriptionServer> servers = 1;
   map<string, string> documentMetadata = 2;
   v2ray.core.app.subscription.ImportSource importSource = 3;
+
+  bool added_by_api = 4;
 }

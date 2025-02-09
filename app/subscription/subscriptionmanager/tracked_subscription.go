@@ -23,6 +23,8 @@ type trackedSubscription struct {
 	originalDocument     []byte
 	originalContainer    *containers.Container
 	originalServerConfig map[string]*originalServerConfig
+
+	addedByAPI bool
 }
 
 type originalServerConfig struct {
@@ -92,5 +94,6 @@ func (s *trackedSubscription) fillStatus(status *subscription.TrackedSubscriptio
 			status.Servers[v.Id].Tag = materializedInstance.tagPostfix
 		}
 	}
+	status.AddedByApi = s.addedByAPI
 	return nil
 }
