@@ -14,6 +14,12 @@ func (s *SubscriptionManagerImpl) RemoveTrackedSubscription(name string) error {
 	return s.removeTrackedSubscription(name)
 }
 
+func (s *SubscriptionManagerImpl) UpdateTrackedSubscription(name string) error {
+	s.Lock()
+	defer s.Unlock()
+	return s.updateSubscription(name)
+}
+
 func (s *SubscriptionManagerImpl) ListTrackedSubscriptions() []string {
 	s.Lock()
 	defer s.Unlock()

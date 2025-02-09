@@ -23,10 +23,18 @@ message AddTrackedSubscriptionRequest{
 message AddTrackedSubscriptionResponse{
 
 }
+
 message RemoveTrackedSubscriptionRequest{
   string name = 1;
 }
 message RemoveTrackedSubscriptionResponse{
+
+}
+
+message UpdateTrackedSubscriptionRequest{
+  string name = 1;
+}
+message UpdateTrackedSubscriptionResponse{
 
 }
 
@@ -48,6 +56,8 @@ service SubscriptionManagerService {
       returns (RemoveTrackedSubscriptionResponse) {}
   rpc GetTrackedSubscriptionStatus(GetTrackedSubscriptionStatusRequest)
       returns (GetTrackedSubscriptionStatusResponse) {}
+  rpc UpdateTrackedSubscription(UpdateTrackedSubscriptionRequest)
+      returns (UpdateTrackedSubscriptionResponse) {}
 }
 
 

@@ -17,6 +17,17 @@ type SubscriptionManagerService struct {
 	manager subscription.SubscriptionManager
 }
 
+func (s *SubscriptionManagerService) UpdateTrackedSubscription(ctx context.Context, request *UpdateTrackedSubscriptionRequest) (*UpdateTrackedSubscriptionResponse, error) {
+	if s.manager == nil {
+		return nil, newError("subscription manager is not available")
+	}
+	err := s.manager.UpdateTrackedSubscription(request.Name)
+	if err != nil {
+		return nil, err
+	}
+	return &UpdateTrackedSubscriptionResponse{}, nil
+}
+
 func NewSubscriptionManagerService(manager subscription.SubscriptionManager) *SubscriptionManagerService {
 	return &SubscriptionManagerService{manager: manager}
 }

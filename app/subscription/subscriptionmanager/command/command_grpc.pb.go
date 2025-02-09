@@ -17,6 +17,7 @@ const (
 	SubscriptionManagerService_AddTrackedSubscription_FullMethodName       = "/v2ray.core.app.subscription.subscriptionmanager.command.SubscriptionManagerService/AddTrackedSubscription"
 	SubscriptionManagerService_RemoveTrackedSubscription_FullMethodName    = "/v2ray.core.app.subscription.subscriptionmanager.command.SubscriptionManagerService/RemoveTrackedSubscription"
 	SubscriptionManagerService_GetTrackedSubscriptionStatus_FullMethodName = "/v2ray.core.app.subscription.subscriptionmanager.command.SubscriptionManagerService/GetTrackedSubscriptionStatus"
+	SubscriptionManagerService_UpdateTrackedSubscription_FullMethodName    = "/v2ray.core.app.subscription.subscriptionmanager.command.SubscriptionManagerService/UpdateTrackedSubscription"
 )
 
 // SubscriptionManagerServiceClient is the client API for SubscriptionManagerService service.
@@ -27,6 +28,7 @@ type SubscriptionManagerServiceClient interface {
 	AddTrackedSubscription(ctx context.Context, in *AddTrackedSubscriptionRequest, opts ...grpc.CallOption) (*AddTrackedSubscriptionResponse, error)
 	RemoveTrackedSubscription(ctx context.Context, in *RemoveTrackedSubscriptionRequest, opts ...grpc.CallOption) (*RemoveTrackedSubscriptionResponse, error)
 	GetTrackedSubscriptionStatus(ctx context.Context, in *GetTrackedSubscriptionStatusRequest, opts ...grpc.CallOption) (*GetTrackedSubscriptionStatusResponse, error)
+	UpdateTrackedSubscription(ctx context.Context, in *UpdateTrackedSubscriptionRequest, opts ...grpc.CallOption) (*UpdateTrackedSubscriptionResponse, error)
 }
 
 type subscriptionManagerServiceClient struct {
@@ -77,6 +79,16 @@ func (c *subscriptionManagerServiceClient) GetTrackedSubscriptionStatus(ctx cont
 	return out, nil
 }
 
+func (c *subscriptionManagerServiceClient) UpdateTrackedSubscription(ctx context.Context, in *UpdateTrackedSubscriptionRequest, opts ...grpc.CallOption) (*UpdateTrackedSubscriptionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateTrackedSubscriptionResponse)
+	err := c.cc.Invoke(ctx, SubscriptionManagerService_UpdateTrackedSubscription_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SubscriptionManagerServiceServer is the server API for SubscriptionManagerService service.
 // All implementations must embed UnimplementedSubscriptionManagerServiceServer
 // for forward compatibility.
@@ -85,6 +97,7 @@ type SubscriptionManagerServiceServer interface {
 	AddTrackedSubscription(context.Context, *AddTrackedSubscriptionRequest) (*AddTrackedSubscriptionResponse, error)
 	RemoveTrackedSubscription(context.Context, *RemoveTrackedSubscriptionRequest) (*RemoveTrackedSubscriptionResponse, error)
 	GetTrackedSubscriptionStatus(context.Context, *GetTrackedSubscriptionStatusRequest) (*GetTrackedSubscriptionStatusResponse, error)
+	UpdateTrackedSubscription(context.Context, *UpdateTrackedSubscriptionRequest) (*UpdateTrackedSubscriptionResponse, error)
 	mustEmbedUnimplementedSubscriptionManagerServiceServer()
 }
 
@@ -106,6 +119,9 @@ func (UnimplementedSubscriptionManagerServiceServer) RemoveTrackedSubscription(c
 }
 func (UnimplementedSubscriptionManagerServiceServer) GetTrackedSubscriptionStatus(context.Context, *GetTrackedSubscriptionStatusRequest) (*GetTrackedSubscriptionStatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTrackedSubscriptionStatus not implemented")
+}
+func (UnimplementedSubscriptionManagerServiceServer) UpdateTrackedSubscription(context.Context, *UpdateTrackedSubscriptionRequest) (*UpdateTrackedSubscriptionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTrackedSubscription not implemented")
 }
 func (UnimplementedSubscriptionManagerServiceServer) mustEmbedUnimplementedSubscriptionManagerServiceServer() {
 }
@@ -201,6 +217,24 @@ func _SubscriptionManagerService_GetTrackedSubscriptionStatus_Handler(srv interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SubscriptionManagerService_UpdateTrackedSubscription_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTrackedSubscriptionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SubscriptionManagerServiceServer).UpdateTrackedSubscription(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SubscriptionManagerService_UpdateTrackedSubscription_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SubscriptionManagerServiceServer).UpdateTrackedSubscription(ctx, req.(*UpdateTrackedSubscriptionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SubscriptionManagerService_ServiceDesc is the grpc.ServiceDesc for SubscriptionManagerService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -223,6 +257,10 @@ var SubscriptionManagerService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTrackedSubscriptionStatus",
 			Handler:    _SubscriptionManagerService_GetTrackedSubscriptionStatus_Handler,
+		},
+		{
+			MethodName: "UpdateTrackedSubscription",
+			Handler:    _SubscriptionManagerService_UpdateTrackedSubscription_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
