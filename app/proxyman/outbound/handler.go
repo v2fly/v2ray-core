@@ -23,6 +23,8 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/security"
 	"github.com/v2fly/v2ray-core/v5/transport/pipe"
+
+	rtdns "github.com/v2fly/v2ray-core/v5/features/routing/dns"
 )
 
 func getStatCounter(v *core.Instance, tag string) (stats.Counter, stats.Counter) {
@@ -278,11 +280,16 @@ func (h *Handler) Dial(ctx context.Context, dest net.Destination) (internet.Conn
 }
 
 func (h *Handler) resolveIP(ctx context.Context, domain string, localAddr net.Address) net.Address {
+	//add by b1gcat start
+	inboundTag, domain := rtdns.JoinInboundDomainTag(ctx, domain)
+	// add by b1gcat end
+
 	strategy := h.senderSettings.DomainStrategy
 	ips, err := dns.LookupIPWithOption(h.dns, domain, dns.IPOption{
 		IPv4Enable: strategy == proxyman.SenderConfig_USE_IP || strategy == proxyman.SenderConfig_USE_IP4 || (localAddr != nil && localAddr.Family().IsIPv4()),
 		IPv6Enable: strategy == proxyman.SenderConfig_USE_IP || strategy == proxyman.SenderConfig_USE_IP6 || (localAddr != nil && localAddr.Family().IsIPv6()),
 		FakeEnable: false,
+		InBoundTag: inboundTag,
 	})
 	if err != nil {
 		newError("failed to get IP address for domain ", domain).Base(err).WriteToLog(session.ExportIDToError(ctx))

@@ -17,6 +17,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/task"
 	"github.com/v2fly/v2ray-core/v5/features/dns"
 	"github.com/v2fly/v2ray-core/v5/features/policy"
+	rtdns "github.com/v2fly/v2ray-core/v5/features/routing/dns"
 	"github.com/v2fly/v2ray-core/v5/transport"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
 )
@@ -68,10 +69,15 @@ func (h *Handler) policy() policy.Session {
 }
 
 func (h *Handler) resolveIP(ctx context.Context, domain string, localAddr net.Address) net.Address {
+	//add by b1gcat start
+	inboundTag, domain := rtdns.JoinInboundDomainTag(ctx, domain)
+	// add by b1gcat end
+
 	ips, err := dns.LookupIPWithOption(h.dns, domain, dns.IPOption{
 		IPv4Enable: h.config.DomainStrategy == Config_USE_IP || h.config.DomainStrategy == Config_USE_IP4 || (localAddr != nil && localAddr.Family().IsIPv4()),
 		IPv6Enable: h.config.DomainStrategy == Config_USE_IP || h.config.DomainStrategy == Config_USE_IP6 || (localAddr != nil && localAddr.Family().IsIPv6()),
 		FakeEnable: false,
+		InBoundTag: inboundTag,
 	})
 	if err != nil {
 		newError("failed to get IP address for domain ", domain).Base(err).WriteToLog(session.ExportIDToError(ctx))

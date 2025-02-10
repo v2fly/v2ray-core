@@ -24,6 +24,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/strmatcher"
 	"github.com/v2fly/v2ray-core/v5/features"
 	"github.com/v2fly/v2ray-core/v5/features/dns"
+	rtdns "github.com/v2fly/v2ray-core/v5/features/routing/dns"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
 	"github.com/v2fly/v2ray-core/v5/infra/conf/geodata"
 )
@@ -258,19 +259,17 @@ func (s *DNS) AsFakeDNSEngine() dns.FakeDNSEngine {
 // LookupIP implements dns.Client.
 func (s *DNS) LookupIP(domain string) ([]net.IP, error) {
 	//add by b1gcat start
-	info := strings.SplitN(domain, ":", 2)
-	if len(info) == 2 {
-		domain = info[1]
-		return s.lookupIPInternal(domain, dns.IPOption{IPv4Enable: true, IPv6Enable: true, FakeEnable: false, InBoundTag: info[0]})
-	}
+	inBoundTag, domain := rtdns.SplitInboundDomainTag(domain)
 	//add by b1gcat end
-
-	return s.lookupIPInternal(domain, dns.IPOption{IPv4Enable: true, IPv6Enable: true, FakeEnable: false})
+	return s.lookupIPInternal(domain, dns.IPOption{IPv4Enable: true, IPv6Enable: true, FakeEnable: false, InBoundTag: inBoundTag})
 }
 
 // LookupIPv4 implements dns.IPv4Lookup.
 func (s *DNS) LookupIPv4(domain string) ([]net.IP, error) {
-	return s.lookupIPInternal(domain, dns.IPOption{IPv4Enable: true, FakeEnable: false})
+	//add by b1gcat start
+	inBoundTag, domain := rtdns.SplitInboundDomainTag(domain)
+	//add by b1gcat end
+	return s.lookupIPInternal(domain, dns.IPOption{IPv4Enable: true, FakeEnable: false, InBoundTag: inBoundTag})
 }
 
 // LookupIPv6 implements dns.IPv6Lookup.
@@ -334,6 +333,13 @@ func (s *DNS) sortClients(domain string, option dns.IPOption) []*Client {
 	for _, match := range s.domainMatcher.Match(domain) {
 		info := s.matcherInfos[match]
 		client := s.clients[info.clientIdx]
+
+		//add by b1gcat start
+		if matched := rtdns.MatchInboundDomainTag(option.InBoundTag, client.tag); !matched {
+			continue
+		}
+		//add by b1gcat end
+
 		domainRule := client.domains[info.domainRuleIdx]
 		domainRules = append(domainRules, fmt.Sprintf("%s(DNS idx:%d)", domainRule, info.clientIdx))
 		switch {
@@ -350,16 +356,26 @@ func (s *DNS) sortClients(domain string, option dns.IPOption) []*Client {
 	// Default round-robin query
 	hasDomainMatch := len(clients) > 0
 	for idx, client := range s.clients {
+		//add by b1gcat start
+		if matched := rtdns.MatchInboundDomainTag(option.InBoundTag, client.tag); !matched {
+			continue
+		}
+		//add by b1gcat end
+
 		switch {
 		case clientUsed[idx]:
 			continue
 		case !option.FakeEnable && isFakeDNS(client.server):
+			fmt.Println("########client.tag:", 1)
 			continue
 		case client.fallbackStrategy == FallbackStrategy_Disabled:
+			fmt.Println("########client.tag:", 2)
 			continue
 		case client.fallbackStrategy == FallbackStrategy_DisabledIfAnyMatch && hasDomainMatch:
+			fmt.Println("########client.tag:", 3)
 			continue
 		}
+
 		clientUsed[idx] = true
 		clients = append(clients, client)
 		clientIdxs = append(clientIdxs, idx)

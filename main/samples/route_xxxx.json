@@ -1,0 +1,13 @@
+{
+    "routing": {
+      "domainStrategy": "IPOnDemand",
+      "rules": [
+        {
+          "type": "field",
+          "ip": ["geoip:!private", "geoip:!cn"],
+          "outboundTag": "proxy-s5-xxxx"
+        }
+      ]
+    }
+  }
+  

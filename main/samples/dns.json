@@ -1,28 +1,24 @@
 {
-    "dns": {
-    "disableFallback":false,
+  "dns": {
+    "disableFallback": false,
     "queryStrategy": "UseIPv4",
     "disableCache": true,
     "servers": [
-      "8.8.8.8",
-      "1.1.1.1", 
       {
-        "skipFallback": true,
-        "address": "114.114.114.114", 
-        "port": 53,
-        "domains": [
-          "geosite:cn",
-          "ntp.org"
-        ]
+        "tag": "1:dns-fuck",
+        "address": "8.8.8.8"
+      },
+      "1.1.1.1",
+      {
+        "tag": "1:dns-localside-s5-xxxx",
+        "skipFallback": false,
+        "address": "114.114.114.114"
       },
       {
-        "skipFallback": true,
-        "address": "223.5.5.5", 
+        "skipFallback": false,
+        "address": "223.5.5.5",
         "port": 53,
-        "domains": [
-          "geosite:cn",
-          "ntp.org"
-        ]
+        "domains": ["geosite:cn", "ntp.org"]
       }
     ]
   }

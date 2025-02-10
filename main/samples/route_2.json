@@ -23,11 +23,6 @@
           "domainMatcher": "mph",
           "domain": ["geosite:cn"],
           "outboundTag": "direct"
-        },
-        {
-          "type": "field",
-          "ip": ["geoip:!private", "geoip:!cn"],
-          "outboundTag": "proxy-s5-xxxx"
         }
       ]
     }
