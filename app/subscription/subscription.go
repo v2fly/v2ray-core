@@ -10,6 +10,7 @@ type SubscriptionManager interface {
 	RemoveTrackedSubscription(name string) error
 	ListTrackedSubscriptions() []string
 	GetTrackedSubscriptionStatus(name string) (*TrackedSubscriptionStatus, error)
+	UpdateTrackedSubscription(name string) error
 }
 
 func SubscriptionManagerType() interface{} {
