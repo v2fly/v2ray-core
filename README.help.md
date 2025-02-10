@@ -17,7 +17,7 @@ https://guide.v2fly.org/advanced/outboundproxy.html
 
 ## 测试代理
 ```
-curl --socks5 test:password@127.0.0.1:1080 https://www.baidu.com 
+curl -vv --socks5-hostname test:password@127.0.0.1:1080 https://ifconfig.me
 ```
 
 
