@@ -54,6 +54,9 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 	cryptoData := bytespool.Alloc(int32(len(b)))
 	defer bytespool.Free(cryptoData)
 
+	cache := buf.New()
+	defer cache.Release()
+
 	// Parse QUIC packets
 	for len(b) > 0 {
 		buffer := buf.FromBytes(b)
@@ -139,9 +142,7 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 			return nil, err
 		}
 
-		cache := buf.New()
-		defer cache.Release()
-
+		cache.Clear()
 		mask := cache.Extend(int32(block.BlockSize()))
 		block.Encrypt(mask, b[hdrLen+4:hdrLen+4+16])
 		b[0] ^= mask[0] & 0xf
