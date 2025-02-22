@@ -63,6 +63,7 @@ type ConnContext struct {
     EncryptMethod CipherType
     EncryptKey    []byte
     IV            []byte
+    UserKey       []byte  // 添加 UserKey 字段
     
     ClientID      []byte
     ConnectionID  uint32
