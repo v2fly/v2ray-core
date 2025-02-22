@@ -44,6 +44,7 @@ import (
 	_ "github.com/v2fly/v2ray-core/v5/proxy/freedom"
 	_ "github.com/v2fly/v2ray-core/v5/proxy/http"
 	_ "github.com/v2fly/v2ray-core/v5/proxy/shadowsocks"
+	_ "github.com/v2fly/v2ray-core/v5/proxy/shadowsocksr"
 	_ "github.com/v2fly/v2ray-core/v5/proxy/socks"
 	_ "github.com/v2fly/v2ray-core/v5/proxy/trojan"
 	_ "github.com/v2fly/v2ray-core/v5/proxy/vless/inbound"
