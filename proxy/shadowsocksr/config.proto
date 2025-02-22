@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package v2ray.core.proxy.shadowsocksr;
+option go_package = "github.com/v2fly/v2ray-core/v5/proxy/shadowsocksr";
+
+import "common/net/network.proto";
+import "common/protocol/user.proto";
+import "common/protocol/server_spec.proto";
+
+message Account {
+  string password = 1;
+  CipherType cipher_type = 2;
+  string protocol = 3;
+  string protocol_param = 4;
+  string obfs = 5; 
+  string obfs_param = 6;
+}
+
+enum CipherType {
+  UNKNOWN = 0;
+  NONE = 1;
+  AES_128_CFB = 2;
+  AES_192_CFB = 3;
+  AES_256_CFB = 4;
+  AES_128_CTR = 5;
+  AES_192_CTR = 6;
+  AES_256_CTR = 7;
+  RC4_MD5 = 8;
+  CHACHA20 = 9;
+  CHACHA20_IETF = 10;
+}
+
+message ServerConfig {
+  bool udp_enabled = 1;
+  v2ray.core.common.protocol.User user = 2;
+  repeated v2ray.core.common.net.Network network = 3;
+}
+
+message ClientConfig {
+  repeated v2ray.core.common.protocol.ServerEndpoint server = 1;
+}
