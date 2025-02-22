@@ -1,6 +1,10 @@
 package shadowsocksr
 
 import (
+    "crypto/cipher"
+    "crypto/aes"
+    "crypto/rc4"
+    "golang.org/x/crypto/chacha20"
     "bytes"
     "crypto/hmac"
     "crypto/rand"
