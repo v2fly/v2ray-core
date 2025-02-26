@@ -18,7 +18,9 @@ func ListenTLSMirror(ctx context.Context, address net.Address, port net.Port,
 		return nil, newError("failed to listen TLS mirror").Base(err)
 	}
 
-	tlsMirrorServer := &Server{listener: listener, config: tlsMirrorSettings, handler: handler}
+	tlsMirrorServer := &Server{ctx: ctx, listener: listener, config: tlsMirrorSettings, handler: handler}
+
+	go tlsMirrorServer.accepts()
 
 	return tlsMirrorServer, nil
 }
@@ -27,4 +29,10 @@ const protocolName = "tlsmirror"
 
 func init() {
 	common.Must(internet.RegisterTransportListener(protocolName, ListenTLSMirror))
+}
+
+func init() {
+	common.Must(internet.RegisterProtocolConfigCreator(protocolName, func() interface{} {
+		return new(Config)
+	}))
 }

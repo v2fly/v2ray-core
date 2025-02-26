@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
 	"io"
 	"strings"
 	"time"
@@ -81,20 +82,18 @@ type Conn struct {
 
 	clientConn net.Conn
 	serverConn net.Conn
-
-	c2sReminder []byte
 }
 
 func (s *Server) accept(clientConn net.Conn, serverConn net.Conn) {
 	ctx, done := context.WithCancel(context.Background())
 	c := &Conn{
-		ctx:         ctx,
-		done:        done,
-		clientConn:  clientConn,
-		serverConn:  serverConn,
-		c2sReminder: nil,
+		ctx:        ctx,
+		done:       done,
+		clientConn: clientConn,
+		serverConn: serverConn,
 	}
-	c.c2sHandshake()
+	go c.c2sWorker()
+	go c.s2cWorker()
 }
 
 type bufPeeker struct {
@@ -108,33 +107,66 @@ func (b *bufPeeker) Peek(n int) ([]byte, error) {
 	return b.buffer[:n], nil
 }
 
-func (c *Conn) c2sHandshake() {
+func (c *Conn) c2sWorker() {
+	c2sHandshake, handshakeReminder, c2sReminderData, err := c.captureHandshake(c.clientConn, c.serverConn)
+	if err != nil {
+		c.done()
+		return
+	}
+	_ = c2sHandshake
+	_ = handshakeReminder
+	_ = c2sReminderData
+}
+
+func (c *Conn) s2cWorker() {
+	s2cHandshake, handshakeReminder, s2cReminderData, err := c.captureHandshake(c.serverConn, c.clientConn)
+	if err != nil {
+		c.done()
+		return
+	}
+	_ = s2cHandshake
+	_ = handshakeReminder
+	_ = s2cReminderData
+}
+
+func (c *Conn) captureHandshake(sourceConn, mirrorConn net.Conn) (handshake tlsmirror.TLSRecord, handshakeReminder, rest []byte, reterr error) {
 	var readBuffer [65536]byte
 	var nextRead int
-	var overallLength int
 	for c.ctx.Err() == nil {
-		n, err := c.clientConn.Read(readBuffer[nextRead:])
+		n, err := sourceConn.Read(readBuffer[nextRead:])
 		if err != nil {
 			c.done()
 			return
 		}
 		result, tryAgainLen, processed, err := mirrorcommon.PeekTLSRecord(&bufPeeker{buffer: readBuffer[:nextRead+n]})
-		if tryAgainLen == 0 && processed == 0 {
-			panic("todo")
-		}
-		if err != nil {
-			_, err := io.Copy(c.serverConn, bytes.NewReader(readBuffer[nextRead:n]))
-			if err != nil {
-				panic("todo")
+		if processed == 0 {
+			if tryAgainLen == 0 {
+				// TODO: directly copy
+				c.done()
+				err = newError("failed to peek tls record").Base(err).AtWarning()
 				return
 			}
-			nextRead = nextRead + n
-			continue
+			_, err = io.Copy(mirrorConn, bytes.NewReader(readBuffer[nextRead:nextRead+n]))
+			if err != nil {
+				c.done()
+				newError("failed to copy to server connection").Base(err).AtWarning().WriteToLog()
+				return
+			}
+			nextRead += n
+		} else {
+			// Parse the client hello
+			if result.RecordType != mirrorcommon.TLSRecord_RecordType_handshake {
+				c.done()
+				err = newError("unexpected record type").AtWarning()
+				return
+			}
+			handshake = result
+			handshakeReminder = readBuffer[nextRead : nextRead+processed]
+			rest = readBuffer[0:processed]
+			reterr = nil
+			return
 		}
-
-		if result.RecordType == mirrorcommon.TLSRecord_RecordType_application_data {
-			panic("todo")
-		}
-		overallLength += processed
 	}
+	reterr = newError("context is done")
+	return
 }

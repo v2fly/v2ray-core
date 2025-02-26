@@ -5,8 +5,15 @@ option csharp_namespace = "V2Ray.Core.Transport.Internet.Tlsmirror.Server";
 option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/server";
 option java_package = "com.v2ray.core.transport.internet.tlsmirror.server";
 option java_multiple_files = true;
+import "common/protoext/extensions.proto";
 
 message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "transport";
+  option (v2ray.core.common.protoext.message_opt).short_name = "tlsmirror";
+  option (v2ray.core.common.protoext.message_opt).allow_restricted_mode_load = true;
+
+  option (v2ray.core.common.protoext.message_opt).transport_original_name = "tlsmirror";
+
   string forward_address = 1;
   uint32 forward_port = 2;
   string forward_tag = 3;

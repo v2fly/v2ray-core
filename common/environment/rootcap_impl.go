@@ -229,7 +229,7 @@ func (t *transportEnvImpl) Listener() internet.SystemListener {
 }
 
 func (t *transportEnvImpl) OutboundDialer() tagged.DialFunc {
-	panic("implement me")
+	return tagged.Dialer
 }
 
 func (t *transportEnvImpl) TransientStorage() storage.ScopedTransientStorage {
