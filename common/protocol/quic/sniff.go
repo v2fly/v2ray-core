@@ -52,7 +52,9 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 	// Crypto data separated across packets
 	cryptoLen := 0
 	cryptoData := bytespool.Alloc(int32(len(b)))
-	defer bytespool.Free(cryptoData)
+	defer func() {
+		bytespool.Free(cryptoData)
+	}()
 
 	cache := buf.New()
 	defer cache.Release()
