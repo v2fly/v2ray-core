@@ -250,7 +250,10 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 
 func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool, network net.Network) (SniffResult, error) {
 	payload := buf.New()
-	defer payload.Release()
+
+	defer func() {
+		payload.Release()
+	}()
 
 	sniffer := NewSniffer(ctx)
 
