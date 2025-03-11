@@ -14,11 +14,6 @@
           "port": 123,
           "network": "udp",
           "outboundTag": "direct"
-        },
-        {
-          "type": "field",
-          "ip": ["223.5.5.5", "114.114.114.114"],
-          "outboundTag": "direct"
         }
       ]
     }

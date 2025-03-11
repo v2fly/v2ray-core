@@ -2,7 +2,7 @@
   "inbounds": [
     {
       "tag": "transparent-xxxx",
-      "port": 12345,
+      "port": 3456,
       "protocol": "dokodemo-door",
       "settings": {
         "network": "tcp,udp",

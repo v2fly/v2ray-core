@@ -2,7 +2,7 @@
   "inbounds": [
     {
       "tag": "localside-s5-xxxx",
-      "port": 1080,
+      "port": 34560,
       "protocol": "socks",
       "sniffing": {
         "enabled": true,
