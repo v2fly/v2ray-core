@@ -17,8 +17,9 @@ https://guide.v2fly.org/advanced/outboundproxy.html
 
 ## 测试代理
 ```
-curl -vv --socks5-hostname test:password@127.0.0.1:1080 https://ifconfig.me
+curl -vv --socks5-hostname test:password@127.0.0.1:34560 https://ifconfig.me
 ```
+
 
 
 

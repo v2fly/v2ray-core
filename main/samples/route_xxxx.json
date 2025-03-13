@@ -4,7 +4,7 @@
       "rules": [
         {
           "type": "field",
-          "ip": ["geoip:!private", "geoip:!cn"],
+          "ip": ["geoip:!private"],
           "outboundTag": "proxy-s5-xxxx"
         }
       ]
