@@ -3,7 +3,7 @@
     "domainStrategy": "IPOnDemand",
     "rules": [
       {
-        "inboundTag": ["dns-transparent-xxxx","dns-localside-s5-xxxx"],
+        "inboundTag": ["dns-transparent-xxxx","dns-localside-s5-xxxx","transparent-xxxx","localside-s5-xxxx"],
         "type": "field",
         "outboundTag": "proxy-s5-xxxx"
       }
