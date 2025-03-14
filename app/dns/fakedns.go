@@ -7,6 +7,7 @@ import (
 	fakedns "github.com/v2fly/v2ray-core/v5/app/dns/fakedns"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/features/dns"
+	rtdns "github.com/v2fly/v2ray-core/v5/features/routing/dns"
 )
 
 // FakeDNSClient is an implementation of dns.Client with FakeDNS enabled.
@@ -16,12 +17,18 @@ type FakeDNSClient struct {
 
 // LookupIP implements dns.Client.
 func (s *FakeDNSClient) LookupIP(domain string) ([]net.IP, error) {
-	return s.lookupIPInternal(domain, dns.IPOption{IPv4Enable: true, IPv6Enable: true, FakeEnable: true})
+	//add by b1gcat start
+	inBoundTag, domain := rtdns.SplitInboundDomainTag(domain)
+
+	return s.lookupIPInternal(domain, dns.IPOption{IPv4Enable: true, IPv6Enable: true, FakeEnable: true, InBoundTag: inBoundTag})
 }
 
 // LookupIPv4 implements dns.IPv4Lookup.
 func (s *FakeDNSClient) LookupIPv4(domain string) ([]net.IP, error) {
-	return s.lookupIPInternal(domain, dns.IPOption{IPv4Enable: true, FakeEnable: true})
+	//add by b1gcat start
+	inBoundTag, domain := rtdns.SplitInboundDomainTag(domain)
+
+	return s.lookupIPInternal(domain, dns.IPOption{IPv4Enable: true, FakeEnable: true, InBoundTag: inBoundTag})
 }
 
 // LookupIPv6 implements dns.IPv6Lookup.
