@@ -366,13 +366,10 @@ func (s *DNS) sortClients(domain string, option dns.IPOption) []*Client {
 		case clientUsed[idx]:
 			continue
 		case !option.FakeEnable && isFakeDNS(client.server):
-			fmt.Println("########client.tag:", 1)
 			continue
 		case client.fallbackStrategy == FallbackStrategy_Disabled:
-			fmt.Println("########client.tag:", 2)
 			continue
 		case client.fallbackStrategy == FallbackStrategy_DisabledIfAnyMatch && hasDomainMatch:
-			fmt.Println("########client.tag:", 3)
 			continue
 		}
 
