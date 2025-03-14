@@ -51,7 +51,7 @@ func SplitInboundDomainTag(domain string) (string, string) {
 
 func MatchInboundDomainTag(inBoundtag, clientTag string) (matched bool) {
 	if inBoundtag == "" || clientTag == "" {
-		panic("inBoundtag or clientTag is empty" + inBoundtag + ":" + clientTag)
+		panic("inBoundtag or clientTag is empty:" + inBoundtag + "/" + clientTag)
 	}
 
 	tags := strings.SplitN(clientTag, ":", 2)

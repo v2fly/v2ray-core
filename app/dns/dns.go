@@ -318,6 +318,7 @@ func (s *DNS) lookupIPInternal(domain string, option dns.IPOption) ([]net.IP, er
 	}
 
 	if len(errs) == 0 {
+		newError("domai-404: ", domain).WriteToLog()
 		return nil, dns.ErrEmptyResponse
 	}
 	return nil, newError("returning nil for domain ", domain).Base(errors.Combine(errs...))
