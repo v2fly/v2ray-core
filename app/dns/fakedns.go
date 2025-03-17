@@ -33,7 +33,10 @@ func (s *FakeDNSClient) LookupIPv4(domain string) ([]net.IP, error) {
 
 // LookupIPv6 implements dns.IPv6Lookup.
 func (s *FakeDNSClient) LookupIPv6(domain string) ([]net.IP, error) {
-	return s.lookupIPInternal(domain, dns.IPOption{IPv6Enable: true, FakeEnable: true})
+	//add by b1gcat start
+	inBoundTag, domain := rtdns.SplitInboundDomainTag(domain)
+
+	return s.lookupIPInternal(domain, dns.IPOption{IPv6Enable: true, FakeEnable: true, InBoundTag: inBoundTag})
 }
 
 // FakeDNSEngine is an implementation of dns.FakeDNSEngine based on a fully functional DNS.

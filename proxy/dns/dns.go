@@ -242,15 +242,15 @@ func (h *Handler) handleIPQuery(ctx context.Context, id uint16, qType dnsmessage
 
 	var ttl uint32 = 600
 
+	//add by b1gcat start
+	_, domainNew := rtdns.JoinInboundDomainTag(ctx, domain)
+	// add by b1gcat end
+
 	switch qType {
 	case dnsmessage.TypeA:
-		//add by b1gcat start
-		_, domainNew := rtdns.JoinInboundDomainTag(ctx, domain)
-		// add by b1gcat end
-
 		ips, err = h.ipv4Lookup.LookupIPv4(domainNew)
 	case dnsmessage.TypeAAAA:
-		ips, err = h.ipv6Lookup.LookupIPv6(domain)
+		ips, err = h.ipv6Lookup.LookupIPv6(domainNew)
 	}
 
 	rcode := dns.RCodeFromError(err)
