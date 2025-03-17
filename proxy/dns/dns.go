@@ -21,6 +21,8 @@ import (
 	"github.com/v2fly/v2ray-core/v5/features/policy"
 	"github.com/v2fly/v2ray-core/v5/transport"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
+
+	rtdns "github.com/v2fly/v2ray-core/v5/features/routing/dns"
 )
 
 func init() {
@@ -196,7 +198,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 				isIPQuery, domain, id, qType := parseIPQuery(b.Bytes())
 				if isIPQuery {
 					if domain, err := strmatcher.ToDomain(domain); err == nil {
-						go h.handleIPQuery(id, qType, domain, writer)
+						go h.handleIPQuery(ctx, id, qType, domain, writer)
 						continue
 					}
 				}
@@ -234,7 +236,7 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, d internet.
 	return nil
 }
 
-func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string, writer dns_proto.MessageWriter) {
+func (h *Handler) handleIPQuery(ctx context.Context, id uint16, qType dnsmessage.Type, domain string, writer dns_proto.MessageWriter) {
 	var ips []net.IP
 	var err error
 
@@ -242,7 +244,11 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 
 	switch qType {
 	case dnsmessage.TypeA:
-		ips, err = h.ipv4Lookup.LookupIPv4(domain)
+		//add by b1gcat start
+		_, domainNew := rtdns.JoinInboundDomainTag(ctx, domain)
+		// add by b1gcat end
+
+		ips, err = h.ipv4Lookup.LookupIPv4(domainNew)
 	case dnsmessage.TypeAAAA:
 		ips, err = h.ipv6Lookup.LookupIPv6(domain)
 	}
