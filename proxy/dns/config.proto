@@ -14,9 +14,15 @@ message Config {
   // original one.
   v2ray.core.common.net.Endpoint server = 1;
   uint32 user_level = 2;
+
+  bool override_response_ttl = 4;
+  uint32 response_ttl = 3;
 }
 
 message SimplifiedConfig {
   option (v2ray.core.common.protoext.message_opt).type = "outbound";
   option (v2ray.core.common.protoext.message_opt).short_name = "dns";
+
+  bool override_response_ttl = 4;
+  uint32 response_ttl = 3;
 }
