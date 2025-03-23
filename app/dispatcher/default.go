@@ -33,8 +33,8 @@ type cachedReader struct {
 	cache  buf.MultiBuffer
 }
 
-func (r *cachedReader) Cache(b *buf.Buffer) error {
-	mb, err := r.reader.ReadMultiBufferTimeout(time.Millisecond * 100)
+func (r *cachedReader) Cache(b *buf.Buffer, deadline time.Duration) error {
+	mb, err := r.reader.ReadMultiBufferTimeout(deadline)
 	if err != nil {
 		return err
 	}
@@ -42,14 +42,8 @@ func (r *cachedReader) Cache(b *buf.Buffer) error {
 	if !mb.IsEmpty() {
 		r.cache, _ = buf.MergeMulti(r.cache, mb)
 	}
-	cacheLen := r.cache.Len()
-	if cacheLen <= b.Cap() {
-		b.Clear()
-	} else {
-		b.Release()
-		*b = *buf.NewWithSize(cacheLen)
-	}
-	rawBytes := b.Extend(cacheLen)
+	b.Clear()
+	rawBytes := b.Extend(b.Cap())
 	n := r.cache.Copy(rawBytes)
 	b.Resize(0, int32(n))
 	r.Unlock()
@@ -249,11 +243,9 @@ func (d *DefaultDispatcher) Dispatch(ctx context.Context, destination net.Destin
 }
 
 func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool, network net.Network) (SniffResult, error) {
-	payload := buf.New()
+	payload := buf.NewWithSize(32767)
 
-	defer func() {
-		payload.Release()
-	}()
+	defer payload.Release()
 
 	sniffer := NewSniffer(ctx)
 
@@ -264,13 +256,17 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool, netw
 	}
 
 	contentResult, contentErr := func() (SniffResult, error) {
+		cacheDeadline := 200 * time.Millisecond
 		totalAttempt := 0
 		for {
 			select {
 			case <-ctx.Done():
 				return nil, ctx.Err()
 			default:
-				cacheErr := cReader.Cache(payload)
+				cachingStartingTimeStamp := time.Now()
+				cacheErr := cReader.Cache(payload, cacheDeadline)
+				cachingTimeElapsed := time.Since(cachingStartingTimeStamp)
+				cacheDeadline -= cachingTimeElapsed
 
 				if !payload.IsEmpty() {
 					result, err := sniffer.Sniff(ctx, payload.Bytes(), network)
@@ -286,7 +282,7 @@ func sniffer(ctx context.Context, cReader *cachedReader, metadataOnly bool, netw
 					}
 				}
 
-				if totalAttempt >= 2 {
+				if totalAttempt >= 2 || cacheDeadline <= 0 {
 					return nil, errSniffingTimeout
 				}
 			}

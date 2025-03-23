@@ -12,7 +12,6 @@ import (
 
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/bytespool"
 	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/v2fly/v2ray-core/v5/common/protocol"
 	ptls "github.com/v2fly/v2ray-core/v5/common/protocol/tls"
@@ -49,12 +48,14 @@ var (
 )
 
 func SniffQUIC(b []byte) (*SniffHeader, error) {
+	if len(b) == 0 {
+		return nil, common.ErrNoClue
+	}
+
 	// Crypto data separated across packets
 	cryptoLen := 0
-	cryptoData := bytespool.Alloc(int32(len(b)))
-	defer func() {
-		bytespool.Free(cryptoData)
-	}()
+	cryptoDataBuf := buf.NewWithSize(32767)
+	defer cryptoDataBuf.Release()
 
 	cache := buf.New()
 	defer cache.Release()
@@ -230,14 +231,14 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 				}
 				if cryptoLen < int(offset+length) {
 					cryptoLen = int(offset + length)
-					if len(cryptoData) < cryptoLen {
-						newCryptoData := bytespool.Alloc(int32(cryptoLen))
-						copy(newCryptoData, cryptoData)
-						bytespool.Free(cryptoData)
-						cryptoData = newCryptoData
+					if cryptoDataBuf.Cap() < int32(cryptoLen) {
+						return nil, io.ErrShortBuffer
+					}
+					if cryptoDataBuf.Len() != int32(cryptoLen) {
+						cryptoDataBuf.Extend(int32(cryptoLen) - cryptoDataBuf.Len())
 					}
 				}
-				if _, err := buffer.Read(cryptoData[offset : offset+length]); err != nil { // Field: Crypto Data
+				if _, err := buffer.Read(cryptoDataBuf.BytesRange(int32(offset), int32(offset+length))); err != nil { // Field: Crypto Data
 					return nil, io.ErrUnexpectedEOF
 				}
 			case 0x1c: // CONNECTION_CLOSE frame, only 0x1c is permitted in initial packet
@@ -262,7 +263,7 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 		}
 
 		tlsHdr := &ptls.SniffHeader{}
-		err = ptls.ReadClientHello(cryptoData[:cryptoLen], tlsHdr)
+		err = ptls.ReadClientHello(cryptoDataBuf.BytesRange(0, int32(cryptoLen)), tlsHdr)
 		if err != nil {
 			// The crypto data may have not been fully recovered in current packets,
 			// So we continue to sniff rest packets.
@@ -271,6 +272,7 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 		}
 		return &SniffHeader{domain: tlsHdr.Domain()}, nil
 	}
+
 	// All payload is parsed as valid QUIC packets, but we need more packets for crypto data to read client hello.
 	return nil, protocol.ErrProtoNeedMoreData
 }
