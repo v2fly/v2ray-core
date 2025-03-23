@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	version  = "5.29.2"
+	version  = "5.29.3"
 	build    = "Custom"
 	codename = "V2Fly, a community-driven edition of V2Ray."
 	intro    = "A unified platform for anti-censorship."
