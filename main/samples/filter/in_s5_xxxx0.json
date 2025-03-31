@@ -1,0 +1,16 @@
+{
+  "inbounds": [
+    {
+      "tag": "localside-s5-xxxx",
+      "port": 34560,
+      "protocol": "socks",
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
+      },
+      "settings": {
+        "auth": "noauth"
+      }
+    }
+  ]
+}

@@ -5,11 +5,6 @@
     "disableCache": true,
     "servers": [
       {
-        "tag": "1:dns-fuck",
-        "address": "114.114.114.114",
-        "skipFallback": false
-      },
-      {
         "tag": "1:dns-localside-s5-xxxx",
         "address": "8.8.8.8",
         "skipFallback": false

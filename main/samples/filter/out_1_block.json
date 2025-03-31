@@ -1,0 +1,14 @@
+{
+  "outbounds": [
+    {
+      "tag": "block",
+      "protocol": "blackhole",
+      "settings": {
+        "domainStrategy": "UseIP4",
+        "response": {
+          "type": "http"
+        }
+      }
+    }
+  ]
+}

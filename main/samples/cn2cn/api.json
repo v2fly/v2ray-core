@@ -1,0 +1,30 @@
+{
+  "api": {
+    "services": [
+      "HandlerService"
+    ], 
+    "tag": "api"
+  }, 
+  "stats": { }, 
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 8801,
+      "protocol": "dokodemo-door",
+      "settings": {
+        "address": "127.0.0.1"
+      },
+      "tag": "api"
+    }
+  ],
+  "routing": {
+    "domainStrategy": "AsIs",
+    "rules": [
+      {
+        "type": "field",
+        "inboundTag": ["api"], 
+        "outboundTag": "api"
+      }
+    ]
+  }
+}

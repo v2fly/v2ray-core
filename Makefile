@@ -15,7 +15,14 @@ gateway:
 
 release:gateway router dat
 
-router:
+sjw74:
+	CGO_ENABLED=1 \
+       CC=/opt/openeuler/oecore-x86_64/sysroots/x86_64-openeulersdk-linux/usr/bin/x86_64-openeuler-linux-gcc\
+       GOOS=linux \
+       GOARCH=amd64 \
+        go build -ldflags $(LDFlag) -o dist/$(Version)/elink_embed ./main
+
+router: 
 	CGO_ENABLED=1 \
        CC=/opt/openwrt-sdk/staging_dir/toolchain-x86_64_gcc-11.3.0_musl/bin/x86_64-openwrt-linux-gcc\
        GOOS=linux \
