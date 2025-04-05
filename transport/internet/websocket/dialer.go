@@ -164,7 +164,7 @@ func (d dialerWithEarlyData) Dial(earlyData []byte) (*websocket.Conn, error) {
 	}
 	if n != int64(len(earlyData)) {
 		if errWrite := conn.WriteMessage(websocket.BinaryMessage, earlyData[n:]); errWrite != nil {
-			return nil, newError("failed to dial to (", d.uriBase, ") with early data as write of remainder early data failed: ").Base(err)
+			return nil, newError("failed to dial to (", d.uriBase, ") with early data as write of remainder early data failed: ").Base(errWrite)
 		}
 	}
 	return conn, nil
@@ -209,7 +209,7 @@ func (d dialerWithEarlyDataRelayed) Dial(earlyData []byte) (io.ReadWriteCloser, 
 	}
 	if n != int64(len(earlyData)) {
 		if _, errWrite := conn.Write(earlyData[n:]); errWrite != nil {
-			return nil, newError("failed to dial to (", d.uriBase, ") with early data as write of remainder early data failed: ").Base(err)
+			return nil, newError("failed to dial to (", d.uriBase, ") with early data as write of remainder early data failed: ").Base(errWrite)
 		}
 	}
 	return conn, nil
