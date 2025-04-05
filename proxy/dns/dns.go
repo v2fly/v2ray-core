@@ -38,6 +38,8 @@ func init() {
 		simplifiedServer := config.(*SimplifiedConfig)
 		_ = simplifiedServer
 		fullConfig := &Config{}
+		fullConfig.OverrideResponseTtl = simplifiedServer.OverrideResponseTtl
+		fullConfig.ResponseTtl = simplifiedServer.ResponseTtl
 		return common.CreateObject(ctx, fullConfig)
 	}))
 }
@@ -53,6 +55,8 @@ type Handler struct {
 	ownLinkVerifier ownLinkVerifier
 	server          net.Destination
 	timeout         time.Duration
+
+	config *Config
 }
 
 func (h *Handler) Init(config *Config, dnsClient dns.Client, policyManager policy.Manager) error {
@@ -82,6 +86,8 @@ func (h *Handler) Init(config *Config, dnsClient dns.Client, policyManager polic
 	if config.Server != nil {
 		h.server = config.Server.AsDestination()
 	}
+
+	h.config = config
 	return nil
 }
 
@@ -239,6 +245,9 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 	var err error
 
 	var ttl uint32 = 600
+	if h.config.OverrideResponseTtl {
+		ttl = h.config.ResponseTtl
+	}
 
 	switch qType {
 	case dnsmessage.TypeA:
