@@ -47,7 +47,7 @@ func (rs *restfulService) tagStats(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (rs *restfulService) version(w http.ResponseWriter, r *http.Request) {
+(fullfunctioningService) version(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, render.M{"version": core.Version()})
 }
 
