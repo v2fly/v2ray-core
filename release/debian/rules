@@ -12,7 +12,7 @@ execute_after_dh_auto_configure:
 	cp -r vendor/* _build/src
 
 override_dh_auto_build:
-	DH_GOPKG="github.com/v2fly/v2ray-core/v5/main" dh_auto_build -- -ldflags "-s -w"
+	DH_GOPKG="github.com/ghxhy/v2ray-core/v5/main" dh_auto_build -- -ldflags "-s -w"
 	cd $(BUILDDIR); mv bin/main bin/v2ray
 
 override_dh_auto_install:

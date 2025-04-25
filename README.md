@@ -5,11 +5,11 @@
   <p>Project V is a set of network tools that helps you to build your own computer network. It secures your network connections and thus protects your privacy.</p>
 </div>
 
-[![GitHub Test Badge](https://github.com/v2fly/v2ray-core/workflows/Test/badge.svg)](https://github.com/v2fly/v2ray-core/actions)
-[![codecov.io](https://codecov.io/gh/v2fly/v2ray-core/branch/master/graph/badge.svg?branch=master)](https://codecov.io/gh/v2fly/v2ray-core?branch=master)
-[![codebeat](https://goreportcard.com/badge/github.com/v2fly/v2ray-core)](https://goreportcard.com/report/github.com/v2fly/v2ray-core)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/e150b7ede2114388921943bf23d95161)](https://www.codacy.com/gh/v2fly/v2ray-core/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=v2fly/v2ray-core&amp;utm_campaign=Badge_Grade)
-[![Downloads](https://img.shields.io/github/downloads/v2fly/v2ray-core/total.svg)](https://github.com/v2fly/v2ray-core/releases/latest)
+[![GitHub Test Badge](https://github.com/ghxhy/v2ray-core/workflows/Test/badge.svg)](https://github.com/ghxhy/v2ray-core/actions)
+[![codecov.io](https://codecov.io/gh/ghxhy/v2ray-core/branch/master/graph/badge.svg?branch=master)](https://codecov.io/gh/ghxhy/v2ray-core?branch=master)
+[![codebeat](https://goreportcard.com/badge/github.com/ghxhy/v2ray-core)](https://goreportcard.com/report/github.com/ghxhy/v2ray-core)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/e150b7ede2114388921943bf23d95161)](https://www.codacy.com/gh/ghxhy/v2ray-core/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ghxhy/v2ray-core&amp;utm_campaign=Badge_Grade)
+[![Downloads](https://img.shields.io/github/downloads/ghxhy/v2ray-core/total.svg)](https://github.com/ghxhy/v2ray-core/releases/latest)
 
 ## Related Links
 
@@ -18,13 +18,13 @@
 
 ## Packaging Status
 
-> If you are willing to package V2Ray for other distros/platforms, please let us know or seek for help via [GitHub issues](https://github.com/v2fly/v2ray-core/issues).
+> If you are willing to package V2Ray for other distros/platforms, please let us know or seek for help via [GitHub issues](https://github.com/ghxhy/v2ray-core/issues).
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/v2ray.svg)](https://repology.org/project/v2ray/versions)
 
 ## License
 
-[The MIT License (MIT)](https://raw.githubusercontent.com/v2fly/v2ray-core/master/LICENSE)
+[The MIT License (MIT)](https://raw.githubusercontent.com/ghxhy/v2ray-core/master/LICENSE)
 
 ## Credits
 

@@ -3,7 +3,7 @@ syntax = "proto3";
 package v2ray.core.app.subscription.specs;
 
 option csharp_namespace = "V2Ray.Core.App.Subscription.Specs";
-option go_package = "github.com/v2fly/v2ray-core/v5/app/subscription/specs";
+option go_package = "github.com/ghxhy/v2ray-core/v5/app/subscription/specs";
 option java_package = "com.v2ray.core.app.subscription.specs";
 option java_multiple_files = true;
 

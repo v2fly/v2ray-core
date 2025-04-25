@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # This file is accessible as https://install.direct/go.sh
-# Original source is located at github.com/v2fly/v2ray-core/release/install-release.sh
+# Original source is located at github.com/ghxhy/v2ray-core/release/install-release.sh
 
 # If not specify, default meaning of return value:
 # 0: Success

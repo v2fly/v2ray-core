@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package v2ray.core.transport.internet.request.roundtripper.httprt;
 option csharp_namespace = "V2Ray.Core.Transport.Internet.Request.Roundtripper.httprt";
-option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/request/roundtripper/httprt";
+option go_package = "github.com/ghxhy/v2ray-core/v5/transport/internet/request/roundtripper/httprt";
 option java_package = "com.v2ray.core.transport.internet.request.roundtripper.httprt";
 option java_multiple_files = true;
 

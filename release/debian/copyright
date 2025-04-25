@@ -1,7 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: v2ray-core
-Upstream-Contact: https://github.com/v2fly/v2ray-core
-Source: https://github.com/v2fly/v2ray-core
+Upstream-Contact: https://github.com/ghxhy/v2ray-core
+Source: https://github.com/ghxhy/v2ray-core
 
 Files: *
 Copyright: 2015-2020 V2Fly Community

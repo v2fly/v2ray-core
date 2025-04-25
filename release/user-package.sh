@@ -18,8 +18,8 @@ cleanup() { rm -rf "$TMP"; }
 trap cleanup INT TERM ERR
 
 get_source() {
-	echo ">>> Clone v2fly/v2ray-core repo..."
-	git clone https://github.com/v2fly/v2ray-core.git
+	echo ">>> Clone ghxhy/v2ray-core repo..."
+	git clone https://github.com/ghxhy/v2ray-core.git
 	cd v2ray-core
 	go mod download
 }
@@ -33,7 +33,7 @@ build_v2() {
 		local VERSIONTAG=$(git describe --abbrev=0 --tags)
 	fi
 
-	LDFLAGS="-s -w -buildid= -X github.com/v2fly/v2ray-core/v5.codename=${CODENAME} -X github.com/v2fly/v2ray-core/v5.build=${BUILDNAME} -X github.com/v2fly/v2ray-core/v5.version=${VERSIONTAG}"
+	LDFLAGS="-s -w -buildid= -X github.com/ghxhy/v2ray-core/v5.codename=${CODENAME} -X github.com/ghxhy/v2ray-core/v5.build=${BUILDNAME} -X github.com/ghxhy/v2ray-core/v5.version=${VERSIONTAG}"
 
 	echo ">>> Compile v2ray ..."
 	env CGO_ENABLED=0 go build -o "$TMP"/v2ray"${EXESUFFIX}" -ldflags "$LDFLAGS" ./main
