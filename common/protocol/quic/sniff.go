@@ -10,6 +10,7 @@ import (
 	"github.com/quic-go/quic-go/quicvarint"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
+	"github.com/v2fly/v2ray-core/v5/common/bytespool"
 	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/v2fly/v2ray-core/v5/common/protocol"
 	ptls "github.com/v2fly/v2ray-core/v5/common/protocol/tls"
@@ -53,10 +54,8 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 
 	// Crypto data separated across packets
 	cryptoLen := 0
-	cryptoDataBuf := buf.NewWithSize(32767)
-	cryptoDataBuf.Wipe()
-	defer cryptoDataBuf.Release()
-
+	cryptoData := bytespool.Alloc(32767)
+	defer bytespool.Free(cryptoData)
 	cache := buf.New()
 	defer cache.Release()
 
@@ -219,15 +218,14 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 					return nil, io.ErrUnexpectedEOF
 				}
 				if cryptoLen < int(offset+length) {
-					cryptoLen = int(offset + length)
-					if cryptoDataBuf.Cap() < int32(cryptoLen) {
+					newCryptoLen := int(offset + length)
+					if len(cryptoData) < newCryptoLen {
 						return nil, io.ErrShortBuffer
 					}
-					if cryptoDataBuf.Len() != int32(cryptoLen) {
-						cryptoDataBuf.Extend(int32(cryptoLen) - cryptoDataBuf.Len())
-					}
+					wipeBytes(cryptoData[cryptoLen:newCryptoLen])
+					cryptoLen = newCryptoLen
 				}
-				if _, err := buffer.Read(cryptoDataBuf.BytesRange(int32(offset), int32(offset+length))); err != nil { // Field: Crypto Data
+				if _, err := buffer.Read(cryptoData[offset : offset+length]); err != nil { // Field: Crypto Data
 					return nil, io.ErrUnexpectedEOF
 				}
 			case 0x1c: // CONNECTION_CLOSE frame, only 0x1c is permitted in initial packet
@@ -252,7 +250,7 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 		}
 
 		tlsHdr := &ptls.SniffHeader{}
-		err = ptls.ReadClientHello(cryptoDataBuf.BytesRange(0, int32(cryptoLen)), tlsHdr)
+		err = ptls.ReadClientHello(cryptoData[:cryptoLen], tlsHdr)
 		if err != nil {
 			// The crypto data may have not been fully recovered in current packets,
 			// So we continue to sniff rest packets.
@@ -263,6 +261,12 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 	}
 	// All payload is parsed as valid QUIC packets, but we need more packets for crypto data to read client hello.
 	return nil, protocol.ErrProtoNeedMoreData
+}
+
+func wipeBytes(b []byte) {
+	for i := range len(b) {
+		b[i] = 0x0
+	}
 }
 
 func hkdfExpandLabel(hash crypto.Hash, secret, context []byte, label string, length int) []byte {
