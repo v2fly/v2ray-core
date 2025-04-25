@@ -126,8 +126,17 @@ func dohQuery(server string, domain string) ([]byte, uint32, error) {
 		return []byte{}, 0, err
 	}
 	if len(respMsg.Answer) > 0 {
+		targetDomain := domain
+
 		for _, answer := range respMsg.Answer {
-			if https, ok := answer.(*dns.HTTPS); ok && https.Hdr.Name == dns.Fqdn(domain) {
+			if cname, ok := answer.(*dns.CNAME); ok && cname.Hdr.Name == dns.Fqdn(domain) {
+				targetDomain = cname.Target
+				break
+			}
+		}
+
+		for _, answer := range respMsg.Answer {
+			if https, ok := answer.(*dns.HTTPS); ok && https.Hdr.Name == dns.Fqdn(targetDomain) {
 				for _, v := range https.Value {
 					if echConfig, ok := v.(*dns.SVCBECHConfig); ok {
 						newError(context.Background(), "Get ECH config:", echConfig.String(), " TTL:", respMsg.Answer[0].Header().Ttl).AtDebug().WriteToLog()
