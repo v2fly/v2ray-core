@@ -29,7 +29,7 @@ func mergeSameTag(s []interface{}, path string) ([]interface{}, error) {
 	// to: [a,"",b,"",merged,"",merged,""]
 	merged := &struct{}{}
 	tagKeyOnly := false
-	// See https://github.com/v2fly/v2ray-core/issues/2981
+	// See https://github.com/ghxhy/v2ray-core/issues/2981
 	if strings.HasPrefix(path, ".dns.servers") {
 		tagKeyOnly = true
 	}

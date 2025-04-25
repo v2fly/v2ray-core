@@ -1,6 +1,6 @@
 package dns
 
-//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
+//go:generate go run github.com/ghxhy/v2ray-core/v5/common/errors/errorgen
 
 import (
 	"context"
@@ -8,14 +8,14 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/v2fly/v2ray-core/v5/app/dns"
-	"github.com/v2fly/v2ray-core/v5/app/dns/fakedns"
-	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/platform"
-	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
-	"github.com/v2fly/v2ray-core/v5/infra/conf/geodata"
-	rule2 "github.com/v2fly/v2ray-core/v5/infra/conf/rule"
+	"github.com/ghxhy/v2ray-core/v5/app/dns"
+	"github.com/ghxhy/v2ray-core/v5/app/dns/fakedns"
+	"github.com/ghxhy/v2ray-core/v5/app/router/routercommon"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common/platform"
+	"github.com/ghxhy/v2ray-core/v5/infra/conf/cfgcommon"
+	"github.com/ghxhy/v2ray-core/v5/infra/conf/geodata"
+	rule2 "github.com/ghxhy/v2ray-core/v5/infra/conf/rule"
 )
 
 type NameServerConfig struct {

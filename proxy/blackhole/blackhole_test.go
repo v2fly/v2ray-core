@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/serial"
-	"github.com/v2fly/v2ray-core/v5/proxy/blackhole"
-	"github.com/v2fly/v2ray-core/v5/transport"
-	"github.com/v2fly/v2ray-core/v5/transport/pipe"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/buf"
+	"github.com/ghxhy/v2ray-core/v5/common/serial"
+	"github.com/ghxhy/v2ray-core/v5/proxy/blackhole"
+	"github.com/ghxhy/v2ray-core/v5/transport"
+	"github.com/ghxhy/v2ray-core/v5/transport/pipe"
 )
 
 func TestBlackHoleHTTPResponse(t *testing.T) {

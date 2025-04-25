@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/protocol"
-	"github.com/v2fly/v2ray-core/v5/common/protocol/quic"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/protocol"
+	"github.com/ghxhy/v2ray-core/v5/common/protocol/quic"
 )
 
 func TestSniffQUIC(t *testing.T) {

@@ -1,9 +1,9 @@
 package outbound
 
 import (
-	net "github.com/v2fly/v2ray-core/v5/common/net"
-	protocol "github.com/v2fly/v2ray-core/v5/common/protocol"
-	_ "github.com/v2fly/v2ray-core/v5/common/protoext"
+	net "github.com/ghxhy/v2ray-core/v5/common/net"
+	protocol "github.com/ghxhy/v2ray-core/v5/common/protocol"
+	_ "github.com/ghxhy/v2ray-core/v5/common/protoext"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

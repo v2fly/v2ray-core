@@ -1,12 +1,12 @@
 package outbound
 
 import (
-	"github.com/v2fly/v2ray-core/v5/app/subscription/entries"
-	"github.com/v2fly/v2ray-core/v5/app/subscription/specs"
-	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/app/subscription/entries"
+	"github.com/ghxhy/v2ray-core/v5/app/subscription/specs"
+	"github.com/ghxhy/v2ray-core/v5/common"
 )
 
-//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
+//go:generate go run github.com/ghxhy/v2ray-core/v5/common/errors/errorgen
 
 // NewOutboundEntriesParser internal api
 func NewOutboundEntriesParser() entries.Converter {

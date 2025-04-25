@@ -3,11 +3,11 @@ package v4_test
 import (
 	"testing"
 
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
-	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon/testassist"
-	v4 "github.com/v2fly/v2ray-core/v5/infra/conf/v4"
-	"github.com/v2fly/v2ray-core/v5/proxy/dokodemo"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/infra/conf/cfgcommon"
+	"github.com/ghxhy/v2ray-core/v5/infra/conf/cfgcommon/testassist"
+	v4 "github.com/ghxhy/v2ray-core/v5/infra/conf/v4"
+	"github.com/ghxhy/v2ray-core/v5/proxy/dokodemo"
 )
 
 func TestDokodemoConfig(t *testing.T) {

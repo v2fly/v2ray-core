@@ -9,11 +9,11 @@ import (
 
 	"github.com/pion/dtls/v2"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/transport/internet"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/buf"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet/udp"
 )
 
 type Listener struct {

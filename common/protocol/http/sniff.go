@@ -5,8 +5,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
 )
 
 type version byte

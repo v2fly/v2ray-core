@@ -9,10 +9,10 @@ import (
 
 	"github.com/quic-go/quic-go"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/buf"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet"
 )
 
 type sysConn struct {

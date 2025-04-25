@@ -4,7 +4,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/v2fly/v2ray-core/v5/common/protocol"
+	"github.com/ghxhy/v2ray-core/v5/common/protocol"
 )
 
 // Validator stores valid trojan users.

@@ -11,17 +11,17 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
 	"gvisor.dev/gvisor/pkg/waiter"
 
-	tun_net "github.com/v2fly/v2ray-core/v5/app/tun/net"
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/log"
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/session"
-	"github.com/v2fly/v2ray-core/v5/common/signal"
-	"github.com/v2fly/v2ray-core/v5/common/task"
-	"github.com/v2fly/v2ray-core/v5/features/policy"
-	"github.com/v2fly/v2ray-core/v5/features/routing"
-	internet "github.com/v2fly/v2ray-core/v5/transport/internet"
+	tun_net "github.com/ghxhy/v2ray-core/v5/app/tun/net"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/buf"
+	"github.com/ghxhy/v2ray-core/v5/common/log"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common/session"
+	"github.com/ghxhy/v2ray-core/v5/common/signal"
+	"github.com/ghxhy/v2ray-core/v5/common/task"
+	"github.com/ghxhy/v2ray-core/v5/features/policy"
+	"github.com/ghxhy/v2ray-core/v5/features/routing"
+	internet "github.com/ghxhy/v2ray-core/v5/transport/internet"
 )
 
 const (

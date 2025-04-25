@@ -6,11 +6,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/protocol"
-	"github.com/v2fly/v2ray-core/v5/common/uuid"
-	. "github.com/v2fly/v2ray-core/v5/proxy/vmess/encoding"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/buf"
+	"github.com/ghxhy/v2ray-core/v5/common/protocol"
+	"github.com/ghxhy/v2ray-core/v5/common/uuid"
+	. "github.com/ghxhy/v2ray-core/v5/proxy/vmess/encoding"
 )
 
 func TestSwitchAccount(t *testing.T) {

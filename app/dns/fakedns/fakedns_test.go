@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/uuid"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common/uuid"
 )
 
 func TestNewFakeDnsHolder(_ *testing.T) {

@@ -1,8 +1,8 @@
 package proxyman
 
 import (
-	net "github.com/v2fly/v2ray-core/v5/common/net"
-	internet "github.com/v2fly/v2ray-core/v5/transport/internet"
+	net "github.com/ghxhy/v2ray-core/v5/common/net"
+	internet "github.com/ghxhy/v2ray-core/v5/transport/internet"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"

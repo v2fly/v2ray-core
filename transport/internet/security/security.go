@@ -1,9 +1,9 @@
 package security
 
-//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
+//go:generate go run github.com/ghxhy/v2ray-core/v5/common/errors/errorgen
 
 import (
-	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
 )
 
 type Engine interface {

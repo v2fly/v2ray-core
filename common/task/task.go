@@ -3,7 +3,7 @@ package task
 import (
 	"context"
 
-	"github.com/v2fly/v2ray-core/v5/common/signal/semaphore"
+	"github.com/ghxhy/v2ray-core/v5/common/signal/semaphore"
 )
 
 // OnSuccess executes g() after f() returns nil.

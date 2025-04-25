@@ -3,16 +3,16 @@ package meek
 import (
 	"context"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/serial"
-	"github.com/v2fly/v2ray-core/v5/transport/internet"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/request/assembler/simple"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/request/assembly"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/request/roundtripper/httprt"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common/serial"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet/request/assembler/simple"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet/request/assembly"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet/request/roundtripper/httprt"
 )
 
-//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
+//go:generate go run github.com/ghxhy/v2ray-core/v5/common/errors/errorgen
 
 const protocolName = "meek"
 

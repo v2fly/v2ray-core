@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"os"
 
-	"github.com/v2fly/v2ray-core/v5/infra/conf/merge"
-	"github.com/v2fly/v2ray-core/v5/infra/conf/mergers"
-	"github.com/v2fly/v2ray-core/v5/infra/conf/serial"
-	v4 "github.com/v2fly/v2ray-core/v5/infra/conf/v4"
+	"github.com/ghxhy/v2ray-core/v5/infra/conf/merge"
+	"github.com/ghxhy/v2ray-core/v5/infra/conf/mergers"
+	"github.com/ghxhy/v2ray-core/v5/infra/conf/serial"
+	v4 "github.com/ghxhy/v2ray-core/v5/infra/conf/v4"
 )
 
 // LoadConfig load config files to *conf.Config, it will:

@@ -10,7 +10,7 @@ import (
 
 	"github.com/golang-collections/go-datastructures/queue"
 
-	"github.com/v2fly/v2ray-core/v5/transport/internet/request"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet/request"
 )
 
 func newRequestToPacketConnClient(ctx context.Context, config *ClientConfig) (*requestToPacketConnClient, error) { //nolint: unparam

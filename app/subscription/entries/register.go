@@ -1,6 +1,6 @@
 package entries
 
-import "github.com/v2fly/v2ray-core/v5/app/subscription/specs"
+import "github.com/ghxhy/v2ray-core/v5/app/subscription/specs"
 
 type ConverterRegistry struct {
 	knownConverters map[string]Converter

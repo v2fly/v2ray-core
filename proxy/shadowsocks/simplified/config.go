@@ -6,10 +6,10 @@ import (
 
 	"github.com/golang/protobuf/jsonpb"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/protocol"
-	"github.com/v2fly/v2ray-core/v5/common/serial"
-	"github.com/v2fly/v2ray-core/v5/proxy/shadowsocks"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/protocol"
+	"github.com/ghxhy/v2ray-core/v5/common/serial"
+	"github.com/ghxhy/v2ray-core/v5/proxy/shadowsocks"
 )
 
 func (c *CipherTypeWrapper) UnmarshalJSONPB(unmarshaler *jsonpb.Unmarshaler, bytes []byte) error {

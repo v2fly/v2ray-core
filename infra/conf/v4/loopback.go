@@ -3,7 +3,7 @@ package v4
 import (
 	"github.com/golang/protobuf/proto"
 
-	"github.com/v2fly/v2ray-core/v5/proxy/loopback"
+	"github.com/ghxhy/v2ray-core/v5/proxy/loopback"
 )
 
 type LoopbackConfig struct {

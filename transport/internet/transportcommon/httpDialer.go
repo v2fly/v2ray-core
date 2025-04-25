@@ -12,7 +12,7 @@ import (
 
 	"golang.org/x/net/http2"
 
-	"github.com/v2fly/v2ray-core/v5/transport/internet/security"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet/security"
 )
 
 type DialerFunc func(ctx context.Context, addr string) (net.Conn, error)

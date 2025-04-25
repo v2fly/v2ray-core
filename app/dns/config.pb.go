@@ -1,10 +1,10 @@
 package dns
 
 import (
-	fakedns "github.com/v2fly/v2ray-core/v5/app/dns/fakedns"
-	routercommon "github.com/v2fly/v2ray-core/v5/app/router/routercommon"
-	net "github.com/v2fly/v2ray-core/v5/common/net"
-	_ "github.com/v2fly/v2ray-core/v5/common/protoext"
+	fakedns "github.com/ghxhy/v2ray-core/v5/app/dns/fakedns"
+	routercommon "github.com/ghxhy/v2ray-core/v5/app/router/routercommon"
+	net "github.com/ghxhy/v2ray-core/v5/common/net"
+	_ "github.com/ghxhy/v2ray-core/v5/common/protoext"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

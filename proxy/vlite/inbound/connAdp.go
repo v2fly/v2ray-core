@@ -4,8 +4,8 @@ import (
 	"io"
 	"net"
 
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/signal/done"
+	"github.com/ghxhy/v2ray-core/v5/common/buf"
+	"github.com/ghxhy/v2ray-core/v5/common/signal/done"
 )
 
 func newUDPConnAdaptor(conn net.Conn, done *done.Instance) net.Conn {

@@ -9,11 +9,11 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/v2fly/v2ray-core/v5/app/persistentstorage/protostorage"
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/environment"
-	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
-	"github.com/v2fly/v2ray-core/v5/features/extension/storage"
+	"github.com/ghxhy/v2ray-core/v5/app/persistentstorage/protostorage"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/environment"
+	"github.com/ghxhy/v2ray-core/v5/common/environment/envctx"
+	"github.com/ghxhy/v2ray-core/v5/features/extension/storage"
 )
 
 func newFileSystemStorage(ctx context.Context, config *Config) storage.ScopedPersistentStorageService {

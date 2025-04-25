@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/v2fly/v2ray-core/v5/features/extension/storage"
+	"github.com/ghxhy/v2ray-core/v5/features/extension/storage"
 )
 
 type ProtoPersistentStorage interface {

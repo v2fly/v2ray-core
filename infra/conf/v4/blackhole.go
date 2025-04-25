@@ -5,10 +5,10 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"github.com/v2fly/v2ray-core/v5/common/serial"
-	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon"
-	"github.com/v2fly/v2ray-core/v5/infra/conf/cfgcommon/loader"
-	"github.com/v2fly/v2ray-core/v5/proxy/blackhole"
+	"github.com/ghxhy/v2ray-core/v5/common/serial"
+	"github.com/ghxhy/v2ray-core/v5/infra/conf/cfgcommon"
+	"github.com/ghxhy/v2ray-core/v5/infra/conf/cfgcommon/loader"
+	"github.com/ghxhy/v2ray-core/v5/proxy/blackhole"
 )
 
 type NoneResponse struct{}

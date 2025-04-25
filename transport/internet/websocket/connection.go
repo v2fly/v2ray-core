@@ -8,9 +8,9 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/errors"
-	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/ghxhy/v2ray-core/v5/common/buf"
+	"github.com/ghxhy/v2ray-core/v5/common/errors"
+	"github.com/ghxhy/v2ray-core/v5/common/serial"
 )
 
 var _ buf.Writer = (*connection)(nil)

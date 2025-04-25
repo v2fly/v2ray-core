@@ -1,6 +1,6 @@
 package log
 
-import "github.com/v2fly/v2ray-core/v5/common/errors"
+import "github.com/ghxhy/v2ray-core/v5/common/errors"
 
 type errPathObjHolder struct{}
 

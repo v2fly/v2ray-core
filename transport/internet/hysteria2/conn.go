@@ -8,7 +8,7 @@ import (
 	"github.com/v2fly/hysteria/core/v2/international/protocol"
 	hyServer "github.com/v2fly/hysteria/core/v2/server"
 
-	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
 )
 
 const (

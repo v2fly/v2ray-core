@@ -12,22 +12,22 @@ import (
 	"sync"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v5/app/persistentstorage"
-	"github.com/v2fly/v2ray-core/v5/app/persistentstorage/protostorage"
-	"github.com/v2fly/v2ray-core/v5/common/environment"
-	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
+	"github.com/ghxhy/v2ray-core/v5/app/persistentstorage"
+	"github.com/ghxhy/v2ray-core/v5/app/persistentstorage/protostorage"
+	"github.com/ghxhy/v2ray-core/v5/common/environment"
+	"github.com/ghxhy/v2ray-core/v5/common/environment/envctx"
 
 	"github.com/golang/protobuf/proto"
 
-	core "github.com/v2fly/v2ray-core/v5"
-	"github.com/v2fly/v2ray-core/v5/common"
-	v2net "github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/session"
-	"github.com/v2fly/v2ray-core/v5/common/signal/done"
-	"github.com/v2fly/v2ray-core/v5/common/task"
-	"github.com/v2fly/v2ray-core/v5/features/extension"
-	"github.com/v2fly/v2ray-core/v5/features/outbound"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/tagged"
+	core "github.com/ghxhy/v2ray-core/v5"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	v2net "github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common/session"
+	"github.com/ghxhy/v2ray-core/v5/common/signal/done"
+	"github.com/ghxhy/v2ray-core/v5/common/task"
+	"github.com/ghxhy/v2ray-core/v5/features/extension"
+	"github.com/ghxhy/v2ray-core/v5/features/outbound"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet/tagged"
 )
 
 type Observer struct {

@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/testing/servers/tcp"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/testing/servers/tcp"
 
-	_ "github.com/v2fly/v2ray-core/v5/main/distro/all"
+	_ "github.com/ghxhy/v2ray-core/v5/main/distro/all"
 )
 
 func TestGRPCDefault(t *testing.T) {

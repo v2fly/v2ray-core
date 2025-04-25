@@ -5,16 +5,16 @@ import (
 	"io"
 	"sync"
 
-	"github.com/v2fly/v2ray-core/v5/app/tun/packetparse"
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
-	vudp "github.com/v2fly/v2ray-core/v5/common/protocol/udp"
-	"github.com/v2fly/v2ray-core/v5/features/routing"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
+	"github.com/ghxhy/v2ray-core/v5/app/tun/packetparse"
+	"github.com/ghxhy/v2ray-core/v5/common/buf"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common/net/packetaddr"
+	vudp "github.com/ghxhy/v2ray-core/v5/common/protocol/udp"
+	"github.com/ghxhy/v2ray-core/v5/features/routing"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet/udp"
 )
 
-//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
+//go:generate go run github.com/ghxhy/v2ray-core/v5/common/errors/errorgen
 
 func NewTunSorter(tunWriter io.Writer, dispatcher routing.Dispatcher, packetAddrType packetaddr.PacketAddrType, ctx context.Context) *TunSorter {
 	return &TunSorter{

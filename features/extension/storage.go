@@ -3,7 +3,7 @@ package extension
 import (
 	"context"
 
-	"github.com/v2fly/v2ray-core/v5/features"
+	"github.com/ghxhy/v2ray-core/v5/features"
 )
 
 type PersistentStorageEngine interface {

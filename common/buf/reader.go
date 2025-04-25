@@ -3,8 +3,8 @@ package buf
 import (
 	"io"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/errors"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/errors"
 )
 
 func readOneUDP(r io.Reader) (*Buffer, error) {

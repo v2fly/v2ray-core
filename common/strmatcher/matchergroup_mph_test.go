@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	. "github.com/v2fly/v2ray-core/v5/common/strmatcher"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	. "github.com/ghxhy/v2ray-core/v5/common/strmatcher"
 )
 
 func TestMphMatcherGroup(t *testing.T) {
@@ -174,7 +174,7 @@ func TestMphMatcherGroup(t *testing.T) {
 	}
 }
 
-// See https://github.com/v2fly/v2ray-core/issues/92#issuecomment-673238489
+// See https://github.com/ghxhy/v2ray-core/issues/92#issuecomment-673238489
 func TestMphMatcherGroupAsIndexMatcher(t *testing.T) {
 	rules := []struct {
 		Type   Type

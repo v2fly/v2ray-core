@@ -5,7 +5,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/v2fly/v2ray-core/v5/common/protoext"
+	"github.com/ghxhy/v2ray-core/v5/common/protoext"
 )
 
 const restrictedLoadModeCtx = "restrictedLoadModeCtx"

@@ -1,7 +1,7 @@
 package http
 
 import (
-	protocol "github.com/v2fly/v2ray-core/v5/common/protocol"
+	protocol "github.com/ghxhy/v2ray-core/v5/common/protocol"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

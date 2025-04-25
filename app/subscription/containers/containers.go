@@ -1,6 +1,6 @@
 package containers
 
-//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
+//go:generate go run github.com/ghxhy/v2ray-core/v5/common/errors/errorgen
 
 type UnparsedServerConf struct {
 	KindHint string

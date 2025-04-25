@@ -3,9 +3,9 @@ package routing
 import (
 	"context"
 
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/features"
-	"github.com/v2fly/v2ray-core/v5/transport"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/features"
+	"github.com/ghxhy/v2ray-core/v5/transport"
 )
 
 // Dispatcher is a feature that dispatches inbound requests to outbound handlers based on rules.

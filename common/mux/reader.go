@@ -3,9 +3,9 @@ package mux
 import (
 	"io"
 
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/crypto"
-	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/ghxhy/v2ray-core/v5/common/buf"
+	"github.com/ghxhy/v2ray-core/v5/common/crypto"
+	"github.com/ghxhy/v2ray-core/v5/common/serial"
 )
 
 // PacketReader is an io.Reader that reads whole chunk of Mux frames every time.

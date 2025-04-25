@@ -3,8 +3,8 @@ package websocket
 import (
 	"net/http"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet"
 )
 
 const protocolName = "websocket"

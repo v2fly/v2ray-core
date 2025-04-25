@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"net/http/pprof"
 
-	"github.com/v2fly/v2ray-core/v5/main/commands/base"
-	"github.com/v2fly/v2ray-core/v5/main/plugins"
+	"github.com/ghxhy/v2ray-core/v5/main/commands/base"
+	"github.com/ghxhy/v2ray-core/v5/main/plugins"
 )
 
 var pprofPlugin plugins.Plugin = func(cmd *base.Command) func() error {

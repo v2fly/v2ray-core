@@ -9,12 +9,12 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/session"
-	"github.com/v2fly/v2ray-core/v5/transport/internet"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/grpc/encoding"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common/session"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet/grpc/encoding"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet/tls"
 )
 
 type Listener struct {

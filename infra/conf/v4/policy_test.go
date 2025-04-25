@@ -3,8 +3,8 @@ package v4_test
 import (
 	"testing"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	v4 "github.com/v2fly/v2ray-core/v5/infra/conf/v4"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	v4 "github.com/ghxhy/v2ray-core/v5/infra/conf/v4"
 )
 
 func TestBufferSize(t *testing.T) {

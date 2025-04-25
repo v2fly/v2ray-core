@@ -8,12 +8,12 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
-	"github.com/v2fly/v2ray-core/v5/common/environment/filesystemcap"
-	"github.com/v2fly/v2ray-core/v5/common/protoext"
+	"github.com/ghxhy/v2ray-core/v5/common/environment/envctx"
+	"github.com/ghxhy/v2ray-core/v5/common/environment/filesystemcap"
+	"github.com/ghxhy/v2ray-core/v5/common/protoext"
 )
 
-//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
+//go:generate go run github.com/ghxhy/v2ray-core/v5/common/errors/errorgen
 
 func FilterProtoConfig(ctx context.Context, config proto.Message) error {
 	messageProtoReflect := config.ProtoReflect()

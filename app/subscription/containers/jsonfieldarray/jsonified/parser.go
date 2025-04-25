@@ -1,10 +1,10 @@
 package jsonified
 
 import (
-	"github.com/v2fly/v2ray-core/v5/app/subscription/containers"
-	"github.com/v2fly/v2ray-core/v5/app/subscription/containers/jsonfieldarray"
-	"github.com/v2fly/v2ray-core/v5/common"
-	jsonConf "github.com/v2fly/v2ray-core/v5/infra/conf/json"
+	"github.com/ghxhy/v2ray-core/v5/app/subscription/containers"
+	"github.com/ghxhy/v2ray-core/v5/app/subscription/containers/jsonfieldarray"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	jsonConf "github.com/ghxhy/v2ray-core/v5/infra/conf/json"
 )
 
 func newJsonifiedYamlParser() containers.SubscriptionContainerDocumentParser {

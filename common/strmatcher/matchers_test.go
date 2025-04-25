@@ -5,8 +5,8 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	. "github.com/v2fly/v2ray-core/v5/common/strmatcher"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	. "github.com/ghxhy/v2ray-core/v5/common/strmatcher"
 )
 
 func TestMatcher(t *testing.T) {

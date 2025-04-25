@@ -3,7 +3,7 @@ package log
 import (
 	"sync"
 
-	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/ghxhy/v2ray-core/v5/common/serial"
 )
 
 // Message is the interface for all log messages.

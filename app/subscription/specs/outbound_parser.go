@@ -7,8 +7,8 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"github.com/v2fly/v2ray-core/v5/common/registry"
-	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/ghxhy/v2ray-core/v5/common/registry"
+	"github.com/ghxhy/v2ray-core/v5/common/serial"
 )
 
 func NewOutboundParser() *OutboundParser {

@@ -3,14 +3,14 @@ package command
 import (
 	"context"
 
-	core "github.com/v2fly/v2ray-core/v5"
-	"github.com/v2fly/v2ray-core/v5/app/subscription"
-	"github.com/v2fly/v2ray-core/v5/common"
+	core "github.com/ghxhy/v2ray-core/v5"
+	"github.com/ghxhy/v2ray-core/v5/app/subscription"
+	"github.com/ghxhy/v2ray-core/v5/common"
 
 	"google.golang.org/grpc"
 )
 
-//go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
+//go:generate go run github.com/ghxhy/v2ray-core/v5/common/errors/errorgen
 
 type SubscriptionManagerService struct {
 	UnimplementedSubscriptionManagerServiceServer

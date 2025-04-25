@@ -9,11 +9,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/protocol"
-	"github.com/v2fly/v2ray-core/v5/features/routing"
-	"github.com/v2fly/v2ray-core/v5/transport"
-	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common/protocol"
+	"github.com/ghxhy/v2ray-core/v5/features/routing"
+	"github.com/ghxhy/v2ray-core/v5/transport"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet"
 )
 
 // A timeout for reading the first payload from the client, used in 0-RTT optimizations.

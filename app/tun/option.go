@@ -7,7 +7,7 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
 
-	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
+	"github.com/ghxhy/v2ray-core/v5/app/router/routercommon"
 )
 
 func CreateNIC(id tcpip.NICID, linkEndpoint stack.LinkEndpoint) StackOption {

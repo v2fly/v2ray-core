@@ -1,8 +1,8 @@
 package http
 
 import (
-	_ "github.com/v2fly/v2ray-core/v5/common/protoext"
-	http "github.com/v2fly/v2ray-core/v5/transport/internet/headers/http"
+	_ "github.com/ghxhy/v2ray-core/v5/common/protoext"
+	http "github.com/ghxhy/v2ray-core/v5/transport/internet/headers/http"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

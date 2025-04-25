@@ -14,8 +14,8 @@ import (
 
 	"github.com/miekg/dns"
 
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet"
 )
 
 func ApplyECH(c *Config, config *tls.Config) error {

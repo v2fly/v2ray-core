@@ -8,9 +8,9 @@ import (
 
 	"golang.org/x/crypto/sha3"
 
-	"github.com/v2fly/v2ray-core/v5/app/subscription/containers"
-	"github.com/v2fly/v2ray-core/v5/app/subscription/documentfetcher"
-	"github.com/v2fly/v2ray-core/v5/app/subscription/specs"
+	"github.com/ghxhy/v2ray-core/v5/app/subscription/containers"
+	"github.com/ghxhy/v2ray-core/v5/app/subscription/documentfetcher"
+	"github.com/ghxhy/v2ray-core/v5/app/subscription/specs"
 )
 
 func (s *SubscriptionManagerImpl) updateSubscription(subscriptionName string) error {

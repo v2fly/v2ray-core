@@ -3,9 +3,9 @@ package systemnetworkimpl
 import (
 	"context"
 
-	"github.com/v2fly/v2ray-core/v5/common/environment"
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/ghxhy/v2ray-core/v5/common/environment"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet"
 )
 
 func NewSystemNetworkImpl(listener internet.SystemListener, dialer internet.SystemDialer) environment.SystemNetworkCapabilitySet {

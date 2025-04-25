@@ -10,11 +10,11 @@ import (
 	"strings"
 	"syscall"
 
-	core "github.com/v2fly/v2ray-core/v5"
-	"github.com/v2fly/v2ray-core/v5/common/cmdarg"
-	"github.com/v2fly/v2ray-core/v5/common/platform"
-	"github.com/v2fly/v2ray-core/v5/main/commands/base"
-	"github.com/v2fly/v2ray-core/v5/main/plugins"
+	core "github.com/ghxhy/v2ray-core/v5"
+	"github.com/ghxhy/v2ray-core/v5/common/cmdarg"
+	"github.com/ghxhy/v2ray-core/v5/common/platform"
+	"github.com/ghxhy/v2ray-core/v5/main/commands/base"
+	"github.com/ghxhy/v2ray-core/v5/main/plugins"
 )
 
 // CmdRun runs V2Ray with config

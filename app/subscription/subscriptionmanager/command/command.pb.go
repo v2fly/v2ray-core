@@ -1,8 +1,8 @@
 package command
 
 import (
-	subscription "github.com/v2fly/v2ray-core/v5/app/subscription"
-	_ "github.com/v2fly/v2ray-core/v5/common/protoext"
+	subscription "github.com/ghxhy/v2ray-core/v5/app/subscription"
+	_ "github.com/ghxhy/v2ray-core/v5/common/protoext"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

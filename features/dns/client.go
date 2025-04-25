@@ -1,10 +1,10 @@
 package dns
 
 import (
-	"github.com/v2fly/v2ray-core/v5/common/errors"
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/serial"
-	"github.com/v2fly/v2ray-core/v5/features"
+	"github.com/ghxhy/v2ray-core/v5/common/errors"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common/serial"
+	"github.com/ghxhy/v2ray-core/v5/features"
 )
 
 // IPOption is an object for IP query options.

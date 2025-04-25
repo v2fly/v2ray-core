@@ -12,17 +12,17 @@ import (
 
 	"golang.org/x/net/dns/dnsmessage"
 
-	core "github.com/v2fly/v2ray-core/v5"
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/protocol/dns"
-	udp_proto "github.com/v2fly/v2ray-core/v5/common/protocol/udp"
-	"github.com/v2fly/v2ray-core/v5/common/session"
-	"github.com/v2fly/v2ray-core/v5/common/signal/pubsub"
-	"github.com/v2fly/v2ray-core/v5/common/task"
-	dns_feature "github.com/v2fly/v2ray-core/v5/features/dns"
-	"github.com/v2fly/v2ray-core/v5/features/routing"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
+	core "github.com/ghxhy/v2ray-core/v5"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common/protocol/dns"
+	udp_proto "github.com/ghxhy/v2ray-core/v5/common/protocol/udp"
+	"github.com/ghxhy/v2ray-core/v5/common/session"
+	"github.com/ghxhy/v2ray-core/v5/common/signal/pubsub"
+	"github.com/ghxhy/v2ray-core/v5/common/task"
+	dns_feature "github.com/ghxhy/v2ray-core/v5/features/dns"
+	"github.com/ghxhy/v2ray-core/v5/features/routing"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet/udp"
 )
 
 // ClassicNameServer implemented traditional UDP DNS.

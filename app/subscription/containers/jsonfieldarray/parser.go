@@ -3,8 +3,8 @@ package jsonfieldarray
 import (
 	"encoding/json"
 
-	"github.com/v2fly/v2ray-core/v5/app/subscription/containers"
-	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/app/subscription/containers"
+	"github.com/ghxhy/v2ray-core/v5/common"
 )
 
 // NewJSONFieldArrayParser internal api

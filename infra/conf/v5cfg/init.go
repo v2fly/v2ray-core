@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"io"
 
-	core "github.com/v2fly/v2ray-core/v5"
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/cmdarg"
-	"github.com/v2fly/v2ray-core/v5/infra/conf/json"
+	core "github.com/ghxhy/v2ray-core/v5"
+	"github.com/ghxhy/v2ray-core/v5/common"
+	"github.com/ghxhy/v2ray-core/v5/common/buf"
+	"github.com/ghxhy/v2ray-core/v5/common/cmdarg"
+	"github.com/ghxhy/v2ray-core/v5/infra/conf/json"
 )
 
 const jsonV5 = "jsonv5"

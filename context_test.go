@@ -5,7 +5,7 @@ import (
 	"testing"
 	_ "unsafe"
 
-	. "github.com/v2fly/v2ray-core/v5"
+	. "github.com/ghxhy/v2ray-core/v5"
 )
 
 func TestFromContextPanic(t *testing.T) {

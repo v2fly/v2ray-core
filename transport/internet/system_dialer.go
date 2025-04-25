@@ -5,8 +5,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/session"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common/session"
 )
 
 var effectiveSystemDialer SystemDialer = &DefaultSystemDialer{}

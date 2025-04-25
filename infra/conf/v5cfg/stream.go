@@ -5,8 +5,8 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"github.com/v2fly/v2ray-core/v5/common/serial"
-	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/ghxhy/v2ray-core/v5/common/serial"
+	"github.com/ghxhy/v2ray-core/v5/transport/internet"
 )
 
 func (s StreamConfig) BuildV5(ctx context.Context) (proto.Message, error) {

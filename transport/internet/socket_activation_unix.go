@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/ghxhy/v2ray-core/v5/common/net"
 )
 
 func activateSocket(address string, f func(network, address string, fd uintptr)) (net.Listener, error) {
