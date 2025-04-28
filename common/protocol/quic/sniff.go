@@ -143,7 +143,7 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 
 		cache.Clear()
 		mask := cache.Extend(int32(block.BlockSize()))
-		block.Encrypt(mask, b[hdrLen+4:hdrLen+4+16])
+		block.Encrypt(mask, b[hdrLen+4:hdrLen+4+len(mask)])
 		b[0] ^= mask[0] & 0xf
 		packetNumberLength := int(b[0]&0x3 + 1)
 		for i := range packetNumberLength {
@@ -155,6 +155,7 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 		cipher := aeadAESGCMTLS13(key, iv)
 
 		nonce := cache.Extend(int32(cipher.NonceSize()))
+		wipeBytes(nonce[:len(nonce)-packetNumberLength])
 		_, err = buffer.Read(nonce[len(nonce)-packetNumberLength:])
 		if err != nil {
 			return nil, err
