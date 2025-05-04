@@ -1,8 +1,8 @@
 package server
 
 import (
+	"bufio"
 	"bytes"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
 	"io"
 	"strings"
 	"time"
@@ -13,6 +13,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorcommon"
 )
 
@@ -82,6 +83,17 @@ type Conn struct {
 
 	clientConn net.Conn
 	serverConn net.Conn
+
+	OnC2SMessage func(message *tlsmirror.TLSRecord) (drop bool, ok error)
+	OnS2CMessage func(message *tlsmirror.TLSRecord) (drop bool, ok error)
+
+	c2sInsert chan *tlsmirror.TLSRecord
+	s2cInsert chan *tlsmirror.TLSRecord
+}
+
+type InsertableTLSConn interface {
+	InsertC2SMessage(message *tlsmirror.TLSRecord) error
+	InsertS2CMessage(message *tlsmirror.TLSRecord) error
 }
 
 func (s *Server) accept(clientConn net.Conn, serverConn net.Conn) {
@@ -91,6 +103,8 @@ func (s *Server) accept(clientConn net.Conn, serverConn net.Conn) {
 		done:       done,
 		clientConn: clientConn,
 		serverConn: serverConn,
+		c2sInsert:  make(chan *tlsmirror.TLSRecord),
+		s2cInsert:  make(chan *tlsmirror.TLSRecord),
 	}
 	go c.c2sWorker()
 	go c.s2cWorker()
@@ -107,6 +121,20 @@ func (b *bufPeeker) Peek(n int) ([]byte, error) {
 	return b.buffer[:n], nil
 }
 
+type readerWithInitialData struct {
+	initialData []byte
+	innerReader io.Reader
+}
+
+func (r *readerWithInitialData) Read(p []byte) (n int, err error) {
+	if len(r.initialData) > 0 {
+		n = copy(p, r.initialData)
+		r.initialData = r.initialData[n:]
+		return
+	}
+	return r.innerReader.Read(p)
+}
+
 func (c *Conn) c2sWorker() {
 	c2sHandshake, handshakeReminder, c2sReminderData, err := c.captureHandshake(c.clientConn, c.serverConn)
 	if err != nil {
@@ -116,6 +144,50 @@ func (c *Conn) c2sWorker() {
 	_ = c2sHandshake
 	_ = handshakeReminder
 	_ = c2sReminderData
+	_, err = io.Copy(c.serverConn, bytes.NewReader(handshakeReminder))
+	if err != nil {
+		c.done()
+		newError("failed to copy handshake reminder").Base(err).AtWarning().WriteToLog()
+		return
+	}
+
+	clientSocketReader := readerWithInitialData{initialData: c2sReminderData, innerReader: c.clientConn}
+	clientSocket := bufio.NewReader(&clientSocketReader)
+
+	recordReader := mirrorcommon.NewTLSRecordStreamReader(clientSocket)
+	recordWriter := mirrorcommon.NewTLSRecordStreamWriter(bufio.NewWriter(c.serverConn))
+	go func() {
+		for c.ctx.Err() == nil {
+			record := <-c.c2sInsert
+			err := recordWriter.WriteRecord(record)
+			if err != nil {
+				c.done()
+				newError("failed to write C2S message").Base(err).AtWarning().WriteToLog()
+				return
+			}
+		}
+	}()
+	for c.ctx.Err() == nil {
+		record, err := recordReader.ReadNextRecord()
+		if err != nil {
+			c.done()
+			newError("failed to read TLS record").Base(err).AtWarning().WriteToLog()
+			return
+		}
+		if c.OnC2SMessage != nil {
+			drop, err := c.OnC2SMessage(record)
+			if err != nil {
+				c.done()
+				newError("failed to process C2S message").Base(err).AtWarning().WriteToLog()
+				return
+			}
+			if drop {
+				continue
+			}
+		}
+		duplicatedRecord := mirrorcommon.DuplicateRecord(*record)
+		c.c2sInsert <- &duplicatedRecord
+	}
 }
 
 func (c *Conn) s2cWorker() {
@@ -127,6 +199,50 @@ func (c *Conn) s2cWorker() {
 	_ = s2cHandshake
 	_ = handshakeReminder
 	_ = s2cReminderData
+
+	_, err = io.Copy(c.clientConn, bytes.NewReader(handshakeReminder))
+	if err != nil {
+		c.done()
+		newError("failed to copy handshake reminder").Base(err).AtWarning().WriteToLog()
+		return
+	}
+
+	serverSocketReader := readerWithInitialData{initialData: s2cReminderData, innerReader: c.serverConn}
+	serverSocket := bufio.NewReader(&serverSocketReader)
+	recordReader := mirrorcommon.NewTLSRecordStreamReader(serverSocket)
+	recordWriter := mirrorcommon.NewTLSRecordStreamWriter(bufio.NewWriter(c.clientConn))
+	go func() {
+		for c.ctx.Err() == nil {
+			record := <-c.s2cInsert
+			err := recordWriter.WriteRecord(record)
+			if err != nil {
+				c.done()
+				newError("failed to write S2C message").Base(err).AtWarning().WriteToLog()
+				return
+			}
+		}
+	}()
+	for c.ctx.Err() == nil {
+		record, err := recordReader.ReadNextRecord()
+		if err != nil {
+			c.done()
+			newError("failed to read TLS record").Base(err).AtWarning().WriteToLog()
+			return
+		}
+		if c.OnS2CMessage != nil {
+			drop, err := c.OnS2CMessage(record)
+			if err != nil {
+				c.done()
+				newError("failed to process S2C message").Base(err).AtWarning().WriteToLog()
+				return
+			}
+			if drop {
+				continue
+			}
+		}
+		duplicatedRecord := mirrorcommon.DuplicateRecord(*record)
+		c.s2cInsert <- &duplicatedRecord
+	}
 }
 
 func (c *Conn) captureHandshake(sourceConn, mirrorConn net.Conn) (handshake tlsmirror.TLSRecord, handshakeReminder, rest []byte, reterr error) {
@@ -161,8 +277,8 @@ func (c *Conn) captureHandshake(sourceConn, mirrorConn net.Conn) (handshake tlsm
 				return
 			}
 			handshake = result
-			handshakeReminder = readBuffer[nextRead : nextRead+processed]
-			rest = readBuffer[0:processed]
+			handshakeReminder = readBuffer[nextRead:processed]
+			rest = readBuffer[processed : nextRead+n]
 			reterr = nil
 			return
 		}
