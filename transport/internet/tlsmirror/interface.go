@@ -8,7 +8,7 @@ type TLSRecord struct {
 }
 
 type RecordReader interface {
-	ReadNextRecord() (*TLSRecord, error)
+	ReadNextRecord(rejectProfile PartialTLSRecordRejectProfile) (*TLSRecord, error)
 }
 
 type RecordWriter interface {
@@ -17,4 +17,8 @@ type RecordWriter interface {
 
 type Peeker interface {
 	Peek(n int) ([]byte, error)
+}
+
+type PartialTLSRecordRejectProfile interface {
+	TestIfReject(record *TLSRecord, readyFields int) error
 }

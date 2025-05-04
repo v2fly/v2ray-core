@@ -170,6 +170,7 @@ func (c *Conn) c2sWorker() {
 	for c.ctx.Err() == nil {
 		record, err := recordReader.ReadNextRecord()
 		if err != nil {
+			drainCopy(c.clientConn, nil, c.serverConn)
 			c.done()
 			newError("failed to read TLS record").Base(err).AtWarning().WriteToLog()
 			return
@@ -225,6 +226,7 @@ func (c *Conn) s2cWorker() {
 	for c.ctx.Err() == nil {
 		record, err := recordReader.ReadNextRecord()
 		if err != nil {
+			drainCopy(c.clientConn, nil, c.serverConn)
 			c.done()
 			newError("failed to read TLS record").Base(err).AtWarning().WriteToLog()
 			return
@@ -245,6 +247,44 @@ func (c *Conn) s2cWorker() {
 	}
 }
 
+func drainCopy(dst io.Writer, initData []byte, src io.Reader) {
+	if initData != nil {
+		_, err := io.Copy(dst, bytes.NewReader(initData))
+		if err != nil {
+			newError("failed to drain copy").Base(err).AtWarning().WriteToLog()
+		}
+		return
+	}
+	_, err := io.Copy(dst, src)
+	if err != nil {
+		newError("failed to drain copy").Base(err).AtWarning().WriteToLog()
+	}
+}
+
+type rejectionDecisionMaker struct {
+}
+
+func (r *rejectionDecisionMaker) TestIfReject(record *tlsmirror.TLSRecord, readyFields int) error {
+	if readyFields >= 1 {
+		if record.RecordType != mirrorcommon.TLSRecord_RecordType_handshake {
+			return newError("unexpected record type").AtWarning()
+		}
+	}
+	if readyFields >= 2 {
+		switch record.LegacyProtocolVersion[0] {
+		case 0x01:
+		case 0x02:
+		case 0x03:
+			if record.LegacyProtocolVersion[1] > 0x03 {
+				return newError("unexpected minor protocol version").AtWarning()
+			}
+		default:
+			return newError("unexpected major protocol version").AtWarning()
+		}
+	}
+	return nil
+}
+
 func (c *Conn) captureHandshake(sourceConn, mirrorConn net.Conn) (handshake tlsmirror.TLSRecord, handshakeReminder, rest []byte, reterr error) {
 	var readBuffer [65536]byte
 	var nextRead int
@@ -254,10 +294,12 @@ func (c *Conn) captureHandshake(sourceConn, mirrorConn net.Conn) (handshake tlsm
 			c.done()
 			return
 		}
-		result, tryAgainLen, processed, err := mirrorcommon.PeekTLSRecord(&bufPeeker{buffer: readBuffer[:nextRead+n]})
+		handshakeRejectionDecisionMaker := &rejectionDecisionMaker{}
+		result, tryAgainLen, processed, err := mirrorcommon.PeekTLSRecord(&bufPeeker{buffer: readBuffer[:nextRead+n]}, handshakeRejectionDecisionMaker)
 		if processed == 0 {
 			if tryAgainLen == 0 {
 				// TODO: directly copy
+				drainCopy(mirrorConn, readBuffer[:nextRead+n], sourceConn)
 				c.done()
 				err = newError("failed to peek tls record").Base(err).AtWarning()
 				return

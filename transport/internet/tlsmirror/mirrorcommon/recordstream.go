@@ -16,7 +16,7 @@ type TLSRecordStreamReader struct {
 }
 
 func (t *TLSRecordStreamReader) ReadNextRecord() (*tlsmirror.TLSRecord, error) {
-	record, tryAgainLength, processedLength, err := PeekTLSRecord(t.bufferedReader)
+	record, tryAgainLength, processedLength, err := PeekTLSRecord(t.bufferedReader, nil)
 	if err == nil {
 		_, err := t.bufferedReader.Discard(processedLength)
 		if err != nil {

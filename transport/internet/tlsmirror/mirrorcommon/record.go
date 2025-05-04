@@ -9,7 +9,7 @@ import (
 // PeekTLSRecord reads a TLS record from peeker.
 // It returns the record, the number of bytes read from peeker, and any error encountered.
 // It does not consume content from peeker, and the content peeked is borrowed from peeker.
-func PeekTLSRecord(peeker tlsmirror.Peeker) (result tlsmirror.TLSRecord, tryAgainLength, processed int, err error) {
+func PeekTLSRecord(peeker tlsmirror.Peeker, rejectionProfile tlsmirror.PartialTLSRecordRejectProfile) (result tlsmirror.TLSRecord, tryAgainLength, processed int, err error) {
 	var record tlsmirror.TLSRecord
 	header, err := peeker.Peek(5)
 	if err != nil {
@@ -24,6 +24,12 @@ func PeekTLSRecord(peeker tlsmirror.Peeker) (result tlsmirror.TLSRecord, tryAgai
 	record.RecordLength = uint16(header[3])<<8 | uint16(header[4])
 	if record.RecordLength > 16384 {
 		return record, 0, 0, fmt.Errorf("tls: record length %d is too large", record.RecordLength)
+	}
+	if rejectionProfile != nil {
+		err = rejectionProfile.TestIfReject(&record, 2)
+		if err != nil {
+			return record, 0, 0, err
+		}
 	}
 	fragment, err := peeker.Peek(int(5 + record.RecordLength))
 	if err != nil {
