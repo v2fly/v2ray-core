@@ -23,7 +23,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pion/dtls/v2 v2.2.12
 	github.com/pion/transport/v2 v2.2.10
-	github.com/pires/go-proxyproto v0.8.0
+	github.com/pires/go-proxyproto v0.8.1
 	github.com/quic-go/quic-go v0.51.0
 	github.com/refraction-networking/utls v1.7.1
 	github.com/seiflotfy/cuckoofilter v0.0.0-20220411075957-e3b120b3f5fb
