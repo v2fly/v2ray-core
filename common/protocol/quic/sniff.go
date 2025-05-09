@@ -118,7 +118,7 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 		}
 
 		hdrLen := len(b) - int(buffer.Len())
-		if len(b) < hdrLen+int(packetLen) {
+		if len(b) < hdrLen+int(packetLen) || len(b) < hdrLen+20{
 			return nil, common.ErrNoClue // Not enough data to read as a QUIC packet. QUIC is UDP-based, so this is unlikely to happen.
 		}
 
@@ -166,6 +166,10 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 		}
 
 		extHdrLen := hdrLen + int(packetNumberLength)
+		// very strange packet length, maybe a fake QUIC header
+		if int(packetNumberLength) > int(packetLen) {
+			return nil, errNotQuic
+		}
 		copy(b[extHdrLen:hdrLen+4], origPNBytes[packetNumberLength:])
 		data := b[extHdrLen : int(packetLen)+hdrLen]
 
