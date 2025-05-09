@@ -166,6 +166,10 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 		}
 
 		extHdrLen := hdrLen + int(packetNumberLength)
+		// very stange packet length, maybe a fake QUIC header
+		if packetNumberLength > int(packetLen) {
+			return nil, errNotQuic
+		}
 		copy(b[extHdrLen:hdrLen+4], origPNBytes[packetNumberLength:])
 		data := b[extHdrLen : int(packetLen)+hdrLen]
 
