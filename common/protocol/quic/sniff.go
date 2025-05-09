@@ -166,7 +166,7 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 		}
 
 		extHdrLen := hdrLen + int(packetNumberLength)
-		// very stange packet length, maybe a fake QUIC header
+		// very strange packet length, maybe a fake QUIC header
 		if int(packetNumberLength) > int(packetLen) {
 			return nil, errNotQuic
 		}
