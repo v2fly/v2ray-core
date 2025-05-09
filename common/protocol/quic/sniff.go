@@ -118,7 +118,7 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 		}
 
 		hdrLen := len(b) - int(buffer.Len())
-		if len(b) < hdrLen+int(packetLen) {
+		if len(b) < hdrLen+int(packetLen) || len(b) < hdrLen+20{
 			return nil, common.ErrNoClue // Not enough data to read as a QUIC packet. QUIC is UDP-based, so this is unlikely to happen.
 		}
 
