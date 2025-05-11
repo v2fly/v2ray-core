@@ -1,7 +1,6 @@
 package server
 
 import (
-	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorbase"
 	"strings"
 	"time"
 
@@ -11,6 +10,9 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorbase"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorcommon"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
@@ -74,5 +76,30 @@ func (s *Server) Addr() net.Addr {
 }
 
 func (s *Server) accept(clientConn net.Conn, serverConn net.Conn) {
-	mirrorbase.NewMirroredTLSConn(s.ctx, clientConn, serverConn, nil, nil)
+	ctx, cancel := context.WithCancel(s.ctx)
+	conn := &ServerConn{
+		ctx:  ctx,
+		done: cancel,
+	}
+
+	conn.mirrorConn = mirrorbase.NewMirroredTLSConn(ctx, clientConn, serverConn, conn.onC2SMessage, nil, conn)
+}
+
+type ServerConn struct {
+	ctx  context.Context
+	done context.CancelFunc
+
+	mirrorConn tlsmirror.InsertableTLSConn
+}
+
+func (s *ServerConn) Close() error {
+	s.done()
+	return nil
+}
+
+func (s *ServerConn) onC2SMessage(message *tlsmirror.TLSRecord) (drop bool, ok error) {
+	if message.RecordType == mirrorcommon.TLSRecord_RecordType_application_data {
+
+	}
+	return false, ok
 }

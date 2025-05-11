@@ -4,18 +4,18 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorcommon"
 	"io"
 	"net"
-)
 
-type MessageHook func(message *tlsmirror.TLSRecord) (drop bool, ok error)
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorcommon"
+)
 
 // NewMirroredTLSConn creates a new mirrored TLS connection.
 // No stable interface
-func NewMirroredTLSConn(ctx context.Context, clientConn net.Conn, serverConn net.Conn, onC2SMessage, onS2CMessage MessageHook) *Conn {
-	c := &Conn{
+func NewMirroredTLSConn(ctx context.Context, clientConn net.Conn, serverConn net.Conn, onC2SMessage, onS2CMessage tlsmirror.MessageHook, closable common.Closable) tlsmirror.InsertableTLSConn {
+	c := &conn{
 		ctx:          ctx,
 		clientConn:   clientConn,
 		serverConn:   serverConn,
@@ -30,23 +30,35 @@ func NewMirroredTLSConn(ctx context.Context, clientConn net.Conn, serverConn net
 	return c
 }
 
-type Conn struct {
+type conn struct {
 	ctx  context.Context
 	done context.CancelFunc
 
 	clientConn net.Conn
 	serverConn net.Conn
 
-	OnC2SMessage MessageHook
-	OnS2CMessage MessageHook
+	OnC2SMessage tlsmirror.MessageHook
+	OnS2CMessage tlsmirror.MessageHook
 
 	c2sInsert chan *tlsmirror.TLSRecord
 	s2cInsert chan *tlsmirror.TLSRecord
 }
 
-type InsertableTLSConn interface {
-	InsertC2SMessage(message *tlsmirror.TLSRecord) error
-	InsertS2CMessage(message *tlsmirror.TLSRecord) error
+func (c *conn) Close() error {
+	c.done()
+	return nil
+}
+
+func (c *conn) InsertC2SMessage(message *tlsmirror.TLSRecord) error {
+	duplicatedRecord := mirrorcommon.DuplicateRecord(*message)
+	c.c2sInsert <- &duplicatedRecord
+	return nil
+}
+
+func (c *conn) InsertS2CMessage(message *tlsmirror.TLSRecord) error {
+	duplicatedRecord := mirrorcommon.DuplicateRecord(*message)
+	c.s2cInsert <- &duplicatedRecord
+	return nil
 }
 
 type bufPeeker struct {
@@ -74,7 +86,7 @@ func (r *readerWithInitialData) Read(p []byte) (n int, err error) {
 	return r.innerReader.Read(p)
 }
 
-func (c *Conn) c2sWorker() {
+func (c *conn) c2sWorker() {
 	c2sHandshake, handshakeReminder, c2sReminderData, err := c.captureHandshake(c.clientConn, c.serverConn)
 	if err != nil {
 		c.done()
@@ -130,7 +142,7 @@ func (c *Conn) c2sWorker() {
 	}
 }
 
-func (c *Conn) s2cWorker() {
+func (c *conn) s2cWorker() {
 	s2cHandshake, handshakeReminder, s2cReminderData, err := c.captureHandshake(c.serverConn, c.clientConn)
 	if err != nil {
 		c.done()
@@ -224,7 +236,7 @@ func (r *rejectionDecisionMaker) TestIfReject(record *tlsmirror.TLSRecord, ready
 	return nil
 }
 
-func (c *Conn) captureHandshake(sourceConn, mirrorConn net.Conn) (handshake tlsmirror.TLSRecord, handshakeReminder, rest []byte, reterr error) {
+func (c *conn) captureHandshake(sourceConn, mirrorConn net.Conn) (handshake tlsmirror.TLSRecord, handshakeReminder, rest []byte, reterr error) {
 	var readBuffer [65536]byte
 	var nextRead int
 	for c.ctx.Err() == nil {

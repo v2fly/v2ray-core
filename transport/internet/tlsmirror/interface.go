@@ -1,5 +1,7 @@
 package tlsmirror
 
+import "github.com/v2fly/v2ray-core/v5/common"
+
 type TLSRecord struct {
 	RecordType            byte
 	LegacyProtocolVersion [2]byte
@@ -21,4 +23,12 @@ type Peeker interface {
 
 type PartialTLSRecordRejectProfile interface {
 	TestIfReject(record *TLSRecord, readyFields int) error
+}
+
+type MessageHook func(message *TLSRecord) (drop bool, ok error)
+
+type InsertableTLSConn interface {
+	common.Closable
+	InsertC2SMessage(message *TLSRecord) error
+	InsertS2CMessage(message *TLSRecord) error
 }
