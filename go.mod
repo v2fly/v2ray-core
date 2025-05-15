@@ -2,7 +2,7 @@ module github.com/v2fly/v2ray-core/v5
 
 go 1.24
 
-toolchain go1.24.2
+toolchain go1.24.3
 
 require (
 	github.com/adrg/xdg v0.5.3
