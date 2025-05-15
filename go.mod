@@ -11,7 +11,7 @@ require (
 	github.com/go-chi/render v1.0.3
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259
-	github.com/golang/mock v1.6.0
+	github.com/golang/mock v1.7.0-rc.1
 	github.com/golang/protobuf v1.5.4
 	github.com/google/go-cmp v0.7.0
 	github.com/google/gopacket v1.1.19
@@ -44,7 +44,7 @@ require (
 	google.golang.org/grpc v1.72.0
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/yaml.v3 v3.0.1
-	gvisor.dev/gvisor v0.0.0-20231020174304-b8a429915ff1
+	gvisor.dev/gvisor v0.0.0-20250515015712-ea65823fb37c
 	h12.io/socks v1.0.3
 	lukechampine.com/blake3 v1.4.0
 )
@@ -90,7 +90,7 @@ require (
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
 	golang.org/x/mod v0.23.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
-	golang.org/x/time v0.5.0 // indirect
+	golang.org/x/time v0.7.0 // indirect
 	golang.org/x/tools v0.30.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250218202821-56aae31c358a // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
