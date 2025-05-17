@@ -42,6 +42,18 @@ type conn struct {
 
 	c2sInsert chan *tlsmirror.TLSRecord
 	s2cInsert chan *tlsmirror.TLSRecord
+
+	isClientRandomReady bool
+	ClientRandom        [32]byte
+	isServerRandomReady bool
+	ServerRandom        [32]byte
+}
+
+func (c *conn) GetHandshakeRandom() ([]byte, []byte, error) {
+	if !c.isClientRandomReady || !c.isServerRandomReady {
+		return nil, nil, newError("client random or server random not ready")
+	}
+	return c.ClientRandom[:], c.ServerRandom[:], nil
 }
 
 func (c *conn) Close() error {
@@ -102,6 +114,14 @@ func (c *conn) c2sWorker() {
 		return
 	}
 
+	clientHello, err := mirrorcommon.UnpackTLSClientHello(c2sHandshake.Fragment)
+	if err != nil {
+		c.done()
+		newError("failed to unpack client hello").Base(err).AtWarning().WriteToLog()
+		return
+	}
+	c.ClientRandom = clientHello.ClientRandom
+
 	clientSocketReader := readerWithInitialData{initialData: c2sReminderData, innerReader: c.clientConn}
 	clientSocket := bufio.NewReader(&clientSocketReader)
 
@@ -158,6 +178,14 @@ func (c *conn) s2cWorker() {
 		newError("failed to copy handshake reminder").Base(err).AtWarning().WriteToLog()
 		return
 	}
+
+	serverHello, err := mirrorcommon.UnpackTLSServerHello(s2cHandshake.Fragment)
+	if err != nil {
+		c.done()
+		newError("failed to unpack server hello").Base(err).AtWarning().WriteToLog()
+		return
+	}
+	c.ServerRandom = serverHello.ServerRandom
 
 	serverSocketReader := readerWithInitialData{initialData: s2cReminderData, innerReader: c.serverConn}
 	serverSocket := bufio.NewReader(&serverSocketReader)

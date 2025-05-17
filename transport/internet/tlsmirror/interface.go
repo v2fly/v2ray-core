@@ -29,6 +29,7 @@ type MessageHook func(message *TLSRecord) (drop bool, ok error)
 
 type InsertableTLSConn interface {
 	common.Closable
+	GetHandshakeRandom() ([]byte, []byte, error)
 	InsertC2SMessage(message *TLSRecord) error
 	InsertS2CMessage(message *TLSRecord) error
 }
