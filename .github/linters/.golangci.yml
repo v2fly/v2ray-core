@@ -1,57 +1,70 @@
-run:
-  timeout: 5m
-
-issues:
-  new: true
-  exclude-rules:
-    - linters:
-        - staticcheck
-      text: "SA1019:"
-    - linters:
-        - stylecheck
-      text: "ST1016:"
-  exclude-files:
-    - generated.*
-    - .pb.go
-
+version: "2"
 linters:
   enable:
     - asciicheck
     - bodyclose
     - depguard
     - gocritic
-    - gofmt
-    - gofumpt
-    - goimports
     - goprintffuncname
-    - gosimple
-    - govet
-    - ineffassign
     - misspell
     - nakedret
     - revive
     - rowserrcheck
     - staticcheck
-    - stylecheck
-    - typecheck
     - unconvert
     - unparam
     - whitespace
   disable:
     - errcheck
     - unused
-
-linters-settings:
-  goimports:
-    local-prefixes: github.com/v2fly/v2ray-core
-  revive:
+  settings:
+    depguard:
+      rules:
+        Main:
+          deny:
+            - pkg: github.com/pkg/errors
+              desc: Should be replaced by standard lib errors package
+    revive:
+      rules:
+        - name: blank-imports
+          severity: warning
+          disabled: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
-      - name: blank-imports
-        severity: warning
-        disabled: true
-  depguard:
-    rules:
-      Main:
-        deny:
-          - pkg: "github.com/pkg/errors"
-            desc: Should be replaced by standard lib errors package
+      - linters:
+          - staticcheck
+        text: 'SA1019:'
+      - linters:
+          - staticcheck
+        text: 'ST1016:'
+    paths:
+      - generated.*
+      - .pb.go
+      - third_party$
+      - builtin$
+      - examples$
+issues:
+  new: true
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/v2fly/v2ray-core
+  exclusions:
+    generated: lax
+    paths:
+      - generated.*
+      - .pb.go
+      - third_party$
+      - builtin$
+      - examples$
