@@ -25,6 +25,6 @@ func (e *Encryptor) Seal(dst, src []byte) ([]byte, error) {
 	return dst, nil
 }
 
-func (e *Encryptor) NoneSize() int {
+func (e *Encryptor) NonceSize() int {
 	return e.aead.NonceSize()
 }
