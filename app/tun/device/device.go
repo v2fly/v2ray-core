@@ -8,7 +8,7 @@ import (
 
 type Device interface {
 	stack.LinkEndpoint
-
+	Close()
 	// common.Closable
 }
 
