@@ -73,8 +73,8 @@ func New(options device.Options) (device.Device, error) {
 	return t, nil
 }
 
-func (t *GvisorTUN) Close() error {
-	return unix.Close(t.fd)
+func (t *GvisorTUN) Close() {
+	unix.Close(t.fd)
 }
 
 // Modified from golang.zx2c4.com/wireguard/tun/tun_linux.go

@@ -22,20 +22,16 @@ type packetAddrDevice struct {
 	secondaryDispatcher stack.NetworkDispatcher
 }
 
-func (p *packetAddrDevice) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt stack.PacketBufferPtr) {
-	buf := pkt.ToBuffer()
-	_, err := p.sorter.OnPacketReceived(buf.Flatten())
-	if err != nil {
-		p.secondaryDispatcher.DeliverNetworkPacket(protocol, pkt)
-	}
+func (p *packetAddrDevice) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
+	p.secondaryDispatcher.DeliverNetworkPacket(protocol, pkt)
 }
 
-func (p *packetAddrDevice) DeliverLinkPacket(protocol tcpip.NetworkProtocolNumber, pkt stack.PacketBufferPtr) {
+func (p *packetAddrDevice) DeliverLinkPacket(protocol tcpip.NetworkProtocolNumber, pkt stack.PacketBuffer) {
 	// TODO implement me
 	panic("implement me")
 }
 
 func (p *packetAddrDevice) Attach(dispatcher stack.NetworkDispatcher) {
 	p.secondaryDispatcher = dispatcher
-	p.Device.Attach(p)
+	p.Device.Attach(dispatcher)
 }
