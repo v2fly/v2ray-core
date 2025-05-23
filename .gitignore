@@ -4,27 +4,46 @@
 *.dll
 *.so
 *.dylib
-
-# Test binary, built with `go test -c`
 *.test
 
-# Output of the go coverage tool, specifically when used with LiteIDE
+# Output from Go tools
 *.out
+*.coverprofile
+*.profile
+*.log
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Go build artifacts
+/v2ray
+/v2ctl
+/mockgen
+/vprotogen
+/errorgen
 
-*.DS_Store
-.idea
+# Ignore everything in vprotogen and errorgen except their source definitions
+!infra/vprotogen/
+!common/errors/errorgen/
+
+# Dependency directories
+# Uncomment the next line if you want to ignore vendored dependencies
+# /vendor/
+
+# IDE/editor configs
+.idea/
+.vscode/
+*.swp
+
+# OS generated files
+.DS_Store
+[._]*.un~
+*~
+
+# Archives
 *.zip
 *.tar.gz
-v2ray
-v2ctl
-mockgen
-vprotogen
-!infra/vprotogen/
-errorgen
-!common/errors/errorgen/
+
+# Misc
 *.dat
-*~
-[._]*.un~
+
+# Go module files (keep these tracked)
+!go.mod
+!go.sum
