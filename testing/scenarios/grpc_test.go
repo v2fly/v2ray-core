@@ -23,26 +23,28 @@ func TestGRPCDefault(t *testing.T) {
 	coreInst, InstMgrIfce := NewInstanceManagerCoreInstance()
 	defer coreInst.Close()
 
+	ctx := context.Background()
+
 	common.Must(InstMgrIfce.AddInstance(
-		context.TODO(),
+		ctx,
 		"grpc_client",
 		common.Must2(os.ReadFile("config/grpc_client.json")).([]byte),
 		"jsonv5"))
 
 	common.Must(InstMgrIfce.AddInstance(
-		context.TODO(),
+		ctx,
 		"grpc_server",
 		common.Must2(os.ReadFile("config/grpc_server.json")).([]byte),
 		"jsonv5"))
 
-	common.Must(InstMgrIfce.StartInstance(context.TODO(), "grpc_server"))
-	common.Must(InstMgrIfce.StartInstance(context.TODO(), "grpc_client"))
+	common.Must(InstMgrIfce.StartInstance(ctx, "grpc_server"))
+	common.Must(InstMgrIfce.StartInstance(ctx, "grpc_client"))
 
 	defer func() {
-		common.Must(InstMgrIfce.StopInstance(context.TODO(), "grpc_server"))
-		common.Must(InstMgrIfce.StopInstance(context.TODO(), "grpc_client"))
-		common.Must(InstMgrIfce.UntrackInstance(context.TODO(), "grpc_server"))
-		common.Must(InstMgrIfce.UntrackInstance(context.TODO(), "grpc_client"))
+		common.Must(InstMgrIfce.StopInstance(ctx, "grpc_server"))
+		common.Must(InstMgrIfce.StopInstance(ctx, "grpc_client"))
+		common.Must(InstMgrIfce.UntrackInstance(ctx, "grpc_server"))
+		common.Must(InstMgrIfce.UntrackInstance(ctx, "grpc_client"))
 		coreInst.Close()
 	}()
 
@@ -62,26 +64,28 @@ func TestGRPCWithServiceName(t *testing.T) {
 	coreInst, InstMgrIfce := NewInstanceManagerCoreInstance()
 	defer coreInst.Close()
 
+	ctx := context.Background()
+
 	common.Must(InstMgrIfce.AddInstance(
-		context.TODO(),
+		ctx,
 		"grpc_client",
 		common.Must2(os.ReadFile("config/grpc_servicename_client.json")).([]byte),
 		"jsonv5"))
 
 	common.Must(InstMgrIfce.AddInstance(
-		context.TODO(),
+		ctx,
 		"grpc_server",
 		common.Must2(os.ReadFile("config/grpc_servicename_server.json")).([]byte),
 		"jsonv5"))
 
-	common.Must(InstMgrIfce.StartInstance(context.TODO(), "grpc_server"))
-	common.Must(InstMgrIfce.StartInstance(context.TODO(), "grpc_client"))
+	common.Must(InstMgrIfce.StartInstance(ctx, "grpc_server"))
+	common.Must(InstMgrIfce.StartInstance(ctx, "grpc_client"))
 
 	defer func() {
-		common.Must(InstMgrIfce.StopInstance(context.TODO(), "grpc_server"))
-		common.Must(InstMgrIfce.StopInstance(context.TODO(), "grpc_client"))
-		common.Must(InstMgrIfce.UntrackInstance(context.TODO(), "grpc_server"))
-		common.Must(InstMgrIfce.UntrackInstance(context.TODO(), "grpc_client"))
+		common.Must(InstMgrIfce.StopInstance(ctx, "grpc_server"))
+		common.Must(InstMgrIfce.StopInstance(ctx, "grpc_client"))
+		common.Must(InstMgrIfce.UntrackInstance(ctx, "grpc_server"))
+		common.Must(InstMgrIfce.UntrackInstance(ctx, "grpc_client"))
 		coreInst.Close()
 	}()
 

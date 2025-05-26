@@ -23,26 +23,28 @@ func TestMekya(t *testing.T) {
 	coreInst, InstMgrIfce := NewInstanceManagerCoreInstance()
 	defer coreInst.Close()
 
+	ctx := context.Background()
+
 	common.Must(InstMgrIfce.AddInstance(
-		context.TODO(),
+		ctx,
 		"mekya_client",
 		common.Must2(os.ReadFile("config/mekya_client.json")).([]byte),
 		"jsonv5"))
 
 	common.Must(InstMgrIfce.AddInstance(
-		context.TODO(),
+		ctx,
 		"mekya_server",
 		common.Must2(os.ReadFile("config/mekya_server.json")).([]byte),
 		"jsonv5"))
 
-	common.Must(InstMgrIfce.StartInstance(context.TODO(), "mekya_server"))
-	common.Must(InstMgrIfce.StartInstance(context.TODO(), "mekya_client"))
+	common.Must(InstMgrIfce.StartInstance(ctx, "mekya_server"))
+	common.Must(InstMgrIfce.StartInstance(ctx, "mekya_client"))
 
 	defer func() {
-		common.Must(InstMgrIfce.StopInstance(context.TODO(), "mekya_server"))
-		common.Must(InstMgrIfce.StopInstance(context.TODO(), "mekya_client"))
-		common.Must(InstMgrIfce.UntrackInstance(context.TODO(), "mekya_server"))
-		common.Must(InstMgrIfce.UntrackInstance(context.TODO(), "mekya_client"))
+		common.Must(InstMgrIfce.StopInstance(ctx, "mekya_server"))
+		common.Must(InstMgrIfce.StopInstance(ctx, "mekya_client"))
+		common.Must(InstMgrIfce.UntrackInstance(ctx, "mekya_server"))
+		common.Must(InstMgrIfce.UntrackInstance(ctx, "mekya_client"))
 		coreInst.Close()
 	}()
 

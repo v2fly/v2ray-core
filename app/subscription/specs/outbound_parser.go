@@ -81,7 +81,7 @@ func (p *OutboundParser) ToSubscriptionServerConfig(config *OutboundConfig) (*Su
 }
 
 func loadHeterogeneousConfigFromRawJSONRestricted(interfaceType, name string, rawJSON json.RawMessage) (proto.Message, error) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	ctx = registry.CreateRestrictedModeContext(ctx)
 	if len(rawJSON) == 0 {
 		rawJSON = []byte("{}")

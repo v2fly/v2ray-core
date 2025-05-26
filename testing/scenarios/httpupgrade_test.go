@@ -23,26 +23,28 @@ func TestHTTPUpgrade(t *testing.T) {
 	coreInst, InstMgrIfce := NewInstanceManagerCoreInstance()
 	defer coreInst.Close()
 
+	ctx := context.Background()
+
 	common.Must(InstMgrIfce.AddInstance(
-		context.TODO(),
+		ctx,
 		"httpupgrade_client",
 		common.Must2(os.ReadFile("config/httpupgrade_client.json")).([]byte),
 		"jsonv5"))
 
 	common.Must(InstMgrIfce.AddInstance(
-		context.TODO(),
+		ctx,
 		"httpupgrade_server",
 		common.Must2(os.ReadFile("config/httpupgrade_server.json")).([]byte),
 		"jsonv5"))
 
-	common.Must(InstMgrIfce.StartInstance(context.TODO(), "httpupgrade_server"))
-	common.Must(InstMgrIfce.StartInstance(context.TODO(), "httpupgrade_client"))
+	common.Must(InstMgrIfce.StartInstance(ctx, "httpupgrade_server"))
+	common.Must(InstMgrIfce.StartInstance(ctx, "httpupgrade_client"))
 
 	defer func() {
-		common.Must(InstMgrIfce.StopInstance(context.TODO(), "httpupgrade_server"))
-		common.Must(InstMgrIfce.StopInstance(context.TODO(), "httpupgrade_client"))
-		common.Must(InstMgrIfce.UntrackInstance(context.TODO(), "httpupgrade_server"))
-		common.Must(InstMgrIfce.UntrackInstance(context.TODO(), "httpupgrade_client"))
+		common.Must(InstMgrIfce.StopInstance(ctx, "httpupgrade_server"))
+		common.Must(InstMgrIfce.StopInstance(ctx, "httpupgrade_client"))
+		common.Must(InstMgrIfce.UntrackInstance(ctx, "httpupgrade_server"))
+		common.Must(InstMgrIfce.UntrackInstance(ctx, "httpupgrade_client"))
 		coreInst.Close()
 	}()
 
@@ -62,26 +64,28 @@ func TestHTTPUpgradeWithEarlyData(t *testing.T) {
 	coreInst, InstMgrIfce := NewInstanceManagerCoreInstance()
 	defer coreInst.Close()
 
+	ctx := context.Background()
+
 	common.Must(InstMgrIfce.AddInstance(
-		context.TODO(),
+		ctx,
 		"httpupgrade_client",
 		common.Must2(os.ReadFile("config/httpupgrade_earlydata_client.json")).([]byte),
 		"jsonv5"))
 
 	common.Must(InstMgrIfce.AddInstance(
-		context.TODO(),
+		ctx,
 		"httpupgrade_server",
 		common.Must2(os.ReadFile("config/httpupgrade_earlydata_server.json")).([]byte),
 		"jsonv5"))
 
-	common.Must(InstMgrIfce.StartInstance(context.TODO(), "httpupgrade_server"))
-	common.Must(InstMgrIfce.StartInstance(context.TODO(), "httpupgrade_client"))
+	common.Must(InstMgrIfce.StartInstance(ctx, "httpupgrade_server"))
+	common.Must(InstMgrIfce.StartInstance(ctx, "httpupgrade_client"))
 
 	defer func() {
-		common.Must(InstMgrIfce.StopInstance(context.TODO(), "httpupgrade_server"))
-		common.Must(InstMgrIfce.StopInstance(context.TODO(), "httpupgrade_client"))
-		common.Must(InstMgrIfce.UntrackInstance(context.TODO(), "httpupgrade_server"))
-		common.Must(InstMgrIfce.UntrackInstance(context.TODO(), "httpupgrade_client"))
+		common.Must(InstMgrIfce.StopInstance(ctx, "httpupgrade_server"))
+		common.Must(InstMgrIfce.StopInstance(ctx, "httpupgrade_client"))
+		common.Must(InstMgrIfce.UntrackInstance(ctx, "httpupgrade_server"))
+		common.Must(InstMgrIfce.UntrackInstance(ctx, "httpupgrade_client"))
 		coreInst.Close()
 	}()
 
@@ -101,26 +105,28 @@ func TestHTTPUpgradeWithShortEarlyData(t *testing.T) {
 	coreInst, InstMgrIfce := NewInstanceManagerCoreInstance()
 	defer coreInst.Close()
 
+	ctx := context.Background()
+
 	common.Must(InstMgrIfce.AddInstance(
-		context.TODO(),
+		ctx,
 		"httpupgrade_client",
 		common.Must2(os.ReadFile("config/httpupgrade_earlydataShortEarlyData_client.json")).([]byte),
 		"jsonv5"))
 
 	common.Must(InstMgrIfce.AddInstance(
-		context.TODO(),
+		ctx,
 		"httpupgrade_server",
 		common.Must2(os.ReadFile("config/httpupgrade_earlydataShortEarlyData_server.json")).([]byte),
 		"jsonv5"))
 
-	common.Must(InstMgrIfce.StartInstance(context.TODO(), "httpupgrade_server"))
-	common.Must(InstMgrIfce.StartInstance(context.TODO(), "httpupgrade_client"))
+	common.Must(InstMgrIfce.StartInstance(ctx, "httpupgrade_server"))
+	common.Must(InstMgrIfce.StartInstance(ctx, "httpupgrade_client"))
 
 	defer func() {
-		common.Must(InstMgrIfce.StopInstance(context.TODO(), "httpupgrade_server"))
-		common.Must(InstMgrIfce.StopInstance(context.TODO(), "httpupgrade_client"))
-		common.Must(InstMgrIfce.UntrackInstance(context.TODO(), "httpupgrade_server"))
-		common.Must(InstMgrIfce.UntrackInstance(context.TODO(), "httpupgrade_client"))
+		common.Must(InstMgrIfce.StopInstance(ctx, "httpupgrade_server"))
+		common.Must(InstMgrIfce.StopInstance(ctx, "httpupgrade_client"))
+		common.Must(InstMgrIfce.UntrackInstance(ctx, "httpupgrade_server"))
+		common.Must(InstMgrIfce.UntrackInstance(ctx, "httpupgrade_client"))
 		coreInst.Close()
 	}()
 

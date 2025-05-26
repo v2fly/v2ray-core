@@ -23,26 +23,28 @@ func TestMeek(t *testing.T) {
 	coreInst, InstMgrIfce := NewInstanceManagerCoreInstance()
 	defer coreInst.Close()
 
+	ctx := context.Background()
+
 	common.Must(InstMgrIfce.AddInstance(
-		context.TODO(),
+		ctx,
 		"meek_client",
 		common.Must2(os.ReadFile("config/meek_client.json")).([]byte),
 		"jsonv5"))
 
 	common.Must(InstMgrIfce.AddInstance(
-		context.TODO(),
+		ctx,
 		"meek_server",
 		common.Must2(os.ReadFile("config/meek_server.json")).([]byte),
 		"jsonv5"))
 
-	common.Must(InstMgrIfce.StartInstance(context.TODO(), "meek_server"))
-	common.Must(InstMgrIfce.StartInstance(context.TODO(), "meek_client"))
+	common.Must(InstMgrIfce.StartInstance(ctx, "meek_server"))
+	common.Must(InstMgrIfce.StartInstance(ctx, "meek_client"))
 
 	defer func() {
-		common.Must(InstMgrIfce.StopInstance(context.TODO(), "meek_server"))
-		common.Must(InstMgrIfce.StopInstance(context.TODO(), "meek_client"))
-		common.Must(InstMgrIfce.UntrackInstance(context.TODO(), "meek_server"))
-		common.Must(InstMgrIfce.UntrackInstance(context.TODO(), "meek_client"))
+		common.Must(InstMgrIfce.StopInstance(ctx, "meek_server"))
+		common.Must(InstMgrIfce.StopInstance(ctx, "meek_client"))
+		common.Must(InstMgrIfce.UntrackInstance(ctx, "meek_server"))
+		common.Must(InstMgrIfce.UntrackInstance(ctx, "meek_client"))
 		coreInst.Close()
 	}()
 

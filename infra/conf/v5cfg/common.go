@@ -13,7 +13,7 @@ import (
 
 func loadHeterogeneousConfigFromRawJSON(interfaceType, name string, rawJSON json.RawMessage) (proto.Message, error) {
 	fsdef := envimpl.NewDefaultFileSystemDefaultImpl()
-	ctx := envctx.ContextWithEnvironment(context.TODO(), fsdef)
+	ctx := envctx.ContextWithEnvironment(context.Background(), fsdef)
 	if len(rawJSON) == 0 {
 		rawJSON = []byte("{}")
 	}
