@@ -1,6 +1,8 @@
 package tun
 
 import (
+	"gvisor.dev/gvisor/pkg/context"
+	"gvisor.dev/gvisor/pkg/sentry/uniqueid"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv6"
@@ -26,7 +28,7 @@ func (t *TUN) CreateStack(linkedEndpoint stack.LinkEndpoint) (*stack.Stack, erro
 		},
 	})
 
-	nicID := tcpip.NICID(s.UniqueID())
+	nicID := tcpip.NICID(uniqueid.GlobalProviderFromContext(context.Background()).UniqueID())
 
 	opts := []StackOption{
 		SetTCPHandler(t.ctx, t.dispatcher, t.policyManager, t.config),
