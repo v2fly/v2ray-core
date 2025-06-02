@@ -24,6 +24,7 @@ type TLSConfig struct {
 	VerifyClientCertificate          bool                  `json:"verifyClientCertificate"`
 	ECHConfig                        string                `json:"echConfig"`
 	ECHDOHServer                     string                `json:"echDohServer"`
+	ECHQueryDomain                   string                `json:"echQueryDomain"`
 }
 
 // Build implements Buildable.
