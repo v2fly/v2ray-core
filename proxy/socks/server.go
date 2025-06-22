@@ -19,6 +19,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/features"
 	"github.com/v2fly/v2ray-core/v5/features/policy"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
+	"github.com/v2fly/v2ray-core/v5/transport"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
 )
@@ -129,14 +130,47 @@ func (s *Server) processTCP(ctx context.Context, conn internet.Connection, dispa
 			})
 		}
 
+		dispatcher = &handshakeFinalizingDispatcher{Feature: dispatcher, delegate: dispatcher, serverSession: svrSession}
 		return s.transport(ctx, reader, conn, dest, dispatcher)
 	}
 
+	err = svrSession.flushLastReply(true)
+	if err != nil {
+		return err
+	}
 	if request.Command == protocol.RequestCommandUDP {
 		return s.handleUDP(conn)
 	}
 
 	return nil
+}
+
+// Wrapper to send final SOCKS reply only after Dispatch() returns
+type handshakeFinalizingDispatcher struct {
+	features.Feature // do not inherit Dispatch() in case its signature changes
+	delegate         routing.Dispatcher
+	serverSession    *ServerSession
+}
+
+func (d *handshakeFinalizingDispatcher) Dispatch(ctx context.Context, dest net.Destination) (*transport.Link, error) {
+	link, err := d.delegate.Dispatch(ctx, dest)
+	if err == nil {
+		closeInDefer := true
+		defer func() {
+			if closeInDefer {
+				common.Interrupt(link.Reader)
+				common.Interrupt(link.Writer)
+			}
+		}()
+		err = d.serverSession.flushLastReply(true)
+		if err != nil {
+			return nil, err
+		}
+		closeInDefer = false
+	} else {
+		d.serverSession.flushLastReply(false)
+	}
+	return link, err
 }
 
 func (*Server) handleUDP(c io.Reader) error {
