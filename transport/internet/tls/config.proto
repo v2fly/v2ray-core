@@ -84,4 +84,7 @@ message Config {
 
   // DOH server to query HTTPS record for ECH
   string ech_DOHserver = 17;
+
+  // domain to query for https record
+  string ech_query_domain = 18;
 }
