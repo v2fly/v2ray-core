@@ -17,4 +17,6 @@ message Config {
   string forward_address = 1;
   uint32 forward_port = 2;
   string forward_tag = 3;
+
+  string carrier_connection_tag = 4;
 }

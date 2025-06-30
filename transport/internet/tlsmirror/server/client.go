@@ -11,7 +11,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorbase"
 )
 
-func newPersistentMirrorTLSDialer() *persistentMirrorTLSDialer {
+func newPersistentMirrorTLSDialer(ctx context.Context) *persistentMirrorTLSDialer {
 	return &persistentMirrorTLSDialer{}
 
 }
@@ -23,6 +23,29 @@ type persistentMirrorTLSDialer struct {
 
 	requestNewConnection func(ctx context.Context) error
 	incomingConnections  chan net.Conn
+
+	listener *OutboundListener
+	outbound *Outbound
+}
+
+func (d *persistentMirrorTLSDialer) init(ctx context.Context, config *Config) {
+	d.ctx = ctx
+	d.config = config
+
+	d.incomingConnections = make(chan net.Conn, 4)
+	d.listener = NewOutboundListener()
+	d.outbound = NewOutbound(d.config.CarrierConnectionTag, d.listener)
+
+	go func() {
+		for {
+			conn, err := d.listener.Accept()
+			if err != nil {
+				break
+			}
+			d.handleIncomingCarrierConnection(ctx, conn)
+		}
+	}()
+
 }
 
 func (d *persistentMirrorTLSDialer) handleIncomingCarrierConnection(ctx context.Context, conn net.Conn) {
@@ -90,7 +113,7 @@ func Dial(ctx context.Context, dest net.Destination, settings *internet.MemorySt
 	transportEnvironment := envctx.EnvironmentFromContext(ctx).(environment.TransportEnvironment)
 	dialer, err := transportEnvironment.TransientStorage().Get(ctx, "persistentDialer")
 	if err != nil {
-		dialer = newPersistentMirrorTLSDialer()
+		dialer = newPersistentMirrorTLSDialer(ctx)
 		err = transportEnvironment.TransientStorage().Put(ctx, "persistentDialer", dialer)
 		if err != nil {
 			return nil, newError("failed to put persistent dialer").Base(err)

@@ -33,3 +33,10 @@ type InsertableTLSConn interface {
 	InsertC2SMessage(message *TLSRecord) error
 	InsertS2CMessage(message *TLSRecord) error
 }
+
+const TrafficGeneratorManagedConnectionContextKey = "TrafficGeneratorManagedConnection-ku63HMMD-kduCPhr8-DN4y6WEa"
+
+type TrafficGeneratorManagedConnection interface {
+	RecallTrafficGenerator() error
+	IsConnectionReady() bool
+}
