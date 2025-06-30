@@ -34,6 +34,10 @@ type clientConnState struct {
 	protocolVersion [2]byte
 }
 
+func (s *clientConnState) GetConnectionContext() context.Context {
+	return s.ctx
+}
+
 func (s *clientConnState) Read(b []byte) (n int, err error) {
 	if s.readBuffer != nil {
 		n, _ = s.readBuffer.Read(b)

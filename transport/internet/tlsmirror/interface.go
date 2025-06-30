@@ -1,6 +1,10 @@
 package tlsmirror
 
-import "github.com/v2fly/v2ray-core/v5/common"
+import (
+	"context"
+
+	"github.com/v2fly/v2ray-core/v5/common"
+)
 
 type TLSRecord struct {
 	RecordType            byte
@@ -38,5 +42,5 @@ const TrafficGeneratorManagedConnectionContextKey = "TrafficGeneratorManagedConn
 
 type TrafficGeneratorManagedConnection interface {
 	RecallTrafficGenerator() error
-	IsConnectionReady() bool
+	WaitConnectionReady() context.Context
 }

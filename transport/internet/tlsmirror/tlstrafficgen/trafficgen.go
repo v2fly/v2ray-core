@@ -44,16 +44,13 @@ type trafficGeneratorManagedConnectionController struct {
 	recallDone context.CancelFunc
 }
 
+func (t *trafficGeneratorManagedConnectionController) WaitConnectionReady() context.Context {
+	return t.readyCtx
+}
+
 func (t *trafficGeneratorManagedConnectionController) RecallTrafficGenerator() error {
 	t.recallDone()
 	return nil
-}
-
-func (t *trafficGeneratorManagedConnectionController) IsConnectionReady() bool {
-	if t.readyCtx.Err() != nil {
-		return true
-	}
-	return false
 }
 
 func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) error {
