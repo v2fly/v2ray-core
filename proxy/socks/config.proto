@@ -41,6 +41,7 @@ message ServerConfig {
   uint32 user_level = 6;
 
   v2ray.core.net.packetaddr.PacketAddrType packet_encoding = 7;
+  bool defer_last_reply = 8;
 }
 
 // ClientConfig is the protobuf config for Socks client.

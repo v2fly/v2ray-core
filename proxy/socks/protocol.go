@@ -30,6 +30,7 @@ const (
 	authNoMatchingMethod = 0xFF
 
 	statusSuccess       = 0x00
+	statusConnRefused   = 0x05
 	statusCmdNotSupport = 0x07
 )
 
@@ -40,10 +41,11 @@ var addrParser = protocol.NewAddressParser(
 )
 
 type ServerSession struct {
-	config        *ServerConfig
-	address       net.Address
-	port          net.Port
-	clientAddress net.Address
+	config         *ServerConfig
+	address        net.Address
+	port           net.Port
+	clientAddress  net.Address
+	flushLastReply func(bool) error
 }
 
 func (s *ServerSession) handshake4(cmd byte, reader io.Reader, writer io.Writer) (*protocol.RequestHeader, error) {
@@ -85,7 +87,13 @@ func (s *ServerSession) handshake4(cmd byte, reader io.Reader, writer io.Writer)
 			Port:    port,
 			Version: socks4Version,
 		}
-		if err := writeSocks4Response(writer, socks4RequestGranted, net.AnyIP, net.Port(0)); err != nil {
+		if err := s.setupLastReply(func(ok bool) error {
+			if ok {
+				return writeSocks4Response(writer, socks4RequestGranted, net.AnyIP, net.Port(0))
+			} else {
+				return writeSocks4Response(writer, socks4RequestRejected, net.AnyIP, net.Port(0))
+			}
+		}); err != nil {
 			return nil, err
 		}
 		return request, nil
@@ -203,11 +211,35 @@ func (s *ServerSession) handshake5(nMethod byte, reader io.Reader, writer io.Wri
 			responseAddress = s.address
 		}
 	}
-	if err := writeSocks5Response(writer, statusSuccess, responseAddress, responsePort); err != nil {
+	if err := s.setupLastReply(func(ok bool) error {
+		if ok {
+			return writeSocks5Response(writer, statusSuccess, responseAddress, responsePort)
+		} else {
+			return writeSocks5Response(writer, statusConnRefused, net.AnyIP, net.Port(0))
+		}
+	}); err != nil {
 		return nil, err
 	}
 
 	return request, nil
+}
+
+// Sets the callback and calls or postpones it based on the boolean field
+func (s *ServerSession) setupLastReply(callback func(bool) error) error {
+	noOpCallback := func(bool) error {
+		return nil
+	}
+
+	// set the field even if we call it now because it will be called again
+	s.flushLastReply = func(ok bool) error {
+		s.flushLastReply = noOpCallback
+		return callback(ok)
+	}
+
+	if s.config.GetDeferLastReply() {
+		return nil
+	}
+	return s.flushLastReply(true)
 }
 
 // Handshake performs a Socks4/4a/5 handshake.
