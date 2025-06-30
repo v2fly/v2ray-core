@@ -154,7 +154,7 @@ func (c *sysConn) SyscallConn() (syscall.RawConn, error) {
 }
 
 type interConn struct {
-	stream quic.Stream
+	stream *quic.Stream
 	local  net.Addr
 	remote net.Addr
 }

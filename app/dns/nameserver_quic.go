@@ -36,7 +36,7 @@ type QUICNameServer struct {
 	cleanup     *task.Periodic
 	name        string
 	destination net.Destination
-	connection  quic.Connection
+	connection  *quic.Conn
 }
 
 // NewQUICNameServer creates DNS-over-QUIC client object for local resolving
@@ -331,7 +331,7 @@ func (s *QUICNameServer) QueryIP(ctx context.Context, domain string, clientIP ne
 	}
 }
 
-func isActive(s quic.Connection) bool {
+func isActive(s *quic.Conn) bool {
 	select {
 	case <-s.Context().Done():
 		return false
@@ -340,8 +340,8 @@ func isActive(s quic.Connection) bool {
 	}
 }
 
-func (s *QUICNameServer) getConnection(ctx context.Context) (quic.Connection, error) {
-	var conn quic.Connection
+func (s *QUICNameServer) getConnection(ctx context.Context) (*quic.Conn, error) {
+	var conn *quic.Conn
 	s.RLock()
 	conn = s.connection
 	if conn != nil && isActive(conn) {
@@ -374,7 +374,7 @@ func (s *QUICNameServer) getConnection(ctx context.Context) (quic.Connection, er
 	return conn, nil
 }
 
-func (s *QUICNameServer) openConnection(ctx context.Context) (quic.Connection, error) {
+func (s *QUICNameServer) openConnection(ctx context.Context) (*quic.Conn, error) {
 	tlsConfig := tls.Config{
 		ServerName: func() string {
 			switch s.destination.Address.Family() {
@@ -399,7 +399,7 @@ func (s *QUICNameServer) openConnection(ctx context.Context) (quic.Connection, e
 	return conn, nil
 }
 
-func (s *QUICNameServer) openStream(ctx context.Context) (quic.Stream, error) {
+func (s *QUICNameServer) openStream(ctx context.Context) (*quic.Stream, error) {
 	conn, err := s.getConnection(ctx)
 	if err != nil {
 		return nil, err
