@@ -75,7 +75,7 @@ func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) erro
 	if err != nil {
 		return newError("failed to dial to destination").Base(err).AtWarning()
 	}
-	tlsConn, err := generator.TLS(conn)
+	tlsConn, err := generator.tlsHandshake(conn)
 	if err != nil {
 		return newError("failed to create TLS connection").Base(err).AtWarning()
 	}
@@ -173,7 +173,7 @@ func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) erro
 	}
 }
 
-func (generator *TrafficGenerator) TLS(conn net.Conn) (security.Conn, error) {
+func (generator *TrafficGenerator) tlsHandshake(conn net.Conn) (security.Conn, error) {
 	securityEngine, err := common.CreateObject(generator.ctx, generator.config.SecuritySettings)
 	if err != nil {
 		return nil, newError("unable to create security engine from security settings").Base(err)

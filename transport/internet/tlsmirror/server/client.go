@@ -9,6 +9,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorbase"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/tlstrafficgen"
 )
 
 func newPersistentMirrorTLSDialer(ctx context.Context, serverAddress net.Destination) *persistentMirrorTLSDialer {
@@ -31,6 +32,8 @@ type persistentMirrorTLSDialer struct {
 	outbound *Outbound
 
 	serverAddress net.Destination
+
+	trafficGenerator *tlstrafficgen.TrafficGenerator
 }
 
 func (d *persistentMirrorTLSDialer) init(ctx context.Context, config *Config) {
@@ -55,6 +58,21 @@ func (d *persistentMirrorTLSDialer) init(ctx context.Context, config *Config) {
 		}
 	}()
 
+	if d.config.EmbeddedTrafficGenerator != nil {
+		d.trafficGenerator = tlstrafficgen.NewTrafficGenerator(d.ctx, d.config.EmbeddedTrafficGenerator)
+
+		d.requestNewConnection = func(ctx context.Context) error {
+			go func() {
+				err := d.trafficGenerator.GenerateNextTraffic(d.ctx)
+				if err != nil {
+					newError("failed to generate next traffic").Base(err).AtWarning().WriteToLog()
+				} else {
+					newError("traffic generation request sent").AtDebug().WriteToLog()
+				}
+			}()
+			return nil
+		}
+	}
 }
 
 func (d *persistentMirrorTLSDialer) handleIncomingCarrierConnection(ctx context.Context, conn net.Conn) {
