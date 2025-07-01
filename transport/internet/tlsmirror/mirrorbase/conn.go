@@ -89,11 +89,15 @@ type readerWithInitialData struct {
 	innerReader io.Reader
 }
 
+func (r *readerWithInitialData) initialDataDrained() bool {
+	return len(r.initialData) == 0
+}
+
 func (r *readerWithInitialData) Read(p []byte) (n int, err error) {
 	if len(r.initialData) > 0 {
 		n = copy(p, r.initialData)
 		r.initialData = r.initialData[n:]
-		return
+		return n, nil
 	}
 	return r.innerReader.Read(p)
 }
@@ -107,7 +111,8 @@ func (c *conn) c2sWorker() {
 	_ = c2sHandshake
 	_ = handshakeReminder
 	_ = c2sReminderData
-	_, err = io.Copy(c.serverConn, bytes.NewReader(handshakeReminder))
+	serverConnectionWriter := bufio.NewWriter(c.serverConn)
+	_, err = io.Copy(serverConnectionWriter, bytes.NewReader(handshakeReminder))
 	if err != nil {
 		c.done()
 		newError("failed to copy handshake reminder").Base(err).AtWarning().WriteToLog()
@@ -122,15 +127,23 @@ func (c *conn) c2sWorker() {
 	}
 	c.ClientRandom = clientHello.ClientRandom
 
-	clientSocketReader := readerWithInitialData{initialData: c2sReminderData, innerReader: c.clientConn}
-	clientSocket := bufio.NewReader(&clientSocketReader)
+	clientSocketReader := &readerWithInitialData{initialData: c2sReminderData, innerReader: c.clientConn}
+	clientSocket := bufio.NewReaderSize(clientSocketReader, 65536)
 
 	recordReader := mirrorcommon.NewTLSRecordStreamReader(clientSocket)
-	recordWriter := mirrorcommon.NewTLSRecordStreamWriter(bufio.NewWriter(c.serverConn))
+	recordWriter := mirrorcommon.NewTLSRecordStreamWriter(serverConnectionWriter)
+	if len(c2sReminderData) == 0 {
+		err := serverConnectionWriter.Flush()
+		if err != nil {
+			c.done()
+			newError("failed to flush server connection writer").Base(err).AtWarning().WriteToLog()
+			return
+		}
+	}
 	go func() {
 		for c.ctx.Err() == nil {
 			record := <-c.c2sInsert
-			err := recordWriter.WriteRecord(record)
+			err := recordWriter.WriteRecord(record, false)
 			if err != nil {
 				c.done()
 				newError("failed to write C2S message").Base(err).AtWarning().WriteToLog()
@@ -163,6 +176,7 @@ func (c *conn) c2sWorker() {
 }
 
 func (c *conn) s2cWorker() {
+	// TODO: stick packets together, if they arrived so
 	s2cHandshake, handshakeReminder, s2cReminderData, err := c.captureHandshake(c.serverConn, c.clientConn)
 	if err != nil {
 		c.done()
@@ -172,7 +186,9 @@ func (c *conn) s2cWorker() {
 	_ = handshakeReminder
 	_ = s2cReminderData
 
-	_, err = io.Copy(c.clientConn, bytes.NewReader(handshakeReminder))
+	clientConnectionWriter := bufio.NewWriter(c.clientConn)
+
+	_, err = io.Copy(clientConnectionWriter, bytes.NewReader(handshakeReminder))
 	if err != nil {
 		c.done()
 		newError("failed to copy handshake reminder").Base(err).AtWarning().WriteToLog()
@@ -187,14 +203,23 @@ func (c *conn) s2cWorker() {
 	}
 	c.ServerRandom = serverHello.ServerRandom
 
-	serverSocketReader := readerWithInitialData{initialData: s2cReminderData, innerReader: c.serverConn}
-	serverSocket := bufio.NewReader(&serverSocketReader)
+	serverSocketReader := &readerWithInitialData{initialData: s2cReminderData, innerReader: c.serverConn}
+	serverSocket := bufio.NewReaderSize(serverSocketReader, 65536)
 	recordReader := mirrorcommon.NewTLSRecordStreamReader(serverSocket)
-	recordWriter := mirrorcommon.NewTLSRecordStreamWriter(bufio.NewWriter(c.clientConn))
+	recordWriter := mirrorcommon.NewTLSRecordStreamWriter(clientConnectionWriter)
+
+	if len(s2cReminderData) == 0 {
+		err := clientConnectionWriter.Flush()
+		if err != nil {
+			c.done()
+			newError("failed to flush client connection writer").Base(err).AtWarning().WriteToLog()
+			return
+		}
+	}
 	go func() {
 		for c.ctx.Err() == nil {
 			record := <-c.s2cInsert
-			err := recordWriter.WriteRecord(record)
+			err := recordWriter.WriteRecord(record, false)
 			if err != nil {
 				c.done()
 				newError("failed to write S2C message").Base(err).AtWarning().WriteToLog()
