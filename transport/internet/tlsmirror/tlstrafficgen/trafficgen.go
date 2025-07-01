@@ -196,15 +196,19 @@ func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) erro
 			}
 			selectedValue := int32(selectionValue.Int64())
 			currentValue := int32(0)
+			matched := false
 			for _, nextStep := range step.NextStep {
 				if currentValue >= selectedValue {
 					currentStep = int(nextStep.GotoLocation)
+					matched = true
 					break
 				}
 				currentValue += nextStep.Weight
 			}
-			newError("invalid steps instruction, check configuration for step", currentStep).AtError().WriteToLog()
-			currentStep++
+			if !matched {
+				newError("invalid steps jump instruction, check configuration for step ", currentStep).AtError().WriteToLog()
+				currentStep++
+			}
 		}
 	}
 }
