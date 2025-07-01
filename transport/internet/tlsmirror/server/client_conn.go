@@ -99,6 +99,7 @@ func (s *clientConnState) onC2SMessage(message *tlsmirror.TLSRecord) (drop bool,
 		if s.decryptor == nil {
 			clientRandom, serverRandom, err := s.mirrorConn.GetHandshakeRandom()
 			if err != nil {
+				newError("failed to get handshake random").Base(err).AtWarning().WriteToLog()
 				return false, nil
 			}
 
