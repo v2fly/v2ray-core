@@ -23,7 +23,7 @@ func DeriveEncryptionKey(primaryKey, clientRandom, serverRandom []byte, tag stri
 
 	encryptionKey, err := hkdf.Expand(func() hash.Hash {
 		return sha256.New()
-	}, combined, "v2ray-sp76YMKM-EkGrFUNL-rTJRJMkU:tlsmirror-encryption", 12)
+	}, combined, "v2ray-sp76YMKM-EkGrFUNL-rTJRJMkU:tlsmirror-encryption", 16)
 	if err != nil {
 		return nil, nil, newError("unable to derive encryption key").Base(err)
 	}

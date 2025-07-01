@@ -14,7 +14,7 @@ type Encryptor struct {
 func NewEncryptor(encryptionKey []byte, nonceMask []byte) *Encryptor {
 	wrappedAead := aeadAESGCMTLS13(encryptionKey, nonceMask)
 	return &Encryptor{
-		nonceGenerator: crypto.GenerateInitialAEADNonce(),
+		nonceGenerator: generateInitialAEADNonce(),
 		aead:           wrappedAead,
 	}
 }
