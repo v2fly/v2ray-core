@@ -140,6 +140,7 @@ func (d *persistentMirrorTLSDialer) handleIncomingCarrierConnection(ctx context.
 		localAddr:  conn.LocalAddr(),
 		remoteAddr: conn.RemoteAddr(),
 		handler:    d.handleIncomingReadyConnection,
+		primaryKey: d.config.PrimaryKey,
 	}
 
 	cconnState.mirrorConn = mirrorbase.NewMirroredTLSConn(ctx, conn, forwardConn, cconnState.onC2SMessage, cconnState.onS2CMessage, conn)

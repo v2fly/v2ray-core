@@ -23,4 +23,6 @@ message Config {
   string carrier_connection_tag = 4;
 
   v2ray.core.transport.internet.tlsmirror.tlstrafficgen.Config embedded_traffic_generator = 5;
+
+  bytes primary_key = 6;
 }

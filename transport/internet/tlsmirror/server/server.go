@@ -80,6 +80,7 @@ func (s *Server) accept(clientConn net.Conn, serverConn net.Conn) {
 		done:       cancel,
 		localAddr:  clientConn.LocalAddr(),
 		remoteAddr: clientConn.RemoteAddr(),
+		primaryKey: s.config.PrimaryKey,
 	}
 
 	conn.mirrorConn = mirrorbase.NewMirroredTLSConn(ctx, clientConn, serverConn, conn.onC2SMessage, nil, conn)
