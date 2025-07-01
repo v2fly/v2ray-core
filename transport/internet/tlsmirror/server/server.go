@@ -81,7 +81,13 @@ func (s *Server) accept(clientConn net.Conn, serverConn net.Conn) {
 		localAddr:  clientConn.LocalAddr(),
 		remoteAddr: clientConn.RemoteAddr(),
 		primaryKey: s.config.PrimaryKey,
+		handler:    s.onIncomingReadyConnection,
+		readPipe:   make(chan []byte, 1),
 	}
 
 	conn.mirrorConn = mirrorbase.NewMirroredTLSConn(ctx, clientConn, serverConn, conn.onC2SMessage, nil, conn)
+}
+
+func (s *Server) onIncomingReadyConnection(conn internet.Connection) {
+	go s.handler(conn)
 }
