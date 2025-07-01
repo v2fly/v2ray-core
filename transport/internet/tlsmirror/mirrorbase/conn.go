@@ -126,6 +126,7 @@ func (c *conn) c2sWorker() {
 		return
 	}
 	c.ClientRandom = clientHello.ClientRandom
+	c.isClientRandomReady = true
 
 	clientSocketReader := &readerWithInitialData{initialData: c2sReminderData, innerReader: c.clientConn}
 	clientSocket := bufio.NewReaderSize(clientSocketReader, 65536)
@@ -202,6 +203,7 @@ func (c *conn) s2cWorker() {
 		return
 	}
 	c.ServerRandom = serverHello.ServerRandom
+	c.isServerRandomReady = true
 
 	serverSocketReader := &readerWithInitialData{initialData: s2cReminderData, innerReader: c.serverConn}
 	serverSocket := bufio.NewReaderSize(serverSocketReader, 65536)
