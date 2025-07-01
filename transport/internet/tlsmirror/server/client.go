@@ -2,6 +2,10 @@ package server
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+
+	"github.com/golang/protobuf/proto"
+
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/environment"
 	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
@@ -12,10 +16,11 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/tlstrafficgen"
 )
 
-func newPersistentMirrorTLSDialer(ctx context.Context, serverAddress net.Destination) *persistentMirrorTLSDialer {
+func newPersistentMirrorTLSDialer(ctx context.Context, serverAddress net.Destination, overrideSecuritySetting proto.Message) *persistentMirrorTLSDialer {
 	return &persistentMirrorTLSDialer{
-		ctx:           ctx,
-		serverAddress: serverAddress,
+		ctx:                        ctx,
+		serverAddress:              serverAddress,
+		overridingSecuritySettings: overrideSecuritySetting,
 	}
 
 }
@@ -31,7 +36,8 @@ type persistentMirrorTLSDialer struct {
 	listener *OutboundListener
 	outbound *Outbound
 
-	serverAddress net.Destination
+	serverAddress              net.Destination
+	overridingSecuritySettings proto.Message
 
 	trafficGenerator *tlstrafficgen.TrafficGenerator
 }
@@ -59,6 +65,9 @@ func (d *persistentMirrorTLSDialer) init(ctx context.Context, config *Config) {
 	}()
 
 	if d.config.EmbeddedTrafficGenerator != nil {
+		if d.overridingSecuritySettings != nil && d.config.EmbeddedTrafficGenerator.SecuritySettings == nil {
+			d.config.EmbeddedTrafficGenerator.SecuritySettings = serial.ToTypedMessage(d.overridingSecuritySettings)
+		}
 		d.trafficGenerator = tlstrafficgen.NewTrafficGenerator(d.ctx, d.config.EmbeddedTrafficGenerator)
 
 		d.requestNewConnection = func(ctx context.Context) error {
@@ -145,6 +154,10 @@ func Dial(ctx context.Context, dest net.Destination, settings *internet.MemorySt
 	transportEnvironment := envctx.EnvironmentFromContext(ctx).(environment.TransportEnvironment)
 	dialer, err := transportEnvironment.TransientStorage().Get(ctx, "persistentDialer")
 	if err != nil {
+		var securitySetting proto.Message
+		if settings.SecurityType != "" && settings.SecurityType != "none" {
+			securitySetting = settings.SecuritySettings.(proto.Message)
+		}
 		dialer = newPersistentMirrorTLSDialer(ctx, dest)
 		err = transportEnvironment.TransientStorage().Put(ctx, "persistentDialer", dialer)
 		if err != nil {
