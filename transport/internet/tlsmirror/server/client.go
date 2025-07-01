@@ -2,27 +2,35 @@ package server
 
 import (
 	"context"
-	"github.com/v2fly/v2ray-core/v5/common/serial"
 
 	"github.com/golang/protobuf/proto"
 
+	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/environment"
 	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
 	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/features/outbound"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorbase"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/tlstrafficgen"
 )
 
-func newPersistentMirrorTLSDialer(ctx context.Context, serverAddress net.Destination, overrideSecuritySetting proto.Message) *persistentMirrorTLSDialer {
-	return &persistentMirrorTLSDialer{
+func newPersistentMirrorTLSDialer(ctx context.Context, config *Config, serverAddress net.Destination, overrideSecuritySetting proto.Message) (*persistentMirrorTLSDialer, error) {
+	persistentDialer := &persistentMirrorTLSDialer{
 		ctx:                        ctx,
 		serverAddress:              serverAddress,
 		overridingSecuritySettings: overrideSecuritySetting,
 	}
 
+	err := persistentDialer.init(ctx, config)
+	if err != nil {
+		return nil, newError("failed to initialize persistent mirror TLS dialer").Base(err)
+	}
+
+	return persistentDialer, nil
 }
 
 type persistentMirrorTLSDialer struct {
@@ -40,9 +48,19 @@ type persistentMirrorTLSDialer struct {
 	overridingSecuritySettings proto.Message
 
 	trafficGenerator *tlstrafficgen.TrafficGenerator
+
+	obm outbound.Manager
 }
 
-func (d *persistentMirrorTLSDialer) init(ctx context.Context, config *Config) {
+func (d *persistentMirrorTLSDialer) init(ctx context.Context, config *Config) error {
+
+	if err := core.RequireFeatures(ctx, func(om outbound.Manager) {
+		d.obm = om
+
+	}); err != nil {
+		return err
+	}
+
 	d.requestNewConnection = func(ctx context.Context) error {
 		return nil
 	}
@@ -55,6 +73,25 @@ func (d *persistentMirrorTLSDialer) init(ctx context.Context, config *Config) {
 	d.outbound = NewOutbound(d.config.CarrierConnectionTag, d.listener)
 
 	go func() {
+		err := d.outbound.Start()
+		if err != nil {
+			newError("failed to start outbound listener").Base(err).AtWarning().WriteToLog()
+			return
+		}
+
+		if err := d.obm.RemoveHandler(context.Background(), d.config.CarrierConnectionTag); err != nil {
+			newError("failed to remove existing handler").WriteToLog()
+		}
+
+		err = d.obm.AddHandler(context.Background(), &Outbound{
+			tag:      d.config.CarrierConnectionTag,
+			listener: d.listener,
+		})
+		if err != nil {
+			newError("failed to add outbound handler").Base(err).AtWarning().WriteToLog()
+			return
+		}
+
 		for {
 			conn, err := d.listener.Accept()
 			if err != nil {
@@ -83,6 +120,7 @@ func (d *persistentMirrorTLSDialer) init(ctx context.Context, config *Config) {
 			return nil
 		}
 	}
+	return nil
 }
 
 func (d *persistentMirrorTLSDialer) handleIncomingCarrierConnection(ctx context.Context, conn net.Conn) {
@@ -159,7 +197,11 @@ func Dial(ctx context.Context, dest net.Destination, settings *internet.MemorySt
 		if settings.SecurityType != "" && settings.SecurityType != "none" {
 			securitySetting = settings.SecuritySettings.(proto.Message)
 		}
-		dialer = newPersistentMirrorTLSDialer(ctx, dest, securitySetting)
+		config := settings.ProtocolSettings.(*Config)
+		dialer, err = newPersistentMirrorTLSDialer(ctx, config, dest, securitySetting)
+		if err != nil {
+			return nil, newError("failed to create persistent mirror TLS dialer").Base(err)
+		}
 		err = transportEnvironment.TransientStorage().Put(ctx, "persistentDialer", dialer)
 		if err != nil {
 			return nil, newError("failed to put persistent dialer").Base(err)

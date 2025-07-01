@@ -16,6 +16,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/environment"
 	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
 	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/security"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
 )
@@ -209,7 +210,11 @@ func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) erro
 }
 
 func (generator *TrafficGenerator) tlsHandshake(conn net.Conn) (security.Conn, error) {
-	securityEngine, err := common.CreateObject(generator.ctx, generator.config.SecuritySettings)
+	securitySettingInstance, err := serial.GetInstanceOf(generator.config.SecuritySettings)
+	if err != nil {
+		return nil, newError("failed to get instance of security settings").Base(err)
+	}
+	securityEngine, err := common.CreateObject(generator.ctx, securitySettingInstance)
 	if err != nil {
 		return nil, newError("unable to create security engine from security settings").Base(err)
 	}
