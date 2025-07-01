@@ -27,6 +27,14 @@ func NewMirroredTLSConn(ctx context.Context, clientConn net.Conn, serverConn net
 	c.ctx, c.done = context.WithCancel(ctx)
 	go c.c2sWorker()
 	go c.s2cWorker()
+	go func() {
+		<-c.ctx.Done()
+		if closable != nil {
+			closable.Close()
+		}
+		c.clientConn.Close()
+		c.serverConn.Close()
+	}()
 	return c
 }
 
@@ -259,7 +267,6 @@ func drainCopy(dst io.Writer, initData []byte, src io.Reader) {
 		if err != nil {
 			newError("failed to drain copy").Base(err).AtWarning().WriteToLog()
 		}
-		return
 	}
 	_, err := io.Copy(dst, src)
 	if err != nil {
@@ -298,6 +305,7 @@ func (c *conn) captureHandshake(sourceConn, mirrorConn net.Conn) (handshake tlsm
 		n, err := sourceConn.Read(readBuffer[nextRead:])
 		if err != nil {
 			c.done()
+			reterr = newError("failed to read from source connection").Base(err).AtWarning()
 			return
 		}
 		handshakeRejectionDecisionMaker := &rejectionDecisionMaker{}
@@ -307,7 +315,7 @@ func (c *conn) captureHandshake(sourceConn, mirrorConn net.Conn) (handshake tlsm
 				// TODO: directly copy
 				drainCopy(mirrorConn, readBuffer[:nextRead+n], sourceConn)
 				c.done()
-				err = newError("failed to peek tls record").Base(err).AtWarning()
+				reterr = newError("failed to peek tls record").Base(err).AtWarning()
 				return
 			}
 			_, err = io.Copy(mirrorConn, bytes.NewReader(readBuffer[nextRead:nextRead+n]))
