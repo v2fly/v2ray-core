@@ -158,7 +158,7 @@ func Dial(ctx context.Context, dest net.Destination, settings *internet.MemorySt
 		if settings.SecurityType != "" && settings.SecurityType != "none" {
 			securitySetting = settings.SecuritySettings.(proto.Message)
 		}
-		dialer = newPersistentMirrorTLSDialer(ctx, dest)
+		dialer = newPersistentMirrorTLSDialer(ctx, dest, securitySetting)
 		err = transportEnvironment.TransientStorage().Put(ctx, "persistentDialer", dialer)
 		if err != nil {
 			return nil, newError("failed to put persistent dialer").Base(err)
