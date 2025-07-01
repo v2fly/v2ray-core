@@ -200,7 +200,8 @@ func Dial(ctx context.Context, dest net.Destination, settings *internet.MemorySt
 			securitySetting = settings.SecuritySettings.(proto.Message)
 		}
 		config := settings.ProtocolSettings.(*Config)
-		dialer, err = newPersistentMirrorTLSDialer(ctx, config, dest, securitySetting)
+		detachedContext := core.ToBackgroundDetachedContext(ctx)
+		dialer, err = newPersistentMirrorTLSDialer(detachedContext, config, dest, securitySetting)
 		if err != nil {
 			return nil, newError("failed to create persistent mirror TLS dialer").Base(err)
 		}
