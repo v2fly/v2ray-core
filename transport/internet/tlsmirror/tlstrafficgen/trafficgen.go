@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/url"
+	"time"
 
 	cryptoRand "crypto/rand"
 	"golang.org/x/net/http2"
@@ -29,10 +30,12 @@ type TrafficGenerator struct {
 	tag         string
 }
 
-func NewTrafficGenerator(ctx context.Context, config *Config) *TrafficGenerator {
+func NewTrafficGenerator(ctx context.Context, config *Config, destination net.Destination, tag string) *TrafficGenerator {
 	return &TrafficGenerator{
-		ctx:    ctx,
-		config: config,
+		ctx:         ctx,
+		config:      config,
+		destination: destination,
+		tag:         tag,
 	}
 }
 
@@ -51,6 +54,19 @@ func (t *trafficGeneratorManagedConnectionController) WaitConnectionReady() cont
 func (t *trafficGeneratorManagedConnectionController) RecallTrafficGenerator() error {
 	t.recallDone()
 	return nil
+}
+
+// Copied from https://brandur.org/fragments/crypto-rand-float64, Thanks
+func randIntN(max int64) int64 {
+	nBig, err := cryptoRand.Int(cryptoRand.Reader, big.NewInt(max))
+	if err != nil {
+		panic(err)
+	}
+	return nBig.Int64()
+}
+
+func randFloat64() float64 {
+	return float64(randIntN(1<<53)) / (1 << 53)
 }
 
 func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) error {
@@ -123,6 +139,8 @@ func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) erro
 			httpReq.Header = header
 		}
 
+		startTime := time.Now()
+
 		resp, err := httpRoundTripper.RoundTrip(httpReq)
 		if err != nil {
 			return newError("failed to send HTTP request").Base(err).AtWarning()
@@ -134,6 +152,23 @@ func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) erro
 		err = resp.Body.Close()
 		if err != nil {
 			return newError("failed to close HTTP response body").Base(err).AtWarning()
+		}
+		endTime := time.Now()
+
+		eclipsedTime := endTime.Sub(startTime)
+		secondToWait := float64(step.WaitAtMost-step.WaitAtLeast)*randFloat64() + float64(step.WaitAtLeast)
+		if eclipsedTime < time.Duration(secondToWait*float64(time.Second)) {
+			waitTime := time.Duration(secondToWait*float64(time.Second)) - eclipsedTime
+			newError("waiting for ", waitTime, " after step ", currentStep).AtDebug().WriteToLog()
+			waitTimer := time.NewTimer(waitTime)
+			select {
+			case <-ctx.Done():
+				waitTimer.Stop()
+				return ctx.Err()
+			case <-waitTimer.C:
+			}
+		} else {
+			newError("step ", currentStep, " took too long: ", eclipsedTime, ", expected: ", secondToWait, " seconds").AtWarning().WriteToLog()
 		}
 
 		if step.ConnectionReady {

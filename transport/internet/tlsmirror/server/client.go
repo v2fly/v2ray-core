@@ -68,7 +68,8 @@ func (d *persistentMirrorTLSDialer) init(ctx context.Context, config *Config) {
 		if d.overridingSecuritySettings != nil && d.config.EmbeddedTrafficGenerator.SecuritySettings == nil {
 			d.config.EmbeddedTrafficGenerator.SecuritySettings = serial.ToTypedMessage(d.overridingSecuritySettings)
 		}
-		d.trafficGenerator = tlstrafficgen.NewTrafficGenerator(d.ctx, d.config.EmbeddedTrafficGenerator)
+		d.trafficGenerator = tlstrafficgen.NewTrafficGenerator(d.ctx, d.config.EmbeddedTrafficGenerator,
+			d.serverAddress, d.config.CarrierConnectionTag)
 
 		d.requestNewConnection = func(ctx context.Context) error {
 			go func() {
