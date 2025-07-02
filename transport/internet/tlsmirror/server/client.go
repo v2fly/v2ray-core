@@ -93,9 +93,16 @@ func (d *persistentMirrorTLSDialer) init(ctx context.Context, config *Config) er
 		}
 
 		for {
+			var ctx context.Context
 			conn, err := d.listener.Accept()
 			if err != nil {
 				break
+			}
+			if ctxGetter, ok := conn.(connectionContextGetter); ok {
+				ctx = ctxGetter.GetConnectionContext()
+			} else {
+				ctx = d.ctx
+				newError("connection does not implement connectionContextGetter, using default context").AtError().WriteToLog()
 			}
 			d.handleIncomingCarrierConnection(ctx, conn)
 		}
@@ -153,14 +160,24 @@ type connectionContextGetter interface {
 
 func (d *persistentMirrorTLSDialer) handleIncomingReadyConnection(conn internet.Connection) {
 	go func() {
+		var waitedForReady bool
 		if getter, ok := conn.(connectionContextGetter); ok {
 			ctx := getter.GetConnectionContext()
 
 			if managedConnectionController := ctx.Value(tlsmirror.TrafficGeneratorManagedConnectionContextKey); managedConnectionController != nil {
 				if controller, ok := managedConnectionController.(tlsmirror.TrafficGeneratorManagedConnection); ok {
-					<-controller.WaitConnectionReady().Done()
+					select {
+					case <-controller.WaitConnectionReady().Done():
+						waitedForReady = true
+						// TODO: connection might become invalid and never ready, handle this case
+
+					}
+
 				}
 			}
+		}
+		if !waitedForReady {
+			newError("unable to wait for connection ready, please verify your setup").AtWarning().WriteToLog()
 		}
 		d.incomingConnections <- conn
 	}()

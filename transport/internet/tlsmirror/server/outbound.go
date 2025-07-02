@@ -12,20 +12,29 @@ import (
 
 func NewOutboundListener() *OutboundListener {
 	return &OutboundListener{
-		buffer: make(chan net.Conn, 4),
+		buffer: make(chan *connWithContext, 4),
 		done:   done.New(),
 	}
 }
 
+type connWithContext struct {
+	net.Conn
+	ctx context.Context
+}
+
+func (c *connWithContext) GetConnectionContext() context.Context {
+	return c.ctx
+}
+
 // OutboundListener is a net.Listener for listening gRPC connections.
 type OutboundListener struct {
-	buffer chan net.Conn
+	buffer chan *connWithContext
 	done   *done.Instance
 }
 
-func (l *OutboundListener) add(conn net.Conn) {
+func (l *OutboundListener) addWithContext(ctx context.Context, conn net.Conn) {
 	select {
-	case l.buffer <- conn:
+	case l.buffer <- &connWithContext{Conn: conn, ctx: ctx}:
 	case <-l.done.Wait():
 		conn.Close()
 	default:
@@ -94,7 +103,7 @@ func (co *Outbound) Dispatch(ctx context.Context, link *transport.Link) {
 
 	closeSignal := done.New()
 	c := net.NewConnection(net.ConnectionInputMulti(link.Writer), net.ConnectionOutputMulti(link.Reader), net.ConnectionOnClose(closeSignal))
-	co.listener.add(c)
+	co.listener.addWithContext(ctx, c)
 	co.access.RUnlock()
 	<-closeSignal.Wait()
 }

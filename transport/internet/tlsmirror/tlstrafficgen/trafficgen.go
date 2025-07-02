@@ -174,6 +174,7 @@ func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) erro
 
 		if step.ConnectionReady {
 			carrierConnectionReadyDone()
+			newError("connection ready for payload traffic").AtInfo().WriteToLog()
 		}
 
 		if step.ConnectionRecallExit {
