@@ -274,8 +274,7 @@ func drainCopy(dst io.Writer, initData []byte, src io.Reader) {
 	}
 }
 
-type rejectionDecisionMaker struct {
-}
+type rejectionDecisionMaker struct{}
 
 func (r *rejectionDecisionMaker) TestIfReject(record *tlsmirror.TLSRecord, readyFields int) error {
 	if readyFields >= 1 {
@@ -306,7 +305,7 @@ func (c *conn) captureHandshake(sourceConn, mirrorConn net.Conn) (handshake tlsm
 		if err != nil {
 			c.done()
 			reterr = newError("failed to read from source connection").Base(err).AtWarning()
-			return
+			return handshake, nil, nil, reterr
 		}
 		handshakeRejectionDecisionMaker := &rejectionDecisionMaker{}
 		result, tryAgainLen, processed, err := mirrorcommon.PeekTLSRecord(&bufPeeker{buffer: readBuffer[:nextRead+n]}, handshakeRejectionDecisionMaker)
@@ -316,29 +315,28 @@ func (c *conn) captureHandshake(sourceConn, mirrorConn net.Conn) (handshake tlsm
 				drainCopy(mirrorConn, readBuffer[:nextRead+n], sourceConn)
 				c.done()
 				reterr = newError("failed to peek tls record").Base(err).AtWarning()
-				return
+				return handshake, nil, nil, reterr
 			}
 			_, err = io.Copy(mirrorConn, bytes.NewReader(readBuffer[nextRead:nextRead+n]))
 			if err != nil {
 				c.done()
 				newError("failed to copy to server connection").Base(err).AtWarning().WriteToLog()
-				return
+				return handshake, nil, nil, reterr
 			}
 			nextRead += n
 		} else {
 			// Parse the client hello
 			if result.RecordType != mirrorcommon.TLSRecord_RecordType_handshake {
 				c.done()
-				err = newError("unexpected record type").AtWarning()
-				return
+				reterr = newError("unexpected record type").AtWarning()
+				return handshake, nil, nil, reterr
 			}
 			handshake = result
 			handshakeReminder = readBuffer[nextRead:processed]
 			rest = readBuffer[processed : nextRead+n]
-			reterr = nil
-			return
+			return handshake, handshakeReminder, rest, nil
 		}
 	}
 	reterr = newError("context is done")
-	return
+	return handshake, nil, nil, reterr
 }

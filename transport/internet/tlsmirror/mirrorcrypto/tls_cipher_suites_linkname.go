@@ -1,7 +1,9 @@
 package mirrorcrypto
 
-import _ "unsafe"
-import "crypto/cipher"
+import (
+	"crypto/cipher"
+	_ "unsafe"
+)
 
 // This linkname is necessary to avoid duplicating too many internal packages.
 

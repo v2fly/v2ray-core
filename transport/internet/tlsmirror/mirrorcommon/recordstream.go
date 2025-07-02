@@ -3,8 +3,9 @@ package mirrorcommon
 import (
 	"bufio"
 	"errors"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
 	"io"
+
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
 )
 
 func NewTLSRecordStreamReader(reader *bufio.Reader) *TLSRecordStreamReader {
@@ -29,7 +30,7 @@ func (t *TLSRecordStreamReader) ReadNextRecord() (*tlsmirror.TLSRecord, error) {
 
 	if errors.Is(err, io.EOF) {
 		return nil, err
-	} else {
+	} else { // nolint: gocritic
 		if tryAgainLength == 0 {
 			return nil, err
 		}

@@ -53,10 +53,8 @@ type persistentMirrorTLSDialer struct {
 }
 
 func (d *persistentMirrorTLSDialer) init(ctx context.Context, config *Config) error {
-
 	if err := core.RequireFeatures(ctx, func(om outbound.Manager) {
 		d.obm = om
-
 	}); err != nil {
 		return err
 	}
@@ -166,13 +164,11 @@ func (d *persistentMirrorTLSDialer) handleIncomingReadyConnection(conn internet.
 
 			if managedConnectionController := ctx.Value(tlsmirror.TrafficGeneratorManagedConnectionContextKey); managedConnectionController != nil {
 				if controller, ok := managedConnectionController.(tlsmirror.TrafficGeneratorManagedConnection); ok {
-					select {
+					select { // nolint: staticcheck
 					case <-controller.WaitConnectionReady().Done():
 						waitedForReady = true
 						// TODO: connection might become invalid and never ready, handle this case
-
 					}
-
 				}
 			}
 		}
@@ -184,7 +180,8 @@ func (d *persistentMirrorTLSDialer) handleIncomingReadyConnection(conn internet.
 }
 
 func (d *persistentMirrorTLSDialer) Dial(ctx context.Context,
-	dest net.Destination, settings *internet.MemoryStreamConfig) (internet.Connection, error) {
+	dest net.Destination, settings *internet.MemoryStreamConfig,
+) (internet.Connection, error) {
 	var recvConn net.Conn
 	select {
 	case conn := <-d.incomingConnections:
@@ -194,7 +191,7 @@ func (d *persistentMirrorTLSDialer) Dial(ctx context.Context,
 		if err != nil {
 			return nil, newError("failed to request new connection").Base(err)
 		}
-		select {
+		select { // nolint: staticcheck
 		case conn := <-d.incomingConnections:
 			recvConn = conn
 		}
@@ -205,7 +202,6 @@ func (d *persistentMirrorTLSDialer) Dial(ctx context.Context,
 	}
 
 	return recvConn, nil
-
 }
 
 func Dial(ctx context.Context, dest net.Destination, settings *internet.MemoryStreamConfig) (internet.Connection, error) {

@@ -3,13 +3,13 @@ package tlstrafficgen
 import (
 	"bufio"
 	"context"
+	cryptoRand "crypto/rand"
 	"io"
 	"math/big"
 	"net/http"
 	"net/url"
 	"time"
 
-	cryptoRand "crypto/rand"
 	"golang.org/x/net/http2"
 
 	"github.com/v2fly/v2ray-core/v5/common"
@@ -86,7 +86,7 @@ func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) erro
 
 	var trafficControllerIfce tlsmirror.TrafficGeneratorManagedConnection = trafficController
 	managedConnectionContextValue := context.WithValue(generator.ctx,
-		tlsmirror.TrafficGeneratorManagedConnectionContextKey, trafficControllerIfce)
+		tlsmirror.TrafficGeneratorManagedConnectionContextKey, trafficControllerIfce) // nolint:staticcheck
 
 	conn, err := dialer(managedConnectionContextValue, generator.destination, generator.tag)
 	if err != nil {

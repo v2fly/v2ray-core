@@ -10,8 +10,8 @@ import (
 )
 
 func ListenTLSMirror(ctx context.Context, address net.Address, port net.Port,
-	streamSettings *internet.MemoryStreamConfig, handler internet.ConnHandler) (internet.Listener, error) {
-
+	streamSettings *internet.MemoryStreamConfig, handler internet.ConnHandler,
+) (internet.Listener, error) {
 	tlsMirrorSettings := streamSettings.ProtocolSettings.(*Config)
 	listener, err := transportcommon.ListenWithSecuritySettings(ctx, address, port, streamSettings)
 	if err != nil {
