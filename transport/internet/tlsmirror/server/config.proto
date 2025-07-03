@@ -25,4 +25,6 @@ message Config {
   v2ray.core.transport.internet.tlsmirror.tlstrafficgen.Config embedded_traffic_generator = 5;
 
   bytes primary_key = 6;
+
+  repeated uint32 explicit_nonce_ciphersuites = 7;
 }

@@ -50,6 +50,8 @@ type persistentMirrorTLSDialer struct {
 	trafficGenerator *tlstrafficgen.TrafficGenerator
 
 	obm outbound.Manager
+
+	explicitNonceCiphersuiteLookup *ciphersuiteLookuper
 }
 
 func (d *persistentMirrorTLSDialer) init(ctx context.Context, config *Config) error {
@@ -69,6 +71,17 @@ func (d *persistentMirrorTLSDialer) init(ctx context.Context, config *Config) er
 	d.incomingConnections = make(chan net.Conn, 4)
 	d.listener = NewOutboundListener()
 	d.outbound = NewOutbound(d.config.CarrierConnectionTag, d.listener)
+
+	if len(d.config.ExplicitNonceCiphersuites) > 0 {
+		var err error
+		d.explicitNonceCiphersuiteLookup, err = newCipherSuiteLookuperFromUint32Array(d.config.ExplicitNonceCiphersuites)
+		if err != nil {
+			return newError("failed to create explicit nonce ciphersuite lookuper").Base(err)
+		}
+	} else {
+		d.explicitNonceCiphersuiteLookup = newEmptyCipherSuiteLookuper()
+		newError("no explicit nonce ciphersuites configured, all ciphersuites will be treated as non-explicit nonce").AtWarning().WriteToLog()
+	}
 
 	go func() {
 		err := d.outbound.Start()
@@ -149,7 +162,8 @@ func (d *persistentMirrorTLSDialer) handleIncomingCarrierConnection(ctx context.
 		readPipe:   make(chan []byte, 1),
 	}
 
-	cconnState.mirrorConn = mirrorbase.NewMirroredTLSConn(ctx, conn, forwardConn, cconnState.onC2SMessage, cconnState.onS2CMessage, conn)
+	cconnState.mirrorConn = mirrorbase.NewMirroredTLSConn(ctx, conn, forwardConn, cconnState.onC2SMessage, cconnState.onS2CMessage, conn,
+		d.explicitNonceCiphersuiteLookup.Lookup)
 }
 
 type connectionContextGetter interface {
