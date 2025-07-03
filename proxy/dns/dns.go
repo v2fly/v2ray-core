@@ -88,13 +88,10 @@ func (h *Handler) Init(config *Config, dnsClient dns.Client, policyManager polic
 	if config.Server != nil {
 		h.server = config.Server.AsDestination()
 	}
-<<<<<<< HEAD
 
 	h.config = config
-=======
-	h.nonIPQuery = config.Non_IPQuery
 
->>>>>>> ff1eb9f2 (add nonIPQuery for dns config)
+	h.nonIPQuery = config.Non_IPQuery
 	return nil
 }
 
