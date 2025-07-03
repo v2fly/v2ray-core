@@ -46,6 +46,23 @@ type trafficGeneratorManagedConnectionController struct {
 
 	recallCtx  context.Context
 	recallDone context.CancelFunc
+
+	invalidatedCtx  context.Context
+	invalidatedDone context.CancelFunc
+}
+
+func newTrafficGeneratorManagedConnectionController(parent context.Context) *trafficGeneratorManagedConnectionController {
+	readyCtx, readyDone := context.WithCancel(parent)
+	recallCtx, recallDone := context.WithCancel(parent)
+	invalidatedCtx, invalidatedDone := context.WithCancel(parent)
+	return &trafficGeneratorManagedConnectionController{
+		readyCtx:        readyCtx,
+		readyDone:       readyDone,
+		recallCtx:       recallCtx,
+		recallDone:      recallDone,
+		invalidatedCtx:  invalidatedCtx,
+		invalidatedDone: invalidatedDone,
+	}
 }
 
 func (t *trafficGeneratorManagedConnectionController) WaitConnectionReady() context.Context {
@@ -55,6 +72,10 @@ func (t *trafficGeneratorManagedConnectionController) WaitConnectionReady() cont
 func (t *trafficGeneratorManagedConnectionController) RecallTrafficGenerator() error {
 	t.recallDone()
 	return nil
+}
+
+func (t *trafficGeneratorManagedConnectionController) IsConnectionInvalidated() bool {
+	return t.invalidatedCtx.Err() != nil
 }
 
 // Copied from https://brandur.org/fragments/crypto-rand-float64, Thanks
@@ -74,19 +95,16 @@ func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) erro
 	transportEnvironment := envctx.EnvironmentFromContext(generator.ctx).(environment.TransportEnvironment)
 	dialer := transportEnvironment.OutboundDialer()
 
-	carrierConnectionReadyCtx, carrierConnectionReadyDone := context.WithCancel(generator.ctx)
-	carrierConnectionRecallCtx, carrierConnectionRecallDone := context.WithCancel(generator.ctx)
-
-	trafficController := &trafficGeneratorManagedConnectionController{
-		readyCtx:   carrierConnectionReadyCtx,
-		readyDone:  carrierConnectionReadyDone,
-		recallCtx:  carrierConnectionRecallCtx,
-		recallDone: carrierConnectionRecallDone,
-	}
+	trafficController := newTrafficGeneratorManagedConnectionController(generator.ctx)
 
 	var trafficControllerIfce tlsmirror.TrafficGeneratorManagedConnection = trafficController
 	managedConnectionContextValue := context.WithValue(generator.ctx,
 		tlsmirror.TrafficGeneratorManagedConnectionContextKey, trafficControllerIfce) // nolint:staticcheck
+
+	defer func() {
+		trafficController.invalidatedDone()
+		trafficController.readyDone()
+	}()
 
 	conn, err := dialer(managedConnectionContextValue, generator.destination, generator.tag)
 	if err != nil {
@@ -173,12 +191,12 @@ func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) erro
 		}
 
 		if step.ConnectionReady {
-			carrierConnectionReadyDone()
+			trafficController.readyDone()
 			newError("connection ready for payload traffic").AtInfo().WriteToLog()
 		}
 
 		if step.ConnectionRecallExit {
-			if carrierConnectionRecallCtx.Err() != nil {
+			if trafficController.recallCtx.Err() != nil {
 				return tlsConn.Close()
 			}
 		}
