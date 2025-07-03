@@ -47,7 +47,7 @@ jobs:
         run: |
           export PATH=$(go env GOPATH)/bin:${PATH}
           go install -v github.com/ory/go-acc@latest
-          go-acc -timeout=30m --covermode=atomic -o=coverage.txt ./...
+          go-acc --covermode=atomic -o=coverage.txt ./... -- -timeout=30m
         shell: bash
 
       - name: Upload codecov
