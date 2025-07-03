@@ -22,6 +22,8 @@ type Server struct {
 	handler  internet.ConnHandler
 
 	ctx context.Context
+
+	explicitNonceCiphersuiteLookup *ciphersuiteLookuper
 }
 
 func (s *Server) process(conn net.Conn) {
@@ -85,9 +87,32 @@ func (s *Server) accept(clientConn net.Conn, serverConn net.Conn) {
 		readPipe:   make(chan []byte, 1),
 	}
 
-	conn.mirrorConn = mirrorbase.NewMirroredTLSConn(ctx, clientConn, serverConn, conn.onC2SMessage, nil, conn)
+	conn.mirrorConn = mirrorbase.NewMirroredTLSConn(ctx, clientConn, serverConn, conn.onC2SMessage, nil, conn,
+		s.explicitNonceCiphersuiteLookup.Lookup)
 }
 
 func (s *Server) onIncomingReadyConnection(conn internet.Connection) {
 	go s.handler(conn)
+}
+
+func NewServer(ctx context.Context, listener net.Listener, config *Config, handler internet.ConnHandler) *Server {
+	var explicitNonceCiphersuiteLookup *ciphersuiteLookuper
+	if len(config.ExplicitNonceCiphersuites) > 0 {
+		var err error
+		explicitNonceCiphersuiteLookup, err = newCipherSuiteLookuperFromUint32Array(config.ExplicitNonceCiphersuites)
+		if err != nil {
+			newError("failed to create explicit nonce ciphersuite lookuper").Base(err).AtWarning().WriteToLog()
+		}
+	} else {
+		explicitNonceCiphersuiteLookup = newEmptyCipherSuiteLookuper()
+		newError("no explicit nonce ciphersuites configured, all ciphersuites will be treated as non-explicit nonce").AtWarning().WriteToLog()
+	}
+
+	return &Server{
+		ctx:                            ctx,
+		listener:                       listener,
+		config:                         config,
+		handler:                        handler,
+		explicitNonceCiphersuiteLookup: explicitNonceCiphersuiteLookup,
+	}
 }

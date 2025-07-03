@@ -18,15 +18,16 @@ const (
 )
 
 type Config struct {
-	state                    protoimpl.MessageState `protogen:"open.v1"`
-	ForwardAddress           string                 `protobuf:"bytes,1,opt,name=forward_address,json=forwardAddress,proto3" json:"forward_address,omitempty"`
-	ForwardPort              uint32                 `protobuf:"varint,2,opt,name=forward_port,json=forwardPort,proto3" json:"forward_port,omitempty"`
-	ForwardTag               string                 `protobuf:"bytes,3,opt,name=forward_tag,json=forwardTag,proto3" json:"forward_tag,omitempty"`
-	CarrierConnectionTag     string                 `protobuf:"bytes,4,opt,name=carrier_connection_tag,json=carrierConnectionTag,proto3" json:"carrier_connection_tag,omitempty"`
-	EmbeddedTrafficGenerator *tlstrafficgen.Config  `protobuf:"bytes,5,opt,name=embedded_traffic_generator,json=embeddedTrafficGenerator,proto3" json:"embedded_traffic_generator,omitempty"`
-	PrimaryKey               []byte                 `protobuf:"bytes,6,opt,name=primary_key,json=primaryKey,proto3" json:"primary_key,omitempty"`
-	unknownFields            protoimpl.UnknownFields
-	sizeCache                protoimpl.SizeCache
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	ForwardAddress            string                 `protobuf:"bytes,1,opt,name=forward_address,json=forwardAddress,proto3" json:"forward_address,omitempty"`
+	ForwardPort               uint32                 `protobuf:"varint,2,opt,name=forward_port,json=forwardPort,proto3" json:"forward_port,omitempty"`
+	ForwardTag                string                 `protobuf:"bytes,3,opt,name=forward_tag,json=forwardTag,proto3" json:"forward_tag,omitempty"`
+	CarrierConnectionTag      string                 `protobuf:"bytes,4,opt,name=carrier_connection_tag,json=carrierConnectionTag,proto3" json:"carrier_connection_tag,omitempty"`
+	EmbeddedTrafficGenerator  *tlstrafficgen.Config  `protobuf:"bytes,5,opt,name=embedded_traffic_generator,json=embeddedTrafficGenerator,proto3" json:"embedded_traffic_generator,omitempty"`
+	PrimaryKey                []byte                 `protobuf:"bytes,6,opt,name=primary_key,json=primaryKey,proto3" json:"primary_key,omitempty"`
+	ExplicitNonceCiphersuites []uint32               `protobuf:"varint,7,rep,packed,name=explicit_nonce_ciphersuites,json=explicitNonceCiphersuites,proto3" json:"explicit_nonce_ciphersuites,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
@@ -101,11 +102,18 @@ func (x *Config) GetPrimaryKey() []byte {
 	return nil
 }
 
+func (x *Config) GetExplicitNonceCiphersuites() []uint32 {
+	if x != nil {
+		return x.ExplicitNonceCiphersuites
+	}
+	return nil
+}
+
 var File_transport_internet_tlsmirror_server_config_proto protoreflect.FileDescriptor
 
 const file_transport_internet_tlsmirror_server_config_proto_rawDesc = "" +
 	"\n" +
-	"0transport/internet/tlsmirror/server/config.proto\x12.v2ray.core.transport.internet.tlsmirror.server\x1a common/protoext/extensions.proto\x1a7transport/internet/tlsmirror/tlstrafficgen/config.proto\"\xf6\x02\n" +
+	"0transport/internet/tlsmirror/server/config.proto\x12.v2ray.core.transport.internet.tlsmirror.server\x1a common/protoext/extensions.proto\x1a7transport/internet/tlsmirror/tlstrafficgen/config.proto\"\xb6\x03\n" +
 	"\x06Config\x12'\n" +
 	"\x0fforward_address\x18\x01 \x01(\tR\x0eforwardAddress\x12!\n" +
 	"\fforward_port\x18\x02 \x01(\rR\vforwardPort\x12\x1f\n" +
@@ -114,7 +122,8 @@ const file_transport_internet_tlsmirror_server_config_proto_rawDesc = "" +
 	"\x16carrier_connection_tag\x18\x04 \x01(\tR\x14carrierConnectionTag\x12{\n" +
 	"\x1aembedded_traffic_generator\x18\x05 \x01(\v2=.v2ray.core.transport.internet.tlsmirror.tlstrafficgen.ConfigR\x18embeddedTrafficGenerator\x12\x1f\n" +
 	"\vprimary_key\x18\x06 \x01(\fR\n" +
-	"primaryKey:+\x82\xb5\x18'\n" +
+	"primaryKey\x12>\n" +
+	"\x1bexplicit_nonce_ciphersuites\x18\a \x03(\rR\x19explicitNonceCiphersuites:+\x82\xb5\x18'\n" +
 	"\ttransport\x12\ttlsmirror\x8a\xff)\ttlsmirror\x90\xff)\x01B\xab\x01\n" +
 	"2com.v2ray.core.transport.internet.tlsmirror.serverP\x01ZBgithub.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/server\xaa\x02.V2Ray.Core.Transport.Internet.Tlsmirror.Serverb\x06proto3"
 

@@ -31,11 +31,14 @@ type PartialTLSRecordRejectProfile interface {
 
 type MessageHook func(message *TLSRecord) (drop bool, ok error)
 
+type ExplicitNonceDetection func(cipherSuite uint16) bool
+
 type InsertableTLSConn interface {
 	common.Closable
 	GetHandshakeRandom() ([]byte, []byte, error)
 	InsertC2SMessage(message *TLSRecord) error
 	InsertS2CMessage(message *TLSRecord) error
+	GetApplicationDataExplicitNonceReservedOverheadHeaderLength() (int, error)
 }
 
 const TrafficGeneratorManagedConnectionContextKey = "TrafficGeneratorManagedConnection-ku63HMMD-kduCPhr8-DN4y6WEa"

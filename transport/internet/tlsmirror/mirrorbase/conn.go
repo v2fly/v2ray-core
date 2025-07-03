@@ -14,15 +14,16 @@ import (
 
 // NewMirroredTLSConn creates a new mirrored TLS connection.
 // No stable interface
-func NewMirroredTLSConn(ctx context.Context, clientConn net.Conn, serverConn net.Conn, onC2SMessage, onS2CMessage tlsmirror.MessageHook, closable common.Closable) tlsmirror.InsertableTLSConn {
+func NewMirroredTLSConn(ctx context.Context, clientConn net.Conn, serverConn net.Conn, onC2SMessage, onS2CMessage tlsmirror.MessageHook, closable common.Closable, explicitNonceDetection tlsmirror.ExplicitNonceDetection) tlsmirror.InsertableTLSConn {
 	c := &conn{
-		ctx:          ctx,
-		clientConn:   clientConn,
-		serverConn:   serverConn,
-		c2sInsert:    make(chan *tlsmirror.TLSRecord, 100),
-		s2cInsert:    make(chan *tlsmirror.TLSRecord, 100),
-		OnC2SMessage: onC2SMessage,
-		OnS2CMessage: onS2CMessage,
+		ctx:                    ctx,
+		clientConn:             clientConn,
+		serverConn:             serverConn,
+		c2sInsert:              make(chan *tlsmirror.TLSRecord, 100),
+		s2cInsert:              make(chan *tlsmirror.TLSRecord, 100),
+		OnC2SMessage:           onC2SMessage,
+		OnS2CMessage:           onS2CMessage,
+		explicitNonceDetection: explicitNonceDetection,
 	}
 	c.ctx, c.done = context.WithCancel(ctx)
 	go c.c2sWorker()
@@ -45,8 +46,9 @@ type conn struct {
 	clientConn net.Conn
 	serverConn net.Conn
 
-	OnC2SMessage tlsmirror.MessageHook
-	OnS2CMessage tlsmirror.MessageHook
+	OnC2SMessage           tlsmirror.MessageHook
+	OnS2CMessage           tlsmirror.MessageHook
+	explicitNonceDetection tlsmirror.ExplicitNonceDetection
 
 	c2sInsert chan *tlsmirror.TLSRecord
 	s2cInsert chan *tlsmirror.TLSRecord
@@ -55,6 +57,8 @@ type conn struct {
 	ClientRandom        [32]byte
 	isServerRandomReady bool
 	ServerRandom        [32]byte
+
+	tls12ExplicitNonce *bool
 }
 
 func (c *conn) GetHandshakeRandom() ([]byte, []byte, error) {
@@ -213,6 +217,9 @@ func (c *conn) s2cWorker() {
 	c.ServerRandom = serverHello.ServerRandom
 	c.isServerRandomReady = true
 
+	isTLS12ExplicitNonce := c.explicitNonceDetection(serverHello.CipherSuite)
+	c.tls12ExplicitNonce = &isTLS12ExplicitNonce
+
 	serverSocketReader := &readerWithInitialData{initialData: s2cReminderData, innerReader: c.serverConn}
 	serverSocket := bufio.NewReaderSize(serverSocketReader, 65536)
 	recordReader := mirrorcommon.NewTLSRecordStreamReader(serverSocket)
@@ -339,4 +346,14 @@ func (c *conn) captureHandshake(sourceConn, mirrorConn net.Conn) (handshake tlsm
 	}
 	reterr = newError("context is done")
 	return handshake, nil, nil, reterr
+}
+
+func (c *conn) GetApplicationDataExplicitNonceReservedOverheadHeaderLength() (int, error) {
+	if c.tls12ExplicitNonce == nil {
+		return 0, newError("explicit nonce info is not ready")
+	}
+	if *c.tls12ExplicitNonce == true {
+		return 8, nil
+	}
+	return 0, nil
 }

@@ -87,4 +87,8 @@ message Config {
 
   // domain to query for https record
   string ech_query_domain = 18;
+
+  // cipher suites to to be offered or accepted.
+  // This is an developer option.
+  repeated uint32 ciphersuites = 19;
 }
