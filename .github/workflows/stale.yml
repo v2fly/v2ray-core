@@ -15,3 +15,5 @@ jobs:
           stale-pr-message: 'It has been open 120 days with no activity. Remove stale label or comment or this will be closed in 5 days'
           days-before-stale: 120
           days-before-close: 5
+          exempt-pr-labels: 'planned'
+          exempt-pr-labels: 'planned'
