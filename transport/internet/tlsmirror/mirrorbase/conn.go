@@ -8,6 +8,7 @@ import (
 	"net"
 
 	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/crypto"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorcommon"
 )
@@ -15,15 +16,19 @@ import (
 // NewMirroredTLSConn creates a new mirrored TLS connection.
 // No stable interface
 func NewMirroredTLSConn(ctx context.Context, clientConn net.Conn, serverConn net.Conn, onC2SMessage, onS2CMessage tlsmirror.MessageHook, closable common.Closable, explicitNonceDetection tlsmirror.ExplicitNonceDetection) tlsmirror.InsertableTLSConn {
+
+	explicitNonceDetectionReady, explicitNonceDetectionOver := context.WithCancel(ctx)
 	c := &conn{
-		ctx:                    ctx,
-		clientConn:             clientConn,
-		serverConn:             serverConn,
-		c2sInsert:              make(chan *tlsmirror.TLSRecord, 100),
-		s2cInsert:              make(chan *tlsmirror.TLSRecord, 100),
-		OnC2SMessage:           onC2SMessage,
-		OnS2CMessage:           onS2CMessage,
-		explicitNonceDetection: explicitNonceDetection,
+		ctx:                         ctx,
+		clientConn:                  clientConn,
+		serverConn:                  serverConn,
+		c2sInsert:                   make(chan *tlsmirror.TLSRecord, 100),
+		s2cInsert:                   make(chan *tlsmirror.TLSRecord, 100),
+		OnC2SMessage:                onC2SMessage,
+		OnS2CMessage:                onS2CMessage,
+		explicitNonceDetection:      explicitNonceDetection,
+		explicitNonceDetectionReady: explicitNonceDetectionReady,
+		explicitNonceDetectionOver:  explicitNonceDetectionOver,
 	}
 	c.ctx, c.done = context.WithCancel(ctx)
 	go c.c2sWorker()
@@ -58,10 +63,15 @@ type conn struct {
 	isServerRandomReady bool
 	ServerRandom        [32]byte
 
-	tls12ExplicitNonce *bool
+	tls12ExplicitNonce               *bool
+	explicitNonceDetectionReady      context.Context
+	explicitNonceDetectionOver       context.CancelFunc
+	c2sExplicitNonceCounterGenerator crypto.BytesGenerator
+	s2cExplicitNonceCounterGenerator crypto.BytesGenerator
 }
 
 func (c *conn) GetHandshakeRandom() ([]byte, []byte, error) {
+	// TODO: the value of c.isClientRandomReady, c.isServerRandomReady, c.ClientRandom, c.ServerRandom has incorrect memory consistency assumptions.
 	if !c.isClientRandomReady || !c.isServerRandomReady {
 		return nil, nil, newError("client random or server random not ready")
 	}
@@ -155,7 +165,15 @@ func (c *conn) c2sWorker() {
 	}
 	go func() {
 		for c.ctx.Err() == nil {
+			// implicit memory consistency synchronization capture read for c.tls12ExplicitNonce
 			record := <-c.c2sInsert
+			// memory consistency synchronization for value c.tls12ExplicitNonce is required!!!
+			if *c.tls12ExplicitNonce {
+				if record.RecordType == mirrorcommon.TLSRecord_RecordType_application_data {
+					nonce := c.s2cExplicitNonceCounterGenerator()
+					copy(record.Fragment, nonce)
+				}
+			}
 			err := recordWriter.WriteRecord(record, false)
 			if err != nil {
 				c.done()
@@ -164,6 +182,7 @@ func (c *conn) c2sWorker() {
 			}
 		}
 	}()
+	explicitNonceSessionAndChangeCipherSpecWasLastMessage := false
 	for c.ctx.Err() == nil {
 		record, err := recordReader.ReadNextRecord()
 		if err != nil {
@@ -172,6 +191,35 @@ func (c *conn) c2sWorker() {
 			newError("failed to read TLS record").Base(err).AtWarning().WriteToLog()
 			return
 		}
+
+		if record.RecordType == mirrorcommon.TLSRecord_RecordType_change_cipher_spec {
+			// implicit memory consistency synchronization capture read for c.tls12ExplicitNonce
+			if c.explicitNonceDetectionReady.Err() == nil {
+				drainCopy(c.clientConn, nil, c.serverConn)
+				c.done()
+				newError("received client to server change cipher spec before server hello").Base(err).AtWarning().WriteToLog()
+				return
+			}
+			// memory consistency synchronization for value c.tls12ExplicitNonce is required!!!
+			if *c.tls12ExplicitNonce {
+				explicitNonceSessionAndChangeCipherSpecWasLastMessage = true
+			}
+		}
+
+		if record.RecordType == mirrorcommon.TLSRecord_RecordType_handshake &&
+			explicitNonceSessionAndChangeCipherSpecWasLastMessage {
+			// verify if the first 8 bytes are 0x00
+			if len(record.Fragment) < 8 || !bytes.Equal(record.Fragment[:8],
+				[]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}) {
+				newError("unexpected explicit nonce header at tls 12 finish").AtWarning().WriteToLog()
+				drainCopy(c.clientConn, nil, c.serverConn)
+				c.done()
+				return
+			}
+
+			c.c2sExplicitNonceCounterGenerator = crypto.GenerateIncreasingNonce([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
+		}
+
 		if c.OnC2SMessage != nil {
 			drop, err := c.OnC2SMessage(record)
 			if err != nil {
@@ -186,6 +234,7 @@ func (c *conn) c2sWorker() {
 		duplicatedRecord := mirrorcommon.DuplicateRecord(*record)
 		c.c2sInsert <- &duplicatedRecord
 	}
+	drainCopy(c.serverConn, nil, c.clientConn)
 }
 
 func (c *conn) s2cWorker() {
@@ -219,6 +268,8 @@ func (c *conn) s2cWorker() {
 
 	isTLS12ExplicitNonce := c.explicitNonceDetection(serverHello.CipherSuite)
 	c.tls12ExplicitNonce = &isTLS12ExplicitNonce
+	// implicit memory consistency synchronization release write for c.tls12ExplicitNonce
+	c.explicitNonceDetectionOver()
 
 	serverSocketReader := &readerWithInitialData{initialData: s2cReminderData, innerReader: c.serverConn}
 	serverSocket := bufio.NewReaderSize(serverSocketReader, 65536)
@@ -235,7 +286,15 @@ func (c *conn) s2cWorker() {
 	}
 	go func() {
 		for c.ctx.Err() == nil {
+			// implicit memory consistency synchronization capture read for c.tls12ExplicitNonce
 			record := <-c.s2cInsert
+			// memory consistency synchronization for value c.tls12ExplicitNonce is required!!!
+			if *c.tls12ExplicitNonce {
+				if record.RecordType == mirrorcommon.TLSRecord_RecordType_application_data {
+					nonce := c.c2sExplicitNonceCounterGenerator()
+					copy(record.Fragment, nonce)
+				}
+			}
 			err := recordWriter.WriteRecord(record, false)
 			if err != nil {
 				c.done()
@@ -244,14 +303,35 @@ func (c *conn) s2cWorker() {
 			}
 		}
 	}()
+	explicitNonceSessionAndChangeCipherSpecWasLastMessage := false
 	for c.ctx.Err() == nil {
 		record, err := recordReader.ReadNextRecord()
 		if err != nil {
+			newError("failed to read TLS record").Base(err).AtWarning().WriteToLog()
 			drainCopy(c.clientConn, nil, c.serverConn)
 			c.done()
-			newError("failed to read TLS record").Base(err).AtWarning().WriteToLog()
 			return
 		}
+
+		if record.RecordType == mirrorcommon.TLSRecord_RecordType_change_cipher_spec {
+			if *c.tls12ExplicitNonce {
+				explicitNonceSessionAndChangeCipherSpecWasLastMessage = true
+			}
+		}
+
+		if record.RecordType == mirrorcommon.TLSRecord_RecordType_handshake &&
+			explicitNonceSessionAndChangeCipherSpecWasLastMessage {
+			// verify if the first 8 bytes are 0x00
+			if len(record.Fragment) < 8 || !bytes.Equal(record.Fragment[:8],
+				[]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}) {
+				newError("unexpected explicit nonce header at tls 12 finish").AtWarning().WriteToLog()
+				drainCopy(c.clientConn, nil, c.serverConn)
+				c.done()
+				return
+			}
+			c.c2sExplicitNonceCounterGenerator = crypto.GenerateIncreasingNonce([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
+		}
+
 		if c.OnS2CMessage != nil {
 			drop, err := c.OnS2CMessage(record)
 			if err != nil {
@@ -266,6 +346,7 @@ func (c *conn) s2cWorker() {
 		duplicatedRecord := mirrorcommon.DuplicateRecord(*record)
 		c.s2cInsert <- &duplicatedRecord
 	}
+	drainCopy(c.clientConn, nil, c.serverConn)
 }
 
 func drainCopy(dst io.Writer, initData []byte, src io.Reader) {
