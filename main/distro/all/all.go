@@ -87,6 +87,8 @@ import (
 
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2"
 
+	_ "github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/server"
+
 	// Transport headers
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/headers/http"
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/headers/noop"

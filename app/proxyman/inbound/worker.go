@@ -113,7 +113,7 @@ func (w *tcpWorker) Proxy() proxy.Inbound {
 }
 
 func (w *tcpWorker) Start() error {
-	ctx := context.Background()
+	ctx := w.ctx
 	proxyEnvironment := envctx.EnvironmentFromContext(w.ctx).(environment.ProxyEnvironment)
 	transportEnvironment, err := proxyEnvironment.NarrowScopeToTransport("transport")
 	if err != nil {
