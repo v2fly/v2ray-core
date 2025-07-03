@@ -182,10 +182,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	if linkPath, err := os.Readlink(protoc); err == nil {
-		protoc = linkPath
-	}
-
 	installedVersion, err := getInstalledProtocVersion(protoc)
 	if err != nil {
 		fmt.Println(err)

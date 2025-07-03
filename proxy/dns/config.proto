@@ -14,9 +14,9 @@ message Config {
   // original one.
   v2ray.core.common.net.Endpoint server = 1;
   uint32 user_level = 2;
-
   bool override_response_ttl = 4;
   uint32 response_ttl = 3;
+  string non_IP_query = 5;
 }
 
 message SimplifiedConfig {
