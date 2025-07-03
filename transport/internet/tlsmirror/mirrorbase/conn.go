@@ -169,9 +169,12 @@ func (c *conn) c2sWorker() {
 			record := <-c.c2sInsert
 			// memory consistency synchronization for value c.tls12ExplicitNonce is required!!!
 			if *c.tls12ExplicitNonce {
-				if record.RecordType == mirrorcommon.TLSRecord_RecordType_application_data {
-					nonce := c.c2sExplicitNonceCounterGenerator()
-					copy(record.Fragment, nonce)
+				if record.RecordType == mirrorcommon.TLSRecord_RecordType_application_data ||
+					record.RecordType == mirrorcommon.TLSRecord_RecordType_alert {
+					if len(record.Fragment) >= 8 {
+						nonce := c.c2sExplicitNonceCounterGenerator()
+						copy(record.Fragment, nonce)
+					}
 				}
 			}
 			err := recordWriter.WriteRecord(record, false)
@@ -290,9 +293,12 @@ func (c *conn) s2cWorker() {
 			record := <-c.s2cInsert
 			// memory consistency synchronization for value c.tls12ExplicitNonce is required!!!
 			if *c.tls12ExplicitNonce {
-				if record.RecordType == mirrorcommon.TLSRecord_RecordType_application_data {
-					nonce := c.s2cExplicitNonceCounterGenerator()
-					copy(record.Fragment, nonce)
+				if record.RecordType == mirrorcommon.TLSRecord_RecordType_application_data ||
+					record.RecordType == mirrorcommon.TLSRecord_RecordType_alert {
+					if len(record.Fragment) >= 8 {
+						nonce := c.s2cExplicitNonceCounterGenerator()
+						copy(record.Fragment, nonce)
+					}
 				}
 			}
 			err := recordWriter.WriteRecord(record, false)
