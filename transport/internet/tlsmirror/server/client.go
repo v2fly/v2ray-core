@@ -182,6 +182,14 @@ func (d *persistentMirrorTLSDialer) handleIncomingReadyConnection(conn internet.
 					case <-controller.WaitConnectionReady().Done():
 						waitedForReady = true
 						// TODO: connection might become invalid and never ready, handle this case
+						if controller.IsConnectionInvalidated() {
+							newError("connection is invalidated, skipping").AtWarning().WriteToLog()
+							return
+						}
+					case <-ctx.Done():
+						return
+					case <-d.ctx.Done():
+						return
 					}
 				}
 			}
