@@ -200,8 +200,8 @@ func (c *conn) c2sWorker() {
 	for c.ctx.Err() == nil {
 		record, err := recordReader.ReadNextRecord()
 		if err != nil {
-			drainCopy(c.clientConn, nil, c.serverConn)
 			c.done()
+			drainCopy(c.clientConn, nil, c.serverConn)
 			newError("failed to read TLS record").Base(err).AtWarning().WriteToLog()
 			return
 		}
@@ -209,8 +209,8 @@ func (c *conn) c2sWorker() {
 		if record.RecordType == mirrorcommon.TLSRecord_RecordType_change_cipher_spec {
 			// implicit memory consistency synchronization capture read for c.tls12ExplicitNonce
 			if c.explicitNonceDetectionReady.Err() == nil {
-				drainCopy(c.clientConn, nil, c.serverConn)
 				c.done()
+				drainCopy(c.clientConn, nil, c.serverConn)
 				newError("received client to server change cipher spec before server hello").Base(err).AtWarning().WriteToLog()
 				return
 			}
@@ -226,8 +226,8 @@ func (c *conn) c2sWorker() {
 			if len(record.Fragment) < 8 || !bytes.Equal(record.Fragment[:8],
 				[]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}) {
 				newError("unexpected explicit nonce header at tls 12 finish").AtWarning().WriteToLog()
-				drainCopy(c.clientConn, nil, c.serverConn)
 				c.done()
+				drainCopy(c.clientConn, nil, c.serverConn)
 				return
 			}
 
@@ -239,6 +239,7 @@ func (c *conn) c2sWorker() {
 			if err != nil {
 				c.done()
 				newError("failed to process C2S message").Base(err).AtWarning().WriteToLog()
+				drainCopy(c.clientConn, nil, c.serverConn)
 				return
 			}
 			if drop {
@@ -335,8 +336,8 @@ func (c *conn) s2cWorker() {
 		record, err := recordReader.ReadNextRecord()
 		if err != nil {
 			newError("failed to read TLS record").Base(err).AtWarning().WriteToLog()
-			drainCopy(c.clientConn, nil, c.serverConn)
 			c.done()
+			drainCopy(c.clientConn, nil, c.serverConn)
 			return
 		}
 
@@ -352,8 +353,8 @@ func (c *conn) s2cWorker() {
 			if len(record.Fragment) < 8 || !bytes.Equal(record.Fragment[:8],
 				[]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}) {
 				newError("unexpected explicit nonce header at tls 12 finish").AtWarning().WriteToLog()
-				drainCopy(c.clientConn, nil, c.serverConn)
 				c.done()
+				drainCopy(c.clientConn, nil, c.serverConn)
 				return
 			}
 			c.s2cExplicitNonceCounterGenerator = reverseBytesGeneratorByteOrder(crypto.GenerateIncreasingNonce([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}))
@@ -364,6 +365,7 @@ func (c *conn) s2cWorker() {
 			if err != nil {
 				c.done()
 				newError("failed to process S2C message").Base(err).AtWarning().WriteToLog()
+				drainCopy(c.clientConn, nil, c.serverConn)
 				return
 			}
 			if drop {
