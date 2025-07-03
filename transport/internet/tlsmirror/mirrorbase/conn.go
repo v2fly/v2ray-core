@@ -165,8 +165,14 @@ func (c *conn) c2sWorker() {
 	}
 	go func() {
 		for c.ctx.Err() == nil {
-			// implicit memory consistency synchronization capture read for c.tls12ExplicitNonce
-			record := <-c.c2sInsert
+			var record *tlsmirror.TLSRecord
+			select {
+			case <-c.ctx.Done():
+				return
+			case record = <-c.c2sInsert:
+				// implicit memory consistency synchronization capture read for c.tls12ExplicitNonce
+			}
+
 			// memory consistency synchronization for value c.tls12ExplicitNonce is required!!!
 			if *c.tls12ExplicitNonce {
 				if record.RecordType == mirrorcommon.TLSRecord_RecordType_application_data ||
@@ -181,6 +187,11 @@ func (c *conn) c2sWorker() {
 			if err != nil {
 				c.done()
 				newError("failed to write C2S message").Base(err).AtWarning().WriteToLog()
+				return
+			}
+			if record.RecordType == mirrorcommon.TLSRecord_RecordType_alert {
+				c.done()
+				newError("alert sent, ending copy").AtWarning().WriteToLog()
 				return
 			}
 		}
@@ -289,8 +300,13 @@ func (c *conn) s2cWorker() {
 	}
 	go func() {
 		for c.ctx.Err() == nil {
-			// implicit memory consistency synchronization capture read for c.tls12ExplicitNonce
-			record := <-c.s2cInsert
+			var record *tlsmirror.TLSRecord
+			select {
+			case <-c.ctx.Done():
+				return
+			case record = <-c.s2cInsert:
+				// implicit memory consistency synchronization capture read for c.tls12ExplicitNonce
+			}
 			// memory consistency synchronization for value c.tls12ExplicitNonce is required!!!
 			if *c.tls12ExplicitNonce {
 				if record.RecordType == mirrorcommon.TLSRecord_RecordType_application_data ||
@@ -305,6 +321,11 @@ func (c *conn) s2cWorker() {
 			if err != nil {
 				c.done()
 				newError("failed to write S2C message").Base(err).AtWarning().WriteToLog()
+				return
+			}
+			if record.RecordType == mirrorcommon.TLSRecord_RecordType_alert {
+				c.done()
+				newError("alert sent, ending copy").AtWarning().WriteToLog()
 				return
 			}
 		}
