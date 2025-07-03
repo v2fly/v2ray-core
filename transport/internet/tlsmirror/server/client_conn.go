@@ -133,11 +133,16 @@ func (s *clientConnState) onC2SMessage(message *tlsmirror.TLSRecord) (drop bool,
 
 func (s *clientConnState) onS2CMessage(message *tlsmirror.TLSRecord) (drop bool, ok error) {
 	if message.RecordType == mirrorcommon.TLSRecord_RecordType_application_data {
+		explicitNonceReservedOverheadHeaderLength, err := s.mirrorConn.GetApplicationDataExplicitNonceReservedOverheadHeaderLength()
+		if err != nil {
+			return false, newError("failed to get explicit nonce reserved overhead header length").Base(err)
+		}
+
 		if s.encryptor == nil {
 			return false, nil
 		}
-		buffer := make([]byte, 0, len(message.Fragment)-s.encryptor.NonceSize())
-		buffer, err := s.decryptor.Open(buffer, message.Fragment)
+		buffer := make([]byte, 0, len(message.Fragment)-s.encryptor.NonceSize()-explicitNonceReservedOverheadHeaderLength)
+		buffer, err = s.decryptor.Open(buffer, message.Fragment[explicitNonceReservedOverheadHeaderLength:])
 		if err != nil {
 			return false, nil
 		}
@@ -149,8 +154,12 @@ func (s *clientConnState) onS2CMessage(message *tlsmirror.TLSRecord) (drop bool,
 }
 
 func (s *clientConnState) WriteMessage(message []byte) error {
-	buffer := make([]byte, 0, len(message)+s.encryptor.NonceSize())
-	buffer, err := s.encryptor.Seal(buffer, message)
+	explicitNonceReservedOverheadHeaderLength, err := s.mirrorConn.GetApplicationDataExplicitNonceReservedOverheadHeaderLength()
+	if err != nil {
+		return newError("failed to get explicit nonce reserved overhead header length").Base(err)
+	}
+	buffer := make([]byte, 0, explicitNonceReservedOverheadHeaderLength+len(message)+s.encryptor.NonceSize())
+	buffer, err = s.encryptor.Seal(buffer[explicitNonceReservedOverheadHeaderLength:], message)
 	if err != nil {
 		return newError("failed to encrypt message").Base(err)
 	}
