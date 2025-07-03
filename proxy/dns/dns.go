@@ -58,7 +58,7 @@ type Handler struct {
 
 	config *Config
 
-	nonIPQuery      string
+	nonIPQuery string
 }
 
 func (h *Handler) Init(config *Config, dnsClient dns.Client, policyManager policy.Manager) error {
