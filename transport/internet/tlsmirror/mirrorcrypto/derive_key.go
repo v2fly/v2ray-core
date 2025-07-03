@@ -20,12 +20,12 @@ func DeriveEncryptionKey(primaryKey, clientRandom, serverRandom []byte, tag stri
 	combined := append(primaryKey, clientRandom...) // nolint: gocritic
 	combined = append(combined, serverRandom...)
 
-	encryptionKey, err := hkdf.Expand(sha256.New, combined, "v2ray-sp76YMKM-EkGrFUNL-rTJRJMkU:tlsmirror-encryption", 16)
+	encryptionKey, err := hkdf.Expand(sha256.New, combined, "v2ray-sp76YMKM-EkGrFUNL-rTJRJMkU:tlsmirror-encryption"+tag, 16)
 	if err != nil {
 		return nil, nil, newError("unable to derive encryption key").Base(err)
 	}
 
-	nonceMask, err := hkdf.Expand(sha256.New, combined, "v2ray-sp76YMKM-EkGrFUNL-rTJRJMkU:tlsmirror-noncemask", 12)
+	nonceMask, err := hkdf.Expand(sha256.New, combined, "v2ray-sp76YMKM-EkGrFUNL-rTJRJMkU:tlsmirror-noncemask"+tag, 12)
 	if err != nil {
 		return nil, nil, newError("unable to derive nonce mask").Base(err)
 	}
