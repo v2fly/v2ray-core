@@ -170,7 +170,7 @@ func (c *conn) c2sWorker() {
 			// memory consistency synchronization for value c.tls12ExplicitNonce is required!!!
 			if *c.tls12ExplicitNonce {
 				if record.RecordType == mirrorcommon.TLSRecord_RecordType_application_data {
-					nonce := c.s2cExplicitNonceCounterGenerator()
+					nonce := c.c2sExplicitNonceCounterGenerator()
 					copy(record.Fragment, nonce)
 				}
 			}
@@ -217,7 +217,7 @@ func (c *conn) c2sWorker() {
 				return
 			}
 
-			c.c2sExplicitNonceCounterGenerator = crypto.GenerateIncreasingNonce([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
+			c.c2sExplicitNonceCounterGenerator = reverseBytesGeneratorByteOrder(crypto.GenerateIncreasingNonce([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}))
 		}
 
 		if c.OnC2SMessage != nil {
@@ -291,7 +291,7 @@ func (c *conn) s2cWorker() {
 			// memory consistency synchronization for value c.tls12ExplicitNonce is required!!!
 			if *c.tls12ExplicitNonce {
 				if record.RecordType == mirrorcommon.TLSRecord_RecordType_application_data {
-					nonce := c.c2sExplicitNonceCounterGenerator()
+					nonce := c.s2cExplicitNonceCounterGenerator()
 					copy(record.Fragment, nonce)
 				}
 			}
@@ -329,7 +329,7 @@ func (c *conn) s2cWorker() {
 				c.done()
 				return
 			}
-			c.c2sExplicitNonceCounterGenerator = crypto.GenerateIncreasingNonce([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
+			c.s2cExplicitNonceCounterGenerator = reverseBytesGeneratorByteOrder(crypto.GenerateIncreasingNonce([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}))
 		}
 
 		if c.OnS2CMessage != nil {
