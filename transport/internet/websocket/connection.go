@@ -114,12 +114,13 @@ func (c *connection) Write(b []byte) (int, error) {
 	if c.shouldWait {
 		var err error
 		c.conn, err = c.dialer.Dial(b)
-		c.finishedDial()
 		if err != nil {
+			c.finishedDial()
 			return 0, newError("Unable to proceed with delayed write").Base(err)
 		}
 		c.remoteAddr = c.conn.RemoteAddr()
 		c.shouldWait = false
+		c.finishedDial()
 		return len(b), nil
 	}
 	if err := c.conn.WriteMessage(websocket.BinaryMessage, b); err != nil {
@@ -137,7 +138,11 @@ func (c *connection) WriteMultiBuffer(mb buf.MultiBuffer) error {
 
 func (c *connection) Close() error {
 	if c.shouldWait {
-		<-c.delayedDialFinish.Done()
+		select {
+		case <-c.delayedDialFinish.Done():
+		default:
+			c.finishedDial()
+		}
 		if c.conn == nil {
 			return newError("unable to close delayed dial websocket connection as it do not exist")
 		}
@@ -170,6 +175,16 @@ func (c *connection) LocalAddr() net.Addr {
 }
 
 func (c *connection) RemoteAddr() net.Addr {
+	if c.shouldWait {
+		<-c.delayedDialFinish.Done()
+		if c.conn == nil {
+			newError("websocket transport is not materialized when RemoteAddr() is called").AtWarning().WriteToLog()
+			return &net.UnixAddr{
+				Name: "@placeholder",
+				Net:  "unix",
+			}
+		}
+	}
 	return c.remoteAddr
 }
 

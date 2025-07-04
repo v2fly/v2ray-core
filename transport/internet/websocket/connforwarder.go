@@ -42,7 +42,11 @@ func (c *connectionForwarder) Write(p []byte) (n int, err error) {
 
 func (c *connectionForwarder) Close() error {
 	if c.shouldWait {
-		<-c.delayedDialFinish.Done()
+		select {
+		case <-c.delayedDialFinish.Done():
+		default:
+			c.finishedDial()
+		}
 		if c.ReadWriteCloser == nil {
 			return newError("unable to close delayed dial websocket connection as it do not exist")
 		}
