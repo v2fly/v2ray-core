@@ -47,7 +47,7 @@ func Pad(paddingLength int) []byte {
 	case 4:
 		return []byte{0, 0, 0, 0}
 	default:
-		return append(make([]byte, paddingLength-4), byte(paddingLength>>24), byte(paddingLength>>16), byte(paddingLength>>8), byte(paddingLength))
+		return append(make([]byte, paddingLength))
 	}
 
 }

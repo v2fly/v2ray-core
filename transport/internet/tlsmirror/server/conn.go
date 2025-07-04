@@ -69,7 +69,8 @@ func (s *connState) Read(b []byte) (n int, err error) {
 }
 
 func (s *connState) Write(b []byte) (n int, err error) {
-	if s.firstWrite {
+	payloadSize := len(b)
+	if s.firstWrite && s.firstWriteDelay > 0 {
 		firstWriteDelayTimer := time.NewTimer(s.firstWriteDelay)
 		defer firstWriteDelayTimer.Stop()
 		select {
@@ -80,13 +81,13 @@ func (s *connState) Write(b []byte) (n int, err error) {
 		}
 	}
 	if s.transportLayerPadding != nil && s.transportLayerPadding.Enabled {
-		b = Pack(b, 0)
+		b = Pack(bytes.Clone(b), 0)
 	}
 	err = s.WriteMessage(b)
 	if err != nil {
 		return 0, err
 	}
-	n = len(b)
+	n = payloadSize
 	return n, nil
 }
 
