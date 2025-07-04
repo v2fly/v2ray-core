@@ -2,6 +2,9 @@ package server
 
 import (
 	"context"
+	cryptoRand "crypto/rand"
+	"math/big"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 
@@ -151,15 +154,29 @@ func (d *persistentMirrorTLSDialer) handleIncomingCarrierConnection(ctx context.
 		return
 	}
 
+	firstWriteDelay := time.Duration(0)
+	if d.config.DeferFirstPayloadWriteTime != nil {
+		uniformRandomAdd := big.NewInt(int64(d.config.DeferFirstPayloadWriteTime.UniformRandomMultiplierNanoseconds))
+		uniformRandomAddBigInt, err := cryptoRand.Int(cryptoRand.Reader, uniformRandomAdd)
+		if err != nil {
+			newError("failed to generate random delay").Base(err).AtWarning().WriteToLog()
+			return
+		}
+		uniformRandomAddU64 := uint64(uniformRandomAddBigInt.Int64())
+		firstWriteDelay = time.Duration(d.config.DeferFirstPayloadWriteTime.BaseNanoseconds + uniformRandomAddU64)
+	}
+
 	ctx, cancel := context.WithCancel(ctx)
 	cconnState := &clientConnState{
-		ctx:        ctx,
-		done:       cancel,
-		localAddr:  conn.LocalAddr(),
-		remoteAddr: conn.RemoteAddr(),
-		handler:    d.handleIncomingReadyConnection,
-		primaryKey: d.config.PrimaryKey,
-		readPipe:   make(chan []byte, 1),
+		ctx:             ctx,
+		done:            cancel,
+		localAddr:       conn.LocalAddr(),
+		remoteAddr:      conn.RemoteAddr(),
+		handler:         d.handleIncomingReadyConnection,
+		primaryKey:      d.config.PrimaryKey,
+		readPipe:        make(chan []byte, 1),
+		firstWrite:      true,
+		firstWriteDelay: firstWriteDelay,
 	}
 
 	cconnState.mirrorConn = mirrorbase.NewMirroredTLSConn(ctx, conn, forwardConn, cconnState.onC2SMessage, cconnState.onS2CMessage, conn,
