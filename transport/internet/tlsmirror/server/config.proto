@@ -37,7 +37,7 @@ message Config {
 
   repeated uint32 explicit_nonce_ciphersuites = 7;
 
-  TimeSpec defer_first_payload_write_time = 8;
+  TimeSpec defer_instance_derived_write_time = 8;
 
   TransportLayerPadding transport_layer_padding = 9;
 }
