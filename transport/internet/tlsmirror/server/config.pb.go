@@ -230,7 +230,7 @@ const file_transport_internet_tlsmirror_server_config_proto_rawDesc = "" +
 	"\x10base_nanoseconds\x18\x01 \x01(\x04R\x0fbaseNanoseconds\x12Q\n" +
 	"%uniform_random_multiplier_nanoseconds\x18\x02 \x01(\x04R\"uniformRandomMultiplierNanoseconds\"1\n" +
 	"\x15TransportLayerPadding\x12\x18\n" +
-	"\aenabled\x18\x01 \x01(\bR\aenabled\"\xba\x05\n" +
+	"\aenabled\x18\x01 \x01(\bR\aenabled\"\xb6\x05\n" +
 	"\x06Config\x12'\n" +
 	"\x0fforward_address\x18\x01 \x01(\tR\x0eforwardAddress\x12!\n" +
 	"\fforward_port\x18\x02 \x01(\rR\vforwardPort\x12\x1f\n" +
@@ -242,8 +242,8 @@ const file_transport_internet_tlsmirror_server_config_proto_rawDesc = "" +
 	"primaryKey\x12>\n" +
 	"\x1bexplicit_nonce_ciphersuites\x18\a \x03(\rR\x19explicitNonceCiphersuites\x12\x82\x01\n" +
 	"!defer_instance_derived_write_time\x18\b \x01(\v28.v2ray.core.transport.internet.tlsmirror.server.TimeSpecR\x1ddeferInstanceDerivedWriteTime\x12}\n" +
-	"\x17transport_layer_padding\x18\t \x01(\v2E.v2ray.core.transport.internet.tlsmirror.server.TransportLayerPaddingR\x15transportLayerPadding:+\x82\xb5\x18'\n" +
-	"\ttransport\x12\ttlsmirror\x8a\xff)\ttlsmirror\x90\xff)\x01B\xab\x01\n" +
+	"\x17transport_layer_padding\x18\t \x01(\v2E.v2ray.core.transport.internet.tlsmirror.server.TransportLayerPaddingR\x15transportLayerPadding:'\x82\xb5\x18#\n" +
+	"\ttransport\x12\ttlsmirror\x8a\xff)\ttlsmirrorB\xab\x01\n" +
 	"2com.v2ray.core.transport.internet.tlsmirror.serverP\x01ZBgithub.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/server\xaa\x02.V2Ray.Core.Transport.Internet.Tlsmirror.Serverb\x06proto3"
 
 var (
