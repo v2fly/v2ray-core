@@ -31,6 +31,8 @@ type connState struct {
 	readBuffer *bytes.Buffer
 
 	protocolVersion [2]byte
+
+	transportLayerPadding *TransportLayerPadding
 }
 
 func (s *connState) Read(b []byte) (n int, err error) {
@@ -46,6 +48,14 @@ func (s *connState) Read(b []byte) (n int, err error) {
 	case <-s.ctx.Done():
 		return 0, s.ctx.Err()
 	case data := <-s.readPipe:
+		if s.transportLayerPadding != nil && s.transportLayerPadding.Enabled {
+			var padding int
+			data, padding = Unpack(data)
+			_ = padding
+			if data == nil {
+				return 0, nil
+			}
+		}
 		s.readBuffer = bytes.NewBuffer(data)
 		n, err = s.readBuffer.Read(b)
 		if err != nil {
@@ -56,6 +66,9 @@ func (s *connState) Read(b []byte) (n int, err error) {
 }
 
 func (s *connState) Write(b []byte) (n int, err error) {
+	if s.transportLayerPadding != nil && s.transportLayerPadding.Enabled {
+		b = Pack(b, 0)
+	}
 	err = s.WriteMessage(b)
 	if err != nil {
 		return 0, err

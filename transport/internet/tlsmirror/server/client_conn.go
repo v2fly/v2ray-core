@@ -35,6 +35,8 @@ type clientConnState struct {
 
 	firstWrite      bool
 	firstWriteDelay time.Duration
+
+	transportLayerPadding *TransportLayerPadding
 }
 
 func (s *clientConnState) GetConnectionContext() context.Context {
@@ -54,6 +56,14 @@ func (s *clientConnState) Read(b []byte) (n int, err error) {
 	case <-s.ctx.Done():
 		return 0, s.ctx.Err()
 	case data := <-s.readPipe:
+		if s.transportLayerPadding != nil && s.transportLayerPadding.Enabled {
+			var padding int
+			data, padding = Unpack(data)
+			_ = padding
+			if data == nil {
+				return 0, nil
+			}
+		}
 		s.readBuffer = bytes.NewBuffer(data)
 		n, err = s.readBuffer.Read(b)
 		if err != nil {
@@ -73,6 +83,9 @@ func (s *clientConnState) Write(b []byte) (n int, err error) {
 		case <-firstWriteDelayTimer.C:
 			s.firstWrite = false
 		}
+	}
+	if s.transportLayerPadding != nil && s.transportLayerPadding.Enabled {
+		b = Pack(b, 0)
 	}
 	err = s.WriteMessage(b)
 	if err != nil {
