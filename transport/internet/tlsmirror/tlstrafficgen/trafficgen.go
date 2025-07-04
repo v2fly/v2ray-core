@@ -158,7 +158,7 @@ func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) erro
 
 		startTime := time.Now()
 
-		resp, err := httpRoundTripper.RoundTrip(httpReq)
+		resp, err := httpRoundTripper.RoundTrip(httpReq) //nolint:bodyclose
 		if err != nil {
 			return newError("failed to send HTTP request").Base(err).AtWarning()
 		}
