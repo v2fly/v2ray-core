@@ -81,10 +81,10 @@ func (s *Server) accept(clientConn net.Conn, serverConn net.Conn) {
 	ctx, cancel := context.WithCancel(s.ctx)
 
 	firstWriteDelay := time.Duration(0)
-	if s.config.DeferFirstPayloadWriteTime != nil {
-		firstWriteDelay = time.Duration(s.config.DeferFirstPayloadWriteTime.BaseNanoseconds)
-		if s.config.DeferFirstPayloadWriteTime.UniformRandomMultiplierNanoseconds > 0 {
-			uniformRandomAdd := big.NewInt(int64(s.config.DeferFirstPayloadWriteTime.UniformRandomMultiplierNanoseconds))
+	if s.config.DeferInstanceDerivedWriteTime != nil {
+		firstWriteDelay = time.Duration(s.config.DeferInstanceDerivedWriteTime.BaseNanoseconds)
+		if s.config.DeferInstanceDerivedWriteTime.UniformRandomMultiplierNanoseconds > 0 {
+			uniformRandomAdd := big.NewInt(int64(s.config.DeferInstanceDerivedWriteTime.UniformRandomMultiplierNanoseconds))
 			uniformRandomAddBigInt, err := cryptoRand.Int(cryptoRand.Reader, uniformRandomAdd)
 			if err != nil {
 				newError("failed to generate random delay").Base(err).AtWarning().WriteToLog()

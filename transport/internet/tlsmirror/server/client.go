@@ -155,10 +155,10 @@ func (d *persistentMirrorTLSDialer) handleIncomingCarrierConnection(ctx context.
 	}
 
 	var firstWriteDelay time.Duration
-	if d.config.DeferFirstPayloadWriteTime != nil {
-		firstWriteDelay = time.Duration(d.config.DeferFirstPayloadWriteTime.BaseNanoseconds)
-		if d.config.DeferFirstPayloadWriteTime.UniformRandomMultiplierNanoseconds > 0 {
-			uniformRandomAdd := big.NewInt(int64(d.config.DeferFirstPayloadWriteTime.UniformRandomMultiplierNanoseconds))
+	if d.config.DeferInstanceDerivedWriteTime != nil {
+		firstWriteDelay = time.Duration(d.config.DeferInstanceDerivedWriteTime.BaseNanoseconds)
+		if d.config.DeferInstanceDerivedWriteTime.UniformRandomMultiplierNanoseconds > 0 {
+			uniformRandomAdd := big.NewInt(int64(d.config.DeferInstanceDerivedWriteTime.UniformRandomMultiplierNanoseconds))
 			uniformRandomAddBigInt, err := cryptoRand.Int(cryptoRand.Reader, uniformRandomAdd)
 			if err != nil {
 				newError("failed to generate random delay").Base(err).AtWarning().WriteToLog()
