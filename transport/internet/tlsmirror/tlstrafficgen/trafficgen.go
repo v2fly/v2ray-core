@@ -164,18 +164,35 @@ func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) erro
 		if err != nil {
 			return newError("failed to send HTTP request").Base(err).AtWarning()
 		}
-		_, err = io.Copy(io.Discard, resp.Body)
-		if err != nil {
-			return newError("failed to read HTTP response body").Base(err).AtWarning()
+
+		finishRequest := func() error {
+			_, err = io.Copy(io.Discard, resp.Body)
+			if err != nil {
+				return newError("failed to read HTTP response body").Base(err).AtWarning()
+			}
+			err = resp.Body.Close()
+			if err != nil {
+				return newError("failed to close HTTP response body").Base(err).AtWarning()
+			}
+			return nil
 		}
-		err = resp.Body.Close()
-		if err != nil {
-			return newError("failed to close HTTP response body").Base(err).AtWarning()
+
+		if step.H2DoNotWaitForDownloadFinish && alpn == "h2" {
+			go func() {
+				if err := finishRequest(); err != nil {
+					newError("failed to finish request in background").Base(err).AtWarning().WriteToLog()
+				}
+			}()
+		} else {
+			if err := finishRequest(); err != nil {
+				return err
+			}
 		}
+
 		endTime := time.Now()
 
 		eclipsedTime := endTime.Sub(startTime)
-		secondToWait := float64(step.WaitAtMost-step.WaitAtLeast)*randFloat64() + float64(step.WaitAtLeast)
+		secondToWait := (float64(step.WaitTime.UniformRandomMultiplierNanoseconds)*randFloat64() + float64(step.WaitTime.BaseNanoseconds)) / float64(time.Second)
 		if eclipsedTime < time.Duration(secondToWait*float64(time.Second)) {
 			waitTime := time.Duration(secondToWait*float64(time.Second)) - eclipsedTime
 			newError("waiting for ", waitTime, " after step ", currentStep).AtDebug().WriteToLog()

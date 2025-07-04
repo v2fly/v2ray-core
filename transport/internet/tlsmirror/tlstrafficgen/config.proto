@@ -8,6 +8,11 @@ option java_multiple_files = true;
 
 import "google/protobuf/any.proto";
 
+message TimeSpec {
+  uint64 base_nanoseconds = 1;
+  uint64 uniform_random_multiplier_nanoseconds = 2;
+}
+
 message Header {
   string name = 1;
   string value = 2;
@@ -24,12 +29,12 @@ message Step {
   string host = 8;
   string path = 2;
   string method = 3;
-  float wait_at_least = 4;
-  float wait_at_most = 5;
   repeated TransferCandidate next_step = 6;
   bool connection_ready = 7;
   repeated Header headers = 9;
   bool connection_recall_exit = 10;
+  TimeSpec wait_time = 11;
+  bool h2_do_not_wait_for_download_finish = 12;
 }
 
 message Config {
