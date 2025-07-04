@@ -32,6 +32,9 @@ type connState struct {
 
 	protocolVersion [2]byte
 
+	firstWrite      bool
+	firstWriteDelay time.Duration
+
 	transportLayerPadding *TransportLayerPadding
 }
 
@@ -66,6 +69,16 @@ func (s *connState) Read(b []byte) (n int, err error) {
 }
 
 func (s *connState) Write(b []byte) (n int, err error) {
+	if s.firstWrite {
+		firstWriteDelayTimer := time.NewTimer(s.firstWriteDelay)
+		defer firstWriteDelayTimer.Stop()
+		select {
+		case <-s.ctx.Done():
+			return 0, s.ctx.Err()
+		case <-firstWriteDelayTimer.C:
+			s.firstWrite = false
+		}
+	}
 	if s.transportLayerPadding != nil && s.transportLayerPadding.Enabled {
 		b = Pack(b, 0)
 	}

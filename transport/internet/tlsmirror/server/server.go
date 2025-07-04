@@ -1,6 +1,8 @@
 package server
 
 import (
+	cryptoRand "crypto/rand"
+	"math/big"
 	"strings"
 	"time"
 
@@ -77,14 +79,29 @@ func (s *Server) Addr() net.Addr {
 
 func (s *Server) accept(clientConn net.Conn, serverConn net.Conn) {
 	ctx, cancel := context.WithCancel(s.ctx)
+
+	firstWriteDelay := time.Duration(0)
+	if s.config.DeferFirstPayloadWriteTime != nil {
+		uniformRandomAdd := big.NewInt(int64(s.config.DeferFirstPayloadWriteTime.UniformRandomMultiplierNanoseconds))
+		uniformRandomAddBigInt, err := cryptoRand.Int(cryptoRand.Reader, uniformRandomAdd)
+		if err != nil {
+			newError("failed to generate random delay").Base(err).AtWarning().WriteToLog()
+			return
+		}
+		uniformRandomAddU64 := uint64(uniformRandomAddBigInt.Int64())
+		firstWriteDelay = time.Duration(s.config.DeferFirstPayloadWriteTime.BaseNanoseconds + uniformRandomAddU64)
+	}
+
 	conn := &connState{
-		ctx:        ctx,
-		done:       cancel,
-		localAddr:  clientConn.LocalAddr(),
-		remoteAddr: clientConn.RemoteAddr(),
-		primaryKey: s.config.PrimaryKey,
-		handler:    s.onIncomingReadyConnection,
-		readPipe:   make(chan []byte, 1),
+		ctx:             ctx,
+		done:            cancel,
+		localAddr:       clientConn.LocalAddr(),
+		remoteAddr:      clientConn.RemoteAddr(),
+		primaryKey:      s.config.PrimaryKey,
+		handler:         s.onIncomingReadyConnection,
+		readPipe:        make(chan []byte, 1),
+		firstWrite:      true,
+		firstWriteDelay: firstWriteDelay,
 	}
 
 	conn.mirrorConn = mirrorbase.NewMirroredTLSConn(ctx, clientConn, serverConn, conn.onC2SMessage, nil, conn,
