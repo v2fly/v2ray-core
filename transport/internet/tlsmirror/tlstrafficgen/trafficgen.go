@@ -1,7 +1,6 @@
 package tlstrafficgen
 
 import (
-	"bufio"
 	"context"
 	cryptoRand "crypto/rand"
 	"io"
@@ -10,8 +9,6 @@ import (
 	"net/url"
 	"time"
 
-	"golang.org/x/net/http2"
-
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/environment"
 	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
@@ -19,6 +16,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/security"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/httponconnection"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
@@ -124,7 +122,7 @@ func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) erro
 	}
 	steps := generator.config.Steps
 	currentStep := 0
-	httpRoundTripper, err := newSingleConnectionHTTPTransport(tlsConn, alpn)
+	httpRoundTripper, err := httponconnection.NewSingleConnectionHTTPTransport(tlsConn, alpn)
 	if err != nil {
 		return newError("failed to create HTTP transport").Base(err).AtWarning()
 	}
@@ -268,71 +266,4 @@ func (generator *TrafficGenerator) tlsHandshake(conn net.Conn) (security.Conn, e
 	}
 
 	return securityEngineTyped.Client(conn)
-}
-
-type httpRequestTransport interface {
-	http.RoundTripper
-}
-
-func newHTTPRequestTransportH1(conn net.Conn) httpRequestTransport {
-	return &httpRequestTransportH1{
-		conn:      conn,
-		bufReader: bufio.NewReader(conn),
-	}
-}
-
-type httpRequestTransportH1 struct {
-	conn      net.Conn
-	bufReader *bufio.Reader
-}
-
-func (h *httpRequestTransportH1) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Proto = "HTTP/1.1"
-	req.ProtoMajor = 1
-	req.ProtoMinor = 1
-
-	err := req.Write(h.conn)
-	if err != nil {
-		return nil, err
-	}
-	return http.ReadResponse(h.bufReader, req)
-}
-
-func newHTTPRequestTransportH2(conn net.Conn) httpRequestTransport {
-	transport := &http2.Transport{}
-	clientConn, err := transport.NewClientConn(conn)
-	if err != nil {
-		return nil
-	}
-	return &httpRequestTransportH2{
-		transport:        transport,
-		clientConnection: clientConn,
-	}
-}
-
-type httpRequestTransportH2 struct {
-	transport        *http2.Transport
-	clientConnection *http2.ClientConn
-}
-
-func (h *httpRequestTransportH2) RoundTrip(request *http.Request) (*http.Response, error) {
-	request.ProtoMajor = 2
-	request.ProtoMinor = 0
-
-	response, err := h.clientConnection.RoundTrip(request)
-	if err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-
-func newSingleConnectionHTTPTransport(conn net.Conn, alpn string) (httpRequestTransport, error) {
-	switch alpn {
-	case "h2":
-		return newHTTPRequestTransportH2(conn), nil
-	case "http/1.1", "":
-		return newHTTPRequestTransportH1(conn), nil
-	default:
-		return nil, newError("unknown alpn: " + alpn).AtWarning()
-	}
 }
