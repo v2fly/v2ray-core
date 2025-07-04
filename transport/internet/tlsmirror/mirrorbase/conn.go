@@ -16,7 +16,6 @@ import (
 // NewMirroredTLSConn creates a new mirrored TLS connection.
 // No stable interface
 func NewMirroredTLSConn(ctx context.Context, clientConn net.Conn, serverConn net.Conn, onC2SMessage, onS2CMessage tlsmirror.MessageHook, closable common.Closable, explicitNonceDetection tlsmirror.ExplicitNonceDetection) tlsmirror.InsertableTLSConn {
-
 	explicitNonceDetectionReady, explicitNonceDetectionOver := context.WithCancel(ctx)
 	c := &conn{
 		ctx:                         ctx,
@@ -462,7 +461,7 @@ func (c *conn) GetApplicationDataExplicitNonceReservedOverheadHeaderLength() (in
 	if c.tls12ExplicitNonce == nil {
 		return 0, newError("explicit nonce info is not ready")
 	}
-	if *c.tls12ExplicitNonce == true {
+	if *c.tls12ExplicitNonce {
 		return 8, nil
 	}
 	return 0, nil

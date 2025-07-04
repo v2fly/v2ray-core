@@ -235,7 +235,7 @@ func (c *unclaimedConnection) tick() {
 	defer c.access.Unlock()
 	if !c.claimed {
 		c.claimed = true
-		c.Conn.Close()
+		c.Conn.Close() //nolint: staticcheck
 		c.Conn = nil
 	}
 }

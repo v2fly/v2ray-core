@@ -187,7 +187,7 @@ func (s *clientConnState) WriteMessage(message []byte) error {
 		return newError("failed to get explicit nonce reserved overhead header length").Base(err)
 	}
 	buffer := make([]byte, explicitNonceReservedOverheadHeaderLength, explicitNonceReservedOverheadHeaderLength+len(message)+s.encryptor.NonceSize())
-	buffer, err = s.encryptor.Seal(buffer[:], message)
+	buffer, err = s.encryptor.Seal(buffer, message)
 	if err != nil {
 		return newError("failed to encrypt message").Base(err)
 	}

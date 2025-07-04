@@ -294,7 +294,7 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
 		}
 	}
 
-	if c.Ciphersuites != nil && len(c.Ciphersuites) > 0 {
+	if len(c.Ciphersuites) > 0 {
 		config.CipherSuites = make([]uint16, 0, len(c.Ciphersuites))
 		for _, cs := range c.Ciphersuites {
 			config.CipherSuites = append(config.CipherSuites, uint16(cs))

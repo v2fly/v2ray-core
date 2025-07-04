@@ -22,7 +22,7 @@ import "encoding/binary"
 // @param data_OWNERSHIP_RELINQUISHED - The payload, this reference is consumed and should not be used after this call.
 // @param padding - The number of padding bytes to add to the data.
 func Pack(data_OWNERSHIP_RELINQUISHED []byte, paddingLength int) []byte {
-	data := append(data_OWNERSHIP_RELINQUISHED, make([]byte, paddingLength)...)
+	data := append(data_OWNERSHIP_RELINQUISHED, make([]byte, paddingLength)...) //nolint:gocritic
 	dataLength := len(data_OWNERSHIP_RELINQUISHED)
 	data = binary.BigEndian.AppendUint32(data, uint32(dataLength))
 	return data
@@ -47,9 +47,8 @@ func Pad(paddingLength int) []byte {
 	case 4:
 		return []byte{0, 0, 0, 0}
 	default:
-		return append(make([]byte, paddingLength))
+		return append(make([]byte, paddingLength)) //nolint:gocritic, govet, staticcheck
 	}
-
 }
 
 // Unpack extracts the data and padding from the given padded data. It
