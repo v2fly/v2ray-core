@@ -9,6 +9,11 @@ option java_multiple_files = true;
 import "common/protoext/extensions.proto";
 import "transport/internet/tlsmirror/tlstrafficgen/config.proto";
 
+message TimeSpec {
+  uint64 base_nanoseconds = 1;
+  uint64 uniform_random_multiplier_nanoseconds = 2;
+}
+
 message Config {
   option (v2ray.core.common.protoext.message_opt).type = "transport";
   option (v2ray.core.common.protoext.message_opt).short_name = "tlsmirror";
@@ -27,4 +32,6 @@ message Config {
   bytes primary_key = 6;
 
   repeated uint32 explicit_nonce_ciphersuites = 7;
+
+  TimeSpec defer_first_payload_write_time = 8;
 }

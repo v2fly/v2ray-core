@@ -32,6 +32,9 @@ type clientConnState struct {
 	readBuffer *bytes.Buffer
 
 	protocolVersion [2]byte
+
+	firstWrite      bool
+	firstWriteDelay time.Duration
 }
 
 func (s *clientConnState) GetConnectionContext() context.Context {
@@ -61,6 +64,16 @@ func (s *clientConnState) Read(b []byte) (n int, err error) {
 }
 
 func (s *clientConnState) Write(b []byte) (n int, err error) {
+	if s.firstWrite {
+		firstWriteDelayTimer := time.NewTimer(s.firstWriteDelay)
+		defer firstWriteDelayTimer.Stop()
+		select {
+		case <-s.ctx.Done():
+			return 0, s.ctx.Err()
+		case <-firstWriteDelayTimer.C:
+			s.firstWrite = false
+		}
+	}
 	err = s.WriteMessage(b)
 	if err != nil {
 		return 0, err
