@@ -14,6 +14,10 @@ message TimeSpec {
   uint64 uniform_random_multiplier_nanoseconds = 2;
 }
 
+message TransportLayerPadding {
+  bool enabled = 1;
+}
+
 message Config {
   option (v2ray.core.common.protoext.message_opt).type = "transport";
   option (v2ray.core.common.protoext.message_opt).short_name = "tlsmirror";
@@ -34,4 +38,6 @@ message Config {
   repeated uint32 explicit_nonce_ciphersuites = 7;
 
   TimeSpec defer_first_payload_write_time = 8;
+
+  TransportLayerPadding transport_layer_padding = 9;
 }
