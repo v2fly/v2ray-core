@@ -192,6 +192,10 @@ func (generator *TrafficGenerator) GenerateNextTraffic(ctx context.Context) erro
 		endTime := time.Now()
 
 		eclipsedTime := endTime.Sub(startTime)
+		if step.WaitTime == nil {
+			step.WaitTime = &TimeSpec{}
+			newError("no wait time specified for step ", currentStep, ", using default 0 seconds").AtWarning().WriteToLog()
+		}
 		secondToWait := (float64(step.WaitTime.UniformRandomMultiplierNanoseconds)*randFloat64() + float64(step.WaitTime.BaseNanoseconds)) / float64(time.Second)
 		if eclipsedTime < time.Duration(secondToWait*float64(time.Second)) {
 			waitTime := time.Duration(secondToWait*float64(time.Second)) - eclipsedTime
