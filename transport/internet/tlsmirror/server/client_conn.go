@@ -96,6 +96,7 @@ func (s *clientConnState) Write(b []byte) (n int, err error) {
 }
 
 func (s *clientConnState) Close() error {
+	// TODO: Only recall the connection, not close it.
 	s.done()
 	return nil
 }
