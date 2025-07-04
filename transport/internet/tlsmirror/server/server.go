@@ -82,14 +82,17 @@ func (s *Server) accept(clientConn net.Conn, serverConn net.Conn) {
 
 	firstWriteDelay := time.Duration(0)
 	if s.config.DeferFirstPayloadWriteTime != nil {
-		uniformRandomAdd := big.NewInt(int64(s.config.DeferFirstPayloadWriteTime.UniformRandomMultiplierNanoseconds))
-		uniformRandomAddBigInt, err := cryptoRand.Int(cryptoRand.Reader, uniformRandomAdd)
-		if err != nil {
-			newError("failed to generate random delay").Base(err).AtWarning().WriteToLog()
-			return
+		firstWriteDelay = time.Duration(s.config.DeferFirstPayloadWriteTime.BaseNanoseconds)
+		if s.config.DeferFirstPayloadWriteTime.UniformRandomMultiplierNanoseconds > 0 {
+			uniformRandomAdd := big.NewInt(int64(s.config.DeferFirstPayloadWriteTime.UniformRandomMultiplierNanoseconds))
+			uniformRandomAddBigInt, err := cryptoRand.Int(cryptoRand.Reader, uniformRandomAdd)
+			if err != nil {
+				newError("failed to generate random delay").Base(err).AtWarning().WriteToLog()
+				return
+			}
+			uniformRandomAddU64 := uint64(uniformRandomAddBigInt.Int64())
+			firstWriteDelay += time.Duration(uniformRandomAddU64)
 		}
-		uniformRandomAddU64 := uint64(uniformRandomAddBigInt.Int64())
-		firstWriteDelay = time.Duration(s.config.DeferFirstPayloadWriteTime.BaseNanoseconds + uniformRandomAddU64)
 	}
 
 	conn := &connState{
