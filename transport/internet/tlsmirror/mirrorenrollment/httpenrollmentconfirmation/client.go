@@ -30,7 +30,7 @@ func (c *client) VerifyConnectionEnrollment(req *tlsmirror.EnrollmentConfirmatio
 		return nil, newError("failed to marshal enrollment confirmation request").Base(err)
 	}
 
-	serverID := base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(req.ServerIdentifier)
+	serverID := base32.NewEncoding("0123456789abcdefghijklmnopqrstuv").WithPadding(base32.NoPadding).EncodeToString(req.ServerIdentifier)
 
 	httpReq, err := http.NewRequest("POST", "http://"+serverID+tlsmirror.EnrollmentVerificationControlConnectionPostfix, bytes.NewReader(requestMessage))
 	if err != nil {
