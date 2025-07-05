@@ -32,3 +32,17 @@ func DeriveEncryptionKey(primaryKey, clientRandom, serverRandom []byte, tag stri
 
 	return encryptionKey, nonceMask, nil
 }
+
+func DeriveSecondaryKey(primaryKey []byte, tag string) ([]byte, error) {
+	if len(primaryKey) != 32 {
+		return nil, newError("invalid primary key size: ", len(primaryKey))
+	}
+
+	// Use HKDF to derive a secondary key
+	secondaryKey, err := hkdf.Expand(sha256.New, primaryKey, "v2ray-sv77RCEY-e8AhYsbD-BmFC7XRK:tlsmirror-secondary"+tag, 16)
+	if err != nil {
+		return nil, newError("unable to derive secondary key").Base(err)
+	}
+
+	return secondaryKey, nil
+}

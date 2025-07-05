@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package v2ray.core.transport.internet.tlsmirror;
+option csharp_namespace = "V2Ray.Core.Transport.Internet.Tlsmirror";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror";
+option java_package = "com.v2ray.core.transport.internet.tlsmirror";
+option java_multiple_files = true;
+
+
+message EnrollmentConfirmationReq{
+  bytes server_identifier = 1;
+  bytes carrier_tls_connection_client_random = 2;
+  bytes carrier_tls_connection_server_random = 3;
+}
+message EnrollmentConfirmationResp{
+  bool enrolled = 1;
+}
