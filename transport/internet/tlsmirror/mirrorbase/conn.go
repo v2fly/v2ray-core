@@ -275,6 +275,7 @@ func (c *conn) s2cWorker() {
 	if err != nil {
 		c.done()
 		newError("failed to unpack server hello").Base(err).AtWarning().WriteToLog()
+		drainCopy(c.clientConn, nil, c.serverConn)
 		return
 	}
 	c.ServerRandom = serverHello.ServerRandom
@@ -285,6 +286,14 @@ func (c *conn) s2cWorker() {
 	// implicit memory consistency synchronization release write for c.tls12ExplicitNonce
 	c.explicitNonceDetectionOver()
 
+	_, err = c.OnS2CMessage(&s2cHandshake)
+	if err != nil {
+		newError("failed to process S2C server hello message").Base(err).AtWarning().WriteToLog()
+		drainCopy(c.clientConn, nil, c.serverConn)
+		c.done()
+		return
+	}
+
 	serverSocketReader := &readerWithInitialData{initialData: s2cReminderData, innerReader: c.serverConn}
 	serverSocket := bufio.NewReaderSize(serverSocketReader, 65536)
 	recordReader := mirrorcommon.NewTLSRecordStreamReader(serverSocket)
@@ -293,8 +302,9 @@ func (c *conn) s2cWorker() {
 	if len(s2cReminderData) == 0 {
 		err := clientConnectionWriter.Flush()
 		if err != nil {
-			c.done()
 			newError("failed to flush client connection writer").Base(err).AtWarning().WriteToLog()
+			drainCopy(c.clientConn, nil, c.serverConn)
+			c.done()
 			return
 		}
 	}

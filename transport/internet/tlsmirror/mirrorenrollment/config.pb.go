@@ -18,15 +18,17 @@ const (
 )
 
 type Config struct {
-	state                  protoimpl.MessageState `protogen:"open.v1"`
-	PrimaryIngressOutbound string                 `protobuf:"bytes,1,opt,name=primary_ingress_outbound,json=primaryIngressOutbound,proto3" json:"primary_ingress_outbound,omitempty"`
-	PrimaryEgressOutbound  string                 `protobuf:"bytes,2,opt,name=primary_egress_outbound,json=primaryEgressOutbound,proto3" json:"primary_egress_outbound,omitempty"`
-	BootstrapIngressUrl    []string               `protobuf:"bytes,3,rep,name=bootstrap_ingress_url,json=bootstrapIngressUrl,proto3" json:"bootstrap_ingress_url,omitempty"`
-	BootstrapEgressUrl     []string               `protobuf:"bytes,4,rep,name=bootstrap_egress_url,json=bootstrapEgressUrl,proto3" json:"bootstrap_egress_url,omitempty"`
-	BootstrapIngressConfig []*anypb.Any           `protobuf:"bytes,5,rep,name=bootstrap_ingress_config,json=bootstrapIngressConfig,proto3" json:"bootstrap_ingress_config,omitempty"`
-	BootstrapEgressConfig  []*anypb.Any           `protobuf:"bytes,6,rep,name=bootstrap_egress_config,json=bootstrapEgressConfig,proto3" json:"bootstrap_egress_config,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// This will be handled by the TLS Mirror server, the enrollment part only accepts existing connections.
+	PrimaryIngressOutbound  string       `protobuf:"bytes,1,opt,name=primary_ingress_outbound,json=primaryIngressOutbound,proto3" json:"primary_ingress_outbound,omitempty"`
+	PrimaryEgressOutbound   string       `protobuf:"bytes,2,opt,name=primary_egress_outbound,json=primaryEgressOutbound,proto3" json:"primary_egress_outbound,omitempty"`
+	BootstrapIngressUrl     []string     `protobuf:"bytes,3,rep,name=bootstrap_ingress_url,json=bootstrapIngressUrl,proto3" json:"bootstrap_ingress_url,omitempty"`
+	BootstrapEgressUrl      []string     `protobuf:"bytes,4,rep,name=bootstrap_egress_url,json=bootstrapEgressUrl,proto3" json:"bootstrap_egress_url,omitempty"`
+	BootstrapIngressConfig  []*anypb.Any `protobuf:"bytes,5,rep,name=bootstrap_ingress_config,json=bootstrapIngressConfig,proto3" json:"bootstrap_ingress_config,omitempty"`
+	BootstrapEgressConfig   []*anypb.Any `protobuf:"bytes,6,rep,name=bootstrap_egress_config,json=bootstrapEgressConfig,proto3" json:"bootstrap_egress_config,omitempty"`
+	BootstrapEgressOutbound string       `protobuf:"bytes,7,opt,name=bootstrap_egress_outbound,json=bootstrapEgressOutbound,proto3" json:"bootstrap_egress_outbound,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
@@ -101,18 +103,26 @@ func (x *Config) GetBootstrapEgressConfig() []*anypb.Any {
 	return nil
 }
 
+func (x *Config) GetBootstrapEgressOutbound() string {
+	if x != nil {
+		return x.BootstrapEgressOutbound
+	}
+	return ""
+}
+
 var File_transport_internet_tlsmirror_mirrorenrollment_config_proto protoreflect.FileDescriptor
 
 const file_transport_internet_tlsmirror_mirrorenrollment_config_proto_rawDesc = "" +
 	"\n" +
-	":transport/internet/tlsmirror/mirrorenrollment/config.proto\x128v2ray.core.transport.internet.tlsmirror.mirrorenrollment\x1a common/protoext/extensions.proto\x1a\x19google/protobuf/any.proto\"\xfe\x02\n" +
+	":transport/internet/tlsmirror/mirrorenrollment/config.proto\x128v2ray.core.transport.internet.tlsmirror.mirrorenrollment\x1a common/protoext/extensions.proto\x1a\x19google/protobuf/any.proto\"\xba\x03\n" +
 	"\x06Config\x128\n" +
 	"\x18primary_ingress_outbound\x18\x01 \x01(\tR\x16primaryIngressOutbound\x126\n" +
 	"\x17primary_egress_outbound\x18\x02 \x01(\tR\x15primaryEgressOutbound\x122\n" +
 	"\x15bootstrap_ingress_url\x18\x03 \x03(\tR\x13bootstrapIngressUrl\x120\n" +
 	"\x14bootstrap_egress_url\x18\x04 \x03(\tR\x12bootstrapEgressUrl\x12N\n" +
 	"\x18bootstrap_ingress_config\x18\x05 \x03(\v2\x14.google.protobuf.AnyR\x16bootstrapIngressConfig\x12L\n" +
-	"\x17bootstrap_egress_config\x18\x06 \x03(\v2\x14.google.protobuf.AnyR\x15bootstrapEgressConfigB\xc9\x01\n" +
+	"\x17bootstrap_egress_config\x18\x06 \x03(\v2\x14.google.protobuf.AnyR\x15bootstrapEgressConfig\x12:\n" +
+	"\x19bootstrap_egress_outbound\x18\a \x01(\tR\x17bootstrapEgressOutboundB\xc9\x01\n" +
 	"<com.v2ray.core.transport.internet.tlsmirror.mirrorenrollmentP\x01ZLgithub.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorenrollment\xaa\x028V2Ray.Core.Transport.Internet.Tlsmirror.MirrorEnrollmentb\x06proto3"
 
 var (
