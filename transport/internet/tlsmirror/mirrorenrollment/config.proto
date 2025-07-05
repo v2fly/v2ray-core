@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package v2ray.core.transport.internet.tlsmirror.mirrorenrollment;
+option csharp_namespace = "V2Ray.Core.Transport.Internet.Tlsmirror.MirrorEnrollment";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorenrollment";
+option java_package = "com.v2ray.core.transport.internet.tlsmirror.mirrorenrollment";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+import "google/protobuf/any.proto";
+
+message Config {
+  // This will be handled by the TLS Mirror server, the enrollment part only accepts existing connections.
+  string primary_ingress_outbound = 1;
+
+  string primary_egress_outbound = 2;
+  repeated string bootstrap_ingress_url = 3;
+  repeated string bootstrap_egress_url = 4;
+  repeated google.protobuf.Any bootstrap_ingress_config = 5;
+  repeated google.protobuf.Any bootstrap_egress_config = 6;
+  string bootstrap_egress_outbound = 7;
+}
