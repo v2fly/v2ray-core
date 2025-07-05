@@ -27,12 +27,12 @@ type serverEnrollmentProcessor struct {
 	activeConnections sync.Map
 }
 
-func (p *serverEnrollmentProcessor) AddConnection(ctx context.Context, conn tlsmirror.InsertableTLSConnForEnrollment) (tlsmirror.RemoveConnectionFunc, error) {
+func (p *serverEnrollmentProcessor) AddConnection(ctx context.Context, clientRandom, serverRandom []byte, conn tlsmirror.InsertableTLSConnForEnrollment) (tlsmirror.RemoveConnectionFunc, error) {
 	if conn == nil {
 		return nil, newError("nil InsertableTLSConnForEnrollment")
 	}
 
-	enrollmentKey, err := DeriveEnrollmentKey(p.primaryKey, conn)
+	enrollmentKey, err := DeriveEnrollmentKeyWithClientAndServerRandom(p.primaryKey, clientRandom, serverRandom)
 	if err != nil {
 		return nil, newError("failed to derive enrollment key").Base(err).AtError()
 	}

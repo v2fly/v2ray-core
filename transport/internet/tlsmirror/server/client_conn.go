@@ -11,6 +11,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorcommon"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorcrypto"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorenrollment"
 )
 
 type clientConnState struct {
@@ -198,4 +199,35 @@ func (s *clientConnState) WriteMessage(message []byte) error {
 		Fragment:              buffer,
 	}
 	return s.mirrorConn.InsertC2SMessage(&record)
+}
+
+func (s *clientConnState) VerifyConnectionEnrollmentWithProcessor(connectionEnrollmentConfirmationClient tlsmirror.ConnectionEnrollmentConfirmation) error {
+	clientRandom, serverRandom, err := s.mirrorConn.GetHandshakeRandom()
+	if err != nil {
+		return newError("failed to get handshake random").Base(err).AtWarning()
+	}
+
+	enrollmentServerIdentity, err := mirrorenrollment.DeriveEnrollmentServerIdentifier(s.primaryKey)
+	if err != nil {
+		return newError("failed to derive enrollment server identifier").Base(err).AtError()
+	}
+
+	enrollmentReq := &tlsmirror.EnrollmentConfirmationReq{
+		ServerIdentifier:                 enrollmentServerIdentity,
+		CarrierTlsConnectionClientRandom: clientRandom,
+		CarrierTlsConnectionServerRandom: serverRandom,
+	}
+	resp, err := connectionEnrollmentConfirmationClient.VerifyConnectionEnrollment(enrollmentReq)
+	if err != nil {
+		return newError("failed to verify connection enrollment").Base(err).AtError()
+	}
+	if resp == nil {
+		return newError("nil EnrollmentConfirmationResp")
+	}
+	if resp.Enrolled {
+		newError("connection enrolled successfully").AtInfo().WriteToLog()
+	} else {
+		return newError("connection enrollment failed")
+	}
+	return nil
 }

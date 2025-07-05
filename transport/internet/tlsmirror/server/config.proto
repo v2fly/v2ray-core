@@ -8,6 +8,7 @@ option java_multiple_files = true;
 
 import "common/protoext/extensions.proto";
 import "transport/internet/tlsmirror/tlstrafficgen/config.proto";
+import "transport/internet/tlsmirror/mirrorenrollment/config.proto";
 
 message TimeSpec {
   uint64 base_nanoseconds = 1;
@@ -40,4 +41,7 @@ message Config {
   TimeSpec defer_instance_derived_write_time = 8;
 
   TransportLayerPadding transport_layer_padding = 9;
+
+  v2ray.core.transport.internet.tlsmirror.mirrorenrollment.Config connection_enrollment = 10;
+
 }

@@ -2,6 +2,7 @@ package server
 
 import (
 	_ "github.com/v2fly/v2ray-core/v5/common/protoext"
+	mirrorenrollment "github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorenrollment"
 	tlstrafficgen "github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/tlstrafficgen"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -114,16 +115,17 @@ func (x *TransportLayerPadding) GetEnabled() bool {
 }
 
 type Config struct {
-	state                         protoimpl.MessageState `protogen:"open.v1"`
-	ForwardAddress                string                 `protobuf:"bytes,1,opt,name=forward_address,json=forwardAddress,proto3" json:"forward_address,omitempty"`
-	ForwardPort                   uint32                 `protobuf:"varint,2,opt,name=forward_port,json=forwardPort,proto3" json:"forward_port,omitempty"`
-	ForwardTag                    string                 `protobuf:"bytes,3,opt,name=forward_tag,json=forwardTag,proto3" json:"forward_tag,omitempty"`
-	CarrierConnectionTag          string                 `protobuf:"bytes,4,opt,name=carrier_connection_tag,json=carrierConnectionTag,proto3" json:"carrier_connection_tag,omitempty"`
-	EmbeddedTrafficGenerator      *tlstrafficgen.Config  `protobuf:"bytes,5,opt,name=embedded_traffic_generator,json=embeddedTrafficGenerator,proto3" json:"embedded_traffic_generator,omitempty"`
-	PrimaryKey                    []byte                 `protobuf:"bytes,6,opt,name=primary_key,json=primaryKey,proto3" json:"primary_key,omitempty"`
-	ExplicitNonceCiphersuites     []uint32               `protobuf:"varint,7,rep,packed,name=explicit_nonce_ciphersuites,json=explicitNonceCiphersuites,proto3" json:"explicit_nonce_ciphersuites,omitempty"`
-	DeferInstanceDerivedWriteTime *TimeSpec              `protobuf:"bytes,8,opt,name=defer_instance_derived_write_time,json=deferInstanceDerivedWriteTime,proto3" json:"defer_instance_derived_write_time,omitempty"`
-	TransportLayerPadding         *TransportLayerPadding `protobuf:"bytes,9,opt,name=transport_layer_padding,json=transportLayerPadding,proto3" json:"transport_layer_padding,omitempty"`
+	state                         protoimpl.MessageState   `protogen:"open.v1"`
+	ForwardAddress                string                   `protobuf:"bytes,1,opt,name=forward_address,json=forwardAddress,proto3" json:"forward_address,omitempty"`
+	ForwardPort                   uint32                   `protobuf:"varint,2,opt,name=forward_port,json=forwardPort,proto3" json:"forward_port,omitempty"`
+	ForwardTag                    string                   `protobuf:"bytes,3,opt,name=forward_tag,json=forwardTag,proto3" json:"forward_tag,omitempty"`
+	CarrierConnectionTag          string                   `protobuf:"bytes,4,opt,name=carrier_connection_tag,json=carrierConnectionTag,proto3" json:"carrier_connection_tag,omitempty"`
+	EmbeddedTrafficGenerator      *tlstrafficgen.Config    `protobuf:"bytes,5,opt,name=embedded_traffic_generator,json=embeddedTrafficGenerator,proto3" json:"embedded_traffic_generator,omitempty"`
+	PrimaryKey                    []byte                   `protobuf:"bytes,6,opt,name=primary_key,json=primaryKey,proto3" json:"primary_key,omitempty"`
+	ExplicitNonceCiphersuites     []uint32                 `protobuf:"varint,7,rep,packed,name=explicit_nonce_ciphersuites,json=explicitNonceCiphersuites,proto3" json:"explicit_nonce_ciphersuites,omitempty"`
+	DeferInstanceDerivedWriteTime *TimeSpec                `protobuf:"bytes,8,opt,name=defer_instance_derived_write_time,json=deferInstanceDerivedWriteTime,proto3" json:"defer_instance_derived_write_time,omitempty"`
+	TransportLayerPadding         *TransportLayerPadding   `protobuf:"bytes,9,opt,name=transport_layer_padding,json=transportLayerPadding,proto3" json:"transport_layer_padding,omitempty"`
+	ConnectionEnrollment          *mirrorenrollment.Config `protobuf:"bytes,10,opt,name=connection_enrollment,json=connectionEnrollment,proto3" json:"connection_enrollment,omitempty"`
 	unknownFields                 protoimpl.UnknownFields
 	sizeCache                     protoimpl.SizeCache
 }
@@ -221,16 +223,23 @@ func (x *Config) GetTransportLayerPadding() *TransportLayerPadding {
 	return nil
 }
 
+func (x *Config) GetConnectionEnrollment() *mirrorenrollment.Config {
+	if x != nil {
+		return x.ConnectionEnrollment
+	}
+	return nil
+}
+
 var File_transport_internet_tlsmirror_server_config_proto protoreflect.FileDescriptor
 
 const file_transport_internet_tlsmirror_server_config_proto_rawDesc = "" +
 	"\n" +
-	"0transport/internet/tlsmirror/server/config.proto\x12.v2ray.core.transport.internet.tlsmirror.server\x1a common/protoext/extensions.proto\x1a7transport/internet/tlsmirror/tlstrafficgen/config.proto\"\x88\x01\n" +
+	"0transport/internet/tlsmirror/server/config.proto\x12.v2ray.core.transport.internet.tlsmirror.server\x1a common/protoext/extensions.proto\x1a7transport/internet/tlsmirror/tlstrafficgen/config.proto\x1a:transport/internet/tlsmirror/mirrorenrollment/config.proto\"\x88\x01\n" +
 	"\bTimeSpec\x12)\n" +
 	"\x10base_nanoseconds\x18\x01 \x01(\x04R\x0fbaseNanoseconds\x12Q\n" +
 	"%uniform_random_multiplier_nanoseconds\x18\x02 \x01(\x04R\"uniformRandomMultiplierNanoseconds\"1\n" +
 	"\x15TransportLayerPadding\x12\x18\n" +
-	"\aenabled\x18\x01 \x01(\bR\aenabled\"\xb6\x05\n" +
+	"\aenabled\x18\x01 \x01(\bR\aenabled\"\xad\x06\n" +
 	"\x06Config\x12'\n" +
 	"\x0fforward_address\x18\x01 \x01(\tR\x0eforwardAddress\x12!\n" +
 	"\fforward_port\x18\x02 \x01(\rR\vforwardPort\x12\x1f\n" +
@@ -242,7 +251,9 @@ const file_transport_internet_tlsmirror_server_config_proto_rawDesc = "" +
 	"primaryKey\x12>\n" +
 	"\x1bexplicit_nonce_ciphersuites\x18\a \x03(\rR\x19explicitNonceCiphersuites\x12\x82\x01\n" +
 	"!defer_instance_derived_write_time\x18\b \x01(\v28.v2ray.core.transport.internet.tlsmirror.server.TimeSpecR\x1ddeferInstanceDerivedWriteTime\x12}\n" +
-	"\x17transport_layer_padding\x18\t \x01(\v2E.v2ray.core.transport.internet.tlsmirror.server.TransportLayerPaddingR\x15transportLayerPadding:'\x82\xb5\x18#\n" +
+	"\x17transport_layer_padding\x18\t \x01(\v2E.v2ray.core.transport.internet.tlsmirror.server.TransportLayerPaddingR\x15transportLayerPadding\x12u\n" +
+	"\x15connection_enrollment\x18\n" +
+	" \x01(\v2@.v2ray.core.transport.internet.tlsmirror.mirrorenrollment.ConfigR\x14connectionEnrollment:'\x82\xb5\x18#\n" +
 	"\ttransport\x12\ttlsmirror\x8a\xff)\ttlsmirrorB\xab\x01\n" +
 	"2com.v2ray.core.transport.internet.tlsmirror.serverP\x01ZBgithub.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/server\xaa\x02.V2Ray.Core.Transport.Internet.Tlsmirror.Serverb\x06proto3"
 
@@ -260,20 +271,22 @@ func file_transport_internet_tlsmirror_server_config_proto_rawDescGZIP() []byte 
 
 var file_transport_internet_tlsmirror_server_config_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_transport_internet_tlsmirror_server_config_proto_goTypes = []any{
-	(*TimeSpec)(nil),              // 0: v2ray.core.transport.internet.tlsmirror.server.TimeSpec
-	(*TransportLayerPadding)(nil), // 1: v2ray.core.transport.internet.tlsmirror.server.TransportLayerPadding
-	(*Config)(nil),                // 2: v2ray.core.transport.internet.tlsmirror.server.Config
-	(*tlstrafficgen.Config)(nil),  // 3: v2ray.core.transport.internet.tlsmirror.tlstrafficgen.Config
+	(*TimeSpec)(nil),                // 0: v2ray.core.transport.internet.tlsmirror.server.TimeSpec
+	(*TransportLayerPadding)(nil),   // 1: v2ray.core.transport.internet.tlsmirror.server.TransportLayerPadding
+	(*Config)(nil),                  // 2: v2ray.core.transport.internet.tlsmirror.server.Config
+	(*tlstrafficgen.Config)(nil),    // 3: v2ray.core.transport.internet.tlsmirror.tlstrafficgen.Config
+	(*mirrorenrollment.Config)(nil), // 4: v2ray.core.transport.internet.tlsmirror.mirrorenrollment.Config
 }
 var file_transport_internet_tlsmirror_server_config_proto_depIdxs = []int32{
 	3, // 0: v2ray.core.transport.internet.tlsmirror.server.Config.embedded_traffic_generator:type_name -> v2ray.core.transport.internet.tlsmirror.tlstrafficgen.Config
 	0, // 1: v2ray.core.transport.internet.tlsmirror.server.Config.defer_instance_derived_write_time:type_name -> v2ray.core.transport.internet.tlsmirror.server.TimeSpec
 	1, // 2: v2ray.core.transport.internet.tlsmirror.server.Config.transport_layer_padding:type_name -> v2ray.core.transport.internet.tlsmirror.server.TransportLayerPadding
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	4, // 3: v2ray.core.transport.internet.tlsmirror.server.Config.connection_enrollment:type_name -> v2ray.core.transport.internet.tlsmirror.mirrorenrollment.Config
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_transport_internet_tlsmirror_server_config_proto_init() }

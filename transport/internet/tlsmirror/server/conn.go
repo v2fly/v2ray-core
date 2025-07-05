@@ -36,6 +36,15 @@ type connState struct {
 	firstWriteDelay time.Duration
 
 	transportLayerPadding *TransportLayerPadding
+
+	connectionEnrollmentEnabled           bool
+	connectionEnrollmentProcessorEnrolled bool
+	connectionEnrollmentProcessor         tlsmirror.ConnectionEnrollmentConfirmationProcessor
+	connectionEnrollmentRemover           tlsmirror.RemoveConnectionFunc
+}
+
+func (s *connState) VerifyConnectionEnrollment(req *tlsmirror.EnrollmentConfirmationReq) (*tlsmirror.EnrollmentConfirmationResp, error) {
+	return &tlsmirror.EnrollmentConfirmationResp{Enrolled: true}, nil
 }
 
 func (s *connState) Read(b []byte) (n int, err error) {
@@ -113,7 +122,35 @@ func (s *connState) SetWriteDeadline(t time.Time) error {
 
 func (s *connState) Close() error {
 	s.done()
+	if s.connectionEnrollmentRemover != nil {
+		if err := s.connectionEnrollmentRemover(); err != nil {
+			newError("failed to remove connection enrollment").Base(err).AtWarning().WriteToLog()
+		}
+		s.connectionEnrollmentRemover = nil
+	}
 	return nil
+}
+
+func (s *connState) onS2CMessage(message *tlsmirror.TLSRecord) (drop bool, ok error) {
+	if message.RecordType == mirrorcommon.TLSRecord_RecordType_handshake {
+		if s.connectionEnrollmentEnabled && !s.connectionEnrollmentProcessorEnrolled {
+			clientRandom, serverRandom, err := s.mirrorConn.GetHandshakeRandom()
+			if err != nil {
+				newError("failed to get handshake random").Base(err).AtWarning().WriteToLog()
+				return false, nil
+			}
+
+			remove, err := s.connectionEnrollmentProcessor.AddConnection(s.ctx, clientRandom, serverRandom, s)
+			if err != nil {
+				newError("failed to add connection for enrollment").Base(err).AtWarning().WriteToLog()
+				return false, nil
+			}
+			s.connectionEnrollmentRemover = remove
+			s.connectionEnrollmentProcessorEnrolled = true
+			return false, nil
+		}
+	}
+	return false, nil
 }
 
 func (s *connState) onC2SMessage(message *tlsmirror.TLSRecord) (drop bool, ok error) {

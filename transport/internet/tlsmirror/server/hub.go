@@ -18,7 +18,10 @@ func ListenTLSMirror(ctx context.Context, address net.Address, port net.Port,
 		return nil, newError("failed to listen TLS mirror").Base(err)
 	}
 
-	tlsMirrorServer := NewServer(ctx, listener, tlsMirrorSettings, handler)
+	tlsMirrorServer, err := NewServer(ctx, listener, tlsMirrorSettings, handler)
+	if err != nil {
+		return nil, newError("failed to create TLS mirror server").Base(err)
+	}
 
 	go tlsMirrorServer.accepts()
 
