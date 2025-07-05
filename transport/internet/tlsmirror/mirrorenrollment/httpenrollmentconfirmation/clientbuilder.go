@@ -73,7 +73,7 @@ func (c *clientRoundtripper) createNewConnection() error {
 		return nil // Connection already exists
 	}
 
-	serverID := base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(c.serverIdentity)
+	serverID := base32.NewEncoding("0123456789abcdefghijklmnopqrstuv").WithPadding(base32.NoPadding).EncodeToString(c.serverIdentity)
 	conn, err := c.dial("tcp", serverID+tlsmirror.EnrollmentVerificationControlConnectionPostfix+":80")
 	if err != nil {
 		return newError("failed to dial server: ", err)

@@ -125,6 +125,11 @@ func (s *Server) accept(clientConn net.Conn, serverConn net.Conn) {
 		transportLayerPadding: s.config.TransportLayerPadding,
 	}
 
+	if s.config.ConnectionEnrollment != nil {
+		conn.connectionEnrollmentEnabled = true
+		conn.connectionEnrollmentProcessor = s.enrollmentConfirmationProcessor
+	}
+
 	conn.mirrorConn = mirrorbase.NewMirroredTLSConn(ctx, clientConn, serverConn, conn.onC2SMessage, conn.onS2CMessage, conn,
 		s.explicitNonceCiphersuiteLookup.Lookup)
 }
@@ -150,7 +155,7 @@ func (s *Server) init() error {
 		}
 
 		if err := s.obm.RemoveHandler(context.Background(), s.config.ConnectionEnrollment.PrimaryIngressOutbound); err != nil {
-			return newError("failed to remove existing handler").Base(err)
+			newError("failed to remove existing handler").Base(err).AtDebug().WriteToLog()
 		}
 
 		err := s.obm.AddHandler(context.Background(), s.enrollmentConfirmationOutbound)
