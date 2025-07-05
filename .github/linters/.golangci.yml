@@ -50,7 +50,7 @@ linters:
       - builtin$
       - examples$
 issues:
-  new: false
+  new: true
 formatters:
   enable:
     - gofmt
