@@ -1,6 +1,7 @@
 package v5cfg
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -86,7 +87,9 @@ func (c RootConfig) BuildV5(ctx context.Context) (proto.Message, error) {
 func loadJSONConfig(data []byte) (*core.Config, error) {
 	rootConfig := &RootConfig{}
 
-	err := json.Unmarshal(data, rootConfig)
+	rootConfDecoder := json.NewDecoder(bytes.NewReader(data))
+	rootConfDecoder.DisallowUnknownFields()
+	err := rootConfDecoder.Decode(rootConfig)
 	if err != nil {
 		return nil, newError("unable to load json").Base(err)
 	}
