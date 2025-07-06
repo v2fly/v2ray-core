@@ -183,20 +183,21 @@ func (d *persistentMirrorTLSDialer) handleIncomingCarrierConnection(ctx context.
 
 	ctx, cancel := context.WithCancel(ctx)
 	cconnState := &clientConnState{
-		ctx:                   ctx,
-		done:                  cancel,
-		localAddr:             conn.LocalAddr(),
-		remoteAddr:            conn.RemoteAddr(),
-		handler:               d.handleIncomingReadyConnection,
-		primaryKey:            d.config.PrimaryKey,
-		readPipe:              make(chan []byte, 1),
-		firstWrite:            true,
-		firstWriteDelay:       firstWriteDelay,
-		transportLayerPadding: d.config.TransportLayerPadding,
+		ctx:                      ctx,
+		done:                     cancel,
+		localAddr:                conn.LocalAddr(),
+		remoteAddr:               conn.RemoteAddr(),
+		handler:                  d.handleIncomingReadyConnection,
+		primaryKey:               d.config.PrimaryKey,
+		readPipe:                 make(chan []byte, 1),
+		firstWrite:               true,
+		firstWriteDelay:          firstWriteDelay,
+		transportLayerPadding:    d.config.TransportLayerPadding,
+		sequenceWatermarkEnabled: d.config.SequenceWatermarkingEnabled,
 	}
 
 	cconnState.mirrorConn = mirrorbase.NewMirroredTLSConn(ctx, conn, forwardConn, cconnState.onC2SMessage, cconnState.onS2CMessage, conn,
-		d.explicitNonceCiphersuiteLookup.Lookup)
+		d.explicitNonceCiphersuiteLookup.Lookup, cconnState.onC2SMessageTx, cconnState.onS2CMessageTx)
 }
 
 type connectionContextGetter interface {

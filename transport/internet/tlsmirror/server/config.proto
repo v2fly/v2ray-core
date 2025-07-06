@@ -44,4 +44,6 @@ message Config {
 
   v2ray.core.transport.internet.tlsmirror.mirrorenrollment.Config connection_enrollment = 10;
 
+  bool sequence_watermarking_enabled = 11;
+
 }

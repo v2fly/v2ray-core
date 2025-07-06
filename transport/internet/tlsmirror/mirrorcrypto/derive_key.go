@@ -46,3 +46,31 @@ func DeriveSecondaryKey(primaryKey []byte, tag string) ([]byte, error) {
 
 	return secondaryKey, nil
 }
+
+func DeriveSequenceWatermarkingKey(primaryKey, clientRandom, serverRandom []byte, tag string) ([]byte, []byte, error) {
+	if len(primaryKey) != 32 {
+		return nil, nil, newError("invalid primary key size: ", len(primaryKey))
+	}
+	if len(clientRandom) != 32 {
+		return nil, nil, newError("invalid client random size: ", len(clientRandom))
+	}
+	if len(serverRandom) != 32 {
+		return nil, nil, newError("invalid server random size: ", len(serverRandom))
+	}
+
+	// Concatenate the primary key, client random, and server random
+	combined := append(primaryKey, clientRandom...) // nolint: gocritic
+	combined = append(combined, serverRandom...)
+
+	encryptionKey, err := hkdf.Expand(sha256.New, combined, "v2ray-xv64FXUU-GxMn8UYz-bTy6UDeE:tlsmirror-sequence-watermark"+tag, 32)
+	if err != nil {
+		return nil, nil, newError("unable to derive encryption key").Base(err)
+	}
+
+	nonceMask, err := hkdf.Expand(sha256.New, combined, "v2ray-xv64FXUU-GxMn8UYz-bTy6UDeE:tlsmirror-sequence-watermark"+tag, 24)
+	if err != nil {
+		return nil, nil, newError("unable to derive nonce mask").Base(err)
+	}
+
+	return encryptionKey, nonceMask, nil
+}

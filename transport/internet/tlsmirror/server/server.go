@@ -113,16 +113,17 @@ func (s *Server) accept(clientConn net.Conn, serverConn net.Conn) {
 	}
 
 	conn := &connState{
-		ctx:                   ctx,
-		done:                  cancel,
-		localAddr:             clientConn.LocalAddr(),
-		remoteAddr:            clientConn.RemoteAddr(),
-		primaryKey:            s.config.PrimaryKey,
-		handler:               s.onIncomingReadyConnection,
-		readPipe:              make(chan []byte, 1),
-		firstWrite:            true,
-		firstWriteDelay:       firstWriteDelay,
-		transportLayerPadding: s.config.TransportLayerPadding,
+		ctx:                      ctx,
+		done:                     cancel,
+		localAddr:                clientConn.LocalAddr(),
+		remoteAddr:               clientConn.RemoteAddr(),
+		primaryKey:               s.config.PrimaryKey,
+		handler:                  s.onIncomingReadyConnection,
+		readPipe:                 make(chan []byte, 1),
+		firstWrite:               true,
+		firstWriteDelay:          firstWriteDelay,
+		transportLayerPadding:    s.config.TransportLayerPadding,
+		sequenceWatermarkEnabled: s.config.SequenceWatermarkingEnabled,
 	}
 
 	if s.config.ConnectionEnrollment != nil {
@@ -131,7 +132,7 @@ func (s *Server) accept(clientConn net.Conn, serverConn net.Conn) {
 	}
 
 	conn.mirrorConn = mirrorbase.NewMirroredTLSConn(ctx, clientConn, serverConn, conn.onC2SMessage, conn.onS2CMessage, conn,
-		s.explicitNonceCiphersuiteLookup.Lookup)
+		s.explicitNonceCiphersuiteLookup.Lookup, conn.onC2SMessageTx, conn.onS2CMessageTx)
 }
 
 func (s *Server) onIncomingReadyConnection(conn internet.Connection) {

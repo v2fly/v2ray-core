@@ -11,6 +11,9 @@ type TLSRecord struct {
 	LegacyProtocolVersion [2]byte
 	RecordLength          uint16
 	Fragment              []byte
+
+	// Annotations are used to store additional information about the record. Never sent over the wire.
+	InsertedMessage bool
 }
 
 type RecordReader interface {
