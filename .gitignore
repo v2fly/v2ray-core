@@ -28,3 +28,5 @@ errorgen
 *.dat
 *~
 [._]*.un~
+
+.golangci.yml
