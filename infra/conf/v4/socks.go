@@ -38,6 +38,7 @@ type SocksServerConfig struct {
 	Timeout        uint32             `json:"timeout"`
 	UserLevel      uint32             `json:"userLevel"`
 	PacketEncoding string             `json:"packetEncoding"`
+	DeferLastReply bool               `json:"deferLastReply,omitempty"`
 }
 
 func (v *SocksServerConfig) Build() (proto.Message, error) {
@@ -73,6 +74,8 @@ func (v *SocksServerConfig) Build() (proto.Message, error) {
 	case "", "None":
 		config.PacketEncoding = packetaddr.PacketAddrType_None
 	}
+
+	config.DeferLastReply = v.DeferLastReply
 
 	return config, nil
 }
