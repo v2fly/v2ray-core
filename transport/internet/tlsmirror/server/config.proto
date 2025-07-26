@@ -42,7 +42,7 @@ message Config {
 
   TransportLayerPadding transport_layer_padding = 9;
 
-  v2ray.core.transport.internet.tlsmirror.mirrorenrollment.Config connection_enrollment = 10;
+  v2ray.core.transport.internet.tlsmirror.mirrorenrollment.Config connection_enrolment = 10;
 
   bool sequence_watermarking_enabled = 11;
 

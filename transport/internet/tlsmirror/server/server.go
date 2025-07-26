@@ -126,7 +126,7 @@ func (s *Server) accept(clientConn net.Conn, serverConn net.Conn) {
 		sequenceWatermarkEnabled: s.config.SequenceWatermarkingEnabled,
 	}
 
-	if s.config.ConnectionEnrollment != nil {
+	if s.config.ConnectionEnrolment != nil {
 		conn.connectionEnrollmentEnabled = true
 		conn.connectionEnrollmentProcessor = s.enrollmentConfirmationProcessor
 	}
@@ -146,16 +146,16 @@ func (s *Server) init() error {
 		return err
 	}
 
-	if s.config.ConnectionEnrollment != nil {
+	if s.config.ConnectionEnrolment != nil {
 		s.enrollmentConfirmationListener = NewOutboundListener()
-		s.enrollmentConfirmationOutbound = NewOutbound(s.config.ConnectionEnrollment.PrimaryIngressOutbound,
+		s.enrollmentConfirmationOutbound = NewOutbound(s.config.ConnectionEnrolment.PrimaryIngressOutbound,
 			s.enrollmentConfirmationListener)
 
 		if err := s.enrollmentConfirmationOutbound.Start(); err != nil {
 			return newError("failed to start enrollment confirmation outbound").Base(err).AtWarning()
 		}
 
-		if err := s.obm.RemoveHandler(context.Background(), s.config.ConnectionEnrollment.PrimaryIngressOutbound); err != nil {
+		if err := s.obm.RemoveHandler(context.Background(), s.config.ConnectionEnrolment.PrimaryIngressOutbound); err != nil {
 			newError("failed to remove existing handler").Base(err).AtDebug().WriteToLog()
 		}
 
@@ -169,7 +169,7 @@ func (s *Server) init() error {
 			return newError("failed to create enrollment confirmation processor").Base(err).AtError()
 		}
 
-		s.enrollmentConfirmationServer, err = mirrorenrollment.NewEnrollmentConfirmationServer(s.ctx, s.config.ConnectionEnrollment,
+		s.enrollmentConfirmationServer, err = mirrorenrollment.NewEnrollmentConfirmationServer(s.ctx, s.config.ConnectionEnrolment,
 			s.enrollmentConfirmationProcessor)
 		if err != nil {
 			return newError("failed to create enrollment confirmation server").Base(err).AtError()

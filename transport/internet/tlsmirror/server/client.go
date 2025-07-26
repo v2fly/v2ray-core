@@ -142,12 +142,12 @@ func (d *persistentMirrorTLSDialer) init(ctx context.Context, config *Config) er
 		}
 	}
 
-	if d.config.ConnectionEnrollment != nil {
+	if d.config.ConnectionEnrolment != nil {
 		enrollmentServerIdentifier, err := mirrorenrollment.DeriveEnrollmentServerIdentifier(d.config.PrimaryKey)
 		if err != nil {
 			return newError("failed to derive enrollment server identifier").Base(err).AtError()
 		}
-		d.enrollmentConfirmationClient, err = mirrorenrollment.NewEnrollmentConfirmationClient(d.ctx, d.config.ConnectionEnrollment, enrollmentServerIdentifier)
+		d.enrollmentConfirmationClient, err = mirrorenrollment.NewEnrollmentConfirmationClient(d.ctx, d.config.ConnectionEnrolment, enrollmentServerIdentifier)
 		if err != nil {
 			return newError("failed to create enrollment confirmation client").Base(err).AtError()
 		}
@@ -210,7 +210,7 @@ type verifyConnectionEnrollment interface {
 
 func (d *persistentMirrorTLSDialer) handleIncomingReadyConnection(conn internet.Connection) {
 	go func() {
-		if d.config.ConnectionEnrollment != nil {
+		if d.config.ConnectionEnrolment != nil {
 			if enrollableConn, ok := conn.(verifyConnectionEnrollment); ok {
 				if d.enrollmentConfirmationClient != nil {
 					err := enrollableConn.VerifyConnectionEnrollmentWithProcessor(d.enrollmentConfirmationClient)
