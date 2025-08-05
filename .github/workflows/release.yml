@@ -217,7 +217,7 @@ jobs:
         with:
           go-version: ^1.24
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: build_artifacts
 
