@@ -4,7 +4,18 @@ Documentation=https://www.v2fly.org/
 After=network.target nss-lookup.target
 
 [Service]
-User=nobody
+User=v2ray
+Group=v2ray
+DynamicUser=yes
+StateDirectory=v2ray
+RuntimeDirectory=v2ray
+CacheDirectory=v2ray
+ConfigurationDirectory=v2ray
+LogsDirectory=v2ray
+ProtectHome=true
+ProtectSystem=strict
+ProtectHostname=yes
+UMask=0077
 CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 NoNewPrivileges=true
