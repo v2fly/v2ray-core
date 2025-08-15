@@ -309,7 +309,7 @@ func (s *Instance) RequireFeatures(callback interface{}) error {
 
 	var featureTypes []reflect.Type
 	for i := 0; i < callbackType.NumIn(); i++ {
-		featureTypes = append(featureTypes, reflect.PtrTo(callbackType.In(i)))
+		featureTypes = append(featureTypes, reflect.PointerTo(callbackType.In(i)))
 	}
 
 	r := resolution{
