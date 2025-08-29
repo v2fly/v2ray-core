@@ -18,13 +18,13 @@ import (
 )
 
 func init() {
-	const geoipURL = "https://raw.githubusercontent.com/v2fly/geoip/release/geoip.dat"
+	const geoipURL = "https://github.com/v2fly/geoip/releases/download/202507050144/geoip.dat"
 
 	wd, err := os.Getwd()
 	common.Must(err)
 
 	tempPath := filepath.Join(wd, "..", "..", "testing", "temp")
-	geoipPath := filepath.Join(tempPath, "geoip.dat")
+	geoipPath := filepath.Join(tempPath, "geoip-202507050144.dat")
 
 	os.Setenv("v2ray.location.asset", tempPath)
 
@@ -196,7 +196,7 @@ func TestGeoIPMatcher6US(t *testing.T) {
 }
 
 func loadGeoIP(country string) ([]*routercommon.CIDR, error) {
-	geoipBytes, err := filesystem.ReadAsset("geoip.dat")
+	geoipBytes, err := filesystem.ReadAsset("geoip-202507050144.dat")
 	if err != nil {
 		return nil, err
 	}
