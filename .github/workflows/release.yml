@@ -14,14 +14,14 @@ on:
       - "**/*.go"
       - "go.mod"
       - "go.sum"
-      - ".github/workflows/*.yml"
+      - ".github/workflows/release.yml"
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - "**/*.go"
       - "go.mod"
       - "go.sum"
-      - ".github/workflows/*.yml"
+      - ".github/workflows/release.yml"
 
 jobs:
   build:
@@ -105,7 +105,7 @@ jobs:
             pie: pie
           - goos: linux
             goarch: amd64
-            pie: 
+            pie:
           # END MIPS
           # END Other architectures
       fail-fast: false
