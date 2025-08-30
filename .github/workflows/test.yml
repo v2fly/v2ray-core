@@ -44,13 +44,15 @@ jobs:
           git diff --exit-code go.mod go.sum
           go mod verify
 
-      - name: Test
+      - name: Run tests with coverage report
         run: |
-          export PATH=$(go env GOPATH)/bin:${PATH}
-          go install -v github.com/ory/go-acc@latest
-          go-acc --covermode=atomic -o=coverage.txt ./... -- -timeout=30m
-        shell: bash
+          go test ./... -v -timeout=1h -coverprofile=coverage.out -covermode=atomic
 
-      - name: Upload codecov
-        run: bash <(curl -s https://codecov.io/bash)
-        shell: bash
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          slug: v2fly/v2ray-core
+          verbose: true
+          fail_ci_if_error: true
