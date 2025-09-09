@@ -19,13 +19,14 @@ jobs:
     if: github.repository == 'v2fly/v2ray-core'
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.x
-        uses: actions/setup-go@v4
-        with:
-          go-version: ^1.21
-
       - name: Checkout codebase
         uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: ./go.mod
+          cache-dependency-path: ./go.sum
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
