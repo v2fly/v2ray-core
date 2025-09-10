@@ -50,9 +50,10 @@ jobs:
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
+        if: runner.os == 'Linux'
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
-          slug: v2fly/v2ray-core
+          slug: ${{ github.repository }}
           verbose: true
           fail_ci_if_error: true
