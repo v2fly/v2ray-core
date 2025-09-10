@@ -24,16 +24,26 @@ type Holder struct {
 	ipRange *gonet.IPNet
 
 	config *FakeDnsPool
+	closed bool // Flag, closed instance
 }
 
 func (fkdns *Holder) IsIPInIPPool(ip net.Address) bool {
+	if fkdns == nil || fkdns.closed {
+		return false
+	}
 	if ip.Family().IsDomain() {
+		return false
+	}
+	if fkdns.ipRange == nil {
 		return false
 	}
 	return fkdns.ipRange.Contains(ip.IP())
 }
 
 func (fkdns *Holder) GetFakeIPForDomain3(domain string, ipv4, ipv6 bool) []net.Address {
+	if fkdns == nil || fkdns.closed || fkdns.ipRange == nil {
+		return []net.Address{}
+	}
 	isIPv6 := fkdns.ipRange.IP.To4() == nil
 	if (isIPv6 && ipv6) || (!isIPv6 && ipv4) {
 		return fkdns.GetFakeIPForDomain(domain)
@@ -46,6 +56,9 @@ func (*Holder) Type() interface{} {
 }
 
 func (fkdns *Holder) Start() error {
+	if fkdns == nil || fkdns.closed {
+		return newError("Holder is closed")
+	}
 	if fkdns.config != nil && fkdns.config.IpPool != "" && fkdns.config.LruSize != 0 {
 		return fkdns.initializeFromConfig()
 	}
@@ -53,10 +66,14 @@ func (fkdns *Holder) Start() error {
 }
 
 func (fkdns *Holder) Close() error {
+	if fkdns == nil || fkdns.closed {
+		return nil
+	}
 	fkdns.domainToIP = nil
 	fkdns.nextIP = nil
 	fkdns.ipRange = nil
 	fkdns.mu = nil
+	fkdns.closed = true
 	return nil
 }
 
@@ -111,6 +128,9 @@ func (fkdns *Holder) initialize(ipPoolCidr string, lruSize int) error {
 
 // GetFakeIPForDomain checks and generate a fake IP for a domain name
 func (fkdns *Holder) GetFakeIPForDomain(domain string) []net.Address {
+	if fkdns == nil || fkdns.closed {
+		return nil
+	}
 	fkdns.mu.Lock()
 	defer fkdns.mu.Unlock()
 	if v, ok := fkdns.domainToIP.Get(domain); ok {
@@ -121,8 +141,12 @@ func (fkdns *Holder) GetFakeIPForDomain(domain string) []net.Address {
 		ip = net.IPAddress(fkdns.nextIP.Bytes())
 
 		fkdns.nextIP = fkdns.nextIP.Add(fkdns.nextIP, big.NewInt(1))
-		if !fkdns.ipRange.Contains(fkdns.nextIP.Bytes()) {
-			fkdns.nextIP = big.NewInt(0).SetBytes(fkdns.ipRange.IP)
+		if fkdns.ipRange == nil || !fkdns.ipRange.Contains(fkdns.nextIP.Bytes()) {
+			if fkdns.ipRange != nil {
+				fkdns.nextIP = big.NewInt(0).SetBytes(fkdns.ipRange.IP)
+			} else {
+				break // ipRange nil, cancel
+			}
 		}
 
 		// if we run for a long time, we may go back to beginning and start seeing the IP in use
@@ -136,11 +160,28 @@ func (fkdns *Holder) GetFakeIPForDomain(domain string) []net.Address {
 
 // GetDomainFromFakeDNS checks if an IP is a fake IP and have corresponding domain name
 func (fkdns *Holder) GetDomainFromFakeDNS(ip net.Address) string {
-	if !ip.Family().IsIP() || !fkdns.ipRange.Contains(ip.IP()) {
+	// nil-Checks, Panics preventing (Issue: Segfault in net.(*IPNet).Contains)
+	if fkdns == nil || fkdns.closed || fkdns.ipRange == nil || fkdns.domainToIP == nil {
+		return ""
+	}
+	if ip == nil || !ip.Family().IsIP() {
+		return ""
+	}
+	ipBytes := ip.IP()
+	if ipBytes == nil {
+		return ""
+	}
+	// ipRange-Check
+	if fkdns.ipRange == nil || !fkdns.ipRange.Contains(ipBytes) {
+		return ""
+	}
+	if fkdns.domainToIP == nil {
 		return ""
 	}
 	if k, ok := fkdns.domainToIP.GetKeyFromValue(ip); ok {
-		return k.(string)
+		if str, ok := k.(string); ok {
+			return str
+		}
 	}
 	return ""
 }
