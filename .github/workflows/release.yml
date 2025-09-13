@@ -117,6 +117,7 @@ jobs:
       GOARM: ${{ matrix.goarm }}
       PIE_ENABLED: ${{ matrix.pie }}
       CGO_ENABLED: 0
+      IS_PRERELEASE: ${{ github.event.release.prerelease }}
 
     steps:
       - name: Checkout codebase
@@ -128,6 +129,11 @@ jobs:
         id: get_filename
         run: |
           export _NAME=$(jq ".[\"$GOOS-$GOARCH$GOARM$PIE_ENABLED\"].friendlyName" -r < release/friendly-filenames.json)
+
+          if [ "$GOARCH" = "arm64" ] && [ "$PIE_ENABLED" = "pie" ] && [ "$IS_PRERELEASE" = "true" ]; then
+            export _NAME="${_NAME}-prerelease"
+          fi
+
           echo "GOOS: $GOOS, GOARCH: $GOARCH, GOARM: $GOARM, RELEASE_NAME: $_NAME"
           echo "ASSET_NAME=$_NAME" >> $GITHUB_OUTPUT
           echo "ASSET_NAME=$_NAME" >> $GITHUB_ENV
