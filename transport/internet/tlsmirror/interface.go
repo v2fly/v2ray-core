@@ -72,3 +72,19 @@ type ConnectionEnrollmentConfirmationProcessor interface {
 	ConnectionEnrollmentConfirmation
 	AddConnection(ctx context.Context, clientRandom, ServerRandom []byte, conn InsertableTLSConnForEnrollment) (RemoveConnectionFunc, error)
 }
+
+type ConnectionEnrollmentConfirmationClientInstanceConfig struct {
+	DefaultOutboundTag string
+}
+
+type ConnectionEnrollmentConfirmationClientInstanceConfigReceiver interface {
+	OnConnectionEnrollmentConfirmationClientInstanceConfigReady(ConnectionEnrollmentConfirmationClientInstanceConfig)
+}
+
+type ConnectionEnrollmentConfirmationServerInstanceConfig struct {
+	EnrollmentProcessor ConnectionEnrollmentConfirmationProcessor
+}
+
+type ConnectionEnrollmentConfirmationServerInstanceConfigReceiver interface {
+	OnConnectionEnrollmentConfirmationServerInstanceConfigReady(ConnectionEnrollmentConfirmationServerInstanceConfig)
+}

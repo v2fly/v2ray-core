@@ -7,6 +7,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/environment"
 	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
 	v2net "github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorenrollment/httpenrollmentconfirmation"
 )
@@ -44,11 +45,24 @@ type EnrollmentConfirmationClient struct {
 
 	serverIdentity []byte
 
-	primaryEnrollmentConfirmationClient tlsmirror.ConnectionEnrollmentConfirmation
+	primaryEnrollmentConfirmationClient    tlsmirror.ConnectionEnrollmentConfirmation
+	bootstrapEnrollmentConfirmationClients []tlsmirror.ConnectionEnrollmentConfirmation
 }
 
 func (c *EnrollmentConfirmationClient) VerifyConnectionEnrollment(req *tlsmirror.EnrollmentConfirmationReq) (*tlsmirror.EnrollmentConfirmationResp, error) {
-	return c.primaryEnrollmentConfirmationClient.VerifyConnectionEnrollment(req)
+	resp, err := c.primaryEnrollmentConfirmationClient.VerifyConnectionEnrollment(req)
+	if err == nil {
+		return resp, nil
+	}
+	newError("enrollment confirmation verification with primary enrollment failed").Base(err).WriteToLog()
+	for _, bootstrapClient := range c.bootstrapEnrollmentConfirmationClients {
+		resp, err := bootstrapClient.VerifyConnectionEnrollment(req)
+		if err == nil {
+			return resp, nil
+		}
+		newError("enrollment confirmation verification with bootstrap enrollment failed").Base(err).WriteToLog()
+	}
+	return nil, newError("all enrollment confirmation clients failed").Base(err).AtError()
 }
 
 func (c *EnrollmentConfirmationClient) init() error {
@@ -72,6 +86,25 @@ func (c *EnrollmentConfirmationClient) init() error {
 	c.primaryEnrollmentConfirmationClient, err = httpenrollmentconfirmation.NewHTTPEnrollmentConfirmationClientFromHTTPRoundTripper(rtt)
 	if err != nil {
 		return newError("failed to create HTTP enrollment confirmation client").Base(err).AtError()
+	}
+
+	for _, bootstrapEnrollmentConfirmationConfig := range c.config.BootstrapEgressConfig {
+		enrollment, err := serial.GetInstanceOf(bootstrapEnrollmentConfirmationConfig)
+		if err != nil {
+			return newError("failed to get instance of bootstrap enrollment confirmation config").Base(err).AtError()
+		}
+		enrollmentConfirmation, ok := enrollment.(tlsmirror.ConnectionEnrollmentConfirmation)
+		if !ok {
+			return newError("bootstrap enrollment confirmation config is not a valid ConnectionEnrollmentConfirmation")
+
+		}
+
+		if configReceiver, ok := enrollmentConfirmation.(tlsmirror.ConnectionEnrollmentConfirmationClientInstanceConfigReceiver); ok {
+			configReceiver.OnConnectionEnrollmentConfirmationClientInstanceConfigReady(tlsmirror.ConnectionEnrollmentConfirmationClientInstanceConfig{
+				DefaultOutboundTag: c.config.BootstrapEgressOutbound,
+			})
+		}
+		c.bootstrapEnrollmentConfirmationClients = append(c.bootstrapEnrollmentConfirmationClients, enrollmentConfirmation)
 	}
 	return nil
 }
