@@ -74,7 +74,8 @@ func (r *rootEnvImpl) DropProxyEnvironment(tag string) error {
 	if err != nil {
 		return err
 	}
-	return transientStorage.DropScope(r.ctx, tag)
+	transientStorage.Clear(r.ctx)
+	return r.transientStorage.DropScope(r.ctx, tag)
 }
 
 type appEnvImpl struct {

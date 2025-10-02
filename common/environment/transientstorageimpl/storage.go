@@ -56,7 +56,16 @@ func (s *scopedTransientStorageImpl) List(ctx context.Context, keyPrefix string)
 func (s *scopedTransientStorageImpl) Clear(ctx context.Context) {
 	s.access.Lock()
 	defer s.access.Unlock()
+	for _, v := range s.values {
+		if sw, ok := v.(storage.TransientStorageLifecycleReceiver); ok {
+			_ = sw.Close()
+		}
+	}
 	s.values = map[string]interface{}{}
+	for _, v := range s.scopes {
+		v.Clear(ctx)
+	}
+	s.scopes = map[string]storage.ScopedTransientStorage{}
 }
 
 func (s *scopedTransientStorageImpl) NarrowScope(ctx context.Context, key string) (storage.ScopedTransientStorage, error) {
@@ -74,6 +83,9 @@ func (s *scopedTransientStorageImpl) NarrowScope(ctx context.Context, key string
 func (s *scopedTransientStorageImpl) DropScope(ctx context.Context, key string) error {
 	s.access.Lock()
 	defer s.access.Unlock()
+	if v, ok := s.scopes[key]; ok {
+		v.Clear(ctx)
+	}
 	delete(s.scopes, key)
 	return nil
 }
