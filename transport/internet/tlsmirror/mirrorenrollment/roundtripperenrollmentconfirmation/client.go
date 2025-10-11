@@ -109,7 +109,11 @@ func (c *Client) AutoImplDialer() request.Dialer {
 }
 
 func (c *Client) VerifyConnectionEnrollment(req *tlsmirror.EnrollmentConfirmationReq) (*tlsmirror.EnrollmentConfirmationResp, error) {
-	connectionTag := append(req.ServerIdentifier, c.clientTemporaryIdentifier...)
+	connectionTagServerID := req.ServerIdentifier
+	if c.config.ServerIdentity != nil {
+		connectionTagServerID = c.config.ServerIdentity
+	}
+	connectionTag := append(connectionTagServerID, c.clientTemporaryIdentifier...)
 	wrappedData, err := proto.Marshal(req)
 	if err != nil {
 		return nil, newError("failed to marshal enrollment confirmation request").Base(err)
