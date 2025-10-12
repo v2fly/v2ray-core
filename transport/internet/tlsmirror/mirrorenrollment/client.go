@@ -4,11 +4,13 @@ import (
 	"context"
 	"net"
 
+	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/environment"
 	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
 	v2net "github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorcommon"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorenrollment/httpenrollmentconfirmation"
 )
 
@@ -78,7 +80,9 @@ func (c *EnrollmentConfirmationClient) init() error {
 				return nil, newError("failed to parse destination address").Base(err).AtError()
 			}
 			dest.Network = v2net.Network_TCP
-			return dialer(c.ctx, dest, c.config.PrimaryEgressOutbound)
+
+			loopbackProtectedCtx := mirrorcommon.SetLoopbackProtectionFlagForContext(c.ctx, c.serverIdentity)
+			return dialer(loopbackProtectedCtx, dest, c.config.PrimaryEgressOutbound)
 		}, c.serverIdentity)
 	if err != nil {
 		return newError("failed to create HTTP round tripper for enrollment confirmation").Base(err).AtError()
@@ -93,7 +97,14 @@ func (c *EnrollmentConfirmationClient) init() error {
 		if err != nil {
 			return newError("failed to get instance of bootstrap enrollment confirmation config").Base(err).AtError()
 		}
-		enrollmentConfirmation, ok := enrollment.(tlsmirror.ConnectionEnrollmentConfirmation)
+
+		loopbackProtectedCtx := mirrorcommon.SetLoopbackProtectionFlagForContext(c.ctx, c.serverIdentity)
+		enrollmentInst, err := common.CreateObject(loopbackProtectedCtx, enrollment)
+		if err != nil {
+			return newError("failed to create bootstrap enrollment confirmation config").Base(err).AtError()
+		}
+
+		enrollmentConfirmation, ok := enrollmentInst.(tlsmirror.ConnectionEnrollmentConfirmation)
 		if !ok {
 			return newError("bootstrap enrollment confirmation config is not a valid ConnectionEnrollmentConfirmation")
 

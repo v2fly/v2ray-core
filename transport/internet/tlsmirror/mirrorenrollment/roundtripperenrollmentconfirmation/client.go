@@ -26,9 +26,14 @@ func NewClient(ctx context.Context, config *ClientConfig) (*Client, error) {
 		return nil, newError("config cannot be nil")
 	}
 
-	rttClientI, err := serial.GetInstanceOf(config.RoundTripperClient)
+	rttClientConfig, err := serial.GetInstanceOf(config.RoundTripperClient)
 	if err != nil {
 		return nil, newError("failed to get instance of RoundTripperClient").Base(err)
+	}
+
+	rttClientI, err := common.CreateObject(ctx, rttClientConfig)
+	if err != nil {
+		return nil, newError("failed to create RoundTripperClient").Base(err)
 	}
 
 	rttClient, ok := rttClientI.(request.RoundTripperClient)
