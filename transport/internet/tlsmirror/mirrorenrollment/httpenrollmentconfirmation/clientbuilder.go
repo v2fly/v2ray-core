@@ -52,17 +52,19 @@ func (c *clientRoundtripper) RoundTrip(request *http.Request) (*http.Response, e
 	resp, err := c.currentConn.RoundTrip(request)
 	if err != nil {
 		defer func() {
+			c.currentConnLock.RUnlock()
 			c.currentConnLock.Lock()
-			defer c.currentConnLock.Unlock()
 			if c.currentConn != nil {
 				c.currentConnInnerConn.Close()
 				c.currentConnInnerConn = nil
 				c.currentConn = nil
 			}
+			c.currentConnLock.Unlock()
+			c.currentConnLock.RLock()
 		}()
 		return nil, newError("unable to roundtrip for enrollment verification").Base(err)
 	}
-	return resp, err
+	return resp, nil
 }
 
 func (c *clientRoundtripper) createNewConnection() error {

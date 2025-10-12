@@ -37,10 +37,14 @@ func (c *client) VerifyConnectionEnrollment(req *tlsmirror.EnrollmentConfirmatio
 		return nil, newError("failed to create HTTP request").Base(err)
 	}
 	httpResp, err := c.httpRoundTripper.RoundTrip(httpReq)
+	defer func() {
+		if httpResp != nil && httpResp.Body != nil {
+			httpResp.Body.Close()
+		}
+	}()
 	if err != nil {
 		return nil, newError("failed to send HTTP request").Base(err)
 	}
-	defer httpResp.Body.Close()
 	if httpResp.StatusCode != http.StatusOK {
 		return nil, newError("unexpected HTTP response status: ", httpResp.StatusCode)
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 
+	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/v2fly/v2ray-core/v5/common"
@@ -14,12 +15,16 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror"
 )
 
-func NewServer(ctx context.Context, config *ServerConfig) *Server {
+func NewServer(ctx context.Context, config *ServerConfig) (*Server, error) {
 	s := &Server{
 		ctx:    ctx,
 		config: config,
 	}
-	return s
+
+	if err := s.init(); err != nil {
+		return nil, newError("failed to initialize RoundTripperEnrollmentConfirmation server").Base(err).AtError()
+	}
+	return s, nil
 }
 
 type Server struct {
@@ -27,6 +32,10 @@ type Server struct {
 	ctx                 context.Context
 	enrollmentProcessor tlsmirror.ConnectionEnrollmentConfirmationProcessor
 	rttServer           request.RoundTripperServer
+}
+
+func (s *Server) OnConnectionEnrollmentConfirmationServerInstanceConfigReady(config tlsmirror.ConnectionEnrollmentConfirmationServerInstanceConfig) {
+	s.enrollmentProcessor = config.EnrollmentProcessor
 }
 
 func (s *Server) Listen(ctx context.Context) (v2net.Listener, error) {
@@ -75,8 +84,35 @@ func (s *Server) AutoImplListener() request.Listener {
 	return s
 }
 
+func (s *Server) init() error {
+	if s.config == nil {
+		return newError("nil ServerConfig")
+	}
+	if s.config.RoundTripperServer == nil {
+		return newError("nil RoundTripperServer in ServerConfig")
+	}
+	RoundTripperServerConfig, err := serial.GetInstanceOf(s.config.RoundTripperServer)
+	if err != nil {
+		return newError("failed to get instance of RoundTripperServer").Base(err).AtError()
+	}
+	RoundTripperServerObj, err := common.CreateObject(s.ctx, RoundTripperServerConfig)
+	if err != nil {
+		return newError("failed to create RoundTripperServer").Base(err).AtError()
+	}
+	RoundTripperServerTyped, ok := RoundTripperServerObj.(request.RoundTripperServer)
+	if !ok {
+		return newError("RoundTripperServer is not a valid request.RoundTripperServer")
+	}
+	s.rttServer = RoundTripperServerTyped
+	s.rttServer.OnTransportServerAssemblyReady(s)
+	if err := s.rttServer.Start(); err != nil {
+		return newError("failed to start RoundTripperServer").Base(err).AtError()
+	}
+	return nil
+}
+
 func init() {
 	common.Must(common.RegisterConfig((*ServerConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
-		return NewServer(ctx, config.(*ServerConfig)), nil
+		return NewServer(ctx, config.(*ServerConfig))
 	}))
 }
