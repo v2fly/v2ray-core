@@ -264,7 +264,7 @@ func (d *persistentMirrorTLSDialer) handleIncomingReadyConnection(conn internet.
 func (d *persistentMirrorTLSDialer) Dial(ctx context.Context,
 	dest net.Destination, settings *internet.MemoryStreamConfig,
 ) (internet.Connection, error) {
-	if d.enrollmentServerIdentifier != nil && len(d.enrollmentServerIdentifier) > 0 {
+	if len(d.enrollmentServerIdentifier) > 0 {
 		if mirrorcommon.IsLoopbackProtectionEnabled(ctx, d.enrollmentServerIdentifier) {
 			return nil, newError("loopback protection: refusing to dial to self")
 		}
