@@ -46,12 +46,18 @@ type clientRoundtripper struct {
 }
 
 func (c *clientRoundtripper) IsCreatingSecondaryNewConnection() bool {
-	defer c.currentConnLock.RUnlock()
-	c.currentConnLock.RLock()
+	defer c.pendingNewConnectionLock.RUnlock()
+	c.pendingNewConnectionLock.RLock()
 	return c.pendingNewConnection >= 1
 }
-
 func (c *clientRoundtripper) RoundTrip(request *http.Request) (*http.Response, error) {
+	if c.IsCreatingSecondaryNewConnection() {
+		return nil, newError("another connection is being established, cannot create a secondary connection")
+	}
+	return c.roundTrip(request)
+}
+
+func (c *clientRoundtripper) roundTrip(request *http.Request) (*http.Response, error) {
 	c.currentConnLock.RLock()
 
 	if c.currentConn == nil {
@@ -59,15 +65,18 @@ func (c *clientRoundtripper) RoundTrip(request *http.Request) (*http.Response, e
 		c.pendingNewConnectionLock.Lock()
 		c.pendingNewConnection += 1
 		c.pendingNewConnectionLock.Unlock()
-		defer func() {
+		decreaseCount := func() {
 			c.pendingNewConnectionLock.Lock()
 			c.pendingNewConnection -= 1
 			c.pendingNewConnectionLock.Unlock()
-		}()
+		}
 		if err := c.createNewConnection(); err != nil {
+			decreaseCount()
 			return nil, err // Failed to create a new connection
 		}
-		return c.RoundTrip(request)
+		resp, err := c.roundTrip(request)
+		decreaseCount()
+		return resp, err
 	}
 	defer c.currentConnLock.RUnlock()
 
