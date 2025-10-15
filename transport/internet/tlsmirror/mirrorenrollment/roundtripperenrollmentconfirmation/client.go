@@ -118,7 +118,7 @@ func (c *Client) VerifyConnectionEnrollment(req *tlsmirror.EnrollmentConfirmatio
 	if c.config.ServerIdentity != nil {
 		connectionTagServerID = c.config.ServerIdentity
 	}
-	connectionTag := append(connectionTagServerID, c.clientTemporaryIdentifier...)
+	connectionTag := append(connectionTagServerID, c.clientTemporaryIdentifier...) //nolint:gocritic
 	wrappedData, err := proto.Marshal(req)
 	if err != nil {
 		return nil, newError("failed to marshal enrollment confirmation request").Base(err)
