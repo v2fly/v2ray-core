@@ -4,6 +4,7 @@ type ProxyEnvironmentCapabilitySet interface {
 	BaseEnvironmentCapabilitySet
 	InstanceNetworkCapabilitySet
 	TransientStorageCapabilitySet
+	ProxyMetadataCapabilitySet
 }
 
 // TODO Add NarrowScopeToConnection

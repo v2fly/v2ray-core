@@ -49,6 +49,12 @@ type EnrollmentConfirmationClient struct {
 
 	primaryEnrollmentConfirmationClient    tlsmirror.ConnectionEnrollmentConfirmation
 	bootstrapEnrollmentConfirmationClients []tlsmirror.ConnectionEnrollmentConfirmation
+
+	primaryEnrollmentConfirmationClientRoundtripperMetadata httpenrollmentconfirmation.RoundTripperMetadata
+}
+
+func (c *EnrollmentConfirmationClient) IsSecondaryLoopbackProtectionEnabled() bool {
+	return c.primaryEnrollmentConfirmationClientRoundtripperMetadata.IsCreatingSecondaryNewConnection()
 }
 
 func (c *EnrollmentConfirmationClient) VerifyConnectionEnrollment(req *tlsmirror.EnrollmentConfirmationReq) (*tlsmirror.EnrollmentConfirmationResp, error) {
@@ -68,7 +74,7 @@ func (c *EnrollmentConfirmationClient) VerifyConnectionEnrollment(req *tlsmirror
 }
 
 func (c *EnrollmentConfirmationClient) init() error {
-	rtt, err := httpenrollmentconfirmation.NewClientRoundTripperForEnrollmentConfirmation(
+	rtt, rttmds, err := httpenrollmentconfirmation.NewClientRoundTripperForEnrollmentConfirmation(
 		func(network, addr string) (net.Conn, error) {
 			transportEnvironment := envctx.EnvironmentFromContext(c.ctx).(environment.TransportEnvironment)
 			dialer := transportEnvironment.OutboundDialer()
@@ -82,11 +88,17 @@ func (c *EnrollmentConfirmationClient) init() error {
 			dest.Network = v2net.Network_TCP
 
 			loopbackProtectedCtx := mirrorcommon.SetLoopbackProtectionFlagForContext(c.ctx, c.serverIdentity)
-			return dialer(loopbackProtectedCtx, dest, c.config.PrimaryEgressOutbound)
+			primaryConfirmationOutbound := c.config.PrimaryEgressOutbound
+			if primaryConfirmationOutbound == "" {
+				primaryConfirmationOutbound = transportEnvironment.SelfProxyTag()
+				loopbackProtectedCtx = mirrorcommon.SetSecondaryLoopbackProtectionFlagForContext(c.ctx, c.serverIdentity)
+			}
+			return dialer(loopbackProtectedCtx, dest, primaryConfirmationOutbound)
 		}, c.serverIdentity)
 	if err != nil {
 		return newError("failed to create HTTP round tripper for enrollment confirmation").Base(err).AtError()
 	}
+	c.primaryEnrollmentConfirmationClientRoundtripperMetadata = rttmds
 	c.primaryEnrollmentConfirmationClient, err = httpenrollmentconfirmation.NewHTTPEnrollmentConfirmationClientFromHTTPRoundTripper(rtt)
 	if err != nil {
 		return newError("failed to create HTTP enrollment confirmation client").Base(err).AtError()

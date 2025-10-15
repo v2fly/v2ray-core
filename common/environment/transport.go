@@ -5,6 +5,7 @@ type TransportEnvironmentCapacitySet interface {
 	SystemNetworkCapabilitySet
 	InstanceNetworkCapabilitySet
 	TransientStorageCapabilitySet
+	ProxyMetadataCapabilitySet
 }
 
 type TransportEnvironment interface {
