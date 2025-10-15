@@ -123,7 +123,6 @@ func (c *EnrollmentConfirmationClient) init() error {
 		enrollmentConfirmation, ok := enrollmentInst.(tlsmirror.ConnectionEnrollmentConfirmation)
 		if !ok {
 			return newError("bootstrap enrollment confirmation config is not a valid ConnectionEnrollmentConfirmation")
-
 		}
 
 		if configReceiver, ok := enrollmentConfirmation.(tlsmirror.ConnectionEnrollmentConfirmationClientInstanceConfigReceiver); ok {

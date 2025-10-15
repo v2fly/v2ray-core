@@ -4,8 +4,9 @@ import (
 	"context"
 	"net"
 
-	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/v2fly/v2ray-core/v5/common/serial"
 
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/environment"

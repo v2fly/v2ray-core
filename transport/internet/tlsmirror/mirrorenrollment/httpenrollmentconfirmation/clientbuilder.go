@@ -50,6 +50,7 @@ func (c *clientRoundtripper) IsCreatingSecondaryNewConnection() bool {
 	c.pendingNewConnectionLock.RLock()
 	return c.pendingNewConnection >= 1
 }
+
 func (c *clientRoundtripper) RoundTrip(request *http.Request) (*http.Response, error) {
 	if c.IsCreatingSecondaryNewConnection() {
 		return nil, newError("another connection is being established, cannot create a secondary connection")
