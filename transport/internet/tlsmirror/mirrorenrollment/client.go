@@ -49,12 +49,6 @@ type EnrollmentConfirmationClient struct {
 
 	primaryEnrollmentConfirmationClient    tlsmirror.ConnectionEnrollmentConfirmation
 	bootstrapEnrollmentConfirmationClients []tlsmirror.ConnectionEnrollmentConfirmation
-
-	primaryEnrollmentConfirmationClientRoundtripperMetadata httpenrollmentconfirmation.RoundTripperMetadata
-}
-
-func (c *EnrollmentConfirmationClient) IsSecondaryLoopbackProtectionEnabled() bool {
-	return c.primaryEnrollmentConfirmationClientRoundtripperMetadata.IsCreatingSecondaryNewConnection()
 }
 
 func (c *EnrollmentConfirmationClient) VerifyConnectionEnrollment(req *tlsmirror.EnrollmentConfirmationReq) (*tlsmirror.EnrollmentConfirmationResp, error) {
@@ -85,7 +79,7 @@ func (c *EnrollmentConfirmationClient) VerifyConnectionEnrollment(req *tlsmirror
 }
 
 func (c *EnrollmentConfirmationClient) init() error {
-	rtt, rttmds, err := httpenrollmentconfirmation.NewClientRoundTripperForEnrollmentConfirmation(
+	rtt, _, err := httpenrollmentconfirmation.NewClientRoundTripperForEnrollmentConfirmation(
 		func(network, addr string) (net.Conn, error) {
 			transportEnvironment := envctx.EnvironmentFromContext(c.ctx).(environment.TransportEnvironment)
 			dialer := transportEnvironment.OutboundDialer()
@@ -109,7 +103,6 @@ func (c *EnrollmentConfirmationClient) init() error {
 	if err != nil {
 		return newError("failed to create HTTP round tripper for enrollment confirmation").Base(err).AtError()
 	}
-	c.primaryEnrollmentConfirmationClientRoundtripperMetadata = rttmds
 	c.primaryEnrollmentConfirmationClient, err = httpenrollmentconfirmation.NewHTTPEnrollmentConfirmationClientFromHTTPRoundTripper(rtt)
 	if err != nil {
 		return newError("failed to create HTTP enrollment confirmation client").Base(err).AtError()
