@@ -44,3 +44,7 @@ type PersistentStorageCapabilitySet interface {
 type TransientStorageCapabilitySet interface {
 	TransientStorage() storage.ScopedTransientStorage
 }
+
+type ProxyMetadataCapabilitySet interface {
+	SelfProxyTag() string
+}

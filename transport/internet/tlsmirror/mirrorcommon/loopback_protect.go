@@ -11,9 +11,21 @@ func SetLoopbackProtectionFlagForContext(ctx context.Context, enrollmentID []byt
 	return context.WithValue(ctx, loopbackProtectionKey, true)
 }
 
+func SetSecondaryLoopbackProtectionFlagForContext(ctx context.Context, enrollmentID []byte) context.Context {
+	loopbackProtectionKey := tlsmirror.ConnectionLoopbackPrevention{Key: string(enrollmentID)}
+	return context.WithValue(ctx, loopbackProtectionKey, false)
+}
+
 func IsLoopbackProtectionEnabled(ctx context.Context, enrollmentID []byte) bool {
 	loopbackProtectionKey := tlsmirror.ConnectionLoopbackPrevention{Key: string(enrollmentID)}
 	val := ctx.Value(loopbackProtectionKey)
 	enabled, ok := val.(bool)
 	return ok && enabled
+}
+
+func IsSecondaryLoopbackProtectionEnabled(ctx context.Context, enrollmentID []byte) bool {
+	loopbackProtectionKey := tlsmirror.ConnectionLoopbackPrevention{Key: string(enrollmentID)}
+	val := ctx.Value(loopbackProtectionKey)
+	enabled, ok := val.(bool)
+	return ok && !enabled
 }

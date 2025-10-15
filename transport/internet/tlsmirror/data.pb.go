@@ -20,6 +20,7 @@ type EnrollmentConfirmationReq struct {
 	ServerIdentifier                 []byte                 `protobuf:"bytes,1,opt,name=server_identifier,json=serverIdentifier,proto3" json:"server_identifier,omitempty"`
 	CarrierTlsConnectionClientRandom []byte                 `protobuf:"bytes,2,opt,name=carrier_tls_connection_client_random,json=carrierTlsConnectionClientRandom,proto3" json:"carrier_tls_connection_client_random,omitempty"`
 	CarrierTlsConnectionServerRandom []byte                 `protobuf:"bytes,3,opt,name=carrier_tls_connection_server_random,json=carrierTlsConnectionServerRandom,proto3" json:"carrier_tls_connection_server_random,omitempty"`
+	IsSelfEnrollment                 bool                   `protobuf:"varint,4,opt,name=is_self_enrollment,json=isSelfEnrollment,proto3" json:"is_self_enrollment,omitempty"`
 	unknownFields                    protoimpl.UnknownFields
 	sizeCache                        protoimpl.SizeCache
 }
@@ -75,6 +76,13 @@ func (x *EnrollmentConfirmationReq) GetCarrierTlsConnectionServerRandom() []byte
 	return nil
 }
 
+func (x *EnrollmentConfirmationReq) GetIsSelfEnrollment() bool {
+	if x != nil {
+		return x.IsSelfEnrollment
+	}
+	return false
+}
+
 type EnrollmentConfirmationResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Enrolled      bool                   `protobuf:"varint,1,opt,name=enrolled,proto3" json:"enrolled,omitempty"`
@@ -123,11 +131,12 @@ var File_transport_internet_tlsmirror_data_proto protoreflect.FileDescriptor
 
 const file_transport_internet_tlsmirror_data_proto_rawDesc = "" +
 	"\n" +
-	"'transport/internet/tlsmirror/data.proto\x12'v2ray.core.transport.internet.tlsmirror\"\xe8\x01\n" +
+	"'transport/internet/tlsmirror/data.proto\x12'v2ray.core.transport.internet.tlsmirror\"\x96\x02\n" +
 	"\x19EnrollmentConfirmationReq\x12+\n" +
 	"\x11server_identifier\x18\x01 \x01(\fR\x10serverIdentifier\x12N\n" +
 	"$carrier_tls_connection_client_random\x18\x02 \x01(\fR carrierTlsConnectionClientRandom\x12N\n" +
-	"$carrier_tls_connection_server_random\x18\x03 \x01(\fR carrierTlsConnectionServerRandom\"8\n" +
+	"$carrier_tls_connection_server_random\x18\x03 \x01(\fR carrierTlsConnectionServerRandom\x12,\n" +
+	"\x12is_self_enrollment\x18\x04 \x01(\bR\x10isSelfEnrollment\"8\n" +
 	"\x1aEnrollmentConfirmationResp\x12\x1a\n" +
 	"\benrolled\x18\x01 \x01(\bR\benrolledB\x96\x01\n" +
 	"+com.v2ray.core.transport.internet.tlsmirrorP\x01Z;github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror\xaa\x02'V2Ray.Core.Transport.Internet.Tlsmirrorb\x06proto3"

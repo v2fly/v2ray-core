@@ -14,17 +14,22 @@ import (
 func NewClientRoundTripperForEnrollmentConfirmation(
 	dial func(network, addr string) (net.Conn, error),
 	serverIdentity []byte,
-) (http.RoundTripper, error) {
+) (http.RoundTripper, RoundTripperMetadata, error) {
 	if dial == nil {
-		return nil, newError("nil dial function")
+		return nil, nil, newError("nil dial function")
 	}
 	if len(serverIdentity) == 0 {
-		return nil, newError("nil or empty server identity")
+		return nil, nil, newError("nil or empty server identity")
 	}
-	return &clientRoundtripper{
+	cr := &clientRoundtripper{
 		dial:           dial,
 		serverIdentity: serverIdentity,
-	}, nil
+	}
+	return cr, cr, nil
+}
+
+type RoundTripperMetadata interface {
+	IsCreatingSecondaryNewConnection() bool
 }
 
 type clientRoundtripper struct {
@@ -34,6 +39,16 @@ type clientRoundtripper struct {
 	currentConnInnerConn common.Closable
 	currentConn          http.RoundTripper
 	currentConnLock      sync.RWMutex
+
+	pendingNewConnection int
+	// DO NOT ATTEMPT TO ACQUIRE ANY LOCK WHILE HOLDING THIS LOCK
+	pendingNewConnectionLock sync.RWMutex
+}
+
+func (c *clientRoundtripper) IsCreatingSecondaryNewConnection() bool {
+	defer c.currentConnLock.RUnlock()
+	c.currentConnLock.RLock()
+	return c.pendingNewConnection >= 1
 }
 
 func (c *clientRoundtripper) RoundTrip(request *http.Request) (*http.Response, error) {
@@ -41,6 +56,14 @@ func (c *clientRoundtripper) RoundTrip(request *http.Request) (*http.Response, e
 
 	if c.currentConn == nil {
 		c.currentConnLock.RUnlock()
+		c.pendingNewConnectionLock.Lock()
+		c.pendingNewConnection += 1
+		c.pendingNewConnectionLock.Unlock()
+		defer func() {
+			c.pendingNewConnectionLock.Lock()
+			c.pendingNewConnection -= 1
+			c.pendingNewConnectionLock.Unlock()
+		}()
 		if err := c.createNewConnection(); err != nil {
 			return nil, err // Failed to create a new connection
 		}

@@ -158,6 +158,8 @@ type proxyEnvImpl struct {
 	systemDialer     internet.SystemDialer
 	systemListener   internet.SystemListener
 
+	scopeName string
+
 	ctx context.Context
 }
 
@@ -177,6 +179,10 @@ func (p *proxyEnvImpl) TransientStorage() storage.ScopedTransientStorage {
 	return p.transientStorage
 }
 
+func (p *proxyEnvImpl) SelfProxyTag() string {
+	return p.scopeName
+}
+
 func (p *proxyEnvImpl) NarrowScope(key string) (ProxyEnvironment, error) {
 	transientStorage, err := p.transientStorage.NarrowScope(p.ctx, key)
 	if err != nil {
@@ -184,6 +190,7 @@ func (p *proxyEnvImpl) NarrowScope(key string) (ProxyEnvironment, error) {
 	}
 	return &proxyEnvImpl{
 		transientStorage: transientStorage,
+		scopeName:        p.scopeName,
 		ctx:              p.ctx,
 	}, nil
 }
@@ -198,6 +205,7 @@ func (p *proxyEnvImpl) NarrowScopeToTransport(key string) (TransportEnvironment,
 		transientStorage: transientStorage,
 		systemDialer:     p.systemDialer,
 		systemListener:   p.systemListener,
+		selfProxyTag:     p.scopeName,
 	}, nil
 }
 
@@ -211,10 +219,16 @@ type transportEnvImpl struct {
 	systemListener   internet.SystemListener
 
 	ctx context.Context
+
+	selfProxyTag string
 }
 
 func (t *transportEnvImpl) RequireFeatures() interface{} {
 	panic("implement me")
+}
+
+func (t *transportEnvImpl) SelfProxyTag() string {
+	return t.selfProxyTag
 }
 
 func (t *transportEnvImpl) RecordLog() interface{} {

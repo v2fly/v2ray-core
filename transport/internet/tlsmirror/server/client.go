@@ -267,6 +267,12 @@ func (d *persistentMirrorTLSDialer) Dial(ctx context.Context,
 		if mirrorcommon.IsLoopbackProtectionEnabled(ctx, d.enrollmentServerIdentifier) {
 			return nil, newError("loopback protection: refusing to dial to self")
 		}
+
+		if mirrorcommon.IsSecondaryLoopbackProtectionEnabled(ctx, d.enrollmentServerIdentifier) {
+			if d.enrollmentConfirmationClient.IsSecondaryLoopbackProtectionEnabled() {
+				return nil, newError("secondary loopback protection: refusing to dial to self")
+			}
+		}
 	}
 
 	var recvConn net.Conn
