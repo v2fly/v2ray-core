@@ -60,12 +60,23 @@ func (c *EnrollmentConfirmationClient) IsSecondaryLoopbackProtectionEnabled() bo
 func (c *EnrollmentConfirmationClient) VerifyConnectionEnrollment(req *tlsmirror.EnrollmentConfirmationReq) (*tlsmirror.EnrollmentConfirmationResp, error) {
 	resp, err := c.primaryEnrollmentConfirmationClient.VerifyConnectionEnrollment(req)
 	if err == nil {
+		if resp.Enrolled {
+			newError("enrollment confirmation verification with primary enrollment successful").Base(err).WriteToLog()
+		} else {
+			newError("enrollment confirmation verification with primary enrollment over, not enrolled").Base(err).WriteToLog()
+		}
 		return resp, nil
 	}
 	newError("enrollment confirmation verification with primary enrollment failed").Base(err).WriteToLog()
 	for _, bootstrapClient := range c.bootstrapEnrollmentConfirmationClients {
 		resp, err := bootstrapClient.VerifyConnectionEnrollment(req)
 		if err == nil {
+			if resp.Enrolled {
+				newError("enrollment confirmation verification with bootstrap enrollment successful").Base(err).WriteToLog()
+			} else {
+				newError("enrollment confirmation verification with bootstrap enrollment over, not enrolled").Base(err).WriteToLog()
+			}
+
 			return resp, nil
 		}
 		newError("enrollment confirmation verification with bootstrap enrollment failed").Base(err).WriteToLog()
