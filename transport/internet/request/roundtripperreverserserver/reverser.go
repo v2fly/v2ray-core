@@ -14,6 +14,17 @@ import (
 
 //go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
+func NewReverser(ctx context.Context, config *Config) (*Reverser, error) {
+	reverser := &Reverser{
+		ctx:    ctx,
+		config: config,
+	}
+	if err := reverser.init(); err != nil {
+		return nil, newError("failed to initialize Reverser").Base(err).AtError()
+	}
+	return reverser, nil
+}
+
 type Reverser struct {
 	ctx           context.Context
 	config        *Config
@@ -47,12 +58,12 @@ func (s *Reverser) Listen(ctx context.Context) (v2net.Listener, error) {
 	listener := transportEnvironment.Listener()
 	addr, err := v2net.ParseDestination(s.config.Listen)
 	if err != nil {
-		panic(newError("invalid listen address " + s.config.Listen).Base(err).AtError())
+		return nil, newError("invalid listen address " + s.config.Listen).Base(err).AtError()
 	}
 	netaddr := &net.TCPAddr{IP: addr.Address.IP(), Port: int(addr.Port)}
-	l, err := listener.Listen(s.ctx, netaddr, nil)
+	l, err := listener.Listen(ctx, netaddr, nil)
 	if err != nil {
-		panic(newError("failed to listen on " + s.config.Listen).Base(err).AtError())
+		return nil, newError("failed to listen on " + s.config.Listen).Base(err).AtError()
 	}
 	return l, nil
 }
@@ -70,6 +81,12 @@ func (s *Reverser) init() error {
 		return newError("failed to create AccessChecker").Base(err).AtError()
 	}
 	s.accessChecker = accessChecker
+
+	ReverserImplInst, err := NewReverserImpl()
+	if err != nil {
+		return newError("failed to create ReverserImpl").Base(err).AtError()
+	}
+	s.reverser = ReverserImplInst
 
 	if s.config.RoundTripperServer == nil {
 		return newError("nil RoundTripperServer in ServerConfig")
