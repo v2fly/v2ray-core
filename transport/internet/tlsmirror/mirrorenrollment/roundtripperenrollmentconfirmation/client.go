@@ -3,6 +3,7 @@ package roundtripperenrollmentconfirmation
 import (
 	"context"
 	csrand "crypto/rand"
+	"io"
 	"net"
 
 	"google.golang.org/protobuf/proto"
@@ -118,7 +119,15 @@ func (c *Client) VerifyConnectionEnrollment(req *tlsmirror.EnrollmentConfirmatio
 	if c.config.ServerIdentity != nil {
 		connectionTagServerID = c.config.ServerIdentity
 	}
-	connectionTag := append(connectionTagServerID, c.clientTemporaryIdentifier...) //nolint:gocritic
+	var replyAddressTag [16]byte
+	_, err := io.ReadFull(csrand.Reader, replyAddressTag[:])
+	if err != nil {
+		return nil, newError("failed to generate reply address tag").Base(err)
+	}
+
+	connectionTag := append(replyAddressTag[:], connectionTagServerID...) //nolint:gocritic
+	req.ClientIdentifier = c.clientTemporaryIdentifier
+	req.ReplyAddressTag = replyAddressTag[:]
 	wrappedData, err := proto.Marshal(req)
 	if err != nil {
 		return nil, newError("failed to marshal enrollment confirmation request").Base(err)

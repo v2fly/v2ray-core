@@ -12,6 +12,7 @@ message EnrollmentConfirmationReq{
   bytes carrier_tls_connection_client_random = 2;
   bytes carrier_tls_connection_server_random = 3;
   bytes client_identifier = 4; // Implicated
+  bytes reply_address_tag = 5;
 }
 message EnrollmentConfirmationResp{
   bool enrolled = 1;
