@@ -19,3 +19,7 @@ var cmdEngineering = &base.Command{
 func init() {
 	base.RegisterCommand(cmdEngineering)
 }
+
+func AddCommand(cmd *base.Command) {
+	cmdEngineering.Commands = append(cmdEngineering.Commands, cmd)
+}
