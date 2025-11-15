@@ -17,6 +17,14 @@ message ClientConfig {
   bytes server_identity = 5;
 }
 
+message ServerInverseRoleConfig {
+  google.protobuf.Any round_tripper_client = 1;
+  google.protobuf.Any security_config = 2;
+  string dest = 3;
+  string outbound_tag = 4;
+  bytes server_identity = 5;
+}
+
 message ServerConfig {
   google.protobuf.Any round_tripper_server = 2;
   string listen = 3;
