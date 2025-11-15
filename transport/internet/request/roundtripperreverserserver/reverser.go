@@ -54,8 +54,8 @@ func (s *Reverser) OnRoundTrip(ctx context.Context, req request.Request, opts ..
 }
 
 func (s *Reverser) Listen(ctx context.Context) (v2net.Listener, error) {
-	transportEnvironment := envctx.EnvironmentFromContext(s.ctx).(environment.TransportEnvironment)
-	listener := transportEnvironment.Listener()
+	systemNetworkCapabilitySet := envctx.EnvironmentFromContext(s.ctx).(environment.SystemNetworkCapabilitySet)
+	listener := systemNetworkCapabilitySet.Listener()
 	addr, err := v2net.ParseDestination(s.config.Listen)
 	if err != nil {
 		return nil, newError("invalid listen address " + s.config.Listen).Base(err).AtError()
