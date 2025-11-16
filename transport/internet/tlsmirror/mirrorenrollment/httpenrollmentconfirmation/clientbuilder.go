@@ -83,12 +83,13 @@ func (c *clientRoundtripper) roundTrip(request *http.Request) (*http.Response, e
 	}
 	defer c.currentConnLock.RUnlock()
 
-	timeoutContext, _ := context.WithTimeout(context.Background(), time.Second*30)
+	timeoutContext, cancelOnErr := context.WithTimeout(context.Background(), time.Second*30)
 	request = request.WithContext(timeoutContext)
 
 	resp, err := c.currentConn.RoundTrip(request)
 	// Use the current connection to perform the round trip
 	if err != nil {
+		cancelOnErr()
 		if resp != nil && resp.Body != nil {
 			resp.Body.Close()
 		}
