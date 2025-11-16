@@ -98,7 +98,14 @@ func (c *EnrollmentConfirmationClient) init() error {
 				primaryConfirmationOutbound = transportEnvironment.SelfProxyTag()
 				loopbackProtectedCtx = mirrorcommon.SetSecondaryLoopbackProtectionFlagForContext(c.ctx, c.serverIdentity)
 			}
-			return dialer(loopbackProtectedCtx, dest, primaryConfirmationOutbound)
+			connContext, done := context.WithCancel(loopbackProtectedCtx)
+			conn, err := dialer(connContext, dest, primaryConfirmationOutbound)
+			if err != nil {
+				done()
+				return nil, newError("failed to dial to destination").Base(err).AtError()
+			}
+			contextLinkedConn := NewCancelContextOnCloseConn(conn, done)
+			return contextLinkedConn, nil
 		}, c.serverIdentity)
 	if err != nil {
 		return newError("failed to create HTTP round tripper for enrollment confirmation").Base(err).AtError()
