@@ -46,6 +46,9 @@ func (s *Reverser) OnRoundTrip(ctx context.Context, req request.Request, opts ..
 		}
 		return reverserImpl, nil
 	}
+	if len(req.ConnectionTag) != 32 {
+		return request.Response{}, newError("invalid ConnectionTag length")
+	}
 	reverserImpl, err := s.reverser.OnOtherRoundTrip(ctx, req, opts...)
 	if err != nil {
 		return request.Response{}, newError("failed to handle client round trip").Base(err).AtError()
