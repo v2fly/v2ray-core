@@ -79,7 +79,7 @@ var cmdGenerateToken = &base.Command{
 
 		if *genOut != "" {
 			content := fmt.Sprintf("private: %s\npublic: %s\n", b64Priv, b64Pub)
-			if err := os.WriteFile(*genOut, []byte(content), 0600); err != nil {
+			if err := os.WriteFile(*genOut, []byte(content), 0o600); err != nil {
 				base.Fatalf("failed to write tokens to file %q: %v", *genOut, err)
 			}
 			if _, err := fmt.Fprintf(os.Stdout, "wrote base64 tokens to %s\n", *genOut); err != nil {
