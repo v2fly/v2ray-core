@@ -121,7 +121,7 @@ jobs:
 
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -215,7 +215,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -319,7 +319,7 @@ jobs:
         arm64-v8a:arm64
         arm64-v8a:arm64/v8
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Log in to ghcr.io
         uses: redhat-actions/podman-login@v1

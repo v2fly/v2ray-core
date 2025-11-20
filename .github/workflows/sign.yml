@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout default branch
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Grant it execution permission
         run: |
