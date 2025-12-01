@@ -186,19 +186,30 @@ func EncodeUDPPacket(request *protocol.RequestHeader, payload []byte) (*buf.Buff
 	user := request.User
 	account := user.Account.(*MemoryAccount)
 
-	buffer := buf.New()
 	ivLen := account.Cipher.IVSize()
+	// Calculate required buffer size: IV + max address length (1+255+2) + payload + AEAD overhead (16)
+	neededSize := ivLen + 258 + int32(len(payload)) + 16
+
+	var buffer *buf.Buffer
+	if neededSize > buf.Size {
+		buffer = buf.NewWithSize(neededSize)
+	} else {
+		buffer = buf.New()
+	}
+
 	if ivLen > 0 {
 		common.Must2(buffer.ReadFullFrom(rand.Reader, ivLen))
 	}
 
 	if err := addrParser.WriteAddressPort(buffer, request.Address, request.Port); err != nil {
+		buffer.Release()
 		return nil, newError("failed to write address").Base(err)
 	}
 
 	buffer.Write(payload)
 
 	if err := account.Cipher.EncodePacket(account.Key, buffer); err != nil {
+		buffer.Release()
 		return nil, newError("failed to encrypt UDP payload").Base(err)
 	}
 
