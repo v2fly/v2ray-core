@@ -77,6 +77,9 @@ func (h *httpTripperClient) RoundTrip(ctx context.Context, req request.Request, 
 		return resp, err
 	}
 	defer httpResp.Body.Close()
+	if httpResp.StatusCode != http.StatusOK {
+		newError("non-200 response: ", httpResp.Status).AtInfo().WriteToLog()
+	}
 	if streamingWriter == nil {
 		result, err := io.ReadAll(httpResp.Body)
 		if err != nil {

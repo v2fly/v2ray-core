@@ -90,7 +90,11 @@ func (c *Client) Dial(ctx context.Context) (net.Conn, error) {
 		return nil, newError("failed to dial to destination").Base(err).AtError()
 	}
 	if c.config.SecurityConfig != nil {
-		securityEngine, err := common.CreateObject(c.ctx, c.config.SecurityConfig)
+		securityConfigSetting, err := serial.GetInstanceOf(c.config.SecurityConfig)
+		if err != nil {
+			return nil, newError("unable to get security config instance").Base(err)
+		}
+		securityEngine, err := common.CreateObject(c.ctx, securityConfigSetting)
 		if err != nil {
 			return nil, newError("unable to create security engine from security settings").Base(err)
 		}
