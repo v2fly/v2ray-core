@@ -23,6 +23,13 @@ type connection struct {
 
 type delayedDialer func(earlyData []byte) (conn net.Conn, earlyReply io.Reader, err error)
 
+func newConnection(conn net.Conn, remoteAddr net.Addr) *connection {
+	return &connection{
+		conn:       conn,
+		remoteAddr: remoteAddr,
+	}
+}
+
 func newConnectionWithPendingRead(conn net.Conn, remoteAddr net.Addr, earlyReplyReader io.Reader) *connection {
 	return &connection{
 		conn:       conn,
