@@ -10,6 +10,7 @@ import (
 
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/net"
+	http_proto "github.com/v2fly/v2ray-core/v5/common/protocol/http"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/transportcommon"
 )
@@ -56,6 +57,14 @@ func (s *server) Handle(conn net.Conn) (internet.Connection, error) {
 		_ = conn.Close()
 		return nil, err
 	}
+	forwardedAddrs := http_proto.ParseXForwardedFor(req.Header)
+        remoteAddr := conn.RemoteAddr()
+        if len(forwardedAddrs) > 0 && forwardedAddrs[0].Family().IsIP() {
+                remoteAddr = &net.TCPAddr{
+                        IP:   forwardedAddrs[0].IP(),
+                        Port: int(0),
+                }
+        }
 	if s.config.MaxEarlyData != 0 {
 		if s.config.EarlyDataHeaderName == "" {
 			return nil, newError("EarlyDataHeaderName is not set")
@@ -66,10 +75,10 @@ func (s *server) Handle(conn net.Conn) (internet.Connection, error) {
 			if err != nil {
 				return nil, err
 			}
-			return newConnectionWithPendingRead(conn, conn.RemoteAddr(), bytes.NewReader(earlyDataBytes)), nil
+			return newConnectionWithPendingRead(conn, remoteAddr, bytes.NewReader(earlyDataBytes)), nil
 		}
 	}
-	return internet.Connection(conn), nil
+	return newConnection(conn, remoteAddr), nil
 }
 
 func (s *server) keepAccepting() {
