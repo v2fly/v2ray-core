@@ -29,7 +29,18 @@ func (s *server) Addr() net.Addr {
 	return nil
 }
 
-func (s *server) Handle(conn net.Conn) (internet.Connection, error) {
+func (s *server) Handle(conn net.Conn) {
+	upgradedConn, err := s.upgrade(conn)
+	if err != nil {
+		conn.Close()
+		newError("failed to handle request").Base(err).WriteToLog()
+		return
+	}
+	s.addConn(upgradedConn)
+}
+
+// upgrade execute a fake websocket upgrade process and return the available connection
+func (s *server) upgrade(conn net.Conn) (internet.Connection, error) {
 	connReader := bufio.NewReader(conn)
 	req, err := http.ReadRequest(connReader)
 	if err != nil {
@@ -78,12 +89,7 @@ func (s *server) keepAccepting() {
 		if err != nil {
 			return
 		}
-		handledConn, err := s.Handle(conn)
-		if err != nil {
-			newError("failed to handle request").Base(err).WriteToLog()
-			continue
-		}
-		s.addConn(handledConn)
+		go s.Handle(conn)
 	}
 }
 
