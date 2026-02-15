@@ -507,6 +507,7 @@ func (x *StrategyRandomConfig) GetAliveOnly() bool {
 type StrategyLeastPingConfig struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ObserverTag   string                 `protobuf:"bytes,7,opt,name=observer_tag,json=observerTag,proto3" json:"observer_tag,omitempty"`
+	StickyChoice  bool                   `protobuf:"varint,8,opt,name=sticky_choice,json=stickyChoice,proto3" json:"sticky_choice,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -546,6 +547,13 @@ func (x *StrategyLeastPingConfig) GetObserverTag() string {
 		return x.ObserverTag
 	}
 	return ""
+}
+
+func (x *StrategyLeastPingConfig) GetStickyChoice() bool {
+	if x != nil {
+		return x.StickyChoice
+	}
+	return false
 }
 
 type StrategyLeastLoadConfig struct {
@@ -996,9 +1004,10 @@ const file_app_router_config_proto_rawDesc = "" +
 	"\fobserver_tag\x18\a \x01(\tR\vobserverTag\x12\x1d\n" +
 	"\n" +
 	"alive_only\x18\b \x01(\bR\taliveOnly:\x16\x82\xb5\x18\x12\n" +
-	"\bbalancer\x12\x06random\"W\n" +
+	"\bbalancer\x12\x06random\"|\n" +
 	"\x17StrategyLeastPingConfig\x12!\n" +
-	"\fobserver_tag\x18\a \x01(\tR\vobserverTag:\x19\x82\xb5\x18\x15\n" +
+	"\fobserver_tag\x18\a \x01(\tR\vobserverTag\x12#\n" +
+	"\rsticky_choice\x18\b \x01(\bR\fstickyChoice:\x19\x82\xb5\x18\x15\n" +
 	"\bbalancer\x12\tleastping\"\x84\x02\n" +
 	"\x17StrategyLeastLoadConfig\x12;\n" +
 	"\x05costs\x18\x02 \x03(\v2%.v2ray.core.app.router.StrategyWeightR\x05costs\x12\x1c\n" +
