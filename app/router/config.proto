@@ -97,6 +97,8 @@ message StrategyLeastPingConfig {
   option (v2ray.core.common.protoext.message_opt).short_name = "leastping";
 
   string observer_tag = 7;
+
+  bool sticky_choice = 8;
 }
 
 message StrategyLeastLoadConfig {
