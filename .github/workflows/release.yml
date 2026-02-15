@@ -51,9 +51,9 @@ jobs:
             goarm: 5
           # END Linux ARM 5 6 7
           # BEGIN Windows ARM 7
-          - goos: windows
-            goarch: arm
-            goarm: 7
+#          - goos: windows
+#            goarch: arm
+#            goarm: 7
           # END Windows ARM 7
           # BEGIN FreeBSD ARM 6 7
           - goos: freebsd
