@@ -92,6 +92,8 @@ import (
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorenrollment/roundtripperenrollmentconfirmation"
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/server"
 
+	_ "github.com/v2fly/v2ray-core/v5/transport/internet/tlsmirror/mirrorenrollment/clicommand"
+
 	// Transport headers
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/headers/http"
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/headers/noop"

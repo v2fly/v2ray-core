@@ -27,6 +27,20 @@ func NewEnrollmentConfirmationClient(
 		return nil, newError("config cannot be nil")
 	}
 
+	for _, handler := range config.BootstrapEgressUrl {
+		if handler == "" {
+			return nil, newError("bootstrap ingress URL cannot be empty")
+		}
+		anyPb, err := AnyFromLink(handler)
+		if err != nil {
+			return nil, newError("invalid bootstrap ingress URL").Base(err).AtError()
+		}
+		if anyPb == nil {
+			return nil, newError("bootstrap ingress URL did not produce valid Any")
+		}
+		config.BootstrapEgressConfig = append(config.BootstrapEgressConfig, anyPb)
+	}
+
 	ecc := &EnrollmentConfirmationClient{
 		ctx:            ctx,
 		config:         config,
