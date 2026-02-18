@@ -36,16 +36,16 @@ func (c *udpConn) ID() *stack.TransportEndpointID {
 
 func SetUDPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyManager policy.Manager, config *Config) StackOption {
 	return func(s *stack.Stack) error {
-		udpForwarder := gvisor_udp.NewForwarder(s, func(r *gvisor_udp.ForwarderRequest) {
+		udpForwarder := gvisor_udp.NewForwarder(s, func(r *gvisor_udp.ForwarderRequest) bool {
 			wg := new(waiter.Queue)
 			linkedEndpoint, err := r.CreateEndpoint(wg)
 			if err != nil {
 				newError("failed to create endpoint: ", err).WriteToLog(session.ExportIDToError(ctx))
-				return
+				return false
 			}
 
 			conn := &udpConn{
-				UDPConn: gonet.NewUDPConn(s, wg, linkedEndpoint),
+				UDPConn: gonet.NewUDPConn(wg, linkedEndpoint),
 				id:      r.ID(),
 			}
 
@@ -56,6 +56,7 @@ func SetUDPHandler(ctx context.Context, dispatcher routing.Dispatcher, policyMan
 				config:        config,
 			}
 			go handler.Handle(conn)
+			return true
 		})
 		s.SetTransportProtocolHandler(gvisor_udp.ProtocolNumber, udpForwarder.HandlePacket)
 		return nil
