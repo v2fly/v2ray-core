@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package v2ray.core.common.packetswitch.gvisorstack;
+option csharp_namespace = "V2Ray.Core.Common.Packetswitch.Gvisorstack";
+option go_package = "github.com/v2fly/v2ray-core/v5/common/packetswitch/gvisorstack";
+option java_package = "com.v2ray.core.common.packetswitch.gvisorstack";
+option java_multiple_files = true;
+
+import "app/router/routercommon/common.proto";
+import "transport/internet/config.proto";
+import "common/protoext/extensions.proto";
+
+message Config {
+  uint32 mtu = 2;
+  uint32 user_level = 3;
+  repeated v2ray.core.app.router.routercommon.CIDR ips = 6;
+  repeated v2ray.core.app.router.routercommon.CIDR routes = 7;
+  bool enable_promiscuous_mode = 8;
+  bool enable_spoofing = 9;
+  v2ray.core.transport.internet.SocketConfig socket_settings = 10;
+  bool prefer_ipv6_for_udp = 11;
+}
