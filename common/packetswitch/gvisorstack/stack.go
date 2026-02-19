@@ -88,7 +88,7 @@ func (w *WrappedStack) createStack(linkedEndpoint stack.LinkEndpoint) (*stack.St
 
 	// Add protocol addresses
 	for _, ip := range w.config.Ips {
-		tcpIPAddr := tcpip.AddrFrom4Slice(ip.Ip)
+		tcpIPAddr := tcpip.AddrFromSlice(ip.Ip)
 		protocolAddress := tcpip.ProtocolAddress{
 			AddressWithPrefix: tcpip.AddressWithPrefix{
 				Address:   tcpIPAddr,
@@ -114,7 +114,7 @@ func (w *WrappedStack) createStack(linkedEndpoint stack.LinkEndpoint) (*stack.St
 	s.SetRouteTable(func() (table []tcpip.Route) {
 		for _, cidrs := range w.config.Routes {
 			subnet := tcpip.AddressWithPrefix{
-				Address:   tcpip.AddrFrom4Slice(cidrs.Ip),
+				Address:   tcpip.AddrFromSlice(cidrs.Ip),
 				PrefixLen: int(cidrs.Prefix),
 			}.Subnet()
 			route := tcpip.Route{

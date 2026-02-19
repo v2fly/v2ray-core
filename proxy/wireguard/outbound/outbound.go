@@ -9,7 +9,7 @@ import (
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/dice"
+	"github.com/v2fly/v2ray-core/v5/common/dualStack/happyEyeball"
 	"github.com/v2fly/v2ray-core/v5/common/environment"
 	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
 	cnet "github.com/v2fly/v2ray-core/v5/common/net"
@@ -241,33 +241,6 @@ func (w *WireguardOutbound) Process(ctx context.Context, link *transport.Link, d
 	}
 	destination := outbound.Target
 
-	// resolve domain names using dns client if necessary
-	if destination.Address != nil && destination.Address.Family().IsDomain() && sess.dnsClient != nil {
-		domain := destination.Address.Domain()
-		// determine IP option based on domain strategy and dialer local address
-		var localAddr cnet.Address
-		if dialer != nil {
-			localAddr = dialer.Address()
-		}
-		opt := dns.IPOption{
-			IPv4Enable: sess.config.DomainStrategy == Config_USE_IP || sess.config.DomainStrategy == Config_USE_IP4 || (localAddr != nil && localAddr.Family().IsIPv4()),
-			IPv6Enable: sess.config.DomainStrategy == Config_USE_IP || sess.config.DomainStrategy == Config_USE_IP6 || (localAddr != nil && localAddr.Family().IsIPv6()),
-			FakeEnable: false,
-		}
-		ips, err := dns.LookupIPWithOption(sess.dnsClient, domain, opt)
-		if err != nil {
-			newError("failed to get IP address for domain ", domain).Base(err).WriteToLog(session.ExportIDToError(ctx))
-		}
-		if len(ips) > 0 {
-			// pick a random IP from results
-			ip := ips[dice.Roll(len(ips))]
-			destination.Address = cnet.IPAddress(ip)
-		} else {
-			// no resolved IP; continue and let later operations fail appropriately
-			newError("no IP resolved for domain ", domain).AtWarning().WriteToLog(session.ExportIDToError(ctx))
-		}
-	}
-
 	// require gVisor stack to process network-level connections
 	if sess.stack == nil {
 		return newError("gvisor stack is not configured for wireguard outbound")
@@ -309,14 +282,31 @@ func (w *WireguardOutbound) Process(ctx context.Context, link *transport.Link, d
 	switch destination.Network {
 	case cnet.Network_TCP:
 		// Dial TCP inside the virtual stack
-		conn, err := sess.stack.DialTCP(ctx, destination)
-		if err != nil {
-			return newError("failed to dial tcp in stack").Base(err)
+		ips := w.resolveDNSName(ctx, destination, sess)
+
+		var dialedConn gonet.Conn
+		if len(ips) == 0 {
+			conn, err := sess.stack.DialTCP(ctx, destination)
+			if err != nil {
+				return newError("failed to dial tcp in stack").Base(err)
+			}
+			dialedConn = conn
+			newError("dialed ", destination, " with no DNS resolution").AtDebug().WriteToLog(session.ExportIDToError(ctx))
+		} else {
+			conn, err := happyEyeball.RacingDialer(ctx, destination, ips, func(ctx context.Context, domainDestination cnet.Destination, ips cnet.IP) (internet.Connection, error) {
+				dest := cnet.Destination{Network: domainDestination.Network, Address: cnet.IPAddress(ips), Port: domainDestination.Port}
+				return sess.stack.DialTCP(ctx, dest)
+			}, true, time.Millisecond*300)
+			if err != nil {
+				return newError("failed to dial tcp in stack with racing dialer").Base(err)
+			}
+			dialedConn = conn
 		}
-		defer func() { _ = conn.Close() }()
+
+		defer func() { _ = dialedConn.Close() }()
 
 		requestDone := func() error {
-			writer := buf.NewWriter(conn)
+			writer := buf.NewWriter(dialedConn)
 			if err := buf.Copy(link.Reader, writer, buf.UpdateActivity(timer)); err != nil {
 				return newError("failed to copy request").Base(err)
 			}
@@ -324,7 +314,7 @@ func (w *WireguardOutbound) Process(ctx context.Context, link *transport.Link, d
 		}
 
 		responseDone := func() error {
-			reader := buf.NewReader(conn)
+			reader := buf.NewReader(dialedConn)
 			if err := buf.Copy(reader, link.Writer, buf.UpdateActivity(timer)); err != nil {
 				return newError("failed to copy response").Base(err)
 			}
@@ -360,6 +350,24 @@ func (w *WireguardOutbound) Process(ctx context.Context, link *transport.Link, d
 	default:
 		return newError("unsupported network: ", destination.Network)
 	}
+}
+
+func (w *WireguardOutbound) resolveDNSName(ctx context.Context, destination cnet.Destination, sess *WireguardOutboundSession) []cnet.IP {
+	// resolve domain names using dns client if necessary
+	if destination.Address != nil && destination.Address.Family().IsDomain() && sess.dnsClient != nil {
+		domain := destination.Address.Domain()
+		opt := dns.IPOption{
+			IPv4Enable: sess.config.DomainStrategy == Config_USE_IP || sess.config.DomainStrategy == Config_USE_IP4,
+			IPv6Enable: sess.config.DomainStrategy == Config_USE_IP || sess.config.DomainStrategy == Config_USE_IP6,
+			FakeEnable: false,
+		}
+		ips, err := dns.LookupIPWithOption(sess.dnsClient, domain, opt)
+		if err != nil {
+			newError("failed to get IP address for domain ", domain).Base(err).WriteToLog(session.ExportIDToError(ctx))
+		}
+		return ips
+	}
+	return nil
 }
 
 func (w *WireguardOutbound) Close() error {
