@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package v2ray.core.proxy.wireguard.outbound;
+option csharp_namespace = "V2Ray.Core.Proxy.Wireguard.Outbound";
+option go_package = "github.com/v2fly/v2ray-core/v5/proxy/wireguard/outbound";
+option java_package = "com.v2ray.core.proxy.wireguard.outbound";
+option java_multiple_files = true;
+
+import "proxy/wireguard/wgcommon/config.proto";
+import "common/packetswitch/gvisorstack/config.proto";
+import "common/net/packetaddr/config.proto";
+import "common/protoext/extensions.proto";
+
+message Config{
+  option (v2ray.core.common.protoext.message_opt).type = "outbound";
+  option (v2ray.core.common.protoext.message_opt).short_name = "wireguard";
+
+  v2ray.core.proxy.wireguard.wgcommon.DeviceConfig wg_device = 1;
+  v2ray.core.common.packetswitch.gvisorstack.Config stack = 2;
+
+  //v2ray.core.net.packetaddr.PacketAddrType outbound_packet_encoding = 3;
+  bool listen_on_system_network = 4;
+
+  enum DomainStrategy {
+    AS_IS = 0;
+    USE_IP = 1;
+    USE_IP4 = 2;
+    USE_IP6 = 3;
+  }
+  DomainStrategy domain_strategy = 5;
+}

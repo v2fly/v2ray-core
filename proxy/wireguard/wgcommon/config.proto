@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package v2ray.core.proxy.wireguard.wgcommon;
+option csharp_namespace = "V2Ray.Core.Proxy.Wireguard.Wgcommon";
+option go_package = "github.com/v2fly/v2ray-core/v5/proxy/wireguard/wgcommon";
+option java_package = "com.v2ray.core.proxy.wireguard.wgcommon";
+option java_multiple_files = true;
+
+
+message PeerConfig {
+  bytes public_key = 1;
+  bytes preshared_key = 2;
+  repeated string allowed_ips = 3;
+  string endpoint = 4;
+  int64 persistent_keepalive_interval = 5;
+}
+
+
+message DeviceConfig {
+  bytes private_key = 1;
+  uint32 listen_port = 3;
+  repeated PeerConfig peers = 4;
+  uint32 mtu = 5;
+}
