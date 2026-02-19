@@ -58,9 +58,6 @@ import (
 	_ "github.com/v2fly/v2ray-core/v5/proxy/hysteria2"
 	_ "github.com/v2fly/v2ray-core/v5/proxy/shadowsocks2022"
 
-	// WireGuard Outbound is unreleased.
-	_ "github.com/v2fly/v2ray-core/v5/proxy/wireguard/outbound"
-
 	// Transports
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/domainsocket"
 	_ "github.com/v2fly/v2ray-core/v5/transport/internet/grpc"
