@@ -3,8 +3,9 @@ package wgcommon
 import (
 	"fmt"
 
-	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"golang.zx2c4.com/wireguard/device"
+
+	"github.com/v2fly/v2ray-core/v5/common/errors"
 )
 
 // NewDeviceLoggerAdapter returns a wireguard device.Logger that forwards

@@ -4,17 +4,18 @@ import (
 	"context"
 	"sync"
 
-	"github.com/v2fly/v2ray-core/v5/common"
-	"github.com/v2fly/v2ray-core/v5/common/packetswitch"
 	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv6"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
+
+	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/packetswitch"
 )
 
-func NewNetworkLayerDeviceToGvisorLinkEndpointAdaptor(ctx context.Context, mtu int, networkLayerSwitch packetswitch.NetworkLayerDevice) *NetworkLayerDeviceToGvisorLinkEndpointAdaptor {
+func NewNetworkLayerDeviceToGvisorLinkEndpointAdaptor(_ context.Context, mtu int, networkLayerSwitch packetswitch.NetworkLayerDevice) *NetworkLayerDeviceToGvisorLinkEndpointAdaptor {
 	return &NetworkLayerDeviceToGvisorLinkEndpointAdaptor{
 		mtu:                mtu,
 		networkLayerSwitch: networkLayerSwitch,
@@ -57,7 +58,7 @@ func (n *NetworkLayerDeviceToGvisorLinkEndpointAdaptor) LinkAddress() tcpip.Link
 	return ""
 }
 
-func (n *NetworkLayerDeviceToGvisorLinkEndpointAdaptor) SetLinkAddress(addr tcpip.LinkAddress) {
+func (n *NetworkLayerDeviceToGvisorLinkEndpointAdaptor) SetLinkAddress(_ tcpip.LinkAddress) {
 	// no-op
 }
 
@@ -154,11 +155,11 @@ func (n *NetworkLayerDeviceToGvisorLinkEndpointAdaptor) ARPHardwareType() header
 	return header.ARPHardwareNone
 }
 
-func (n *NetworkLayerDeviceToGvisorLinkEndpointAdaptor) AddHeader(buffer *stack.PacketBuffer) {
+func (n *NetworkLayerDeviceToGvisorLinkEndpointAdaptor) AddHeader(_ *stack.PacketBuffer) {
 	// No link-layer header to add.
 }
 
-func (n *NetworkLayerDeviceToGvisorLinkEndpointAdaptor) ParseHeader(buffer *stack.PacketBuffer) bool {
+func (n *NetworkLayerDeviceToGvisorLinkEndpointAdaptor) ParseHeader(_ *stack.PacketBuffer) bool {
 	// Nothing to parse; packet is a bare network packet.
 	return true
 }

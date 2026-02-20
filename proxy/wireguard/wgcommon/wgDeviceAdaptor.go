@@ -5,8 +5,9 @@ import (
 	"os"
 	"sync"
 
-	"github.com/v2fly/v2ray-core/v5/common/packetswitch"
 	"golang.zx2c4.com/wireguard/tun"
+
+	"github.com/v2fly/v2ray-core/v5/common/packetswitch"
 )
 
 func NewNetworkLayerDeviceToWireguardTunDeviceAdaptor(mtu int, networkLayerSwitch packetswitch.NetworkLayerDevice, batchSize int, inboundChannelSize int) (*NetworkLayerDeviceToWireguardTunDeviceAdaptor, error) {

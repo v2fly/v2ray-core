@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v5/common/packetswitch"
 	"golang.zx2c4.com/wireguard/tun"
+
+	"github.com/v2fly/v2ray-core/v5/common/packetswitch"
 )
 
 // fakeNetDevice implements packetswitch.NetworkLayerDevice and optionally exposes Events().
