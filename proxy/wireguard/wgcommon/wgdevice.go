@@ -66,7 +66,11 @@ func (w *WrappedWireguardDevice) Close() error {
 
 func (w *WrappedWireguardDevice) Debug() (string, error) {
 	if w.device != nil {
-		return w.device.IpcGet()
+		result, err := w.device.IpcGet()
+		if err != nil {
+			return "", err
+		}
+		return filterDebugData(result), nil
 	}
 	return "", nil
 }
