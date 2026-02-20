@@ -45,10 +45,10 @@ func (w *WrappedWireguardDevice) SetupDeviceWithoutPeers() error {
 
 	var sb strings.Builder
 	if len(w.config.PrivateKey) > 0 {
-		sb.WriteString(fmt.Sprintf("private_key=%x\n", w.config.PrivateKey))
+		_, _ = fmt.Fprintf(&sb, "private_key=%x\n", w.config.PrivateKey)
 	}
 	if w.config.ListenPort != 0 {
-		sb.WriteString(fmt.Sprintf("listen_port=%d\n", w.config.ListenPort))
+		_, _ = fmt.Fprintf(&sb, "listen_port=%d\n", w.config.ListenPort)
 	}
 
 	// Terminate operation with a blank line.
@@ -75,15 +75,15 @@ func (w *WrappedWireguardDevice) AddOrReplacePeers(peers []*PeerConfig) error {
 			continue
 		}
 		// start peer block
-		sb.WriteString(fmt.Sprintf("public_key=%x\n", p.PublicKey))
+		_, _ = fmt.Fprintf(&sb, "public_key=%x\n", p.PublicKey)
 		if len(p.PresharedKey) > 0 {
-			sb.WriteString(fmt.Sprintf("preshared_key=%x\n", p.PresharedKey))
+			_, _ = fmt.Fprintf(&sb, "preshared_key=%x\n", p.PresharedKey)
 		}
 		if p.Endpoint != "" {
-			sb.WriteString(fmt.Sprintf("endpoint=%s\n", p.Endpoint))
+			_, _ = fmt.Fprintf(&sb, "endpoint=%s\n", p.Endpoint)
 		}
 		if p.PersistentKeepaliveInterval != 0 {
-			sb.WriteString(fmt.Sprintf("persistent_keepalive_interval=%d\n", p.PersistentKeepaliveInterval))
+			_, _ = fmt.Fprintf(&sb, "persistent_keepalive_interval=%d\n", p.PersistentKeepaliveInterval)
 		}
 		// replace allowed IPs for this peer
 		sb.WriteString("replace_allowed_ips=true\n")
@@ -91,7 +91,7 @@ func (w *WrappedWireguardDevice) AddOrReplacePeers(peers []*PeerConfig) error {
 			if aip == "" {
 				continue
 			}
-			sb.WriteString(fmt.Sprintf("allowed_ip=%s\n", aip))
+			_, _ = fmt.Fprintf(&sb, "allowed_ip=%s\n", aip)
 		}
 	}
 
@@ -113,7 +113,7 @@ func (w *WrappedWireguardDevice) RemovePeer(publicKey []byte) error {
 	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("public_key=%x\n", publicKey))
+	_, _ = fmt.Fprintf(&sb, "public_key=%x\n", publicKey)
 	sb.WriteString("remove=true\n")
 	sb.WriteString("\n")
 

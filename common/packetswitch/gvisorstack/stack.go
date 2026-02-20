@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/v2fly/v2ray-core/v5/common/packetswitch"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv6"
@@ -12,6 +11,8 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/transport/icmp"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/udp"
+
+	"github.com/v2fly/v2ray-core/v5/common/packetswitch"
 )
 
 //go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen

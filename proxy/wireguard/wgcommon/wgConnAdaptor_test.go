@@ -36,8 +36,9 @@ func TestNetPacketConnToWg_OpenReceive_Send(t *testing.T) {
 	if port == 0 {
 		// LocalAddr should have set actualPort, otherwise use svConn
 		if la := svConn.LocalAddr(); la != nil {
-			if ua, ok := la.(*net.UDPAddr); ok {
+			if ua, ok := la.(*net.UDPAddr); ok && ua.Port != 0 {
 				port = uint16(ua.Port)
+				_ = port
 			}
 		}
 	}

@@ -8,12 +8,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/v2fly/v2ray-core/v5/common/packetswitch"
 	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv6"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
+
+	"github.com/v2fly/v2ray-core/v5/common/packetswitch"
 )
 
 // fakeDevice implements packetswitch.NetworkLayerDevice for testing.

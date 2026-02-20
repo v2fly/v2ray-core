@@ -13,9 +13,7 @@ import (
 
 type Dialer func(ctx context.Context, domainDestination net.Destination, ips net.IP) (internet.Connection, error)
 
-func RacingDialer(ctx context.Context,
-	domainDestination net.Destination, ips []net.IP, dialer Dialer,
-	preferIPv6 bool, preferredHeadStart time.Duration) (internet.Connection, error) {
+func RacingDialer(ctx context.Context, domainDestination net.Destination, ips []net.IP, dialer Dialer, preferIPv6 bool, preferredHeadStart time.Duration) (internet.Connection, error) {
 	// check if they are of a single family, if so no one have head start
 	hasIPv4 := false
 	hasIPv6 := false
@@ -32,7 +30,7 @@ func RacingDialer(ctx context.Context,
 	}
 
 	// If there is only one family present, there is no head start
-	if !(hasIPv4 && hasIPv6) {
+	if !hasIPv4 || !hasIPv6 {
 		preferredHeadStart = 0
 	}
 	if preferredHeadStart < 0 {
@@ -93,7 +91,7 @@ func RacingDialer(ctx context.Context,
 				// channel already has a conn, close this extra one
 				_ = c.Close()
 			}
-			finished.Close()
+			_ = finished.Close()
 			return nil
 		})
 	}
