@@ -225,7 +225,7 @@ jobs:
           go-version-file: ./go.mod
           cache-dependency-path: ./go.sum
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           path: build_artifacts
 
