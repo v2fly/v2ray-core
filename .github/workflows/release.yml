@@ -6,10 +6,9 @@ on:
       - prereleased
       - released
   push:
-    branches:
-      - master
+    tags:
       - v*
-      - dev*
+
     paths:
       - "**/*.go"
       - "go.mod"
