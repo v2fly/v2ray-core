@@ -6,6 +6,8 @@ import (
 	_ "github.com/v2fly/v2ray-core/v5/main/distro/all"
 )
 
+//start from here
+
 func main() {
 	base.RootCommand.Long = "A unified platform for anti-censorship."
 	base.RegisterCommand(commands.CmdRun)
