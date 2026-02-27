@@ -7,7 +7,7 @@ on:
       - released
   push:
     tags:
-      - v*
+      -  '*'
 
     paths:
       - "**/*.go"
