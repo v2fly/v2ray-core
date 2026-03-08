@@ -44,7 +44,7 @@ func SetSpoofing(id tcpip.NICID, enable bool) StackOption {
 func AddProtocolAddress(id tcpip.NICID, ips []*routercommon.CIDR) StackOption {
 	return func(s *stack.Stack) error {
 		for _, ip := range ips {
-			tcpIPAddr := tcpip.AddrFrom4Slice(ip.Ip)
+			tcpIPAddr := tcpip.AddrFromSlice(ip.Ip)
 			protocolAddress := tcpip.ProtocolAddress{
 				AddressWithPrefix: tcpip.AddressWithPrefix{
 					Address:   tcpIPAddr,
@@ -75,7 +75,7 @@ func SetRouteTable(id tcpip.NICID, routes []*routercommon.CIDR) StackOption {
 		s.SetRouteTable(func() (table []tcpip.Route) {
 			for _, cidrs := range routes {
 				subnet := tcpip.AddressWithPrefix{
-					Address:   tcpip.AddrFrom4Slice(cidrs.Ip),
+					Address:   tcpip.AddrFromSlice(cidrs.Ip),
 					PrefixLen: int(cidrs.Prefix),
 				}.Subnet()
 				route := tcpip.Route{
