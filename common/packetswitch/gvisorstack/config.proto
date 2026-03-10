@@ -19,4 +19,5 @@ message Config {
   bool enable_spoofing = 9;
   v2ray.core.transport.internet.SocketConfig socket_settings = 10;
   bool prefer_ipv6_for_udp = 11;
+  bool dual_stack_udp = 12;
 }

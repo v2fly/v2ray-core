@@ -28,6 +28,7 @@ type Config struct {
 	EnableSpoofing        bool                   `protobuf:"varint,9,opt,name=enable_spoofing,json=enableSpoofing,proto3" json:"enable_spoofing,omitempty"`
 	SocketSettings        *internet.SocketConfig `protobuf:"bytes,10,opt,name=socket_settings,json=socketSettings,proto3" json:"socket_settings,omitempty"`
 	PreferIpv6ForUdp      bool                   `protobuf:"varint,11,opt,name=prefer_ipv6_for_udp,json=preferIpv6ForUdp,proto3" json:"prefer_ipv6_for_udp,omitempty"`
+	DualStackUdp          bool                   `protobuf:"varint,12,opt,name=dual_stack_udp,json=dualStackUdp,proto3" json:"dual_stack_udp,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -118,11 +119,18 @@ func (x *Config) GetPreferIpv6ForUdp() bool {
 	return false
 }
 
+func (x *Config) GetDualStackUdp() bool {
+	if x != nil {
+		return x.DualStackUdp
+	}
+	return false
+}
+
 var File_common_packetswitch_gvisorstack_config_proto protoreflect.FileDescriptor
 
 const file_common_packetswitch_gvisorstack_config_proto_rawDesc = "" +
 	"\n" +
-	",common/packetswitch/gvisorstack/config.proto\x12*v2ray.core.common.packetswitch.gvisorstack\x1a$app/router/routercommon/common.proto\x1a\x1ftransport/internet/config.proto\x1a common/protoext/extensions.proto\"\x9d\x03\n" +
+	",common/packetswitch/gvisorstack/config.proto\x12*v2ray.core.common.packetswitch.gvisorstack\x1a$app/router/routercommon/common.proto\x1a\x1ftransport/internet/config.proto\x1a common/protoext/extensions.proto\"\xc3\x03\n" +
 	"\x06Config\x12\x10\n" +
 	"\x03mtu\x18\x02 \x01(\rR\x03mtu\x12\x1d\n" +
 	"\n" +
@@ -133,7 +141,8 @@ const file_common_packetswitch_gvisorstack_config_proto_rawDesc = "" +
 	"\x0fenable_spoofing\x18\t \x01(\bR\x0eenableSpoofing\x12T\n" +
 	"\x0fsocket_settings\x18\n" +
 	" \x01(\v2+.v2ray.core.transport.internet.SocketConfigR\x0esocketSettings\x12-\n" +
-	"\x13prefer_ipv6_for_udp\x18\v \x01(\bR\x10preferIpv6ForUdpB\x9f\x01\n" +
+	"\x13prefer_ipv6_for_udp\x18\v \x01(\bR\x10preferIpv6ForUdp\x12$\n" +
+	"\x0edual_stack_udp\x18\f \x01(\bR\fdualStackUdpB\x9f\x01\n" +
 	".com.v2ray.core.common.packetswitch.gvisorstackP\x01Z>github.com/v2fly/v2ray-core/v5/common/packetswitch/gvisorstack\xaa\x02*V2Ray.Core.Common.Packetswitch.Gvisorstackb\x06proto3"
 
 var (
