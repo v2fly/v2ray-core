@@ -9,6 +9,7 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv6"
 
+	"github.com/v2fly/v2ray-core/v5/common/dualStack/fusedPacketConn"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 )
 
@@ -114,6 +115,20 @@ func (w *WrappedStack) ListenUDP(ctx context.Context, localAddress net.Destinati
 			return nil, err
 		}
 		return udpConn, nil
+	}
+
+	if w.config.DualStackUdp {
+		udpConn4, err := gonet.DialUDP(w.stack, nil, nil, ipv4.ProtocolNumber)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create IPv4 UDP conn for dual stack: %w", err)
+		}
+		udpConn6, err := gonet.DialUDP(w.stack, nil, nil, ipv6.ProtocolNumber)
+		if err != nil {
+			udpConn4.Close()
+			return nil, fmt.Errorf("failed to create IPv6 UDP conn for dual stack: %w", err)
+		}
+		preferIPv6 := w.config.GetPreferIpv6ForUdp()
+		return fusedPacketConn.NewFusedPacketConn(udpConn4, udpConn6, int(w.config.Mtu), preferIPv6), nil
 	}
 
 	// If not specified, let the stack choose the local address (pass nil laddr).

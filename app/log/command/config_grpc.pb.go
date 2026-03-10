@@ -81,10 +81,10 @@ type LoggerServiceServer interface {
 type UnimplementedLoggerServiceServer struct{}
 
 func (UnimplementedLoggerServiceServer) RestartLogger(context.Context, *RestartLoggerRequest) (*RestartLoggerResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RestartLogger not implemented")
+	return nil, status.Error(codes.Unimplemented, "method RestartLogger not implemented")
 }
 func (UnimplementedLoggerServiceServer) FollowLog(*FollowLogRequest, grpc.ServerStreamingServer[FollowLogResponse]) error {
-	return status.Errorf(codes.Unimplemented, "method FollowLog not implemented")
+	return status.Error(codes.Unimplemented, "method FollowLog not implemented")
 }
 func (UnimplementedLoggerServiceServer) mustEmbedUnimplementedLoggerServiceServer() {}
 func (UnimplementedLoggerServiceServer) testEmbeddedByValue()                       {}
@@ -97,7 +97,7 @@ type UnsafeLoggerServiceServer interface {
 }
 
 func RegisterLoggerServiceServer(s grpc.ServiceRegistrar, srv LoggerServiceServer) {
-	// If the following call pancis, it indicates UnimplementedLoggerServiceServer was
+	// If the following call panics, it indicates UnimplementedLoggerServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.

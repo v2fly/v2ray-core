@@ -252,7 +252,7 @@ func (w *WireguardOutbound) Process(ctx context.Context, link *transport.Link, d
 
 	if packetConn, err := packetaddr.ToPacketAddrConn(link, destination); err == nil {
 		defer func() { _ = packetConn.Close() }()
-		pc, err := sess.stack.ListenUDP(ctx, cnet.UDPDestination(cnet.AnyIP, 0))
+		pc, err := sess.stack.ListenUDP(ctx, cnet.UDPDestination(nil, 0))
 		if err != nil {
 			return newError("failed to create udp session in stack").Base(err)
 		}
