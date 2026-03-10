@@ -55,7 +55,7 @@ func (conn *StunClientConn) ExecuteSTUNMessageAsync(msg stun.Message, dest net.A
 	msg.Encode()
 	conn.processor.AddPendingTransactionListener(msg.TransactionID, callback)
 
-	if _, err = conn.PacketConn.WriteTo(msg.Raw, dest); err != nil {
+	if _, err = conn.WriteTo(msg.Raw, dest); err != nil {
 		conn.processor.CancelTransaction(msg.TransactionID)
 		return resp, nil, err
 	}

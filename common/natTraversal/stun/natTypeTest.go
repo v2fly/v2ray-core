@@ -114,7 +114,7 @@ func (t *NATTypeTest) recordTransaction(tc TestConducted) {
 // transaction ID) and waits for the first response within a single timeout window.
 // This avoids sequential retry delays caused by UDP packet loss.
 // Non-timeout errors from sending are returned immediately.
-func (t *NATTypeTest) doTransactionWithRetry(conn *StunClientConn, localAddr net.Addr, dest net.Addr, attempts int, setters ...stun.Setter) (*stun.Message, net.Addr, error) {
+func (t *NATTypeTest) doTransactionWithRetry(conn *StunClientConn, localAddr net.Addr, dest net.Addr, attempts int, setters ...stun.Setter) (*stun.Message, net.Addr, error) { //nolint:unparam
 	type result struct {
 		msg  stun.Message
 		addr net.Addr
@@ -395,7 +395,7 @@ func (t *NATTypeTest) TestHairpinBehaviour() error {
 	// filtered by endpoint-dependent filtering on socket 1.
 	openMsg := stun.MustBuild(stun.TransactionID, stun.BindingRequest)
 	openMsg.Encode()
-	conn1.PacketConn.WriteTo(openMsg.Raw, selfAddr2)
+	conn1.WriteTo(openMsg.Raw, selfAddr2)
 
 	// Build hairpin test messages: register on conn1's processor, send from conn2.
 	// Hairpinned packets arrive at conn1 from MA2 (now allowed by filter).
@@ -421,7 +421,7 @@ func (t *NATTypeTest) TestHairpinBehaviour() error {
 		txIDs = append(txIDs, msg.TransactionID)
 
 		// Send from conn2 to MA1 (socket 1's mapped address)
-		if _, err := conn2.PacketConn.WriteTo(msg.Raw, selfAddr1); err != nil {
+		if _, err := conn2.WriteTo(msg.Raw, selfAddr1); err != nil {
 			for _, id := range txIDs {
 				conn1.processor.CancelTransaction(id)
 			}
@@ -555,11 +555,12 @@ func (t *NATTypeTest) CalcReminderValues() error {
 			break
 		}
 	}
-	if validPairCount < 1 {
+	switch {
+	case validPairCount < 1:
 		t.PreserveSourceIPPortWhenDestNATMapping = NATYesOrNoUnknownType_Unknown
-	} else if allSendToMatchRespFrom {
+	case allSendToMatchRespFrom:
 		t.PreserveSourceIPPortWhenDestNATMapping = NATYesOrNoUnknownType_No
-	} else {
+	default:
 		t.PreserveSourceIPPortWhenDestNATMapping = NATYesOrNoUnknownType_Yes
 	}
 
