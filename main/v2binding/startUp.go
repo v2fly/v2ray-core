@@ -13,7 +13,7 @@ func (b *bindingInstance) setBaseDir(baseDir string) {
 	b.baseDir = baseDir
 	attentionFile := path.Join(baseDir, "place your config file here.txt")
 	{
-		f, err := os.OpenFile(attentionFile, os.O_RDONLY|os.O_CREATE, 0666)
+		f, err := os.OpenFile(attentionFile, os.O_RDONLY|os.O_CREATE, 0o666)
 		if err != nil {
 			return
 		}

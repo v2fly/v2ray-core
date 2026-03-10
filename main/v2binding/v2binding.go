@@ -101,7 +101,7 @@ func StartAPIInstance(basedir string) {
 		err := binding.loadDefaultConfigIfExists()
 		if err != nil {
 			fmt.Println(err)
-			os.WriteFile("last_err.txt", []byte(err.Error()), 0644)
+			os.WriteFile("last_err.txt", []byte(err.Error()), 0o644)
 		}
 	}
 }
