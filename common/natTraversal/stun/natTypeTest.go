@@ -641,6 +641,10 @@ func (t *NATTypeTest) CalcReminderValues() error {
 			if tc.Resp == nil || tc.RespFrom == nil || tc.ReqSentTo == nil {
 				continue
 			}
+			// Only count hairpin packets: responses that are binding requests (not binding responses)
+			if tc.Resp.Type != stun.BindingRequest {
+				continue
+			}
 			respPairCount++
 			if tc.RespFrom.String() != tc.ReqSentTo.String() {
 				allSendToMatchRespFrom = false
