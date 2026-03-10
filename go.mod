@@ -74,7 +74,7 @@ require (
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40 // indirect
 	github.com/mustafaturan/monoton v1.0.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
-	github.com/pion/dtls/v3 v3.0.10 // indirect
+	github.com/pion/dtls/v3 v3.0.11 // indirect
 	github.com/pion/logging v0.2.4 // indirect
 	github.com/pion/randutil v0.1.0 // indirect
 	github.com/pion/sctp v1.8.7 // indirect
