@@ -17,6 +17,7 @@ import (
 
 var (
 	server    *string
+	server2   *string
 	timeout   *int
 	attempts  *int
 	socks5udp *string
@@ -34,11 +35,13 @@ The STUN server must support RFC 5780 (OTHER-ADDRESS and CHANGE-REQUEST)
 for full test coverage.
 
 Usage:
-	{{.Exec}} engineering stun-test -server <host:port> [-timeout <ms>] [-attempts <n>] [-socks5udp <host:port>]
+	{{.Exec}} engineering stun-test -server <host:port> [-server2 <host:port>] [-timeout <ms>] [-attempts <n>] [-socks5udp <host:port>]
 
 Options:
 	-server <host:port>
 		The STUN server address (required)
+	-server2 <host:port>
+		A secondary STUN server address for cross-server mapping stability test
 	-timeout <ms>
 		Timeout per test in milliseconds (default: 3000)
 	-attempts <n>
@@ -48,11 +51,13 @@ Options:
 
 Example:
 	{{.Exec}} engineering stun-test -server stun.example.com:3478
+	{{.Exec}} engineering stun-test -server stun.example.com:3478 -server2 stun2.example.com:3478
 	{{.Exec}} engineering stun-test -server stun.example.com:3478 -socks5udp 127.0.0.1:1080
 `,
 	Flag: func() flag.FlagSet {
 		fs := flag.NewFlagSet("", flag.ExitOnError)
 		server = fs.String("server", "", "STUN server address (host:port)")
+		server2 = fs.String("server2", "", "secondary STUN server address (host:port)")
 		timeout = fs.Int("timeout", 3000, "timeout per test in milliseconds")
 		attempts = fs.Int("attempts", 3, "number of parallel requests per test")
 		socks5udp = fs.String("socks5udp", "", "SOCKS5 UDP relay address (host:port)")
@@ -166,6 +171,24 @@ func executeStunTest(cmd *base.Command, args []string) {
 
 	serverAddr := &net.UDPAddr{IP: ips.IP, Port: port}
 
+	// Resolve secondary STUN server address if provided
+	var server2Addr *net.UDPAddr
+	if *server2 != "" {
+		host2, portStr2, err := net.SplitHostPort(*server2)
+		if err != nil {
+			base.Fatalf("invalid server2 address %q: %v", *server2, err)
+		}
+		ips2, err := net.ResolveIPAddr("ip", host2)
+		if err != nil {
+			base.Fatalf("failed to resolve server2 host %q: %v", host2, err)
+		}
+		port2, err := net.LookupPort("udp", portStr2)
+		if err != nil {
+			base.Fatalf("invalid server2 port %q: %v", portStr2, err)
+		}
+		server2Addr = &net.UDPAddr{IP: ips2.IP, Port: port2}
+	}
+
 	// Resolve SOCKS5 UDP relay address if provided
 	var relayAddr *net.UDPAddr
 	if *socks5udp != "" {
@@ -185,6 +208,9 @@ func executeStunTest(cmd *base.Command, args []string) {
 	}
 
 	fmt.Printf("STUN server: %s\n", serverAddr)
+	if server2Addr != nil {
+		fmt.Printf("STUN server 2: %s\n", server2Addr)
+	}
 	if relayAddr != nil {
 		fmt.Printf("SOCKS5 UDP relay: %s\n", relayAddr)
 	}
@@ -201,9 +227,15 @@ func executeStunTest(cmd *base.Command, args []string) {
 		return conn, nil
 	}
 
+	var secondaryServer net.Addr
+	if server2Addr != nil {
+		secondaryServer = server2Addr
+	}
+
 	test := stunlib.NewNATTypeTest(
 		newConn,
 		serverAddr,
+		secondaryServer,
 		time.Duration(*timeout)*time.Millisecond,
 		*attempts,
 	)
@@ -218,6 +250,7 @@ func executeStunTest(cmd *base.Command, args []string) {
 	fmt.Printf("  Filter Behaviour:  %s\n", natDependantTypeString(test.FilterBehaviour))
 	fmt.Printf("  Mapping Behaviour: %s\n", natDependantTypeString(test.MappingBehaviour))
 	fmt.Printf("  Hairpin Behaviour: %s\n", natYesOrNoString(test.HairpinBehaviour))
+	fmt.Printf("  Stable Mapping on Secondary Server: %s\n", natYesOrNoString(test.StableMappingOnSecondaryServer))
 	fmt.Println()
 	fmt.Println("=== Derived Properties ===")
 	fmt.Printf("  Preserve Source Port (Source NAT):     %s\n", natYesOrNoString(test.PreserveSourcePortWhenSourceNATMapping))

@@ -44,6 +44,8 @@ type NATTypeTest struct {
 	MappingBehaviour NATDependantType
 	HairpinBehaviour NATYesOrNoUnknownType
 
+	StableMappingOnSecondaryServer NATYesOrNoUnknownType
+
 	// Calculated values from testsTranscript
 	PreserveSourcePortWhenSourceNATMapping NATYesOrNoUnknownType
 	SingleSourceIPSourceNATMapping         NATYesOrNoUnknownType
@@ -54,17 +56,19 @@ type NATTypeTest struct {
 	// this can be detected when asking remote server to reply from a different ip or port
 	PreserveSourceIPPortWhenDestNATMapping NATYesOrNoUnknownType
 
-	TestServer net.Addr
+	TestServer          net.Addr
+	TestServerSecondary net.Addr
 
 	SourceIPs []net.IP
 }
 
-func NewNATTypeTest(newStunConn func() (net.PacketConn, error), testServer net.Addr, timeout time.Duration, attempts int) *NATTypeTest {
+func NewNATTypeTest(newStunConn func() (net.PacketConn, error), testServer net.Addr, testServerSecondary net.Addr, timeout time.Duration, attempts int) *NATTypeTest {
 	return &NATTypeTest{
-		newStunConn: newStunConn,
-		Timeout:     timeout,
-		Attempts:    attempts,
-		TestServer:  testServer,
+		newStunConn:         newStunConn,
+		Timeout:             timeout,
+		Attempts:            attempts,
+		TestServer:          testServer,
+		TestServerSecondary: testServerSecondary,
 	}
 }
 
@@ -335,6 +339,59 @@ func (t *NATTypeTest) TestMappingBehaviour() error {
 	return nil
 }
 
+func (t *NATTypeTest) TestMappingBehaviourWithSecondaryServer() error {
+	if t.TestServerSecondary == nil {
+		t.StableMappingOnSecondaryServer = NATYesOrNoUnknownType_Unknown
+		return nil
+	}
+
+	rawConn, err := t.newStunConn()
+	if err != nil {
+		return err
+	}
+
+	conn, err := NewStunClientConn(rawConn)
+	if err != nil {
+		rawConn.Close()
+		return err
+	}
+	defer conn.Close()
+	localAddr := rawConn.LocalAddr()
+	startBackgroundReader(conn)
+
+	// Binding to primary server
+	resp1, _, err := t.doTransactionWithRetry(conn, localAddr, t.TestServer, t.Attempts,
+		stun.TransactionID, stun.BindingRequest)
+	if err != nil {
+		return err
+	}
+
+	var mappedAddr1 stun.XORMappedAddress
+	if err := mappedAddr1.GetFrom(resp1); err != nil {
+		return err
+	}
+
+	// Binding to secondary server from the same socket
+	resp2, _, err := t.doTransactionWithRetry(conn, localAddr, t.TestServerSecondary, t.Attempts,
+		stun.TransactionID, stun.BindingRequest)
+	if err != nil {
+		return err
+	}
+
+	var mappedAddr2 stun.XORMappedAddress
+	if err := mappedAddr2.GetFrom(resp2); err != nil {
+		return err
+	}
+
+	if mappedAddr1.String() == mappedAddr2.String() {
+		t.StableMappingOnSecondaryServer = NATYesOrNoUnknownType_Yes
+	} else {
+		t.StableMappingOnSecondaryServer = NATYesOrNoUnknownType_No
+	}
+
+	return nil
+}
+
 // TestHairpinBehaviour determines if the NAT supports hairpinning per RFC 5780 Section 4.5.
 // Both sockets must first get their mapped addresses via STUN, then send to each other's
 // mapped address. This ensures the NAT filter is opened for the peer's mapped address
@@ -473,6 +530,7 @@ func (t *NATTypeTest) TestAll() error {
 		t.TestFilterBehaviour,
 		t.TestMappingBehaviour,
 		t.TestHairpinBehaviour,
+		t.TestMappingBehaviourWithSecondaryServer,
 	)
 	if err != nil {
 		return err
