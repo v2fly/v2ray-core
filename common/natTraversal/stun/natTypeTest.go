@@ -296,6 +296,16 @@ func (t *NATTypeTest) TestMappingBehaviour() error {
 		return nil
 	}
 
+	// Validate OTHER-ADDRESS has both a different IP and port from the primary server.
+	// The mapping behavior test requires a genuinely distinct endpoint to produce meaningful results.
+	serverUDPForValidation, ok := t.TestServer.(*net.UDPAddr)
+	if !ok {
+		return errors.New("TestServer is not a UDP address")
+	}
+	if otherAddr.IP.Equal(serverUDPForValidation.IP) || otherAddr.Port == serverUDPForValidation.Port {
+		return errors.New("OTHER-ADDRESS from STUN server does not differ in both IP and port from the primary server")
+	}
+
 	// Test II: From same socket, binding to OTHER-ADDRESS (different IP and port)
 	altAddr := &net.UDPAddr{IP: otherAddr.IP, Port: otherAddr.Port}
 	resp2, _, err := t.doTransactionWithRetry(conn, localAddr, altAddr, t.Attempts,
@@ -594,32 +604,57 @@ func (t *NATTypeTest) CalcReminderValues() error {
 		t.SingleSourceIPSourceNATMapping = NATYesOrNoUnknownType_No
 	}
 
-	allSendToMatchRespFrom := true
-	validPairCount := 0
+	// PreserveSourceIPPortWhenDestNATMapping: check using RESPONSE-ORIGIN if available,
+	// otherwise fall back to CHANGE-REQUEST hairpin detection.
+	allResponseOriginMatchRespFrom := true
+	responseOriginPairCount := 0
 	for _, tc := range transcripts {
 		if tc.Resp == nil || tc.RespFrom == nil || tc.ReqSentTo == nil {
 			continue
 		}
-		if value, ok := tc.Req.Attributes.Get(stun.AttrChangeRequest); ok {
-			if len(value.Value) != 4 || (value.Value[0] == 0 && value.Value[1] == 0 && value.Value[2] == 0 && value.Value[3] == 0) {
-				continue
-			}
-		} else {
+		var responseOrigin stun.ResponseOrigin
+		if err := responseOrigin.GetFrom(tc.Resp); err != nil {
 			continue
 		}
-		validPairCount++
-		if tc.RespFrom.String() != tc.ReqSentTo.String() {
-			allSendToMatchRespFrom = false
+		responseOriginAddr := net.UDPAddr{IP: responseOrigin.IP, Port: responseOrigin.Port}
+		if responseOriginAddr.String() == tc.ReqSentTo.String() {
+			continue
+		}
+		responseOriginPairCount++
+		if tc.RespFrom.String() != responseOriginAddr.String() {
+			allResponseOriginMatchRespFrom = false
 			break
 		}
 	}
-	switch {
-	case validPairCount < 1:
-		t.PreserveSourceIPPortWhenDestNATMapping = NATYesOrNoUnknownType_Unknown
-	case allSendToMatchRespFrom:
-		t.PreserveSourceIPPortWhenDestNATMapping = NATYesOrNoUnknownType_No
-	default:
-		t.PreserveSourceIPPortWhenDestNATMapping = NATYesOrNoUnknownType_Yes
+	if responseOriginPairCount >= 1 {
+		if allResponseOriginMatchRespFrom {
+			t.PreserveSourceIPPortWhenDestNATMapping = NATYesOrNoUnknownType_Yes
+		} else {
+			t.PreserveSourceIPPortWhenDestNATMapping = NATYesOrNoUnknownType_No
+		}
+	} else {
+		// Fallback: detect if we receive our own hairpin packets.
+		// If RespFrom == ReqSentTo for all responses, the source address was rewritten (not preserved).
+		allSendToMatchRespFrom := true
+		respPairCount := 0
+		for _, tc := range transcripts {
+			if tc.Resp == nil || tc.RespFrom == nil || tc.ReqSentTo == nil {
+				continue
+			}
+			respPairCount++
+			if tc.RespFrom.String() != tc.ReqSentTo.String() {
+				allSendToMatchRespFrom = false
+				break
+			}
+		}
+		switch {
+		case respPairCount < 1:
+			t.PreserveSourceIPPortWhenDestNATMapping = NATYesOrNoUnknownType_Unknown
+		case allSendToMatchRespFrom:
+			t.PreserveSourceIPPortWhenDestNATMapping = NATYesOrNoUnknownType_No
+		default:
+			t.PreserveSourceIPPortWhenDestNATMapping = NATYesOrNoUnknownType_Yes
+		}
 	}
 
 	// PreserveSourcePortWhenSourceNATMapping: check if mapped port matches local source port
