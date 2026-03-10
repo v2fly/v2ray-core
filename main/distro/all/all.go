@@ -114,6 +114,7 @@ import (
 	_ "github.com/v2fly/v2ray-core/v5/main/commands/all"
 
 	// engineering commands
+	_ "github.com/v2fly/v2ray-core/v5/common/natTraversal/stun/stuncli"
 	_ "github.com/v2fly/v2ray-core/v5/main/commands/all/engineering"
 	_ "github.com/v2fly/v2ray-core/v5/main/commands/all/engineering/generateRandomData"
 
