@@ -269,9 +269,9 @@ func (c *ClientUDPSessionConn) ReadFrom(p []byte) (n int, addr net.Addr, err err
 					rxReplayDetector: replaydetector.New(1024, ^uint64(0)),
 				}
 				c.trackedServerSessionID[string(resp.SessionID[:])] = state
-				c.parent.locker.RLock()
+				c.parent.locker.Lock()
 				c.parent.sessionMapAlias[string(resp.SessionID[:])] = string(resp.ClientSessionID[:])
-				c.parent.locker.RUnlock()
+				c.parent.locker.Unlock()
 				trackedState = state
 			} else {
 				trackedState = trackedStateReceived
