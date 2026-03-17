@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/keepalive"
 
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"
@@ -63,15 +64,7 @@ type dialerCanceller func()
 func dialgRPC(ctx context.Context, dest net.Destination, streamSettings *internet.MemoryStreamConfig) (net.Conn, error) {
 	grpcSettings := streamSettings.ProtocolSettings.(*Config)
 
-	config := tls.ConfigFromStreamSettings(streamSettings)
-
-	transportCredentials := insecure.NewCredentials()
-	if config != nil {
-		transportCredentials = credentials.NewTLS(config.GetTLSConfig(tls.WithDestination(dest)))
-	}
-	dialOption := grpc.WithTransportCredentials(transportCredentials)
-
-	conn, canceller, err := getGrpcClient(ctx, dest, dialOption, streamSettings)
+	conn, canceller, err := getGrpcClient(ctx, dest, streamSettings)
 	if err != nil {
 		return nil, newError("Cannot dial grpc").Base(err)
 	}
@@ -84,9 +77,54 @@ func dialgRPC(ctx context.Context, dest net.Destination, streamSettings *interne
 	return encoding.NewGunConn(gunService, nil), nil
 }
 
-func getGrpcClient(ctx context.Context, dest net.Destination, dialOption grpc.DialOption, streamSettings *internet.MemoryStreamConfig) (*grpc.ClientConn, dialerCanceller, error) {
+func getGrpcClient(ctx context.Context, dest net.Destination, streamSettings *internet.MemoryStreamConfig) (*grpc.ClientConn, dialerCanceller, error) {
 	transportEnvironment := envctx.EnvironmentFromContext(ctx).(environment.TransportEnvironment)
 	state, err := transportEnvironment.TransientStorage().Get(ctx, "grpc-transport-connection-state")
+	grpcSettings := streamSettings.ProtocolSettings.(*Config)
+	tlsConfig := tls.ConfigFromStreamSettings(streamSettings)
+	transportCredentials := insecure.NewCredentials()
+	if tlsConfig != nil {
+		transportCredentials = credentials.NewTLS(tlsConfig.GetTLSConfig(tls.WithDestination(dest)))
+	}
+	dialOptions := []grpc.DialOption{
+		grpc.WithTransportCredentials(transportCredentials),
+		grpc.WithConnectParams(grpc.ConnectParams{
+			Backoff: backoff.Config{
+				BaseDelay:  500 * time.Millisecond,
+				Multiplier: 1.5,
+				Jitter:     0.2,
+				MaxDelay:   19 * time.Second,
+			},
+			MinConnectTimeout: 5 * time.Second,
+		}),
+		grpc.WithContextDialer(func(ctxGrpc context.Context, s string) (gonet.Conn, error) {
+			rawHost, rawPort, err := net.SplitHostPort(s)
+			if err != nil {
+				return nil, err
+			}
+			if len(rawPort) == 0 {
+				rawPort = "443"
+			}
+			port, err := net.PortFromString(rawPort)
+			if err != nil {
+				return nil, err
+			}
+			address := net.ParseAddress(rawHost)
+			detachedContext := core.ToBackgroundDetachedContext(ctx)
+			return internet.DialSystem(detachedContext, net.TCPDestination(address, port), streamSettings.SocketSettings)
+		}),
+		grpc.WithDisableServiceConfig(),
+	}
+	if grpcSettings.IdleTimeout > 0 || grpcSettings.HealthCheckTimeout > 0 || grpcSettings.PermitWithoutStream {
+		dialOptions = append(dialOptions, grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:                time.Second * time.Duration(grpcSettings.IdleTimeout),
+			Timeout:             time.Second * time.Duration(grpcSettings.HealthCheckTimeout),
+			PermitWithoutStream: grpcSettings.PermitWithoutStream,
+		}))
+	}
+	if grpcSettings.InitialWindowsSize > 0 {
+		dialOptions = append(dialOptions, grpc.WithInitialWindowSize(grpcSettings.InitialWindowsSize))
+	}
 	if err != nil {
 		state = &transportConnectionState{}
 		transportEnvironment.TransientStorage().Put(ctx, "grpc-transport-connection-state", state)
@@ -116,33 +154,7 @@ func getGrpcClient(ctx context.Context, dest net.Destination, dialOption grpc.Di
 
 	conn, err := grpc.NewClient(
 		dest.Address.String()+":"+dest.Port.String(),
-		dialOption,
-		grpc.WithConnectParams(grpc.ConnectParams{
-			Backoff: backoff.Config{
-				BaseDelay:  500 * time.Millisecond,
-				Multiplier: 1.5,
-				Jitter:     0.2,
-				MaxDelay:   19 * time.Second,
-			},
-			MinConnectTimeout: 5 * time.Second,
-		}),
-		grpc.WithContextDialer(func(ctxGrpc context.Context, s string) (gonet.Conn, error) {
-			rawHost, rawPort, err := net.SplitHostPort(s)
-			if err != nil {
-				return nil, err
-			}
-			if len(rawPort) == 0 {
-				rawPort = "443"
-			}
-			port, err := net.PortFromString(rawPort)
-			if err != nil {
-				return nil, err
-			}
-			address := net.ParseAddress(rawHost)
-			detachedContext := core.ToBackgroundDetachedContext(ctx)
-			return internet.DialSystem(detachedContext, net.TCPDestination(address, port), streamSettings.SocketSettings)
-		}),
-		grpc.WithDisableServiceConfig(),
+		dialOptions...,
 	)
 	canceller = func() {
 		stateTyped.scopedDialerAccess.Lock()

@@ -16,4 +16,8 @@ message Config {
 
   string host = 1;
   string service_name = 2;
+  int32 idle_timeout = 3;
+  int32 health_check_timeout = 4;
+  bool permit_without_stream = 5;
+  int32 initial_windows_size = 6;
 }
