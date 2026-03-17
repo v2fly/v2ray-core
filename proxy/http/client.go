@@ -213,7 +213,6 @@ func setUpHTTPTunnel(ctx context.Context, dest net.Destination, target string, u
 			rawConn.Close()
 			return nil, nil, err
 		}
-		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
 			rawConn.Close()
