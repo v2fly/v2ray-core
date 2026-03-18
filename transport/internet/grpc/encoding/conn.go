@@ -10,7 +10,10 @@ import (
 	"net"
 	"time"
 
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
+
+	grpc_proto "github.com/v2fly/v2ray-core/v5/common/protocol/grpc"
 )
 
 // GunService is the abstract interface of GunService_TunClient and GunService_TunServer
@@ -107,6 +110,16 @@ func NewGunConn(service GunService, over context.CancelFunc) *GunConn {
 		conn.remote = &net.TCPAddr{
 			IP:   []byte{0, 0, 0, 0},
 			Port: 0,
+		}
+	}
+	if _, isServer := service.(GunService_TunServer); isServer {
+		if md, ok := metadata.FromIncomingContext(service.Context()); ok {
+			if forwardedAddrs := grpc_proto.ParseXForwardedFor(md); len(forwardedAddrs) > 0 && forwardedAddrs[0].Family().IsIP() {
+				conn.remote = &net.TCPAddr{
+					IP:   forwardedAddrs[0].IP(),
+					Port: int(0),
+				}
+			}
 		}
 	}
 
