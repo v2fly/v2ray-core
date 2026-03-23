@@ -1,0 +1,775 @@
+package rrpitTransport
+
+import (
+	_ "github.com/v2fly/v2ray-core/v5/common/protoext"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
+	reflect "reflect"
+	sync "sync"
+	unsafe "unsafe"
+)
+
+const (
+	// Verify that this generated code is sufficiently up-to-date.
+	_ = protoimpl.EnforceVersion(20 - protoimpl.MinVersion)
+	// Verify that runtime/protoimpl is sufficiently up-to-date.
+	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
+)
+
+type DTLSUDPChannel struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Ip            []byte                 `protobuf:"bytes,1,opt,name=ip,proto3" json:"ip,omitempty"`
+	Port          uint32                 `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
+	Password      string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
+	IpAddr        string                 `protobuf:"bytes,68000,opt,name=ip_addr,json=ipAddr,proto3" json:"ip_addr,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DTLSUDPChannel) Reset() {
+	*x = DTLSUDPChannel{}
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DTLSUDPChannel) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DTLSUDPChannel) ProtoMessage() {}
+
+func (x *DTLSUDPChannel) ProtoReflect() protoreflect.Message {
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DTLSUDPChannel.ProtoReflect.Descriptor instead.
+func (*DTLSUDPChannel) Descriptor() ([]byte, []int) {
+	return file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *DTLSUDPChannel) GetIp() []byte {
+	if x != nil {
+		return x.Ip
+	}
+	return nil
+}
+
+func (x *DTLSUDPChannel) GetPort() uint32 {
+	if x != nil {
+		return x.Port
+	}
+	return 0
+}
+
+func (x *DTLSUDPChannel) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+func (x *DTLSUDPChannel) GetIpAddr() string {
+	if x != nil {
+		return x.IpAddr
+	}
+	return ""
+}
+
+type Channel struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Underlying channel transport settings, for example DTLSUDPChannel.
+	Setting       *ChannelSetting `protobuf:"bytes,1,opt,name=setting,proto3" json:"setting,omitempty"`
+	Channel       *anypb.Any      `protobuf:"bytes,2,opt,name=channel,proto3" json:"channel,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Channel) Reset() {
+	*x = Channel{}
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Channel) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Channel) ProtoMessage() {}
+
+func (x *Channel) ProtoReflect() protoreflect.Message {
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Channel.ProtoReflect.Descriptor instead.
+func (*Channel) Descriptor() ([]byte, []int) {
+	return file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Channel) GetSetting() *ChannelSetting {
+	if x != nil {
+		return x.Setting
+	}
+	return nil
+}
+
+func (x *Channel) GetChannel() *anypb.Any {
+	if x != nil {
+		return x.Channel
+	}
+	return nil
+}
+
+type ChannelSetting struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Maximum transmission unit of the underlying channel, in bytes.
+	Mtu uint32 `protobuf:"varint,1,opt,name=mtu,proto3" json:"mtu,omitempty"`
+	// Relative scheduling weight of this channel. Zero means the default weight.
+	Weight int32 `protobuf:"varint,2,opt,name=weight,proto3" json:"weight,omitempty"`
+	// Maximum packets this channel may send in a single rrpit timestamp window.
+	MaxSendingSpeed int32 `protobuf:"varint,3,opt,name=max_sending_speed,json=maxSendingSpeed,proto3" json:"max_sending_speed,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ChannelSetting) Reset() {
+	*x = ChannelSetting{}
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChannelSetting) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChannelSetting) ProtoMessage() {}
+
+func (x *ChannelSetting) ProtoReflect() protoreflect.Message {
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChannelSetting.ProtoReflect.Descriptor instead.
+func (*ChannelSetting) Descriptor() ([]byte, []int) {
+	return file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ChannelSetting) GetMtu() uint32 {
+	if x != nil {
+		return x.Mtu
+	}
+	return 0
+}
+
+func (x *ChannelSetting) GetWeight() int32 {
+	if x != nil {
+		return x.Weight
+	}
+	return 0
+}
+
+func (x *ChannelSetting) GetMaxSendingSpeed() int32 {
+	if x != nil {
+		return x.MaxSendingSpeed
+	}
+	return 0
+}
+
+type LaneSetting struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Size of each shard carried inside a transfer lane, in bytes.
+	ShardSize int32 `protobuf:"varint,1,opt,name=shard_size,json=shardSize,proto3" json:"shard_size,omitempty"`
+	// Maximum number of source data shards before a lane is finalized.
+	MaxDataShardsPerLane int32 `protobuf:"varint,2,opt,name=max_data_shards_per_lane,json=maxDataShardsPerLane,proto3" json:"max_data_shards_per_lane,omitempty"`
+	// Maximum number of in-flight / buffered lanes kept by tx and rx state.
+	MaxBufferedLanes int32 `protobuf:"varint,3,opt,name=max_buffered_lanes,json=maxBufferedLanes,proto3" json:"max_buffered_lanes,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *LaneSetting) Reset() {
+	*x = LaneSetting{}
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LaneSetting) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LaneSetting) ProtoMessage() {}
+
+func (x *LaneSetting) ProtoReflect() protoreflect.Message {
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LaneSetting.ProtoReflect.Descriptor instead.
+func (*LaneSetting) Descriptor() ([]byte, []int) {
+	return file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *LaneSetting) GetShardSize() int32 {
+	if x != nil {
+		return x.ShardSize
+	}
+	return 0
+}
+
+func (x *LaneSetting) GetMaxDataShardsPerLane() int32 {
+	if x != nil {
+		return x.MaxDataShardsPerLane
+	}
+	return 0
+}
+
+func (x *LaneSetting) GetMaxBufferedLanes() int32 {
+	if x != nil {
+		return x.MaxBufferedLanes
+	}
+	return 0
+}
+
+type SessionReconstructionSetting struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// the fraction of repair share (compare to data shards) to send immediately after finishing sending the data.
+	InitialRepairShardRatio float32 `protobuf:"fixed32,1,opt,name=initial_repair_shard_ratio,json=initialRepairShardRatio,proto3" json:"initial_repair_shard_ratio,omitempty"`
+	// when there is still sending capacity in channels, send repair shards for each lane depending on this weight,
+	// and number of repair shards still missing(known from control message)
+	LaneRepairWeight []float32 `protobuf:"fixed32,2,rep,packed,name=lane_repair_weight,json=laneRepairWeight,proto3" json:"lane_repair_weight,omitempty"`
+	// when we received acknowledgement from remote, the fraction of repair shard to send compared to data shards missing
+	SecondaryRepairShardRatio float32 `protobuf:"fixed32,3,opt,name=secondary_repair_shard_ratio,json=secondaryRepairShardRatio,proto3" json:"secondary_repair_shard_ratio,omitempty"`
+	// the number of tickets before we send the secondary repair shard again
+	TimeResendSecondaryRepairShard int32 `protobuf:"varint,4,opt,name=time_resend_secondary_repair_shard,json=timeResendSecondaryRepairShard,proto3" json:"time_resend_secondary_repair_shard,omitempty"`
+	unknownFields                  protoimpl.UnknownFields
+	sizeCache                      protoimpl.SizeCache
+}
+
+func (x *SessionReconstructionSetting) Reset() {
+	*x = SessionReconstructionSetting{}
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SessionReconstructionSetting) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SessionReconstructionSetting) ProtoMessage() {}
+
+func (x *SessionReconstructionSetting) ProtoReflect() protoreflect.Message {
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SessionReconstructionSetting.ProtoReflect.Descriptor instead.
+func (*SessionReconstructionSetting) Descriptor() ([]byte, []int) {
+	return file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *SessionReconstructionSetting) GetInitialRepairShardRatio() float32 {
+	if x != nil {
+		return x.InitialRepairShardRatio
+	}
+	return 0
+}
+
+func (x *SessionReconstructionSetting) GetLaneRepairWeight() []float32 {
+	if x != nil {
+		return x.LaneRepairWeight
+	}
+	return nil
+}
+
+func (x *SessionReconstructionSetting) GetSecondaryRepairShardRatio() float32 {
+	if x != nil {
+		return x.SecondaryRepairShardRatio
+	}
+	return 0
+}
+
+func (x *SessionReconstructionSetting) GetTimeResendSecondaryRepairShard() int32 {
+	if x != nil {
+		return x.TimeResendSecondaryRepairShard
+	}
+	return 0
+}
+
+type SessionSetting struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Whether locally assigned tx channel ids should use odd parity.
+	OddChannelIds bool `protobuf:"varint,1,opt,name=odd_channel_ids,json=oddChannelIds,proto3" json:"odd_channel_ids,omitempty"`
+	// Rewind window for tx-side packet timestamp history.
+	MaxRewindableTimestampNum int32 `protobuf:"varint,2,opt,name=max_rewindable_timestamp_num,json=maxRewindableTimestampNum,proto3" json:"max_rewindable_timestamp_num,omitempty"`
+	// Rewind window for tx-side remote control history.
+	MaxRewindableControlMessageNum int32 `protobuf:"varint,3,opt,name=max_rewindable_control_message_num,json=maxRewindableControlMessageNum,proto3" json:"max_rewindable_control_message_num,omitempty"`
+	// Tick interval, int64 values of time.Duration.
+	TimestampInterval int64                         `protobuf:"varint,4,opt,name=timestamp_interval,json=timestampInterval,proto3" json:"timestamp_interval,omitempty"`
+	Reconstruction    *SessionReconstructionSetting `protobuf:"bytes,5,opt,name=reconstruction,proto3" json:"reconstruction,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *SessionSetting) Reset() {
+	*x = SessionSetting{}
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SessionSetting) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SessionSetting) ProtoMessage() {}
+
+func (x *SessionSetting) ProtoReflect() protoreflect.Message {
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SessionSetting.ProtoReflect.Descriptor instead.
+func (*SessionSetting) Descriptor() ([]byte, []int) {
+	return file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *SessionSetting) GetOddChannelIds() bool {
+	if x != nil {
+		return x.OddChannelIds
+	}
+	return false
+}
+
+func (x *SessionSetting) GetMaxRewindableTimestampNum() int32 {
+	if x != nil {
+		return x.MaxRewindableTimestampNum
+	}
+	return 0
+}
+
+func (x *SessionSetting) GetMaxRewindableControlMessageNum() int32 {
+	if x != nil {
+		return x.MaxRewindableControlMessageNum
+	}
+	return 0
+}
+
+func (x *SessionSetting) GetTimestampInterval() int64 {
+	if x != nil {
+		return x.TimestampInterval
+	}
+	return 0
+}
+
+func (x *SessionSetting) GetReconstruction() *SessionReconstructionSetting {
+	if x != nil {
+		return x.Reconstruction
+	}
+	return nil
+}
+
+type EngineeringSetting struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// If non-empty, rrpit debug snapshots and packet logs are written here.
+	DebuggerDir string `protobuf:"bytes,1,opt,name=debugger_dir,json=debuggerDir,proto3" json:"debugger_dir,omitempty"`
+	// Maximum bytes per rotated debugger packet log file.
+	DebuggerMaxFileSizeBytes int64 `protobuf:"varint,2,opt,name=debugger_max_file_size_bytes,json=debuggerMaxFileSizeBytes,proto3" json:"debugger_max_file_size_bytes,omitempty"`
+	// Maximum number of rotated debugger packet log files retained.
+	DebuggerMaxFiles int32 `protobuf:"varint,3,opt,name=debugger_max_files,json=debuggerMaxFiles,proto3" json:"debugger_max_files,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *EngineeringSetting) Reset() {
+	*x = EngineeringSetting{}
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EngineeringSetting) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EngineeringSetting) ProtoMessage() {}
+
+func (x *EngineeringSetting) ProtoReflect() protoreflect.Message {
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EngineeringSetting.ProtoReflect.Descriptor instead.
+func (*EngineeringSetting) Descriptor() ([]byte, []int) {
+	return file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *EngineeringSetting) GetDebuggerDir() string {
+	if x != nil {
+		return x.DebuggerDir
+	}
+	return ""
+}
+
+func (x *EngineeringSetting) GetDebuggerMaxFileSizeBytes() int64 {
+	if x != nil {
+		return x.DebuggerMaxFileSizeBytes
+	}
+	return 0
+}
+
+func (x *EngineeringSetting) GetDebuggerMaxFiles() int32 {
+	if x != nil {
+		return x.DebuggerMaxFiles
+	}
+	return 0
+}
+
+type AdaptorSetting struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// SMUX protocol version. Zero means the smux default.
+	SmuxVersion int32 `protobuf:"varint,1,opt,name=smux_version,json=smuxVersion,proto3" json:"smux_version,omitempty"`
+	// Disable smux keep-alive probes.
+	KeepAliveDisabled bool `protobuf:"varint,2,opt,name=keep_alive_disabled,json=keepAliveDisabled,proto3" json:"keep_alive_disabled,omitempty"`
+	// Keep-alive interval, int64 values of time.Duration. Zero means the smux default.
+	KeepAliveInterval int64 `protobuf:"varint,3,opt,name=keep_alive_interval,json=keepAliveInterval,proto3" json:"keep_alive_interval,omitempty"`
+	// Keep-alive timeout, int64 values of time.Duration. Zero means the smux default.
+	KeepAliveTimeout int64 `protobuf:"varint,4,opt,name=keep_alive_timeout,json=keepAliveTimeout,proto3" json:"keep_alive_timeout,omitempty"`
+	// Maximum smux frame size in bytes. Zero means the smux default.
+	MaxFrameSize int32 `protobuf:"varint,5,opt,name=max_frame_size,json=maxFrameSize,proto3" json:"max_frame_size,omitempty"`
+	// Maximum total smux receive buffer in bytes. Zero means the smux default.
+	MaxReceiveBuffer int32 `protobuf:"varint,6,opt,name=max_receive_buffer,json=maxReceiveBuffer,proto3" json:"max_receive_buffer,omitempty"`
+	// Maximum per-stream smux receive buffer in bytes. Zero means the smux default.
+	MaxStreamBuffer int32 `protobuf:"varint,7,opt,name=max_stream_buffer,json=maxStreamBuffer,proto3" json:"max_stream_buffer,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *AdaptorSetting) Reset() {
+	*x = AdaptorSetting{}
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdaptorSetting) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdaptorSetting) ProtoMessage() {}
+
+func (x *AdaptorSetting) ProtoReflect() protoreflect.Message {
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdaptorSetting.ProtoReflect.Descriptor instead.
+func (*AdaptorSetting) Descriptor() ([]byte, []int) {
+	return file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *AdaptorSetting) GetSmuxVersion() int32 {
+	if x != nil {
+		return x.SmuxVersion
+	}
+	return 0
+}
+
+func (x *AdaptorSetting) GetKeepAliveDisabled() bool {
+	if x != nil {
+		return x.KeepAliveDisabled
+	}
+	return false
+}
+
+func (x *AdaptorSetting) GetKeepAliveInterval() int64 {
+	if x != nil {
+		return x.KeepAliveInterval
+	}
+	return 0
+}
+
+func (x *AdaptorSetting) GetKeepAliveTimeout() int64 {
+	if x != nil {
+		return x.KeepAliveTimeout
+	}
+	return 0
+}
+
+func (x *AdaptorSetting) GetMaxFrameSize() int32 {
+	if x != nil {
+		return x.MaxFrameSize
+	}
+	return 0
+}
+
+func (x *AdaptorSetting) GetMaxReceiveBuffer() int32 {
+	if x != nil {
+		return x.MaxReceiveBuffer
+	}
+	return 0
+}
+
+func (x *AdaptorSetting) GetMaxStreamBuffer() int32 {
+	if x != nil {
+		return x.MaxStreamBuffer
+	}
+	return 0
+}
+
+type Config struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Channels      []*Channel             `protobuf:"bytes,1,rep,name=channels,proto3" json:"channels,omitempty"`
+	Lane          *LaneSetting           `protobuf:"bytes,2,opt,name=lane,proto3" json:"lane,omitempty"`
+	Session       *SessionSetting        `protobuf:"bytes,3,opt,name=session,proto3" json:"session,omitempty"`
+	Engineering   *EngineeringSetting    `protobuf:"bytes,4,opt,name=engineering,proto3" json:"engineering,omitempty"`
+	Adaptor       *AdaptorSetting        `protobuf:"bytes,5,opt,name=adaptor,proto3" json:"adaptor,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Config) Reset() {
+	*x = Config{}
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Config) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Config) ProtoMessage() {}
+
+func (x *Config) ProtoReflect() protoreflect.Message {
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Config.ProtoReflect.Descriptor instead.
+func (*Config) Descriptor() ([]byte, []int) {
+	return file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *Config) GetChannels() []*Channel {
+	if x != nil {
+		return x.Channels
+	}
+	return nil
+}
+
+func (x *Config) GetLane() *LaneSetting {
+	if x != nil {
+		return x.Lane
+	}
+	return nil
+}
+
+func (x *Config) GetSession() *SessionSetting {
+	if x != nil {
+		return x.Session
+	}
+	return nil
+}
+
+func (x *Config) GetEngineering() *EngineeringSetting {
+	if x != nil {
+		return x.Engineering
+	}
+	return nil
+}
+
+func (x *Config) GetAdaptor() *AdaptorSetting {
+	if x != nil {
+		return x.Adaptor
+	}
+	return nil
+}
+
+var File_transport_internet_rrpit_rrpitTransport_config_proto protoreflect.FileDescriptor
+
+const file_transport_internet_rrpit_rrpitTransport_config_proto_rawDesc = "" +
+	"\n" +
+	"4transport/internet/rrpit/rrpitTransport/config.proto\x12-v2ray.core.transport.internet.rrpit.transport\x1a\x19google/protobuf/any.proto\x1a common/protoext/extensions.proto\"u\n" +
+	"\x0eDTLSUDPChannel\x12\x0e\n" +
+	"\x02ip\x18\x01 \x01(\fR\x02ip\x12\x12\n" +
+	"\x04port\x18\x02 \x01(\rR\x04port\x12\x1a\n" +
+	"\bpassword\x18\x03 \x01(\tR\bpassword\x12#\n" +
+	"\aip_addr\x18\xa0\x93\x04 \x01(\tB\b\x82\xb5\x18\x04:\x02ipR\x06ipAddr\"\x92\x01\n" +
+	"\aChannel\x12W\n" +
+	"\asetting\x18\x01 \x01(\v2=.v2ray.core.transport.internet.rrpit.transport.ChannelSettingR\asetting\x12.\n" +
+	"\achannel\x18\x02 \x01(\v2\x14.google.protobuf.AnyR\achannel\"f\n" +
+	"\x0eChannelSetting\x12\x10\n" +
+	"\x03mtu\x18\x01 \x01(\rR\x03mtu\x12\x16\n" +
+	"\x06weight\x18\x02 \x01(\x05R\x06weight\x12*\n" +
+	"\x11max_sending_speed\x18\x03 \x01(\x05R\x0fmaxSendingSpeed\"\x92\x01\n" +
+	"\vLaneSetting\x12\x1d\n" +
+	"\n" +
+	"shard_size\x18\x01 \x01(\x05R\tshardSize\x126\n" +
+	"\x18max_data_shards_per_lane\x18\x02 \x01(\x05R\x14maxDataShardsPerLane\x12,\n" +
+	"\x12max_buffered_lanes\x18\x03 \x01(\x05R\x10maxBufferedLanes\"\x96\x02\n" +
+	"\x1cSessionReconstructionSetting\x12;\n" +
+	"\x1ainitial_repair_shard_ratio\x18\x01 \x01(\x02R\x17initialRepairShardRatio\x12,\n" +
+	"\x12lane_repair_weight\x18\x02 \x03(\x02R\x10laneRepairWeight\x12?\n" +
+	"\x1csecondary_repair_shard_ratio\x18\x03 \x01(\x02R\x19secondaryRepairShardRatio\x12J\n" +
+	"\"time_resend_secondary_repair_shard\x18\x04 \x01(\x05R\x1etimeResendSecondaryRepairShard\"\xe9\x02\n" +
+	"\x0eSessionSetting\x12&\n" +
+	"\x0fodd_channel_ids\x18\x01 \x01(\bR\roddChannelIds\x12?\n" +
+	"\x1cmax_rewindable_timestamp_num\x18\x02 \x01(\x05R\x19maxRewindableTimestampNum\x12J\n" +
+	"\"max_rewindable_control_message_num\x18\x03 \x01(\x05R\x1emaxRewindableControlMessageNum\x12-\n" +
+	"\x12timestamp_interval\x18\x04 \x01(\x03R\x11timestampInterval\x12s\n" +
+	"\x0ereconstruction\x18\x05 \x01(\v2K.v2ray.core.transport.internet.rrpit.transport.SessionReconstructionSettingR\x0ereconstruction\"\xa5\x01\n" +
+	"\x12EngineeringSetting\x12!\n" +
+	"\fdebugger_dir\x18\x01 \x01(\tR\vdebuggerDir\x12>\n" +
+	"\x1cdebugger_max_file_size_bytes\x18\x02 \x01(\x03R\x18debuggerMaxFileSizeBytes\x12,\n" +
+	"\x12debugger_max_files\x18\x03 \x01(\x05R\x10debuggerMaxFiles\"\xc1\x02\n" +
+	"\x0eAdaptorSetting\x12!\n" +
+	"\fsmux_version\x18\x01 \x01(\x05R\vsmuxVersion\x12.\n" +
+	"\x13keep_alive_disabled\x18\x02 \x01(\bR\x11keepAliveDisabled\x12.\n" +
+	"\x13keep_alive_interval\x18\x03 \x01(\x03R\x11keepAliveInterval\x12,\n" +
+	"\x12keep_alive_timeout\x18\x04 \x01(\x03R\x10keepAliveTimeout\x12$\n" +
+	"\x0emax_frame_size\x18\x05 \x01(\x05R\fmaxFrameSize\x12,\n" +
+	"\x12max_receive_buffer\x18\x06 \x01(\x05R\x10maxReceiveBuffer\x12*\n" +
+	"\x11max_stream_buffer\x18\a \x01(\x05R\x0fmaxStreamBuffer\"\xdb\x03\n" +
+	"\x06Config\x12R\n" +
+	"\bchannels\x18\x01 \x03(\v26.v2ray.core.transport.internet.rrpit.transport.ChannelR\bchannels\x12N\n" +
+	"\x04lane\x18\x02 \x01(\v2:.v2ray.core.transport.internet.rrpit.transport.LaneSettingR\x04lane\x12W\n" +
+	"\asession\x18\x03 \x01(\v2=.v2ray.core.transport.internet.rrpit.transport.SessionSettingR\asession\x12c\n" +
+	"\vengineering\x18\x04 \x01(\v2A.v2ray.core.transport.internet.rrpit.transport.EngineeringSettingR\vengineering\x12W\n" +
+	"\aadaptor\x18\x05 \x01(\v2=.v2ray.core.transport.internet.rrpit.transport.AdaptorSettingR\aadaptor:\x16\x82\xb5\x18\x12\n" +
+	"\ttransport\x12\x05rrpitB\xad\x01\n" +
+	"1com.v2ray.core.transport.internet.rrpit.transportP\x01ZFgithub.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitTransport\xaa\x02-V2Ray.Core.Transport.Internet.Rrpit.Transportb\x06proto3"
+
+var (
+	file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescOnce sync.Once
+	file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescData []byte
+)
+
+func file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescGZIP() []byte {
+	file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescOnce.Do(func() {
+		file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_transport_internet_rrpit_rrpitTransport_config_proto_rawDesc), len(file_transport_internet_rrpit_rrpitTransport_config_proto_rawDesc)))
+	})
+	return file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescData
+}
+
+var file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_transport_internet_rrpit_rrpitTransport_config_proto_goTypes = []any{
+	(*DTLSUDPChannel)(nil),               // 0: v2ray.core.transport.internet.rrpit.transport.DTLSUDPChannel
+	(*Channel)(nil),                      // 1: v2ray.core.transport.internet.rrpit.transport.Channel
+	(*ChannelSetting)(nil),               // 2: v2ray.core.transport.internet.rrpit.transport.ChannelSetting
+	(*LaneSetting)(nil),                  // 3: v2ray.core.transport.internet.rrpit.transport.LaneSetting
+	(*SessionReconstructionSetting)(nil), // 4: v2ray.core.transport.internet.rrpit.transport.SessionReconstructionSetting
+	(*SessionSetting)(nil),               // 5: v2ray.core.transport.internet.rrpit.transport.SessionSetting
+	(*EngineeringSetting)(nil),           // 6: v2ray.core.transport.internet.rrpit.transport.EngineeringSetting
+	(*AdaptorSetting)(nil),               // 7: v2ray.core.transport.internet.rrpit.transport.AdaptorSetting
+	(*Config)(nil),                       // 8: v2ray.core.transport.internet.rrpit.transport.Config
+	(*anypb.Any)(nil),                    // 9: google.protobuf.Any
+}
+var file_transport_internet_rrpit_rrpitTransport_config_proto_depIdxs = []int32{
+	2, // 0: v2ray.core.transport.internet.rrpit.transport.Channel.setting:type_name -> v2ray.core.transport.internet.rrpit.transport.ChannelSetting
+	9, // 1: v2ray.core.transport.internet.rrpit.transport.Channel.channel:type_name -> google.protobuf.Any
+	4, // 2: v2ray.core.transport.internet.rrpit.transport.SessionSetting.reconstruction:type_name -> v2ray.core.transport.internet.rrpit.transport.SessionReconstructionSetting
+	1, // 3: v2ray.core.transport.internet.rrpit.transport.Config.channels:type_name -> v2ray.core.transport.internet.rrpit.transport.Channel
+	3, // 4: v2ray.core.transport.internet.rrpit.transport.Config.lane:type_name -> v2ray.core.transport.internet.rrpit.transport.LaneSetting
+	5, // 5: v2ray.core.transport.internet.rrpit.transport.Config.session:type_name -> v2ray.core.transport.internet.rrpit.transport.SessionSetting
+	6, // 6: v2ray.core.transport.internet.rrpit.transport.Config.engineering:type_name -> v2ray.core.transport.internet.rrpit.transport.EngineeringSetting
+	7, // 7: v2ray.core.transport.internet.rrpit.transport.Config.adaptor:type_name -> v2ray.core.transport.internet.rrpit.transport.AdaptorSetting
+	8, // [8:8] is the sub-list for method output_type
+	8, // [8:8] is the sub-list for method input_type
+	8, // [8:8] is the sub-list for extension type_name
+	8, // [8:8] is the sub-list for extension extendee
+	0, // [0:8] is the sub-list for field type_name
+}
+
+func init() { file_transport_internet_rrpit_rrpitTransport_config_proto_init() }
+func file_transport_internet_rrpit_rrpitTransport_config_proto_init() {
+	if File_transport_internet_rrpit_rrpitTransport_config_proto != nil {
+		return
+	}
+	type x struct{}
+	out := protoimpl.TypeBuilder{
+		File: protoimpl.DescBuilder{
+			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_transport_internet_rrpit_rrpitTransport_config_proto_rawDesc), len(file_transport_internet_rrpit_rrpitTransport_config_proto_rawDesc)),
+			NumEnums:      0,
+			NumMessages:   9,
+			NumExtensions: 0,
+			NumServices:   0,
+		},
+		GoTypes:           file_transport_internet_rrpit_rrpitTransport_config_proto_goTypes,
+		DependencyIndexes: file_transport_internet_rrpit_rrpitTransport_config_proto_depIdxs,
+		MessageInfos:      file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes,
+	}.Build()
+	File_transport_internet_rrpit_rrpitTransport_config_proto = out.File
+	file_transport_internet_rrpit_rrpitTransport_config_proto_goTypes = nil
+	file_transport_internet_rrpit_rrpitTransport_config_proto_depIdxs = nil
+}

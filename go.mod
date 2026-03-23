@@ -21,7 +21,7 @@ require (
 	github.com/miekg/dns v1.1.72
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
-	github.com/pion/dtls/v2 v2.2.12
+	github.com/pion/dtls/v3 v3.0.11
 	github.com/pion/stun/v3 v3.1.1
 	github.com/pion/transport/v2 v2.2.10
 	github.com/pires/go-proxyproto v0.11.0
@@ -74,7 +74,7 @@ require (
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40 // indirect
 	github.com/mustafaturan/monoton v1.0.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
-	github.com/pion/dtls/v3 v3.0.11 // indirect
+	github.com/pion/dtls/v2 v2.2.12 // indirect
 	github.com/pion/logging v0.2.4 // indirect
 	github.com/pion/randutil v0.1.0 // indirect
 	github.com/pion/sctp v1.8.7 // indirect
@@ -87,6 +87,7 @@ require (
 	github.com/secure-io/siv-go v0.0.0-20180922214919-5ff40651e2c4 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/wlynxg/anet v0.0.5 // indirect
+	github.com/xssnick/raptorq v1.3.0 // indirect
 	github.com/xtaci/smux v1.5.24 // indirect
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
 	golang.org/x/mod v0.33.0 // indirect

@@ -541,6 +541,8 @@ github.com/wlynxg/anet v0.0.5/go.mod h1:eay5PRQr7fIVAMbTbchTnO9gG65Hg/uYGdc7mguH
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xiaokangwang/VLite v0.0.0-20220418190619-cff95160a432 h1:I/ATawgO2RerCq9ACwL0wBB8xNXZdE3J+93MCEHReRs=
 github.com/xiaokangwang/VLite v0.0.0-20220418190619-cff95160a432/go.mod h1:QN7Go2ftTVfx0aCTh9RXHV8pkpi0FtmbwQw40dy61wQ=
+github.com/xssnick/raptorq v1.3.0 h1:3GoaySKMg/i8rbjhIuqjxpTTO2l3Gs2/Gh7k3GAjvGo=
+github.com/xssnick/raptorq v1.3.0/go.mod h1:kgEVVsZv2hP+IeV7C7985KIFsDdvYq2ARW234SBA9Q4=
 github.com/xtaci/smux v1.5.12/go.mod h1:OMlQbT5vcgl2gb49mFkYo6SMf+zP3rcjcwQz7ZU7IGY=
 github.com/xtaci/smux v1.5.15/go.mod h1:OMlQbT5vcgl2gb49mFkYo6SMf+zP3rcjcwQz7ZU7IGY=
 github.com/xtaci/smux v1.5.24 h1:77emW9dtnOxxOQ5ltR+8BbsX1kzcOxQ5gB+aaV9hXOY=

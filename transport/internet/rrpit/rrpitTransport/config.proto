@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package v2ray.core.transport.internet.rrpit.transport;
+option csharp_namespace = "V2Ray.Core.Transport.Internet.Rrpit.Transport";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitTransport";
+option java_package = "com.v2ray.core.transport.internet.rrpit.transport";
+option java_multiple_files = true;
+
+import "google/protobuf/any.proto";
+
+import "common/protoext/extensions.proto";
+
+message DTLSUDPChannel {
+  bytes ip = 1;
+  uint32 port = 2;
+  string password = 3;
+
+  string ip_addr = 68000 [(v2ray.core.common.protoext.field_opt).convert_time_parse_ip = "ip"];
+}
+
+message Channel {
+  // Underlying channel transport settings, for example DTLSUDPChannel.
+  ChannelSetting setting = 1;
+  google.protobuf.Any channel = 2;
+}
+
+message ChannelSetting {
+  // Maximum transmission unit of the underlying channel, in bytes.
+  uint32 mtu = 1;
+
+  // Relative scheduling weight of this channel. Zero means the default weight.
+  int32 weight = 2;
+
+  // Maximum packets this channel may send in a single rrpit timestamp window.
+  int32 max_sending_speed = 3;
+}
+
+message LaneSetting {
+  // Size of each shard carried inside a transfer lane, in bytes.
+  int32 shard_size = 1;
+
+  // Maximum number of source data shards before a lane is finalized.
+  int32 max_data_shards_per_lane = 2;
+
+  // Maximum number of in-flight / buffered lanes kept by tx and rx state.
+  int32 max_buffered_lanes = 3;
+}
+
+message SessionReconstructionSetting {
+  // the fraction of repair share (compare to data shards) to send immediately after finishing sending the data.
+  float initial_repair_shard_ratio = 1;
+
+  // when there is still sending capacity in channels, send repair shards for each lane depending on this weight,
+  // and number of repair shards still missing(known from control message)
+  repeated float lane_repair_weight = 2;
+
+  // when we received acknowledgement from remote, the fraction of repair shard to send compared to data shards missing
+  float secondary_repair_shard_ratio = 3;
+
+  // the number of tickets before we send the secondary repair shard again
+  int32 time_resend_secondary_repair_shard = 4;
+}
+
+message SessionSetting {
+  // Whether locally assigned tx channel ids should use odd parity.
+  bool odd_channel_ids = 1;
+
+  // Rewind window for tx-side packet timestamp history.
+  int32 max_rewindable_timestamp_num = 2;
+
+  // Rewind window for tx-side remote control history.
+  int32 max_rewindable_control_message_num = 3;
+
+  // Tick interval, int64 values of time.Duration.
+  int64 timestamp_interval = 4;
+
+  SessionReconstructionSetting reconstruction = 5;
+}
+
+message EngineeringSetting {
+  // If non-empty, rrpit debug snapshots and packet logs are written here.
+  string debugger_dir = 1;
+
+  // Maximum bytes per rotated debugger packet log file.
+  int64 debugger_max_file_size_bytes = 2;
+
+  // Maximum number of rotated debugger packet log files retained.
+  int32 debugger_max_files = 3;
+}
+
+message AdaptorSetting {
+  // SMUX protocol version. Zero means the smux default.
+  int32 smux_version = 1;
+
+  // Disable smux keep-alive probes.
+  bool keep_alive_disabled = 2;
+
+  // Keep-alive interval, int64 values of time.Duration. Zero means the smux default.
+  int64 keep_alive_interval = 3;
+
+  // Keep-alive timeout, int64 values of time.Duration. Zero means the smux default.
+  int64 keep_alive_timeout = 4;
+
+  // Maximum smux frame size in bytes. Zero means the smux default.
+  int32 max_frame_size = 5;
+
+  // Maximum total smux receive buffer in bytes. Zero means the smux default.
+  int32 max_receive_buffer = 6;
+
+  // Maximum per-stream smux receive buffer in bytes. Zero means the smux default.
+  int32 max_stream_buffer = 7;
+}
+
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "transport";
+  option (v2ray.core.common.protoext.message_opt).short_name = "rrpit";
+  option (v2ray.core.common.protoext.message_opt).allow_restricted_mode_load = false;
+
+  repeated Channel channels = 1;
+  LaneSetting lane = 2;
+  SessionSetting session = 3;
+  EngineeringSetting engineering = 4;
+  AdaptorSetting adaptor = 5;
+}

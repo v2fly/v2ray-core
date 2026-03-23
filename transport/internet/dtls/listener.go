@@ -7,7 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pion/dtls/v2"
+	"github.com/pion/dtls/v3"
+	dtlsnet "github.com/pion/dtls/v3/pkg/net"
 
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
@@ -54,6 +55,79 @@ func newDTLSServerConn(src net.Destination, parent *Listener) *dTLSConn {
 type dTLSConnWrapped struct {
 	unencryptedConn *dTLSConn
 	dTLSConn        *dtls.Conn
+}
+
+func (c *dTLSConnWrapped) Read(b []byte) (int, error) {
+	if c == nil || c.dTLSConn == nil {
+		return 0, io.ErrClosedPipe
+	}
+	return c.dTLSConn.Read(b)
+}
+
+func (c *dTLSConnWrapped) Write(b []byte) (int, error) {
+	if c == nil || c.dTLSConn == nil {
+		return 0, io.ErrClosedPipe
+	}
+	return c.dTLSConn.Write(b)
+}
+
+func (c *dTLSConnWrapped) Close() error {
+	if c == nil {
+		return nil
+	}
+	if c.dTLSConn != nil {
+		return c.dTLSConn.Close()
+	}
+	if c.unencryptedConn != nil {
+		return c.unencryptedConn.Close()
+	}
+	return nil
+}
+
+func (c *dTLSConnWrapped) LocalAddr() gonet.Addr {
+	if c == nil || c.dTLSConn == nil {
+		return nil
+	}
+	return c.dTLSConn.LocalAddr()
+}
+
+func (c *dTLSConnWrapped) RemoteAddr() gonet.Addr {
+	if c == nil || c.dTLSConn == nil {
+		return nil
+	}
+	return c.dTLSConn.RemoteAddr()
+}
+
+func (c *dTLSConnWrapped) SetDeadline(t time.Time) error {
+	if c == nil || c.dTLSConn == nil {
+		return io.ErrClosedPipe
+	}
+	return c.dTLSConn.SetDeadline(t)
+}
+
+func (c *dTLSConnWrapped) SetReadDeadline(t time.Time) error {
+	if c == nil || c.dTLSConn == nil {
+		return io.ErrClosedPipe
+	}
+	return c.dTLSConn.SetReadDeadline(t)
+}
+
+func (c *dTLSConnWrapped) SetWriteDeadline(t time.Time) error {
+	if c == nil || c.dTLSConn == nil {
+		return io.ErrClosedPipe
+	}
+	return c.dTLSConn.SetWriteDeadline(t)
+}
+
+func (c *dTLSConnWrapped) ClientIdentity() []byte {
+	if c == nil || c.dTLSConn == nil {
+		return nil
+	}
+	state, ready := c.dTLSConn.ConnectionState()
+	if !ready {
+		return nil
+	}
+	return append([]byte(nil), state.IdentityHint...)
 }
 
 type dTLSConn struct {
@@ -161,7 +235,11 @@ func newDTLSConnWrapped(unencryptedConnection *dTLSConn, transportConfiguration 
 	default:
 		newError("unknown dtls mode").WriteToLog()
 	}
-	dtlsConn, err := dtls.Server(unencryptedConnection, config)
+	dtlsConn, err := dtls.Server(
+		dtlsnet.PacketConnFromConn(unencryptedConnection),
+		unencryptedConnection.RemoteAddr(),
+		config,
+	)
 	if err != nil {
 		return nil, newError("unable to create dtls server conn").Base(err)
 	}
@@ -187,7 +265,12 @@ func (l *Listener) OnReceive(payload *buf.Buffer, src net.Destination) {
 				newError("unable to accept new dtls connection").Base(err).WriteToLog()
 				return
 			}
-			l.addConn(internet.Connection(conn.dTLSConn))
+			if err := conn.dTLSConn.Handshake(); err != nil {
+				newError("unable to complete dtls handshake").Base(err).WriteToLog()
+				_ = conn.Close()
+				return
+			}
+			l.addConn(internet.Connection(conn))
 		}()
 	}
 	conn.unencryptedConn.OnReceive(payload)

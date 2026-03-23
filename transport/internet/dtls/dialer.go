@@ -3,7 +3,8 @@ package dtls
 import (
 	"context"
 
-	"github.com/pion/dtls/v2"
+	"github.com/pion/dtls/v3"
+	dtlsnet "github.com/pion/dtls/v3/pkg/net"
 
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/environment"
@@ -39,7 +40,15 @@ func dialDTLS(ctx context.Context, dest net.Destination, streamSettings *interne
 	default:
 		return nil, newError("unknow dtls mode")
 	}
-	return dtls.Client(rawConn, config)
+	conn, err := dtls.Client(dtlsnet.PacketConnFromConn(rawConn), rawConn.RemoteAddr(), config)
+	if err != nil {
+		return nil, err
+	}
+	if err := conn.Handshake(); err != nil {
+		_ = conn.Close()
+		return nil, err
+	}
+	return conn, nil
 }
 
 func dial(ctx context.Context, dest net.Destination, streamSettings *internet.MemoryStreamConfig) (internet.Connection, error) {

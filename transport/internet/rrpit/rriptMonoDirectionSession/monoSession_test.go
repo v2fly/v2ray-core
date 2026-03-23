@@ -1,0 +1,977 @@
+package rriptMonoDirectionSession
+
+import (
+	"bytes"
+	"encoding/binary"
+	"io"
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/lunixbochs/struc"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitTransferChannel"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitTransferLane"
+)
+
+const materializedChannelSequenceFieldLength = 8
+
+func TestSessionTxAttachChannelAndSendMessage(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           2,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+		OddChannelIDs:                  true,
+	})
+
+	channelID, err := tx.AttachTxChannel(writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if channelID != 1 {
+		t.Fatalf("expected first odd channel id 1, got %d", channelID)
+	}
+
+	if err := tx.SendMessage([]byte("hello")); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 1 {
+		t.Fatalf("expected 1 wire message, got %d", len(writer.writes))
+	}
+
+	channelSeq, payload := splitMaterializedWire(t, writer.writes[0])
+	if channelSeq != 0 {
+		t.Fatalf("expected first materialized channel seq 0, got %d", channelSeq)
+	}
+
+	packet := mustUnmarshalSessionDataPacket(t, payload)
+	if packet.PacketKind != PacketKind_DATA {
+		t.Fatalf("expected session packet kind DATA, got %d", packet.PacketKind)
+	}
+	if packet.LaneID != 0 {
+		t.Fatalf("expected first lane id 0, got %d", packet.LaneID)
+	}
+	if packet.Transfer.Seq != 0 {
+		t.Fatalf("expected first transfer seq 0, got %d", packet.Transfer.Seq)
+	}
+	if packet.Transfer.TotalDataShards != 0 {
+		t.Fatalf("expected data packet to omit total shard count, got %d", packet.Transfer.TotalDataShards)
+	}
+	if string(packet.Transfer.Data) != "hello" {
+		t.Fatalf("expected payload hello, got %q", string(packet.Transfer.Data))
+	}
+}
+
+func TestSessionTxOnNewTimestampSendsRepairPacket(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           2,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+	})
+	if _, err := tx.AttachTxChannel(writer); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("alpha")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.SendMessage([]byte("beta")); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.OnNewTimestamp(77); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 3 {
+		t.Fatalf("expected 3 wire messages, got %d", len(writer.writes))
+	}
+
+	_, payload := splitMaterializedWire(t, writer.writes[2])
+	packet := mustUnmarshalSessionDataPacket(t, payload)
+	if packet.LaneID != 0 {
+		t.Fatalf("expected repair packet for lane 0, got %d", packet.LaneID)
+	}
+	if packet.Transfer.TotalDataShards != 2 {
+		t.Fatalf("expected repair packet to announce 2 total data shards, got %d", packet.Transfer.TotalDataShards)
+	}
+	if packet.Transfer.Seq != 2 {
+		t.Fatalf("expected first repair packet seq 2, got %d", packet.Transfer.Seq)
+	}
+	if len(packet.Transfer.Data) != 16 {
+		t.Fatalf("expected repair symbol size 16, got %d", len(packet.Transfer.Data))
+	}
+	if tx.txChannelsConfig[0].Status.TimestampLastSent != 77 {
+		t.Fatalf("expected channel rate timestamp 77, got %d", tx.txChannelsConfig[0].Status.TimestampLastSent)
+	}
+}
+
+func TestSessionTxOnNewTimestampSendsConfiguredInitialRepairPackets(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           4,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+		Reconstruction: SessionTxReconstructionConfig{
+			InitialRepairShardRatio: 1.5,
+		},
+	})
+	if _, err := tx.AttachTxChannel(writer); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("alpha")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.SendMessage([]byte("beta")); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.OnNewTimestamp(77); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 5 {
+		t.Fatalf("expected 5 wire messages, got %d", len(writer.writes))
+	}
+
+	for i, wantSeq := range []uint32{2, 3, 4} {
+		_, payload := splitMaterializedWire(t, writer.writes[2+i])
+		packet := mustUnmarshalSessionDataPacket(t, payload)
+		if packet.LaneID != 0 {
+			t.Fatalf("expected configured repair packet for lane 0, got %d", packet.LaneID)
+		}
+		if packet.Transfer.TotalDataShards != 2 {
+			t.Fatalf("expected repair packet to announce 2 total data shards, got %d", packet.Transfer.TotalDataShards)
+		}
+		if packet.Transfer.Seq != wantSeq {
+			t.Fatalf("expected repair packet seq %d, got %d", wantSeq, packet.Transfer.Seq)
+		}
+	}
+}
+
+func TestSessionTxLaneRepairWeightUsesPeerSeenChunks(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           4,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      8,
+		MaxRewindableControlMessageNum: 8,
+		Reconstruction: SessionTxReconstructionConfig{
+			LaneRepairWeight: []float64{0.5},
+		},
+	})
+	channelID, err := tx.AttachTxChannel(writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("alpha")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.SendMessage([]byte("beta")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.OnNewTimestamp(1); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 2 {
+		t.Fatalf("expected only the source packets before control feedback, got %d writes", len(writer.writes))
+	}
+
+	if err := tx.AcceptRemoteControlMessage(ControlMessage{
+		FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: channelID},
+		Lane: SessionLaneControlMessage{
+			LaneACKTo:      -1,
+			LenLaneControl: 1,
+			LaneControl: []rrpitTransferLane.TransferControl{
+				{SeenChunks: 0},
+			},
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.OnNewTimestamp(2); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 3 {
+		t.Fatalf("expected one weighted repair packet after control feedback, got %d writes", len(writer.writes))
+	}
+
+	_, payload := splitMaterializedWire(t, writer.writes[2])
+	packet := mustUnmarshalSessionDataPacket(t, payload)
+	if packet.Transfer.Seq != 2 {
+		t.Fatalf("expected weighted repair packet seq 2, got %d", packet.Transfer.Seq)
+	}
+}
+
+func TestSessionTxSecondaryRepairResendsAfterConfiguredTicks(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           4,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      8,
+		MaxRewindableControlMessageNum: 8,
+		Reconstruction: SessionTxReconstructionConfig{
+			SecondaryRepairShardRatio:      1,
+			TimeResendSecondaryRepairShard: 2,
+		},
+	})
+	channelID, err := tx.AttachTxChannel(writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("alpha")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.OnNewTimestamp(1); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 1 {
+		t.Fatalf("expected no repair before remote feedback, got %d writes", len(writer.writes))
+	}
+
+	if err := tx.AcceptRemoteControlMessage(ControlMessage{
+		FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: channelID},
+		Lane: SessionLaneControlMessage{
+			LaneACKTo:      -1,
+			LenLaneControl: 1,
+			LaneControl: []rrpitTransferLane.TransferControl{
+				{SeenChunks: 0},
+			},
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.OnNewTimestamp(2); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.OnNewTimestamp(3); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 2 {
+		t.Fatalf("expected the first scheduled secondary repair burst after two ticks, got %d writes", len(writer.writes))
+	}
+	if err := tx.OnNewTimestamp(4); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.OnNewTimestamp(5); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 3 {
+		t.Fatalf("expected the next scheduled secondary repair burst after another two ticks, got %d writes", len(writer.writes))
+	}
+
+	for i, wantSeq := range []uint32{1, 2} {
+		_, payload := splitMaterializedWire(t, writer.writes[1+i])
+		packet := mustUnmarshalSessionDataPacket(t, payload)
+		if packet.Transfer.Seq != wantSeq {
+			t.Fatalf("expected repair packet seq %d, got %d", wantSeq, packet.Transfer.Seq)
+		}
+	}
+}
+
+func TestSessionTxSecondaryRepairContinuesForOldestLaneAfterSeenChunksReachTotal(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           1,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      8,
+		MaxRewindableControlMessageNum: 8,
+		Reconstruction: SessionTxReconstructionConfig{
+			SecondaryRepairShardRatio:      1,
+			TimeResendSecondaryRepairShard: 1,
+		},
+	})
+	channelID, err := tx.AttachTxChannel(writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("hello")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.OnNewTimestamp(1); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 2 {
+		t.Fatalf("expected the first scheduled secondary repair burst at tick 1, got %d writes", len(writer.writes))
+	}
+
+	if err := tx.AcceptRemoteControlMessage(ControlMessage{
+		FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: channelID},
+		Lane: SessionLaneControlMessage{
+			LaneACKTo:      -1,
+			LenLaneControl: 1,
+			LaneControl: []rrpitTransferLane.TransferControl{
+				{SeenChunks: 1},
+			},
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.OnNewTimestamp(2); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.OnNewTimestamp(3); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 4 {
+		t.Fatalf("expected repair to continue after SeenChunks reached total, got %d writes", len(writer.writes))
+	}
+
+	for i, wantSeq := range []uint32{2, 3} {
+		_, payload := splitMaterializedWire(t, writer.writes[2+i])
+		packet := mustUnmarshalSessionDataPacket(t, payload)
+		if packet.Transfer.Seq != wantSeq {
+			t.Fatalf("expected repair packet seq %d, got %d", wantSeq, packet.Transfer.Seq)
+		}
+	}
+}
+
+func TestSessionTxSecondaryRepairRecomputesMissingAtResendTime(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           4,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      8,
+		MaxRewindableControlMessageNum: 8,
+		Reconstruction: SessionTxReconstructionConfig{
+			SecondaryRepairShardRatio:      1,
+			TimeResendSecondaryRepairShard: 2,
+		},
+	})
+	channelID, err := tx.AttachTxChannel(writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, payload := range [][]byte{[]byte("a"), []byte("b"), []byte("c"), []byte("d")} {
+		if err := tx.SendMessage(payload); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(writer.writes) != 4 {
+		t.Fatalf("expected 4 source writes, got %d", len(writer.writes))
+	}
+
+	if err := tx.OnNewTimestamp(1); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 4 {
+		t.Fatalf("expected no secondary repair before scheduled resend, got %d writes", len(writer.writes))
+	}
+
+	if err := tx.AcceptRemoteControlMessage(ControlMessage{
+		FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: channelID},
+		Lane: SessionLaneControlMessage{
+			LaneACKTo:      -1,
+			LenLaneControl: 1,
+			LaneControl: []rrpitTransferLane.TransferControl{
+				{SeenChunks: 3},
+			},
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.OnNewTimestamp(2); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 5 {
+		t.Fatalf("expected exactly one repair shard at the scheduled resend tick, got %d writes", len(writer.writes))
+	}
+
+	if err := tx.OnNewTimestamp(3); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 5 {
+		t.Fatalf("expected no additional resend before the next interval, got %d writes", len(writer.writes))
+	}
+
+	_, payload := splitMaterializedWire(t, writer.writes[4])
+	packet := mustUnmarshalSessionDataPacket(t, payload)
+	if packet.Transfer.Seq != 4 {
+		t.Fatalf("expected first repair packet seq 4, got %d", packet.Transfer.Seq)
+	}
+}
+
+func TestSessionTxAcceptRemoteControlMessage(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           1,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      8,
+		MaxRewindableControlMessageNum: 8,
+	})
+	channelID, err := tx.AttachTxChannel(writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("hello")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.OnNewTimestamp(100); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.AcceptRemoteControlMessage(ControlMessage{
+		FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: channelID},
+		Lane: SessionLaneControlMessage{
+			LaneACKTo: 0,
+		},
+		Channel: SessionChannelControlMessage{
+			LenChannelControl: 1,
+			ChannelControl: []rrpitTransferChannel.ChannelControlMessage{
+				{
+					ChannelID:                  channelID,
+					TotalPacketReceived:        2,
+					LastSequenceNumberReceived: 1,
+				},
+			},
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if len(tx.txLanes.lanes) != 0 {
+		t.Fatalf("expected acknowledged lane to be dropped, still have %d lanes", len(tx.txLanes.lanes))
+	}
+	if tx.txLanes.firstLaneID != 1 {
+		t.Fatalf("expected first lane id to advance to 1, got %d", tx.txLanes.firstLaneID)
+	}
+
+	if _, err := tx.txChannelsConfig[0].MaterializeChannel.RemoteLastSeenMessageSenderTimestamp(); err != nil {
+		t.Fatalf("expected channel control to be accepted, got %v", err)
+	}
+}
+
+func TestSessionTxSeenChunksDoesNotCompleteLane(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           1,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      8,
+		MaxRewindableControlMessageNum: 8,
+	})
+	channelID, err := tx.AttachTxChannel(writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("hello")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.OnNewTimestamp(1); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.AcceptRemoteControlMessage(ControlMessage{
+		FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: channelID},
+		Lane: SessionLaneControlMessage{
+			LaneACKTo:      -1,
+			LenLaneControl: 1,
+			LaneControl: []rrpitTransferLane.TransferControl{
+				{SeenChunks: 8},
+			},
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if len(tx.txLanes.lanes) != 1 {
+		t.Fatalf("expected lane to stay active until LaneACKTo advances, have %d lanes", len(tx.txLanes.lanes))
+	}
+
+	if err := tx.OnNewTimestamp(2); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 3 {
+		t.Fatalf("expected an additional repair packet after high SeenChunks, got %d total writes", len(writer.writes))
+	}
+}
+
+func TestSessionTxFloodControlMessageToAllChannels(t *testing.T) {
+	firstWriter := &recordingWriteCloser{}
+	secondWriter := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           1,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+		OddChannelIDs:                  true,
+	})
+
+	firstChannelID, err := tx.AttachTxChannel(firstWriter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondChannelID, err := tx.AttachTxChannel(secondWriter)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.FloodControlMessageToAllChannels(); err != nil {
+		t.Fatal(err)
+	}
+	if len(firstWriter.writes) != 1 || len(secondWriter.writes) != 1 {
+		t.Fatalf("expected one control packet on each channel, got %d and %d", len(firstWriter.writes), len(secondWriter.writes))
+	}
+
+	_, firstPayload := splitMaterializedWire(t, firstWriter.writes[0])
+	firstPacket := mustUnmarshalSessionControlPacket(t, firstPayload)
+	if firstPacket.PacketKind != PacketKind_CONTROL {
+		t.Fatalf("expected control packet kind, got %d", firstPacket.PacketKind)
+	}
+	if firstPacket.Control.FloodChannel.CurrentChannelID != firstChannelID {
+		t.Fatalf("expected first flood channel id %d, got %d", firstChannelID, firstPacket.Control.FloodChannel.CurrentChannelID)
+	}
+
+	_, secondPayload := splitMaterializedWire(t, secondWriter.writes[0])
+	secondPacket := mustUnmarshalSessionControlPacket(t, secondPayload)
+	if secondPacket.Control.FloodChannel.CurrentChannelID != secondChannelID {
+		t.Fatalf("expected second flood channel id %d, got %d", secondChannelID, secondPacket.Control.FloodChannel.CurrentChannelID)
+	}
+}
+
+func TestSessionTxFloodControlMessagesOverridesCurrentChannelIDPerChannel(t *testing.T) {
+	firstWriter := &recordingWriteCloser{}
+	secondWriter := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           1,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+		OddChannelIDs:                  true,
+	})
+
+	firstChannelID, err := tx.AttachTxChannel(firstWriter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondChannelID, err := tx.AttachTxChannel(secondWriter)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = tx.FloodControlMessages(func(uint64) (ControlMessage, error) {
+		return ControlMessage{
+			FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: 999},
+		}, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, firstPayload := splitMaterializedWire(t, firstWriter.writes[0])
+	firstPacket := mustUnmarshalSessionControlPacket(t, firstPayload)
+	if firstPacket.Control.FloodChannel.CurrentChannelID != firstChannelID {
+		t.Fatalf("expected first flooded control to carry channel id %d, got %d", firstChannelID, firstPacket.Control.FloodChannel.CurrentChannelID)
+	}
+
+	_, secondPayload := splitMaterializedWire(t, secondWriter.writes[0])
+	secondPacket := mustUnmarshalSessionControlPacket(t, secondPayload)
+	if secondPacket.Control.FloodChannel.CurrentChannelID != secondChannelID {
+		t.Fatalf("expected second flooded control to carry channel id %d, got %d", secondChannelID, secondPacket.Control.FloodChannel.CurrentChannelID)
+	}
+}
+
+func TestSessionRxRoundTripAndGenerateControl(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           2,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+	})
+	channelID, err := tx.AttachTxChannel(writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var received [][]byte
+	rx := mustNewSessionRx(t, SessionRxConfig{
+		LaneShardSize:    16,
+		MaxBufferedLanes: 4,
+		OnMessage: func(data []byte) error {
+			received = append(received, append([]byte(nil), data...))
+			return nil
+		},
+	})
+	channel, err := rx.AttachRxChannel(channelID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("alpha")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.SendMessage([]byte("beta")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.OnNewTimestamp(10); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, wire := range writer.writes {
+		if err := channel.OnNewMessageArrived(wire); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if diff := cmp.Diff([][]byte{[]byte("alpha"), []byte("beta")}, received); diff != "" {
+		t.Fatalf("unexpected delivered payloads (-want +got):\n%s", diff)
+	}
+
+	ctrl, err := rx.GenerateControlMessage(channelID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ctrl.FloodChannel.CurrentChannelID != channelID {
+		t.Fatalf("expected flood channel id %d, got %d", channelID, ctrl.FloodChannel.CurrentChannelID)
+	}
+	if ctrl.Lane.LaneACKTo != 0 {
+		t.Fatalf("expected lane ack to 0, got %d", ctrl.Lane.LaneACKTo)
+	}
+	if ctrl.Lane.LenLaneControl != 0 || len(ctrl.Lane.LaneControl) != 0 {
+		t.Fatalf("expected no outstanding lane control, got len field %d and %d entries", ctrl.Lane.LenLaneControl, len(ctrl.Lane.LaneControl))
+	}
+	if ctrl.Channel.LenChannelControl != 1 || len(ctrl.Channel.ChannelControl) != 1 {
+		t.Fatalf("expected one channel control, got len field %d and %d entries", ctrl.Channel.LenChannelControl, len(ctrl.Channel.ChannelControl))
+	}
+	if diff := cmp.Diff(rrpitTransferChannel.ChannelControlMessage{
+		ChannelID:                  channelID,
+		TotalPacketReceived:        3,
+		LastSequenceNumberReceived: 2,
+	}, ctrl.Channel.ChannelControl[0]); diff != "" {
+		t.Fatalf("unexpected channel control (-want +got):\n%s", diff)
+	}
+}
+
+func TestSessionRxControlPacketLearnsChannelID(t *testing.T) {
+	var seen []ControlMessage
+	rx := mustNewSessionRx(t, SessionRxConfig{
+		LaneShardSize:    16,
+		MaxBufferedLanes: 4,
+		OnMessage:        func([]byte) error { return nil },
+		OnRemoteControlMsg: func(ctrl ControlMessage) error {
+			seen = append(seen, ctrl)
+			return nil
+		},
+	})
+	channel, err := rx.AttachRxChannel(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	payload, err := marshalSessionControlPacket(ControlMessage{
+		FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: 9},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := channel.OnNewMessageArrived(materializedWire(0, payload)); err != nil {
+		t.Fatal(err)
+	}
+
+	if channel.ChannelID != 9 {
+		t.Fatalf("expected learned channel id 9, got %d", channel.ChannelID)
+	}
+	if len(seen) != 1 {
+		t.Fatalf("expected one seen control message, got %d", len(seen))
+	}
+	if seen[0].FloodChannel.CurrentChannelID != 9 {
+		t.Fatalf("expected seen flood channel id 9, got %d", seen[0].FloodChannel.CurrentChannelID)
+	}
+	if seen[0].Lane.LenLaneControl != 0 || len(seen[0].Lane.LaneControl) != 0 {
+		t.Fatalf("expected empty lane control in seen control message, got len field %d and %d entries", seen[0].Lane.LenLaneControl, len(seen[0].Lane.LaneControl))
+	}
+	if seen[0].Channel.LenChannelControl != 0 || len(seen[0].Channel.ChannelControl) != 0 {
+		t.Fatalf("expected empty channel control in seen control message, got len field %d and %d entries", seen[0].Channel.LenChannelControl, len(seen[0].Channel.ChannelControl))
+	}
+
+	ctrl, err := rx.GenerateControlMessage(9)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ctrl.Channel.LenChannelControl != 1 || len(ctrl.Channel.ChannelControl) != 1 {
+		t.Fatalf("expected one channel control, got len field %d and %d entries", ctrl.Channel.LenChannelControl, len(ctrl.Channel.ChannelControl))
+	}
+	if diff := cmp.Diff(rrpitTransferChannel.ChannelControlMessage{
+		ChannelID:                  9,
+		TotalPacketReceived:        1,
+		LastSequenceNumberReceived: 0,
+	}, ctrl.Channel.ChannelControl[0]); diff != "" {
+		t.Fatalf("unexpected channel control after flood learn (-want +got):\n%s", diff)
+	}
+}
+
+func TestSessionRxRejectsDuplicateLearnedChannelIDs(t *testing.T) {
+	rx := mustNewSessionRx(t, SessionRxConfig{
+		LaneShardSize:    16,
+		MaxBufferedLanes: 4,
+		OnMessage:        func([]byte) error { return nil },
+	})
+
+	firstChannel, err := rx.AttachRxChannel(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondChannel, err := rx.AttachRxChannel(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	payload, err := marshalSessionControlPacket(ControlMessage{
+		FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: 7},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := firstChannel.OnNewMessageArrived(materializedWire(0, payload)); err != nil {
+		t.Fatal(err)
+	}
+	if err := secondChannel.OnNewMessageArrived(materializedWire(0, payload)); err == nil {
+		t.Fatal("expected duplicate learned rx channel id error")
+	}
+}
+
+func TestSessionRxDeliversLanesInOrder(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           1,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+	})
+	channelID, err := tx.AttachTxChannel(writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var received [][]byte
+	rx := mustNewSessionRx(t, SessionRxConfig{
+		LaneShardSize:    16,
+		MaxBufferedLanes: 4,
+		OnMessage: func(data []byte) error {
+			received = append(received, append([]byte(nil), data...))
+			return nil
+		},
+	})
+	channel, err := rx.AttachRxChannel(channelID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("first")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.SendMessage([]byte("second")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.OnNewTimestamp(1); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.OnNewTimestamp(2); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 4 {
+		t.Fatalf("expected 4 writes, got %d", len(writer.writes))
+	}
+
+	for _, wireIndex := range []int{1, 2} {
+		if err := channel.OnNewMessageArrived(writer.writes[wireIndex]); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(received) != 0 {
+		t.Fatalf("expected later lane to stay buffered, got %d delivered payloads", len(received))
+	}
+
+	ctrl, err := rx.GenerateControlMessage(channelID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ctrl.Lane.LaneACKTo != -1 {
+		t.Fatalf("expected no lane ack yet, got %d", ctrl.Lane.LaneACKTo)
+	}
+	if ctrl.Lane.LenLaneControl != 2 || len(ctrl.Lane.LaneControl) != 2 {
+		t.Fatalf("expected 2 lane controls, got len field %d and %d entries", ctrl.Lane.LenLaneControl, len(ctrl.Lane.LaneControl))
+	}
+	if ctrl.Lane.LaneControl[0].SeenChunks != 0 || ctrl.Lane.LaneControl[1].SeenChunks != 2 {
+		t.Fatalf("unexpected lane controls: %+v", ctrl.Lane.LaneControl)
+	}
+
+	for _, wireIndex := range []int{0, 3} {
+		if err := channel.OnNewMessageArrived(writer.writes[wireIndex]); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if diff := cmp.Diff([][]byte{[]byte("first"), []byte("second")}, received); diff != "" {
+		t.Fatalf("unexpected ordered payload delivery (-want +got):\n%s", diff)
+	}
+}
+
+func TestSessionRxDoesNotFailWhenDecoderSuggestsRetry(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  32,
+		MaxDataShardsPerLane:           5,
+		MaxBufferedLanes:               8,
+		MaxRewindableTimestampNum:      8,
+		MaxRewindableControlMessageNum: 8,
+	})
+	channelID, err := tx.AttachTxChannel(writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	payloads := [][]byte{
+		[]byte("first"),
+		[]byte("second"),
+		[]byte("third"),
+		[]byte("fourth"),
+		[]byte("fifth"),
+	}
+	for _, payload := range payloads {
+		if err := tx.SendMessage(payload); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for ts := uint64(1); ts <= 12; ts++ {
+		if err := tx.OnNewTimestamp(ts); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	var received [][]byte
+	rx := mustNewSessionRx(t, SessionRxConfig{
+		LaneShardSize:    32,
+		MaxBufferedLanes: 8,
+		OnMessage: func(data []byte) error {
+			received = append(received, append([]byte(nil), data...))
+			return nil
+		},
+	})
+	channel, err := rx.AttachRxChannel(channelID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repairDelivered := 0
+	for _, wire := range writer.writes {
+		_, payload := splitMaterializedWire(t, wire)
+		packet := mustUnmarshalSessionDataPacket(t, payload)
+		if packet.LaneID != 0 {
+			continue
+		}
+		if packet.Transfer.TotalDataShards == 0 && (packet.Transfer.Seq == 1 || packet.Transfer.Seq == 4) {
+			continue
+		}
+		if packet.Transfer.TotalDataShards != 0 {
+			repairDelivered++
+		}
+
+		if err := channel.OnNewMessageArrived(wire); err != nil {
+			t.Fatal(err)
+		}
+		if len(received) == len(payloads) {
+			break
+		}
+	}
+
+	if repairDelivered == 0 {
+		t.Fatal("expected to deliver repair packets")
+	}
+	if diff := cmp.Diff(payloads, received); diff != "" {
+		t.Fatalf("unexpected payload delivery after repair retries (-want +got):\n%s", diff)
+	}
+}
+
+type recordingWriteCloser struct {
+	writes [][]byte
+}
+
+func (w *recordingWriteCloser) Write(p []byte) (int, error) {
+	w.writes = append(w.writes, append([]byte(nil), p...))
+	return len(p), nil
+}
+
+func (w *recordingWriteCloser) Close() error {
+	return nil
+}
+
+func splitMaterializedWire(t *testing.T, wire []byte) (uint64, []byte) {
+	t.Helper()
+
+	if len(wire) < materializedChannelSequenceFieldLength {
+		t.Fatalf("wire message too short: %d", len(wire))
+	}
+	return binary.BigEndian.Uint64(wire[:materializedChannelSequenceFieldLength]), append([]byte(nil), wire[materializedChannelSequenceFieldLength:]...)
+}
+
+func materializedWire(seq uint64, payload []byte) []byte {
+	wire := make([]byte, materializedChannelSequenceFieldLength+len(payload))
+	binary.BigEndian.PutUint64(wire[:materializedChannelSequenceFieldLength], seq)
+	copy(wire[materializedChannelSequenceFieldLength:], payload)
+	return wire
+}
+
+func mustUnmarshalSessionDataPacket(t *testing.T, payload []byte) sessionDataPacket {
+	t.Helper()
+
+	var packet sessionDataPacket
+	if err := struc.Unpack(bytes.NewReader(payload), &packet); err != nil {
+		t.Fatal(err)
+	}
+	return packet
+}
+
+func mustUnmarshalSessionControlPacket(t *testing.T, payload []byte) sessionControlPacket {
+	t.Helper()
+
+	var packet sessionControlPacket
+	if err := struc.Unpack(bytes.NewReader(payload), &packet); err != nil {
+		t.Fatal(err)
+	}
+	return packet
+}
+
+func mustNewSessionTx(t *testing.T, config SessionTxConfig) *SessionTx {
+	t.Helper()
+
+	tx, err := NewSessionTx(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return tx
+}
+
+func mustNewSessionRx(t *testing.T, config SessionRxConfig) *SessionRx {
+	t.Helper()
+
+	rx, err := NewSessionRx(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return rx
+}
+
+var _ io.WriteCloser = (*recordingWriteCloser)(nil)
