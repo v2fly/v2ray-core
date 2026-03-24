@@ -3,6 +3,7 @@ package packetToStream
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"io"
 	"sync"
 	"testing"
@@ -44,16 +45,7 @@ func TestAdaptorCarriesSmuxStreamsOverRRpit(t *testing.T) {
 	go pumpPacketWire(clientToServer, serverRx, pumpErrs)
 	go pumpPacketWire(serverToClient, clientRx, pumpErrs)
 
-	smuxConfig := smux.DefaultConfig()
-	smuxConfig.KeepAliveDisabled = true
-	smuxConfig.MaxFrameSize = 256
-	maxMessageSize, err := clientSession.MaxMessageSize()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if maxMessageSize >= smuxConfig.MaxFrameSize {
-		t.Fatalf("expected rrpit max message size %d to force fragmentation for smux frame size %d", maxMessageSize, smuxConfig.MaxFrameSize)
-	}
+	smuxConfig := mustNewSmuxConfigForSession(t, clientSession, 2)
 
 	clientAdaptor, err := NewClient(clientSession, smuxConfig)
 	if err != nil {
@@ -162,54 +154,302 @@ func TestAdaptorCarriesSmuxStreamsOverRRpit(t *testing.T) {
 	}
 }
 
-func TestSessionPacketConnReordersPacketsBySequence(t *testing.T) {
-	conn := newSessionPacketConn(nil)
+func TestAdaptorRejectsSmuxFrameSizeAboveBudget(t *testing.T) {
+	session := mustNewPacketToStreamSession(t, true)
+	config := smux.DefaultConfig()
+	config.KeepAliveDisabled = true
+	config.MaxFrameSize = 256
+	if _, err := NewClient(session, config); err == nil {
+		t.Fatal("expected oversized smux frame config to be rejected")
+	}
+}
+
+func TestSessionPacketConnPreservesPerStreamOrder(t *testing.T) {
+	conn := newSessionPacketConn(nil, 1024)
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
+	conn.locallyKnownStreams[1] = true
+
+	frame0 := mustMarshalAdaptorFrameForTest(t, 0, 1, 0, mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 1, []byte("hello ")))
+	frame1 := mustMarshalAdaptorFrameForTest(t, 1, 1, 1, mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 1, []byte("world")))
+
+	if err := conn.OnMessage(frame1); err != nil {
+		t.Fatal(err)
+	}
+	conn.mu.Lock()
+	if conn.readBuf.Len() != 0 {
+		conn.mu.Unlock()
+		t.Fatal("later same-stream frame should not be released before its predecessor")
+	}
+	conn.mu.Unlock()
+
+	if err := conn.OnMessage(frame0); err != nil {
+		t.Fatal(err)
+	}
+
+	want := append(decodePayloadForTest(t, frame0), decodePayloadForTest(t, frame1)...)
+	got := make([]byte, len(want))
+	if _, err := io.ReadFull(conn, got); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("unexpected reordered payload: %x", got)
+	}
+}
+
+func TestSessionPacketConnAllowsIndependentStreamProgress(t *testing.T) {
+	conn := newSessionPacketConn(nil, 1024)
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
+	conn.locallyKnownStreams[1] = true
+	conn.locallyKnownStreams[3] = true
+
+	blocked := mustMarshalAdaptorFrameForTest(t, 1, 1, 1, mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 1, []byte("stream-a-late")))
+	unaffected := mustMarshalAdaptorFrameForTest(t, 2, 3, 0, mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 3, []byte("stream-b-now")))
+
+	if err := conn.OnMessage(blocked); err != nil {
+		t.Fatal(err)
+	}
+	conn.mu.Lock()
+	if conn.readBuf.Len() != 0 {
+		conn.mu.Unlock()
+		t.Fatal("blocked frame should not become readable early")
+	}
+	conn.mu.Unlock()
+
+	if err := conn.OnMessage(unaffected); err != nil {
+		t.Fatal(err)
+	}
+
+	want := decodePayloadForTest(t, unaffected)
+	got := make([]byte, len(want))
+	if _, err := io.ReadFull(conn, got); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("unexpected unrelated stream payload: %x", got)
+	}
+}
+
+func TestSessionPacketConnRemoteStreamWaitsForSyn(t *testing.T) {
+	conn := newSessionPacketConn(nil, 1024)
 	defer func() {
 		if err := conn.Close(); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
-	packet0 := marshalAdapterPacketForTest(0, []byte("hello "))
-	packet1 := marshalAdapterPacketForTest(1, []byte("world"))
-
-	if err := conn.OnMessage(packet1); err != nil {
+	psh := mustMarshalAdaptorFrameForTest(t, 1, 11, 1, mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 11, []byte("payload")))
+	if err := conn.OnMessage(psh); err != nil {
 		t.Fatal(err)
 	}
 	conn.mu.Lock()
 	if conn.readBuf.Len() != 0 {
 		conn.mu.Unlock()
-		t.Fatal("out-of-order packet should not be released early")
+		t.Fatal("remote payload should wait for stream syn")
 	}
 	conn.mu.Unlock()
 
-	if err := conn.OnMessage(packet0); err != nil {
+	syn := mustMarshalAdaptorFrameForTest(t, 0, 11, 0, mustMarshalSmuxFrameForTest(t, 2, smuxCmdSYN, 11, nil))
+	if err := conn.OnMessage(syn); err != nil {
 		t.Fatal(err)
 	}
 
-	got := make([]byte, len("hello world"))
+	want := append(decodePayloadForTest(t, syn), decodePayloadForTest(t, psh)...)
+	got := make([]byte, len(want))
 	if _, err := io.ReadFull(conn, got); err != nil {
 		t.Fatal(err)
 	}
-	if string(got) != "hello world" {
-		t.Fatalf("unexpected reordered payload: %q", got)
+	if !bytes.Equal(got, want) {
+		t.Fatalf("unexpected remote stream sequence: %x", got)
+	}
+}
+
+func TestSessionPacketConnAllowsLocallyKnownStreamWithoutInboundSyn(t *testing.T) {
+	conn := newSessionPacketConn(nil, 1024)
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
+	conn.locallyKnownStreams[9] = true
+
+	frame := mustMarshalAdaptorFrameForTest(t, 0, 9, 0, mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 9, []byte("payload")))
+	if err := conn.OnMessage(frame); err != nil {
+		t.Fatal(err)
 	}
 
-	if err := conn.OnMessage(packet1); err != nil {
+	want := decodePayloadForTest(t, frame)
+	got := make([]byte, len(want))
+	if _, err := io.ReadFull(conn, got); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("unexpected locally-known stream payload: %x", got)
+	}
+}
+
+func TestSessionPacketConnDeliversNOPControlFrames(t *testing.T) {
+	conn := newSessionPacketConn(nil, 1024)
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	nop := mustMarshalAdaptorFrameForTest(t, 0, 0, 0, mustMarshalSmuxFrameForTest(t, 2, smuxCmdNOP, 0, nil))
+	if err := conn.OnMessage(nop); err != nil {
+		t.Fatal(err)
+	}
+
+	want := decodePayloadForTest(t, nop)
+	got := make([]byte, len(want))
+	if _, err := io.ReadFull(conn, got); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("unexpected nop payload: %x", got)
+	}
+}
+
+func TestSessionPacketConnIgnoresDuplicateAndOldFrames(t *testing.T) {
+	conn := newSessionPacketConn(nil, 1024)
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
+	conn.locallyKnownStreams[1] = true
+
+	frame0 := mustMarshalAdaptorFrameForTest(t, 0, 1, 0, mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 1, []byte("one")))
+	if err := conn.OnMessage(frame0); err != nil {
+		t.Fatal(err)
+	}
+	buf := make([]byte, len(decodePayloadForTest(t, frame0)))
+	if _, err := io.ReadFull(conn, buf); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := conn.OnMessage(frame0); err != nil {
 		t.Fatal(err)
 	}
 	conn.mu.Lock()
 	if conn.readBuf.Len() != 0 {
 		conn.mu.Unlock()
-		t.Fatal("duplicate packet should be ignored")
+		t.Fatal("duplicate old frame should be ignored")
+	}
+	conn.mu.Unlock()
+
+	frame1 := mustMarshalAdaptorFrameForTest(t, 1, 1, 1, mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 1, []byte("two")))
+	if err := conn.OnMessage(frame1); err != nil {
+		t.Fatal(err)
+	}
+	if err := conn.OnMessage(frame1); err != nil {
+		t.Fatal(err)
+	}
+	want := decodePayloadForTest(t, frame1)
+	got := make([]byte, len(want))
+	if _, err := io.ReadFull(conn, got); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("unexpected duplicate handling payload: %x", got)
+	}
+	conn.mu.Lock()
+	if conn.readBuf.Len() != 0 {
+		conn.mu.Unlock()
+		t.Fatal("duplicate current frame should not be released twice")
 	}
 	conn.mu.Unlock()
 }
 
-func TestSessionPacketConnCloseWaitsForBufferedPayloadDrain(t *testing.T) {
-	conn := newSessionPacketConn(nil)
+func TestSessionPacketConnRoundRobinDeliveryAcrossStreams(t *testing.T) {
+	conn := newSessionPacketConn(nil, 1024)
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
+	conn.locallyKnownStreams[1] = true
+	conn.locallyKnownStreams[3] = true
 
-	if err := conn.OnMessage(marshalAdapterPacketForTest(0, []byte("hello"))); err != nil {
+	frame10 := &adaptorFrame{frameID: 0, streamID: 1, streamFrameSeq: 0, smuxCmd: smuxCmdPSH, smuxVersion: 2, payload: mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 1, []byte("a0"))}
+	frame11 := &adaptorFrame{frameID: 1, streamID: 1, streamFrameSeq: 1, smuxCmd: smuxCmdPSH, smuxVersion: 2, payload: mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 1, []byte("a1"))}
+	frame30 := &adaptorFrame{frameID: 2, streamID: 3, streamFrameSeq: 0, smuxCmd: smuxCmdPSH, smuxVersion: 2, payload: mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 3, []byte("b0"))}
+	frame31 := &adaptorFrame{frameID: 3, streamID: 3, streamFrameSeq: 1, smuxCmd: smuxCmdPSH, smuxVersion: 2, payload: mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 3, []byte("b1"))}
+
+	conn.mu.Lock()
+	conn.readyFramesByStream[1] = map[uint64]*adaptorFrame{0: frame10, 1: frame11}
+	conn.readyFramesByStream[3] = map[uint64]*adaptorFrame{0: frame30, 1: frame31}
+	conn.activateStreamLocked(1)
+	conn.activateStreamLocked(3)
+	conn.deliverReadyFramesLocked()
+	conn.mu.Unlock()
+
+	want := append([]byte{}, frame10.payload...)
+	want = append(want, frame30.payload...)
+	want = append(want, frame11.payload...)
+	want = append(want, frame31.payload...)
+	got := make([]byte, len(want))
+	if _, err := io.ReadFull(conn, got); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("unexpected round-robin order: %x", got)
+	}
+}
+
+func TestSessionPacketConnOnMessageIgnoresFramesAfterClose(t *testing.T) {
+	conn := newSessionPacketConn(nil, 1024)
+	if err := conn.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	frame := mustMarshalAdaptorFrameForTest(t, 0, 0, 0, mustMarshalSmuxFrameForTest(t, 2, smuxCmdNOP, 0, nil))
+	if err := conn.OnMessage(frame); err != nil {
+		t.Fatal(err)
+	}
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+	if conn.readBuf.Len() != 0 {
+		t.Fatal("closed conn should ignore later frames")
+	}
+}
+
+func TestSessionPacketConnOnMessageRejectsMetadataMismatch(t *testing.T) {
+	conn := newSessionPacketConn(nil, 1024)
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	smuxFrame := mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 1, []byte("payload"))
+	badWire := encodeAdaptorFrame(&adaptorFrame{
+		frameID:        0,
+		streamID:       2,
+		streamFrameSeq: 0,
+		smuxCmd:        smuxCmdPSH,
+		smuxVersion:    2,
+		payload:        smuxFrame,
+	})
+	if err := conn.OnMessage(badWire); err == nil {
+		t.Fatal("expected metadata mismatch to be rejected")
+	}
+}
+
+func TestSessionPacketConnCloseWaitsForBufferedPayloadDrain(t *testing.T) {
+	conn := newSessionPacketConn(nil, 1024)
+
+	conn.locallyKnownStreams[1] = true
+	frame := mustMarshalAdaptorFrameForTest(t, 0, 1, 0, mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 1, []byte("hello")))
+	if err := conn.OnMessage(frame); err != nil {
 		t.Fatal(err)
 	}
 
@@ -225,12 +465,12 @@ func TestSessionPacketConnCloseWaitsForBufferedPayloadDrain(t *testing.T) {
 	case <-time.After(50 * time.Millisecond):
 	}
 
-	buf := make([]byte, 5)
+	buf := make([]byte, len(decodePayloadForTest(t, frame)))
 	if _, err := io.ReadFull(conn, buf); err != nil {
 		t.Fatal(err)
 	}
-	if string(buf) != "hello" {
-		t.Fatalf("unexpected payload: %q", buf)
+	if !bytes.Equal(buf, decodePayloadForTest(t, frame)) {
+		t.Fatalf("unexpected payload: %x", buf)
 	}
 
 	select {
@@ -245,9 +485,10 @@ func TestSessionPacketConnCloseWaitsForBufferedPayloadDrain(t *testing.T) {
 }
 
 func TestSessionPacketConnCloseRejectsWritesWhileDraining(t *testing.T) {
-	conn := newSessionPacketConn(nil)
-
-	if err := conn.OnMessage(marshalAdapterPacketForTest(0, []byte("hello"))); err != nil {
+	conn := newSessionPacketConn(nil, 1024)
+	conn.locallyKnownStreams[1] = true
+	frame := mustMarshalAdaptorFrameForTest(t, 0, 1, 0, mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 1, []byte("hello")))
+	if err := conn.OnMessage(frame); err != nil {
 		t.Fatal(err)
 	}
 
@@ -262,11 +503,11 @@ func TestSessionPacketConnCloseRejectsWritesWhileDraining(t *testing.T) {
 	<-closeStarted
 	time.Sleep(20 * time.Millisecond)
 
-	if _, err := conn.Write([]byte("blocked")); err != io.ErrClosedPipe {
+	if _, err := conn.Write(mustMarshalSmuxFrameForTest(t, 2, smuxCmdNOP, 0, nil)); err != io.ErrClosedPipe {
 		t.Fatalf("expected io.ErrClosedPipe while close is draining, got %v", err)
 	}
 
-	buf := make([]byte, 5)
+	buf := make([]byte, len(decodePayloadForTest(t, frame)))
 	if _, err := io.ReadFull(conn, buf); err != nil {
 		t.Fatal(err)
 	}
@@ -275,6 +516,146 @@ func TestSessionPacketConnCloseRejectsWritesWhileDraining(t *testing.T) {
 	case <-closeDone:
 	case <-time.After(500 * time.Millisecond):
 		t.Fatal("close did not finish after draining payload")
+	}
+}
+
+func TestSessionPacketConnCloseTimesOutWithUndeliverableFrames(t *testing.T) {
+	oldTimeout := sessionPacketConnCloseDrainTimeout
+	sessionPacketConnCloseDrainTimeout = 50 * time.Millisecond
+	defer func() {
+		sessionPacketConnCloseDrainTimeout = oldTimeout
+	}()
+
+	conn := newSessionPacketConn(nil, 1024)
+	frame := mustMarshalAdaptorFrameForTest(t, 0, 9, 0, mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 9, []byte("blocked")))
+	if err := conn.OnMessage(frame); err != nil {
+		t.Fatal(err)
+	}
+
+	closeDone := make(chan struct{})
+	go func() {
+		_ = conn.Close()
+		close(closeDone)
+	}()
+
+	select {
+	case <-closeDone:
+		t.Fatal("close returned before drain timeout for undeliverable frame")
+	case <-time.After(10 * time.Millisecond):
+	}
+
+	select {
+	case <-closeDone:
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("close did not time out for undeliverable frame")
+	}
+
+	if _, err := conn.Read(make([]byte, 1)); err != io.EOF {
+		t.Fatalf("expected EOF after close timeout, got %v", err)
+	}
+}
+
+func TestSessionPacketConnReadAndWriteReturnCloseError(t *testing.T) {
+	conn := newSessionPacketConn(nil, 1024)
+	wantErr := errors.New("boom")
+	conn.fail(wantErr)
+
+	if _, err := conn.Read(make([]byte, 1)); !errors.Is(err, wantErr) {
+		t.Fatalf("expected read error %v, got %v", wantErr, err)
+	}
+	if _, err := conn.Write(mustMarshalSmuxFrameForTest(t, 2, smuxCmdNOP, 0, nil)); !errors.Is(err, wantErr) {
+		t.Fatalf("expected write error %v, got %v", wantErr, err)
+	}
+}
+
+func TestSessionPacketConnWriteRejectsMalformedSmuxFrame(t *testing.T) {
+	conn, cleanup := newWritableSessionPacketConn(t)
+	defer cleanup()
+
+	if _, err := conn.Write([]byte{1, 2, 3}); err == nil {
+		t.Fatal("expected malformed smux frame write to fail")
+	}
+	if _, err := conn.Read(make([]byte, 1)); err == nil {
+		t.Fatal("expected malformed write to close conn with error")
+	}
+}
+
+func TestSessionPacketConnWriteFailsWithoutTransferChannel(t *testing.T) {
+	session := mustNewPacketToStreamSession(t, true)
+	defer func() { _ = session.Close() }()
+
+	conn := newSessionPacketConn(session, 1024)
+	frame := mustMarshalSmuxFrameForTest(t, 2, smuxCmdNOP, 0, nil)
+	firstErr := error(nil)
+	if _, err := conn.Write(frame); err == nil {
+		t.Fatal("expected missing transfer channel to fail")
+	} else {
+		firstErr = err
+	}
+	if _, err := conn.Read(make([]byte, 1)); !errors.Is(err, firstErr) && err.Error() != firstErr.Error() {
+		t.Fatalf("expected read to return write failure %v, got %v", firstErr, err)
+	}
+}
+
+func TestSessionPacketConnWriteTracksFrameAndStreamSequence(t *testing.T) {
+	conn, cleanup := newWritableSessionPacketConn(t)
+	defer cleanup()
+
+	frameA := mustMarshalSmuxFrameForTest(t, 2, smuxCmdPSH, 1, []byte("a"))
+	frameB := mustMarshalSmuxFrameForTest(t, 2, smuxCmdFIN, 1, nil)
+	frameNOP := mustMarshalSmuxFrameForTest(t, 2, smuxCmdNOP, 0, nil)
+
+	if n, err := conn.Write(frameA); err != nil || n != len(frameA) {
+		t.Fatalf("unexpected first write result n=%d err=%v", n, err)
+	}
+	if n, err := conn.Write(frameB); err != nil || n != len(frameB) {
+		t.Fatalf("unexpected second write result n=%d err=%v", n, err)
+	}
+	if n, err := conn.Write(frameNOP); err != nil || n != len(frameNOP) {
+		t.Fatalf("unexpected nop write result n=%d err=%v", n, err)
+	}
+
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+	if conn.nextSendFrameID != 3 {
+		t.Fatalf("unexpected nextSendFrameID %d", conn.nextSendFrameID)
+	}
+	if conn.nextSendStreamFrameSeq[1] != 2 {
+		t.Fatalf("unexpected stream frame seq for stream 1: %d", conn.nextSendStreamFrameSeq[1])
+	}
+	if conn.nextSendStreamFrameSeq[0] != 1 {
+		t.Fatalf("unexpected stream frame seq for control stream: %d", conn.nextSendStreamFrameSeq[0])
+	}
+	if !conn.locallyKnownStreams[1] {
+		t.Fatal("locally known stream should be recorded after write")
+	}
+	if conn.locallyKnownStreams[0] {
+		t.Fatal("control stream should not be tracked as locally known stream")
+	}
+}
+
+func TestSessionPacketConnLocalAddrAndDeadlines(t *testing.T) {
+	conn := newSessionPacketConn(nil, 1024)
+	defer func() {
+		if err := conn.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	if got := conn.LocalAddr(); got == nil || got.Network() != "rrpit" || got.String() != "rrpit-local" {
+		t.Fatalf("unexpected local addr: %#v", got)
+	}
+	if got := conn.RemoteAddr(); got == nil || got.Network() != "rrpit" || got.String() != "rrpit-remote" {
+		t.Fatalf("unexpected remote addr: %#v", got)
+	}
+	if err := conn.SetDeadline(time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	if err := conn.SetReadDeadline(time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	if err := conn.SetWriteDeadline(time.Now()); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -367,10 +748,91 @@ func mustRecvSmuxStream(t *testing.T, streams <-chan *smux.Stream, errs <-chan e
 	return nil
 }
 
-func marshalAdapterPacketForTest(seq uint64, payload []byte) []byte {
-	packet := make([]byte, packetHeaderSize+len(payload))
-	binary.BigEndian.PutUint64(packet[:packetSequenceFieldSize], seq)
-	binary.BigEndian.PutUint32(packet[packetSequenceFieldSize:packetHeaderSize], uint32(len(payload)))
-	copy(packet[packetHeaderSize:], payload)
-	return packet
+func newWritableSessionPacketConn(t *testing.T) (*sessionPacketConn, func()) {
+	t.Helper()
+
+	session := mustNewPacketToStreamSession(t, true)
+	wire := newPacketWire()
+	if _, err := session.AttachTxChannel(wire); err != nil {
+		t.Fatal(err)
+	}
+	conn := newSessionPacketConn(session, 1024)
+	maxMessageSize, err := session.MaxMessageSize()
+	if err != nil {
+		t.Fatal(err)
+	}
+	conn.maxSerializedFrameBytes = maxMessageSize - adaptorHeaderSize
+	if conn.maxSerializedFrameBytes <= 0 {
+		t.Fatalf("unexpected max serialized frame bytes: %d", conn.maxSerializedFrameBytes)
+	}
+	return conn, func() {
+		_ = wire.Close()
+		_ = session.Close()
+	}
+}
+
+func mustNewSmuxConfigForSession(t *testing.T, session *rrpitBidirectionalSession.BidirectionalSession, version int) *smux.Config {
+	t.Helper()
+
+	maxMessageSize, err := session.MaxMessageSize()
+	if err != nil {
+		t.Fatal(err)
+	}
+	maxFrameSize := maxMessageSize - adaptorHeaderSize - smuxFrameHeaderSize
+	if maxFrameSize <= 0 {
+		t.Fatalf("rrpit message budget too small for smux frame: %d", maxMessageSize)
+	}
+	if maxFrameSize > 64 {
+		maxFrameSize = 64
+	}
+	config := smux.DefaultConfig()
+	config.Version = version
+	config.KeepAliveDisabled = true
+	config.MaxFrameSize = maxFrameSize
+	return config
+}
+
+func mustMarshalSmuxFrameForTest(t *testing.T, version byte, cmd byte, streamID uint32, payload []byte) []byte {
+	t.Helper()
+
+	if err := validateSmuxCommand(version, cmd, len(payload), streamID); err != nil {
+		t.Fatal(err)
+	}
+	frame := make([]byte, smuxFrameHeaderSize+len(payload))
+	frame[smuxVersionFieldOffset] = version
+	frame[smuxCmdFieldOffset] = cmd
+	binary.LittleEndian.PutUint16(frame[smuxLengthFieldOffset:smuxLengthFieldOffset+2], uint16(len(payload)))
+	binary.LittleEndian.PutUint32(frame[smuxStreamIDFieldOffset:smuxStreamIDFieldOffset+4], streamID)
+	copy(frame[smuxFrameHeaderSize:], payload)
+	return frame
+}
+
+func mustMarshalAdaptorFrameForTest(t *testing.T, frameID uint64, streamID uint32, streamSeq uint64, smuxFrame []byte) []byte {
+	t.Helper()
+
+	meta, err := parseSmuxFrame(smuxFrame)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if meta.streamID != streamID {
+		t.Fatalf("smux frame stream id %d does not match adaptor header %d", meta.streamID, streamID)
+	}
+	return encodeAdaptorFrame(&adaptorFrame{
+		frameID:        frameID,
+		streamID:       streamID,
+		streamFrameSeq: streamSeq,
+		smuxCmd:        meta.cmd,
+		smuxVersion:    meta.version,
+		payload:        append([]byte(nil), smuxFrame...),
+	})
+}
+
+func decodePayloadForTest(t *testing.T, wire []byte) []byte {
+	t.Helper()
+
+	frame, err := decodeAdaptorFrame(wire)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return frame.payload
 }
