@@ -64,10 +64,13 @@ type SessionTxConfig struct {
 }
 
 type SessionTxReconstructionConfig struct {
-	InitialRepairShardRatio        float64
-	LaneRepairWeight               []float64
-	SecondaryRepairShardRatio      float64
-	TimeResendSecondaryRepairShard int
+	InitialRepairShardRatio              float64
+	LaneRepairWeight                     []float64
+	SecondaryRepairShardRatio            float64
+	TimeResendSecondaryRepairShard       int
+	StaleLaneFinalizedAgeThresholdTicks  int
+	StaleLaneProgressStallThresholdTicks int
+	SecondaryRepairMinBurst              int
 }
 
 type SessionRxConfig struct {
@@ -101,6 +104,10 @@ type txLane struct {
 	SecondaryRepairPacketsPending  uint32
 	SecondaryRepairPacketsPerBurst uint32
 	NextSecondaryRepairTimestamp   uint64
+	PeerReconstructed              bool
+	CreatedAtTimestamp             uint64
+	FinalizedAtTimestamp           uint64
+	LastProgressTimestamp          uint64
 }
 
 type txChannels struct {
@@ -151,6 +158,8 @@ const (
 	defaultMaxBufferedLanes               = 64
 	defaultMaxRewindableTimestampNum      = 256
 	defaultMaxRewindableControlMessageNum = 256
+	defaultStaleLaneFinalizedAgeTicks     = 8
+	defaultStaleLaneProgressStallTicks    = 8
 )
 
 var ErrTxLaneBufferFull = errors.New("too many buffered transfer lanes")
@@ -382,6 +391,21 @@ func (t *SessionTx) ensureDefaults() error {
 	if t.Reconstruction.TimeResendSecondaryRepairShard < 0 {
 		return newError("invalid secondary repair resend interval")
 	}
+	if t.Reconstruction.StaleLaneFinalizedAgeThresholdTicks == 0 {
+		t.Reconstruction.StaleLaneFinalizedAgeThresholdTicks = defaultStaleLaneFinalizedAgeTicks
+	}
+	if t.Reconstruction.StaleLaneProgressStallThresholdTicks == 0 {
+		t.Reconstruction.StaleLaneProgressStallThresholdTicks = defaultStaleLaneProgressStallTicks
+	}
+	if t.Reconstruction.StaleLaneFinalizedAgeThresholdTicks < 0 {
+		return newError("invalid stale lane finalized age threshold")
+	}
+	if t.Reconstruction.StaleLaneProgressStallThresholdTicks < 0 {
+		return newError("invalid stale lane progress stall threshold")
+	}
+	if t.Reconstruction.SecondaryRepairMinBurst < 0 {
+		return newError("invalid secondary repair minimum burst")
+	}
 	for _, weight := range t.Reconstruction.LaneRepairWeight {
 		if weight < 0 {
 			return newError("invalid lane repair weight")
@@ -410,6 +434,9 @@ func (t *SessionTx) onNewTimestamp(timestamp uint64) error {
 
 		opportunisticBudget := t.buildOpportunisticRepairBudget()
 		for {
+			if !t.hasRepairSendCapacity() {
+				return nil
+			}
 			lane, kind, index := t.nextConfiguredRepair(opportunisticBudget)
 			if lane == nil {
 				return nil
@@ -691,15 +718,22 @@ func (t *SessionTx) acceptRemoteControlMessage(ctrl ControlMessage) error {
 		}
 		previousSeen := lane.PeerSeenChunks
 		previousKnown := lane.PeerSeenChunksKnown
+		previousComplete := lane.PeerReconstructed
 		if err := lane.TransferLane.AcceptControlData(laneControl); err != nil {
 			return err
 		}
-		if laneControl.SeenChunks > lane.PeerSeenChunks {
+		if laneControl.SeenChunks == rrpitTransferLane.SeenChunksCompletionSentinel {
+			lane.PeerReconstructed = true
+			lane.PeerSeenChunks = laneControl.SeenChunks
+		} else if laneControl.SeenChunks > lane.PeerSeenChunks {
 			lane.PeerSeenChunks = laneControl.SeenChunks
 		}
 		lane.PeerSeenChunksKnown = true
+		if !previousKnown || lane.PeerReconstructed != previousComplete || lane.PeerSeenChunks > previousSeen {
+			lane.LastProgressTimestamp = t.lifecycleTimestamp()
+		}
 		if t.hasCustomReconstructionConfig() {
-			t.updateLaneRepairStateAfterControl(lane, !previousKnown || lane.PeerSeenChunks > previousSeen)
+			t.updateLaneRepairStateAfterControl(lane, !previousKnown || lane.PeerReconstructed != previousComplete || lane.PeerSeenChunks > previousSeen)
 		}
 	}
 	return nil
@@ -747,6 +781,7 @@ const (
 func (t *SessionTx) hasCustomReconstructionConfig() bool {
 	return t.Reconstruction.InitialRepairShardRatio > 0 ||
 		t.Reconstruction.SecondaryRepairShardRatio > 0 ||
+		t.Reconstruction.SecondaryRepairMinBurst > 0 ||
 		t.Reconstruction.TimeResendSecondaryRepairShard > 0 ||
 		len(t.Reconstruction.LaneRepairWeight) > 0
 }
@@ -774,6 +809,8 @@ func (t *SessionTx) finalizeLane(lane *txLane) {
 	if lane.TotalDataShards == 0 {
 		lane.TotalDataShards = lane.DataShards
 	}
+	lane.FinalizedAtTimestamp = t.lifecycleTimestamp()
+	lane.LastProgressTimestamp = lane.FinalizedAtTimestamp
 	if !t.hasCustomReconstructionConfig() {
 		return
 	}
@@ -788,12 +825,17 @@ func (t *SessionTx) flushInitialRepairPackets(lane *txLane) error {
 		return nil
 	}
 	for lane.InitialRepairPacketsPending > 0 {
+		if !t.hasRepairSendCapacity() {
+			return nil
+		}
 		if err := t.sendRepairPacket(lane); err != nil {
 			return err
 		}
 		lane.InitialRepairPacketsPending -= 1
 	}
-	t.scheduleNextSecondaryRepair(lane)
+	if lane.InitialRepairPacketsPending == 0 {
+		t.scheduleNextSecondaryRepair(lane)
+	}
 	return nil
 }
 
@@ -829,35 +871,136 @@ func repairPacketQuota(ratio float64, shardCount uint32) uint32 {
 	return uint32(quota)
 }
 
-func (t *SessionTx) laneMissingShards(lane *txLane) uint32 {
-	if lane == nil || !lane.PeerSeenChunksKnown || lane.TotalDataShards == 0 {
-		return 0
+func (t *SessionTx) lifecycleTimestamp() uint64 {
+	if t.currentTimestampInitialized {
+		return t.currentTimestamp
 	}
-	seen := uint32(lane.PeerSeenChunks)
-	if seen >= lane.TotalDataShards {
-		return 0
-	}
-	return lane.TotalDataShards - seen
+	return 0
 }
 
-func (t *SessionTx) laneRepairDemand(lane *txLane) uint32 {
-	if lane == nil || lane.TotalDataShards == 0 {
+func (t *SessionTx) peerSeenChunksCount(lane *txLane) uint32 {
+	if lane == nil {
+		return 0
+	}
+	if lane.PeerReconstructed {
+		return lane.TotalDataShards
+	}
+	if lane.PeerSeenChunks == rrpitTransferLane.SeenChunksCompletionSentinel {
+		return lane.TotalDataShards
+	}
+	return uint32(lane.PeerSeenChunks)
+}
+
+func (t *SessionTx) laneSeenChunksTarget(lane *txLane) uint32 {
+	if lane == nil {
+		return 0
+	}
+	if lane.TotalDataShards == ^uint32(0) {
+		return lane.TotalDataShards
+	}
+	return lane.TotalDataShards + 1
+}
+
+func (t *SessionTx) laneRepairDemandBase(lane *txLane) uint32 {
+	if lane == nil || lane.TotalDataShards == 0 || lane.PeerReconstructed {
 		return 0
 	}
 	if !lane.PeerSeenChunksKnown {
-		return lane.TotalDataShards
+		return t.laneSeenChunksTarget(lane)
 	}
+	return t.laneMissingShards(lane)
+}
 
-	missing := t.laneMissingShards(lane)
-	if missing > 0 {
-		return missing
+func (t *SessionTx) isOldestUnackedLane(lane *txLane) bool {
+	return lane != nil && lane.LaneID == uint64(t.txLanes.firstLaneID)
+}
+
+func (t *SessionTx) laneNeedsStaleMonitoring(lane *txLane) bool {
+	return lane != nil && lane.Finalized && !lane.PeerReconstructed && t.isOldestUnackedLane(lane)
+}
+
+func (t *SessionTx) isStaleOldestLane(lane *txLane) bool {
+	if lane == nil || !lane.Finalized || lane.PeerReconstructed || !t.isOldestUnackedLane(lane) {
+		return false
 	}
-	if lane.LaneID != uint64(t.txLanes.firstLaneID) {
+	now := t.lifecycleTimestamp()
+	finalizedAge := timestampAge(now, lane.FinalizedAtTimestamp)
+	progressAge := timestampAge(now, lane.LastProgressTimestamp)
+	return finalizedAge >= uint64(t.Reconstruction.StaleLaneFinalizedAgeThresholdTicks) ||
+		progressAge >= uint64(t.Reconstruction.StaleLaneProgressStallThresholdTicks)
+}
+
+func timestampAge(now uint64, then uint64) uint64 {
+	if now <= then {
 		return 0
 	}
+	return now - then
+}
 
-	// The receiver may need a small repair tail beyond K symbols before decode completes.
-	return 1
+func (t *SessionTx) secondaryRepairBurst(repairDemand uint32) uint32 {
+	burst := repairPacketQuota(t.Reconstruction.SecondaryRepairShardRatio, repairDemand)
+	minBurst := uint32(t.Reconstruction.SecondaryRepairMinBurst)
+	if burst < minBurst {
+		return minBurst
+	}
+	return burst
+}
+
+func (t *SessionTx) clearSecondaryRepairState(lane *txLane) {
+	if lane == nil {
+		return
+	}
+	lane.SecondaryRepairPacketsPending = 0
+	lane.SecondaryRepairPacketsPerBurst = 0
+	lane.NextSecondaryRepairTimestamp = 0
+}
+
+func (t *SessionTx) clearRepairState(lane *txLane) {
+	if lane == nil {
+		return
+	}
+	lane.InitialRepairPacketsPending = 0
+	t.clearSecondaryRepairState(lane)
+}
+
+func (t *SessionTx) staleOldestLane() (*txLane, int) {
+	if len(t.txLanes.lanes) == 0 {
+		return nil, -1
+	}
+	lane := t.txLanes.lanes[0]
+	if !t.isStaleOldestLane(lane) {
+		return nil, -1
+	}
+	return lane, 0
+}
+
+func (t *SessionTx) laneMissingShards(lane *txLane) uint32 {
+	if lane == nil || !lane.PeerSeenChunksKnown || lane.TotalDataShards == 0 || lane.PeerReconstructed {
+		return 0
+	}
+	seen := t.peerSeenChunksCount(lane)
+	target := t.laneSeenChunksTarget(lane)
+	if seen >= target {
+		return 0
+	}
+	return target - seen
+}
+
+func (t *SessionTx) laneRepairDemand(lane *txLane) uint32 {
+	if lane == nil || lane.TotalDataShards == 0 || lane.PeerReconstructed {
+		return 0
+	}
+	missing := t.laneRepairDemandBase(lane)
+	if !t.isStaleOldestLane(lane) {
+		return missing
+	}
+	if missing > 0 {
+		if missing < 2 {
+			return 2
+		}
+		return missing
+	}
+	return 2
 }
 
 func (t *SessionTx) updateLaneRepairStateAfterControl(lane *txLane, scheduleSecondary bool) {
@@ -869,18 +1012,27 @@ func (t *SessionTx) updateLaneRepairStateAfterControl(lane *txLane, scheduleSeco
 		lane.InitialRepairPacketsPending = 0
 		lane.SecondaryRepairPacketsPending = 0
 		lane.SecondaryRepairPacketsPerBurst = 0
+		if t.Reconstruction.TimeResendSecondaryRepairShard > 0 && t.laneNeedsStaleMonitoring(lane) {
+			if scheduleSecondary && lane.NextSecondaryRepairTimestamp == 0 {
+				lane.NextSecondaryRepairTimestamp = t.secondaryRepairScheduleBaseTimestamp() + uint64(t.Reconstruction.TimeResendSecondaryRepairShard)
+			}
+			return
+		}
 		lane.NextSecondaryRepairTimestamp = 0
 		return
 	}
 
-	burst := repairPacketQuota(t.Reconstruction.SecondaryRepairShardRatio, repairDemand)
+	burst := t.secondaryRepairBurst(repairDemand)
 	lane.SecondaryRepairPacketsPerBurst = burst
 	if t.Reconstruction.TimeResendSecondaryRepairShard <= 0 {
+		if burst == 0 {
+			t.clearSecondaryRepairState(lane)
+			return
+		}
+		if lane.SecondaryRepairPacketsPending > burst {
+			lane.SecondaryRepairPacketsPending = burst
+		}
 		if !scheduleSecondary {
-			if burst == 0 {
-				lane.SecondaryRepairPacketsPending = 0
-				lane.NextSecondaryRepairTimestamp = 0
-			}
 			return
 		}
 
@@ -890,12 +1042,17 @@ func (t *SessionTx) updateLaneRepairStateAfterControl(lane *txLane, scheduleSeco
 	}
 
 	if burst == 0 {
-		lane.SecondaryRepairPacketsPending = 0
-		lane.NextSecondaryRepairTimestamp = 0
+		t.clearSecondaryRepairState(lane)
 		return
 	}
 
-	if lane.SecondaryRepairPacketsPending == 0 && lane.NextSecondaryRepairTimestamp == 0 {
+	if lane.SecondaryRepairPacketsPending > burst {
+		lane.SecondaryRepairPacketsPending = burst
+	}
+	if lane.SecondaryRepairPacketsPending != 0 || !scheduleSecondary || lane.NextSecondaryRepairTimestamp != 0 {
+		return
+	}
+	if lane.NextSecondaryRepairTimestamp == 0 {
 		lane.NextSecondaryRepairTimestamp = t.secondaryRepairScheduleBaseTimestamp() + uint64(t.Reconstruction.TimeResendSecondaryRepairShard)
 	}
 }
@@ -909,28 +1066,38 @@ func (t *SessionTx) scheduleSecondaryRepairResends(timestamp uint64) {
 			continue
 		}
 		repairDemand := t.laneRepairDemand(lane)
-		if repairDemand == 0 {
-			lane.SecondaryRepairPacketsPerBurst = 0
-			lane.NextSecondaryRepairTimestamp = 0
-			continue
-		}
-
 		if lane.NextSecondaryRepairTimestamp == 0 {
-			lane.SecondaryRepairPacketsPerBurst = repairPacketQuota(t.Reconstruction.SecondaryRepairShardRatio, repairDemand)
-			if lane.SecondaryRepairPacketsPerBurst == 0 {
+			if repairDemand > 0 {
+				lane.SecondaryRepairPacketsPerBurst = t.secondaryRepairBurst(repairDemand)
+				if lane.SecondaryRepairPacketsPerBurst == 0 {
+					continue
+				}
+				lane.NextSecondaryRepairTimestamp = timestamp + uint64(t.Reconstruction.TimeResendSecondaryRepairShard)
 				continue
 			}
-			lane.NextSecondaryRepairTimestamp = timestamp + uint64(t.Reconstruction.TimeResendSecondaryRepairShard)
+			if t.laneNeedsStaleMonitoring(lane) {
+				lane.SecondaryRepairPacketsPerBurst = 0
+				lane.NextSecondaryRepairTimestamp = timestamp + uint64(t.Reconstruction.TimeResendSecondaryRepairShard)
+			}
 			continue
 		}
 		if timestamp < lane.NextSecondaryRepairTimestamp {
 			continue
 		}
+		if repairDemand == 0 {
+			if t.laneNeedsStaleMonitoring(lane) {
+				lane.SecondaryRepairPacketsPerBurst = 0
+				lane.NextSecondaryRepairTimestamp = timestamp + uint64(t.Reconstruction.TimeResendSecondaryRepairShard)
+				continue
+			}
+			t.clearSecondaryRepairState(lane)
+			continue
+		}
 
-		burst := repairPacketQuota(t.Reconstruction.SecondaryRepairShardRatio, repairDemand)
+		burst := t.secondaryRepairBurst(repairDemand)
 		lane.SecondaryRepairPacketsPerBurst = burst
 		if burst == 0 {
-			lane.NextSecondaryRepairTimestamp = 0
+			t.clearSecondaryRepairState(lane)
 			continue
 		}
 		lane.SecondaryRepairPacketsPending = burst
@@ -950,14 +1117,26 @@ func (t *SessionTx) scheduleNextSecondaryRepair(lane *txLane) {
 		return
 	}
 	if t.laneRepairDemand(lane) == 0 {
-		lane.NextSecondaryRepairTimestamp = 0
-		lane.SecondaryRepairPacketsPerBurst = 0
-		return
+		if !t.laneNeedsStaleMonitoring(lane) {
+			t.clearSecondaryRepairState(lane)
+			return
+		}
 	}
 	if lane.SecondaryRepairPacketsPending != 0 || lane.NextSecondaryRepairTimestamp != 0 {
 		return
 	}
+	lane.SecondaryRepairPacketsPerBurst = 0
 	lane.NextSecondaryRepairTimestamp = t.secondaryRepairScheduleBaseTimestamp() + uint64(t.Reconstruction.TimeResendSecondaryRepairShard)
+}
+
+func (t *SessionTx) hasRepairSendCapacity() bool {
+	for i := range t.txChannelsConfig {
+		if t.txChannelsConfig[i].MaterializeChannel == nil || t.channelRateLimited(i) {
+			continue
+		}
+		return true
+	}
+	return false
 }
 
 func (t *SessionTx) buildOpportunisticRepairBudget() []uint32 {
@@ -993,13 +1172,16 @@ func (t *SessionTx) laneRepairWeightForLane(index int) float64 {
 }
 
 func (t *SessionTx) nextConfiguredRepair(opportunisticBudget []uint32) (*txLane, repairSendKind, int) {
+	staleLane, staleIndex := t.staleOldestLane()
+	if staleLane != nil && staleLane.SecondaryRepairPacketsPending > 0 {
+		return staleLane, repairSendSecondary, staleIndex
+	}
 	for i, lane := range t.txLanes.lanes {
 		if lane == nil {
 			continue
 		}
-		if lane.PeerSeenChunksKnown && t.laneRepairDemand(lane) == 0 {
-			lane.InitialRepairPacketsPending = 0
-			lane.SecondaryRepairPacketsPending = 0
+		if t.laneRepairDemand(lane) == 0 {
+			t.clearRepairState(lane)
 			continue
 		}
 		if lane.InitialRepairPacketsPending > 0 {
@@ -1008,6 +1190,9 @@ func (t *SessionTx) nextConfiguredRepair(opportunisticBudget []uint32) (*txLane,
 	}
 	for i, lane := range t.txLanes.lanes {
 		if lane != nil && lane.SecondaryRepairPacketsPending > 0 {
+			if staleLane != nil && i == staleIndex {
+				continue
+			}
 			return lane, repairSendSecondary, i
 		}
 	}
@@ -1043,9 +1228,12 @@ func (t *SessionTx) createLane() (*txLane, error) {
 		return nil, err
 	}
 	laneID := uint64(t.txLanes.firstLaneID + int64(len(t.txLanes.lanes)))
+	createdAt := t.lifecycleTimestamp()
 	lane := &txLane{
-		LaneID:       laneID,
-		TransferLane: transferLane,
+		LaneID:                laneID,
+		TransferLane:          transferLane,
+		CreatedAtTimestamp:    createdAt,
+		LastProgressTimestamp: createdAt,
 	}
 	t.txLanes.lanes = append(t.txLanes.lanes, lane)
 	return lane, nil

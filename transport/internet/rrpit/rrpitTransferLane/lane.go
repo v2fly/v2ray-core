@@ -5,6 +5,7 @@ package rrpitTransferLane
 import (
 	"bytes"
 	stderrors "errors"
+	"math"
 
 	"github.com/lunixbochs/struc"
 	commonerrors "github.com/v2fly/v2ray-core/v5/common/errors"
@@ -14,6 +15,11 @@ import (
 const reconstructionLengthFieldSize = 2
 
 var ErrNotEnoughSymbolsToReconstruct = stderrors.New("not enough symbols to reconstruct")
+
+const (
+	SeenChunksCompletionSentinel = math.MaxUint16
+	maxReportedSeenChunks        = SeenChunksCompletionSentinel - 1
+)
 
 func IsNotEnoughSymbolsToReconstruct(err error) bool {
 	return commonerrors.Cause(err) == ErrNotEnoughSymbolsToReconstruct
@@ -27,6 +33,7 @@ type TransferLaneRx struct {
 	seenDataShards   []ReconstructionData
 	seenRepairShards map[uint32]struct{}
 	seenShardCount   uint32
+	completed        bool
 }
 
 func NewTransferLaneRx(shardSize int) (*TransferLaneRx, error) {
@@ -100,10 +107,14 @@ func (lr *TransferLaneRx) AddTransferData(data TransferData) (done bool, err err
 }
 
 func (lr *TransferLaneRx) GenerateControl() (TransferControl, error) {
-	if lr.seenShardCount > uint32(^uint16(0)) {
-		return TransferControl{}, newError("seen shard count exceeds control field capacity")
+	if lr.completed {
+		return TransferControl{SeenChunks: SeenChunksCompletionSentinel}, nil
 	}
-	return TransferControl{SeenChunks: uint16(lr.seenShardCount)}, nil
+	seenChunks := lr.seenShardCount
+	if seenChunks > uint32(maxReportedSeenChunks) {
+		seenChunks = uint32(maxReportedSeenChunks)
+	}
+	return TransferControl{SeenChunks: uint16(seenChunks)}, nil
 }
 
 func (lr *TransferLaneRx) Reconstruct() ([]ReconstructionData, error) {
@@ -111,6 +122,7 @@ func (lr *TransferLaneRx) Reconstruct() ([]ReconstructionData, error) {
 		return nil, newError("total data shards unknown")
 	}
 	if hasAllShards(lr.seenDataShards, lr.TotalDataShards) {
+		lr.completed = true
 		return cloneReconstructionDataSlice(lr.seenDataShards[:int(lr.TotalDataShards)]), nil
 	}
 	if lr.rxCodesState == nil {
@@ -131,6 +143,7 @@ func (lr *TransferLaneRx) Reconstruct() ([]ReconstructionData, error) {
 	}
 	lr.seenDataShards = reconstructed
 	lr.seenShardCount = lr.TotalDataShards
+	lr.completed = true
 	return cloneReconstructionDataSlice(reconstructed), nil
 }
 

@@ -68,24 +68,33 @@ func TestBuildBidirectionalSessionConfigIncludesReconstructionSettings(t *testin
 			MaxRewindableControlMessageNum: 10,
 			TimestampInterval:              11,
 			Reconstruction: &SessionReconstructionSetting{
-				InitialRepairShardRatio:        1.25,
-				LaneRepairWeight:               []float32{0.5, 0.25},
-				SecondaryRepairShardRatio:      0.75,
-				TimeResendSecondaryRepairShard: 3,
+				InitialRepairShardRatio:              1.25,
+				LaneRepairWeight:                     []float32{0.5, 0.25},
+				SecondaryRepairShardRatio:            0.75,
+				TimeResendSecondaryRepairShard:       3,
+				StaleLaneFinalizedAgeThresholdTicks:  7,
+				StaleLaneProgressStallThresholdTicks: 8,
+				SecondaryRepairMinBurst:              2,
 			},
 		},
 	})
 
 	want := rriptMonoDirectionSession.SessionTxReconstructionConfig{
-		InitialRepairShardRatio:        1.25,
-		LaneRepairWeight:               []float64{0.5, 0.25},
-		SecondaryRepairShardRatio:      0.75,
-		TimeResendSecondaryRepairShard: 3,
+		InitialRepairShardRatio:              1.25,
+		LaneRepairWeight:                     []float64{0.5, 0.25},
+		SecondaryRepairShardRatio:            0.75,
+		TimeResendSecondaryRepairShard:       3,
+		StaleLaneFinalizedAgeThresholdTicks:  7,
+		StaleLaneProgressStallThresholdTicks: 8,
+		SecondaryRepairMinBurst:              2,
 	}
 	got := config.Tx.Reconstruction
 	if got.InitialRepairShardRatio != want.InitialRepairShardRatio ||
 		got.SecondaryRepairShardRatio != want.SecondaryRepairShardRatio ||
 		got.TimeResendSecondaryRepairShard != want.TimeResendSecondaryRepairShard ||
+		got.StaleLaneFinalizedAgeThresholdTicks != want.StaleLaneFinalizedAgeThresholdTicks ||
+		got.StaleLaneProgressStallThresholdTicks != want.StaleLaneProgressStallThresholdTicks ||
+		got.SecondaryRepairMinBurst != want.SecondaryRepairMinBurst ||
 		len(got.LaneRepairWeight) != len(want.LaneRepairWeight) {
 		t.Fatalf("unexpected reconstruction config: %+v", got)
 	}

@@ -61,13 +61,20 @@ type SessionTxSnapshot struct {
 }
 
 type TxLaneSnapshot struct {
-	LaneID          uint64                 `json:"lane_id"`
-	DataShards      uint32                 `json:"data_shards"`
-	TotalDataShards uint32                 `json:"total_data_shards"`
-	Finalized       bool                   `json:"finalized"`
-	PeerSeenChunks  uint16                 `json:"peer_seen_chunks"`
-	RepairPackets   uint32                 `json:"repair_packets"`
-	TransferLane    TransferLaneTxSnapshot `json:"transfer_lane"`
+	LaneID                        uint64                 `json:"lane_id"`
+	DataShards                    uint32                 `json:"data_shards"`
+	TotalDataShards               uint32                 `json:"total_data_shards"`
+	Finalized                     bool                   `json:"finalized"`
+	PeerSeenChunks                uint16                 `json:"peer_seen_chunks"`
+	PeerReconstructed             bool                   `json:"peer_reconstructed"`
+	RepairPackets                 uint32                 `json:"repair_packets"`
+	InitialRepairPacketsPending   uint32                 `json:"initial_repair_packets_pending"`
+	SecondaryRepairPacketsPending uint32                 `json:"secondary_repair_packets_pending"`
+	NextSecondaryRepairTimestamp  uint64                 `json:"next_secondary_repair_timestamp"`
+	CreatedAtTimestamp            uint64                 `json:"created_at_timestamp"`
+	FinalizedAtTimestamp          uint64                 `json:"finalized_at_timestamp"`
+	LastProgressTimestamp         uint64                 `json:"last_progress_timestamp"`
+	TransferLane                  TransferLaneTxSnapshot `json:"transfer_lane"`
 }
 
 type TransferLaneTxSnapshot struct {
@@ -120,6 +127,7 @@ type TransferLaneRxSnapshot struct {
 	SeenShardCount     uint32 `json:"seen_shard_count"`
 	SeenDataShardCount int    `json:"seen_data_shard_count"`
 	HasDecoder         bool   `json:"has_decoder"`
+	Completed          bool   `json:"completed"`
 }
 
 type RxChannelSnapshot struct {
@@ -697,12 +705,19 @@ func snapshotTxLane(lanePtr reflect.Value) TxLaneSnapshot {
 	transferLane := forceValue(lane.FieldByName("TransferLane"))
 
 	snapshot := TxLaneSnapshot{
-		LaneID:          lane.FieldByName("LaneID").Uint(),
-		DataShards:      uint32(lane.FieldByName("DataShards").Uint()),
-		TotalDataShards: uint32(lane.FieldByName("TotalDataShards").Uint()),
-		Finalized:       lane.FieldByName("Finalized").Bool(),
-		PeerSeenChunks:  uint16(lane.FieldByName("PeerSeenChunks").Uint()),
-		RepairPackets:   uint32(lane.FieldByName("RepairPackets").Uint()),
+		LaneID:                        lane.FieldByName("LaneID").Uint(),
+		DataShards:                    uint32(lane.FieldByName("DataShards").Uint()),
+		TotalDataShards:               uint32(lane.FieldByName("TotalDataShards").Uint()),
+		Finalized:                     lane.FieldByName("Finalized").Bool(),
+		PeerSeenChunks:                uint16(lane.FieldByName("PeerSeenChunks").Uint()),
+		PeerReconstructed:             lane.FieldByName("PeerReconstructed").Bool(),
+		RepairPackets:                 uint32(lane.FieldByName("RepairPackets").Uint()),
+		InitialRepairPacketsPending:   uint32(lane.FieldByName("InitialRepairPacketsPending").Uint()),
+		SecondaryRepairPacketsPending: uint32(lane.FieldByName("SecondaryRepairPacketsPending").Uint()),
+		NextSecondaryRepairTimestamp:  lane.FieldByName("NextSecondaryRepairTimestamp").Uint(),
+		CreatedAtTimestamp:            lane.FieldByName("CreatedAtTimestamp").Uint(),
+		FinalizedAtTimestamp:          lane.FieldByName("FinalizedAtTimestamp").Uint(),
+		LastProgressTimestamp:         lane.FieldByName("LastProgressTimestamp").Uint(),
 	}
 	if !transferLane.IsNil() {
 		snapshot.TransferLane = snapshotTransferLaneTx(transferLane)
@@ -810,6 +825,7 @@ func snapshotTransferLaneRx(transferLanePtr reflect.Value) TransferLaneRxSnapsho
 		SeenShardCount:     uint32(transferLane.FieldByName("seenShardCount").Uint()),
 		SeenDataShardCount: seenDataShards.Len(),
 		HasDecoder:         !transferLane.FieldByName("rxCodesState").IsNil(),
+		Completed:          transferLane.FieldByName("completed").Bool(),
 	}
 }
 

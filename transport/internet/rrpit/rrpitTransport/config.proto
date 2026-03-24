@@ -59,6 +59,15 @@ message SessionReconstructionSetting {
 
   // the number of tickets before we send the secondary repair shard again
   int32 time_resend_secondary_repair_shard = 4;
+
+  // Number of ticks a finalized oldest lane may stay incomplete before stale-lane boost activates.
+  int32 stale_lane_finalized_age_threshold_ticks = 5;
+
+  // Number of ticks the oldest finalized lane may make no progress before stale-lane boost activates.
+  int32 stale_lane_progress_stall_threshold_ticks = 6;
+
+  // Minimum number of repair shards in a normal secondary resend burst.
+  int32 secondary_repair_min_burst = 7;
 }
 
 message SessionSetting {

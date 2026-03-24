@@ -275,8 +275,14 @@ type SessionReconstructionSetting struct {
 	SecondaryRepairShardRatio float32 `protobuf:"fixed32,3,opt,name=secondary_repair_shard_ratio,json=secondaryRepairShardRatio,proto3" json:"secondary_repair_shard_ratio,omitempty"`
 	// the number of tickets before we send the secondary repair shard again
 	TimeResendSecondaryRepairShard int32 `protobuf:"varint,4,opt,name=time_resend_secondary_repair_shard,json=timeResendSecondaryRepairShard,proto3" json:"time_resend_secondary_repair_shard,omitempty"`
-	unknownFields                  protoimpl.UnknownFields
-	sizeCache                      protoimpl.SizeCache
+	// Number of ticks a finalized oldest lane may stay incomplete before stale-lane boost activates.
+	StaleLaneFinalizedAgeThresholdTicks int32 `protobuf:"varint,5,opt,name=stale_lane_finalized_age_threshold_ticks,json=staleLaneFinalizedAgeThresholdTicks,proto3" json:"stale_lane_finalized_age_threshold_ticks,omitempty"`
+	// Number of ticks the oldest finalized lane may make no progress before stale-lane boost activates.
+	StaleLaneProgressStallThresholdTicks int32 `protobuf:"varint,6,opt,name=stale_lane_progress_stall_threshold_ticks,json=staleLaneProgressStallThresholdTicks,proto3" json:"stale_lane_progress_stall_threshold_ticks,omitempty"`
+	// Minimum number of repair shards in a normal secondary resend burst.
+	SecondaryRepairMinBurst int32 `protobuf:"varint,7,opt,name=secondary_repair_min_burst,json=secondaryRepairMinBurst,proto3" json:"secondary_repair_min_burst,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *SessionReconstructionSetting) Reset() {
@@ -333,6 +339,27 @@ func (x *SessionReconstructionSetting) GetSecondaryRepairShardRatio() float32 {
 func (x *SessionReconstructionSetting) GetTimeResendSecondaryRepairShard() int32 {
 	if x != nil {
 		return x.TimeResendSecondaryRepairShard
+	}
+	return 0
+}
+
+func (x *SessionReconstructionSetting) GetStaleLaneFinalizedAgeThresholdTicks() int32 {
+	if x != nil {
+		return x.StaleLaneFinalizedAgeThresholdTicks
+	}
+	return 0
+}
+
+func (x *SessionReconstructionSetting) GetStaleLaneProgressStallThresholdTicks() int32 {
+	if x != nil {
+		return x.StaleLaneProgressStallThresholdTicks
+	}
+	return 0
+}
+
+func (x *SessionReconstructionSetting) GetSecondaryRepairMinBurst() int32 {
+	if x != nil {
+		return x.SecondaryRepairMinBurst
 	}
 	return 0
 }
@@ -676,12 +703,15 @@ const file_transport_internet_rrpit_rrpitTransport_config_proto_rawDesc = "" +
 	"\n" +
 	"shard_size\x18\x01 \x01(\x05R\tshardSize\x126\n" +
 	"\x18max_data_shards_per_lane\x18\x02 \x01(\x05R\x14maxDataShardsPerLane\x12,\n" +
-	"\x12max_buffered_lanes\x18\x03 \x01(\x05R\x10maxBufferedLanes\"\x96\x02\n" +
+	"\x12max_buffered_lanes\x18\x03 \x01(\x05R\x10maxBufferedLanes\"\x83\x04\n" +
 	"\x1cSessionReconstructionSetting\x12;\n" +
 	"\x1ainitial_repair_shard_ratio\x18\x01 \x01(\x02R\x17initialRepairShardRatio\x12,\n" +
 	"\x12lane_repair_weight\x18\x02 \x03(\x02R\x10laneRepairWeight\x12?\n" +
 	"\x1csecondary_repair_shard_ratio\x18\x03 \x01(\x02R\x19secondaryRepairShardRatio\x12J\n" +
-	"\"time_resend_secondary_repair_shard\x18\x04 \x01(\x05R\x1etimeResendSecondaryRepairShard\"\xe9\x02\n" +
+	"\"time_resend_secondary_repair_shard\x18\x04 \x01(\x05R\x1etimeResendSecondaryRepairShard\x12U\n" +
+	"(stale_lane_finalized_age_threshold_ticks\x18\x05 \x01(\x05R#staleLaneFinalizedAgeThresholdTicks\x12W\n" +
+	")stale_lane_progress_stall_threshold_ticks\x18\x06 \x01(\x05R$staleLaneProgressStallThresholdTicks\x12;\n" +
+	"\x1asecondary_repair_min_burst\x18\a \x01(\x05R\x17secondaryRepairMinBurst\"\xe9\x02\n" +
 	"\x0eSessionSetting\x12&\n" +
 	"\x0fodd_channel_ids\x18\x01 \x01(\bR\roddChannelIds\x12?\n" +
 	"\x1cmax_rewindable_timestamp_num\x18\x02 \x01(\x05R\x19maxRewindableTimestampNum\x12J\n" +

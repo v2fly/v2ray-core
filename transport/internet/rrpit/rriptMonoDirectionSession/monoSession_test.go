@@ -200,14 +200,16 @@ func TestSessionTxLaneRepairWeightUsesPeerSeenChunks(t *testing.T) {
 	if err := tx.OnNewTimestamp(2); err != nil {
 		t.Fatal(err)
 	}
-	if len(writer.writes) != 3 {
-		t.Fatalf("expected one weighted repair packet after control feedback, got %d writes", len(writer.writes))
+	if len(writer.writes) != 4 {
+		t.Fatalf("expected two weighted repair packets after control feedback against the K+1 target, got %d writes", len(writer.writes))
 	}
 
-	_, payload := splitMaterializedWire(t, writer.writes[2])
-	packet := mustUnmarshalSessionDataPacket(t, payload)
-	if packet.Transfer.Seq != 2 {
-		t.Fatalf("expected weighted repair packet seq 2, got %d", packet.Transfer.Seq)
+	for i, wantSeq := range []uint32{2, 3} {
+		_, payload := splitMaterializedWire(t, writer.writes[2+i])
+		packet := mustUnmarshalSessionDataPacket(t, payload)
+		if packet.Transfer.Seq != wantSeq {
+			t.Fatalf("expected weighted repair packet seq %d, got %d", wantSeq, packet.Transfer.Seq)
+		}
 	}
 }
 
@@ -258,8 +260,8 @@ func TestSessionTxSecondaryRepairResendsAfterConfiguredTicks(t *testing.T) {
 	if err := tx.OnNewTimestamp(3); err != nil {
 		t.Fatal(err)
 	}
-	if len(writer.writes) != 2 {
-		t.Fatalf("expected the first scheduled secondary repair burst after two ticks, got %d writes", len(writer.writes))
+	if len(writer.writes) != 3 {
+		t.Fatalf("expected the first scheduled secondary repair burst to send 2 repair shards against the K+1 target, got %d writes", len(writer.writes))
 	}
 	if err := tx.OnNewTimestamp(4); err != nil {
 		t.Fatal(err)
@@ -267,11 +269,11 @@ func TestSessionTxSecondaryRepairResendsAfterConfiguredTicks(t *testing.T) {
 	if err := tx.OnNewTimestamp(5); err != nil {
 		t.Fatal(err)
 	}
-	if len(writer.writes) != 3 {
+	if len(writer.writes) != 5 {
 		t.Fatalf("expected the next scheduled secondary repair burst after another two ticks, got %d writes", len(writer.writes))
 	}
 
-	for i, wantSeq := range []uint32{1, 2} {
+	for i, wantSeq := range []uint32{1, 2, 3, 4} {
 		_, payload := splitMaterializedWire(t, writer.writes[1+i])
 		packet := mustUnmarshalSessionDataPacket(t, payload)
 		if packet.Transfer.Seq != wantSeq {
@@ -289,8 +291,10 @@ func TestSessionTxSecondaryRepairContinuesForOldestLaneAfterSeenChunksReachTotal
 		MaxRewindableTimestampNum:      8,
 		MaxRewindableControlMessageNum: 8,
 		Reconstruction: SessionTxReconstructionConfig{
-			SecondaryRepairShardRatio:      1,
-			TimeResendSecondaryRepairShard: 1,
+			SecondaryRepairShardRatio:            1,
+			TimeResendSecondaryRepairShard:       1,
+			StaleLaneFinalizedAgeThresholdTicks:  2,
+			StaleLaneProgressStallThresholdTicks: 2,
 		},
 	})
 	channelID, err := tx.AttachTxChannel(writer)
@@ -304,8 +308,8 @@ func TestSessionTxSecondaryRepairContinuesForOldestLaneAfterSeenChunksReachTotal
 	if err := tx.OnNewTimestamp(1); err != nil {
 		t.Fatal(err)
 	}
-	if len(writer.writes) != 2 {
-		t.Fatalf("expected the first scheduled secondary repair burst at tick 1, got %d writes", len(writer.writes))
+	if len(writer.writes) != 3 {
+		t.Fatalf("expected the first scheduled secondary repair burst at tick 1 to send 2 repair shards against the K+1 target, got %d writes", len(writer.writes))
 	}
 
 	if err := tx.AcceptRemoteControlMessage(ControlMessage{
@@ -327,12 +331,12 @@ func TestSessionTxSecondaryRepairContinuesForOldestLaneAfterSeenChunksReachTotal
 	if err := tx.OnNewTimestamp(3); err != nil {
 		t.Fatal(err)
 	}
-	if len(writer.writes) != 4 {
-		t.Fatalf("expected repair to continue after SeenChunks reached total, got %d writes", len(writer.writes))
+	if len(writer.writes) != 7 {
+		t.Fatalf("expected stale oldest lane to keep receiving a tail of 2 repairs per tick, got %d writes", len(writer.writes))
 	}
 
-	for i, wantSeq := range []uint32{2, 3} {
-		_, payload := splitMaterializedWire(t, writer.writes[2+i])
+	for i, wantSeq := range []uint32{3, 4, 5, 6} {
+		_, payload := splitMaterializedWire(t, writer.writes[3+i])
 		packet := mustUnmarshalSessionDataPacket(t, payload)
 		if packet.Transfer.Seq != wantSeq {
 			t.Fatalf("expected repair packet seq %d, got %d", wantSeq, packet.Transfer.Seq)
@@ -390,21 +394,23 @@ func TestSessionTxSecondaryRepairRecomputesMissingAtResendTime(t *testing.T) {
 	if err := tx.OnNewTimestamp(2); err != nil {
 		t.Fatal(err)
 	}
-	if len(writer.writes) != 5 {
-		t.Fatalf("expected exactly one repair shard at the scheduled resend tick, got %d writes", len(writer.writes))
+	if len(writer.writes) != 6 {
+		t.Fatalf("expected exactly two repair shards at the scheduled resend tick against the K+1 target, got %d writes", len(writer.writes))
 	}
 
 	if err := tx.OnNewTimestamp(3); err != nil {
 		t.Fatal(err)
 	}
-	if len(writer.writes) != 5 {
+	if len(writer.writes) != 6 {
 		t.Fatalf("expected no additional resend before the next interval, got %d writes", len(writer.writes))
 	}
 
-	_, payload := splitMaterializedWire(t, writer.writes[4])
-	packet := mustUnmarshalSessionDataPacket(t, payload)
-	if packet.Transfer.Seq != 4 {
-		t.Fatalf("expected first repair packet seq 4, got %d", packet.Transfer.Seq)
+	for i, wantSeq := range []uint32{4, 5} {
+		_, payload := splitMaterializedWire(t, writer.writes[4+i])
+		packet := mustUnmarshalSessionDataPacket(t, payload)
+		if packet.Transfer.Seq != wantSeq {
+			t.Fatalf("expected scheduled repair packet seq %d, got %d", wantSeq, packet.Transfer.Seq)
+		}
 	}
 }
 
@@ -467,6 +473,12 @@ func TestSessionTxSeenChunksDoesNotCompleteLane(t *testing.T) {
 		MaxBufferedLanes:               4,
 		MaxRewindableTimestampNum:      8,
 		MaxRewindableControlMessageNum: 8,
+		Reconstruction: SessionTxReconstructionConfig{
+			SecondaryRepairShardRatio:            1,
+			TimeResendSecondaryRepairShard:       1,
+			StaleLaneFinalizedAgeThresholdTicks:  2,
+			StaleLaneProgressStallThresholdTicks: 2,
+		},
 	})
 	channelID, err := tx.AttachTxChannel(writer)
 	if err != nil {
@@ -499,8 +511,343 @@ func TestSessionTxSeenChunksDoesNotCompleteLane(t *testing.T) {
 	if err := tx.OnNewTimestamp(2); err != nil {
 		t.Fatal(err)
 	}
+	if len(writer.writes) != 5 {
+		t.Fatalf("expected a stale-lane repair tail of 2 after high SeenChunks without a completion sentinel, got %d total writes", len(writer.writes))
+	}
+}
+
+func TestSessionTxFinalizeResetsProgressTimestamp(t *testing.T) {
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           2,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+	})
+	tx.currentTimestampInitialized = true
+	tx.currentTimestamp = 3
+
+	lane, err := tx.createLane()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if lane.CreatedAtTimestamp != 3 || lane.LastProgressTimestamp != 3 {
+		t.Fatalf("unexpected creation timestamps: %+v", lane)
+	}
+
+	transfer, err := lane.TransferLane.AddData([]byte("ok"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if transfer.Seq != 0 {
+		t.Fatalf("expected first source seq 0, got %d", transfer.Seq)
+	}
+	lane.DataShards += 1
+
+	tx.currentTimestamp = 9
+	tx.finalizeLane(lane)
+	if lane.FinalizedAtTimestamp != 9 {
+		t.Fatalf("expected finalized timestamp 9, got %d", lane.FinalizedAtTimestamp)
+	}
+	if lane.LastProgressTimestamp != 9 {
+		t.Fatalf("expected progress timestamp to reset on finalize, got %d", lane.LastProgressTimestamp)
+	}
+}
+
+func TestSessionTxLaneDoesNotBecomeStaleImmediatelyAfterFinalize(t *testing.T) {
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           2,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+		Reconstruction: SessionTxReconstructionConfig{
+			SecondaryRepairShardRatio:            1,
+			TimeResendSecondaryRepairShard:       1,
+			StaleLaneFinalizedAgeThresholdTicks:  4,
+			StaleLaneProgressStallThresholdTicks: 4,
+		},
+	})
+	tx.currentTimestampInitialized = true
+	tx.currentTimestamp = 1
+
+	lane, err := tx.createLane()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tx.currentTimestamp = 20
+	if _, err := lane.TransferLane.AddData([]byte("ok")); err != nil {
+		t.Fatal(err)
+	}
+	lane.DataShards += 1
+	tx.finalizeLane(lane)
+
+	if tx.isStaleOldestLane(lane) {
+		t.Fatal("lane should not become stale immediately after finalize")
+	}
+}
+
+func TestSessionTxLaneMissingShardsTargetsDataShardsPlusOne(t *testing.T) {
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           4,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+	})
+	lane := &txLane{
+		TotalDataShards:     4,
+		PeerSeenChunksKnown: true,
+		PeerSeenChunks:      3,
+	}
+
+	if missing := tx.laneMissingShards(lane); missing != 2 {
+		t.Fatalf("expected missing shards to target K+1, got %d", missing)
+	}
+}
+
+func TestSessionTxStaleOldestLaneSecondaryPriorityBeatsLaterInitialRepair(t *testing.T) {
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           1,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+		Reconstruction: SessionTxReconstructionConfig{
+			SecondaryRepairShardRatio:            1,
+			TimeResendSecondaryRepairShard:       1,
+			StaleLaneFinalizedAgeThresholdTicks:  1,
+			StaleLaneProgressStallThresholdTicks: 1,
+		},
+	})
+	tx.currentTimestampInitialized = true
+	tx.currentTimestamp = 5
+	tx.txLanes.lanes = []*txLane{
+		{
+			LaneID:                        0,
+			Finalized:                     true,
+			TotalDataShards:               1,
+			PeerSeenChunksKnown:           true,
+			PeerSeenChunks:                1,
+			SecondaryRepairPacketsPending: 2,
+			FinalizedAtTimestamp:          1,
+			LastProgressTimestamp:         1,
+		},
+		{
+			LaneID:                      1,
+			Finalized:                   true,
+			TotalDataShards:             1,
+			InitialRepairPacketsPending: 1,
+			FinalizedAtTimestamp:        5,
+			LastProgressTimestamp:       5,
+		},
+	}
+
+	lane, kind, index := tx.nextConfiguredRepair(nil)
+	if lane == nil {
+		t.Fatal("expected a scheduled repair lane")
+	}
+	if kind != repairSendSecondary || index != 0 || lane.LaneID != 0 {
+		t.Fatalf("expected stale oldest lane secondary repair first, got kind=%d index=%d lane=%d", kind, index, lane.LaneID)
+	}
+}
+
+func TestSessionTxBecomingOldestBootstrapsStaleMonitoring(t *testing.T) {
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           1,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+		Reconstruction: SessionTxReconstructionConfig{
+			SecondaryRepairShardRatio:            1,
+			TimeResendSecondaryRepairShard:       5,
+			StaleLaneFinalizedAgeThresholdTicks:  2,
+			StaleLaneProgressStallThresholdTicks: 2,
+		},
+	})
+	tx.currentTimestampInitialized = true
+	tx.currentTimestamp = 40
+	tx.txLanes.firstLaneID = 100
+	tx.txLanes.lanes = []*txLane{
+		{
+			LaneID:                100,
+			Finalized:             true,
+			TotalDataShards:       1,
+			PeerSeenChunksKnown:   true,
+			PeerSeenChunks:        65535,
+			PeerReconstructed:     true,
+			CreatedAtTimestamp:    1,
+			FinalizedAtTimestamp:  2,
+			LastProgressTimestamp: 3,
+		},
+		{
+			LaneID:                101,
+			Finalized:             true,
+			TotalDataShards:       20,
+			PeerSeenChunksKnown:   true,
+			PeerSeenChunks:        20,
+			CreatedAtTimestamp:    4,
+			FinalizedAtTimestamp:  5,
+			LastProgressTimestamp: 6,
+		},
+	}
+
+	tx.dropLanesThrough(100)
+	if tx.txLanes.firstLaneID != 101 {
+		t.Fatalf("expected first lane id to advance to 101, got %d", tx.txLanes.firstLaneID)
+	}
+	lane := tx.txLanes.lanes[0]
+	if lane.NextSecondaryRepairTimestamp != 0 {
+		t.Fatalf("expected no preexisting secondary timer, got %d", lane.NextSecondaryRepairTimestamp)
+	}
+
+	tx.scheduleSecondaryRepairResends(40)
+	if lane.NextSecondaryRepairTimestamp != 45 {
+		t.Fatalf("expected stale-monitoring timer to bootstrap at 45, got %d", lane.NextSecondaryRepairTimestamp)
+	}
+}
+
+func TestSessionTxCompletionSentinelStopsRepairImmediately(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           1,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      8,
+		MaxRewindableControlMessageNum: 8,
+		Reconstruction: SessionTxReconstructionConfig{
+			SecondaryRepairShardRatio:      1,
+			TimeResendSecondaryRepairShard: 1,
+		},
+	})
+	channelID, err := tx.AttachTxChannel(writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("hello")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.OnNewTimestamp(1); err != nil {
+		t.Fatal(err)
+	}
 	if len(writer.writes) != 3 {
-		t.Fatalf("expected an additional repair packet after high SeenChunks, got %d total writes", len(writer.writes))
+		t.Fatalf("expected source and two repairs before completion sentinel under the K+1 target, got %d writes", len(writer.writes))
+	}
+
+	if err := tx.AcceptRemoteControlMessage(ControlMessage{
+		FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: channelID},
+		Lane: SessionLaneControlMessage{
+			LaneACKTo:      -1,
+			LenLaneControl: 1,
+			LaneControl: []rrpitTransferLane.TransferControl{
+				{SeenChunks: rrpitTransferLane.SeenChunksCompletionSentinel},
+			},
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	lane := tx.txLanes.lanes[0]
+	if !lane.PeerReconstructed {
+		t.Fatal("expected completion sentinel to mark peer reconstruction complete")
+	}
+	if lane.InitialRepairPacketsPending != 0 || lane.SecondaryRepairPacketsPending != 0 ||
+		lane.SecondaryRepairPacketsPerBurst != 0 || lane.NextSecondaryRepairTimestamp != 0 {
+		t.Fatalf("expected completion sentinel to clear repair state, got %+v", lane)
+	}
+
+	if err := tx.OnNewTimestamp(2); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 3 {
+		t.Fatalf("expected no further repair after completion sentinel, got %d writes", len(writer.writes))
+	}
+}
+
+func TestSessionTxDeferredSecondaryRepairDoesNotRefreshTicketEarly(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           1,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      8,
+		MaxRewindableControlMessageNum: 8,
+		Reconstruction: SessionTxReconstructionConfig{
+			SecondaryRepairShardRatio:      1,
+			TimeResendSecondaryRepairShard: 1,
+		},
+	})
+	channelID, err := tx.AttachTxChannelWithConfig(writer, ChannelConfig{Weight: 1, MaxSendingSpeed: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	tx.currentTimestampInitialized = true
+	tx.currentTimestamp = 1
+
+	if err := tx.SendMessage([]byte("hello")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.AcceptRemoteControlMessage(ControlMessage{
+		FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: channelID},
+		Lane: SessionLaneControlMessage{
+			LaneACKTo:      -1,
+			LenLaneControl: 1,
+			LaneControl: []rrpitTransferLane.TransferControl{
+				{SeenChunks: 0},
+			},
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	lane := tx.txLanes.lanes[0]
+	if lane.NextSecondaryRepairTimestamp != 2 {
+		t.Fatalf("expected resend ticket at timestamp 2, got %d", lane.NextSecondaryRepairTimestamp)
+	}
+
+	tx.currentTimestamp = 2
+	tx.currentTimestampInitialized = true
+	tx.txChannelsConfig[0].Status.TimestampLastSent = 2
+	tx.txChannelsConfig[0].Status.PacketSentCurrentTimestamp = 1
+	tx.scheduleSecondaryRepairResends(2)
+
+	if lane.SecondaryRepairPacketsPending != 2 {
+		t.Fatalf("expected pending resend burst of 2 against the K+1 target, got %d", lane.SecondaryRepairPacketsPending)
+	}
+	if lane.NextSecondaryRepairTimestamp != 0 {
+		t.Fatalf("expected active pending resend to clear the ticket, got %d", lane.NextSecondaryRepairTimestamp)
+	}
+
+	tx.currentTimestamp = 3
+	tx.txChannelsConfig[0].Status.TimestampLastSent = 3
+	tx.txChannelsConfig[0].Status.PacketSentCurrentTimestamp = 1
+	tx.scheduleSecondaryRepairResends(3)
+	if lane.SecondaryRepairPacketsPending != 2 || lane.NextSecondaryRepairTimestamp != 0 {
+		t.Fatalf("expected deferred resend to stay active without refreshing the ticket, got pending=%d next=%d", lane.SecondaryRepairPacketsPending, lane.NextSecondaryRepairTimestamp)
+	}
+
+	tx.txChannelsConfig[0].Status.PacketSentCurrentTimestamp = 0
+	if err := tx.OnNewTimestamp(3); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 2 {
+		t.Fatalf("expected deferred repair to send once capacity returned, got %d writes", len(writer.writes))
+	}
+	if lane.SecondaryRepairPacketsPending != 1 || lane.NextSecondaryRepairTimestamp != 0 {
+		t.Fatalf("expected one repair packet to remain pending after one rate-limited tick, got pending=%d next=%d", lane.SecondaryRepairPacketsPending, lane.NextSecondaryRepairTimestamp)
+	}
+
+	if err := tx.OnNewTimestamp(4); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 3 {
+		t.Fatalf("expected second deferred repair to send on the next tick, got %d writes", len(writer.writes))
+	}
+	if lane.NextSecondaryRepairTimestamp != 5 {
+		t.Fatalf("expected next resend ticket to refresh only after the pending burst drained, got %d", lane.NextSecondaryRepairTimestamp)
 	}
 }
 
@@ -815,8 +1162,15 @@ func TestSessionRxDeliversLanesInOrder(t *testing.T) {
 	if ctrl.Lane.LenLaneControl != 2 || len(ctrl.Lane.LaneControl) != 2 {
 		t.Fatalf("expected 2 lane controls, got len field %d and %d entries", ctrl.Lane.LenLaneControl, len(ctrl.Lane.LaneControl))
 	}
-	if ctrl.Lane.LaneControl[0].SeenChunks != 0 || ctrl.Lane.LaneControl[1].SeenChunks != 2 {
+	if ctrl.Lane.LaneControl[0].SeenChunks != 0 || ctrl.Lane.LaneControl[1].SeenChunks != rrpitTransferLane.SeenChunksCompletionSentinel {
 		t.Fatalf("unexpected lane controls: %+v", ctrl.Lane.LaneControl)
+	}
+	ctrlAgain, err := rx.GenerateControlMessage(channelID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ctrlAgain.Lane.LaneControl[1].SeenChunks != rrpitTransferLane.SeenChunksCompletionSentinel {
+		t.Fatalf("expected completion sentinel to persist until ack advances, got %+v", ctrlAgain.Lane.LaneControl)
 	}
 
 	for _, wireIndex := range []int{0, 3} {

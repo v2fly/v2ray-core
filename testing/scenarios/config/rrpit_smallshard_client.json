@@ -1,0 +1,69 @@
+{
+  "log": {
+    "error": {
+      "level": "Debug",
+      "type": "Console"
+    },
+    "access": {
+      "type": "None"
+    }
+  },
+  "outbounds": [
+    {
+      "protocol": "vmess",
+      "settings": {
+        "address": "127.0.0.1",
+        "port": 18003,
+        "uuid": "bcc71618-e552-42c2-a2a3-d4c17a9df764"
+      },
+      "streamSettings": {
+        "transport": "rrpit",
+        "transportSettings": {
+          "channels": [
+            {
+              "setting": {
+                "mtu": 1200,
+                "weight": 1,
+                "maxSendingSpeed": 64
+              },
+              "channel": {
+                "@type": "types.v2fly.org/v2ray.core.transport.internet.rrpit.transport.DTLSUDPChannel",
+                "password": "rrpit-test-smallshard"
+              }
+            }
+          ],
+          "lane": {
+            "shardSize": 256,
+            "maxDataShardsPerLane": 2,
+            "maxBufferedLanes": 32
+          },
+          "session": {
+            "oddChannelIds": true,
+            "maxRewindableTimestampNum": 128,
+            "maxRewindableControlMessageNum": 128,
+            "timestampInterval": 5000000
+          },
+          "adaptor": {
+            "smuxVersion": 2,
+            "keepAliveDisabled": true,
+            "maxFrameSize": 1024,
+            "maxReceiveBuffer": 524288,
+            "maxStreamBuffer": 32768
+          }
+        }
+      }
+    }
+  ],
+  "inbounds": [
+    {
+      "protocol": "socks",
+      "settings": {
+        "udpEnabled": false,
+        "address": "127.0.0.1",
+        "packetEncoding": "Packet"
+      },
+      "port": 18004,
+      "listen": "127.0.0.1"
+    }
+  ]
+}

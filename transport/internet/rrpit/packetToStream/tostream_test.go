@@ -206,6 +206,78 @@ func TestSessionPacketConnReordersPacketsBySequence(t *testing.T) {
 	conn.mu.Unlock()
 }
 
+func TestSessionPacketConnCloseWaitsForBufferedPayloadDrain(t *testing.T) {
+	conn := newSessionPacketConn(nil)
+
+	if err := conn.OnMessage(marshalAdapterPacketForTest(0, []byte("hello"))); err != nil {
+		t.Fatal(err)
+	}
+
+	closeDone := make(chan struct{})
+	go func() {
+		_ = conn.Close()
+		close(closeDone)
+	}()
+
+	select {
+	case <-closeDone:
+		t.Fatal("close returned before buffered payload drained")
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	buf := make([]byte, 5)
+	if _, err := io.ReadFull(conn, buf); err != nil {
+		t.Fatal(err)
+	}
+	if string(buf) != "hello" {
+		t.Fatalf("unexpected payload: %q", buf)
+	}
+
+	select {
+	case <-closeDone:
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("close did not finish after buffered payload drained")
+	}
+
+	if _, err := conn.Read(make([]byte, 1)); err != io.EOF {
+		t.Fatalf("expected EOF after graceful close, got %v", err)
+	}
+}
+
+func TestSessionPacketConnCloseRejectsWritesWhileDraining(t *testing.T) {
+	conn := newSessionPacketConn(nil)
+
+	if err := conn.OnMessage(marshalAdapterPacketForTest(0, []byte("hello"))); err != nil {
+		t.Fatal(err)
+	}
+
+	closeStarted := make(chan struct{})
+	closeDone := make(chan struct{})
+	go func() {
+		close(closeStarted)
+		_ = conn.Close()
+		close(closeDone)
+	}()
+
+	<-closeStarted
+	time.Sleep(20 * time.Millisecond)
+
+	if _, err := conn.Write([]byte("blocked")); err != io.ErrClosedPipe {
+		t.Fatalf("expected io.ErrClosedPipe while close is draining, got %v", err)
+	}
+
+	buf := make([]byte, 5)
+	if _, err := io.ReadFull(conn, buf); err != nil {
+		t.Fatal(err)
+	}
+
+	select {
+	case <-closeDone:
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("close did not finish after draining payload")
+	}
+}
+
 type packetWire struct {
 	mu     sync.Mutex
 	closed bool

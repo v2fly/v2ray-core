@@ -1,0 +1,81 @@
+{
+  "log": {
+    "error": {
+      "level": "Debug",
+      "type": "Console"
+    },
+    "access": {
+      "type": "None"
+    }
+  },
+  "outbounds": [
+    {
+      "protocol": "vmess",
+      "settings": {
+        "address": "127.0.0.1",
+        "port": 17903,
+        "uuid": "bcc71618-e552-42c2-a2a3-d4c17a9df764"
+      },
+      "streamSettings": {
+        "transport": "rrpit",
+        "transportSettings": {
+          "channels": [
+            {
+              "setting": {
+                "mtu": 1200,
+                "weight": 1,
+                "maxSendingSpeed": 2
+              },
+              "channel": {
+                "@type": "types.v2fly.org/v2ray.core.transport.internet.rrpit.transport.DTLSUDPChannel",
+                "password": "rrpit-test-multichannel-primary"
+              }
+            },
+            {
+              "setting": {
+                "mtu": 1200,
+                "weight": 3,
+                "maxSendingSpeed": 4
+              },
+              "channel": {
+                "@type": "types.v2fly.org/v2ray.core.transport.internet.rrpit.transport.DTLSUDPChannel",
+                "ipAddr": "127.0.0.1",
+                "port": 17905,
+                "password": "rrpit-test-multichannel-secondary"
+              }
+            }
+          ],
+          "lane": {
+            "shardSize": 640,
+            "maxDataShardsPerLane": 4,
+            "maxBufferedLanes": 64
+          },
+          "session": {
+            "oddChannelIds": true,
+            "maxRewindableTimestampNum": 512,
+            "maxRewindableControlMessageNum": 512,
+            "timestampInterval": 5000000
+          },
+          "adaptor": {
+            "smuxVersion": 1,
+            "maxFrameSize": 2048,
+            "maxReceiveBuffer": 1048576,
+            "maxStreamBuffer": 65536
+          }
+        }
+      }
+    }
+  ],
+  "inbounds": [
+    {
+      "protocol": "socks",
+      "settings": {
+        "udpEnabled": false,
+        "address": "127.0.0.1",
+        "packetEncoding": "Packet"
+      },
+      "port": 17904,
+      "listen": "127.0.0.1"
+    }
+  ]
+}

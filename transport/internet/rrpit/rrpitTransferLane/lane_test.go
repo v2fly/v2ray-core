@@ -156,15 +156,19 @@ func TestTransferLaneRxSourceShardDedupAndControl(t *testing.T) {
 	}
 }
 
-func TestTransferLaneRxGenerateControlOverflow(t *testing.T) {
+func TestTransferLaneRxGenerateControlCapsAtMaxReportedValue(t *testing.T) {
 	rx := &TransferLaneRx{
 		ShardSize:      16,
 		seenDataShards: make([]ReconstructionData, 0),
 		seenShardCount: uint32(math.MaxUint16) + 1,
 	}
 
-	if _, err := rx.GenerateControl(); err == nil {
-		t.Fatal("expected overflow error from GenerateControl")
+	control, err := rx.GenerateControl()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if control.SeenChunks != maxReportedSeenChunks {
+		t.Fatalf("expected SeenChunks %d, got %d", maxReportedSeenChunks, control.SeenChunks)
 	}
 }
 
@@ -289,8 +293,31 @@ func TestTransferLaneReconstructWithRepairSymbolsAfterLoss(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if control.SeenChunks != uint16(len(payloads)) {
-		t.Fatalf("expected SeenChunks %d after reconstruction, got %d", len(payloads), control.SeenChunks)
+	if control.SeenChunks != SeenChunksCompletionSentinel {
+		t.Fatalf("expected completion sentinel %d after reconstruction, got %d", SeenChunksCompletionSentinel, control.SeenChunks)
+	}
+}
+
+func TestTransferLaneRxGenerateControlUsesCompletionSentinelAfterDirectReconstruct(t *testing.T) {
+	rx := mustNewTransferLaneRx(t, 16)
+	if _, err := rx.AddTransferData(TransferData{
+		TotalDataShards: 1,
+		Seq:             0,
+		LengthOfData:    uint16(len("done")),
+		Data:            []byte("done"),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := rx.Reconstruct(); err != nil {
+		t.Fatal(err)
+	}
+
+	control, err := rx.GenerateControl()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if control.SeenChunks != SeenChunksCompletionSentinel {
+		t.Fatalf("expected completion sentinel %d, got %d", SeenChunksCompletionSentinel, control.SeenChunks)
 	}
 }
 

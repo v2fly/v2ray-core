@@ -17,6 +17,8 @@ const packetSequenceFieldSize = 8
 const packetLengthFieldSize = 4
 const packetHeaderSize = packetSequenceFieldSize + packetLengthFieldSize
 
+var sessionPacketConnCloseDrainTimeout = 2 * time.Second
+
 // Adaptor consumes the rrpit receive callback and exposes an smux session on top
 // of a length-prefixed byte stream carried by rrpit packets.
 type Adaptor struct {
@@ -36,6 +38,7 @@ type sessionPacketConn struct {
 	nextSendSeq uint64
 	nextRecvSeq uint64
 	closeOnce   sync.Once
+	closing     bool
 	closed      bool
 	closeErr    error
 	localAddr   net.Addr
@@ -179,15 +182,20 @@ func (c *sessionPacketConn) Read(p []byte) (int, error) {
 		}
 		return 0, io.EOF
 	}
-	return c.readBuf.Read(p)
+	n, err := c.readBuf.Read(p)
+	if c.readBuf.Len() == 0 {
+		c.cond.Broadcast()
+	}
+	return n, err
 }
 
 func (c *sessionPacketConn) Write(p []byte) (int, error) {
 	c.mu.Lock()
 	closed := c.closed
+	closing := c.closing
 	closeErr := c.closeErr
 	c.mu.Unlock()
-	if closed {
+	if closed || closing {
 		if closeErr != nil {
 			return 0, closeErr
 		}
@@ -254,6 +262,7 @@ func (c *sessionPacketConn) acceptPacketLocked(seq uint64, payload []byte) {
 }
 
 func (c *sessionPacketConn) Close() error {
+	c.waitForBufferedPayloadBeforeClose()
 	c.closeWithError(nil)
 	return nil
 }
@@ -306,10 +315,46 @@ func (c *sessionPacketConn) closeWithError(err error) {
 			c.closeErr = err
 		}
 		c.mu.Lock()
+		c.closing = true
 		c.closed = true
 		c.cond.Broadcast()
 		c.mu.Unlock()
 	})
+}
+
+func (c *sessionPacketConn) hasBufferedPayloadLocked() bool {
+	return c.readBuf.Len() > 0 || len(c.pending) > 0 || len(c.frameBuf) > 0
+}
+
+func (c *sessionPacketConn) waitForBufferedPayloadBeforeClose() {
+	if c == nil || sessionPacketConnCloseDrainTimeout <= 0 {
+		return
+	}
+
+	c.mu.Lock()
+	if c.closed || c.closing || !c.hasBufferedPayloadLocked() {
+		if !c.closed {
+			c.closing = true
+		}
+		c.mu.Unlock()
+		return
+	}
+	c.closing = true
+
+	timedOut := false
+	timer := time.AfterFunc(sessionPacketConnCloseDrainTimeout, func() {
+		c.mu.Lock()
+		timedOut = true
+		c.cond.Broadcast()
+		c.mu.Unlock()
+	})
+	for !c.closed && c.hasBufferedPayloadLocked() && !timedOut {
+		c.cond.Wait()
+	}
+	if !timer.Stop() && !timedOut {
+		timedOut = true
+	}
+	c.mu.Unlock()
 }
 
 type adaptorAddr string
