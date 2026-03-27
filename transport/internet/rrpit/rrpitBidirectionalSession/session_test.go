@@ -276,6 +276,56 @@ func TestBidirectionalSessionAutoTicks(t *testing.T) {
 	}
 }
 
+func TestBidirectionalSessionSuppressesDuplicateManagerHostedControl(t *testing.T) {
+	var sent [][]byte
+
+	session := mustNewBidirectionalSession(t, Config{
+		Rx: rriptMonoDirectionSession.SessionRxConfig{
+			LaneShardSize:    16,
+			MaxBufferedLanes: 4,
+			OnMessage:        func([]byte) error { return nil },
+		},
+		Tx: rriptMonoDirectionSession.SessionTxConfig{
+			LaneShardSize:                  16,
+			MaxDataShardsPerLane:           1,
+			MaxBufferedLanes:               1,
+			MaxRewindableTimestampNum:      4,
+			MaxRewindableControlMessageNum: 4,
+			DataPacketKind:                 rriptMonoDirectionSession.PacketKind_InteractiveStreamData,
+			ControlPacketKind:              rriptMonoDirectionSession.PacketKind_InteractiveStreamControl,
+			SendIgnoreQuota: func(_ uint8, payload []byte) error {
+				sent = append(sent, append([]byte(nil), payload...))
+				return nil
+			},
+		},
+		ManagerHostedControlKeepaliveIntervalTicks: 2,
+	})
+
+	firstStats, err := session.OnNewTimestampWithStats(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if firstStats.ControlPacketsSent != 1 || len(sent) != 1 {
+		t.Fatalf("expected first manager-hosted tick to send one control packet, stats=%+v sends=%d", firstStats, len(sent))
+	}
+
+	secondStats, err := session.OnNewTimestampWithStats(2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if secondStats.ControlPacketsSent != 0 || len(sent) != 1 {
+		t.Fatalf("expected duplicate control to be suppressed, stats=%+v sends=%d", secondStats, len(sent))
+	}
+
+	thirdStats, err := session.OnNewTimestampWithStats(3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if thirdStats.ControlPacketsSent != 1 || len(sent) != 2 {
+		t.Fatalf("expected keepalive control resend after suppression interval, stats=%+v sends=%d", thirdStats, len(sent))
+	}
+}
+
 type recordingWriteCloser struct {
 	writes [][]byte
 	readTo int

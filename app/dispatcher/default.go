@@ -313,6 +313,19 @@ func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.
 		}
 	} else if d.router != nil {
 		if route, err := d.router.PickRoute(routing_session.AsRoutingContext(ctx)); err == nil {
+			if routeWithAttributes, ok := route.(interface{ GetSessionAttributes() map[string]string }); ok {
+				attrs := routeWithAttributes.GetSessionAttributes()
+				if len(attrs) > 0 {
+					content := session.ContentFromContext(ctx)
+					if content == nil {
+						content = new(session.Content)
+						ctx = session.ContextWithContent(ctx, content)
+					}
+					for key, value := range attrs {
+						content.SetAttribute(key, value)
+					}
+				}
+			}
 			tag := route.GetOutboundTag()
 			if h := d.ohm.GetHandler(tag); h != nil {
 				newError("taking detour [", tag, "] for [", destination, "]").WriteToLog(session.ExportIDToError(ctx))

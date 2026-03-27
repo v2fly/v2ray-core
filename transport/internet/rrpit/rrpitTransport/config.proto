@@ -68,6 +68,21 @@ message SessionReconstructionSetting {
 
   // Minimum number of repair shards in a normal secondary resend burst.
   int32 secondary_repair_min_burst = 7;
+
+  bool always_restrict_source_data_when_oldest_lane_stalled = 8;
+}
+
+message SessionManagerSetting {
+  // Tick interval, int64 values of time.Duration.
+  int64 timestamp_interval = 1;
+
+  int32 interactive_primary_cancellation_counter_limit = 2;
+
+  int32 manager_hosted_control_keepalive_interval_ticks = 3;
+
+  bool dynamic_restrict_source_data_when_oldest_lane_stalled = 4;
+
+  int32 dynamic_restrict_source_data_when_oldest_lane_stalled_ticks = 5;
 }
 
 message SessionSetting {
@@ -79,9 +94,6 @@ message SessionSetting {
 
   // Rewind window for tx-side remote control history.
   int32 max_rewindable_control_message_num = 3;
-
-  // Tick interval, int64 values of time.Duration.
-  int64 timestamp_interval = 4;
 
   SessionReconstructionSetting reconstruction = 5;
 }
@@ -130,4 +142,5 @@ message Config {
   SessionSetting session = 3;
   EngineeringSetting engineering = 4;
   AdaptorSetting adaptor = 5;
+  SessionManagerSetting session_mgr = 6;
 }

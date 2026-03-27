@@ -12,6 +12,10 @@ import "common/net/network.proto";
 import "common/protoext/extensions.proto";
 import "app/router/routercommon/common.proto";
 
+message SetAttribute {
+  string key = 1;
+  string value = 2;
+}
 
 message RoutingRule {
   oneof target_tag {
@@ -65,6 +69,8 @@ message RoutingRule {
   string attributes = 15;
 
   string domain_matcher = 17;
+
+  repeated SetAttribute set_attribute = 18;
 
   // geo_domain instruct simplified config loader to load geo domain rule and fill in domain field.
   repeated v2ray.core.app.router.routercommon.GeoSite geo_domain = 68001;
@@ -177,6 +183,8 @@ message SimplifiedRoutingRule {
   string attributes = 15;
 
   string domain_matcher = 17;
+
+  repeated SetAttribute set_attribute = 18;
 
   // geo_domain instruct simplified config loader to load geo domain rule and fill in domain field.
   repeated v2ray.core.app.router.routercommon.GeoSite geo_domain = 68001;

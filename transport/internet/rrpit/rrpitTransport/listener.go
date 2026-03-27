@@ -14,6 +14,7 @@ import (
 	v2net "github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
 	transportdtls "github.com/v2fly/v2ray-core/v5/transport/internet/dtls"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitBidirectionalSessionManager"
 )
 
 type Listener struct {
@@ -122,13 +123,14 @@ func (l *Listener) getOrCreateSession(sessionID transportSessionID) (*transportS
 	}
 	l.sessions[sessionID] = owner
 
-	go l.acceptStreams(owner)
+	go l.acceptStreams(owner, rrpitBidirectionalSessionManager.InteractiveStream)
+	go l.acceptStreams(owner, rrpitBidirectionalSessionManager.BackgroundStream)
 	return owner, nil
 }
 
-func (l *Listener) acceptStreams(owner *transportSession) {
+func (l *Listener) acceptStreams(owner *transportSession, sessionClass rrpitBidirectionalSessionManager.SessionName) {
 	for {
-		stream, err := owner.adaptor.AcceptStream()
+		stream, err := owner.AcceptStream(sessionClass)
 		if err != nil {
 			_ = owner.Close()
 			return

@@ -19,13 +19,16 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/environment"
 	"github.com/v2fly/v2ray-core/v5/common/environment/envctx"
 	v2net "github.com/v2fly/v2ray-core/v5/common/net"
+	v2session "github.com/v2fly/v2ray-core/v5/common/session"
 	"github.com/v2fly/v2ray-core/v5/features/extension/storage"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitBidirectionalSessionManager"
 )
 
 const (
 	rrpitTransportConnectionStateKey = "rrpit-transport-connection-state"
 	rrpitClientSessionIdleTimeout    = 5 * time.Second
+	rrpitSessionClassAttributeKey    = "rrpitSessionClass"
 )
 
 type transportConnectionState struct {
@@ -118,7 +121,7 @@ func (s *transportConnectionState) removeSession(key string, session *persistent
 
 type persistentClientSession struct {
 	owner        *transportSession
-	openStream   func() (gonet.Conn, error)
+	openStream   func(rrpitBidirectionalSessionManager.SessionName) (gonet.Conn, error)
 	closeSession func() error
 	idleTimeout  time.Duration
 
@@ -160,7 +163,7 @@ func (s *persistentClientSession) OpenConnection(ctx context.Context) (internet.
 	s.activeStreams++
 	s.mu.Unlock()
 
-	stream, err := s.openStream()
+	stream, err := s.openStream(sessionClassFromContext(ctx))
 	if err != nil {
 		s.releaseStream()
 		_ = s.Close()
@@ -337,9 +340,25 @@ func newPersistentClientSession(
 	}
 
 	session.owner = owner
-	session.openStream = owner.OpenStream
+	session.openStream = owner.OpenStreamByClass
 	session.closeSession = owner.Close
 	return session, nil
+}
+
+func sessionClassFromContext(ctx context.Context) rrpitBidirectionalSessionManager.SessionName {
+	if ctx == nil {
+		return rrpitBidirectionalSessionManager.InteractiveStream
+	}
+	content := v2session.ContentFromContext(ctx)
+	if content == nil {
+		return rrpitBidirectionalSessionManager.InteractiveStream
+	}
+	switch content.Attribute(rrpitSessionClassAttributeKey) {
+	case "background":
+		return rrpitBidirectionalSessionManager.BackgroundStream
+	default:
+		return rrpitBidirectionalSessionManager.InteractiveStream
+	}
 }
 
 func Dial(ctx context.Context, dest v2net.Destination, streamSettings *internet.MemoryStreamConfig) (internet.Connection, error) {

@@ -22,6 +22,9 @@ type SessionRx struct {
 	rxLanes
 	rxChannels
 
+	DataPacketKind    uint8
+	ControlPacketKind uint8
+
 	OnMessage              func([]byte) error
 	OnRemoteControlMessage func(ControlMessage) error
 }
@@ -29,12 +32,18 @@ type SessionRx struct {
 type SessionTx struct {
 	txLanes
 	txChannels
-	txChannelsConfig []ChannelStatus
-	OddChannelIDs    bool
-	Reconstruction   SessionTxReconstructionConfig
+	txChannelsConfig  []ChannelStatus
+	OddChannelIDs     bool
+	Reconstruction    SessionTxReconstructionConfig
+	DataPacketKind    uint8
+	ControlPacketKind uint8
+	SendEnforced      func(kind uint8, payload []byte) error
+	SendIgnoreQuota   func(kind uint8, payload []byte) error
+	HasRemainingQuota func() bool
 
-	currentTimestamp            uint64
-	currentTimestampInitialized bool
+	currentTimestamp                               uint64
+	currentTimestampInitialized                    bool
+	dynamicRestrictSourceDataWhenOldestLaneStalled bool
 }
 
 type ChannelStatus struct {
@@ -49,8 +58,9 @@ type ChannelConfig struct {
 }
 
 type ChannelRateControlStatus struct {
-	TimestampLastSent          uint64
-	PacketSentCurrentTimestamp uint64
+	TimestampLastSent                  uint64
+	PacketSentCurrentTimestamp         uint64
+	EnforcedPacketSentCurrentTimestamp uint64
 }
 
 type SessionTxConfig struct {
@@ -60,24 +70,40 @@ type SessionTxConfig struct {
 	MaxRewindableTimestampNum      int
 	MaxRewindableControlMessageNum int
 	OddChannelIDs                  bool
+	DataPacketKind                 uint8
+	ControlPacketKind              uint8
+	SendEnforced                   func(kind uint8, payload []byte) error
+	SendIgnoreQuota                func(kind uint8, payload []byte) error
+	HasRemainingQuota              func() bool
 	Reconstruction                 SessionTxReconstructionConfig
 }
 
 type SessionTxReconstructionConfig struct {
-	InitialRepairShardRatio              float64
-	LaneRepairWeight                     []float64
-	SecondaryRepairShardRatio            float64
-	TimeResendSecondaryRepairShard       int
-	StaleLaneFinalizedAgeThresholdTicks  int
-	StaleLaneProgressStallThresholdTicks int
-	SecondaryRepairMinBurst              int
+	InitialRepairShardRatio                       float64
+	LaneRepairWeight                              []float64
+	SecondaryRepairShardRatio                     float64
+	TimeResendSecondaryRepairShard                int
+	StaleLaneFinalizedAgeThresholdTicks           int
+	StaleLaneProgressStallThresholdTicks          int
+	SecondaryRepairMinBurst                       int
+	AlwaysRestrictSourceDataWhenOldestLaneStalled bool
 }
 
 type SessionRxConfig struct {
 	LaneShardSize      int
 	MaxBufferedLanes   int
+	DataPacketKind     uint8
+	ControlPacketKind  uint8
 	OnMessage          func([]byte) error
 	OnRemoteControlMsg func(ControlMessage) error
+}
+
+type TickStats struct {
+	RepairPacketsGenerated    uint32
+	RepairPacketsSent         uint32
+	ControlPacketsGenerated   uint32
+	ControlPacketsSent        uint32
+	BlockedBySharedSendBudget bool
 }
 
 type txLanes struct {
@@ -166,8 +192,13 @@ var ErrTxLaneBufferFull = errors.New("too many buffered transfer lanes")
 
 func NewSessionTx(config SessionTxConfig) (*SessionTx, error) {
 	tx := &SessionTx{
-		OddChannelIDs:  config.OddChannelIDs,
-		Reconstruction: config.Reconstruction,
+		OddChannelIDs:     config.OddChannelIDs,
+		Reconstruction:    config.Reconstruction,
+		DataPacketKind:    config.DataPacketKind,
+		ControlPacketKind: config.ControlPacketKind,
+		SendEnforced:      config.SendEnforced,
+		SendIgnoreQuota:   config.SendIgnoreQuota,
+		HasRemainingQuota: config.HasRemainingQuota,
 	}
 	if len(config.Reconstruction.LaneRepairWeight) > 0 {
 		tx.Reconstruction.LaneRepairWeight = append([]float64(nil), config.Reconstruction.LaneRepairWeight...)
@@ -185,6 +216,8 @@ func NewSessionTx(config SessionTxConfig) (*SessionTx, error) {
 
 func NewSessionRx(config SessionRxConfig) (*SessionRx, error) {
 	rx := &SessionRx{
+		DataPacketKind:         config.DataPacketKind,
+		ControlPacketKind:      config.ControlPacketKind,
 		OnMessage:              config.OnMessage,
 		OnRemoteControlMessage: config.OnRemoteControlMsg,
 	}
@@ -197,6 +230,11 @@ func NewSessionRx(config SessionRxConfig) (*SessionRx, error) {
 }
 
 func (t *SessionTx) OnNewTimestamp(timestamp uint64) error {
+	_, err := t.onNewTimestamp(timestamp)
+	return err
+}
+
+func (t *SessionTx) OnNewTimestampWithStats(timestamp uint64) (TickStats, error) {
 	return t.onNewTimestamp(timestamp)
 }
 
@@ -233,6 +271,27 @@ func (t *SessionTx) MaxMessageSize() (int, error) {
 
 func (t *SessionTx) AcceptRemoteControlMessage(ctrl ControlMessage) error {
 	return t.acceptRemoteControlMessage(ctrl)
+}
+
+func (t *SessionTx) SetDynamicRestrictSourceDataWhenOldestLaneStalled(enabled bool) {
+	if t == nil {
+		return
+	}
+	t.dynamicRestrictSourceDataWhenOldestLaneStalled = enabled
+}
+
+func (t *SessionTx) RestrictSourceDataWhenOldestLaneStalledEnabled() bool {
+	if t == nil {
+		return false
+	}
+	return t.Reconstruction.AlwaysRestrictSourceDataWhenOldestLaneStalled || t.dynamicRestrictSourceDataWhenOldestLaneStalled
+}
+
+func (t *SessionTx) ChannelCount() int {
+	if t == nil {
+		return 0
+	}
+	return len(t.txChannelsConfig)
 }
 
 func (t *SessionTx) AttachTxChannel(closer io.WriteCloser) (channelID uint64, err error) {
@@ -343,9 +402,25 @@ func (r *SessionRx) GenerateControlMessage(currentChannelID uint64) (ControlMess
 	return ctrl, nil
 }
 
+func (r *SessionRx) GenerateStrippedControlMessage() (ControlMessage, error) {
+	ctrl, err := r.GenerateControlMessage(0)
+	if err != nil {
+		return ControlMessage{}, err
+	}
+	ctrl.FloodChannel = SessionFloodChannelControlMessage{}
+	ctrl.Channel = SessionChannelControlMessage{}
+	return ctrl, nil
+}
+
 func (r *SessionRx) ensureDefaults() error {
 	if r.OnMessage == nil {
 		return newError("nil OnMessage callback")
+	}
+	if r.DataPacketKind == 0 {
+		r.DataPacketKind = PacketKind_InteractiveStreamData
+	}
+	if r.ControlPacketKind == 0 {
+		r.ControlPacketKind = PacketKind_InteractiveStreamControl
 	}
 	if r.rxLanes.laneShardSize == 0 {
 		r.rxLanes.laneShardSize = defaultLaneShardSize
@@ -363,6 +438,12 @@ func (r *SessionRx) ensureDefaults() error {
 }
 
 func (t *SessionTx) ensureDefaults() error {
+	if t.DataPacketKind == 0 {
+		t.DataPacketKind = PacketKind_InteractiveStreamData
+	}
+	if t.ControlPacketKind == 0 {
+		t.ControlPacketKind = PacketKind_InteractiveStreamControl
+	}
 	if t.txLanes.laneShardSize == 0 {
 		t.txLanes.laneShardSize = defaultLaneShardSize
 	}
@@ -420,10 +501,11 @@ func (t *SessionTx) ensureDefaults() error {
 	return nil
 }
 
-func (t *SessionTx) onNewTimestamp(timestamp uint64) error {
+func (t *SessionTx) onNewTimestamp(timestamp uint64) (TickStats, error) {
 	if err := t.ensureDefaults(); err != nil {
-		return err
+		return TickStats{}, err
 	}
+	stats := TickStats{}
 	t.currentTimestamp = timestamp
 	t.currentTimestampInitialized = true
 	t.resetChannelRateWindow(timestamp)
@@ -434,16 +516,19 @@ func (t *SessionTx) onNewTimestamp(timestamp uint64) error {
 
 		opportunisticBudget := t.buildOpportunisticRepairBudget()
 		for {
-			if !t.hasRepairSendCapacity() {
-				return nil
-			}
 			lane, kind, index := t.nextConfiguredRepair(opportunisticBudget)
 			if lane == nil {
-				return nil
+				return stats, nil
 			}
+			if !t.hasRepairSendCapacity() {
+				stats.BlockedBySharedSendBudget = true
+				return stats, nil
+			}
+			stats.RepairPacketsGenerated += 1
 			if err := t.sendRepairPacket(lane); err != nil {
-				return err
+				return stats, err
 			}
+			stats.RepairPacketsSent += 1
 			switch kind {
 			case repairSendInitial:
 				lane.InitialRepairPacketsPending -= 1
@@ -460,19 +545,38 @@ func (t *SessionTx) onNewTimestamp(timestamp uint64) error {
 
 	lane := t.nextLaneForRepair()
 	if lane == nil {
-		return nil
+		return stats, nil
 	}
-
-	return t.sendRepairPacket(lane)
+	if !t.hasRepairSendCapacity() {
+		stats.BlockedBySharedSendBudget = true
+		return stats, nil
+	}
+	stats.RepairPacketsGenerated = 1
+	if err := t.sendRepairPacket(lane); err != nil {
+		return stats, err
+	}
+	stats.RepairPacketsSent = 1
+	return stats, nil
 }
 
 func (r *SessionRx) onChannelData(channel *rxChannel, data []byte) error {
+	return r.onPacketData(channel, data)
+}
+
+func (r *SessionRx) OnLogicalPacket(data []byte) error {
+	return r.onPacketData(nil, data)
+}
+
+func (r *SessionRx) onPacketData(channel *rxChannel, data []byte) error {
+	if err := r.ensureDefaults(); err != nil {
+		return err
+	}
 	if len(data) == 0 {
 		return newError("session packet too short")
 	}
 
 	switch data[0] {
-	case PacketKind_DATA:
+	case r.DataPacketKind:
 		var packet sessionDataPacket
 		if err := struc.Unpack(bytes.NewReader(data), &packet); err != nil {
 			return newError("failed to unpack session data packet: ", err)
@@ -484,7 +588,7 @@ func (r *SessionRx) onChannelData(channel *rxChannel, data []byte) error {
 			return err
 		}
 		return r.deliverMessages(payloads)
-	case PacketKind_CONTROL:
+	case r.ControlPacketKind:
 		var packet sessionControlPacket
 		if err := struc.Unpack(bytes.NewReader(data), &packet); err != nil {
 			return newError("failed to unpack session control packet: ", err)
@@ -625,7 +729,7 @@ func (t *SessionTx) floodControlMessages(generator func(uint64) (ControlMessage,
 			return err
 		}
 		ctrl.FloodChannel.CurrentChannelID = channel.ChannelID
-		payload, err := marshalSessionControlPacket(ctrl)
+		payload, err := marshalSessionControlPacket(t.ControlPacketKind, ctrl)
 		if err != nil {
 			return err
 		}
@@ -641,8 +745,13 @@ func (t *SessionTx) sendMessage(data []byte) error {
 	if err := t.ensureDefaults(); err != nil {
 		return err
 	}
+	if t.shouldBackpressureSourceData() {
+		return ErrTxLaneBufferFull
+	}
 	if len(t.txChannelsConfig) == 0 {
-		return newError("no transfer channel attached")
+		if t.SendIgnoreQuota == nil && t.SendEnforced == nil {
+			return newError("no transfer channel attached")
+		}
 	}
 
 	lane := t.latestAppendableLane()
@@ -661,7 +770,7 @@ func (t *SessionTx) sendMessage(data []byte) error {
 		if t.hasCustomReconstructionConfig() && t.shouldFinalizeLaneAfterData(lane) {
 			t.finalizeLane(lane)
 		}
-		if err := t.sendTransferPacket(lane.LaneID, *transfer); err != nil {
+		if err := t.sendTransferPacket(lane.LaneID, *transfer, false); err != nil {
 			return err
 		}
 		return t.flushInitialRepairPackets(lane)
@@ -684,10 +793,18 @@ func (t *SessionTx) sendMessage(data []byte) error {
 	if t.hasCustomReconstructionConfig() && t.shouldFinalizeLaneAfterData(lane) {
 		t.finalizeLane(lane)
 	}
-	if err := t.sendTransferPacket(lane.LaneID, *transfer); err != nil {
+	if err := t.sendTransferPacket(lane.LaneID, *transfer, false); err != nil {
 		return err
 	}
 	return t.flushInitialRepairPackets(lane)
+}
+
+func (t *SessionTx) shouldBackpressureSourceData() bool {
+	if t == nil || !t.hasCustomReconstructionConfig() || !t.RestrictSourceDataWhenOldestLaneStalledEnabled() || len(t.txLanes.lanes) == 0 {
+		return false
+	}
+	oldest := t.txLanes.lanes[0]
+	return t.isStaleOldestLane(oldest)
 }
 
 func (t *SessionTx) acceptRemoteControlMessage(ctrl ControlMessage) error {
@@ -743,6 +860,7 @@ func (t *SessionTx) resetChannelRateWindow(timestamp uint64) {
 	for i := range t.txChannelsConfig {
 		if t.txChannelsConfig[i].Status.TimestampLastSent != timestamp {
 			t.txChannelsConfig[i].Status.PacketSentCurrentTimestamp = 0
+			t.txChannelsConfig[i].Status.EnforcedPacketSentCurrentTimestamp = 0
 		}
 	}
 }
@@ -850,7 +968,7 @@ func (t *SessionTx) sendRepairPacket(lane *txLane) error {
 	if err != nil {
 		return err
 	}
-	if err := t.sendTransferPacket(lane.LaneID, transfer); err != nil {
+	if err := t.sendTransferPacket(lane.LaneID, transfer, true); err != nil {
 		return err
 	}
 	lane.RepairPackets += 1
@@ -1130,6 +1248,9 @@ func (t *SessionTx) scheduleNextSecondaryRepair(lane *txLane) {
 }
 
 func (t *SessionTx) hasRepairSendCapacity() bool {
+	if t.HasRemainingQuota != nil {
+		return t.HasRemainingQuota()
+	}
 	for i := range t.txChannelsConfig {
 		if t.txChannelsConfig[i].MaterializeChannel == nil || t.channelRateLimited(i) {
 			continue
@@ -1246,13 +1367,25 @@ func (t *SessionTx) removeNewestLane() {
 	t.txLanes.lanes = t.txLanes.lanes[:len(t.txLanes.lanes)-1]
 }
 
-func (t *SessionTx) sendTransferPacket(laneID uint64, transfer rrpitTransferLane.TransferData) error {
-	channelIndex, err := t.bestChannelIndex()
+func (t *SessionTx) sendTransferPacket(laneID uint64, transfer rrpitTransferLane.TransferData, quotaBound bool) error {
+	payload, err := marshalSessionDataPacket(t.DataPacketKind, laneID, transfer)
 	if err != nil {
 		return err
 	}
+	if quotaBound {
+		if t.SendEnforced != nil {
+			return t.SendEnforced(t.DataPacketKind, payload)
+		}
+	} else {
+		if t.SendIgnoreQuota != nil {
+			return t.SendIgnoreQuota(t.DataPacketKind, payload)
+		}
+		if t.SendEnforced != nil {
+			return t.SendEnforced(t.DataPacketKind, payload)
+		}
+	}
 
-	payload, err := marshalSessionDataPacket(laneID, transfer)
+	channelIndex, err := t.bestChannelIndex()
 	if err != nil {
 		return err
 	}
@@ -1304,7 +1437,7 @@ func (t *SessionTx) channelRateLimited(index int) bool {
 	if status.TimestampLastSent != t.effectiveTimestamp() {
 		return false
 	}
-	return int(status.PacketSentCurrentTimestamp) >= maxSpeed
+	return int(status.EnforcedPacketSentCurrentTimestamp) >= maxSpeed
 }
 
 func (t *SessionTx) channelHasLessLoad(candidateIndex int, currentBestIndex int) bool {
@@ -1340,9 +1473,11 @@ func (t *SessionTx) markChannelSent(index int) {
 	status := &t.txChannelsConfig[index].Status
 	if status.TimestampLastSent != timestamp {
 		status.PacketSentCurrentTimestamp = 0
+		status.EnforcedPacketSentCurrentTimestamp = 0
 	}
 	status.TimestampLastSent = timestamp
 	status.PacketSentCurrentTimestamp += 1
+	status.EnforcedPacketSentCurrentTimestamp += 1
 }
 
 func (t *SessionTx) effectiveTimestamp() uint64 {
@@ -1395,10 +1530,10 @@ func (t *SessionTx) allocateChannelID() uint64 {
 	return channelID
 }
 
-func marshalSessionDataPacket(laneID uint64, transfer rrpitTransferLane.TransferData) ([]byte, error) {
+func marshalSessionDataPacket(kind uint8, laneID uint64, transfer rrpitTransferLane.TransferData) ([]byte, error) {
 	buffer := bytes.NewBuffer(nil)
 	if err := struc.Pack(buffer, &sessionDataPacket{
-		PacketKind: PacketKind_DATA,
+		PacketKind: kind,
 		LaneID:     laneID,
 		Transfer:   transfer,
 	}); err != nil {
@@ -1407,13 +1542,37 @@ func marshalSessionDataPacket(laneID uint64, transfer rrpitTransferLane.Transfer
 	return buffer.Bytes(), nil
 }
 
-func marshalSessionControlPacket(ctrl ControlMessage) ([]byte, error) {
+func marshalSessionControlPacket(kind uint8, ctrl ControlMessage) ([]byte, error) {
 	buffer := bytes.NewBuffer(nil)
 	if err := struc.Pack(buffer, &sessionControlPacket{
-		PacketKind: PacketKind_CONTROL,
+		PacketKind: kind,
 		Control:    ctrl,
 	}); err != nil {
 		return nil, newError("failed to pack session control packet: ", err)
 	}
 	return buffer.Bytes(), nil
+}
+
+func MarshalSessionControlPacket(kind uint8, ctrl ControlMessage) ([]byte, error) {
+	return marshalSessionControlPacket(kind, ctrl)
+}
+
+func MarshalSessionDataPacket(kind uint8, laneID uint64, transfer rrpitTransferLane.TransferData) ([]byte, error) {
+	return marshalSessionDataPacket(kind, laneID, transfer)
+}
+
+func UnmarshalSessionControlPacket(data []byte) (ControlMessage, error) {
+	var packet sessionControlPacket
+	if err := struc.Unpack(bytes.NewReader(data), &packet); err != nil {
+		return ControlMessage{}, newError("failed to unpack session control packet: ", err)
+	}
+	return packet.Control, nil
+}
+
+func UnmarshalSessionDataPacket(data []byte) (uint64, rrpitTransferLane.TransferData, error) {
+	var packet sessionDataPacket
+	if err := struc.Unpack(bytes.NewReader(data), &packet); err != nil {
+		return 0, rrpitTransferLane.TransferData{}, newError("failed to unpack session data packet: ", err)
+	}
+	return packet.LaneID, packet.Transfer, nil
 }

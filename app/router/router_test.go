@@ -54,6 +54,50 @@ func TestSimpleRouter(t *testing.T) {
 	}
 }
 
+func TestRouteSetAttribute(t *testing.T) {
+	config := &Config{
+		Rule: []*RoutingRule{
+			{
+				TargetTag: &RoutingRule_Tag{
+					Tag: "test",
+				},
+				Networks: []net.Network{net.Network_TCP},
+				SetAttribute: []*SetAttribute{
+					{
+						Key:   "rrpitSessionClass",
+						Value: "background",
+					},
+				},
+			},
+		},
+	}
+
+	mockCtl := gomock.NewController(t)
+	defer mockCtl.Finish()
+
+	mockDNS := mocks.NewDNSClient(mockCtl)
+	mockOhm := mocks.NewOutboundManager(mockCtl)
+	mockHs := mocks.NewOutboundHandlerSelector(mockCtl)
+
+	r := new(Router)
+	common.Must(r.Init(context.TODO(), config, mockDNS, &mockOutboundManager{
+		Manager:         mockOhm,
+		HandlerSelector: mockHs,
+	}, nil))
+
+	ctx := session.ContextWithOutbound(context.Background(), &session.Outbound{Target: net.TCPDestination(net.DomainAddress("v2fly.org"), 80)})
+	route, err := r.PickRoute(routing_session.AsRoutingContext(ctx))
+	common.Must(err)
+	attrRoute, ok := route.(interface{ GetSessionAttributes() map[string]string })
+	if !ok {
+		t.Fatal("route does not expose session attributes")
+	}
+	attrs := attrRoute.GetSessionAttributes()
+	if attrs["rrpitSessionClass"] != "background" {
+		t.Fatalf("unexpected session attribute map: %#v", attrs)
+	}
+}
+
 func TestSimpleBalancer(t *testing.T) {
 	config := &Config{
 		Rule: []*RoutingRule{

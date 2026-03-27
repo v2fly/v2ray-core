@@ -1,6 +1,7 @@
 package rrpitBidirectionalSession
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"sync"
@@ -19,19 +20,26 @@ type BidirectionalSession struct {
 
 	TimestampInterval time.Duration
 
-	nextTimestamp uint64
-	autoTickStop  chan struct{}
-	autoTickDone  chan struct{}
-	closeOnce     sync.Once
-	closed        bool
+	nextTimestamp                         uint64
+	lastControlPayload                    []byte
+	lastControlTimestamp                  uint64
+	managerHostedControlKeepaliveInterval int
+	sourcePacketActivity                  uint64
+	autoTickStop                          chan struct{}
+	autoTickDone                          chan struct{}
+	closeOnce                             sync.Once
+	closed                                bool
 }
 
 type Config struct {
 	Rx rriptMonoDirectionSession.SessionRxConfig
 	Tx rriptMonoDirectionSession.SessionTxConfig
 
-	TimestampInterval time.Duration
+	TimestampInterval                          time.Duration
+	ManagerHostedControlKeepaliveIntervalTicks int
 }
+
+const managerHostedControlKeepaliveIntervalTicks = 32
 
 func New(config Config) (*BidirectionalSession, error) {
 	session := &BidirectionalSession{
@@ -72,6 +80,10 @@ func New(config Config) (*BidirectionalSession, error) {
 		return nil, err
 	}
 	session.rx = rx
+	if config.ManagerHostedControlKeepaliveIntervalTicks <= 0 {
+		config.ManagerHostedControlKeepaliveIntervalTicks = managerHostedControlKeepaliveIntervalTicks
+	}
+	session.managerHostedControlKeepaliveInterval = config.ManagerHostedControlKeepaliveIntervalTicks
 	session.startAutoTick()
 	return session, nil
 }
@@ -88,6 +100,7 @@ func (s *BidirectionalSession) SendMessage(data []byte) error {
 		}
 		err := s.tx.SendMessage(data)
 		if err == nil {
+			s.sourcePacketActivity += 1
 			return nil
 		}
 		if !errors.Is(err, rriptMonoDirectionSession.ErrTxLaneBufferFull) {
@@ -101,8 +114,13 @@ func (s *BidirectionalSession) SendMessage(data []byte) error {
 }
 
 func (s *BidirectionalSession) OnNewTimestamp(timestamp uint64) error {
+	_, err := s.OnNewTimestampWithStats(timestamp)
+	return err
+}
+
+func (s *BidirectionalSession) OnNewTimestampWithStats(timestamp uint64) (rriptMonoDirectionSession.TickStats, error) {
 	if s == nil || s.tx == nil || s.rx == nil {
-		return nil
+		return rriptMonoDirectionSession.TickStats{}, nil
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -131,15 +149,104 @@ func (s *BidirectionalSession) Close() error {
 	return nil
 }
 
-func (s *BidirectionalSession) onNewTimestampLocked(timestamp uint64) error {
-	if err := s.tx.OnNewTimestamp(timestamp); err != nil {
-		return err
+func (s *BidirectionalSession) onNewTimestampLocked(timestamp uint64) (rriptMonoDirectionSession.TickStats, error) {
+	stats, err := s.tx.OnNewTimestampWithStats(timestamp)
+	if err != nil {
+		return stats, err
 	}
-	return s.tx.FloodControlMessages(s.rx.GenerateControlMessage)
+	if s.tx.SendIgnoreQuota != nil {
+		ctrl, err := s.rx.GenerateStrippedControlMessage()
+		if err != nil {
+			return stats, err
+		}
+		payload, err := rriptMonoDirectionSession.MarshalSessionControlPacket(s.tx.ControlPacketKind, ctrl)
+		if err != nil {
+			return stats, err
+		}
+		if !s.shouldSendManagerHostedControlLocked(timestamp, payload, stats) {
+			return stats, nil
+		}
+		stats.ControlPacketsGenerated += 1
+		if err := s.tx.SendIgnoreQuota(s.tx.ControlPacketKind, payload); err != nil {
+			return stats, err
+		}
+		stats.ControlPacketsSent += 1
+		s.lastControlPayload = append(s.lastControlPayload[:0], payload...)
+		s.lastControlTimestamp = timestamp
+		return stats, nil
+	}
+	stats.ControlPacketsGenerated += 1
+	if err := s.tx.FloodControlMessages(s.rx.GenerateControlMessage); err != nil {
+		return stats, err
+	}
+	stats.ControlPacketsSent += uint32(s.tx.ChannelCount())
+	return stats, nil
+}
+
+func (s *BidirectionalSession) shouldSendManagerHostedControlLocked(
+	timestamp uint64,
+	payload []byte,
+	stats rriptMonoDirectionSession.TickStats,
+) bool {
+	if len(s.lastControlPayload) == 0 {
+		return true
+	}
+	if !bytes.Equal(s.lastControlPayload, payload) {
+		return true
+	}
+	if stats.RepairPacketsGenerated > 0 || stats.RepairPacketsSent > 0 || stats.BlockedBySharedSendBudget {
+		return true
+	}
+	if s.lastControlTimestamp == 0 {
+		return true
+	}
+	return timestamp-s.lastControlTimestamp >= uint64(s.managerHostedControlKeepaliveIntervalTicks())
+}
+
+func (s *BidirectionalSession) managerHostedControlKeepaliveIntervalTicks() int {
+	if s == nil || s.cond == nil {
+		return managerHostedControlKeepaliveIntervalTicks
+	}
+	if s.tx == nil {
+		return managerHostedControlKeepaliveIntervalTicks
+	}
+	if s.managerHostedControlKeepaliveInterval == 0 {
+		return managerHostedControlKeepaliveIntervalTicks
+	}
+	return s.managerHostedControlKeepaliveInterval
 }
 
 func (s *BidirectionalSession) AttachTxChannel(closer io.WriteCloser) (channelID uint64, err error) {
 	return s.AttachTxChannelWithConfig(closer, rriptMonoDirectionSession.ChannelConfig{Weight: 1})
+}
+
+func (s *BidirectionalSession) ConsumeSourcePacketActivity() uint64 {
+	if s == nil {
+		return 0
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	count := s.sourcePacketActivity
+	s.sourcePacketActivity = 0
+	return count
+}
+
+func (s *BidirectionalSession) SetDynamicRestrictSourceDataWhenOldestLaneStalled(enabled bool) {
+	if s == nil || s.tx == nil {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.tx.SetDynamicRestrictSourceDataWhenOldestLaneStalled(enabled)
+}
+
+func (s *BidirectionalSession) RestrictSourceDataWhenOldestLaneStalledEnabled() bool {
+	if s == nil || s.tx == nil {
+		return false
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.tx.RestrictSourceDataWhenOldestLaneStalledEnabled()
 }
 
 func (s *BidirectionalSession) AttachTxChannelWithConfig(
@@ -201,6 +308,13 @@ func (s *BidirectionalSession) Rx() *rriptMonoDirectionSession.SessionRx {
 	return s.rx
 }
 
+func (s *BidirectionalSession) OnLogicalPacket(data []byte) error {
+	if s == nil || s.rx == nil {
+		return io.ErrClosedPipe
+	}
+	return s.rx.OnLogicalPacket(data)
+}
+
 func (s *BidirectionalSession) Tx() *rriptMonoDirectionSession.SessionTx {
 	if s == nil {
 		return nil
@@ -236,7 +350,7 @@ func (s *BidirectionalSession) startAutoTick() {
 			case <-ticker.C:
 				s.mu.Lock()
 				s.nextTimestamp += 1
-				err := s.onNewTimestampLocked(s.nextTimestamp)
+				_, err := s.onNewTimestampLocked(s.nextTimestamp)
 				s.mu.Unlock()
 				if err != nil {
 					return

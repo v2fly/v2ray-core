@@ -28,6 +28,8 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/packetToStream"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rriptMonoDirectionSession"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitBidirectionalSession"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitBidirectionalSessionManager"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitChannelManager"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitDebuger"
 )
 
@@ -72,12 +74,15 @@ type ownedConn struct {
 }
 
 type transportSession struct {
-	id       transportSessionID
-	role     string
-	session  *rrpitBidirectionalSession.BidirectionalSession
-	adaptor  *packetToStream.Adaptor
-	recorder *rrpitDebuger.PacketRecorder
-	onClose  func()
+	id      transportSessionID
+	role    string
+	session *rrpitBidirectionalSession.BidirectionalSession
+	adaptor *packetToStream.Adaptor
+
+	sessionManager    *rrpitBidirectionalSessionManager.Manager
+	backgroundAdaptor *packetToStream.Adaptor
+	recorder          *rrpitDebuger.PacketRecorder
+	onClose           func()
 
 	mu         sync.Mutex
 	channels   []gonet.Conn
@@ -95,24 +100,34 @@ func newTransportSession(
 	client bool,
 	onClose func(),
 ) (*transportSession, error) {
-	sessionConfig := buildBidirectionalSessionConfig(config)
-	session, err := rrpitBidirectionalSession.New(sessionConfig)
+	channelManager, err := rrpitChannelManager.New(buildChannelManagerConfig(config))
 	if err != nil {
 		return nil, err
 	}
 
 	recorder, err := newPacketRecorder(config, role, id)
 	if err != nil {
-		_ = session.Close()
+		_ = channelManager.Close()
 		return nil, err
 	}
+
+	sessionManager, err := rrpitBidirectionalSessionManager.New(buildBidirectionalSessionManagerConfig(config, channelManager))
+	if err != nil {
+		if recorder != nil {
+			_ = recorder.Close()
+		}
+		_ = channelManager.Close()
+		return nil, err
+	}
+	session := sessionManager.Session(rrpitBidirectionalSessionManager.InteractiveStream)
+	backgroundSession := sessionManager.Session(rrpitBidirectionalSessionManager.BackgroundStream)
 
 	smuxConfig, err := buildSmuxConfig(config.GetAdaptor())
 	if err != nil {
 		if recorder != nil {
 			_ = recorder.Close()
 		}
-		_ = session.Close()
+		_ = sessionManager.Close()
 		return nil, err
 	}
 
@@ -121,22 +136,33 @@ func newTransportSession(
 		if recorder != nil {
 			_ = recorder.Close()
 		}
-		_ = session.Close()
+		_ = sessionManager.Close()
+		return nil, err
+	}
+	backgroundAdaptor, err := packetToStream.New(backgroundSession, client, smuxConfig)
+	if err != nil {
+		_ = adaptor.Close()
+		if recorder != nil {
+			_ = recorder.Close()
+		}
+		_ = sessionManager.Close()
 		return nil, err
 	}
 
 	return &transportSession{
-		id:       id,
-		role:     role,
-		session:  session,
-		adaptor:  adaptor,
-		recorder: recorder,
-		onClose:  onClose,
+		id:                id,
+		role:              role,
+		session:           session,
+		adaptor:           adaptor,
+		sessionManager:    sessionManager,
+		backgroundAdaptor: backgroundAdaptor,
+		recorder:          recorder,
+		onClose:           onClose,
 	}, nil
 }
 
 func (s *transportSession) addChannel(conn gonet.Conn, channelIndex int, config rriptMonoDirectionSession.ChannelConfig) error {
-	if s == nil || s.session == nil {
+	if s == nil || s.sessionManager == nil {
 		return io.ErrClosedPipe
 	}
 
@@ -145,7 +171,7 @@ func (s *transportSession) addChannel(conn gonet.Conn, channelIndex int, config 
 		writer = s.recorder.WrapWriter(s.role, channelIndex, writer)
 	}
 
-	_, rxChannel, err := s.session.AttachChannelWithConfig(writer, config)
+	managerChannelIndex, err := s.sessionManager.ChannelManager().AttachChannelWithConfig(writer, config)
 	if err != nil {
 		_ = conn.Close()
 		return err
@@ -161,11 +187,11 @@ func (s *transportSession) addChannel(conn gonet.Conn, channelIndex int, config 
 	s.channels = append(s.channels, conn)
 	s.mu.Unlock()
 
-	go s.readChannel(conn, rxChannel, channelIndex)
+	go s.readChannel(conn, managerChannelIndex, channelIndex)
 	return nil
 }
 
-func (s *transportSession) readChannel(conn gonet.Conn, rxChannel interface{ OnNewMessageArrived([]byte) error }, channelIndex int) {
+func (s *transportSession) readChannel(conn gonet.Conn, managerChannelIndex int, channelIndex int) {
 	reader := bufio.NewReaderSize(conn, transportMaxFrameSize+transportFrameLengthFieldSize)
 	for {
 		lengthBuf := make([]byte, transportFrameLengthFieldSize)
@@ -191,7 +217,7 @@ func (s *transportSession) readChannel(conn gonet.Conn, rxChannel interface{ OnN
 		if s.recorder != nil {
 			s.recorder.RecordInbound(s.role, channelIndex, payload)
 		}
-		if err := rxChannel.OnNewMessageArrived(payload); err != nil {
+		if err := s.sessionManager.ChannelManager().OnNewMessageArrived(managerChannelIndex, payload); err != nil {
 			s.logChannelFailure(channelIndex, conn, "failed to handle inbound rrpit packet", err)
 			_ = s.Close()
 			return
@@ -227,17 +253,19 @@ func (s *transportSession) Close() error {
 		}
 		if s.adaptor != nil {
 			s.closeErr = firstNonNil(s.closeErr, s.adaptor.Close())
+		}
+		if s.backgroundAdaptor != nil {
+			s.closeErr = firstNonNil(s.closeErr, s.backgroundAdaptor.Close())
+		}
+		if s.sessionManager != nil {
+			s.closeErr = firstNonNil(s.closeErr, s.sessionManager.Close())
 		} else if s.session != nil {
 			s.closeErr = firstNonNil(s.closeErr, s.session.Close())
 		}
 
 		s.mu.Lock()
-		channels := append([]gonet.Conn(nil), s.channels...)
 		s.channels = nil
 		s.mu.Unlock()
-		for _, conn := range channels {
-			s.closeErr = firstNonNil(s.closeErr, conn.Close())
-		}
 
 		if s.recorder != nil {
 			s.closeErr = firstNonNil(s.closeErr, s.recorder.Close())
@@ -268,10 +296,40 @@ func (s *transportSession) writeDiagnose() error {
 }
 
 func (s *transportSession) OpenStream() (gonet.Conn, error) {
+	return s.OpenStreamByClass(rrpitBidirectionalSessionManager.InteractiveStream)
+}
+
+func (s *transportSession) OpenStreamByClass(sessionClass rrpitBidirectionalSessionManager.SessionName) (gonet.Conn, error) {
 	if s == nil || s.adaptor == nil {
 		return nil, io.ErrClosedPipe
 	}
-	stream, err := s.adaptor.OpenStream()
+	adaptor := s.adaptor
+	if sessionClass == rrpitBidirectionalSessionManager.BackgroundStream {
+		newError("opening background stream connection").AtDebug().WriteToLog()
+		adaptor = s.backgroundAdaptor
+	}
+	if adaptor == nil {
+		return nil, io.ErrClosedPipe
+	}
+	stream, err := adaptor.OpenStream()
+	if err != nil {
+		return nil, err
+	}
+	return gonet.Conn(stream), nil
+}
+
+func (s *transportSession) AcceptStream(sessionClass rrpitBidirectionalSessionManager.SessionName) (gonet.Conn, error) {
+	if s == nil {
+		return nil, io.ErrClosedPipe
+	}
+	adaptor := s.adaptor
+	if sessionClass == rrpitBidirectionalSessionManager.BackgroundStream {
+		adaptor = s.backgroundAdaptor
+	}
+	if adaptor == nil {
+		return nil, io.ErrClosedPipe
+	}
+	stream, err := adaptor.AcceptStream()
 	if err != nil {
 		return nil, err
 	}
@@ -399,16 +457,49 @@ func buildBidirectionalSessionConfig(config *Config) rrpitBidirectionalSession.C
 			MaxRewindableControlMessageNum: int(session.GetMaxRewindableControlMessageNum()),
 			OddChannelIDs:                  session.GetOddChannelIds(),
 			Reconstruction: rriptMonoDirectionSession.SessionTxReconstructionConfig{
-				InitialRepairShardRatio:              float64(reconstruction.GetInitialRepairShardRatio()),
-				LaneRepairWeight:                     float32SliceToFloat64Slice(reconstruction.GetLaneRepairWeight()),
-				SecondaryRepairShardRatio:            float64(reconstruction.GetSecondaryRepairShardRatio()),
-				TimeResendSecondaryRepairShard:       int(reconstruction.GetTimeResendSecondaryRepairShard()),
-				StaleLaneFinalizedAgeThresholdTicks:  int(reconstruction.GetStaleLaneFinalizedAgeThresholdTicks()),
-				StaleLaneProgressStallThresholdTicks: int(reconstruction.GetStaleLaneProgressStallThresholdTicks()),
-				SecondaryRepairMinBurst:              int(reconstruction.GetSecondaryRepairMinBurst()),
+				InitialRepairShardRatio:                       float64(reconstruction.GetInitialRepairShardRatio()),
+				LaneRepairWeight:                              float32SliceToFloat64Slice(reconstruction.GetLaneRepairWeight()),
+				SecondaryRepairShardRatio:                     float64(reconstruction.GetSecondaryRepairShardRatio()),
+				TimeResendSecondaryRepairShard:                int(reconstruction.GetTimeResendSecondaryRepairShard()),
+				StaleLaneFinalizedAgeThresholdTicks:           int(reconstruction.GetStaleLaneFinalizedAgeThresholdTicks()),
+				StaleLaneProgressStallThresholdTicks:          int(reconstruction.GetStaleLaneProgressStallThresholdTicks()),
+				SecondaryRepairMinBurst:                       int(reconstruction.GetSecondaryRepairMinBurst()),
+				AlwaysRestrictSourceDataWhenOldestLaneStalled: reconstruction.GetAlwaysRestrictSourceDataWhenOldestLaneStalled(),
 			},
 		},
-		TimestampInterval: time.Duration(session.GetTimestampInterval()),
+		TimestampInterval: 0,
+	}
+}
+
+func buildChannelManagerConfig(config *Config) rrpitChannelManager.Config {
+	var session *SessionSetting
+	if config != nil {
+		session = config.GetSession()
+	}
+	return rrpitChannelManager.Config{
+		OddChannelIDs:                  session.GetOddChannelIds(),
+		MaxRewindableTimestampNum:      int(session.GetMaxRewindableTimestampNum()),
+		MaxRewindableControlMessageNum: int(session.GetMaxRewindableControlMessageNum()),
+	}
+}
+
+func buildBidirectionalSessionManagerConfig(
+	config *Config,
+	channelManager *rrpitChannelManager.ChannelManager,
+) rrpitBidirectionalSessionManager.Config {
+	var sessionMgr *SessionManagerSetting
+	if config != nil {
+		sessionMgr = config.GetSessionMgr()
+	}
+	baseSessionConfig := buildBidirectionalSessionConfig(config)
+	baseSessionConfig.ManagerHostedControlKeepaliveIntervalTicks = int(sessionMgr.GetManagerHostedControlKeepaliveIntervalTicks())
+	return rrpitBidirectionalSessionManager.Config{
+		ChannelManager:    channelManager,
+		BaseSessionConfig: baseSessionConfig,
+		TimestampInterval: time.Duration(sessionMgr.GetTimestampInterval()),
+		InteractivePrimaryCancellationCounterLimit:          int(sessionMgr.GetInteractivePrimaryCancellationCounterLimit()),
+		DynamicRestrictSourceDataWhenOldestLaneStalled:      sessionMgr.GetDynamicRestrictSourceDataWhenOldestLaneStalled(),
+		DynamicRestrictSourceDataWhenOldestLaneStalledTicks: int(sessionMgr.GetDynamicRestrictSourceDataWhenOldestLaneStalledTicks()),
 	}
 }
 

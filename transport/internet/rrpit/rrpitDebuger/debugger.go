@@ -606,14 +606,7 @@ func cloneControlMessage(ctrl rriptMonoDirectionSession.ControlMessage) *rriptMo
 }
 
 func packetKindName(kind uint8) string {
-	switch kind {
-	case rriptMonoDirectionSession.PacketKind_DATA:
-		return "data"
-	case rriptMonoDirectionSession.PacketKind_CONTROL:
-		return "control"
-	default:
-		return "unknown"
-	}
+	return rriptMonoDirectionSession.PacketKindName(kind)
 }
 
 func snapshotSessionTx(tx *rriptMonoDirectionSession.SessionTx) (*SessionTxSnapshot, error) {

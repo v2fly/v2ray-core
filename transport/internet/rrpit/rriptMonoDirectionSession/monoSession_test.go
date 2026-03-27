@@ -3,6 +3,7 @@ package rriptMonoDirectionSession
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"io"
 	"testing"
 
@@ -709,6 +710,110 @@ func TestSessionTxBecomingOldestBootstrapsStaleMonitoring(t *testing.T) {
 	}
 }
 
+func TestSessionTxAllowsNewSourceDataWhenOldestLaneIsStaleUntilLaneBufferFull(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           1,
+		MaxBufferedLanes:               2,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+		Reconstruction: SessionTxReconstructionConfig{
+			InitialRepairShardRatio:              1,
+			SecondaryRepairShardRatio:            1,
+			TimeResendSecondaryRepairShard:       1,
+			StaleLaneFinalizedAgeThresholdTicks:  2,
+			StaleLaneProgressStallThresholdTicks: 2,
+		},
+	})
+	if _, err := tx.AttachTxChannel(writer); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("a")); err != nil {
+		t.Fatal(err)
+	}
+	for ts := uint64(1); ts <= 4; ts++ {
+		if err := tx.OnNewTimestamp(ts); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := tx.SendMessage([]byte("b")); err != nil {
+		t.Fatalf("expected stale oldest lane to still allow running ahead before buffer is full, got %v", err)
+	}
+	if err := tx.SendMessage([]byte("c")); !errors.Is(err, ErrTxLaneBufferFull) {
+		t.Fatalf("expected max buffered lanes to be the backpressure limit, got %v", err)
+	}
+}
+
+func TestSessionTxBackpressuresNewSourceDataWhenOldestLaneIsStaleIfConfigured(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           1,
+		MaxBufferedLanes:               16,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+		Reconstruction: SessionTxReconstructionConfig{
+			InitialRepairShardRatio:                       1,
+			SecondaryRepairShardRatio:                     1,
+			TimeResendSecondaryRepairShard:                1,
+			StaleLaneFinalizedAgeThresholdTicks:           2,
+			StaleLaneProgressStallThresholdTicks:          2,
+			AlwaysRestrictSourceDataWhenOldestLaneStalled: true,
+		},
+	})
+	if _, err := tx.AttachTxChannel(writer); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("a")); err != nil {
+		t.Fatal(err)
+	}
+	for ts := uint64(1); ts <= 4; ts++ {
+		if err := tx.OnNewTimestamp(ts); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := tx.SendMessage([]byte("b")); !errors.Is(err, ErrTxLaneBufferFull) {
+		t.Fatalf("expected configured stale-oldest-lane backpressure, got %v", err)
+	}
+}
+
+func TestSessionTxReturnsErrTxLaneBufferFullAtMaxBufferedLanesLimit(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           1,
+		MaxBufferedLanes:               2,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+	})
+	if _, err := tx.AttachTxChannel(writer); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("a")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.SendMessage([]byte("b")); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := len(tx.txLanes.lanes); got != 2 {
+		t.Fatalf("expected exactly 2 buffered lanes before limit, got %d", got)
+	}
+
+	if err := tx.SendMessage([]byte("c")); !errors.Is(err, ErrTxLaneBufferFull) {
+		t.Fatalf("expected ErrTxLaneBufferFull when maxBufferedLanes is reached, got %v", err)
+	}
+	if got := len(tx.txLanes.lanes); got != 2 {
+		t.Fatalf("expected lane count to stay capped at 2 after limit error, got %d", got)
+	}
+}
+
 func TestSessionTxCompletionSentinelStopsRepairImmediately(t *testing.T) {
 	writer := &recordingWriteCloser{}
 	tx := mustNewSessionTx(t, SessionTxConfig{
@@ -812,6 +917,7 @@ func TestSessionTxDeferredSecondaryRepairDoesNotRefreshTicketEarly(t *testing.T)
 	tx.currentTimestampInitialized = true
 	tx.txChannelsConfig[0].Status.TimestampLastSent = 2
 	tx.txChannelsConfig[0].Status.PacketSentCurrentTimestamp = 1
+	tx.txChannelsConfig[0].Status.EnforcedPacketSentCurrentTimestamp = 1
 	tx.scheduleSecondaryRepairResends(2)
 
 	if lane.SecondaryRepairPacketsPending != 2 {
@@ -824,12 +930,14 @@ func TestSessionTxDeferredSecondaryRepairDoesNotRefreshTicketEarly(t *testing.T)
 	tx.currentTimestamp = 3
 	tx.txChannelsConfig[0].Status.TimestampLastSent = 3
 	tx.txChannelsConfig[0].Status.PacketSentCurrentTimestamp = 1
+	tx.txChannelsConfig[0].Status.EnforcedPacketSentCurrentTimestamp = 1
 	tx.scheduleSecondaryRepairResends(3)
 	if lane.SecondaryRepairPacketsPending != 2 || lane.NextSecondaryRepairTimestamp != 0 {
 		t.Fatalf("expected deferred resend to stay active without refreshing the ticket, got pending=%d next=%d", lane.SecondaryRepairPacketsPending, lane.NextSecondaryRepairTimestamp)
 	}
 
 	tx.txChannelsConfig[0].Status.PacketSentCurrentTimestamp = 0
+	tx.txChannelsConfig[0].Status.EnforcedPacketSentCurrentTimestamp = 0
 	if err := tx.OnNewTimestamp(3); err != nil {
 		t.Fatal(err)
 	}
@@ -1027,7 +1135,7 @@ func TestSessionRxControlPacketLearnsChannelID(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	payload, err := marshalSessionControlPacket(ControlMessage{
+	payload, err := marshalSessionControlPacket(PacketKind_CONTROL, ControlMessage{
 		FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: 9},
 	})
 	if err != nil {
@@ -1085,7 +1193,7 @@ func TestSessionRxRejectsDuplicateLearnedChannelIDs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	payload, err := marshalSessionControlPacket(ControlMessage{
+	payload, err := marshalSessionControlPacket(PacketKind_CONTROL, ControlMessage{
 		FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: 7},
 	})
 	if err != nil {

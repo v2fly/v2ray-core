@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rriptMonoDirectionSession"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitBidirectionalSessionManager"
 )
 
 type testClientIdentityConn struct {
@@ -66,27 +67,31 @@ func TestBuildBidirectionalSessionConfigIncludesReconstructionSettings(t *testin
 			OddChannelIds:                  true,
 			MaxRewindableTimestampNum:      9,
 			MaxRewindableControlMessageNum: 10,
-			TimestampInterval:              11,
 			Reconstruction: &SessionReconstructionSetting{
-				InitialRepairShardRatio:              1.25,
-				LaneRepairWeight:                     []float32{0.5, 0.25},
-				SecondaryRepairShardRatio:            0.75,
-				TimeResendSecondaryRepairShard:       3,
-				StaleLaneFinalizedAgeThresholdTicks:  7,
-				StaleLaneProgressStallThresholdTicks: 8,
-				SecondaryRepairMinBurst:              2,
+				InitialRepairShardRatio:                       1.25,
+				LaneRepairWeight:                              []float32{0.5, 0.25},
+				SecondaryRepairShardRatio:                     0.75,
+				TimeResendSecondaryRepairShard:                3,
+				StaleLaneFinalizedAgeThresholdTicks:           7,
+				StaleLaneProgressStallThresholdTicks:          8,
+				SecondaryRepairMinBurst:                       2,
+				AlwaysRestrictSourceDataWhenOldestLaneStalled: true,
 			},
+		},
+		SessionMgr: &SessionManagerSetting{
+			TimestampInterval: 11,
 		},
 	})
 
 	want := rriptMonoDirectionSession.SessionTxReconstructionConfig{
-		InitialRepairShardRatio:              1.25,
-		LaneRepairWeight:                     []float64{0.5, 0.25},
-		SecondaryRepairShardRatio:            0.75,
-		TimeResendSecondaryRepairShard:       3,
-		StaleLaneFinalizedAgeThresholdTicks:  7,
-		StaleLaneProgressStallThresholdTicks: 8,
-		SecondaryRepairMinBurst:              2,
+		InitialRepairShardRatio:                       1.25,
+		LaneRepairWeight:                              []float64{0.5, 0.25},
+		SecondaryRepairShardRatio:                     0.75,
+		TimeResendSecondaryRepairShard:                3,
+		StaleLaneFinalizedAgeThresholdTicks:           7,
+		StaleLaneProgressStallThresholdTicks:          8,
+		SecondaryRepairMinBurst:                       2,
+		AlwaysRestrictSourceDataWhenOldestLaneStalled: true,
 	}
 	got := config.Tx.Reconstruction
 	if got.InitialRepairShardRatio != want.InitialRepairShardRatio ||
@@ -119,7 +124,7 @@ func TestPersistentClientSessionKeepsTransportAliveUntilIdle(t *testing.T) {
 			localAddr:  &gonet.TCPAddr{IP: []byte{127, 0, 0, 1}, Port: 10001},
 			remoteAddr: &gonet.TCPAddr{IP: []byte{127, 0, 0, 1}, Port: 10002},
 		},
-		openStream: func() (gonet.Conn, error) {
+		openStream: func(rrpitBidirectionalSessionManager.SessionName) (gonet.Conn, error) {
 			return clientConn, nil
 		},
 		closeSession: func() error {
@@ -176,7 +181,7 @@ func TestPersistentClientSessionOpenConnectionTracksContext(t *testing.T) {
 			localAddr:  &gonet.TCPAddr{IP: []byte{127, 0, 0, 1}, Port: 10011},
 			remoteAddr: &gonet.TCPAddr{IP: []byte{127, 0, 0, 1}, Port: 10012},
 		},
-		openStream: func() (gonet.Conn, error) {
+		openStream: func(rrpitBidirectionalSessionManager.SessionName) (gonet.Conn, error) {
 			return clientConn, nil
 		},
 		closeSession: func() error {
