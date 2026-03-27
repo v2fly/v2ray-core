@@ -443,8 +443,9 @@ func buildBidirectionalSessionConfig(config *Config) rrpitBidirectionalSession.C
 
 	return rrpitBidirectionalSession.Config{
 		Rx: rriptMonoDirectionSession.SessionRxConfig{
-			LaneShardSize:    int(lane.GetShardSize()),
-			MaxBufferedLanes: int(lane.GetMaxBufferedLanes()),
+			LaneShardSize:              int(lane.GetShardSize()),
+			MaxBufferedLanes:           int(lane.GetMaxBufferedLanes()),
+			RemoteMaxDataShardsPerLane: int(lane.GetRemoteMaxDataShardsPerLane()),
 			OnMessage: func([]byte) error {
 				return nil
 			},

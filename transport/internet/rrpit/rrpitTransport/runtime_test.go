@@ -59,9 +59,10 @@ func TestTransportSessionIdentityRejectsInvalidIdentity(t *testing.T) {
 func TestBuildBidirectionalSessionConfigIncludesReconstructionSettings(t *testing.T) {
 	config := buildBidirectionalSessionConfig(&Config{
 		Lane: &LaneSetting{
-			ShardSize:            1400,
-			MaxDataShardsPerLane: 6,
-			MaxBufferedLanes:     8,
+			ShardSize:                  1400,
+			MaxDataShardsPerLane:       6,
+			MaxBufferedLanes:           8,
+			RemoteMaxDataShardsPerLane: 5,
 		},
 		Session: &SessionSetting{
 			OddChannelIds:                  true,
@@ -107,6 +108,9 @@ func TestBuildBidirectionalSessionConfigIncludesReconstructionSettings(t *testin
 		if got.LaneRepairWeight[i] != weight {
 			t.Fatalf("unexpected lane repair weight[%d]: got %v want %v", i, got.LaneRepairWeight[i], weight)
 		}
+	}
+	if config.Rx.RemoteMaxDataShardsPerLane != 5 {
+		t.Fatalf("unexpected remote max data shards per lane: got %d want 5", config.Rx.RemoteMaxDataShardsPerLane)
 	}
 }
 

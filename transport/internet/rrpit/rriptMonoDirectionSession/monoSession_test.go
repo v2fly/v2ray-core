@@ -1119,6 +1119,112 @@ func TestSessionRxRoundTripAndGenerateControl(t *testing.T) {
 	}
 }
 
+func TestSessionRxDeliversExactFullLaneWithoutRepairWhenRemoteMaxConfigured(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           2,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+	})
+	channelID, err := tx.AttachTxChannel(writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var received [][]byte
+	rx := mustNewSessionRx(t, SessionRxConfig{
+		LaneShardSize:              16,
+		MaxBufferedLanes:           4,
+		RemoteMaxDataShardsPerLane: 2,
+		OnMessage: func(data []byte) error {
+			received = append(received, append([]byte(nil), data...))
+			return nil
+		},
+	})
+	channel, err := rx.AttachRxChannel(channelID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("alpha")); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.SendMessage([]byte("beta")); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 2 {
+		t.Fatalf("expected 2 source writes before repair, got %d", len(writer.writes))
+	}
+
+	for _, wire := range writer.writes {
+		if err := channel.OnNewMessageArrived(wire); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if diff := cmp.Diff([][]byte{[]byte("alpha"), []byte("beta")}, received); diff != "" {
+		t.Fatalf("unexpected delivered payloads (-want +got):\n%s", diff)
+	}
+}
+
+func TestSessionRxWaitsForRepairOnShortLaneEvenWhenRemoteMaxConfigured(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	tx := mustNewSessionTx(t, SessionTxConfig{
+		LaneShardSize:                  16,
+		MaxDataShardsPerLane:           2,
+		MaxBufferedLanes:               4,
+		MaxRewindableTimestampNum:      4,
+		MaxRewindableControlMessageNum: 4,
+	})
+	channelID, err := tx.AttachTxChannel(writer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var received [][]byte
+	rx := mustNewSessionRx(t, SessionRxConfig{
+		LaneShardSize:              16,
+		MaxBufferedLanes:           4,
+		RemoteMaxDataShardsPerLane: 2,
+		OnMessage: func(data []byte) error {
+			received = append(received, append([]byte(nil), data...))
+			return nil
+		},
+	})
+	channel, err := rx.AttachRxChannel(channelID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tx.SendMessage([]byte("alpha")); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) != 1 {
+		t.Fatalf("expected 1 source write, got %d", len(writer.writes))
+	}
+	if err := channel.OnNewMessageArrived(writer.writes[0]); err != nil {
+		t.Fatal(err)
+	}
+	if len(received) != 0 {
+		t.Fatalf("expected short lane to stay buffered before repair, got %d payloads", len(received))
+	}
+
+	if err := tx.OnNewTimestamp(1); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) < 2 {
+		t.Fatalf("expected repair write after tick, got %d total writes", len(writer.writes))
+	}
+	if err := channel.OnNewMessageArrived(writer.writes[1]); err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff([][]byte{[]byte("alpha")}, received); diff != "" {
+		t.Fatalf("unexpected delivered payloads after repair (-want +got):\n%s", diff)
+	}
+}
+
 func TestSessionRxControlPacketLearnsChannelID(t *testing.T) {
 	var seen []ControlMessage
 	rx := mustNewSessionRx(t, SessionRxConfig{

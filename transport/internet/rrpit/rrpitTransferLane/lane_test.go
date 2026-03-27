@@ -9,16 +9,19 @@ import (
 
 func TestNewTransferLaneConstructors(t *testing.T) {
 	t.Run("rx validates shard size", func(t *testing.T) {
-		if _, err := NewTransferLaneRx(reconstructionLengthFieldSize); err == nil {
+		if _, err := NewTransferLaneRx(reconstructionLengthFieldSize, 0); err == nil {
 			t.Fatal("expected invalid shard size error")
 		}
 
-		rx, err := NewTransferLaneRx(16)
+		rx, err := NewTransferLaneRx(16, 3)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if rx.ShardSize != 16 {
 			t.Fatalf("expected shard size 16, got %d", rx.ShardSize)
+		}
+		if rx.RemoteMaxDataShards != 3 {
+			t.Fatalf("expected remote max data shards 3, got %d", rx.RemoteMaxDataShards)
 		}
 		if rx.seenDataShards == nil {
 			t.Fatal("expected seenDataShards to be initialized")
@@ -231,6 +234,70 @@ func TestTransferLaneDirectReconstructWithAllSourceShards(t *testing.T) {
 	}
 }
 
+func TestTransferLaneDirectReconstructWithAllSourceShardsRemoteMaxConfigured(t *testing.T) {
+	payloads := [][]byte{
+		[]byte("alpha"),
+		[]byte("beta"),
+		[]byte("gamma"),
+	}
+
+	tx := mustNewTransferLaneTx(t, 24, len(payloads))
+	sourcePackets := addPayloads(t, tx, payloads)
+	rx := mustNewTransferLaneRxWithRemoteMax(t, 24, len(payloads))
+
+	for i, packet := range sourcePackets {
+		done, err := rx.AddTransferData(packet)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if i < len(sourcePackets)-1 && done {
+			t.Fatal("did not expect early completion before final source shard")
+		}
+		if i == len(sourcePackets)-1 && !done {
+			t.Fatal("expected completion after final source shard when remote max is configured")
+		}
+	}
+
+	got, err := rx.Reconstruct()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := reconstructionDataFromPayloads(payloads)
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("unexpected reconstruction (-want +got):\n%s", diff)
+	}
+}
+
+func TestTransferLaneDirectReconstructWithAllSourceShardsOutOfOrderRemoteMaxConfigured(t *testing.T) {
+	payloads := [][]byte{
+		[]byte("alpha"),
+		[]byte("beta"),
+		[]byte("gamma"),
+	}
+
+	tx := mustNewTransferLaneTx(t, 24, len(payloads))
+	sourcePackets := addPayloads(t, tx, payloads)
+	rx := mustNewTransferLaneRxWithRemoteMax(t, 24, len(payloads))
+
+	for _, index := range []int{2, 0} {
+		done, err := rx.AddTransferData(sourcePackets[index])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if done {
+			t.Fatal("did not expect completion before all source shards exist")
+		}
+	}
+
+	done, err := rx.AddTransferData(sourcePackets[1])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !done {
+		t.Fatal("expected completion once the full contiguous source shard set exists")
+	}
+}
+
 func TestTransferLaneReconstructWithRepairSymbolsAfterLoss(t *testing.T) {
 	payloads := [][]byte{
 		[]byte("first"),
@@ -318,6 +385,20 @@ func TestTransferLaneRxGenerateControlUsesCompletionSentinelAfterDirectReconstru
 	}
 	if control.SeenChunks != SeenChunksCompletionSentinel {
 		t.Fatalf("expected completion sentinel %d, got %d", SeenChunksCompletionSentinel, control.SeenChunks)
+	}
+}
+
+func TestTransferLaneRxDoesNotEarlyCompleteShortLaneWithRemoteMaxConfigured(t *testing.T) {
+	tx := mustNewTransferLaneTx(t, 16, 4)
+	packet := mustAddData(t, tx, []byte("done"))
+	rx := mustNewTransferLaneRxWithRemoteMax(t, 16, 4)
+
+	done, err := rx.AddTransferData(packet)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if done {
+		t.Fatal("did not expect short lane to complete before total shard count is known")
 	}
 }
 
@@ -472,9 +553,13 @@ func TestTransferLaneRxValidationErrors(t *testing.T) {
 }
 
 func mustNewTransferLaneRx(t *testing.T, shardSize int) *TransferLaneRx {
+	return mustNewTransferLaneRxWithRemoteMax(t, shardSize, 0)
+}
+
+func mustNewTransferLaneRxWithRemoteMax(t *testing.T, shardSize int, remoteMaxDataShards int) *TransferLaneRx {
 	t.Helper()
 
-	rx, err := NewTransferLaneRx(shardSize)
+	rx, err := NewTransferLaneRx(shardSize, remoteMaxDataShards)
 	if err != nil {
 		t.Fatal(err)
 	}

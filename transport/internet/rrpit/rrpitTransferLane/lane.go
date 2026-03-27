@@ -26,7 +26,8 @@ func IsNotEnoughSymbolsToReconstruct(err error) bool {
 }
 
 type TransferLaneRx struct {
-	ShardSize int
+	ShardSize           int
+	RemoteMaxDataShards int
 
 	TotalDataShards  uint32
 	rxCodesState     *raptorq.Decoder
@@ -36,14 +37,18 @@ type TransferLaneRx struct {
 	completed        bool
 }
 
-func NewTransferLaneRx(shardSize int) (*TransferLaneRx, error) {
+func NewTransferLaneRx(shardSize int, remoteMaxDataShards int) (*TransferLaneRx, error) {
 	if err := validateTransferLaneConfig(shardSize); err != nil {
 		return nil, err
 	}
+	if remoteMaxDataShards < 0 {
+		return nil, newError("invalid remote max data shards")
+	}
 	return &TransferLaneRx{
-		ShardSize:        shardSize,
-		seenDataShards:   make([]ReconstructionData, 0),
-		seenRepairShards: make(map[uint32]struct{}),
+		ShardSize:           shardSize,
+		RemoteMaxDataShards: remoteMaxDataShards,
+		seenDataShards:      make([]ReconstructionData, 0),
+		seenRepairShards:    make(map[uint32]struct{}),
 	}, nil
 }
 
@@ -90,6 +95,10 @@ func (lr *TransferLaneRx) AddTransferData(data TransferData) (done bool, err err
 	}
 	if err := lr.storeDataShard(data.Seq, shard); err != nil {
 		return false, err
+	}
+	if lr.TotalDataShards == 0 && lr.RemoteMaxDataShards > 0 && hasAllShards(lr.seenDataShards, uint32(lr.RemoteMaxDataShards)) {
+		lr.TotalDataShards = uint32(lr.RemoteMaxDataShards)
+		return true, nil
 	}
 	if lr.rxCodesState != nil {
 		symbol, err := encodeReconstructionData(lr.ShardSize, shard)

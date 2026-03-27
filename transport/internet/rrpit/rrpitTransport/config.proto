@@ -44,6 +44,9 @@ message LaneSetting {
 
   // Maximum number of in-flight / buffered lanes kept by tx and rx state.
   int32 max_buffered_lanes = 3;
+
+  // Remote sender's maximum number of source data shards per lane. Zero disables the heuristic.
+  int32 remote_max_data_shards_per_lane = 4;
 }
 
 message SessionReconstructionSetting {

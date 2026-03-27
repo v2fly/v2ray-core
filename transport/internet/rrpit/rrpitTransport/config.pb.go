@@ -215,8 +215,10 @@ type LaneSetting struct {
 	MaxDataShardsPerLane int32 `protobuf:"varint,2,opt,name=max_data_shards_per_lane,json=maxDataShardsPerLane,proto3" json:"max_data_shards_per_lane,omitempty"`
 	// Maximum number of in-flight / buffered lanes kept by tx and rx state.
 	MaxBufferedLanes int32 `protobuf:"varint,3,opt,name=max_buffered_lanes,json=maxBufferedLanes,proto3" json:"max_buffered_lanes,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// Remote sender's maximum number of source data shards per lane. Zero disables the heuristic.
+	RemoteMaxDataShardsPerLane int32 `protobuf:"varint,4,opt,name=remote_max_data_shards_per_lane,json=remoteMaxDataShardsPerLane,proto3" json:"remote_max_data_shards_per_lane,omitempty"`
+	unknownFields              protoimpl.UnknownFields
+	sizeCache                  protoimpl.SizeCache
 }
 
 func (x *LaneSetting) Reset() {
@@ -266,6 +268,13 @@ func (x *LaneSetting) GetMaxDataShardsPerLane() int32 {
 func (x *LaneSetting) GetMaxBufferedLanes() int32 {
 	if x != nil {
 		return x.MaxBufferedLanes
+	}
+	return 0
+}
+
+func (x *LaneSetting) GetRemoteMaxDataShardsPerLane() int32 {
+	if x != nil {
+		return x.RemoteMaxDataShardsPerLane
 	}
 	return 0
 }
@@ -788,12 +797,13 @@ const file_transport_internet_rrpit_rrpitTransport_config_proto_rawDesc = "" +
 	"\x0eChannelSetting\x12\x10\n" +
 	"\x03mtu\x18\x01 \x01(\rR\x03mtu\x12\x16\n" +
 	"\x06weight\x18\x02 \x01(\x05R\x06weight\x12*\n" +
-	"\x11max_sending_speed\x18\x03 \x01(\x05R\x0fmaxSendingSpeed\"\x92\x01\n" +
+	"\x11max_sending_speed\x18\x03 \x01(\x05R\x0fmaxSendingSpeed\"\xd7\x01\n" +
 	"\vLaneSetting\x12\x1d\n" +
 	"\n" +
 	"shard_size\x18\x01 \x01(\x05R\tshardSize\x126\n" +
 	"\x18max_data_shards_per_lane\x18\x02 \x01(\x05R\x14maxDataShardsPerLane\x12,\n" +
-	"\x12max_buffered_lanes\x18\x03 \x01(\x05R\x10maxBufferedLanes\"\xf0\x04\n" +
+	"\x12max_buffered_lanes\x18\x03 \x01(\x05R\x10maxBufferedLanes\x12C\n" +
+	"\x1fremote_max_data_shards_per_lane\x18\x04 \x01(\x05R\x1aremoteMaxDataShardsPerLane\"\xf0\x04\n" +
 	"\x1cSessionReconstructionSetting\x12;\n" +
 	"\x1ainitial_repair_shard_ratio\x18\x01 \x01(\x02R\x17initialRepairShardRatio\x12,\n" +
 	"\x12lane_repair_weight\x18\x02 \x03(\x02R\x10laneRepairWeight\x12?\n" +

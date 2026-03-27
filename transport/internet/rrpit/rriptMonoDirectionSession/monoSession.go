@@ -90,12 +90,13 @@ type SessionTxReconstructionConfig struct {
 }
 
 type SessionRxConfig struct {
-	LaneShardSize      int
-	MaxBufferedLanes   int
-	DataPacketKind     uint8
-	ControlPacketKind  uint8
-	OnMessage          func([]byte) error
-	OnRemoteControlMsg func(ControlMessage) error
+	LaneShardSize              int
+	MaxBufferedLanes           int
+	RemoteMaxDataShardsPerLane int
+	DataPacketKind             uint8
+	ControlPacketKind          uint8
+	OnMessage                  func([]byte) error
+	OnRemoteControlMsg         func(ControlMessage) error
 }
 
 type TickStats struct {
@@ -143,8 +144,9 @@ type txChannels struct {
 }
 
 type rxLanes struct {
-	laneShardSize    int
-	maxBufferedLanes int
+	laneShardSize              int
+	maxBufferedLanes           int
+	remoteMaxDataShardsPerLane int
 
 	firstLaneID int64
 	lanes       []*rxLane
@@ -223,6 +225,7 @@ func NewSessionRx(config SessionRxConfig) (*SessionRx, error) {
 	}
 	rx.rxLanes.laneShardSize = config.LaneShardSize
 	rx.rxLanes.maxBufferedLanes = config.MaxBufferedLanes
+	rx.rxLanes.remoteMaxDataShardsPerLane = config.RemoteMaxDataShardsPerLane
 	if err := rx.ensureDefaults(); err != nil {
 		return nil, err
 	}
@@ -431,7 +434,7 @@ func (r *SessionRx) ensureDefaults() error {
 	if r.rxLanes.maxBufferedLanes < 0 {
 		return newError("invalid max buffered lanes")
 	}
-	if _, err := rrpitTransferLane.NewTransferLaneRx(r.rxLanes.laneShardSize); err != nil {
+	if _, err := rrpitTransferLane.NewTransferLaneRx(r.rxLanes.laneShardSize, r.rxLanes.remoteMaxDataShardsPerLane); err != nil {
 		return err
 	}
 	return nil
@@ -662,7 +665,7 @@ func (r *SessionRx) ensureLane(laneID uint64) (*rxLane, error) {
 		return r.rxLanes.lanes[index], nil
 	}
 
-	transferLane, err := rrpitTransferLane.NewTransferLaneRx(r.rxLanes.laneShardSize)
+	transferLane, err := rrpitTransferLane.NewTransferLaneRx(r.rxLanes.laneShardSize, r.rxLanes.remoteMaxDataShardsPerLane)
 	if err != nil {
 		return nil, err
 	}
