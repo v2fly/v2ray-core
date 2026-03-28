@@ -4,10 +4,8 @@
 package rrpitTransport
 
 import (
-	"bufio"
 	"context"
 	"crypto/rand"
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -34,11 +32,10 @@ import (
 )
 
 const (
-	defaultDTLSMTU                = 1200
-	defaultDTLSReplayWindow       = 128
-	transportFrameLengthFieldSize = 4
-	transportMaxFrameSize         = 8 << 20
-	transportIdentityVersion      = byte(1)
+	defaultDTLSMTU           = 1200
+	defaultDTLSReplayWindow  = 128
+	transportMaxPacketSize   = 8 << 20
+	transportIdentityVersion = byte(1)
 )
 
 var transportIdentityMagic = [4]byte{'R', 'R', 'P', 'T'}
@@ -57,11 +54,6 @@ type resolvedChannel struct {
 	dtls      *DTLSUDPChannel
 	address   v2net.Address
 	port      v2net.Port
-}
-
-type framedPacketWriteCloser struct {
-	conn gonet.Conn
-	mu   sync.Mutex
 }
 
 type ownedConn struct {
@@ -181,7 +173,7 @@ func (s *transportSession) attachChannel(conn gonet.Conn, channelSlot int, confi
 		return io.ErrClosedPipe
 	}
 
-	writer := io.WriteCloser(&framedPacketWriteCloser{conn: conn})
+	writer := io.WriteCloser(conn)
 	if s.recorder != nil {
 		writer = s.recorder.WrapWriter(s.role, channelSlot, writer)
 	}
@@ -228,30 +220,11 @@ func (s *transportSession) attachChannel(conn gonet.Conn, channelSlot int, confi
 }
 
 func (s *transportSession) readChannel(conn gonet.Conn, channelSlot int, managerChannelIndex int, readIdleTimeout time.Duration) {
-	reader := bufio.NewReaderSize(conn, transportMaxFrameSize+transportFrameLengthFieldSize)
+	packetBuf := make([]byte, transportMaxPacketSize)
 	for {
-		lengthBuf := make([]byte, transportFrameLengthFieldSize)
-		if err := applyChannelReadDeadline(conn, readIdleTimeout); err != nil {
-			s.handleChannelReadFailure(channelSlot, managerChannelIndex, conn, "failed to set frame-length read deadline", err)
-			return
-		}
-		if _, err := io.ReadFull(reader, lengthBuf); err != nil {
-			s.handleChannelReadFailure(channelSlot, managerChannelIndex, conn, channelReadFailureMessage("failed to read frame length", err), err)
-			return
-		}
-		length := binary.BigEndian.Uint32(lengthBuf)
-		if length == 0 || length > transportMaxFrameSize {
-			s.handleChannelReadFailure(channelSlot, managerChannelIndex, conn, "received invalid frame length", fmt.Errorf("length=%d", length))
-			return
-		}
-
-		payload := make([]byte, length)
-		if err := applyChannelReadDeadline(conn, readIdleTimeout); err != nil {
-			s.handleChannelReadFailure(channelSlot, managerChannelIndex, conn, "failed to set frame-payload read deadline", err)
-			return
-		}
-		if _, err := io.ReadFull(reader, payload); err != nil {
-			s.handleChannelReadFailure(channelSlot, managerChannelIndex, conn, channelReadFailureMessage("failed to read frame payload", err), err)
+		payload, err := readChannelPacket(conn, readIdleTimeout, packetBuf)
+		if err != nil {
+			s.handleChannelReadFailure(channelSlot, managerChannelIndex, conn, channelReadFailureMessage("failed to read channel packet", err), err)
 			return
 		}
 
@@ -548,33 +521,6 @@ func (c *ownedConn) RemoteAddr() gonet.Addr {
 	return nil
 }
 
-func (w *framedPacketWriteCloser) Write(p []byte) (int, error) {
-	if w == nil || w.conn == nil {
-		return 0, io.ErrClosedPipe
-	}
-	if len(p) > 65535 {
-		return 0, fmt.Errorf("rrpit channel payload too large")
-	}
-
-	frame := make([]byte, transportFrameLengthFieldSize+len(p))
-	binary.BigEndian.PutUint32(frame[:transportFrameLengthFieldSize], uint32(len(p)))
-	copy(frame[transportFrameLengthFieldSize:], p)
-
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	if err := writeAll(w.conn, frame); err != nil {
-		return 0, err
-	}
-	return len(p), nil
-}
-
-func (w *framedPacketWriteCloser) Close() error {
-	if w == nil || w.conn == nil {
-		return nil
-	}
-	return w.conn.Close()
-}
-
 func buildBidirectionalSessionConfig(config *Config) rrpitBidirectionalSession.Config {
 	var lane *LaneSetting
 	if config != nil {
@@ -834,6 +780,23 @@ func applyChannelReadDeadline(conn gonet.Conn, timeout time.Duration) error {
 	return conn.SetReadDeadline(time.Now().Add(timeout))
 }
 
+func readChannelPacket(conn gonet.Conn, timeout time.Duration, buffer []byte) ([]byte, error) {
+	if conn == nil {
+		return nil, io.ErrClosedPipe
+	}
+	if len(buffer) == 0 {
+		return nil, io.ErrShortBuffer
+	}
+	if err := applyChannelReadDeadline(conn, timeout); err != nil {
+		return nil, err
+	}
+	n, err := conn.Read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	return append([]byte(nil), buffer[:n]...), nil
+}
+
 func channelReadFailureMessage(base string, err error) string {
 	if err == nil {
 		return base
@@ -915,20 +878,6 @@ func makeDTLSStreamSettings(config resolvedChannel, socketSettings *internet.Soc
 		ProtocolSettings: makeTransportDTLSConfig(config),
 		SocketSettings:   socketSettings,
 	}
-}
-
-func writeAll(writer io.Writer, data []byte) error {
-	for len(data) > 0 {
-		written, err := writer.Write(data)
-		if err != nil {
-			return err
-		}
-		if written <= 0 {
-			return io.ErrShortWrite
-		}
-		data = data[written:]
-	}
-	return nil
 }
 
 func firstNonNil(current error, next error) error {

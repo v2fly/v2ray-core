@@ -165,11 +165,44 @@ func TestChannelReadIdleTimeout(t *testing.T) {
 
 func TestChannelReadFailureMessageUsesTimeoutWording(t *testing.T) {
 	timeoutErr := &timeoutOnlyError{}
-	if got := channelReadFailureMessage("failed to read frame length", timeoutErr); got != "channel considered dead after no incoming message within configured timeout" {
+	if got := channelReadFailureMessage("failed to read channel packet", timeoutErr); got != "channel considered dead after no incoming message within configured timeout" {
 		t.Fatalf("unexpected timeout failure message: %q", got)
 	}
-	if got := channelReadFailureMessage("failed to read frame length", io.EOF); got != "failed to read frame length" {
+	if got := channelReadFailureMessage("failed to read channel packet", io.EOF); got != "failed to read channel packet" {
 		t.Fatalf("unexpected non-timeout failure message: %q", got)
+	}
+}
+
+func TestReadChannelPacketPreservesPacketBoundaries(t *testing.T) {
+	conn := &testPacketConn{
+		packets: [][]byte{
+			[]byte("first"),
+			[]byte("second"),
+		},
+	}
+
+	buffer := make([]byte, 16)
+	first, err := readChannelPacket(conn, 50*time.Millisecond, buffer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := readChannelPacket(conn, 50*time.Millisecond, buffer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(first) != "first" {
+		t.Fatalf("unexpected first packet: %q", string(first))
+	}
+	if string(second) != "second" {
+		t.Fatalf("unexpected second packet: %q", string(second))
+	}
+	if conn.readDeadline.IsZero() {
+		t.Fatal("expected read deadline to be set")
+	}
+	buffer[0] = 'x'
+	if string(first) != "first" {
+		t.Fatalf("first packet was not copied: %q", string(first))
 	}
 }
 
@@ -375,3 +408,56 @@ type timeoutOnlyError struct{}
 
 func (*timeoutOnlyError) Error() string { return "timeout" }
 func (*timeoutOnlyError) Timeout() bool { return true }
+
+type testPacketConn struct {
+	gonet.Conn
+	packets      [][]byte
+	readErr      error
+	readDeadline time.Time
+}
+
+func (c *testPacketConn) Read(b []byte) (int, error) {
+	if c.readErr != nil {
+		return 0, c.readErr
+	}
+	if len(c.packets) == 0 {
+		return 0, io.EOF
+	}
+	packet := c.packets[0]
+	c.packets = c.packets[1:]
+	if len(b) < len(packet) {
+		return 0, io.ErrShortBuffer
+	}
+	copy(b, packet)
+	return len(packet), nil
+}
+
+func (c *testPacketConn) Write(b []byte) (int, error) {
+	return len(b), nil
+}
+
+func (c *testPacketConn) Close() error {
+	return nil
+}
+
+func (c *testPacketConn) LocalAddr() gonet.Addr {
+	return nil
+}
+
+func (c *testPacketConn) RemoteAddr() gonet.Addr {
+	return nil
+}
+
+func (c *testPacketConn) SetDeadline(t time.Time) error {
+	c.readDeadline = t
+	return nil
+}
+
+func (c *testPacketConn) SetReadDeadline(t time.Time) error {
+	c.readDeadline = t
+	return nil
+}
+
+func (c *testPacketConn) SetWriteDeadline(time.Time) error {
+	return nil
+}
