@@ -114,6 +114,24 @@ func TestBuildBidirectionalSessionConfigIncludesReconstructionSettings(t *testin
 	}
 }
 
+func TestBuildSmuxConfigClampsDefaultFrameSizeToMessageBudget(t *testing.T) {
+	config, err := buildSmuxConfig(&AdaptorSetting{}, 1198)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := config.MaxFrameSize, 1168; got != want {
+		t.Fatalf("unexpected default smux max frame size: got %d want %d", got, want)
+	}
+
+	explicit, err := buildSmuxConfig(&AdaptorSetting{MaxFrameSize: 2048}, 1198)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if explicit.MaxFrameSize != 2048 {
+		t.Fatalf("unexpected explicit smux max frame size: got %d want 2048", explicit.MaxFrameSize)
+	}
+}
+
 func TestBuildConnectionPersistencePolicy(t *testing.T) {
 	defaults := buildConnectionPersistencePolicy(&Config{})
 	if defaults.DisconnectedSessionRetention != 0 {

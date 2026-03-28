@@ -30,6 +30,14 @@ const (
 
 var sessionPacketConnCloseDrainTimeout = 2 * time.Second
 
+func MaxSmuxFrameSizeForMessage(maxMessageSize int) int {
+	maxFrameSize := maxMessageSize - adaptorHeaderSize - smuxFrameHeaderSize
+	if maxFrameSize <= 0 {
+		return 0
+	}
+	return maxFrameSize
+}
+
 // Adaptor consumes the rrpit receive callback and exposes an smux session on top.
 type Adaptor struct {
 	smux       *smux.Session

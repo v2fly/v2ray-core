@@ -40,7 +40,9 @@
           "session": {
             "oddChannelIds": true,
             "maxRewindableTimestampNum": 512,
-            "maxRewindableControlMessageNum": 512,
+            "maxRewindableControlMessageNum": 512
+          },
+          "sessionMgr": {
             "timestampInterval": 5000000
           },
           "adaptor": {

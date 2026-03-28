@@ -127,7 +127,16 @@ func newTransportSession(
 	session := sessionManager.Session(rrpitBidirectionalSessionManager.InteractiveStream)
 	backgroundSession := sessionManager.Session(rrpitBidirectionalSessionManager.BackgroundStream)
 
-	smuxConfig, err := buildSmuxConfig(config.GetAdaptor())
+	maxMessageSize, err := session.MaxMessageSize()
+	if err != nil {
+		if recorder != nil {
+			_ = recorder.Close()
+		}
+		_ = sessionManager.Close()
+		return nil, err
+	}
+
+	smuxConfig, err := buildSmuxConfig(config.GetAdaptor(), maxMessageSize)
 	if err != nil {
 		if recorder != nil {
 			_ = recorder.Close()
@@ -609,9 +618,12 @@ func float32SliceToFloat64Slice(values []float32) []float64 {
 	return converted
 }
 
-func buildSmuxConfig(config *AdaptorSetting) (*smux.Config, error) {
+func buildSmuxConfig(config *AdaptorSetting, maxMessageSize int) (*smux.Config, error) {
 	smuxConfig := smux.DefaultConfig()
 	if config == nil {
+		if maxFrameSize := packetToStream.MaxSmuxFrameSizeForMessage(maxMessageSize); maxFrameSize > 0 && smuxConfig.MaxFrameSize > maxFrameSize {
+			smuxConfig.MaxFrameSize = maxFrameSize
+		}
 		return smuxConfig, nil
 	}
 
@@ -627,6 +639,8 @@ func buildSmuxConfig(config *AdaptorSetting) (*smux.Config, error) {
 	}
 	if frameSize := config.GetMaxFrameSize(); frameSize != 0 {
 		smuxConfig.MaxFrameSize = int(frameSize)
+	} else if maxFrameSize := packetToStream.MaxSmuxFrameSizeForMessage(maxMessageSize); maxFrameSize > 0 && smuxConfig.MaxFrameSize > maxFrameSize {
+		smuxConfig.MaxFrameSize = maxFrameSize
 	}
 	if receiveBuffer := config.GetMaxReceiveBuffer(); receiveBuffer != 0 {
 		smuxConfig.MaxReceiveBuffer = int(receiveBuffer)

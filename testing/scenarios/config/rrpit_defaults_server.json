@@ -37,7 +37,9 @@
             }
           ],
           "session": {
-            "oddChannelIds": false,
+            "oddChannelIds": false
+          },
+          "sessionMgr": {
             "timestampInterval": 5000000
           }
         }
