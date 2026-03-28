@@ -69,6 +69,9 @@ func (lr *TransferLaneRx) AddTransferData(data TransferData) (done bool, err err
 			return false, newError("invalid reconstruction symbol size")
 		}
 		if lr.rxCodesState == nil {
+			if hasAllShards(lr.seenDataShards, lr.TotalDataShards) {
+				return true, nil
+			}
 			return false, newError("reconstruction decoder not initialized")
 		}
 		if lr.seenRepairShards == nil {

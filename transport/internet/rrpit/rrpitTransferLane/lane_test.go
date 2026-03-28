@@ -298,6 +298,46 @@ func TestTransferLaneDirectReconstructWithAllSourceShardsOutOfOrderRemoteMaxConf
 	}
 }
 
+func TestTransferLaneIgnoresLateRepairAfterRemoteMaxSourceCompletion(t *testing.T) {
+	payloads := [][]byte{
+		[]byte("alpha"),
+		[]byte("beta"),
+		[]byte("gamma"),
+	}
+
+	tx := mustNewTransferLaneTx(t, 24, len(payloads))
+	sourcePackets := addPayloads(t, tx, payloads)
+	repair := mustCreateRepairPacket(t, tx)
+	rx := mustNewTransferLaneRxWithRemoteMax(t, 24, len(payloads))
+
+	for _, packet := range sourcePackets {
+		done, err := rx.AddTransferData(packet)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if packet.Seq == uint32(len(payloads)-1) && !done {
+			t.Fatal("expected source-only completion before repair arrives")
+		}
+	}
+
+	done, err := rx.AddTransferData(repair)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !done {
+		t.Fatal("expected completed lane to stay complete when late repair arrives")
+	}
+
+	got, err := rx.Reconstruct()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := reconstructionDataFromPayloads(payloads)
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("unexpected reconstruction (-want +got):\n%s", diff)
+	}
+}
+
 func TestTransferLaneReconstructWithRepairSymbolsAfterLoss(t *testing.T) {
 	payloads := [][]byte{
 		[]byte("first"),
