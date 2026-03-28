@@ -209,6 +209,11 @@ func (m *Manager) Close() error {
 	}
 	var firstErr error
 	m.closeOnce.Do(func() {
+		// Wake any tick path blocked in the channel manager before trying to
+		// take m.mu; OnNewTimestamp holds m.mu while sending control packets.
+		if err := m.channelManager.Close(); err != nil && firstErr == nil {
+			firstErr = err
+		}
 		m.mu.Lock()
 		m.closed = true
 		sessions := make([]*rrpitBidirectionalSession.BidirectionalSession, 0, len(m.sessions))
@@ -230,9 +235,6 @@ func (m *Manager) Close() error {
 			if err := session.Close(); err != nil && firstErr == nil {
 				firstErr = err
 			}
-		}
-		if err := m.channelManager.Close(); err != nil && firstErr == nil {
-			firstErr = err
 		}
 	})
 	return firstErr

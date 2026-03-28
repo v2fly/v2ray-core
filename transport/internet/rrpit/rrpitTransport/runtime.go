@@ -385,16 +385,19 @@ func (s *transportSession) Close() error {
 		for _, conn := range channels {
 			s.closeErr = firstNonNil(s.closeErr, conn.Close())
 		}
+		// Stop the session manager before closing adaptors so its auto-tick loop
+		// can't hold the bidirectional session lock while adaptor shutdown calls
+		// back into session.Close().
+		if s.sessionManager != nil {
+			s.closeErr = firstNonNil(s.closeErr, s.sessionManager.Close())
+		} else if s.session != nil {
+			s.closeErr = firstNonNil(s.closeErr, s.session.Close())
+		}
 		if s.adaptor != nil {
 			s.closeErr = firstNonNil(s.closeErr, s.adaptor.Close())
 		}
 		if s.backgroundAdaptor != nil {
 			s.closeErr = firstNonNil(s.closeErr, s.backgroundAdaptor.Close())
-		}
-		if s.sessionManager != nil {
-			s.closeErr = firstNonNil(s.closeErr, s.sessionManager.Close())
-		} else if s.session != nil {
-			s.closeErr = firstNonNil(s.closeErr, s.session.Close())
 		}
 
 		if s.recorder != nil {

@@ -422,6 +422,42 @@ func TestTransportSessionDisconnectedRetentionDelaysClose(t *testing.T) {
 	}
 }
 
+func TestTransportSessionCloseDoesNotDeadlockWithAutoTickAndNoChannels(t *testing.T) {
+	session, err := newTransportSession(
+		"server",
+		transportSessionID{},
+		&Config{
+			SessionMgr: &SessionManagerSetting{
+				TimestampInterval: int64(time.Millisecond),
+			},
+			Persistence: &ConnectionPersistenceSetting{
+				DisconnectedSessionRetention: int64(time.Second),
+			},
+		},
+		false,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(20 * time.Millisecond)
+
+	closeDone := make(chan error, 1)
+	go func() {
+		closeDone <- session.Close()
+	}()
+
+	select {
+	case err := <-closeDone:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("transport session close timed out")
+	}
+}
+
 type timeoutOnlyError struct{}
 
 func (*timeoutOnlyError) Error() string { return "timeout" }
