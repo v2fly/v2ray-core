@@ -552,7 +552,7 @@ func (w *framedPacketWriteCloser) Write(p []byte) (int, error) {
 	if w == nil || w.conn == nil {
 		return 0, io.ErrClosedPipe
 	}
-	if len(p) > int(^uint32(0)) {
+	if len(p) > 65535 {
 		return 0, fmt.Errorf("rrpit channel payload too large")
 	}
 
