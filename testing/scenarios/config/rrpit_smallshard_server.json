@@ -53,7 +53,7 @@
           "adaptor": {
             "smuxVersion": 2,
             "keepAliveDisabled": true,
-            "maxFrameSize": 1024,
+            "maxFrameSize": 192,
             "maxReceiveBuffer": 524288,
             "maxStreamBuffer": 32768
           }
