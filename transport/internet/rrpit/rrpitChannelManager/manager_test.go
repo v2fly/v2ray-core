@@ -1,8 +1,10 @@
 package rrpitChannelManager
 
 import (
+	"io"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rriptMonoDirectionSession"
 )
@@ -163,5 +165,70 @@ func TestChannelManagerBypassTrafficDoesNotConsumeEnforcedQuota(t *testing.T) {
 	}
 	if manager.HasRemainingQuota() {
 		t.Fatal("expected enforced quota to be exhausted after one enforced send")
+	}
+}
+
+func TestChannelManagerDetachRemovesChannelFromSelection(t *testing.T) {
+	manager, err := New(Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer manager.Close()
+
+	writer := &recordingWriteCloser{}
+	channelIndex, err := manager.AttachChannelWithConfig(writer, rriptMonoDirectionSession.ChannelConfig{Weight: 1, MaxSendingSpeed: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !manager.HasRemainingQuota() {
+		t.Fatal("expected quota with attached channel")
+	}
+	if err := manager.DetachChannel(channelIndex); err != nil {
+		t.Fatal(err)
+	}
+	if manager.HasRemainingQuota() {
+		t.Fatal("expected no remaining quota after detaching the only channel")
+	}
+	if err := manager.SendIgnoreQuota(rriptMonoDirectionSession.PacketKind_InteractiveStreamData, []byte{rriptMonoDirectionSession.PacketKind_InteractiveStreamData, 0x01}); err == nil {
+		t.Fatal("expected send to fail with no attached channels")
+	} else if err != io.ErrClosedPipe {
+		t.Fatalf("expected io.ErrClosedPipe after detach, got %v", err)
+	}
+}
+
+func TestChannelManagerWaitsForChannelWhenConfigured(t *testing.T) {
+	manager, err := New(Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer manager.Close()
+	manager.SetBlockOnNoChannels(true)
+
+	done := make(chan error, 1)
+	go func() {
+		done <- manager.SendIgnoreQuota(rriptMonoDirectionSession.PacketKind_InteractiveStreamData, []byte{rriptMonoDirectionSession.PacketKind_InteractiveStreamData, 0x01})
+	}()
+
+	select {
+	case err := <-done:
+		t.Fatalf("expected send to wait for a channel, got early result %v", err)
+	case <-time.After(20 * time.Millisecond):
+	}
+
+	writer := &recordingWriteCloser{}
+	if _, err := manager.AttachChannelWithConfig(writer, rriptMonoDirectionSession.ChannelConfig{Weight: 1}); err != nil {
+		t.Fatal(err)
+	}
+
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(200 * time.Millisecond):
+		t.Fatal("timed out waiting for send to complete after channel attach")
+	}
+	if len(writer.snapshot()) != 1 {
+		t.Fatalf("expected one write after attach, got %d", len(writer.snapshot()))
 	}
 }

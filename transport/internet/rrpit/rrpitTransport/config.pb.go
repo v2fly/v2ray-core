@@ -24,13 +24,15 @@ const (
 )
 
 type DTLSUDPChannel struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ip            []byte                 `protobuf:"bytes,1,opt,name=ip,proto3" json:"ip,omitempty"`
-	Port          uint32                 `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
-	Password      string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
-	IpAddr        string                 `protobuf:"bytes,68000,opt,name=ip_addr,json=ipAddr,proto3" json:"ip_addr,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Ip       []byte                 `protobuf:"bytes,1,opt,name=ip,proto3" json:"ip,omitempty"`
+	Port     uint32                 `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
+	Password string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
+	// If positive, consider this DTLS channel dead when no inbound rrpit message bytes arrive for this duration.
+	NoIncomingMessageTimeout int64  `protobuf:"varint,4,opt,name=no_incoming_message_timeout,json=noIncomingMessageTimeout,proto3" json:"no_incoming_message_timeout,omitempty"`
+	IpAddr                   string `protobuf:"bytes,68000,opt,name=ip_addr,json=ipAddr,proto3" json:"ip_addr,omitempty"`
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
 }
 
 func (x *DTLSUDPChannel) Reset() {
@@ -82,6 +84,13 @@ func (x *DTLSUDPChannel) GetPassword() string {
 		return x.Password
 	}
 	return ""
+}
+
+func (x *DTLSUDPChannel) GetNoIncomingMessageTimeout() int64 {
+	if x != nil {
+		return x.NoIncomingMessageTimeout
+	}
+	return 0
 }
 
 func (x *DTLSUDPChannel) GetIpAddr() string {
@@ -697,21 +706,94 @@ func (x *AdaptorSetting) GetMaxStreamBuffer() int32 {
 	return 0
 }
 
+type ConnectionPersistenceSetting struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// How long to retain a logical rrpit session after all DTLS channels are gone. Zero closes immediately.
+	DisconnectedSessionRetention int64 `protobuf:"varint,1,opt,name=disconnected_session_retention,json=disconnectedSessionRetention,proto3" json:"disconnected_session_retention,omitempty"`
+	// Client reconnect retry interval while the logical session is retained. Zero means use the transport default.
+	ReconnectRetryInterval int64 `protobuf:"varint,2,opt,name=reconnect_retry_interval,json=reconnectRetryInterval,proto3" json:"reconnect_retry_interval,omitempty"`
+	// Keep the client rrpit transport session open even when there are no proxied streams.
+	KeepTransportSessionWithoutStreams bool `protobuf:"varint,3,opt,name=keep_transport_session_without_streams,json=keepTransportSessionWithoutStreams,proto3" json:"keep_transport_session_without_streams,omitempty"`
+	// Idle timeout when keep_transport_session_without_streams is false. Zero means use the transport default.
+	IdleTimeout   int64 `protobuf:"varint,4,opt,name=idle_timeout,json=idleTimeout,proto3" json:"idle_timeout,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConnectionPersistenceSetting) Reset() {
+	*x = ConnectionPersistenceSetting{}
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConnectionPersistenceSetting) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConnectionPersistenceSetting) ProtoMessage() {}
+
+func (x *ConnectionPersistenceSetting) ProtoReflect() protoreflect.Message {
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConnectionPersistenceSetting.ProtoReflect.Descriptor instead.
+func (*ConnectionPersistenceSetting) Descriptor() ([]byte, []int) {
+	return file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ConnectionPersistenceSetting) GetDisconnectedSessionRetention() int64 {
+	if x != nil {
+		return x.DisconnectedSessionRetention
+	}
+	return 0
+}
+
+func (x *ConnectionPersistenceSetting) GetReconnectRetryInterval() int64 {
+	if x != nil {
+		return x.ReconnectRetryInterval
+	}
+	return 0
+}
+
+func (x *ConnectionPersistenceSetting) GetKeepTransportSessionWithoutStreams() bool {
+	if x != nil {
+		return x.KeepTransportSessionWithoutStreams
+	}
+	return false
+}
+
+func (x *ConnectionPersistenceSetting) GetIdleTimeout() int64 {
+	if x != nil {
+		return x.IdleTimeout
+	}
+	return 0
+}
+
 type Config struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Channels      []*Channel             `protobuf:"bytes,1,rep,name=channels,proto3" json:"channels,omitempty"`
-	Lane          *LaneSetting           `protobuf:"bytes,2,opt,name=lane,proto3" json:"lane,omitempty"`
-	Session       *SessionSetting        `protobuf:"bytes,3,opt,name=session,proto3" json:"session,omitempty"`
-	Engineering   *EngineeringSetting    `protobuf:"bytes,4,opt,name=engineering,proto3" json:"engineering,omitempty"`
-	Adaptor       *AdaptorSetting        `protobuf:"bytes,5,opt,name=adaptor,proto3" json:"adaptor,omitempty"`
-	SessionMgr    *SessionManagerSetting `protobuf:"bytes,6,opt,name=session_mgr,json=sessionMgr,proto3" json:"session_mgr,omitempty"`
+	state         protoimpl.MessageState        `protogen:"open.v1"`
+	Channels      []*Channel                    `protobuf:"bytes,1,rep,name=channels,proto3" json:"channels,omitempty"`
+	Lane          *LaneSetting                  `protobuf:"bytes,2,opt,name=lane,proto3" json:"lane,omitempty"`
+	Session       *SessionSetting               `protobuf:"bytes,3,opt,name=session,proto3" json:"session,omitempty"`
+	Engineering   *EngineeringSetting           `protobuf:"bytes,4,opt,name=engineering,proto3" json:"engineering,omitempty"`
+	Adaptor       *AdaptorSetting               `protobuf:"bytes,5,opt,name=adaptor,proto3" json:"adaptor,omitempty"`
+	SessionMgr    *SessionManagerSetting        `protobuf:"bytes,6,opt,name=session_mgr,json=sessionMgr,proto3" json:"session_mgr,omitempty"`
+	Persistence   *ConnectionPersistenceSetting `protobuf:"bytes,7,opt,name=persistence,proto3" json:"persistence,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[9]
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -723,7 +805,7 @@ func (x *Config) String() string {
 func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
-	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[9]
+	mi := &file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -736,7 +818,7 @@ func (x *Config) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Config.ProtoReflect.Descriptor instead.
 func (*Config) Descriptor() ([]byte, []int) {
-	return file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescGZIP(), []int{9}
+	return file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Config) GetChannels() []*Channel {
@@ -781,15 +863,23 @@ func (x *Config) GetSessionMgr() *SessionManagerSetting {
 	return nil
 }
 
+func (x *Config) GetPersistence() *ConnectionPersistenceSetting {
+	if x != nil {
+		return x.Persistence
+	}
+	return nil
+}
+
 var File_transport_internet_rrpit_rrpitTransport_config_proto protoreflect.FileDescriptor
 
 const file_transport_internet_rrpit_rrpitTransport_config_proto_rawDesc = "" +
 	"\n" +
-	"4transport/internet/rrpit/rrpitTransport/config.proto\x12-v2ray.core.transport.internet.rrpit.transport\x1a\x19google/protobuf/any.proto\x1a common/protoext/extensions.proto\"u\n" +
+	"4transport/internet/rrpit/rrpitTransport/config.proto\x12-v2ray.core.transport.internet.rrpit.transport\x1a\x19google/protobuf/any.proto\x1a common/protoext/extensions.proto\"\xb4\x01\n" +
 	"\x0eDTLSUDPChannel\x12\x0e\n" +
 	"\x02ip\x18\x01 \x01(\fR\x02ip\x12\x12\n" +
 	"\x04port\x18\x02 \x01(\rR\x04port\x12\x1a\n" +
-	"\bpassword\x18\x03 \x01(\tR\bpassword\x12#\n" +
+	"\bpassword\x18\x03 \x01(\tR\bpassword\x12=\n" +
+	"\x1bno_incoming_message_timeout\x18\x04 \x01(\x03R\x18noIncomingMessageTimeout\x12#\n" +
 	"\aip_addr\x18\xa0\x93\x04 \x01(\tB\b\x82\xb5\x18\x04:\x02ipR\x06ipAddr\"\x92\x01\n" +
 	"\aChannel\x12W\n" +
 	"\asetting\x18\x01 \x01(\v2=.v2ray.core.transport.internet.rrpit.transport.ChannelSettingR\asetting\x12.\n" +
@@ -835,7 +925,12 @@ const file_transport_internet_rrpit_rrpitTransport_config_proto_rawDesc = "" +
 	"\x12keep_alive_timeout\x18\x04 \x01(\x03R\x10keepAliveTimeout\x12$\n" +
 	"\x0emax_frame_size\x18\x05 \x01(\x05R\fmaxFrameSize\x12,\n" +
 	"\x12max_receive_buffer\x18\x06 \x01(\x05R\x10maxReceiveBuffer\x12*\n" +
-	"\x11max_stream_buffer\x18\a \x01(\x05R\x0fmaxStreamBuffer\"\xc2\x04\n" +
+	"\x11max_stream_buffer\x18\a \x01(\x05R\x0fmaxStreamBuffer\"\x95\x02\n" +
+	"\x1cConnectionPersistenceSetting\x12D\n" +
+	"\x1edisconnected_session_retention\x18\x01 \x01(\x03R\x1cdisconnectedSessionRetention\x128\n" +
+	"\x18reconnect_retry_interval\x18\x02 \x01(\x03R\x16reconnectRetryInterval\x12R\n" +
+	"&keep_transport_session_without_streams\x18\x03 \x01(\bR\"keepTransportSessionWithoutStreams\x12!\n" +
+	"\fidle_timeout\x18\x04 \x01(\x03R\vidleTimeout\"\xb1\x05\n" +
 	"\x06Config\x12R\n" +
 	"\bchannels\x18\x01 \x03(\v26.v2ray.core.transport.internet.rrpit.transport.ChannelR\bchannels\x12N\n" +
 	"\x04lane\x18\x02 \x01(\v2:.v2ray.core.transport.internet.rrpit.transport.LaneSettingR\x04lane\x12W\n" +
@@ -843,7 +938,8 @@ const file_transport_internet_rrpit_rrpitTransport_config_proto_rawDesc = "" +
 	"\vengineering\x18\x04 \x01(\v2A.v2ray.core.transport.internet.rrpit.transport.EngineeringSettingR\vengineering\x12W\n" +
 	"\aadaptor\x18\x05 \x01(\v2=.v2ray.core.transport.internet.rrpit.transport.AdaptorSettingR\aadaptor\x12e\n" +
 	"\vsession_mgr\x18\x06 \x01(\v2D.v2ray.core.transport.internet.rrpit.transport.SessionManagerSettingR\n" +
-	"sessionMgr:\x16\x82\xb5\x18\x12\n" +
+	"sessionMgr\x12m\n" +
+	"\vpersistence\x18\a \x01(\v2K.v2ray.core.transport.internet.rrpit.transport.ConnectionPersistenceSettingR\vpersistence:\x16\x82\xb5\x18\x12\n" +
 	"\ttransport\x12\x05rrpitB\xad\x01\n" +
 	"1com.v2ray.core.transport.internet.rrpit.transportP\x01ZFgithub.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitTransport\xaa\x02-V2Ray.Core.Transport.Internet.Rrpit.Transportb\x06proto3"
 
@@ -859,7 +955,7 @@ func file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescGZIP() []b
 	return file_transport_internet_rrpit_rrpitTransport_config_proto_rawDescData
 }
 
-var file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_transport_internet_rrpit_rrpitTransport_config_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_transport_internet_rrpit_rrpitTransport_config_proto_goTypes = []any{
 	(*DTLSUDPChannel)(nil),               // 0: v2ray.core.transport.internet.rrpit.transport.DTLSUDPChannel
 	(*Channel)(nil),                      // 1: v2ray.core.transport.internet.rrpit.transport.Channel
@@ -870,12 +966,13 @@ var file_transport_internet_rrpit_rrpitTransport_config_proto_goTypes = []any{
 	(*SessionSetting)(nil),               // 6: v2ray.core.transport.internet.rrpit.transport.SessionSetting
 	(*EngineeringSetting)(nil),           // 7: v2ray.core.transport.internet.rrpit.transport.EngineeringSetting
 	(*AdaptorSetting)(nil),               // 8: v2ray.core.transport.internet.rrpit.transport.AdaptorSetting
-	(*Config)(nil),                       // 9: v2ray.core.transport.internet.rrpit.transport.Config
-	(*anypb.Any)(nil),                    // 10: google.protobuf.Any
+	(*ConnectionPersistenceSetting)(nil), // 9: v2ray.core.transport.internet.rrpit.transport.ConnectionPersistenceSetting
+	(*Config)(nil),                       // 10: v2ray.core.transport.internet.rrpit.transport.Config
+	(*anypb.Any)(nil),                    // 11: google.protobuf.Any
 }
 var file_transport_internet_rrpit_rrpitTransport_config_proto_depIdxs = []int32{
 	2,  // 0: v2ray.core.transport.internet.rrpit.transport.Channel.setting:type_name -> v2ray.core.transport.internet.rrpit.transport.ChannelSetting
-	10, // 1: v2ray.core.transport.internet.rrpit.transport.Channel.channel:type_name -> google.protobuf.Any
+	11, // 1: v2ray.core.transport.internet.rrpit.transport.Channel.channel:type_name -> google.protobuf.Any
 	4,  // 2: v2ray.core.transport.internet.rrpit.transport.SessionSetting.reconstruction:type_name -> v2ray.core.transport.internet.rrpit.transport.SessionReconstructionSetting
 	1,  // 3: v2ray.core.transport.internet.rrpit.transport.Config.channels:type_name -> v2ray.core.transport.internet.rrpit.transport.Channel
 	3,  // 4: v2ray.core.transport.internet.rrpit.transport.Config.lane:type_name -> v2ray.core.transport.internet.rrpit.transport.LaneSetting
@@ -883,11 +980,12 @@ var file_transport_internet_rrpit_rrpitTransport_config_proto_depIdxs = []int32{
 	7,  // 6: v2ray.core.transport.internet.rrpit.transport.Config.engineering:type_name -> v2ray.core.transport.internet.rrpit.transport.EngineeringSetting
 	8,  // 7: v2ray.core.transport.internet.rrpit.transport.Config.adaptor:type_name -> v2ray.core.transport.internet.rrpit.transport.AdaptorSetting
 	5,  // 8: v2ray.core.transport.internet.rrpit.transport.Config.session_mgr:type_name -> v2ray.core.transport.internet.rrpit.transport.SessionManagerSetting
-	9,  // [9:9] is the sub-list for method output_type
-	9,  // [9:9] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	9,  // 9: v2ray.core.transport.internet.rrpit.transport.Config.persistence:type_name -> v2ray.core.transport.internet.rrpit.transport.ConnectionPersistenceSetting
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_transport_internet_rrpit_rrpitTransport_config_proto_init() }
@@ -901,7 +999,7 @@ func file_transport_internet_rrpit_rrpitTransport_config_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_transport_internet_rrpit_rrpitTransport_config_proto_rawDesc), len(file_transport_internet_rrpit_rrpitTransport_config_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

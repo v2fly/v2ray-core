@@ -114,6 +114,65 @@ func TestBuildBidirectionalSessionConfigIncludesReconstructionSettings(t *testin
 	}
 }
 
+func TestBuildConnectionPersistencePolicy(t *testing.T) {
+	defaults := buildConnectionPersistencePolicy(&Config{})
+	if defaults.DisconnectedSessionRetention != 0 {
+		t.Fatalf("unexpected default disconnected retention: %v", defaults.DisconnectedSessionRetention)
+	}
+	if defaults.ReconnectRetryInterval != 0 {
+		t.Fatalf("unexpected default reconnect retry interval: %v", defaults.ReconnectRetryInterval)
+	}
+	if defaults.IdleTimeout != rrpitClientSessionIdleTimeout {
+		t.Fatalf("unexpected default idle timeout: %v", defaults.IdleTimeout)
+	}
+	if defaults.KeepTransportSessionWithoutStreams {
+		t.Fatal("did not expect keep-without-streams default to be enabled")
+	}
+
+	policy := buildConnectionPersistencePolicy(&Config{
+		Persistence: &ConnectionPersistenceSetting{
+			DisconnectedSessionRetention:       int64(3 * time.Second),
+			ReconnectRetryInterval:             int64(250 * time.Millisecond),
+			KeepTransportSessionWithoutStreams: true,
+			IdleTimeout:                        int64(7 * time.Second),
+		},
+	})
+	if policy.DisconnectedSessionRetention != 3*time.Second {
+		t.Fatalf("unexpected disconnected retention: %v", policy.DisconnectedSessionRetention)
+	}
+	if policy.ReconnectRetryInterval != 250*time.Millisecond {
+		t.Fatalf("unexpected reconnect retry interval: %v", policy.ReconnectRetryInterval)
+	}
+	if policy.IdleTimeout != 7*time.Second {
+		t.Fatalf("unexpected idle timeout: %v", policy.IdleTimeout)
+	}
+	if !policy.KeepTransportSessionWithoutStreams {
+		t.Fatal("expected keep-without-streams to be enabled")
+	}
+}
+
+func TestChannelReadIdleTimeout(t *testing.T) {
+	if got := channelReadIdleTimeout(resolvedChannel{}); got != 0 {
+		t.Fatalf("unexpected zero-config timeout: %v", got)
+	}
+	if got := channelReadIdleTimeout(resolvedChannel{dtls: &DTLSUDPChannel{NoIncomingMessageTimeout: int64(250 * time.Millisecond)}}); got != 250*time.Millisecond {
+		t.Fatalf("unexpected configured timeout: %v", got)
+	}
+	if got := channelReadIdleTimeout(resolvedChannel{dtls: &DTLSUDPChannel{NoIncomingMessageTimeout: -1}}); got != 0 {
+		t.Fatalf("unexpected negative timeout handling: %v", got)
+	}
+}
+
+func TestChannelReadFailureMessageUsesTimeoutWording(t *testing.T) {
+	timeoutErr := &timeoutOnlyError{}
+	if got := channelReadFailureMessage("failed to read frame length", timeoutErr); got != "channel considered dead after no incoming message within configured timeout" {
+		t.Fatalf("unexpected timeout failure message: %q", got)
+	}
+	if got := channelReadFailureMessage("failed to read frame length", io.EOF); got != "failed to read frame length" {
+		t.Fatalf("unexpected non-timeout failure message: %q", got)
+	}
+}
+
 func TestPersistentClientSessionKeepsTransportAliveUntilIdle(t *testing.T) {
 	clientConn, serverConn := gonet.Pipe()
 	defer serverConn.Close()
@@ -228,3 +287,91 @@ func TestPersistentClientSessionOpenConnectionTracksContext(t *testing.T) {
 		t.Fatalf("unexpected transport close count after context cancel: %d", closeCalls)
 	}
 }
+
+func TestPersistentClientSessionCanStayOpenWithoutStreams(t *testing.T) {
+	clientConn, serverConn := gonet.Pipe()
+	defer serverConn.Close()
+
+	var (
+		closeCalls int
+		closeMu    sync.Mutex
+	)
+
+	session := &persistentClientSession{
+		owner: &transportSession{
+			localAddr:  &gonet.TCPAddr{IP: []byte{127, 0, 0, 1}, Port: 10021},
+			remoteAddr: &gonet.TCPAddr{IP: []byte{127, 0, 0, 1}, Port: 10022},
+		},
+		openStream: func(rrpitBidirectionalSessionManager.SessionName) (gonet.Conn, error) {
+			return clientConn, nil
+		},
+		closeSession: func() error {
+			closeMu.Lock()
+			closeCalls++
+			closeMu.Unlock()
+			return nil
+		},
+		idleTimeout:                        20 * time.Millisecond,
+		keepTransportSessionWithoutStreams: true,
+	}
+
+	conn, err := session.OpenConnection(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := conn.Close(); err != nil && err != io.ErrClosedPipe {
+		t.Fatal(err)
+	}
+
+	time.Sleep(50 * time.Millisecond)
+	closeMu.Lock()
+	defer closeMu.Unlock()
+	if closeCalls != 0 {
+		t.Fatalf("expected transport to stay open without streams, got close count %d", closeCalls)
+	}
+}
+
+func TestTransportSessionDisconnectedRetentionDelaysClose(t *testing.T) {
+	var (
+		closeCalls int
+		closeMu    sync.Mutex
+	)
+
+	session := &transportSession{
+		persistence: connectionPersistencePolicy{
+			DisconnectedSessionRetention: 20 * time.Millisecond,
+		},
+		onClose: func() {
+			closeMu.Lock()
+			closeCalls++
+			closeMu.Unlock()
+		},
+	}
+
+	session.mu.Lock()
+	closeImmediately := session.scheduleDisconnectedTimerLocked()
+	session.mu.Unlock()
+	if closeImmediately {
+		t.Fatal("expected disconnect retention to delay close")
+	}
+
+	time.Sleep(5 * time.Millisecond)
+	closeMu.Lock()
+	if closeCalls != 0 {
+		closeMu.Unlock()
+		t.Fatalf("transport closed too early: %d", closeCalls)
+	}
+	closeMu.Unlock()
+
+	time.Sleep(40 * time.Millisecond)
+	closeMu.Lock()
+	defer closeMu.Unlock()
+	if closeCalls != 1 {
+		t.Fatalf("unexpected transport close count after retention expiry: %d", closeCalls)
+	}
+}
+
+type timeoutOnlyError struct{}
+
+func (*timeoutOnlyError) Error() string { return "timeout" }
+func (*timeoutOnlyError) Timeout() bool { return true }

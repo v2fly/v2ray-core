@@ -31,24 +31,28 @@ type channelState struct {
 }
 
 type ChannelManager struct {
-	mu sync.Mutex
+	mu   sync.Mutex
+	cond *sync.Cond
 
-	config           Config
-	nextChannelID    uint64
-	currentTimestamp uint64
-	channels         []*channelState
-	listeners        map[uint8][]Listener
-	sniffers         map[uint8][]Sniffer
-	totalSent        uint64
-	closed           bool
+	config            Config
+	nextChannelID     uint64
+	currentTimestamp  uint64
+	channels          []*channelState
+	listeners         map[uint8][]Listener
+	sniffers          map[uint8][]Sniffer
+	totalSent         uint64
+	blockOnNoChannels bool
+	closed            bool
 }
 
 func New(config Config) (*ChannelManager, error) {
-	return &ChannelManager{
+	manager := &ChannelManager{
 		config:    config,
 		listeners: make(map[uint8][]Listener),
 		sniffers:  make(map[uint8][]Sniffer),
-	}, nil
+	}
+	manager.cond = sync.NewCond(&manager.mu)
+	return manager, nil
 }
 
 func (m *ChannelManager) RegisterListener(kind uint8, handler Listener) {
@@ -107,7 +111,56 @@ func (m *ChannelManager) AttachChannelWithConfig(
 	}
 	state.rx = rx
 	m.channels = append(m.channels, state)
+	if m.cond != nil {
+		m.cond.Broadcast()
+	}
 	return len(m.channels) - 1, nil
+}
+
+func (m *ChannelManager) SetBlockOnNoChannels(enabled bool) {
+	if m == nil {
+		return
+	}
+	m.mu.Lock()
+	m.blockOnNoChannels = enabled
+	if m.cond != nil {
+		m.cond.Broadcast()
+	}
+	m.mu.Unlock()
+}
+
+func (m *ChannelManager) DetachChannel(channelIndex int) error {
+	if m == nil {
+		return io.ErrClosedPipe
+	}
+
+	m.mu.Lock()
+	if channelIndex < 0 || channelIndex >= len(m.channels) {
+		m.mu.Unlock()
+		return io.ErrClosedPipe
+	}
+	channel := m.channels[channelIndex]
+	m.channels[channelIndex] = nil
+	if m.cond != nil {
+		m.cond.Broadcast()
+	}
+	m.mu.Unlock()
+
+	if channel == nil {
+		return nil
+	}
+	var firstErr error
+	if channel.rx != nil {
+		if err := channel.rx.Close(); err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	if channel.tx != nil {
+		if err := channel.tx.Close(); err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	return firstErr
 }
 
 func (m *ChannelManager) OnNewMessageArrived(channelIndex int, payload []byte) error {
@@ -161,9 +214,9 @@ func (m *ChannelManager) Send(kind uint8, payload []byte) error {
 	if m.closed {
 		return io.ErrClosedPipe
 	}
-	channelIndex := m.chooseEnforcedChannelLocked()
-	if channelIndex < 0 {
-		return ErrSharedSendQuotaReached
+	channelIndex, err := m.waitForEnforcedChannelLocked()
+	if err != nil {
+		return err
 	}
 	return m.sendOnChannelLocked(channelIndex, kind, payload, true)
 }
@@ -178,11 +231,14 @@ func (m *ChannelManager) SendIgnoreQuota(kind uint8, payload []byte) error {
 		return io.ErrClosedPipe
 	}
 	if rriptMonoDirectionSession.IsControlPacketKind(kind) {
+		if err := m.waitForAnyTxChannelLocked(); err != nil {
+			return err
+		}
 		return m.sendFloodControlLocked(kind, payload)
 	}
-	channelIndex := m.chooseBypassChannelLocked()
-	if channelIndex < 0 {
-		return io.ErrClosedPipe
+	channelIndex, err := m.waitForBypassChannelLocked()
+	if err != nil {
+		return err
 	}
 	return m.sendOnChannelLocked(channelIndex, kind, payload, false)
 }
@@ -197,6 +253,9 @@ func (m *ChannelManager) Close() error {
 		return nil
 	}
 	m.closed = true
+	if m.cond != nil {
+		m.cond.Broadcast()
+	}
 	channels := append([]*channelState(nil), m.channels...)
 	m.channels = nil
 	m.mu.Unlock()
@@ -336,6 +395,57 @@ func (m *ChannelManager) sendOnChannelLocked(channelIndex int, kind uint8, paylo
 	return nil
 }
 
+func (m *ChannelManager) waitForEnforcedChannelLocked() (int, error) {
+	for {
+		if m.closed {
+			return -1, io.ErrClosedPipe
+		}
+		channelIndex := m.chooseEnforcedChannelLocked()
+		if channelIndex >= 0 {
+			return channelIndex, nil
+		}
+		if m.activeTxChannelCountLocked() == 0 {
+			if !m.blockOnNoChannels || m.cond == nil {
+				return -1, io.ErrClosedPipe
+			}
+			m.cond.Wait()
+			continue
+		}
+		return -1, ErrSharedSendQuotaReached
+	}
+}
+
+func (m *ChannelManager) waitForBypassChannelLocked() (int, error) {
+	for {
+		if m.closed {
+			return -1, io.ErrClosedPipe
+		}
+		channelIndex := m.chooseBypassChannelLocked()
+		if channelIndex >= 0 {
+			return channelIndex, nil
+		}
+		if !m.blockOnNoChannels || m.cond == nil {
+			return -1, io.ErrClosedPipe
+		}
+		m.cond.Wait()
+	}
+}
+
+func (m *ChannelManager) waitForAnyTxChannelLocked() error {
+	for {
+		if m.closed {
+			return io.ErrClosedPipe
+		}
+		if m.activeTxChannelCountLocked() > 0 {
+			return nil
+		}
+		if !m.blockOnNoChannels || m.cond == nil {
+			return io.ErrClosedPipe
+		}
+		m.cond.Wait()
+	}
+}
+
 func (m *ChannelManager) chooseEnforcedChannelLocked() int {
 	best := -1
 	for i := range m.channels {
@@ -375,6 +485,16 @@ func (m *ChannelManager) chooseBypassChannelLocked() int {
 		}
 	}
 	return -1
+}
+
+func (m *ChannelManager) activeTxChannelCountLocked() int {
+	count := 0
+	for _, channel := range m.channels {
+		if channel != nil && channel.tx != nil {
+			count += 1
+		}
+	}
+	return count
 }
 
 func (m *ChannelManager) channelOversubscribePercentageLocked(index int) float64 {

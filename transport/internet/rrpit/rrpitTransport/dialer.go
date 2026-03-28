@@ -29,6 +29,7 @@ const (
 	rrpitTransportConnectionStateKey = "rrpit-transport-connection-state"
 	rrpitClientSessionIdleTimeout    = 5 * time.Second
 	rrpitSessionClassAttributeKey    = "rrpitSessionClass"
+	rrpitReconnectAttemptTimeout     = 5 * time.Second
 )
 
 type transportConnectionState struct {
@@ -77,7 +78,7 @@ func (s *transportConnectionState) getOrCreateSession(
 	s.scopedSessionAccess.Unlock()
 
 	var session *persistentClientSession
-	created, err := newPersistentClientSession(ctx, dest, streamSettings, rrpitClientSessionIdleTimeout, func() {
+	created, err := newPersistentClientSession(ctx, dest, streamSettings, func() {
 		s.removeSession(key, session)
 	})
 	if err != nil {
@@ -120,10 +121,17 @@ func (s *transportConnectionState) removeSession(key string, session *persistent
 }
 
 type persistentClientSession struct {
-	owner        *transportSession
-	openStream   func(rrpitBidirectionalSessionManager.SessionName) (gonet.Conn, error)
-	closeSession func() error
-	idleTimeout  time.Duration
+	owner                              *transportSession
+	openStream                         func(rrpitBidirectionalSessionManager.SessionName) (gonet.Conn, error)
+	closeSession                       func() error
+	idleTimeout                        time.Duration
+	keepTransportSessionWithoutStreams bool
+	baseCtx                            context.Context
+	resolvedChannels                   []resolvedChannel
+	streamSettings                     *internet.MemoryStreamConfig
+	reconnectRetryInterval             time.Duration
+	reconnectStop                      chan struct{}
+	reconnectDone                      chan struct{}
 
 	mu            sync.Mutex
 	activeStreams int
@@ -166,7 +174,6 @@ func (s *persistentClientSession) OpenConnection(ctx context.Context) (internet.
 	stream, err := s.openStream(sessionClassFromContext(ctx))
 	if err != nil {
 		s.releaseStream()
-		_ = s.Close()
 		return nil, err
 	}
 
@@ -213,6 +220,7 @@ func (s *persistentClientSession) Close() error {
 	}
 	s.mu.Unlock()
 
+	s.stopReconnectLoop()
 	if s.closeSession != nil {
 		return s.closeSession()
 	}
@@ -230,7 +238,7 @@ func (s *persistentClientSession) releaseStream() {
 	if s.activeStreams > 0 {
 		s.activeStreams--
 	}
-	if s.closed || s.activeStreams != 0 || s.idleTimeout <= 0 || s.idleTimer != nil {
+	if s.closed || s.keepTransportSessionWithoutStreams || s.activeStreams != 0 || s.idleTimeout <= 0 || s.idleTimer != nil {
 		return
 	}
 
@@ -245,6 +253,26 @@ func (s *persistentClientSession) releaseStream() {
 		s.mu.Unlock()
 		_ = s.Close()
 	})
+}
+
+func (s *persistentClientSession) stopReconnectLoop() {
+	if s == nil {
+		return
+	}
+
+	s.mu.Lock()
+	stop := s.reconnectStop
+	done := s.reconnectDone
+	s.reconnectStop = nil
+	s.reconnectDone = nil
+	s.mu.Unlock()
+
+	if stop != nil {
+		close(stop)
+		if done != nil {
+			<-done
+		}
+	}
 }
 
 func rrpitTransportSessionKey(dest v2net.Destination) string {
@@ -275,13 +303,13 @@ func newPersistentClientSession(
 	ctx context.Context,
 	dest v2net.Destination,
 	streamSettings *internet.MemoryStreamConfig,
-	idleTimeout time.Duration,
 	onClose func(),
 ) (*persistentClientSession, error) {
 	config, ok := streamSettings.ProtocolSettings.(*Config)
 	if !ok {
 		return nil, fmt.Errorf("invalid rrpit transport config")
 	}
+	persistence := buildConnectionPersistencePolicy(config)
 
 	channels, err := resolveDialChannels(dest, config)
 	if err != nil {
@@ -293,7 +321,18 @@ func newPersistentClientSession(
 		return nil, err
 	}
 
-	session := &persistentClientSession{idleTimeout: idleTimeout}
+	baseCtx := ctx
+	if baseCtx == nil {
+		baseCtx = context.Background()
+	}
+	session := &persistentClientSession{
+		idleTimeout:                        persistence.IdleTimeout,
+		keepTransportSessionWithoutStreams: persistence.KeepTransportSessionWithoutStreams,
+		baseCtx:                            baseCtx,
+		resolvedChannels:                   append([]resolvedChannel(nil), channels...),
+		streamSettings:                     streamSettings,
+		reconnectRetryInterval:             persistence.ReconnectRetryInterval,
+	}
 	owner, err := newTransportSession("client", id, config, true, func() {
 		session.mu.Lock()
 		session.closed = true
@@ -302,6 +341,7 @@ func newPersistentClientSession(
 			session.idleTimer = nil
 		}
 		session.mu.Unlock()
+		session.stopReconnectLoop()
 		if onClose != nil {
 			onClose()
 		}
@@ -309,40 +349,100 @@ func newPersistentClientSession(
 	if err != nil {
 		return nil, err
 	}
+	session.owner = owner
 
-	for index, channel := range channels {
-		rawConn, err := internet.DialSystem(ctx, v2net.UDPDestination(channel.address, channel.port), streamSettings.SocketSettings)
-		if err != nil {
-			_ = owner.Close()
-			return nil, err
-		}
-
-		dtlsConn, err := piondtls.Client(
-			piondtlsnet.PacketConnFromConn(rawConn),
-			rawConn.RemoteAddr(),
-			makePionDTLSConfig(channel, id),
-		)
-		if err != nil {
-			_ = rawConn.Close()
-			_ = owner.Close()
-			return nil, err
-		}
-		if err := dtlsConn.Handshake(); err != nil {
-			_ = dtlsConn.Close()
-			_ = owner.Close()
-			return nil, err
-		}
-
-		if err := owner.addChannel(dtlsConn, index, rrpitChannelConfig(channel.transport)); err != nil {
+	for index := range channels {
+		if err := session.connectChannelSlot(ctx, index); err != nil {
 			_ = owner.Close()
 			return nil, err
 		}
 	}
 
-	session.owner = owner
 	session.openStream = owner.OpenStreamByClass
 	session.closeSession = owner.Close
+	session.startReconnectLoop(id)
 	return session, nil
+}
+
+func (s *persistentClientSession) startReconnectLoop(sessionID transportSessionID) {
+	if s == nil || s.reconnectRetryInterval <= 0 {
+		return
+	}
+	s.mu.Lock()
+	if s.reconnectStop != nil || s.closed {
+		s.mu.Unlock()
+		return
+	}
+	s.reconnectStop = make(chan struct{})
+	s.reconnectDone = make(chan struct{})
+	stop := s.reconnectStop
+	done := s.reconnectDone
+	s.mu.Unlock()
+
+	go func() {
+		ticker := time.NewTicker(s.reconnectRetryInterval)
+		defer func() {
+			ticker.Stop()
+			close(done)
+		}()
+		for {
+			select {
+			case <-ticker.C:
+				if s.IsClosed() || s.owner == nil {
+					return
+				}
+				missing := s.owner.MissingChannelSlots()
+				for _, slotIndex := range missing {
+					if s.IsClosed() {
+						return
+					}
+					attemptCtx, cancel := context.WithTimeout(s.baseCtx, rrpitReconnectAttemptTimeout)
+					_ = s.connectChannelSlotWithID(attemptCtx, slotIndex, sessionID)
+					cancel()
+				}
+			case <-stop:
+				return
+			}
+		}
+	}()
+}
+
+func (s *persistentClientSession) connectChannelSlot(ctx context.Context, slotIndex int) error {
+	if s == nil || s.owner == nil {
+		return io.ErrClosedPipe
+	}
+	return s.connectChannelSlotWithID(ctx, slotIndex, s.owner.id)
+}
+
+func (s *persistentClientSession) connectChannelSlotWithID(ctx context.Context, slotIndex int, sessionID transportSessionID) error {
+	if s == nil || s.owner == nil || slotIndex < 0 || slotIndex >= len(s.resolvedChannels) {
+		return io.ErrClosedPipe
+	}
+	channel := s.resolvedChannels[slotIndex]
+	rawConn, err := internet.DialSystem(ctx, v2net.UDPDestination(channel.address, channel.port), s.streamSettings.SocketSettings)
+	if err != nil {
+		return err
+	}
+
+	dtlsConn, err := piondtls.Client(
+		piondtlsnet.PacketConnFromConn(rawConn),
+		rawConn.RemoteAddr(),
+		makePionDTLSConfig(channel, sessionID),
+	)
+	if err != nil {
+		_ = rawConn.Close()
+		return err
+	}
+	if err := dtlsConn.Handshake(); err != nil {
+		_ = dtlsConn.Close()
+		return err
+	}
+
+	if err := s.owner.attachChannel(dtlsConn, slotIndex, rrpitChannelConfig(channel.transport), channelReadIdleTimeout(channel)); err != nil {
+		_ = dtlsConn.Close()
+		return err
+	}
+	return nil
 }
 
 func sessionClassFromContext(ctx context.Context) rrpitBidirectionalSessionManager.SessionName {

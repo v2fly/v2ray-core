@@ -91,7 +91,7 @@ func (l *Listener) serveAcceptedChannel(conn gonet.Conn, channelIndex int) {
 		return
 	}
 
-	if err := owner.addChannel(conn, channelIndex, rrpitChannelConfig(l.channels[channelIndex].transport)); err != nil {
+	if err := owner.attachChannel(conn, channelIndex, rrpitChannelConfig(l.channels[channelIndex].transport), channelReadIdleTimeout(l.channels[channelIndex])); err != nil {
 		_ = owner.Close()
 	}
 }

@@ -14,6 +14,8 @@ message DTLSUDPChannel {
   bytes ip = 1;
   uint32 port = 2;
   string password = 3;
+  // If positive, consider this DTLS channel dead when no inbound rrpit message bytes arrive for this duration.
+  int64 no_incoming_message_timeout = 4;
 
   string ip_addr = 68000 [(v2ray.core.common.protoext.field_opt).convert_time_parse_ip = "ip"];
 }
@@ -135,6 +137,20 @@ message AdaptorSetting {
   int32 max_stream_buffer = 7;
 }
 
+message ConnectionPersistenceSetting {
+  // How long to retain a logical rrpit session after all DTLS channels are gone. Zero closes immediately.
+  int64 disconnected_session_retention = 1;
+
+  // Client reconnect retry interval while the logical session is retained. Zero means use the transport default.
+  int64 reconnect_retry_interval = 2;
+
+  // Keep the client rrpit transport session open even when there are no proxied streams.
+  bool keep_transport_session_without_streams = 3;
+
+  // Idle timeout when keep_transport_session_without_streams is false. Zero means use the transport default.
+  int64 idle_timeout = 4;
+}
+
 message Config {
   option (v2ray.core.common.protoext.message_opt).type = "transport";
   option (v2ray.core.common.protoext.message_opt).short_name = "rrpit";
@@ -146,4 +162,5 @@ message Config {
   EngineeringSetting engineering = 4;
   AdaptorSetting adaptor = 5;
   SessionManagerSetting session_mgr = 6;
+  ConnectionPersistenceSetting persistence = 7;
 }

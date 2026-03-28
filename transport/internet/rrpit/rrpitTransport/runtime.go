@@ -73,6 +73,13 @@ type ownedConn struct {
 	done      chan struct{}
 }
 
+type transportChannelSlot struct {
+	config              rriptMonoDirectionSession.ChannelConfig
+	conn                gonet.Conn
+	managerChannelIndex int
+	readIdleTimeout     time.Duration
+}
+
 type transportSession struct {
 	id      transportSessionID
 	role    string
@@ -83,14 +90,18 @@ type transportSession struct {
 	backgroundAdaptor *packetToStream.Adaptor
 	recorder          *rrpitDebuger.PacketRecorder
 	onClose           func()
+	persistence       connectionPersistencePolicy
 
-	mu         sync.Mutex
-	channels   []gonet.Conn
-	localAddr  gonet.Addr
-	remoteAddr gonet.Addr
+	mu                sync.Mutex
+	slots             []transportChannelSlot
+	localAddr         gonet.Addr
+	remoteAddr        gonet.Addr
+	disconnected      bool
+	disconnectedTimer *time.Timer
 
 	closeOnce sync.Once
 	closeErr  error
+	closed    bool
 }
 
 func newTransportSession(
@@ -100,10 +111,12 @@ func newTransportSession(
 	client bool,
 	onClose func(),
 ) (*transportSession, error) {
+	persistence := buildConnectionPersistencePolicy(config)
 	channelManager, err := rrpitChannelManager.New(buildChannelManagerConfig(config))
 	if err != nil {
 		return nil, err
 	}
+	channelManager.SetBlockOnNoChannels(persistence.DisconnectedSessionRetention > 0)
 
 	recorder, err := newPacketRecorder(config, role, id)
 	if err != nil {
@@ -158,17 +171,19 @@ func newTransportSession(
 		backgroundAdaptor: backgroundAdaptor,
 		recorder:          recorder,
 		onClose:           onClose,
+		persistence:       persistence,
+		slots:             make([]transportChannelSlot, len(config.GetChannels())),
 	}, nil
 }
 
-func (s *transportSession) addChannel(conn gonet.Conn, channelIndex int, config rriptMonoDirectionSession.ChannelConfig) error {
+func (s *transportSession) attachChannel(conn gonet.Conn, channelSlot int, config rriptMonoDirectionSession.ChannelConfig, readIdleTimeout time.Duration) error {
 	if s == nil || s.sessionManager == nil {
 		return io.ErrClosedPipe
 	}
 
 	writer := io.WriteCloser(&framedPacketWriteCloser{conn: conn})
 	if s.recorder != nil {
-		writer = s.recorder.WrapWriter(s.role, channelIndex, writer)
+		writer = s.recorder.WrapWriter(s.role, channelSlot, writer)
 	}
 
 	managerChannelIndex, err := s.sessionManager.ChannelManager().AttachChannelWithConfig(writer, config)
@@ -178,47 +193,77 @@ func (s *transportSession) addChannel(conn gonet.Conn, channelIndex int, config 
 	}
 
 	s.mu.Lock()
+	if s.closed {
+		s.mu.Unlock()
+		_ = s.sessionManager.ChannelManager().DetachChannel(managerChannelIndex)
+		_ = conn.Close()
+		return io.ErrClosedPipe
+	}
+	for len(s.slots) <= channelSlot {
+		s.slots = append(s.slots, transportChannelSlot{})
+	}
+	oldConn := s.slots[channelSlot].conn
+	oldManagerChannelIndex := s.slots[channelSlot].managerChannelIndex
+	s.slots[channelSlot] = transportChannelSlot{
+		config:              config,
+		conn:                conn,
+		managerChannelIndex: managerChannelIndex,
+		readIdleTimeout:     readIdleTimeout,
+	}
 	if s.localAddr == nil {
 		s.localAddr = conn.LocalAddr()
 	}
 	if s.remoteAddr == nil {
 		s.remoteAddr = conn.RemoteAddr()
 	}
-	s.channels = append(s.channels, conn)
+	s.cancelDisconnectedTimerLocked()
 	s.mu.Unlock()
 
-	go s.readChannel(conn, managerChannelIndex, channelIndex)
+	if oldConn != nil {
+		_ = oldConn.Close()
+		_ = s.sessionManager.ChannelManager().DetachChannel(oldManagerChannelIndex)
+	}
+	go s.readChannel(conn, channelSlot, managerChannelIndex, readIdleTimeout)
 	return nil
 }
 
-func (s *transportSession) readChannel(conn gonet.Conn, managerChannelIndex int, channelIndex int) {
+func (s *transportSession) readChannel(conn gonet.Conn, channelSlot int, managerChannelIndex int, readIdleTimeout time.Duration) {
 	reader := bufio.NewReaderSize(conn, transportMaxFrameSize+transportFrameLengthFieldSize)
 	for {
 		lengthBuf := make([]byte, transportFrameLengthFieldSize)
+		if err := applyChannelReadDeadline(conn, readIdleTimeout); err != nil {
+			s.handleChannelReadFailure(channelSlot, managerChannelIndex, conn, "failed to set frame-length read deadline", err)
+			return
+		}
 		if _, err := io.ReadFull(reader, lengthBuf); err != nil {
-			s.logChannelFailure(channelIndex, conn, "failed to read frame length", err)
-			_ = s.Close()
+			s.handleChannelReadFailure(channelSlot, managerChannelIndex, conn, channelReadFailureMessage("failed to read frame length", err), err)
 			return
 		}
 		length := binary.BigEndian.Uint32(lengthBuf)
 		if length == 0 || length > transportMaxFrameSize {
-			s.logChannelFailure(channelIndex, conn, "received invalid frame length", fmt.Errorf("length=%d", length))
-			_ = s.Close()
+			s.handleChannelReadFailure(channelSlot, managerChannelIndex, conn, "received invalid frame length", fmt.Errorf("length=%d", length))
 			return
 		}
 
 		payload := make([]byte, length)
+		if err := applyChannelReadDeadline(conn, readIdleTimeout); err != nil {
+			s.handleChannelReadFailure(channelSlot, managerChannelIndex, conn, "failed to set frame-payload read deadline", err)
+			return
+		}
 		if _, err := io.ReadFull(reader, payload); err != nil {
-			s.logChannelFailure(channelIndex, conn, "failed to read frame payload", err)
-			_ = s.Close()
+			s.handleChannelReadFailure(channelSlot, managerChannelIndex, conn, channelReadFailureMessage("failed to read frame payload", err), err)
 			return
 		}
 
 		if s.recorder != nil {
-			s.recorder.RecordInbound(s.role, channelIndex, payload)
+			s.recorder.RecordInbound(s.role, channelSlot, payload)
 		}
 		if err := s.sessionManager.ChannelManager().OnNewMessageArrived(managerChannelIndex, payload); err != nil {
-			s.logChannelFailure(channelIndex, conn, "failed to handle inbound rrpit packet", err)
+			if !s.isCurrentChannel(channelSlot, managerChannelIndex, conn) {
+				_ = conn.Close()
+				return
+			}
+			s.logChannelFailure(channelSlot, conn, "failed to handle inbound rrpit packet", err)
 			_ = s.Close()
 			return
 		}
@@ -242,14 +287,121 @@ func (s *transportSession) logChannelFailure(channelIndex int, conn gonet.Conn, 
 	).Base(err).AtWarning().WriteToLog()
 }
 
+func (s *transportSession) isCurrentChannel(channelSlot int, managerChannelIndex int, conn gonet.Conn) bool {
+	if s == nil {
+		return false
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.isCurrentChannelLocked(channelSlot, managerChannelIndex, conn)
+}
+
+func (s *transportSession) isCurrentChannelLocked(channelSlot int, managerChannelIndex int, conn gonet.Conn) bool {
+	if s.closed || channelSlot < 0 || channelSlot >= len(s.slots) {
+		return false
+	}
+	slot := s.slots[channelSlot]
+	return slot.conn == conn && slot.managerChannelIndex == managerChannelIndex
+}
+
+func (s *transportSession) handleChannelReadFailure(channelSlot int, managerChannelIndex int, conn gonet.Conn, message string, err error) {
+	if s == nil {
+		return
+	}
+	s.logChannelFailure(channelSlot, conn, message, err)
+
+	s.mu.Lock()
+	if !s.isCurrentChannelLocked(channelSlot, managerChannelIndex, conn) {
+		s.mu.Unlock()
+		_ = conn.Close()
+		return
+	}
+	s.slots[channelSlot].conn = nil
+	s.slots[channelSlot].managerChannelIndex = 0
+	closeImmediately := s.activeChannelCountLocked() == 0 && s.scheduleDisconnectedTimerLocked()
+	s.mu.Unlock()
+
+	_ = s.sessionManager.ChannelManager().DetachChannel(managerChannelIndex)
+	_ = conn.Close()
+	if closeImmediately {
+		_ = s.Close()
+	}
+}
+
+func (s *transportSession) activeChannelCountLocked() int {
+	count := 0
+	for _, slot := range s.slots {
+		if slot.conn != nil {
+			count += 1
+		}
+	}
+	return count
+}
+
+func (s *transportSession) cancelDisconnectedTimerLocked() {
+	s.disconnected = false
+	if s.disconnectedTimer != nil {
+		s.disconnectedTimer.Stop()
+		s.disconnectedTimer = nil
+	}
+}
+
+func (s *transportSession) scheduleDisconnectedTimerLocked() bool {
+	s.disconnected = true
+	if s.disconnectedTimer != nil {
+		s.disconnectedTimer.Stop()
+		s.disconnectedTimer = nil
+	}
+	if s.persistence.DisconnectedSessionRetention <= 0 {
+		return true
+	}
+	s.disconnectedTimer = time.AfterFunc(s.persistence.DisconnectedSessionRetention, func() {
+		_ = s.Close()
+	})
+	return false
+}
+
+func (s *transportSession) MissingChannelSlots() []int {
+	if s == nil {
+		return nil
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.closed {
+		return nil
+	}
+	missing := make([]int, 0, len(s.slots))
+	for index, slot := range s.slots {
+		if slot.conn == nil {
+			missing = append(missing, index)
+		}
+	}
+	return missing
+}
+
 func (s *transportSession) Close() error {
 	if s == nil {
 		return nil
 	}
 
 	s.closeOnce.Do(func() {
+		var channels []gonet.Conn
+		s.mu.Lock()
+		s.closed = true
+		s.cancelDisconnectedTimerLocked()
+		for index := range s.slots {
+			if s.slots[index].conn != nil {
+				channels = append(channels, s.slots[index].conn)
+				s.slots[index].conn = nil
+			}
+		}
+		s.mu.Unlock()
+
 		if s.recorder != nil {
 			s.closeErr = firstNonNil(s.closeErr, s.writeDiagnose())
+		}
+		for _, conn := range channels {
+			s.closeErr = firstNonNil(s.closeErr, conn.Close())
 		}
 		if s.adaptor != nil {
 			s.closeErr = firstNonNil(s.closeErr, s.adaptor.Close())
@@ -262,10 +414,6 @@ func (s *transportSession) Close() error {
 		} else if s.session != nil {
 			s.closeErr = firstNonNil(s.closeErr, s.session.Close())
 		}
-
-		s.mu.Lock()
-		s.channels = nil
-		s.mu.Unlock()
 
 		if s.recorder != nil {
 			s.closeErr = firstNonNil(s.closeErr, s.recorder.Close())
@@ -663,6 +811,37 @@ func rrpitChannelConfig(config *ChannelSetting) rriptMonoDirectionSession.Channe
 		Weight:          int(config.GetWeight()),
 		MaxSendingSpeed: int(config.GetMaxSendingSpeed()),
 	}
+}
+
+func channelReadIdleTimeout(config resolvedChannel) time.Duration {
+	if config.dtls == nil {
+		return 0
+	}
+	timeout := time.Duration(config.dtls.GetNoIncomingMessageTimeout())
+	if timeout <= 0 {
+		return 0
+	}
+	return timeout
+}
+
+func applyChannelReadDeadline(conn gonet.Conn, timeout time.Duration) error {
+	if conn == nil {
+		return io.ErrClosedPipe
+	}
+	if timeout <= 0 {
+		return conn.SetReadDeadline(time.Time{})
+	}
+	return conn.SetReadDeadline(time.Now().Add(timeout))
+}
+
+func channelReadFailureMessage(base string, err error) string {
+	if err == nil {
+		return base
+	}
+	if netErr, ok := err.(interface{ Timeout() bool }); ok && netErr.Timeout() {
+		return "channel considered dead after no incoming message within configured timeout"
+	}
+	return base
 }
 
 func makeTransportDTLSConfig(config resolvedChannel) *transportdtls.Config {
