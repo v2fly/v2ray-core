@@ -2,6 +2,7 @@ package dtls
 
 import (
 	"context"
+	"errors"
 	"io"
 	gonet "net"
 	"sync"
@@ -55,6 +56,8 @@ func newDTLSServerConn(src net.Destination, parent *Listener) *dTLSConn {
 type dTLSConnWrapped struct {
 	unencryptedConn *dTLSConn
 	dTLSConn        *dtls.Conn
+	closeOnce       sync.Once
+	closeErr        error
 }
 
 func (c *dTLSConnWrapped) Read(b []byte) (int, error) {
@@ -75,13 +78,18 @@ func (c *dTLSConnWrapped) Close() error {
 	if c == nil {
 		return nil
 	}
-	if c.dTLSConn != nil {
-		return c.dTLSConn.Close()
-	}
-	if c.unencryptedConn != nil {
-		return c.unencryptedConn.Close()
-	}
-	return nil
+	c.closeOnce.Do(func() {
+		switch {
+		case c.dTLSConn != nil:
+			c.closeErr = c.dTLSConn.Close()
+		case c.unencryptedConn != nil:
+			c.closeErr = c.unencryptedConn.Close()
+		}
+		if errors.Is(c.closeErr, dtls.ErrConnClosed) {
+			c.closeErr = nil
+		}
+	})
+	return c.closeErr
 }
 
 func (c *dTLSConnWrapped) LocalAddr() gonet.Addr {
