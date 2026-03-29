@@ -113,7 +113,7 @@ func (l *Listener) getOrCreateSession(sessionID transportSessionID) (*transportS
 		if l.sessions != nil {
 			delete(l.sessions, sessionID)
 		}
-	})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}

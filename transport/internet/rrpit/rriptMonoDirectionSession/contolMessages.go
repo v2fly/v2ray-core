@@ -5,10 +5,17 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitTransferLane"
 )
 
+type SessionInstanceID [16]byte
+
 type ControlMessage struct {
+	Session      SessionControlMessage
 	FloodChannel SessionFloodChannelControlMessage
 	Lane         SessionLaneControlMessage
 	Channel      SessionChannelControlMessage
+}
+
+type SessionControlMessage struct {
+	InstanceID SessionInstanceID
 }
 
 type SessionFloodChannelControlMessage struct {

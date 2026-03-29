@@ -170,6 +170,46 @@ func TestBidirectionalSessionAttachRxChannelLearnsRemoteIDs(t *testing.T) {
 	}
 }
 
+func TestBidirectionalSessionControlPacketsCarryLocalSessionInstanceID(t *testing.T) {
+	writer := &recordingWriteCloser{}
+	want := rriptMonoDirectionSession.SessionInstanceID{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+
+	session := mustNewBidirectionalSession(t, Config{
+		Rx: rriptMonoDirectionSession.SessionRxConfig{
+			LaneShardSize:    16,
+			MaxBufferedLanes: 4,
+			OnMessage:        func([]byte) error { return nil },
+		},
+		Tx: rriptMonoDirectionSession.SessionTxConfig{
+			LaneShardSize:                  16,
+			MaxDataShardsPerLane:           1,
+			MaxBufferedLanes:               4,
+			MaxRewindableTimestampNum:      4,
+			MaxRewindableControlMessageNum: 4,
+			OddChannelIDs:                  true,
+		},
+		LocalSessionInstanceID: want,
+	})
+
+	if _, err := session.AttachTxChannel(writer); err != nil {
+		t.Fatal(err)
+	}
+	if err := session.OnNewTimestamp(1); err != nil {
+		t.Fatal(err)
+	}
+	if len(writer.writes) == 0 {
+		t.Fatal("expected control packet write")
+	}
+
+	var packet sessionControlPacketForTest
+	if err := struc.Unpack(bytes.NewReader(writer.writes[0][8:]), &packet); err != nil {
+		t.Fatal(err)
+	}
+	if packet.Control.Session.InstanceID != want {
+		t.Fatalf("unexpected session instance id: got %x want %x", packet.Control.Session.InstanceID, want)
+	}
+}
+
 func TestBidirectionalSessionAutoTicks(t *testing.T) {
 	aToB := &recordingWriteCloser{}
 	bToA := &recordingWriteCloser{}

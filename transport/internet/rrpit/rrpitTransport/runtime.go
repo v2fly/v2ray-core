@@ -73,10 +73,11 @@ type transportChannelSlot struct {
 }
 
 type transportSession struct {
-	id      transportSessionID
-	role    string
-	session *rrpitBidirectionalSession.BidirectionalSession
-	adaptor *packetToStream.Adaptor
+	id                     transportSessionID
+	role                   string
+	localSessionInstanceID rriptMonoDirectionSession.SessionInstanceID
+	session                *rrpitBidirectionalSession.BidirectionalSession
+	adaptor                *packetToStream.Adaptor
 
 	sessionManager    *rrpitBidirectionalSessionManager.Manager
 	backgroundAdaptor *packetToStream.Adaptor
@@ -102,6 +103,7 @@ func newTransportSession(
 	config *Config,
 	client bool,
 	onClose func(),
+	onRemoteSessionInstance func(rriptMonoDirectionSession.SessionInstanceID) error,
 ) (*transportSession, error) {
 	persistence := buildConnectionPersistencePolicy(config)
 	channelManager, err := rrpitChannelManager.New(buildChannelManagerConfig(config))
@@ -116,7 +118,24 @@ func newTransportSession(
 		return nil, err
 	}
 
-	sessionManager, err := rrpitBidirectionalSessionManager.New(buildBidirectionalSessionManagerConfig(config, channelManager))
+	localSessionInstanceID, err := newSessionInstanceID()
+	if err != nil {
+		if recorder != nil {
+			_ = recorder.Close()
+		}
+		_ = channelManager.Close()
+		return nil, err
+	}
+
+	sessionManagerConfig := buildBidirectionalSessionManagerConfig(config, channelManager)
+	sessionManagerConfig.BaseSessionConfig.LocalSessionInstanceID = localSessionInstanceID
+	if onRemoteSessionInstance != nil {
+		sessionManagerConfig.BaseSessionConfig.ValidateRemoteControl = func(ctrl rriptMonoDirectionSession.ControlMessage) error {
+			return onRemoteSessionInstance(ctrl.Session.InstanceID)
+		}
+	}
+
+	sessionManager, err := rrpitBidirectionalSessionManager.New(sessionManagerConfig)
 	if err != nil {
 		if recorder != nil {
 			_ = recorder.Close()
@@ -164,16 +183,17 @@ func newTransportSession(
 	}
 
 	return &transportSession{
-		id:                id,
-		role:              role,
-		session:           session,
-		adaptor:           adaptor,
-		sessionManager:    sessionManager,
-		backgroundAdaptor: backgroundAdaptor,
-		recorder:          recorder,
-		onClose:           onClose,
-		persistence:       persistence,
-		slots:             make([]transportChannelSlot, len(config.GetChannels())),
+		id:                     id,
+		role:                   role,
+		localSessionInstanceID: localSessionInstanceID,
+		session:                session,
+		adaptor:                adaptor,
+		sessionManager:         sessionManager,
+		backgroundAdaptor:      backgroundAdaptor,
+		recorder:               recorder,
+		onClose:                onClose,
+		persistence:            persistence,
+		slots:                  make([]transportChannelSlot, len(config.GetChannels())),
 	}, nil
 }
 
@@ -855,6 +875,12 @@ func makePionDTLSConfig(config resolvedChannel, sessionID transportSessionID) *p
 
 func newSessionID() (transportSessionID, error) {
 	var id transportSessionID
+	_, err := rand.Read(id[:])
+	return id, err
+}
+
+func newSessionInstanceID() (rriptMonoDirectionSession.SessionInstanceID, error) {
+	var id rriptMonoDirectionSession.SessionInstanceID
 	_, err := rand.Read(id[:])
 	return id, err
 }

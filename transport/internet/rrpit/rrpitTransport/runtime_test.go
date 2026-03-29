@@ -143,6 +143,9 @@ func TestBuildConnectionPersistencePolicy(t *testing.T) {
 	if defaults.IdleTimeout != rrpitClientSessionIdleTimeout {
 		t.Fatalf("unexpected default idle timeout: %v", defaults.IdleTimeout)
 	}
+	if defaults.RemoteControlInactivityTimeout != 0 {
+		t.Fatalf("unexpected default remote control inactivity timeout: %v", defaults.RemoteControlInactivityTimeout)
+	}
 	if defaults.KeepTransportSessionWithoutStreams {
 		t.Fatal("did not expect keep-without-streams default to be enabled")
 	}
@@ -153,6 +156,7 @@ func TestBuildConnectionPersistencePolicy(t *testing.T) {
 			ReconnectRetryInterval:             int64(250 * time.Millisecond),
 			KeepTransportSessionWithoutStreams: true,
 			IdleTimeout:                        int64(7 * time.Second),
+			RemoteControlInactivityTimeout:     int64(9 * time.Second),
 		},
 	})
 	if policy.DisconnectedSessionRetention != 3*time.Second {
@@ -163,6 +167,9 @@ func TestBuildConnectionPersistencePolicy(t *testing.T) {
 	}
 	if policy.IdleTimeout != 7*time.Second {
 		t.Fatalf("unexpected idle timeout: %v", policy.IdleTimeout)
+	}
+	if policy.RemoteControlInactivityTimeout != 9*time.Second {
+		t.Fatalf("unexpected remote control inactivity timeout: %v", policy.RemoteControlInactivityTimeout)
 	}
 	if !policy.KeepTransportSessionWithoutStreams {
 		t.Fatal("expected keep-without-streams to be enabled")
@@ -435,6 +442,7 @@ func TestTransportSessionCloseDoesNotDeadlockWithAutoTickAndNoChannels(t *testin
 			},
 		},
 		false,
+		nil,
 		nil,
 	)
 	if err != nil {

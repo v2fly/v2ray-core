@@ -18,7 +18,8 @@ type BidirectionalSession struct {
 	rx *rriptMonoDirectionSession.SessionRx
 	tx *rriptMonoDirectionSession.SessionTx
 
-	TimestampInterval time.Duration
+	localSessionInstanceID rriptMonoDirectionSession.SessionInstanceID
+	TimestampInterval      time.Duration
 
 	nextTimestamp                         uint64
 	lastControlPayload                    []byte
@@ -35,6 +36,8 @@ type Config struct {
 	Rx rriptMonoDirectionSession.SessionRxConfig
 	Tx rriptMonoDirectionSession.SessionTxConfig
 
+	LocalSessionInstanceID                     rriptMonoDirectionSession.SessionInstanceID
+	ValidateRemoteControl                      func(rriptMonoDirectionSession.ControlMessage) error
 	TimestampInterval                          time.Duration
 	ManagerHostedControlKeepaliveIntervalTicks int
 }
@@ -43,7 +46,8 @@ const managerHostedControlKeepaliveIntervalTicks = 32
 
 func New(config Config) (*BidirectionalSession, error) {
 	session := &BidirectionalSession{
-		TimestampInterval: config.TimestampInterval,
+		TimestampInterval:      config.TimestampInterval,
+		localSessionInstanceID: config.LocalSessionInstanceID,
 	}
 	session.cond = sync.NewCond(&session.mu)
 
@@ -55,7 +59,13 @@ func New(config Config) (*BidirectionalSession, error) {
 
 	rxConfig := config.Rx
 	userRemoteControlHandler := rxConfig.OnRemoteControlMsg
+	validateRemoteControl := config.ValidateRemoteControl
 	rxConfig.OnRemoteControlMsg = func(ctrl rriptMonoDirectionSession.ControlMessage) error {
+		if validateRemoteControl != nil {
+			if err := validateRemoteControl(ctrl); err != nil {
+				return err
+			}
+		}
 		session.mu.Lock()
 		if session.closed {
 			session.mu.Unlock()
@@ -159,6 +169,7 @@ func (s *BidirectionalSession) onNewTimestampLocked(timestamp uint64) (rriptMono
 		if err != nil {
 			return stats, err
 		}
+		ctrl = s.withLocalSessionControl(ctrl)
 		payload, err := rriptMonoDirectionSession.MarshalSessionControlPacket(s.tx.ControlPacketKind, ctrl)
 		if err != nil {
 			return stats, err
@@ -176,11 +187,24 @@ func (s *BidirectionalSession) onNewTimestampLocked(timestamp uint64) (rriptMono
 		return stats, nil
 	}
 	stats.ControlPacketsGenerated += 1
-	if err := s.tx.FloodControlMessages(s.rx.GenerateControlMessage); err != nil {
+	if err := s.tx.FloodControlMessages(func(currentChannelID uint64) (rriptMonoDirectionSession.ControlMessage, error) {
+		ctrl, err := s.rx.GenerateControlMessage(currentChannelID)
+		if err != nil {
+			return rriptMonoDirectionSession.ControlMessage{}, err
+		}
+		return s.withLocalSessionControl(ctrl), nil
+	}); err != nil {
 		return stats, err
 	}
 	stats.ControlPacketsSent += uint32(s.tx.ChannelCount())
 	return stats, nil
+}
+
+func (s *BidirectionalSession) withLocalSessionControl(ctrl rriptMonoDirectionSession.ControlMessage) rriptMonoDirectionSession.ControlMessage {
+	ctrl.Session = rriptMonoDirectionSession.SessionControlMessage{
+		InstanceID: s.localSessionInstanceID,
+	}
+	return ctrl
 }
 
 func (s *BidirectionalSession) shouldSendManagerHostedControlLocked(

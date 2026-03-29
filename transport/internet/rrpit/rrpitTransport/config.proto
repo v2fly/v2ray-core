@@ -149,6 +149,9 @@ message ConnectionPersistenceSetting {
 
   // Idle timeout when keep_transport_session_without_streams is false. Zero means use the transport default.
   int64 idle_timeout = 4;
+
+  // If positive, discard the local cached rrpit session when no remote control packet is received within this duration.
+  int64 remote_control_inactivity_timeout = 5;
 }
 
 message Config {

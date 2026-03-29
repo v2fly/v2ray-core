@@ -715,9 +715,11 @@ type ConnectionPersistenceSetting struct {
 	// Keep the client rrpit transport session open even when there are no proxied streams.
 	KeepTransportSessionWithoutStreams bool `protobuf:"varint,3,opt,name=keep_transport_session_without_streams,json=keepTransportSessionWithoutStreams,proto3" json:"keep_transport_session_without_streams,omitempty"`
 	// Idle timeout when keep_transport_session_without_streams is false. Zero means use the transport default.
-	IdleTimeout   int64 `protobuf:"varint,4,opt,name=idle_timeout,json=idleTimeout,proto3" json:"idle_timeout,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	IdleTimeout int64 `protobuf:"varint,4,opt,name=idle_timeout,json=idleTimeout,proto3" json:"idle_timeout,omitempty"`
+	// If positive, discard the local cached rrpit session when no remote control packet is received within this duration.
+	RemoteControlInactivityTimeout int64 `protobuf:"varint,5,opt,name=remote_control_inactivity_timeout,json=remoteControlInactivityTimeout,proto3" json:"remote_control_inactivity_timeout,omitempty"`
+	unknownFields                  protoimpl.UnknownFields
+	sizeCache                      protoimpl.SizeCache
 }
 
 func (x *ConnectionPersistenceSetting) Reset() {
@@ -774,6 +776,13 @@ func (x *ConnectionPersistenceSetting) GetKeepTransportSessionWithoutStreams() b
 func (x *ConnectionPersistenceSetting) GetIdleTimeout() int64 {
 	if x != nil {
 		return x.IdleTimeout
+	}
+	return 0
+}
+
+func (x *ConnectionPersistenceSetting) GetRemoteControlInactivityTimeout() int64 {
+	if x != nil {
+		return x.RemoteControlInactivityTimeout
 	}
 	return 0
 }
@@ -925,12 +934,13 @@ const file_transport_internet_rrpit_rrpitTransport_config_proto_rawDesc = "" +
 	"\x12keep_alive_timeout\x18\x04 \x01(\x03R\x10keepAliveTimeout\x12$\n" +
 	"\x0emax_frame_size\x18\x05 \x01(\x05R\fmaxFrameSize\x12,\n" +
 	"\x12max_receive_buffer\x18\x06 \x01(\x05R\x10maxReceiveBuffer\x12*\n" +
-	"\x11max_stream_buffer\x18\a \x01(\x05R\x0fmaxStreamBuffer\"\x95\x02\n" +
+	"\x11max_stream_buffer\x18\a \x01(\x05R\x0fmaxStreamBuffer\"\xe0\x02\n" +
 	"\x1cConnectionPersistenceSetting\x12D\n" +
 	"\x1edisconnected_session_retention\x18\x01 \x01(\x03R\x1cdisconnectedSessionRetention\x128\n" +
 	"\x18reconnect_retry_interval\x18\x02 \x01(\x03R\x16reconnectRetryInterval\x12R\n" +
 	"&keep_transport_session_without_streams\x18\x03 \x01(\bR\"keepTransportSessionWithoutStreams\x12!\n" +
-	"\fidle_timeout\x18\x04 \x01(\x03R\vidleTimeout\"\xb1\x05\n" +
+	"\fidle_timeout\x18\x04 \x01(\x03R\vidleTimeout\x12I\n" +
+	"!remote_control_inactivity_timeout\x18\x05 \x01(\x03R\x1eremoteControlInactivityTimeout\"\xb1\x05\n" +
 	"\x06Config\x12R\n" +
 	"\bchannels\x18\x01 \x03(\v26.v2ray.core.transport.internet.rrpit.transport.ChannelR\bchannels\x12N\n" +
 	"\x04lane\x18\x02 \x01(\v2:.v2ray.core.transport.internet.rrpit.transport.LaneSettingR\x04lane\x12W\n" +

@@ -5,6 +5,8 @@ package rrpitTransport
 
 import (
 	"context"
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	gonet "net"
@@ -22,6 +24,7 @@ import (
 	v2session "github.com/v2fly/v2ray-core/v5/common/session"
 	"github.com/v2fly/v2ray-core/v5/features/extension/storage"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rriptMonoDirectionSession"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitBidirectionalSessionManager"
 )
 
@@ -31,6 +34,8 @@ const (
 	rrpitSessionClassAttributeKey    = "rrpitSessionClass"
 	rrpitReconnectAttemptTimeout     = 5 * time.Second
 )
+
+var errRemoteSessionRestarted = errors.New("rrpit remote session restarted")
 
 type transportConnectionState struct {
 	scopedSessionMap    map[string]*persistentClientSession
@@ -130,13 +135,19 @@ type persistentClientSession struct {
 	resolvedChannels                   []resolvedChannel
 	streamSettings                     *internet.MemoryStreamConfig
 	reconnectRetryInterval             time.Duration
+	remoteControlInactivityTimeout     time.Duration
 	reconnectStop                      chan struct{}
 	reconnectDone                      chan struct{}
 
-	mu            sync.Mutex
-	activeStreams int
-	idleTimer     *time.Timer
-	closed        bool
+	mu                              sync.Mutex
+	activeStreams                   int
+	idleTimer                       *time.Timer
+	remoteControlTimer              *time.Timer
+	remoteControlTimerSeq           uint64
+	closed                          bool
+	expectedRemoteSessionInstanceID rriptMonoDirectionSession.SessionInstanceID
+	remoteSessionInstanceSet        bool
+	invalidateOnce                  sync.Once
 }
 
 func (s *persistentClientSession) IsClosed() bool {
@@ -218,6 +229,7 @@ func (s *persistentClientSession) Close() error {
 		s.idleTimer.Stop()
 		s.idleTimer = nil
 	}
+	s.stopRemoteControlTimerLocked()
 	s.mu.Unlock()
 
 	s.stopReconnectLoop()
@@ -332,6 +344,7 @@ func newPersistentClientSession(
 		resolvedChannels:                   append([]resolvedChannel(nil), channels...),
 		streamSettings:                     streamSettings,
 		reconnectRetryInterval:             persistence.ReconnectRetryInterval,
+		remoteControlInactivityTimeout:     persistence.RemoteControlInactivityTimeout,
 	}
 	owner, err := newTransportSession("client", id, config, true, func() {
 		session.mu.Lock()
@@ -340,16 +353,25 @@ func newPersistentClientSession(
 			session.idleTimer.Stop()
 			session.idleTimer = nil
 		}
+		session.stopRemoteControlTimerLocked()
 		session.mu.Unlock()
 		session.stopReconnectLoop()
 		if onClose != nil {
 			onClose()
 		}
+	}, func(remoteSessionInstanceID rriptMonoDirectionSession.SessionInstanceID) error {
+		if session == nil {
+			return nil
+		}
+		return session.handleRemoteSessionInstance(remoteSessionInstanceID)
 	})
 	if err != nil {
 		return nil, err
 	}
 	session.owner = owner
+	session.mu.Lock()
+	session.armRemoteControlTimerLocked()
+	session.mu.Unlock()
 
 	for index := range channels {
 		if err := session.connectChannelSlot(ctx, index); err != nil {
@@ -459,6 +481,127 @@ func sessionClassFromContext(ctx context.Context) rrpitBidirectionalSessionManag
 	default:
 		return rrpitBidirectionalSessionManager.InteractiveStream
 	}
+}
+
+func (s *persistentClientSession) handleRemoteSessionInstance(remoteSessionInstanceID rriptMonoDirectionSession.SessionInstanceID) error {
+	if s == nil {
+		return io.ErrClosedPipe
+	}
+
+	var expected rriptMonoDirectionSession.SessionInstanceID
+	shouldInvalidate := false
+
+	s.mu.Lock()
+	if s.closed {
+		s.mu.Unlock()
+		return io.ErrClosedPipe
+	}
+	s.armRemoteControlTimerLocked()
+	if !s.remoteSessionInstanceSet {
+		s.expectedRemoteSessionInstanceID = remoteSessionInstanceID
+		s.remoteSessionInstanceSet = true
+		s.mu.Unlock()
+		return nil
+	}
+	expected = s.expectedRemoteSessionInstanceID
+	if expected != remoteSessionInstanceID {
+		shouldInvalidate = true
+		s.closed = true
+		if s.idleTimer != nil {
+			s.idleTimer.Stop()
+			s.idleTimer = nil
+		}
+		s.stopRemoteControlTimerLocked()
+	}
+	s.mu.Unlock()
+
+	if !shouldInvalidate {
+		return nil
+	}
+
+	go s.invalidateRemoteSession(expected, remoteSessionInstanceID)
+	return errRemoteSessionRestarted
+}
+
+func (s *persistentClientSession) armRemoteControlTimerLocked() {
+	if s == nil || s.remoteControlInactivityTimeout <= 0 {
+		return
+	}
+	s.remoteControlTimerSeq++
+	seq := s.remoteControlTimerSeq
+	if s.remoteControlTimer != nil {
+		s.remoteControlTimer.Stop()
+	}
+	s.remoteControlTimer = time.AfterFunc(s.remoteControlInactivityTimeout, func() {
+		s.handleRemoteControlInactivityTimeout(seq)
+	})
+}
+
+func (s *persistentClientSession) stopRemoteControlTimerLocked() {
+	if s == nil {
+		return
+	}
+	s.remoteControlTimerSeq++
+	if s.remoteControlTimer != nil {
+		s.remoteControlTimer.Stop()
+		s.remoteControlTimer = nil
+	}
+}
+
+func (s *persistentClientSession) handleRemoteControlInactivityTimeout(seq uint64) {
+	if s == nil {
+		return
+	}
+
+	s.mu.Lock()
+	if s.closed || s.remoteControlInactivityTimeout <= 0 || seq != s.remoteControlTimerSeq {
+		s.mu.Unlock()
+		return
+	}
+	s.closed = true
+	if s.idleTimer != nil {
+		s.idleTimer.Stop()
+		s.idleTimer = nil
+	}
+	s.stopRemoteControlTimerLocked()
+	timeout := s.remoteControlInactivityTimeout
+	s.mu.Unlock()
+
+	s.invalidateRemoteControlSilence(timeout)
+}
+
+func (s *persistentClientSession) invalidateRemoteSession(expected rriptMonoDirectionSession.SessionInstanceID, received rriptMonoDirectionSession.SessionInstanceID) {
+	if s == nil {
+		return
+	}
+	s.invalidateOnce.Do(func() {
+		newError(
+			"rrpit client detected remote session restart: expected remote instance ",
+			hex.EncodeToString(expected[:]),
+			", received ",
+			hex.EncodeToString(received[:]),
+		).AtWarning().WriteToLog()
+		s.stopReconnectLoop()
+		if s.closeSession != nil {
+			_ = s.closeSession()
+		}
+	})
+}
+
+func (s *persistentClientSession) invalidateRemoteControlSilence(timeout time.Duration) {
+	if s == nil {
+		return
+	}
+	s.invalidateOnce.Do(func() {
+		newError(
+			"rrpit client discarded cached session after no remote control packet for ",
+			timeout,
+		).AtWarning().WriteToLog()
+		s.stopReconnectLoop()
+		if s.closeSession != nil {
+			_ = s.closeSession()
+		}
+	})
 }
 
 func Dial(ctx context.Context, dest v2net.Destination, streamSettings *internet.MemoryStreamConfig) (internet.Connection, error) {

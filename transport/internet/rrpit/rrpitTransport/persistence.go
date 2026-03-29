@@ -12,6 +12,7 @@ type connectionPersistencePolicy struct {
 	ReconnectRetryInterval             time.Duration
 	KeepTransportSessionWithoutStreams bool
 	IdleTimeout                        time.Duration
+	RemoteControlInactivityTimeout     time.Duration
 }
 
 func buildConnectionPersistencePolicy(config *Config) connectionPersistencePolicy {
@@ -24,6 +25,7 @@ func buildConnectionPersistencePolicy(config *Config) connectionPersistencePolic
 		ReconnectRetryInterval:             time.Duration(persistence.GetReconnectRetryInterval()),
 		KeepTransportSessionWithoutStreams: persistence.GetKeepTransportSessionWithoutStreams(),
 		IdleTimeout:                        time.Duration(persistence.GetIdleTimeout()),
+		RemoteControlInactivityTimeout:     time.Duration(persistence.GetRemoteControlInactivityTimeout()),
 	}
 	if policy.DisconnectedSessionRetention < 0 {
 		policy.DisconnectedSessionRetention = 0
@@ -36,6 +38,9 @@ func buildConnectionPersistencePolicy(config *Config) connectionPersistencePolic
 	}
 	if policy.IdleTimeout <= 0 {
 		policy.IdleTimeout = rrpitClientSessionIdleTimeout
+	}
+	if policy.RemoteControlInactivityTimeout < 0 {
+		policy.RemoteControlInactivityTimeout = 0
 	}
 	return policy
 }

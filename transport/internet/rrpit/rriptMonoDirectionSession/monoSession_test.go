@@ -1313,6 +1313,25 @@ func TestSessionRxRejectsDuplicateLearnedChannelIDs(t *testing.T) {
 	}
 }
 
+func TestSessionControlPacketRoundTripPreservesSessionInstanceID(t *testing.T) {
+	want := SessionInstanceID{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+
+	payload, err := marshalSessionControlPacket(PacketKind_CONTROL, ControlMessage{
+		Session: SessionControlMessage{
+			InstanceID: want,
+		},
+		FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: 9},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := mustUnmarshalSessionControlPacket(t, payload)
+	if got.Control.Session.InstanceID != want {
+		t.Fatalf("unexpected session instance id: got %x want %x", got.Control.Session.InstanceID, want)
+	}
+}
+
 func TestSessionRxDeliversLanesInOrder(t *testing.T) {
 	writer := &recordingWriteCloser{}
 	tx := mustNewSessionTx(t, SessionTxConfig{
