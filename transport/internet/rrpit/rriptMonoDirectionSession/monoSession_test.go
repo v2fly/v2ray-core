@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/lunixbochs/struc"
+
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitTransferChannel"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitTransferLane"
 )

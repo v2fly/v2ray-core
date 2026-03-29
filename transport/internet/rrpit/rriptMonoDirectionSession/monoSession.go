@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/lunixbochs/struc"
+
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitMaterializedTransferChannel"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitTransferChannel"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitTransferLane"
