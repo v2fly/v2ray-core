@@ -9,10 +9,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/xtaci/smux"
+
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rriptMonoDirectionSession"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitBidirectionalSession"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitMaterializedTransferChannel"
-	"github.com/xtaci/smux"
 )
 
 func TestAdaptorCarriesSmuxStreamsOverRRpit(t *testing.T) {

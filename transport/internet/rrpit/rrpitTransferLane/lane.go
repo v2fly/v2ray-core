@@ -8,8 +8,9 @@ import (
 	"math"
 
 	"github.com/lunixbochs/struc"
-	commonerrors "github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/xssnick/raptorq"
+
+	commonerrors "github.com/v2fly/v2ray-core/v5/common/errors"
 )
 
 const reconstructionLengthFieldSize = 2
