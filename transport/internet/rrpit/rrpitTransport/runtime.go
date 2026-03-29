@@ -38,8 +38,10 @@ const (
 	transportIdentityVersion = byte(1)
 )
 
-var transportIdentityMagic = [4]byte{'R', 'R', 'P', 'T'}
-var transportHandshakeMagic = transportIdentityMagic
+var (
+	transportIdentityMagic  = [4]byte{'R', 'R', 'P', 'T'}
+	transportHandshakeMagic = transportIdentityMagic
+)
 
 type errPathObjHolder struct{}
 

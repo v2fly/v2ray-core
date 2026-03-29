@@ -23,11 +23,13 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitTransferLane"
 )
 
-const materializedChannelSequenceFieldLength = 8
-const defaultPacketLogBaseName = "rrpit-packets"
-const defaultPacketLogMaxFileSizeBytes = 1 << 20
-const defaultPacketLogMaxFiles = 8
-const packetLogScannerBufferSize = 8 << 20
+const (
+	materializedChannelSequenceFieldLength = 8
+	defaultPacketLogBaseName               = "rrpit-packets"
+	defaultPacketLogMaxFileSizeBytes       = 1 << 20
+	defaultPacketLogMaxFiles               = 8
+	packetLogScannerBufferSize             = 8 << 20
+)
 
 type PacketDirection string
 
@@ -343,17 +345,8 @@ func DiagnoseBidirectionalSession(
 		},
 	}
 
-	txSnapshot, err := snapshotSessionTx(session.Tx())
-	if err != nil {
-		return nil, err
-	}
-	output.Session.Tx = txSnapshot
-
-	rxSnapshot, err := snapshotSessionRx(session.Rx())
-	if err != nil {
-		return nil, err
-	}
-	output.Session.Rx = rxSnapshot
+	output.Session.Tx = snapshotSessionTx(session.Tx())
+	output.Session.Rx = snapshotSessionRx(session.Rx())
 
 	if recorder != nil {
 		output.PacketLog = recorder.Manifest()
@@ -609,9 +602,9 @@ func packetKindName(kind uint8) string {
 	return rriptMonoDirectionSession.PacketKindName(kind)
 }
 
-func snapshotSessionTx(tx *rriptMonoDirectionSession.SessionTx) (*SessionTxSnapshot, error) {
+func snapshotSessionTx(tx *rriptMonoDirectionSession.SessionTx) *SessionTxSnapshot {
 	if tx == nil {
-		return nil, nil
+		return nil
 	}
 
 	root := forceValue(reflect.ValueOf(tx).Elem())
@@ -641,19 +634,15 @@ func snapshotSessionTx(tx *rriptMonoDirectionSession.SessionTx) (*SessionTxSnaps
 	}
 
 	for i := 0; i < channelsConfig.Len(); i++ {
-		channelSnapshot, err := snapshotTxChannel(forceValue(channelsConfig.Index(i)))
-		if err != nil {
-			return nil, err
-		}
-		snapshot.Channels = append(snapshot.Channels, channelSnapshot)
+		snapshot.Channels = append(snapshot.Channels, snapshotTxChannel(forceValue(channelsConfig.Index(i))))
 	}
 
-	return snapshot, nil
+	return snapshot
 }
 
-func snapshotSessionRx(rx *rriptMonoDirectionSession.SessionRx) (*SessionRxSnapshot, error) {
+func snapshotSessionRx(rx *rriptMonoDirectionSession.SessionRx) *SessionRxSnapshot {
 	if rx == nil {
-		return nil, nil
+		return nil
 	}
 
 	root := forceValue(reflect.ValueOf(rx).Elem())
@@ -683,14 +672,10 @@ func snapshotSessionRx(rx *rriptMonoDirectionSession.SessionRx) (*SessionRxSnaps
 		if channelValue.IsNil() {
 			continue
 		}
-		channelSnapshot, err := snapshotRxChannel(channelValue)
-		if err != nil {
-			return nil, err
-		}
-		snapshot.Channels = append(snapshot.Channels, channelSnapshot)
+		snapshot.Channels = append(snapshot.Channels, snapshotRxChannel(channelValue))
 	}
 
-	return snapshot, nil
+	return snapshot
 }
 
 func snapshotTxLane(lanePtr reflect.Value) TxLaneSnapshot {
@@ -733,7 +718,7 @@ func snapshotTransferLaneTx(transferLanePtr reflect.Value) TransferLaneTxSnapsho
 	}
 }
 
-func snapshotTxChannel(channelStatus reflect.Value) (TxChannelSnapshot, error) {
+func snapshotTxChannel(channelStatus reflect.Value) TxChannelSnapshot {
 	config := forceInterface[rriptMonoDirectionSession.ChannelConfig](channelStatus.FieldByName("Config"))
 	status := forceInterface[rriptMonoDirectionSession.ChannelRateControlStatus](channelStatus.FieldByName("Status"))
 
@@ -744,7 +729,7 @@ func snapshotTxChannel(channelStatus reflect.Value) (TxChannelSnapshot, error) {
 
 	materializedValue := forceValue(channelStatus.FieldByName("MaterializeChannel"))
 	if materializedValue.IsNil() {
-		return snapshot, nil
+		return snapshot
 	}
 	materialized := forceInterface[*rrpitMaterializedTransferChannel.ChannelTx](materializedValue)
 	snapshot.ChannelID = materialized.ChannelID
@@ -761,7 +746,7 @@ func snapshotTxChannel(channelStatus reflect.Value) (TxChannelSnapshot, error) {
 		snapshot.RemoteLastSeenSenderTimestampError = err.Error()
 	}
 
-	return snapshot, nil
+	return snapshot
 }
 
 func snapshotSentPacketHistory(history reflect.Value) []SentPacketSnapshot {
@@ -822,18 +807,18 @@ func snapshotTransferLaneRx(transferLanePtr reflect.Value) TransferLaneRxSnapsho
 	}
 }
 
-func snapshotRxChannel(channelPtr reflect.Value) (RxChannelSnapshot, error) {
+func snapshotRxChannel(channelPtr reflect.Value) RxChannelSnapshot {
 	channel := forceValue(channelPtr.Elem())
 	materializedValue := forceValue(channel.FieldByName("MaterializeChannel"))
 	if materializedValue.IsNil() {
-		return RxChannelSnapshot{}, nil
+		return RxChannelSnapshot{}
 	}
 	materialized := forceInterface[*rrpitMaterializedTransferChannel.ChannelRx](materializedValue)
 	return RxChannelSnapshot{
 		ChannelID:             materialized.ChannelID,
 		TotalPacketsReceived:  materialized.TotalPacketsReceived,
 		LastPacketSeqReceived: materialized.LastPacketSeqReceived,
-	}, nil
+	}
 }
 
 func snapshotRingBuffer(history reflect.Value) []reflect.Value {

@@ -420,8 +420,8 @@ func (h *directionalIntegrationHarness) assertReceived(expected [][]byte) {
 func (h *directionalIntegrationHarness) assertSenderDrained() {
 	h.t.Helper()
 
-	if len(h.tx.txLanes.lanes) != 0 {
-		h.t.Fatalf("expected sender lanes to be drained, still have %d", len(h.tx.txLanes.lanes))
+	if len(h.tx.lanes) != 0 {
+		h.t.Fatalf("expected sender lanes to be drained, still have %d", len(h.tx.lanes))
 	}
 }
 

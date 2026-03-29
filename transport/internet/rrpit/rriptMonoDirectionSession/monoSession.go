@@ -205,11 +205,11 @@ func NewSessionTx(config SessionTxConfig) (*SessionTx, error) {
 	if len(config.Reconstruction.LaneRepairWeight) > 0 {
 		tx.Reconstruction.LaneRepairWeight = append([]float64(nil), config.Reconstruction.LaneRepairWeight...)
 	}
-	tx.txLanes.laneShardSize = config.LaneShardSize
-	tx.txLanes.maxDataShardsPerLane = config.MaxDataShardsPerLane
-	tx.txLanes.maxBufferedLanes = config.MaxBufferedLanes
-	tx.txChannels.maxRewindableTimestampNum = config.MaxRewindableTimestampNum
-	tx.txChannels.maxRewindableControlMessageNum = config.MaxRewindableControlMessageNum
+	tx.laneShardSize = config.LaneShardSize
+	tx.maxDataShardsPerLane = config.MaxDataShardsPerLane
+	tx.maxBufferedLanes = config.MaxBufferedLanes
+	tx.maxRewindableTimestampNum = config.MaxRewindableTimestampNum
+	tx.maxRewindableControlMessageNum = config.MaxRewindableControlMessageNum
 	if err := tx.ensureDefaults(); err != nil {
 		return nil, err
 	}
@@ -223,9 +223,9 @@ func NewSessionRx(config SessionRxConfig) (*SessionRx, error) {
 		OnMessage:              config.OnMessage,
 		OnRemoteControlMessage: config.OnRemoteControlMsg,
 	}
-	rx.rxLanes.laneShardSize = config.LaneShardSize
-	rx.rxLanes.maxBufferedLanes = config.MaxBufferedLanes
-	rx.rxLanes.remoteMaxDataShardsPerLane = config.RemoteMaxDataShardsPerLane
+	rx.laneShardSize = config.LaneShardSize
+	rx.maxBufferedLanes = config.MaxBufferedLanes
+	rx.remoteMaxDataShardsPerLane = config.RemoteMaxDataShardsPerLane
 	if err := rx.ensureDefaults(); err != nil {
 		return nil, err
 	}
@@ -265,7 +265,7 @@ func (t *SessionTx) MaxMessageSize() (int, error) {
 	if err := t.ensureDefaults(); err != nil {
 		return 0, err
 	}
-	maxMessageSize := t.txLanes.laneShardSize - rrpitTransferLane.ReconstructionLengthFieldSize
+	maxMessageSize := t.laneShardSize - rrpitTransferLane.ReconstructionLengthFieldSize
 	if maxMessageSize <= 0 {
 		return 0, newError("lane shard size too small")
 	}
@@ -313,8 +313,8 @@ func (t *SessionTx) AttachTxChannelWithConfig(closer io.WriteCloser, config Chan
 	channel, err := rrpitMaterializedTransferChannel.NewChannelTx(
 		channelID,
 		closer,
-		t.txChannels.maxRewindableTimestampNum,
-		t.txChannels.maxRewindableControlMessageNum,
+		t.maxRewindableTimestampNum,
+		t.maxRewindableControlMessageNum,
 	)
 	if err != nil {
 		return 0, err
@@ -349,7 +349,7 @@ func (r *SessionRx) AttachRxChannel(channelID uint64) (*rrpitMaterializedTransfe
 		return nil, err
 	}
 	channelState.MaterializeChannel = channel
-	r.rxChannels.channels = append(r.rxChannels.channels, channelState)
+	r.channels = append(r.channels, channelState)
 	return channel, nil
 }
 
@@ -364,15 +364,15 @@ func (r *SessionRx) GenerateControlMessage(currentChannelID uint64) (ControlMess
 	ctrl := ControlMessage{
 		FloodChannel: SessionFloodChannelControlMessage{CurrentChannelID: currentChannelID},
 		Lane: SessionLaneControlMessage{
-			LaneACKTo: r.rxLanes.firstLaneID - 1,
+			LaneACKTo: r.firstLaneID - 1,
 		},
 	}
 
-	if len(r.rxLanes.lanes) > int(^uint16(0)) {
+	if len(r.lanes) > int(^uint16(0)) {
 		return ControlMessage{}, newError("lane control count exceeds control field capacity")
 	}
-	ctrl.Lane.LaneControl = make([]rrpitTransferLane.TransferControl, len(r.rxLanes.lanes))
-	for i, lane := range r.rxLanes.lanes {
+	ctrl.Lane.LaneControl = make([]rrpitTransferLane.TransferControl, len(r.lanes))
+	for i, lane := range r.lanes {
 		if lane == nil {
 			continue
 		}
@@ -384,11 +384,11 @@ func (r *SessionRx) GenerateControlMessage(currentChannelID uint64) (ControlMess
 	}
 	ctrl.Lane.LenLaneControl = uint16(len(ctrl.Lane.LaneControl))
 
-	if len(r.rxChannels.channels) > int(^uint16(0)) {
+	if len(r.channels) > int(^uint16(0)) {
 		return ControlMessage{}, newError("channel control count exceeds control field capacity")
 	}
-	ctrl.Channel.ChannelControl = make([]rrpitTransferChannel.ChannelControlMessage, 0, len(r.rxChannels.channels))
-	for _, channel := range r.rxChannels.channels {
+	ctrl.Channel.ChannelControl = make([]rrpitTransferChannel.ChannelControlMessage, 0, len(r.channels))
+	for _, channel := range r.channels {
 		if channel == nil || channel.MaterializeChannel == nil || channel.MaterializeChannel.ChannelID == 0 {
 			continue
 		}
@@ -425,16 +425,16 @@ func (r *SessionRx) ensureDefaults() error {
 	if r.ControlPacketKind == 0 {
 		r.ControlPacketKind = PacketKind_InteractiveStreamControl
 	}
-	if r.rxLanes.laneShardSize == 0 {
-		r.rxLanes.laneShardSize = defaultLaneShardSize
+	if r.laneShardSize == 0 {
+		r.laneShardSize = defaultLaneShardSize
 	}
-	if r.rxLanes.maxBufferedLanes == 0 {
-		r.rxLanes.maxBufferedLanes = defaultMaxBufferedLanes
+	if r.maxBufferedLanes == 0 {
+		r.maxBufferedLanes = defaultMaxBufferedLanes
 	}
-	if r.rxLanes.maxBufferedLanes < 0 {
+	if r.maxBufferedLanes < 0 {
 		return newError("invalid max buffered lanes")
 	}
-	if _, err := rrpitTransferLane.NewTransferLaneRx(r.rxLanes.laneShardSize, r.rxLanes.remoteMaxDataShardsPerLane); err != nil {
+	if _, err := rrpitTransferLane.NewTransferLaneRx(r.laneShardSize, r.remoteMaxDataShardsPerLane); err != nil {
 		return err
 	}
 	return nil
@@ -447,23 +447,23 @@ func (t *SessionTx) ensureDefaults() error {
 	if t.ControlPacketKind == 0 {
 		t.ControlPacketKind = PacketKind_InteractiveStreamControl
 	}
-	if t.txLanes.laneShardSize == 0 {
-		t.txLanes.laneShardSize = defaultLaneShardSize
+	if t.laneShardSize == 0 {
+		t.laneShardSize = defaultLaneShardSize
 	}
-	if t.txLanes.maxDataShardsPerLane == 0 {
-		t.txLanes.maxDataShardsPerLane = defaultMaxDataShardsPerLane
+	if t.maxDataShardsPerLane == 0 {
+		t.maxDataShardsPerLane = defaultMaxDataShardsPerLane
 	}
-	if t.txLanes.maxBufferedLanes == 0 {
-		t.txLanes.maxBufferedLanes = defaultMaxBufferedLanes
+	if t.maxBufferedLanes == 0 {
+		t.maxBufferedLanes = defaultMaxBufferedLanes
 	}
-	if t.txChannels.maxRewindableTimestampNum == 0 {
-		t.txChannels.maxRewindableTimestampNum = defaultMaxRewindableTimestampNum
+	if t.maxRewindableTimestampNum == 0 {
+		t.maxRewindableTimestampNum = defaultMaxRewindableTimestampNum
 	}
-	if t.txChannels.maxRewindableControlMessageNum == 0 {
-		t.txChannels.maxRewindableControlMessageNum = defaultMaxRewindableControlMessageNum
+	if t.maxRewindableControlMessageNum == 0 {
+		t.maxRewindableControlMessageNum = defaultMaxRewindableControlMessageNum
 	}
 
-	if t.txLanes.maxBufferedLanes < 0 {
+	if t.maxBufferedLanes < 0 {
 		return newError("invalid max buffered lanes")
 	}
 	if t.Reconstruction.InitialRepairShardRatio < 0 {
@@ -495,10 +495,10 @@ func (t *SessionTx) ensureDefaults() error {
 			return newError("invalid lane repair weight")
 		}
 	}
-	if _, err := rrpitTransferLane.NewTransferLaneTx(t.txLanes.laneShardSize, t.txLanes.maxDataShardsPerLane); err != nil {
+	if _, err := rrpitTransferLane.NewTransferLaneTx(t.laneShardSize, t.maxDataShardsPerLane); err != nil {
 		return err
 	}
-	if _, err := rrpitTransferChannel.NewChannelTx(0, t.txChannels.maxRewindableTimestampNum, t.txChannels.maxRewindableControlMessageNum); err != nil {
+	if _, err := rrpitTransferChannel.NewChannelTx(0, t.maxRewindableTimestampNum, t.maxRewindableControlMessageNum); err != nil {
 		return err
 	}
 	return nil
@@ -646,26 +646,26 @@ func (r *SessionRx) onSessionDataLocked(packet sessionDataPacket) ([][]byte, err
 }
 
 func (r *SessionRx) ensureLane(laneID uint64) (*rxLane, error) {
-	if laneID > uint64(^uint64(0)>>1) {
+	if laneID > ^uint64(0)>>1 {
 		return nil, newError("lane id exceeds supported range")
 	}
 	laneIDInt := int64(laneID)
-	if laneIDInt < r.rxLanes.firstLaneID {
+	if laneIDInt < r.firstLaneID {
 		return nil, nil
 	}
 
-	index := int(laneIDInt - r.rxLanes.firstLaneID)
-	if r.rxLanes.maxBufferedLanes > 0 && index >= r.rxLanes.maxBufferedLanes {
+	index := int(laneIDInt - r.firstLaneID)
+	if r.maxBufferedLanes > 0 && index >= r.maxBufferedLanes {
 		return nil, newError("too many buffered transfer lanes")
 	}
-	for len(r.rxLanes.lanes) <= index {
-		r.rxLanes.lanes = append(r.rxLanes.lanes, nil)
+	for len(r.lanes) <= index {
+		r.lanes = append(r.lanes, nil)
 	}
-	if r.rxLanes.lanes[index] != nil {
-		return r.rxLanes.lanes[index], nil
+	if r.lanes[index] != nil {
+		return r.lanes[index], nil
 	}
 
-	transferLane, err := rrpitTransferLane.NewTransferLaneRx(r.rxLanes.laneShardSize, r.rxLanes.remoteMaxDataShardsPerLane)
+	transferLane, err := rrpitTransferLane.NewTransferLaneRx(r.laneShardSize, r.remoteMaxDataShardsPerLane)
 	if err != nil {
 		return nil, err
 	}
@@ -673,7 +673,7 @@ func (r *SessionRx) ensureLane(laneID uint64) (*rxLane, error) {
 		LaneID:       laneID,
 		TransferLane: transferLane,
 	}
-	r.rxLanes.lanes[index] = lane
+	r.lanes[index] = lane
 	return lane, nil
 }
 
@@ -688,8 +688,8 @@ func (r *SessionRx) deliverMessages(payloads [][]byte) error {
 
 func (r *SessionRx) drainReadyLanesLocked() ([][]byte, error) {
 	payloads := make([][]byte, 0)
-	for len(r.rxLanes.lanes) > 0 {
-		lane := r.rxLanes.lanes[0]
+	for len(r.lanes) > 0 {
+		lane := r.lanes[0]
 		if lane == nil || !lane.Ready {
 			return payloads, nil
 		}
@@ -700,14 +700,14 @@ func (r *SessionRx) drainReadyLanesLocked() ([][]byte, error) {
 			lane.NextDeliverIndex += 1
 		}
 
-		r.rxLanes.lanes = r.rxLanes.lanes[1:]
-		r.rxLanes.firstLaneID += 1
+		r.lanes = r.lanes[1:]
+		r.firstLaneID += 1
 	}
 	return payloads, nil
 }
 
 func (r *SessionRx) hasAttachedChannelID(channelID uint64, exclude *rxChannel) bool {
-	for _, attached := range r.rxChannels.channels {
+	for _, attached := range r.channels {
 		if attached == nil || attached == exclude || attached.MaterializeChannel == nil {
 			continue
 		}
@@ -803,10 +803,10 @@ func (t *SessionTx) sendMessage(data []byte) error {
 }
 
 func (t *SessionTx) shouldBackpressureSourceData() bool {
-	if t == nil || !t.hasCustomReconstructionConfig() || !t.RestrictSourceDataWhenOldestLaneStalledEnabled() || len(t.txLanes.lanes) == 0 {
+	if t == nil || !t.hasCustomReconstructionConfig() || !t.RestrictSourceDataWhenOldestLaneStalledEnabled() || len(t.lanes) == 0 {
 		return false
 	}
-	oldest := t.txLanes.lanes[0]
+	oldest := t.lanes[0]
 	return t.isStaleOldestLane(oldest)
 }
 
@@ -869,17 +869,17 @@ func (t *SessionTx) resetChannelRateWindow(timestamp uint64) {
 }
 
 func (t *SessionTx) nextLaneForRepair() *txLane {
-	if len(t.txLanes.lanes) == 0 {
+	if len(t.lanes) == 0 {
 		return nil
 	}
 
-	lastLane := t.txLanes.lanes[len(t.txLanes.lanes)-1]
+	lastLane := t.lanes[len(t.lanes)-1]
 	if !lastLane.Finalized && lastLane.DataShards > 0 {
 		return lastLane
 	}
 
 	var selected *txLane
-	for _, lane := range t.txLanes.lanes {
+	for _, lane := range t.lanes {
 		if lane.DataShards == 0 {
 			continue
 		}
@@ -908,10 +908,10 @@ func (t *SessionTx) hasCustomReconstructionConfig() bool {
 }
 
 func (t *SessionTx) shouldFinalizeLaneAfterData(lane *txLane) bool {
-	if lane == nil || lane.Finalized || t.txLanes.maxDataShardsPerLane <= 0 {
+	if lane == nil || lane.Finalized || t.maxDataShardsPerLane <= 0 {
 		return false
 	}
-	return int(lane.DataShards) >= t.txLanes.maxDataShardsPerLane
+	return int(lane.DataShards) >= t.maxDataShardsPerLane
 }
 
 func (t *SessionTx) finalizeLatestOpenLane() {
@@ -1033,7 +1033,7 @@ func (t *SessionTx) laneRepairDemandBase(lane *txLane) uint32 {
 }
 
 func (t *SessionTx) isOldestUnackedLane(lane *txLane) bool {
-	return lane != nil && lane.LaneID == uint64(t.txLanes.firstLaneID)
+	return lane != nil && lane.LaneID == uint64(t.firstLaneID)
 }
 
 func (t *SessionTx) laneNeedsStaleMonitoring(lane *txLane) bool {
@@ -1085,10 +1085,10 @@ func (t *SessionTx) clearRepairState(lane *txLane) {
 }
 
 func (t *SessionTx) staleOldestLane() (*txLane, int) {
-	if len(t.txLanes.lanes) == 0 {
+	if len(t.lanes) == 0 {
 		return nil, -1
 	}
-	lane := t.txLanes.lanes[0]
+	lane := t.lanes[0]
 	if !t.isStaleOldestLane(lane) {
 		return nil, -1
 	}
@@ -1182,7 +1182,7 @@ func (t *SessionTx) scheduleSecondaryRepairResends(timestamp uint64) {
 	if t.Reconstruction.TimeResendSecondaryRepairShard <= 0 {
 		return
 	}
-	for _, lane := range t.txLanes.lanes {
+	for _, lane := range t.lanes {
 		if lane == nil || lane.SecondaryRepairPacketsPending != 0 {
 			continue
 		}
@@ -1267,8 +1267,8 @@ func (t *SessionTx) buildOpportunisticRepairBudget() []uint32 {
 	if len(t.Reconstruction.LaneRepairWeight) == 0 {
 		return nil
 	}
-	budget := make([]uint32, len(t.txLanes.lanes))
-	for i, lane := range t.txLanes.lanes {
+	budget := make([]uint32, len(t.lanes))
+	for i, lane := range t.lanes {
 		if lane == nil || !lane.Finalized {
 			continue
 		}
@@ -1300,7 +1300,7 @@ func (t *SessionTx) nextConfiguredRepair(opportunisticBudget []uint32) (*txLane,
 	if staleLane != nil && staleLane.SecondaryRepairPacketsPending > 0 {
 		return staleLane, repairSendSecondary, staleIndex
 	}
-	for i, lane := range t.txLanes.lanes {
+	for i, lane := range t.lanes {
 		if lane == nil {
 			continue
 		}
@@ -1312,7 +1312,7 @@ func (t *SessionTx) nextConfiguredRepair(opportunisticBudget []uint32) (*txLane,
 			return lane, repairSendInitial, i
 		}
 	}
-	for i, lane := range t.txLanes.lanes {
+	for i, lane := range t.lanes {
 		if lane != nil && lane.SecondaryRepairPacketsPending > 0 {
 			if staleLane != nil && i == staleIndex {
 				continue
@@ -1320,7 +1320,7 @@ func (t *SessionTx) nextConfiguredRepair(opportunisticBudget []uint32) (*txLane,
 			return lane, repairSendSecondary, i
 		}
 	}
-	for i, lane := range t.txLanes.lanes {
+	for i, lane := range t.lanes {
 		if lane == nil || i >= len(opportunisticBudget) {
 			continue
 		}
@@ -1332,10 +1332,10 @@ func (t *SessionTx) nextConfiguredRepair(opportunisticBudget []uint32) (*txLane,
 }
 
 func (t *SessionTx) latestAppendableLane() *txLane {
-	if len(t.txLanes.lanes) == 0 {
+	if len(t.lanes) == 0 {
 		return nil
 	}
-	lane := t.txLanes.lanes[len(t.txLanes.lanes)-1]
+	lane := t.lanes[len(t.lanes)-1]
 	if lane.Finalized {
 		return nil
 	}
@@ -1343,15 +1343,15 @@ func (t *SessionTx) latestAppendableLane() *txLane {
 }
 
 func (t *SessionTx) createLane() (*txLane, error) {
-	if t.txLanes.maxBufferedLanes > 0 && len(t.txLanes.lanes) >= t.txLanes.maxBufferedLanes {
+	if t.maxBufferedLanes > 0 && len(t.lanes) >= t.maxBufferedLanes {
 		return nil, ErrTxLaneBufferFull
 	}
 
-	transferLane, err := rrpitTransferLane.NewTransferLaneTx(t.txLanes.laneShardSize, t.txLanes.maxDataShardsPerLane)
+	transferLane, err := rrpitTransferLane.NewTransferLaneTx(t.laneShardSize, t.maxDataShardsPerLane)
 	if err != nil {
 		return nil, err
 	}
-	laneID := uint64(t.txLanes.firstLaneID + int64(len(t.txLanes.lanes)))
+	laneID := uint64(t.firstLaneID + int64(len(t.lanes)))
 	createdAt := t.lifecycleTimestamp()
 	lane := &txLane{
 		LaneID:                laneID,
@@ -1359,15 +1359,15 @@ func (t *SessionTx) createLane() (*txLane, error) {
 		CreatedAtTimestamp:    createdAt,
 		LastProgressTimestamp: createdAt,
 	}
-	t.txLanes.lanes = append(t.txLanes.lanes, lane)
+	t.lanes = append(t.lanes, lane)
 	return lane, nil
 }
 
 func (t *SessionTx) removeNewestLane() {
-	if len(t.txLanes.lanes) == 0 {
+	if len(t.lanes) == 0 {
 		return
 	}
-	t.txLanes.lanes = t.txLanes.lanes[:len(t.txLanes.lanes)-1]
+	t.lanes = t.lanes[:len(t.lanes)-1]
 }
 
 func (t *SessionTx) sendTransferPacket(laneID uint64, transfer rrpitTransferLane.TransferData, quotaBound bool) error {
@@ -1501,35 +1501,35 @@ func (t *SessionTx) channelIndexByID(channelID uint64) int {
 }
 
 func (t *SessionTx) laneByID(laneID int64) *txLane {
-	index := laneID - t.txLanes.firstLaneID
-	if index < 0 || int(index) >= len(t.txLanes.lanes) {
+	index := laneID - t.firstLaneID
+	if index < 0 || int(index) >= len(t.lanes) {
 		return nil
 	}
-	return t.txLanes.lanes[index]
+	return t.lanes[index]
 }
 
 func (t *SessionTx) dropLanesThrough(ackTo int64) {
-	if len(t.txLanes.lanes) == 0 || ackTo < t.txLanes.firstLaneID {
+	if len(t.lanes) == 0 || ackTo < t.firstLaneID {
 		return
 	}
-	dropCount := int(ackTo - t.txLanes.firstLaneID + 1)
-	if dropCount > len(t.txLanes.lanes) {
-		dropCount = len(t.txLanes.lanes)
+	dropCount := int(ackTo - t.firstLaneID + 1)
+	if dropCount > len(t.lanes) {
+		dropCount = len(t.lanes)
 	}
-	t.txLanes.lanes = t.txLanes.lanes[dropCount:]
-	t.txLanes.firstLaneID += int64(dropCount)
+	t.lanes = t.lanes[dropCount:]
+	t.firstLaneID += int64(dropCount)
 }
 
 func (t *SessionTx) allocateChannelID() uint64 {
-	if t.txChannels.nextChannelID == 0 {
+	if t.nextChannelID == 0 {
 		if t.OddChannelIDs {
-			t.txChannels.nextChannelID = 1
+			t.nextChannelID = 1
 		} else {
-			t.txChannels.nextChannelID = 2
+			t.nextChannelID = 2
 		}
 	}
-	channelID := t.txChannels.nextChannelID
-	t.txChannels.nextChannelID += 2
+	channelID := t.nextChannelID
+	t.nextChannelID += 2
 	return channelID
 }
 

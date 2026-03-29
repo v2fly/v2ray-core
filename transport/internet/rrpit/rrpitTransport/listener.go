@@ -135,7 +135,7 @@ func (l *Listener) acceptStreams(owner *transportSession, sessionClass rrpitBidi
 			_ = owner.Close()
 			return
 		}
-		l.handler(&ownedConn{Conn: gonet.Conn(stream), owner: owner})
+		l.handler(&ownedConn{Conn: stream, owner: owner})
 	}
 }
 

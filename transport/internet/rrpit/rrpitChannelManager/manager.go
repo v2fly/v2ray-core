@@ -14,8 +14,10 @@ import (
 
 var ErrSharedSendQuotaReached = errors.New("rrpit shared send quota reached")
 
-type Listener func(payload []byte) error
-type Sniffer func(payload []byte)
+type (
+	Listener func(payload []byte) error
+	Sniffer  func(payload []byte)
+)
 
 type Config struct {
 	OddChannelIDs                  bool

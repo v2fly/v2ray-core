@@ -454,11 +454,11 @@ func TestSessionTxAcceptRemoteControlMessage(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if len(tx.txLanes.lanes) != 0 {
-		t.Fatalf("expected acknowledged lane to be dropped, still have %d lanes", len(tx.txLanes.lanes))
+	if len(tx.lanes) != 0 {
+		t.Fatalf("expected acknowledged lane to be dropped, still have %d lanes", len(tx.lanes))
 	}
-	if tx.txLanes.firstLaneID != 1 {
-		t.Fatalf("expected first lane id to advance to 1, got %d", tx.txLanes.firstLaneID)
+	if tx.firstLaneID != 1 {
+		t.Fatalf("expected first lane id to advance to 1, got %d", tx.firstLaneID)
 	}
 
 	if _, err := tx.txChannelsConfig[0].MaterializeChannel.RemoteLastSeenMessageSenderTimestamp(); err != nil {
@@ -505,8 +505,8 @@ func TestSessionTxSeenChunksDoesNotCompleteLane(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if len(tx.txLanes.lanes) != 1 {
-		t.Fatalf("expected lane to stay active until LaneACKTo advances, have %d lanes", len(tx.txLanes.lanes))
+	if len(tx.lanes) != 1 {
+		t.Fatalf("expected lane to stay active until LaneACKTo advances, have %d lanes", len(tx.lanes))
 	}
 
 	if err := tx.OnNewTimestamp(2); err != nil {
@@ -624,7 +624,7 @@ func TestSessionTxStaleOldestLaneSecondaryPriorityBeatsLaterInitialRepair(t *tes
 	})
 	tx.currentTimestampInitialized = true
 	tx.currentTimestamp = 5
-	tx.txLanes.lanes = []*txLane{
+	tx.lanes = []*txLane{
 		{
 			LaneID:                        0,
 			Finalized:                     true,
@@ -670,8 +670,8 @@ func TestSessionTxBecomingOldestBootstrapsStaleMonitoring(t *testing.T) {
 	})
 	tx.currentTimestampInitialized = true
 	tx.currentTimestamp = 40
-	tx.txLanes.firstLaneID = 100
-	tx.txLanes.lanes = []*txLane{
+	tx.firstLaneID = 100
+	tx.lanes = []*txLane{
 		{
 			LaneID:                100,
 			Finalized:             true,
@@ -696,10 +696,10 @@ func TestSessionTxBecomingOldestBootstrapsStaleMonitoring(t *testing.T) {
 	}
 
 	tx.dropLanesThrough(100)
-	if tx.txLanes.firstLaneID != 101 {
-		t.Fatalf("expected first lane id to advance to 101, got %d", tx.txLanes.firstLaneID)
+	if tx.firstLaneID != 101 {
+		t.Fatalf("expected first lane id to advance to 101, got %d", tx.firstLaneID)
 	}
-	lane := tx.txLanes.lanes[0]
+	lane := tx.lanes[0]
 	if lane.NextSecondaryRepairTimestamp != 0 {
 		t.Fatalf("expected no preexisting secondary timer, got %d", lane.NextSecondaryRepairTimestamp)
 	}
@@ -802,14 +802,14 @@ func TestSessionTxReturnsErrTxLaneBufferFullAtMaxBufferedLanesLimit(t *testing.T
 		t.Fatal(err)
 	}
 
-	if got := len(tx.txLanes.lanes); got != 2 {
+	if got := len(tx.lanes); got != 2 {
 		t.Fatalf("expected exactly 2 buffered lanes before limit, got %d", got)
 	}
 
 	if err := tx.SendMessage([]byte("c")); !errors.Is(err, ErrTxLaneBufferFull) {
 		t.Fatalf("expected ErrTxLaneBufferFull when maxBufferedLanes is reached, got %v", err)
 	}
-	if got := len(tx.txLanes.lanes); got != 2 {
+	if got := len(tx.lanes); got != 2 {
 		t.Fatalf("expected lane count to stay capped at 2 after limit error, got %d", got)
 	}
 }
@@ -855,7 +855,7 @@ func TestSessionTxCompletionSentinelStopsRepairImmediately(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	lane := tx.txLanes.lanes[0]
+	lane := tx.lanes[0]
 	if !lane.PeerReconstructed {
 		t.Fatal("expected completion sentinel to mark peer reconstruction complete")
 	}
@@ -908,7 +908,7 @@ func TestSessionTxDeferredSecondaryRepairDoesNotRefreshTicketEarly(t *testing.T)
 		t.Fatal(err)
 	}
 
-	lane := tx.txLanes.lanes[0]
+	lane := tx.lanes[0]
 	if lane.NextSecondaryRepairTimestamp != 2 {
 		t.Fatalf("expected resend ticket at timestamp 2, got %d", lane.NextSecondaryRepairTimestamp)
 	}

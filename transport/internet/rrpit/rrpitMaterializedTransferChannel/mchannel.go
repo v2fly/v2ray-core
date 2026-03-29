@@ -79,7 +79,7 @@ func (tx *ChannelTx) SendDataMessage(data []byte) error {
 	binary.BigEndian.PutUint64(wireMessage[:channelSequenceFieldLength], tx.NextSeq)
 	copy(wireMessage[channelSequenceFieldLength:], payload)
 
-	written, err := tx.WriteCloser.Write(wireMessage)
+	written, err := tx.Write(wireMessage)
 	if err != nil {
 		return err
 	}
