@@ -22,7 +22,7 @@ require (
 	github.com/miekg/dns v1.1.72
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
-	github.com/pion/dtls/v3 v3.0.11
+	github.com/pion/dtls/v3 v3.1.2
 	github.com/pion/stun/v3 v3.1.1
 	github.com/pion/transport/v2 v2.2.10
 	github.com/pires/go-proxyproto v0.11.0
