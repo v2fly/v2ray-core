@@ -16,11 +16,14 @@ import (
 )
 
 var (
-	server    *string
-	server2   *string
-	timeout   *int
-	attempts  *int
-	socks5udp *string
+	server                 *string
+	server2                *string
+	timeout                *int
+	attempts               *int
+	socks5udp              *string
+	detectBuggyNATMapping  *bool
+	mappingLifetimeMaxIdle *int
+	mappingLifetimeStart   *int
 )
 
 var cmdStunTest = &base.Command{
@@ -48,11 +51,18 @@ Options:
 		Number of parallel requests per test for UDP loss resilience (default: 3)
 	-socks5udp <host:port>
 		SOCKS5 UDP relay address (skips TCP handshake, sends UDP directly)
+	-detect-buggy-nat-mapping
+		Send additional probes to detect NAT mapping behavior that depends on packet arrival ordering
+	-mapping-lifetime-max-idle <ms>
+		Optional maximum idle window for UDP mapping lifetime probing (default: 0, disabled)
+	-mapping-lifetime-start-idle <ms>
+		Initial idle window for UDP mapping lifetime probing (default: 1000)
 
 Example:
 	{{.Exec}} engineering stun-test -server stun.example.com:3478
 	{{.Exec}} engineering stun-test -server stun.example.com:3478 -server2 stun2.example.com:3478
 	{{.Exec}} engineering stun-test -server stun.example.com:3478 -socks5udp 127.0.0.1:1080
+	{{.Exec}} engineering stun-test -server stun.example.com:3478 -mapping-lifetime-max-idle 60000
 `,
 	Flag: func() flag.FlagSet {
 		fs := flag.NewFlagSet("", flag.ExitOnError)
@@ -61,6 +71,9 @@ Example:
 		timeout = fs.Int("timeout", 3000, "timeout per test in milliseconds")
 		attempts = fs.Int("attempts", 3, "number of parallel requests per test")
 		socks5udp = fs.String("socks5udp", "", "SOCKS5 UDP relay address (host:port)")
+		detectBuggyNATMapping = fs.Bool("detect-buggy-nat-mapping", false, "send additional probes to detect NAT mapping behavior that depends on packet arrival ordering")
+		mappingLifetimeMaxIdle = fs.Int("mapping-lifetime-max-idle", 0, "optional maximum idle window for UDP mapping lifetime probing in milliseconds")
+		mappingLifetimeStart = fs.Int("mapping-lifetime-start-idle", 1000, "initial idle window for UDP mapping lifetime probing in milliseconds")
 		return *fs
 	}(),
 	Run: executeStunTest,
@@ -126,6 +139,10 @@ func natDependantTypeString(t stunlib.NATDependantType) string {
 		return "Endpoint+Port Dependent"
 	case stunlib.EndpointPortDependentPinned:
 		return "Endpoint+Port Dependent (Pinned)"
+	case stunlib.EndpointPortDependentStaticPinned:
+		return "Endpoint+Port Dependent (Static Pinned)"
+	case stunlib.EndpointPortDependentMappingPinned:
+		return "Endpoint+Port Dependent (Mapping Pinned)"
 	default:
 		return fmt.Sprintf("Unknown(%d)", t)
 	}
@@ -142,6 +159,36 @@ func natYesOrNoString(t stunlib.NATYesOrNoUnknownType) string {
 	default:
 		return fmt.Sprintf("Unknown(%d)", t)
 	}
+}
+
+func mappingLifetimeString(lowerBound, upperBound time.Duration) string {
+	switch {
+	case upperBound > 0 && lowerBound > 0:
+		return fmt.Sprintf("[%v, %v)", lowerBound, upperBound)
+	case upperBound > 0:
+		return fmt.Sprintf("< %v", upperBound)
+	case lowerBound > 0:
+		return fmt.Sprintf(">= %v", lowerBound)
+	default:
+		return "Unknown"
+	}
+}
+
+func mappingLifetimeEstimateString(estimate stunlib.MappingLifetimeEstimate) string {
+	if !estimate.Supported {
+		return "Not supported"
+	}
+	return mappingLifetimeString(estimate.LowerBound, estimate.UpperBound)
+}
+
+func printMappingLifetimeResults(test *stunlib.NATTypeTest) {
+	fmt.Println("=== Optional Mapping Lifetime Probe ===")
+	fmt.Println("  Probe Model: fresh UDP socket per idle interval")
+	fmt.Printf("  Primary Server:     %s\n", mappingLifetimeString(test.MappingLifetimeLowerBound, test.MappingLifetimeUpperBound))
+	fmt.Printf("  Other Address+Port: %s\n", mappingLifetimeEstimateString(test.MappingLifetimeOtherAddr))
+	fmt.Printf("  Secondary Server:   %s\n", mappingLifetimeEstimateString(test.MappingLifetimeSecondary))
+	fmt.Printf("  Independent:        %s\n", mappingLifetimeEstimateString(test.MappingLifetimeIndependent))
+	fmt.Println()
 }
 
 func executeStunTest(cmd *base.Command, args []string) {
@@ -215,6 +262,14 @@ func executeStunTest(cmd *base.Command, args []string) {
 		fmt.Printf("SOCKS5 UDP relay: %s\n", relayAddr)
 	}
 	fmt.Printf("Timeout: %dms, Attempts: %d\n\n", *timeout, *attempts)
+	fmt.Printf("Detect buggy NAT mapping: %t\n\n", *detectBuggyNATMapping)
+	if *mappingLifetimeMaxIdle > 0 {
+		fmt.Printf(
+			"Optional mapping lifetime probe: max idle %dms, initial idle %dms\n\n",
+			*mappingLifetimeMaxIdle,
+			*mappingLifetimeStart,
+		)
+	}
 
 	newConn := func() (net.PacketConn, error) {
 		conn, err := net.ListenPacket("udp", ":0")
@@ -239,10 +294,20 @@ func executeStunTest(cmd *base.Command, args []string) {
 		time.Duration(*timeout)*time.Millisecond,
 		*attempts,
 	)
+	test.DetectBuggyNATMapping = *detectBuggyNATMapping
 
 	fmt.Println("Running tests...")
 	if err := test.TestAll(); err != nil {
 		base.Fatalf("test failed: %v", err)
+	}
+	if *mappingLifetimeMaxIdle > 0 {
+		fmt.Println("Running optional mapping lifetime probe...")
+		if err := test.TestMappingLifetime(
+			time.Duration(*mappingLifetimeMaxIdle)*time.Millisecond,
+			time.Duration(*mappingLifetimeStart)*time.Millisecond,
+		); err != nil {
+			base.Fatalf("mapping lifetime probe failed: %v", err)
+		}
 	}
 
 	fmt.Println()
@@ -251,12 +316,16 @@ func executeStunTest(cmd *base.Command, args []string) {
 	fmt.Printf("  Mapping Behaviour: %s\n", natDependantTypeString(test.MappingBehaviour))
 	fmt.Printf("  Hairpin Behaviour: %s\n", natYesOrNoString(test.HairpinBehaviour))
 	fmt.Printf("  Stable Mapping on Secondary Server: %s\n", natYesOrNoString(test.StableMappingOnSecondaryServer))
+	fmt.Printf("  Incorrect Response Origin: %s\n", natYesOrNoString(test.IncorrectResponseOrigin))
 	fmt.Println()
 	fmt.Println("=== Derived Properties ===")
 	fmt.Printf("  Preserve Source Port (Source NAT):     %s\n", natYesOrNoString(test.PreserveSourcePortWhenSourceNATMapping))
 	fmt.Printf("  Single Source IP (Source NAT):         %s\n", natYesOrNoString(test.SingleSourceIPSourceNATMapping))
 	fmt.Printf("  Preserve Source Addr (Dest NAT Reply): %s\n", natYesOrNoString(test.PreserveSourceIPPortWhenDestNATMapping))
 	fmt.Println()
+	if *mappingLifetimeMaxIdle > 0 {
+		printMappingLifetimeResults(test)
+	}
 	fmt.Println("=== Source IPs ===")
 	for _, ip := range test.SourceIPs {
 		fmt.Printf("  %s\n", ip)

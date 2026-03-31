@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package v2ray.core.app.webrtc;
+option csharp_namespace = "V2Ray.Core.App.WebRTC";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/webrtc";
+option java_package = "com.v2ray.core.app.webrtc";
+option java_multiple_files = true;
+
+message ConnectionRequest {
+  bytes reply_address_tag = 1;
+  // Supports trickle ICE by allowing incremental candidate updates.
+  bytes connection_session_id = 2;
+  bytes session_description = 3;
+  repeated bytes candidates = 4;
+  bool request_port_blossom = 5;
+}
+
+message ConnectionResponse {
+  bytes reply_address_tag = 1;
+  bytes session_description = 3;
+  repeated bytes candidates = 4;
+  bool stop_polling = 5;
+}

@@ -3,12 +3,15 @@ package stun
 // Mostly Machine Generated Code
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/binary"
 	"errors"
 	"net"
 	"sync"
 	"time"
 
+	pionice "github.com/pion/ice/v4"
 	"github.com/pion/stun/v3"
 
 	"github.com/v2fly/v2ray-core/v5/common/task"
@@ -22,6 +25,8 @@ const (
 	EndpointDependent
 	EndpointPortDependent
 	EndpointPortDependentPinned
+	EndpointPortDependentStaticPinned
+	EndpointPortDependentMappingPinned
 )
 
 type NATYesOrNoUnknownType int
@@ -31,6 +36,12 @@ const (
 	NATYesOrNoUnknownType_Yes
 	NATYesOrNoUnknownType_No
 )
+
+type MappingLifetimeEstimate struct {
+	Supported  bool
+	LowerBound time.Duration
+	UpperBound time.Duration
+}
 
 type NATTypeTest struct {
 	newStunConn     func() (net.PacketConn, error)
@@ -46,6 +57,38 @@ type NATTypeTest struct {
 
 	StableMappingOnSecondaryServer NATYesOrNoUnknownType
 
+	IncorrectResponseOrigin NATYesOrNoUnknownType
+
+	// Optional mapping lifetime probe results.
+	// The probe first establishes a baseline mapped address via the primary
+	// STUN server only. After each idle period, it rebinds to the primary
+	// server and, if available, also probes OTHER-ADDRESS and the configured
+	// secondary STUN server.
+	//
+	// MappingLifetimeLowerBound/UpperBound measure how long the original
+	// primary-server mapping is kept when rebinding to the primary server.
+	//
+	// MappingLifetimeOtherAddr and MappingLifetimeSecondary measure how long
+	// rebinding to those alternate destinations still yields the original
+	// primary-server mapped address, which is a direct indicator of endpoint-
+	// independent mapping retention.
+	//
+	// MappingLifetimeIndependent aggregates the alternate-destination result:
+	// it is retained only while all supported alternate destinations still
+	// produce the original primary-server mapped address.
+	//
+	// If an UpperBound is zero, expiry was not observed within the configured
+	// maximum idle window.
+	//
+	// This is a best-effort estimate. NATs that recreate the same external
+	// mapping after expiry may appear to keep the mapping alive longer than
+	// they actually do.
+	MappingLifetimeLowerBound  time.Duration
+	MappingLifetimeUpperBound  time.Duration
+	MappingLifetimeOtherAddr   MappingLifetimeEstimate
+	MappingLifetimeSecondary   MappingLifetimeEstimate
+	MappingLifetimeIndependent MappingLifetimeEstimate
+
 	// Calculated values from testsTranscript
 	PreserveSourcePortWhenSourceNATMapping NATYesOrNoUnknownType
 	SingleSourceIPSourceNATMapping         NATYesOrNoUnknownType
@@ -60,6 +103,10 @@ type NATTypeTest struct {
 	TestServerSecondary net.Addr
 
 	SourceIPs []net.IP
+
+	// DetectBuggyNATMapping send additional requests to detect buggy mapping systems that will change its mapping
+	// behavior based on order of packet arrivals
+	DetectBuggyNATMapping bool
 }
 
 func NewNATTypeTest(newStunConn func() (net.PacketConn, error), testServer net.Addr, testServerSecondary net.Addr, timeout time.Duration, attempts int) *NATTypeTest {
@@ -78,6 +125,61 @@ type TestConducted struct {
 	ReqSentFrom net.Addr
 	Resp        *stun.Message
 	RespFrom    net.Addr
+}
+
+func randomMappingRequestICEAttributeSetters() ([]stun.Setter, error) {
+	localUfrag, err := randomICECredentialFragment()
+	if err != nil {
+		return nil, err
+	}
+	remoteUfrag, err := randomICECredentialFragment()
+	if err != nil {
+		return nil, err
+	}
+	password, err := randomICECredentialFragment()
+	if err != nil {
+		return nil, err
+	}
+	priority, err := randomUint32()
+	if err != nil {
+		return nil, err
+	}
+	controlled, err := randomUint64()
+	if err != nil {
+		return nil, err
+	}
+
+	return []stun.Setter{
+		stun.NewUsername(localUfrag + ":" + remoteUfrag),
+		pionice.AttrControlled(controlled),
+		pionice.PriorityAttr(priority),
+		stun.NewShortTermIntegrity(password),
+		stun.Fingerprint,
+	}, nil
+}
+
+func randomICECredentialFragment() (string, error) {
+	raw := make([]byte, 12)
+	if _, err := rand.Read(raw); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(raw), nil
+}
+
+func randomUint32() (uint32, error) {
+	var raw [4]byte
+	if _, err := rand.Read(raw[:]); err != nil {
+		return 0, err
+	}
+	return binary.BigEndian.Uint32(raw[:]), nil
+}
+
+func randomUint64() (uint64, error) {
+	var raw [8]byte
+	if _, err := rand.Read(raw[:]); err != nil {
+		return 0, err
+	}
+	return binary.BigEndian.Uint64(raw[:]), nil
 }
 
 func changeRequestSetter(changeIP, changePort bool) stun.RawAttribute {
@@ -203,6 +305,14 @@ func (t *NATTypeTest) TestFilterBehaviour() error {
 		return err
 	}
 
+	var resp1Address string
+	{
+		var xormappedAddr stun.XORMappedAddress
+		if err := xormappedAddr.GetFrom(resp1); err == nil {
+			resp1Address = xormappedAddr.String()
+		}
+	}
+
 	// Check if server supports RFC 5780 (OTHER-ADDRESS).
 	// Without it, CHANGE-REQUEST results are unreliable.
 	var filterOtherAddr stun.OtherAddress
@@ -240,10 +350,42 @@ func (t *NATTypeTest) TestFilterBehaviour() error {
 	altAddr := &net.UDPAddr{IP: filterOtherAddr.IP, Port: filterOtherAddr.Port}
 
 	// Send binding to alt address to open the NAT filter for that endpoint
-	_, _, err = t.doTransactionWithRetry(conn, localAddr, altAddr, t.Attempts,
+	stunOtherAddressMessage, stunOtherAddressMessageAddr, err := t.doTransactionWithRetry(conn, localAddr, altAddr, t.Attempts,
 		stun.TransactionID, stun.BindingRequest)
 	if err != nil && !errors.Is(err, ErrTimeout) {
 		return err
+	}
+
+	if errors.Is(err, ErrTimeout) {
+		t.FilterBehaviour = EndpointPortDependentStaticPinned
+		return nil
+	}
+
+	if stunOtherAddressMessageAddr.String() != filterOtherAddr.String() {
+		t.FilterBehaviour = EndpointPortDependentStaticPinned
+		t.IncorrectResponseOrigin = NATYesOrNoUnknownType_Yes
+		return nil
+	}
+
+	var responseOrigin stun.ResponseOrigin
+	if err := responseOrigin.GetFrom(stunOtherAddressMessage); err == nil {
+		if responseOrigin.String() != filterOtherAddr.String() {
+			t.FilterBehaviour = EndpointPortDependentStaticPinned
+			t.IncorrectResponseOrigin = NATYesOrNoUnknownType_Yes
+			return nil
+		}
+	}
+	var stunOtherAddressMessageAddress string
+	{
+		var xormappedAddr stun.XORMappedAddress
+		if err := xormappedAddr.GetFrom(stunOtherAddressMessage); err == nil {
+			stunOtherAddressMessageAddress = xormappedAddr.String()
+		}
+	}
+
+	if resp1Address != "" && stunOtherAddressMessageAddress != "" && resp1Address != stunOtherAddressMessageAddress {
+		t.FilterBehaviour = EndpointPortDependentMappingPinned
+		return nil
 	}
 
 	// Now ask original server to reply from the alternative address
@@ -306,9 +448,14 @@ func (t *NATTypeTest) TestMappingBehaviour() error {
 		return errors.New("OTHER-ADDRESS from STUN server does not differ in both IP and port from the primary server")
 	}
 
+	if t.DetectBuggyNATMapping {
+		t.doTransactionWithRetry(conn, localAddr, t.TestServer, t.Attempts,
+			stun.TransactionID, stun.BindingRequest, changeRequestSetter(true, true))
+	}
+
 	// Test II: From same socket, binding to OTHER-ADDRESS (different IP and port)
 	altAddr := &net.UDPAddr{IP: otherAddr.IP, Port: otherAddr.Port}
-	resp2, _, err := t.doTransactionWithRetry(conn, localAddr, altAddr, t.Attempts,
+	resp2, resp2Addr, err := t.doTransactionWithRetry(conn, localAddr, altAddr, t.Attempts,
 		stun.TransactionID, stun.BindingRequest)
 	if err != nil {
 		return err
@@ -319,9 +466,29 @@ func (t *NATTypeTest) TestMappingBehaviour() error {
 		return err
 	}
 
+	if resp2Addr.String() != altAddr.String() {
+		t.IncorrectResponseOrigin = NATYesOrNoUnknownType_Yes
+		return nil
+	}
+
 	if mappedAddr1.String() == mappedAddr2.String() {
 		t.MappingBehaviour = Independent
 		return nil
+	}
+
+	var responseOrigin stun.ResponseOrigin
+	if err := responseOrigin.GetFrom(resp2); err == nil {
+		if responseOrigin.String() != resp2Addr.String() {
+			t.IncorrectResponseOrigin = NATYesOrNoUnknownType_Yes
+			return nil
+		}
+	}
+
+	if t.DetectBuggyNATMapping {
+		t.doTransactionWithRetry(conn, localAddr, t.TestServer, t.Attempts,
+			stun.TransactionID, stun.BindingRequest, changeRequestSetter(true, false))
+		t.doTransactionWithRetry(conn, localAddr, t.TestServer, t.Attempts,
+			stun.TransactionID, stun.BindingRequest, changeRequestSetter(false, true))
 	}
 
 	// Test III: From same socket, binding to (other IP, original port)
@@ -532,6 +699,196 @@ func (t *NATTypeTest) TestHairpinBehaviour() error {
 		ReqSentFrom: localAddr2,
 	})
 	return nil
+}
+
+// TestMappingLifetime optionally estimates how long the NAT keeps UDP mappings
+// alive for the same local socket while idling before re-binding.
+//
+// The probe is exponential to keep runtime reasonable:
+// startIdle, startIdle*2, startIdle*4, ...
+//
+// Each idle interval is tested with a fresh UDP socket:
+// 1. Send only to the primary STUN server to establish the baseline mapping.
+// 2. Wait for the idle interval.
+// 3. Send to the primary STUN server again.
+// 4. If supported, also send to OTHER-ADDRESS and the secondary STUN server.
+//
+// Alternate-destination probes compare their mapped address to the original
+// primary-server mapped address. This directly measures how long endpoint-
+// independent mapping is retained after the initial primary mapping is created.
+func (t *NATTypeTest) TestMappingLifetime(maxIdle, startIdle time.Duration) error {
+	t.MappingLifetimeLowerBound = 0
+	t.MappingLifetimeUpperBound = 0
+	t.MappingLifetimeOtherAddr = MappingLifetimeEstimate{}
+	t.MappingLifetimeSecondary = MappingLifetimeEstimate{}
+	t.MappingLifetimeIndependent = MappingLifetimeEstimate{}
+
+	if maxIdle <= 0 {
+		return nil
+	}
+	if startIdle <= 0 {
+		startIdle = time.Second
+	}
+	if startIdle > maxIdle {
+		startIdle = maxIdle
+	}
+
+	for idle := startIdle; idle <= maxIdle; {
+		result, err := t.testMappingLifetimeOnce(idle)
+		if err != nil {
+			return err
+		}
+
+		primaryEstimate := MappingLifetimeEstimate{
+			Supported:  true,
+			LowerBound: t.MappingLifetimeLowerBound,
+			UpperBound: t.MappingLifetimeUpperBound,
+		}
+		updateMappingLifetimeEstimate(&primaryEstimate, idle, result.primaryPreserved)
+		t.MappingLifetimeLowerBound = primaryEstimate.LowerBound
+		t.MappingLifetimeUpperBound = primaryEstimate.UpperBound
+
+		if result.otherSupported {
+			t.MappingLifetimeOtherAddr.Supported = true
+			updateMappingLifetimeEstimate(&t.MappingLifetimeOtherAddr, idle, result.otherPreserved)
+		}
+		if result.secondarySupported {
+			t.MappingLifetimeSecondary.Supported = true
+			updateMappingLifetimeEstimate(&t.MappingLifetimeSecondary, idle, result.secondaryPreserved)
+		}
+		if result.otherSupported || result.secondarySupported {
+			t.MappingLifetimeIndependent.Supported = true
+			allIndependentStable := true
+			if result.otherSupported && !result.otherPreserved {
+				allIndependentStable = false
+			}
+			if result.secondarySupported && !result.secondaryPreserved {
+				allIndependentStable = false
+			}
+			updateMappingLifetimeEstimate(&t.MappingLifetimeIndependent, idle, allIndependentStable)
+		}
+
+		if idle == maxIdle {
+			return nil
+		}
+
+		nextIdle := idle * 2
+		if nextIdle > maxIdle {
+			nextIdle = maxIdle
+		}
+		if nextIdle <= idle {
+			return nil
+		}
+		idle = nextIdle
+	}
+
+	return nil
+}
+
+type mappingLifetimeProbeResult struct {
+	primaryPreserved   bool
+	otherSupported     bool
+	otherPreserved     bool
+	secondarySupported bool
+	secondaryPreserved bool
+}
+
+func (t *NATTypeTest) testMappingLifetimeOnce(idle time.Duration) (*mappingLifetimeProbeResult, error) {
+	rawConn, err := t.newStunConn()
+	if err != nil {
+		return nil, err
+	}
+
+	conn, err := NewStunClientConn(rawConn)
+	if err != nil {
+		rawConn.Close()
+		return nil, err
+	}
+	defer conn.Close()
+	localAddr := rawConn.LocalAddr()
+	startBackgroundReader(conn)
+
+	respPrimary, _, err := t.doTransactionWithRetry(conn, localAddr, t.TestServer, t.Attempts,
+		stun.TransactionID, stun.BindingRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	var primaryMappedAddr stun.XORMappedAddress
+	if err := primaryMappedAddr.GetFrom(respPrimary); err != nil {
+		return nil, err
+	}
+	primaryMappedAddrText := primaryMappedAddr.String()
+
+	var otherDest net.Addr
+	var otherSupported bool
+	var otherAddr stun.OtherAddress
+	if err := otherAddr.GetFrom(respPrimary); err == nil {
+		serverUDP, ok := t.TestServer.(*net.UDPAddr)
+		if ok && !(otherAddr.IP.Equal(serverUDP.IP) && otherAddr.Port == serverUDP.Port) {
+			otherDest = &net.UDPAddr{IP: otherAddr.IP, Port: otherAddr.Port}
+			otherSupported = true
+		}
+	}
+
+	time.Sleep(idle)
+
+	result := &mappingLifetimeProbeResult{
+		otherSupported:     otherSupported,
+		secondarySupported: t.TestServerSecondary != nil,
+	}
+
+	respPrimaryAfterIdle, _, err := t.doTransactionWithRetry(conn, localAddr, t.TestServer, t.Attempts,
+		stun.TransactionID, stun.BindingRequest)
+	if err != nil {
+		return nil, err
+	}
+	var primaryMappedAddrAfterIdle stun.XORMappedAddress
+	if err := primaryMappedAddrAfterIdle.GetFrom(respPrimaryAfterIdle); err != nil {
+		return nil, err
+	}
+	result.primaryPreserved = primaryMappedAddrAfterIdle.String() == primaryMappedAddrText
+
+	if otherSupported {
+		respOther, _, err := t.doTransactionWithRetry(conn, localAddr, otherDest, t.Attempts,
+			stun.TransactionID, stun.BindingRequest)
+		if err != nil {
+			return nil, err
+		}
+		var otherMappedAddr stun.XORMappedAddress
+		if err := otherMappedAddr.GetFrom(respOther); err != nil {
+			return nil, err
+		}
+		result.otherPreserved = otherMappedAddr.String() == primaryMappedAddrText
+	}
+
+	if t.TestServerSecondary != nil {
+		respSecondary, _, err := t.doTransactionWithRetry(conn, localAddr, t.TestServerSecondary, t.Attempts,
+			stun.TransactionID, stun.BindingRequest)
+		if err != nil {
+			return nil, err
+		}
+		var secondaryMappedAddr stun.XORMappedAddress
+		if err := secondaryMappedAddr.GetFrom(respSecondary); err != nil {
+			return nil, err
+		}
+		result.secondaryPreserved = secondaryMappedAddr.String() == primaryMappedAddrText
+	}
+
+	return result, nil
+}
+
+func updateMappingLifetimeEstimate(estimate *MappingLifetimeEstimate, idle time.Duration, preserved bool) {
+	if estimate == nil || !estimate.Supported {
+		return
+	}
+	if preserved {
+		estimate.LowerBound = idle
+		return
+	}
+	if estimate.UpperBound == 0 {
+		estimate.UpperBound = idle
+	}
 }
 
 // TestAll runs all NAT behavior tests in parallel, then calculates derived values.

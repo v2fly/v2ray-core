@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package v2ray.core.app.webrtc;
+option csharp_namespace = "V2Ray.Core.App.WebRTC";
+option go_package = "github.com/v2fly/v2ray-core/v5/app/webrtc";
+option java_package = "com.v2ray.core.app.webrtc";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+import "google/protobuf/any.proto";
+import "common/net/packetaddr/config.proto";
+
+message WebRTCTURNServer {
+  // Only UDP TURN URLs are supported for active listeners, for example:
+  // turn:turn.example.com:3478?transport=udp
+  string url = 1;
+  string username = 2;
+  string password = 3;
+}
+
+// LocalWebRTCListener is an active WebRTC listener that gathers its own UDP candidates.
+message LocalWebRTCListener {
+  string tag = 1;
+  // The connection will be sent from this outbound tag when supported by the listener runtime.
+  string connect_via = 2;
+  v2ray.core.net.packetaddr.PacketAddrType packet_encoding = 3;
+  repeated string stun_servers = 4;
+  repeated WebRTCTURNServer turn_servers = 9;
+
+  bool use_ipv4 = 5;
+  bool use_ipv6 = 6;
+
+  bool request_port_blossom = 7;
+  bool accept_port_blossom = 8;
+  // Limits acceptor-side repeated port blossom. 0 uses the default 6 seconds.
+  uint32 port_blossom_duration_sec = 10;
+
+  bool require_remote_finish_candidate_gathering_before_sending_own_candidate_workaround = 11;
+}
+
+// LocalWebRTCSystemListener is a passive WebRTC listener backed by a local packet socket.
+message LocalWebRTCSystemListener {
+  string tag = 1;
+  // If set, then a UDP mux will be created on this port.
+  uint32 local_port = 2;
+  // The ICE-lite local address.
+  bytes ip = 3;
+  bytes ipv6 = 4;
+
+  bool request_port_blossom = 7;
+  bool accept_port_blossom = 8;
+  // Limits acceptor-side repeated port blossom. 0 uses the default 6 seconds.
+  uint32 port_blossom_duration_sec = 9;
+
+  string ip_addr = 68000 [(v2ray.core.common.protoext.field_opt).convert_time_parse_ip = "ip"];
+  string ipv6_addr = 68001 [(v2ray.core.common.protoext.field_opt).convert_time_parse_ip = "ipv6"];
+}
+
+message ClientConfig {
+  google.protobuf.Any round_tripper_client = 1;
+  google.protobuf.Any security_config = 2;
+  string dest = 3;
+  string outbound_tag = 4;
+  bytes server_identity = 5;
+}
+
+message ServerInverseRoleConfig {
+  google.protobuf.Any round_tripper_client = 1;
+  google.protobuf.Any security_config = 2;
+  string dest = 3;
+  string outbound_tag = 4;
+  bytes server_identity = 5;
+}
+
+message UDPPortForwarderAcceptor {
+  string tag = 1;
+  uint32 port = 2;
+  bytes ip = 3;
+  string connect_via = 4;
+
+  string ip_addr = 68000 [(v2ray.core.common.protoext.field_opt).convert_time_parse_ip = "ip"];
+}
+
+message UDPPortForwarderRemote {
+  string tag = 1;
+  // Create a new outbound to accept UDP connection traffic for forwarding.
+  string accept_connect_on = 4;
+}
+
+message Acceptor {
+  string tag = 3;
+  google.protobuf.Any server_config = 1;
+  repeated UDPPortForwarderAcceptor port_forwarder_accepts = 2;
+  string accept_on_tag = 4;
+}
+
+message Remote {
+  string tag = 3;
+  google.protobuf.Any client_config = 1;
+}
+
+message RemoteConnections {
+  string remote_tag = 1;
+  string local_listener_tag = 2;
+  repeated UDPPortForwarderRemote port_forward = 3;
+}
+
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "service";
+  option (v2ray.core.common.protoext.message_opt).short_name = "webrtc";
+
+  repeated LocalWebRTCListener listener = 1;
+  repeated LocalWebRTCSystemListener system_listener = 2;
+  repeated Acceptor acceptors = 3;
+  repeated Remote remotes = 4;
+  repeated RemoteConnections connection = 5;
+}
