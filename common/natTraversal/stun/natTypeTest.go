@@ -825,7 +825,7 @@ func (t *NATTypeTest) testMappingLifetimeOnce(idle time.Duration) (*mappingLifet
 	var otherAddr stun.OtherAddress
 	if err := otherAddr.GetFrom(respPrimary); err == nil {
 		serverUDP, ok := t.TestServer.(*net.UDPAddr)
-		if ok && !(otherAddr.IP.Equal(serverUDP.IP) && otherAddr.Port == serverUDP.Port) {
+		if ok && (!otherAddr.IP.Equal(serverUDP.IP) || otherAddr.Port != serverUDP.Port) {
 			otherDest = &net.UDPAddr{IP: otherAddr.IP, Port: otherAddr.Port}
 			otherSupported = true
 		}

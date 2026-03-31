@@ -16,8 +16,7 @@ type trackedPacketConns struct {
 }
 
 func (t *trackedPacketConns) track(packetConn net.PacketConn) {
-	conn, ok := packetConn.(v2net.PacketConn)
-	if !ok || conn == nil {
+	if packetConn == nil {
 		return
 	}
 
@@ -25,11 +24,11 @@ func (t *trackedPacketConns) track(packetConn net.PacketConn) {
 	defer t.mu.Unlock()
 
 	for _, existing := range t.packetConns {
-		if existing == conn {
+		if existing == packetConn {
 			return
 		}
 	}
-	t.packetConns = append(t.packetConns, conn)
+	t.packetConns = append(t.packetConns, packetConn)
 }
 
 func (t *trackedPacketConns) blast(ip net.IP) error {

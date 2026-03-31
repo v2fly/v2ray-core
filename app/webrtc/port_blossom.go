@@ -17,9 +17,7 @@ const (
 	portBlossomLastPort  = 65535
 )
 
-var (
-	portBlossomRepeatInterval = time.Second
-)
+var portBlossomRepeatInterval = time.Second
 
 func candidateBlossomIP(raw []byte) (net.IP, error) {
 	var candidateInit pionwebrtc.ICECandidateInit
@@ -96,10 +94,7 @@ func packetConnSupportsIP(packetConn v2net.PacketConn, ip net.IP) bool {
 	}
 
 	if udpAddr.IP.To16() != nil {
-		if ip.To4() != nil {
-			return false
-		}
-		return true
+		return ip.To4() == nil
 	}
 
 	return true

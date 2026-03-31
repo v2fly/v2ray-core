@@ -237,7 +237,7 @@ func (n *connectViaNet) resolveIP(network, address string) (net.IP, error) {
 		return nil, newError("empty built-in dns response for ", address)
 	}
 
-	return net.IP(ips[0]), nil
+	return ips[0], nil
 }
 
 func wantsIPv4(network string) bool {
