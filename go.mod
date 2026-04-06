@@ -25,7 +25,7 @@ require (
 	github.com/pion/dtls/v3 v3.1.2
 	github.com/pion/ice/v4 v4.2.2
 	github.com/pion/logging v0.2.4
-	github.com/pion/stun/v3 v3.1.1
+	github.com/pion/stun/v3 v3.1.2
 	github.com/pion/transport/v2 v2.2.10
 	github.com/pion/transport/v4 v4.0.1
 	github.com/pion/webrtc/v4 v4.2.11
