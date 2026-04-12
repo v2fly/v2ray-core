@@ -34,4 +34,6 @@ message Config {
   bool use_browser_forwarding = 6;
 
   string early_data_header_name = 7;
+
+  bool parse_x_forwarded_for = 8;
 }

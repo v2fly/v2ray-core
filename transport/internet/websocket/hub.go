@@ -26,6 +26,7 @@ type requestHandler struct {
 	ln                  *Listener
 	earlyDataEnabled    bool
 	earlyDataHeaderName string
+	parseXForwardedFor  bool
 }
 
 var upgrader = &websocket.Upgrader{
@@ -74,7 +75,7 @@ func (h *requestHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 
 	forwardedAddrs := http_proto.ParseXForwardedFor(request.Header)
 	remoteAddr := conn.RemoteAddr()
-	if len(forwardedAddrs) > 0 && forwardedAddrs[0].Family().IsIP() {
+	if h.parseXForwardedFor && len(forwardedAddrs) > 0 && forwardedAddrs[0].Family().IsIP() {
 		remoteAddr = &net.TCPAddr{
 			IP:   forwardedAddrs[0].IP(),
 			Port: int(0),
@@ -153,6 +154,7 @@ func ListenWS(ctx context.Context, address net.Address, port net.Port, streamSet
 			ln:                  l,
 			earlyDataEnabled:    useEarlyData,
 			earlyDataHeaderName: earlyDataHeaderName,
+			parseXForwardedFor:  wsSettings.ParseXForwardedFor,
 		},
 		ReadHeaderTimeout: time.Second * 4,
 		MaxHeaderBytes:    http.DefaultMaxHeaderBytes,

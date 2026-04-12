@@ -89,7 +89,7 @@ func (l *Listener) ServeHTTP(writer http.ResponseWriter, request *http.Request) 
 	}
 
 	forwardedAddress := http_proto.ParseXForwardedFor(request.Header)
-	if len(forwardedAddress) > 0 && forwardedAddress[0].Family().IsIP() {
+	if l.config.ParseXForwardedFor && len(forwardedAddress) > 0 && forwardedAddress[0].Family().IsIP() {
 		remoteAddr = &net.TCPAddr{
 			IP:   forwardedAddress[0].IP(),
 			Port: 0,

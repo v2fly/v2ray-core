@@ -70,7 +70,7 @@ func (s *server) upgrade(conn net.Conn) (internet.Connection, error) {
 	}
 	forwardedAddrs := http_proto.ParseXForwardedFor(req.Header)
 	remoteAddr := conn.RemoteAddr()
-	if len(forwardedAddrs) > 0 && forwardedAddrs[0].Family().IsIP() {
+	if s.config.ParseXForwardedFor && len(forwardedAddrs) > 0 && forwardedAddrs[0].Family().IsIP() {
 		remoteAddr = &net.TCPAddr{
 			IP:   forwardedAddrs[0].IP(),
 			Port: int(0),

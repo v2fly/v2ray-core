@@ -19,4 +19,5 @@ message Config {
   string path = 2;
   string method = 3;
   repeated v2ray.core.transport.internet.headers.http.Header header = 4;
+  bool parse_x_forwarded_for = 5;
 }
