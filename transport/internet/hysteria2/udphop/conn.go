@@ -171,7 +171,7 @@ func (u *udpHopPacketConn) ReadFrom(b []byte) (n int, addr net.Addr, err error) 
 			}
 			n := copy(b, p.Buf[:p.N])
 			u.bufPool.Put(p.Buf)
-			return n, u.Addrs[0], nil
+			return n, p.Addr, nil
 		case <-u.closeChan:
 			return 0, nil, net.ErrClosed
 		}
