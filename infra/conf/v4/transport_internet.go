@@ -155,6 +155,15 @@ type Hy2Config struct {
 	BbrProfile   string           `json:"bbrProfile"`
 	BrutalTxMbps uint64           `json:"brutalTxMbps"`
 	BrutalRxMbps uint64           `json:"brutalRxMbps"`
+
+	InitialStreamReceiveWindow     uint64 `json:"InitialStreamReceiveWindow"`
+	MaxStreamReceiveWindow         uint64 `json:"MaxStreamReceiveWindow"`
+	InitialConnectionReceiveWindow uint64 `json:"InitialConnectionReceiveWindow"`
+	MaxConnectionReceiveWindow     uint64 `json:"MaxConnectionReceiveWindow"`
+	MaxIdleTimeout                 int64  `json:"MaxIdleTimeout"`
+	KeepAlivePeriod                int64  `json:"KeepAlivePeriod"`
+	DisablePathMTUDiscovery        bool   `json:"DisablePathMTUDiscovery"`
+	MaxIncomingStreams             int64  `json:"MaxIncomingStreams"`
 }
 
 // Build implements Buildable.
@@ -188,6 +197,15 @@ func (c *Hy2Config) Build() (proto.Message, error) {
 		BbrProfile:   c.BbrProfile,
 		BrutalTxMbps: c.BrutalTxMbps,
 		BrutalRxMbps: c.BrutalRxMbps,
+
+		InitialStreamReceiveWindow:     c.InitialStreamReceiveWindow,
+		MaxStreamReceiveWindow:         c.MaxStreamReceiveWindow,
+		InitialConnectionReceiveWindow: c.InitialConnectionReceiveWindow,
+		MaxConnectionReceiveWindow:     c.MaxConnectionReceiveWindow,
+		MaxIdleTimeout:                 c.MaxIdleTimeout,
+		KeepAlivePeriod:                c.KeepAlivePeriod,
+		DisablePathMTUDiscovery:        c.DisablePathMTUDiscovery,
+		MaxIncomingStreams:             c.MaxIncomingStreams,
 	}, nil
 }
 
