@@ -168,14 +168,29 @@ type Hy2Config struct {
 
 // Build implements Buildable.
 func (c *Hy2Config) Build() (proto.Message, error) {
-	if c.Debug {
-		os.Setenv("HYSTERIA_BBR_DEBUG", strconv.FormatBool(true))
-		os.Setenv("HYSTERIA_BRUTAL_DEBUG", strconv.FormatBool(true))
+	switch c.Congestion {
+	case "", "reno", "bbr", "brutal", "force-brutal":
+	default:
+		return nil, newError("invalid congestion")
+	}
+	switch c.BbrProfile {
+	case "", "conservative", "standard", "aggressive":
+	default:
+		return nil, newError("invalid bbrProfile")
 	}
 	var udphop *hysteria2.UdpHop
 	if c.UdpHop != nil {
 		if c.UdpHop.Ports == nil {
 			return nil, newError("empty ports")
+		}
+		if c.UdpHop.IntervalMin != 0 && c.UdpHop.IntervalMin < 5 {
+			return nil, newError("invalid intervalMin")
+		}
+		if c.UdpHop.IntervalMax != 0 && c.UdpHop.IntervalMax < 5 {
+			return nil, newError("invalid intervalMax")
+		}
+		if c.UdpHop.IntervalMin > c.UdpHop.IntervalMax {
+			return nil, newError("intervalMin > intervalMax")
 		}
 		var ports []uint32
 		for _, r := range c.UdpHop.Ports.Range {
@@ -188,6 +203,10 @@ func (c *Hy2Config) Build() (proto.Message, error) {
 			IntervalMin: c.UdpHop.IntervalMin,
 			IntervalMax: c.UdpHop.IntervalMax,
 		}
+	}
+	if c.Debug {
+		os.Setenv("HYSTERIA_BBR_DEBUG", strconv.FormatBool(true))
+		os.Setenv("HYSTERIA_BRUTAL_DEBUG", strconv.FormatBool(true))
 	}
 	return &hysteria2.Config{
 		Auth:         c.Auth,
