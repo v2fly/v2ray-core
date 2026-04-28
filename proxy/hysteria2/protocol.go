@@ -1,210 +1,320 @@
 package hysteria2
 
 import (
+	"bytes"
+	"encoding/binary"
+	"fmt"
 	"io"
-	"math/rand"
 
 	"github.com/apernet/quic-go/quicvarint"
-	hyProtocol "github.com/v2fly/hysteria/core/v2/international/protocol"
 
-	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/net"
-	hyTransport "github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2"
 )
 
 const (
-	paddingChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	// Max length values are for preventing DoS attacks
+
+	MaxAddressLength = 2048
+	MaxMessageLength = 2048
+	MaxPaddingLength = 4096
+
+	maxVarInt1 = 63
+	maxVarInt2 = 16383
+	maxVarInt4 = 1073741823
+	maxVarInt8 = 4611686018427387903
 )
 
-// ConnWriter is TCP Connection Writer Wrapper
-type ConnWriter struct {
-	io.Writer
-	Target        net.Destination
-	TCPHeaderSent bool
-}
+// TCPRequest format:
+// Address length (QUIC varint)
+// Address (bytes)
+// Padding length (QUIC varint)
+// Padding (bytes)
 
-// Write implements io.Writer
-func (c *ConnWriter) Write(p []byte) (n int, err error) {
-	if !c.TCPHeaderSent {
-		if err := c.writeTCPHeader(); err != nil {
-			return 0, newError("failed to write request header").Base(err)
+func ReadTCPRequest(r io.Reader) (string, error) {
+	bReader := quicvarint.NewReader(r)
+	addrLen, err := quicvarint.Read(bReader)
+	if err != nil {
+		return "", err
+	}
+	if addrLen == 0 || addrLen > MaxAddressLength {
+		return "", newError("invalid address length")
+	}
+	addrBuf := make([]byte, addrLen)
+	_, err = io.ReadFull(r, addrBuf)
+	if err != nil {
+		return "", err
+	}
+	paddingLen, err := quicvarint.Read(bReader)
+	if err != nil {
+		return "", err
+	}
+	if paddingLen > MaxPaddingLength {
+		return "", newError("invalid padding length")
+	}
+	if paddingLen > 0 {
+		_, err = io.CopyN(io.Discard, r, int64(paddingLen))
+		if err != nil {
+			return "", err
 		}
 	}
-
-	return c.Writer.Write(p)
+	return string(addrBuf), nil
 }
 
-// WriteMultiBuffer implements buf.Writer
-func (c *ConnWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
-	defer buf.ReleaseMulti(mb)
-
-	for _, b := range mb {
-		if !b.IsEmpty() {
-			if _, err := c.Write(b.Bytes()); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-func (c *ConnWriter) WriteTCPHeader() error {
-	if !c.TCPHeaderSent {
-		if err := c.writeTCPHeader(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func QuicLen(s int) int {
-	return quicvarint.Len(uint64(s))
-}
-
-func (c *ConnWriter) writeTCPHeader() error {
-	c.TCPHeaderSent = true
-
-	paddingLen := 64 + rand.Intn(512-64)
-	padding := make([]byte, paddingLen)
-	for i := range padding {
-		padding[i] = paddingChars[rand.Intn(len(paddingChars))]
-	}
-	addressAndPort := c.Target.NetAddr()
-	addressLen := len(addressAndPort)
-	if addressLen > hyProtocol.MaxAddressLength {
-		return newError("address length too large: ", addressLen)
-	}
-	size := QuicLen(addressLen) + addressLen + QuicLen(paddingLen) + paddingLen
-
-	buf := make([]byte, size)
-	i := hyProtocol.VarintPut(buf, uint64(addressLen))
-	i += copy(buf[i:], addressAndPort)
-	i += hyProtocol.VarintPut(buf[i:], uint64(paddingLen))
+func WriteTCPRequest(w io.Writer, addr string) error {
+	padding := hysteria2.TcpRequestPadding.String()
+	paddingLen := len(padding)
+	addrLen := len(addr)
+	sz := int(quicvarint.Len(uint64(addrLen))) + addrLen +
+		int(quicvarint.Len(uint64(paddingLen))) + paddingLen
+	buf := make([]byte, sz)
+	i := varintPut(buf, uint64(addrLen))
+	i += copy(buf[i:], addr)
+	i += varintPut(buf[i:], uint64(paddingLen))
 	copy(buf[i:], padding)
-
-	_, err := c.Writer.Write(buf)
+	_, err := w.Write(buf)
 	return err
 }
 
-// PacketWriter UDP Connection Writer Wrapper
-type PacketWriter struct {
-	io.Writer
-	HyConn *hyTransport.HyConn
-	Target net.Destination
-}
+// TCPResponse format:
+// Status (byte, 0=ok, 1=error)
+// Message length (QUIC varint)
+// Message (bytes)
+// Padding length (QUIC varint)
+// Padding (bytes)
 
-// WriteMultiBuffer implements buf.Writer
-func (w *PacketWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
-	for _, b := range mb {
-		if b.IsEmpty() {
-			continue
-		}
-		if _, err := w.writePacket(b.Bytes(), w.Target); err != nil {
-			buf.ReleaseMulti(mb)
-			return err
-		}
+func ReadTCPResponse(r io.Reader) (bool, string, error) {
+	var status [1]byte
+	if _, err := io.ReadFull(r, status[:]); err != nil {
+		return false, "", err
 	}
-
-	return nil
-}
-
-// WriteMultiBufferWithMetadata writes udp packet with destination specified
-func (w *PacketWriter) WriteMultiBufferWithMetadata(mb buf.MultiBuffer, dest net.Destination) error {
-	for _, b := range mb {
-		if b.IsEmpty() {
-			continue
-		}
-		if _, err := w.writePacket(b.Bytes(), dest); err != nil {
-			buf.ReleaseMulti(mb)
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (w *PacketWriter) WriteTo(payload []byte, addr net.Addr) (int, error) {
-	dest := net.DestinationFromAddr(addr)
-
-	return w.writePacket(payload, dest)
-}
-
-func (w *PacketWriter) writePacket(payload []byte, dest net.Destination) (int, error) {
-	return w.HyConn.WritePacket(payload, dest)
-}
-
-// ConnReader is TCP Connection Reader Wrapper
-type ConnReader struct {
-	io.Reader
-	Target net.Destination
-}
-
-// Read implements io.Reader
-func (c *ConnReader) Read(p []byte) (int, error) {
-	return c.Reader.Read(p)
-}
-
-// ReadMultiBuffer implements buf.Reader
-func (c *ConnReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
-	b := buf.New()
-	_, err := b.ReadFrom(c)
+	bReader := quicvarint.NewReader(r)
+	msgLen, err := quicvarint.Read(bReader)
 	if err != nil {
-		return nil, err
+		return false, "", err
 	}
-	return buf.MultiBuffer{b}, nil
-}
-
-// PacketPayload combines udp payload and destination
-type PacketPayload struct {
-	Target net.Destination
-	Buffer buf.MultiBuffer
-}
-
-// PacketReader is UDP Connection Reader Wrapper
-type PacketReader struct {
-	io.Reader
-	HyConn *hyTransport.HyConn
-}
-
-// ReadMultiBuffer implements buf.Reader
-func (r *PacketReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
-	p, err := r.ReadMultiBufferWithMetadata()
-	if p != nil {
-		return p.Buffer, err
+	if msgLen > MaxMessageLength {
+		return false, "", newError("invalid message length")
 	}
-	return nil, err
-}
-
-// ReadMultiBufferWithMetadata reads udp packet with destination
-func (r *PacketReader) ReadMultiBufferWithMetadata() (*PacketPayload, error) {
-	_, data, dest, err := r.HyConn.ReadPacket()
-	if err != nil {
-		return nil, err
-	}
-	b := buf.FromBytes(data)
-	return &PacketPayload{Target: *dest, Buffer: buf.MultiBuffer{b}}, nil
-}
-
-type PacketConnectionReader struct {
-	reader  *PacketReader
-	payload *PacketPayload
-}
-
-func (r *PacketConnectionReader) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
-	if r.payload == nil || r.payload.Buffer.IsEmpty() {
-		r.payload, err = r.reader.ReadMultiBufferWithMetadata()
+	var msgBuf []byte
+	// No message is fine
+	if msgLen > 0 {
+		msgBuf = make([]byte, msgLen)
+		_, err = io.ReadFull(r, msgBuf)
 		if err != nil {
-			return
+			return false, "", err
 		}
 	}
-
-	addr = &net.UDPAddr{
-		IP:   r.payload.Target.Address.IP(),
-		Port: int(r.payload.Target.Port),
+	paddingLen, err := quicvarint.Read(bReader)
+	if err != nil {
+		return false, "", err
 	}
+	if paddingLen > MaxPaddingLength {
+		return false, "", newError("invalid padding length")
+	}
+	if paddingLen > 0 {
+		_, err = io.CopyN(io.Discard, r, int64(paddingLen))
+		if err != nil {
+			return false, "", err
+		}
+	}
+	return status[0] == 0, string(msgBuf), nil
+}
 
-	r.payload.Buffer, n = buf.SplitFirstBytes(r.payload.Buffer, p)
+func WriteTCPResponse(w io.Writer, ok bool, msg string) error {
+	padding := hysteria2.TcpResponsePadding.String()
+	paddingLen := len(padding)
+	msgLen := len(msg)
+	sz := 1 + int(quicvarint.Len(uint64(msgLen))) + msgLen +
+		int(quicvarint.Len(uint64(paddingLen))) + paddingLen
+	buf := make([]byte, sz)
+	if ok {
+		buf[0] = 0
+	} else {
+		buf[0] = 1
+	}
+	i := varintPut(buf[1:], uint64(msgLen))
+	i += copy(buf[1+i:], msg)
+	i += varintPut(buf[1+i:], uint64(paddingLen))
+	copy(buf[1+i:], padding)
+	_, err := w.Write(buf)
+	return err
+}
 
-	return
+// UDPMessage format:
+// Session ID (uint32 BE)
+// Packet ID (uint16 BE)
+// Fragment ID (uint8)
+// Fragment count (uint8)
+// Address length (QUIC varint)
+// Address (bytes)
+// Data...
+
+type UDPMessage struct {
+	SessionID uint32 // 4
+	PacketID  uint16 // 2
+	FragID    uint8  // 1
+	FragCount uint8  // 1
+	Addr      string // varint + bytes
+	Data      []byte
+}
+
+func (m *UDPMessage) HeaderSize() int {
+	lAddr := len(m.Addr)
+	return 4 + 2 + 1 + 1 + int(quicvarint.Len(uint64(lAddr))) + lAddr
+}
+
+func (m *UDPMessage) Size() int {
+	return m.HeaderSize() + len(m.Data)
+}
+
+func (m *UDPMessage) Serialize(buf []byte) int {
+	// Make sure the buffer is big enough
+	if len(buf) < m.Size() {
+		return -1
+	}
+	// binary.BigEndian.PutUint32(buf, m.SessionID)
+	binary.BigEndian.PutUint16(buf[4:], m.PacketID)
+	buf[6] = m.FragID
+	buf[7] = m.FragCount
+	i := varintPut(buf[8:], uint64(len(m.Addr)))
+	i += copy(buf[8+i:], m.Addr)
+	i += copy(buf[8+i:], m.Data)
+	return 8 + i
+}
+
+func ParseUDPMessage(msg []byte) (*UDPMessage, error) {
+	m := &UDPMessage{}
+	buf := bytes.NewBuffer(msg)
+	if err := binary.Read(buf, binary.BigEndian, &m.SessionID); err != nil {
+		return nil, err
+	}
+	if err := binary.Read(buf, binary.BigEndian, &m.PacketID); err != nil {
+		return nil, err
+	}
+	if err := binary.Read(buf, binary.BigEndian, &m.FragID); err != nil {
+		return nil, err
+	}
+	if err := binary.Read(buf, binary.BigEndian, &m.FragCount); err != nil {
+		return nil, err
+	}
+	lAddr, err := quicvarint.Read(buf)
+	if err != nil {
+		return nil, err
+	}
+	if lAddr == 0 || lAddr > MaxMessageLength {
+		return nil, newError("invalid address length")
+	}
+	bs := buf.Bytes()
+	if len(bs) <= int(lAddr) {
+		// We use <= instead of < here as we expect at least one byte of data after the address
+		return nil, newError("invalid message length")
+	}
+	m.Addr = string(bs[:lAddr])
+	m.Data = bs[lAddr:]
+	return m, nil
+}
+
+// varintPut is like quicvarint.Append, but instead of appending to a slice,
+// it writes to a fixed-size buffer. Returns the number of bytes written.
+func varintPut(b []byte, i uint64) int {
+	if i <= maxVarInt1 {
+		b[0] = uint8(i)
+		return 1
+	}
+	if i <= maxVarInt2 {
+		b[0] = uint8(i>>8) | 0x40
+		b[1] = uint8(i)
+		return 2
+	}
+	if i <= maxVarInt4 {
+		b[0] = uint8(i>>24) | 0x80
+		b[1] = uint8(i >> 16)
+		b[2] = uint8(i >> 8)
+		b[3] = uint8(i)
+		return 4
+	}
+	if i <= maxVarInt8 {
+		b[0] = uint8(i>>56) | 0xc0
+		b[1] = uint8(i >> 48)
+		b[2] = uint8(i >> 40)
+		b[3] = uint8(i >> 32)
+		b[4] = uint8(i >> 24)
+		b[5] = uint8(i >> 16)
+		b[6] = uint8(i >> 8)
+		b[7] = uint8(i)
+		return 8
+	}
+	panic(fmt.Sprintf("%#x doesn't fit into 62 bits", i))
+}
+
+func FragUDPMessage(m *UDPMessage, maxSize int) []UDPMessage {
+	if m.Size() <= maxSize {
+		return []UDPMessage{*m}
+	}
+	fullPayload := m.Data
+	maxPayloadSize := maxSize - m.HeaderSize()
+	off := 0
+	fragID := uint8(0)
+	fragCount := uint8((len(fullPayload) + maxPayloadSize - 1) / maxPayloadSize) // round up
+	frags := make([]UDPMessage, fragCount)
+	for off < len(fullPayload) {
+		payloadSize := len(fullPayload) - off
+		if payloadSize > maxPayloadSize {
+			payloadSize = maxPayloadSize
+		}
+		frag := *m
+		frag.FragID = fragID
+		frag.FragCount = fragCount
+		frag.Data = fullPayload[off : off+payloadSize]
+		frags[fragID] = frag
+		off += payloadSize
+		fragID++
+	}
+	return frags
+}
+
+// Defragger handles the defragmentation of UDP messages.
+// The current implementation can only handle one packet ID at a time.
+// If another packet arrives before a packet has received all fragments
+// in their entirety, any previous state is discarded.
+type Defragger struct {
+	pktID uint16
+	frags []*UDPMessage
+	count uint8
+	size  int // data size
+}
+
+func (d *Defragger) Feed(m *UDPMessage) *UDPMessage {
+	if m.FragCount <= 1 {
+		return m
+	}
+	if m.FragID >= m.FragCount {
+		// wtf is this?
+		return nil
+	}
+	if m.PacketID != d.pktID || m.FragCount != uint8(len(d.frags)) {
+		// new message, clear previous state
+		d.pktID = m.PacketID
+		d.frags = make([]*UDPMessage, m.FragCount)
+		d.frags[m.FragID] = m
+		d.count = 1
+		d.size = len(m.Data)
+	} else if d.frags[m.FragID] == nil {
+		d.frags[m.FragID] = m
+		d.count++
+		d.size += len(m.Data)
+		if int(d.count) == len(d.frags) {
+			// all fragments received, assemble
+			data := make([]byte, d.size)
+			off := 0
+			for _, frag := range d.frags {
+				off += copy(data[off:], frag.Data)
+			}
+			m.Data = data
+			m.FragID = 0
+			m.FragCount = 1
+			return m
+		}
+	}
+	return nil
 }

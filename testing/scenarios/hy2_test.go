@@ -66,7 +66,8 @@ func testVMessHysteria2(t *testing.T, congestionType string) {
 						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(
 								&tls.Config{
-									Certificate: []*tls.Certificate{tls.ParseCertificate(cert.MustGenerate(nil))},
+									NextProtocol: []string{"h3"},
+									Certificate:  []*tls.Certificate{tls.ParseCertificate(cert.MustGenerate(nil))},
 								},
 							),
 						},
@@ -74,8 +75,10 @@ func testVMessHysteria2(t *testing.T, congestionType string) {
 							{
 								ProtocolName: "hysteria2",
 								Settings: serial.ToTypedMessage(&hyTransport.Config{
-									Congestion: &hyTransport.Congestion{Type: congestionType, UpMbps: 100, DownMbps: 100},
-									Password:   "password",
+									Auth:         "password",
+									Congestion:   congestionType,
+									BrutalTxMbps: 100,
+									BrutalRxMbps: 100,
 								}),
 							},
 						},
@@ -140,8 +143,10 @@ func testVMessHysteria2(t *testing.T, congestionType string) {
 							{
 								ProtocolName: "hysteria2",
 								Settings: serial.ToTypedMessage(&hyTransport.Config{
-									Congestion: &hyTransport.Congestion{Type: congestionType, UpMbps: 100, DownMbps: 100},
-									Password:   "password",
+									Auth:         "password",
+									Congestion:   congestionType,
+									BrutalTxMbps: 100,
+									BrutalRxMbps: 100,
 								}),
 							},
 						},
@@ -229,7 +234,8 @@ func testHysteria2Offical(t *testing.T, isUDP bool) {
 						SecuritySettings: []*anypb.Any{
 							serial.ToTypedMessage(
 								&tls.Config{
-									Certificate: []*tls.Certificate{tls.ParseCertificate(cert.MustGenerate(nil))},
+									NextProtocol: []string{"h3"},
+									Certificate:  []*tls.Certificate{tls.ParseCertificate(cert.MustGenerate(nil))},
 								},
 							),
 						},
@@ -237,9 +243,9 @@ func testHysteria2Offical(t *testing.T, isUDP bool) {
 							{
 								ProtocolName: "hysteria2",
 								Settings: serial.ToTypedMessage(&hyTransport.Config{
-									Congestion:      &hyTransport.Congestion{Type: "brutal", UpMbps: 100, DownMbps: 100},
-									UseUdpExtension: true,
-									Password:        "password",
+									Auth:         "password",
+									BrutalTxMbps: 100,
+									BrutalRxMbps: 100,
 								}),
 							},
 						},
@@ -295,9 +301,9 @@ func testHysteria2Offical(t *testing.T, isUDP bool) {
 							{
 								ProtocolName: "hysteria2",
 								Settings: serial.ToTypedMessage(&hyTransport.Config{
-									Congestion:      &hyTransport.Congestion{Type: "brutal", UpMbps: 100, DownMbps: 100},
-									UseUdpExtension: true,
-									Password:        "password",
+									Auth:         "password",
+									BrutalTxMbps: 100,
+									BrutalRxMbps: 100,
 								}),
 							},
 						},

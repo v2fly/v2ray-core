@@ -2,208 +2,289 @@ package hysteria2
 
 import (
 	"context"
+	gotls "crypto/tls"
+	"net/http"
+	"net/url"
+	"runtime"
+	"strconv"
 	"sync"
+	"time"
 
-	"github.com/apernet/quic-go/quicvarint"
-	hyClient "github.com/v2fly/hysteria/core/v2/client"
-	hyProtocol "github.com/v2fly/hysteria/core/v2/international/protocol"
+	"github.com/apernet/quic-go"
+	"github.com/apernet/quic-go/http3"
 
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/net"
-	"github.com/v2fly/v2ray-core/v5/common/session"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2/congestion"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2/congestion/bbr"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2/salamander"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2/udphop"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
+
+type client struct {
+	sync.Mutex
+
+	dest         net.Destination
+	config       *Config
+	tlsConfig    *gotls.Config
+	socketConfig *internet.SocketConfig
+
+	conn    *quic.Conn
+	tr      *quic.Transport
+	pktConn net.PacketConn
+	udpSM   *udpSessionManager
+}
+
+func (c *client) status() status {
+	if c.conn == nil {
+		return StatusNull
+	}
+	select {
+	case <-c.conn.Context().Done():
+		return StatusInactive
+	default:
+		return StatusActive
+	}
+}
+
+func (c *client) close() {
+	if c.status() == StatusInactive {
+		c.conn.CloseWithError(closeErrCodeOK, "")
+		c.tr.Close()
+		c.pktConn.Close()
+		c.conn = nil
+		c.tr = nil
+		c.pktConn = nil
+		c.udpSM = nil
+	}
+}
+
+func (c *client) dial() error {
+	c.close()
+	if c.status() == StatusActive {
+		return nil
+	}
+
+	addr, err := net.ResolveUDPAddr("udp", c.dest.NetAddr())
+	if err != nil {
+		return err
+	}
+
+	var pktConn net.PacketConn
+	if c.config.UdpHop != nil {
+		pktConn, err = udphop.NewUDPHopPacketConn(udphop.ToAddrs(addr.IP, c.config.UdpHop.Ports), time.Duration(c.config.UdpHop.IntervalMin)*time.Second, time.Duration(c.config.UdpHop.IntervalMax)*time.Second, func() (net.PacketConn, error) {
+			return internet.ListenSystemPacket(context.Background(), &net.UDPAddr{Port: 0}, c.socketConfig)
+		})
+	} else {
+		pktConn, err = internet.ListenSystemPacket(context.Background(), &net.UDPAddr{Port: 0}, c.socketConfig)
+	}
+	if err != nil {
+		return err
+	}
+	if c.config.Salamander != nil {
+		obfs, err := salamander.NewSalamanderObfuscator([]byte(*c.config.Salamander))
+		if err != nil {
+			return err
+		}
+		pktConn = salamander.WrapPacketConn(pktConn, obfs)
+	}
+
+	tr := &quic.Transport{Conn: pktConn}
+
+	var conn *quic.Conn
+	rt := &http3.Transport{
+		TLSClientConfig: c.tlsConfig,
+		QUICConfig: &quic.Config{
+			InitialStreamReceiveWindow:     c.config.InitialStreamReceiveWindow,
+			MaxStreamReceiveWindow:         c.config.MaxStreamReceiveWindow,
+			InitialConnectionReceiveWindow: c.config.InitialConnectionReceiveWindow,
+			MaxConnectionReceiveWindow:     c.config.MaxConnectionReceiveWindow,
+			MaxIdleTimeout:                 time.Duration(c.config.MaxIdleTimeout) * time.Second,
+			KeepAlivePeriod:                time.Duration(c.config.KeepAlivePeriod) * time.Second,
+			DisablePathMTUDiscovery:        c.config.DisablePathMTUDiscovery || (runtime.GOOS != "linux" && runtime.GOOS != "windows" && runtime.GOOS != "darwin"),
+			EnableDatagrams:                true,
+			MaxDatagramFrameSize:           MaxDatagramFrameSize,
+			OmitMaxDatagramFrameSize:       true,
+			DisablePathManager:             true,
+		},
+		Dial: func(ctx context.Context, _ string, tlsCfg *gotls.Config, cfg *quic.Config) (*quic.Conn, error) {
+			qc, err := tr.DialEarly(ctx, addr, tlsCfg, cfg)
+			if err != nil {
+				return nil, err
+			}
+			conn = qc
+			return qc, nil
+		},
+	}
+	req := &http.Request{
+		Method: http.MethodPost,
+		URL: &url.URL{
+			Scheme: "https",
+			Host:   URLHost,
+			Path:   URLPath,
+		},
+		Header: http.Header{
+			RequestHeaderAuth:   []string{c.config.Auth},
+			CommonHeaderCCRX:    []string{strconv.FormatUint(c.config.BrutalRxMbps*1000*1000/8, 10)},
+			CommonHeaderPadding: []string{AuthRequestPadding.String()},
+		},
+	}
+	resp, err := rt.RoundTrip(req)
+	if err != nil {
+		if conn != nil {
+			_ = conn.CloseWithError(closeErrCodeProtocolError, "")
+		}
+		_ = tr.Close()
+		_ = pktConn.Close()
+		return err
+	}
+	if resp.StatusCode != StatusAuthOK {
+		_ = conn.CloseWithError(closeErrCodeProtocolError, "")
+		_ = tr.Close()
+		_ = pktConn.Close()
+		return newError("auth failed code ", resp.StatusCode)
+	}
+	// udp, _ := strconv.ParseBool(resp.Header.Get(ResponseHeaderUDPEnabled))
+	rx, _ := strconv.ParseUint(resp.Header.Get(CommonHeaderCCRX), 10, 64)
+	_ = resp.Body.Close()
+
+	switch c.config.Congestion {
+	case "reno":
+	case "bbr":
+		congestion.UseBBR(conn, bbr.Profile(c.config.BbrProfile))
+	case "", "brutal":
+		if c.config.BrutalTxMbps > 0 && rx > 0 {
+			congestion.UseBrutal(conn, min(c.config.BrutalTxMbps*1000*1000/8, rx))
+		} else {
+			congestion.UseBBR(conn, bbr.Profile(c.config.BbrProfile))
+		}
+	case "force-brutal":
+		congestion.UseBrutal(conn, c.config.BrutalTxMbps*1000*1000/8)
+	default:
+		panic(c.config.Congestion)
+	}
+
+	c.pktConn = pktConn
+	c.tr = tr
+	c.conn = conn
+	c.udpSM = &udpSessionManager{
+		conn: conn,
+		m:    make(map[uint32]*InterConn),
+		next: 1,
+	}
+	go c.udpSM.run()
+
+	return nil
+}
+
+func (c *client) tcp() (net.Conn, error) {
+	c.Lock()
+	defer c.Unlock()
+
+	err := c.dial()
+	if err != nil {
+		return nil, err
+	}
+
+	stream, err := c.conn.OpenStream()
+	if err != nil {
+		return nil, err
+	}
+
+	return &interConn{
+		stream: stream,
+		local:  c.conn.LocalAddr(),
+		remote: c.conn.RemoteAddr(),
+
+		client: true,
+	}, nil
+}
+
+func (c *client) udp() (net.Conn, error) {
+	c.Lock()
+	defer c.Unlock()
+
+	err := c.dial()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.udpSM.udp()
+}
+
+func (c *client) clean() {
+	c.Lock()
+	c.close()
+	c.Unlock()
+}
 
 type dialerConf struct {
 	net.Destination
 	*internet.MemoryStreamConfig
 }
 
-var (
-	RunningClient map[dialerConf](hyClient.Client)
-	ClientMutex   sync.Mutex
-	MBps          uint64 = 1000000 / 8 // MByte
-)
-
-func GetClientTLSConfig(dest net.Destination, streamSettings *internet.MemoryStreamConfig) (*hyClient.TLSConfig, error) {
-	config := tls.ConfigFromStreamSettings(streamSettings)
-	if config == nil {
-		return nil, newError(Hy2MustNeedTLS)
-	}
-	tlsConfig := config.GetTLSConfig(tls.WithDestination(dest))
-
-	return &hyClient.TLSConfig{
-		RootCAs:               tlsConfig.RootCAs,
-		ServerName:            tlsConfig.ServerName,
-		InsecureSkipVerify:    tlsConfig.InsecureSkipVerify,
-		VerifyPeerCertificate: tlsConfig.VerifyPeerCertificate,
-	}, nil
+type clientManager struct {
+	sync.RWMutex
+	m map[dialerConf]*client
 }
 
-func ResolveAddress(dest net.Destination) (net.Addr, error) {
-	var destAddr *net.UDPAddr
-	if dest.Address.Family().IsIP() {
-		destAddr = &net.UDPAddr{
-			IP:   dest.Address.IP(),
-			Port: int(dest.Port),
+func (m *clientManager) clean() {
+	ticker := time.NewTicker(idleCleanupInterval)
+	for range ticker.C {
+		m.RLock()
+		for _, c := range m.m {
+			c.clean()
 		}
-	} else {
-		addr, err := net.ResolveUDPAddr("udp", dest.NetAddr())
-		if err != nil {
-			return nil, err
-		}
-		destAddr = addr
+		m.RUnlock()
 	}
-	return destAddr, nil
 }
 
-type connFactory struct {
-	hyClient.ConnFactory
-
-	NewFunc func(addr net.Addr) (net.PacketConn, error)
-}
-
-func (f *connFactory) New(addr net.Addr) (net.PacketConn, error) {
-	return f.NewFunc(addr)
-}
-
-func NewHyClient(dest net.Destination, streamSettings *internet.MemoryStreamConfig) (hyClient.Client, error) {
-	tlsConfig, err := GetClientTLSConfig(dest, streamSettings)
-	if err != nil {
-		return nil, err
-	}
-
-	serverAddr, err := ResolveAddress(dest)
-	if err != nil {
-		return nil, err
-	}
-
-	config := streamSettings.ProtocolSettings.(*Config)
-	client, _, err := hyClient.NewClient(&hyClient.Config{
-		Auth:       config.GetPassword(),
-		TLSConfig:  *tlsConfig,
-		ServerAddr: serverAddr,
-		ConnFactory: &connFactory{
-			NewFunc: func(addr net.Addr) (net.PacketConn, error) {
-				rawConn, err := internet.ListenSystemPacket(context.Background(), &net.UDPAddr{
-					IP:   []byte{0, 0, 0, 0},
-					Port: 0,
-				}, streamSettings.SocketSettings)
-				if err != nil {
-					return nil, err
-				}
-				return rawConn.(*net.UDPConn), nil
-			},
-		},
-		BandwidthConfig: hyClient.BandwidthConfig{MaxTx: config.Congestion.GetUpMbps() * MBps, MaxRx: config.GetCongestion().GetDownMbps() * MBps},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
-}
-
-func CloseHyClient(dest net.Destination, streamSettings *internet.MemoryStreamConfig) error {
-	ClientMutex.Lock()
-	defer ClientMutex.Unlock()
-
-	client, found := RunningClient[dialerConf{dest, streamSettings}]
-	if found {
-		delete(RunningClient, dialerConf{dest, streamSettings})
-		return client.Close()
-	}
-	return nil
-}
-
-func GetHyClient(dest net.Destination, streamSettings *internet.MemoryStreamConfig) (hyClient.Client, error) {
-	var err error
-	var client hyClient.Client
-
-	ClientMutex.Lock()
-	client, found := RunningClient[dialerConf{dest, streamSettings}]
-	ClientMutex.Unlock()
-	if !found || !CheckHyClientHealthy(client) {
-		if found {
-			// retry
-			CloseHyClient(dest, streamSettings)
-		}
-		client, err = NewHyClient(dest, streamSettings)
-		if err != nil {
-			return nil, err
-		}
-		ClientMutex.Lock()
-		RunningClient[dialerConf{dest, streamSettings}] = client
-		ClientMutex.Unlock()
-	}
-	return client, nil
-}
-
-func CheckHyClientHealthy(client hyClient.Client) bool {
-	quicConn := client.GetQuicConn()
-	if quicConn == nil {
-		return false
-	}
-	select {
-	case <-quicConn.Context().Done():
-		return false
-	default:
-	}
-	return true
-}
+var manager *clientManager
 
 func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.MemoryStreamConfig) (internet.Connection, error) {
+	if tls.ConfigFromStreamSettings(streamSettings) == nil {
+		return nil, newError("tls is nil")
+	}
+
+	datagram := DatagramFromContext(ctx)
 	config := streamSettings.ProtocolSettings.(*Config)
+	tlsConfig := tls.ConfigFromStreamSettings(streamSettings).GetTLSConfig()
+	socketConfig := streamSettings.SocketSettings
 
-	client, err := GetHyClient(dest, streamSettings)
-	if err != nil {
-		CloseHyClient(dest, streamSettings)
-		return nil, err
-	}
+	manager.RLock()
+	c := manager.m[dialerConf{dest, streamSettings}]
+	manager.RUnlock()
 
-	quicConn := client.GetQuicConn()
-	conn := &HyConn{
-		local:  quicConn.LocalAddr(),
-		remote: quicConn.RemoteAddr(),
-	}
-
-	outbound := session.OutboundFromContext(ctx)
-	network := net.Network_TCP
-	if outbound != nil {
-		network = outbound.Target.Network
-	}
-
-	if network == net.Network_UDP && config.GetUseUdpExtension() { // only hysteria2 can use udpExtension
-		conn.IsUDPExtension = true
-		conn.IsServer = false
-		conn.ClientUDPSession, err = client.UDP()
-		if err != nil {
-			CloseHyClient(dest, streamSettings)
-			return nil, err
+	if c == nil {
+		manager.Lock()
+		c = manager.m[dialerConf{dest, streamSettings}]
+		if c == nil {
+			c = &client{
+				dest:         dest,
+				config:       config,
+				tlsConfig:    tlsConfig,
+				socketConfig: socketConfig,
+			}
 		}
-		return conn, nil
+		manager.m[dialerConf{dest, streamSettings}] = c
+		manager.Unlock()
 	}
 
-	conn.stream, err = client.OpenStream()
-	if err != nil {
-		CloseHyClient(dest, streamSettings)
-		return nil, err
+	if datagram {
+		return c.udp()
 	}
-
-	// write TCP frame type
-	frameSize := quicvarint.Len(hyProtocol.FrameTypeTCPRequest)
-	buf := make([]byte, frameSize)
-	hyProtocol.VarintPut(buf, hyProtocol.FrameTypeTCPRequest)
-	_, err = conn.stream.Write(buf)
-	if err != nil {
-		CloseHyClient(dest, streamSettings)
-		return nil, err
-	}
-	return conn, nil
+	return c.tcp()
 }
 
 func init() {
-	RunningClient = make(map[dialerConf]hyClient.Client)
+	manager = &clientManager{
+		m: make(map[dialerConf]*client),
+	}
+	go manager.clean()
+}
+
+func init() {
 	common.Must(internet.RegisterTransportDialer(protocolName, Dial))
 }

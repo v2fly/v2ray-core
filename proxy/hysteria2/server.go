@@ -2,15 +2,14 @@ package hysteria2
 
 import (
 	"context"
-	"io"
+	"errors"
+	"math/rand"
 	"time"
 
-	hyProtocol "github.com/v2fly/hysteria/core/v2/international/protocol"
-
+	"github.com/apernet/quic-go"
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
-	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/v2fly/v2ray-core/v5/common/log"
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
@@ -21,7 +20,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/features/policy"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
-	hyTransport "github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
 )
 
@@ -55,19 +54,93 @@ func (s *Server) Network() []net.Network {
 // Process implements proxy.Inbound.Process().
 func (s *Server) Process(ctx context.Context, network net.Network, conn internet.Connection, dispatcher routing.Dispatcher) error {
 	sid := session.ExportIDToError(ctx)
+	inbound := session.InboundFromContext(ctx)
+	if inbound == nil {
+		panic("no inbound metadata")
+	}
 
 	iConn := conn
 	if statConn, ok := conn.(*internet.StatCouterConnection); ok {
-		iConn = statConn.Connection // will not count the UDP traffic.
+		iConn = statConn.Connection
 	}
-	hyConn, IsHy2Transport := iConn.(*hyTransport.HyConn)
-
-	if IsHy2Transport && hyConn.IsUDPExtension {
+	if _, ok := iConn.(*hysteria2.InterConn); ok {
 		network = net.Network_UDP
 	}
 
-	if !IsHy2Transport && network == net.Network_UDP {
-		return newError(hyTransport.CanNotUseUDPExtension)
+	if network == net.Network_UDP {
+		udpDispatcherConstructor := udp.NewSplitDispatcher
+		switch s.packetEncoding {
+		case packetaddr.PacketAddrType_None:
+		case packetaddr.PacketAddrType_Packet:
+			packetAddrDispatcherFactory := udp.NewPacketAddrDispatcherCreator(ctx)
+			udpDispatcherConstructor = packetAddrDispatcherFactory.NewPacketAddrDispatcher
+		}
+
+		var readBuf [buf.Size]byte
+		var writeBuf [buf.Size]byte
+		var df = &Defragger{}
+
+		udpServer := udpDispatcherConstructor(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
+			msg := &UDPMessage{
+				SessionID: 0,
+				PacketID:  0,
+				FragID:    0,
+				FragCount: 1,
+				Addr:      packet.Source.NetAddr(),
+				Data:      packet.Payload.Bytes(),
+			}
+			msgN := msg.Serialize(writeBuf[:])
+			_, err := conn.Write(writeBuf[:msgN])
+			var errTooLarge *quic.DatagramTooLargeError
+			if errors.As(err, &errTooLarge) {
+				msg.PacketID = uint16(rand.Intn(0xFFFF)) + 1
+				fMsgs := FragUDPMessage(msg, int(errTooLarge.MaxDatagramPayloadSize))
+				for _, fMsg := range fMsgs {
+					msgN := fMsg.Serialize(writeBuf[:])
+					_, _ = conn.Write(writeBuf[:msgN])
+				}
+			}
+			packet.Payload.Release()
+		})
+
+		for {
+			n, err := conn.Read(readBuf[:])
+			if err != nil {
+				return err
+			}
+
+			msg, err := ParseUDPMessage(readBuf[:n])
+			if err != nil {
+				continue
+			}
+
+			dfMsg := df.Feed(msg)
+			if dfMsg == nil {
+				continue
+			}
+
+			destination, err := net.ParseDestination("udp:" + dfMsg.Addr)
+			if err != nil {
+				continue
+			}
+
+			payload := buf.New()
+			if _, err := payload.Write(dfMsg.Data); err != nil {
+				payload.Release()
+				continue
+			}
+
+			currentPacketCtx := ctx
+			currentPacketCtx = log.ContextWithAccessMessage(currentPacketCtx, &log.AccessMessage{
+				From:   inbound.Source,
+				To:     destination,
+				Status: log.AccessAccepted,
+				Reason: "",
+			})
+			newError("tunnelling request to ", destination).WriteToLog(sid)
+
+			udpServer.Dispatch(currentPacketCtx, destination, payload)
+		}
 	}
 
 	sessionPolicy := s.policyManager.ForLevel(0)
@@ -75,47 +148,25 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 		return newError("unable to set read deadline").Base(err).AtWarning()
 	}
 
-	bufferedReader := &buf.BufferedReader{
-		Reader: buf.NewReader(conn),
+	addr, err := ReadTCPRequest(conn)
+	if err != nil {
+		log.Record(&log.AccessMessage{
+			From:   conn.RemoteAddr(),
+			To:     "",
+			Status: log.AccessRejected,
+			Reason: err,
+		})
+		return newError("failed to create request from: ", conn.RemoteAddr()).Base(err)
 	}
-	clientReader := &ConnReader{Reader: bufferedReader}
 
 	if err := conn.SetReadDeadline(time.Time{}); err != nil {
 		return newError("unable to set read deadline").Base(err).AtWarning()
 	}
 
-	if network == net.Network_UDP { // handle udp request
-		return s.handleUDPPayload(ctx,
-			&PacketReader{Reader: clientReader, HyConn: hyConn},
-			&PacketWriter{Writer: conn, HyConn: hyConn}, dispatcher)
-	}
-
-	var reqAddr string
-	var err error
-	reqAddr, err = hyProtocol.ReadTCPRequest(conn)
-	if err != nil {
-		return newError("failed to parse header").Base(err)
-	}
-	err = hyProtocol.WriteTCPResponse(conn, true, "")
-	if err != nil {
-		return newError("failed to send response").Base(err)
-	}
-
-	address, stringPort, err := net.SplitHostPort(reqAddr)
+	destination, err := net.ParseDestination("tcp:" + addr)
 	if err != nil {
 		return err
 	}
-	port, err := net.PortFromString(stringPort)
-	if err != nil {
-		return err
-	}
-	destination := net.Destination{Network: network, Address: net.ParseAddress(address), Port: port}
-
-	inbound := session.InboundFromContext(ctx)
-	if inbound == nil {
-		panic("no inbound metadata")
-	}
-	sessionPolicy = s.policyManager.ForLevel(0)
 
 	ctx = log.ContextWithAccessMessage(ctx, &log.AccessMessage{
 		From:   conn.RemoteAddr(),
@@ -125,14 +176,7 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 	})
 
 	newError("received request for ", destination).WriteToLog(sid)
-	return s.handleConnection(ctx, sessionPolicy, destination, clientReader, buf.NewWriter(conn), dispatcher)
-}
 
-func (s *Server) handleConnection(ctx context.Context, sessionPolicy policy.Session,
-	destination net.Destination,
-	clientReader buf.Reader,
-	clientWriter buf.Writer, dispatcher routing.Dispatcher,
-) error {
 	ctx, cancel := context.WithCancel(ctx)
 	timer := signal.CancelAfterInactivity(ctx, cancel, sessionPolicy.Timeouts.ConnectionIdle)
 	ctx = policy.ContextWithBufferPolicy(ctx, sessionPolicy.Buffer)
@@ -145,18 +189,28 @@ func (s *Server) handleConnection(ctx context.Context, sessionPolicy policy.Sess
 	requestDone := func() error {
 		defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
 
-		if err := buf.Copy(clientReader, link.Writer, buf.UpdateActivity(timer)); err != nil {
+		if err := buf.Copy(buf.NewReader(conn), link.Writer, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer request").Base(err)
 		}
+
 		return nil
 	}
 
 	responseDone := func() error {
 		defer timer.SetTimeout(sessionPolicy.Timeouts.UplinkOnly)
 
-		if err := buf.Copy(link.Reader, clientWriter, buf.UpdateActivity(timer)); err != nil {
-			return newError("failed to write response").Base(err)
+		bufferedWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
+		err := WriteTCPResponse(bufferedWriter, true, "")
+		if err != nil {
+			return newError("failed to write response").Base(err).AtWarning()
 		}
+		if err = bufferedWriter.SetBuffered(false); err != nil {
+			return newError("failed to flush payload").Base(err).AtWarning()
+		}
+		if err := buf.Copy(link.Reader, bufferedWriter, buf.UpdateActivity(timer)); err != nil {
+			return newError("failed to transport response").Base(err)
+		}
+
 		return nil
 	}
 
@@ -168,49 +222,4 @@ func (s *Server) handleConnection(ctx context.Context, sessionPolicy policy.Sess
 	}
 
 	return nil
-}
-
-func (s *Server) handleUDPPayload(ctx context.Context, clientReader *PacketReader, clientWriter *PacketWriter, dispatcher routing.Dispatcher) error {
-	udpDispatcherConstructor := udp.NewSplitDispatcher
-	switch s.packetEncoding {
-	case packetaddr.PacketAddrType_None:
-	case packetaddr.PacketAddrType_Packet:
-		packetAddrDispatcherFactory := udp.NewPacketAddrDispatcherCreator(ctx)
-		udpDispatcherConstructor = packetAddrDispatcherFactory.NewPacketAddrDispatcher
-	}
-
-	udpServer := udpDispatcherConstructor(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
-		if err := clientWriter.WriteMultiBufferWithMetadata(buf.MultiBuffer{packet.Payload}, packet.Source); err != nil {
-			newError("failed to write response").Base(err).AtWarning().WriteToLog(session.ExportIDToError(ctx))
-		}
-	})
-
-	inbound := session.InboundFromContext(ctx)
-
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		default:
-			p, err := clientReader.ReadMultiBufferWithMetadata()
-			if err != nil {
-				if errors.Cause(err) != io.EOF {
-					return newError("unexpected EOF").Base(err)
-				}
-				return nil
-			}
-			currentPacketCtx := ctx
-			currentPacketCtx = log.ContextWithAccessMessage(currentPacketCtx, &log.AccessMessage{
-				From:   inbound.Source,
-				To:     p.Target,
-				Status: log.AccessAccepted,
-				Reason: "",
-			})
-			newError("tunnelling request to ", p.Target).WriteToLog(session.ExportIDToError(ctx))
-
-			for _, b := range p.Buffer {
-				udpServer.Dispatch(currentPacketCtx, p.Target, b)
-			}
-		}
-	}
 }

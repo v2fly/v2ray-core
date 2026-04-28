@@ -2,6 +2,8 @@ package v4
 
 import (
 	"encoding/json"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
@@ -138,30 +140,54 @@ func (c *TCPConfig) Build() (proto.Message, error) {
 	return config, nil
 }
 
-type Hy2ConfigCongestion struct {
-	Type     string `json:"type"`
-	UpMbps   uint64 `json:"up_mbps"`
-	DownMbps uint64 `json:"down_mbps"`
+type Hy2ConfigUdpHop struct {
+	Ports       *cfgcommon.PortList `json:"ports"`
+	IntervalMin uint32              `json:"intervalMin"`
+	IntervalMax uint32              `json:"intervalMax"`
 }
 
 type Hy2Config struct {
-	Password              string              `json:"password"`
-	Congestion            Hy2ConfigCongestion `json:"congestion"`
-	UseUDPExtension       bool                `json:"use_udp_extension"`
-	IgnoreClientBandwidth bool                `json:"ignore_client_bandwidth"`
+	Auth         string           `json:"auth"`
+	UdpHop       *Hy2ConfigUdpHop `json:"udpHop"`
+	Salamander   *string          `json:"salamander"`
+	Congestion   string           `json:"congestion"`
+	Debug        bool             `json:"debug"`
+	BbrProfile   string           `json:"bbrProfile"`
+	BrutalTxMbps uint64           `json:"brutalTxMbps"`
+	BrutalRxMbps uint64           `json:"brutalRxMbps"`
 }
 
 // Build implements Buildable.
 func (c *Hy2Config) Build() (proto.Message, error) {
+	if c.Debug {
+		os.Setenv("HYSTERIA_BBR_DEBUG", strconv.FormatBool(true))
+		os.Setenv("HYSTERIA_BRUTAL_DEBUG", strconv.FormatBool(true))
+	}
+	var udphop *hysteria2.UdpHop
+	if c.UdpHop != nil {
+		if c.UdpHop.Ports == nil {
+			return nil, newError("empty ports")
+		}
+		var ports []uint32
+		for _, r := range c.UdpHop.Ports.Range {
+			for i := uint32(r.From); i <= uint32(r.To); i++ {
+				ports = append(ports, i)
+			}
+		}
+		udphop = &hysteria2.UdpHop{
+			Ports:       ports,
+			IntervalMin: c.UdpHop.IntervalMin,
+			IntervalMax: c.UdpHop.IntervalMax,
+		}
+	}
 	return &hysteria2.Config{
-		Password: c.Password,
-		Congestion: &hysteria2.Congestion{
-			Type:     c.Congestion.Type,
-			DownMbps: c.Congestion.DownMbps,
-			UpMbps:   c.Congestion.UpMbps,
-		},
-		UseUdpExtension:       c.UseUDPExtension,
-		IgnoreClientBandwidth: c.IgnoreClientBandwidth,
+		Auth:         c.Auth,
+		UdpHop:       udphop,
+		Salamander:   c.Salamander,
+		Congestion:   c.Congestion,
+		BbrProfile:   c.BbrProfile,
+		BrutalTxMbps: c.BrutalTxMbps,
+		BrutalRxMbps: c.BrutalRxMbps,
 	}, nil
 }
 

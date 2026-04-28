@@ -8,19 +8,30 @@ option java_multiple_files = true;
 
 import "common/protoext/extensions.proto";
 
-message Congestion{
-  string type = 1;
-
-  uint64 up_mbps = 2;
-  uint64 down_mbps = 3;
+message UdpHop{
+  repeated uint32 ports = 1;
+  uint32 interval_min = 2;
+  uint32 interval_max = 3;
 }
 
 message Config {
   option (v2ray.core.common.protoext.message_opt).type = "transport";
   option (v2ray.core.common.protoext.message_opt).short_name = "hysteria2";
 
-  string password = 3;
-  Congestion congestion = 4;
-  bool ignore_client_bandwidth = 5;
-  bool use_udp_extension = 6;
+  string auth = 1;
+  UdpHop udp_hop = 2;
+  optional string salamander = 3;
+  string congestion = 4;
+  string bbr_profile = 5;
+  uint64 brutal_tx_mbps = 6;
+  uint64 brutal_rx_mbps = 7;
+
+  uint64 InitialStreamReceiveWindow = 8;
+  uint64 MaxStreamReceiveWindow = 9;
+  uint64 InitialConnectionReceiveWindow = 10;
+  uint64 MaxConnectionReceiveWindow = 11;
+  int64 MaxIdleTimeout = 12;
+  int64 KeepAlivePeriod = 13;
+  bool DisablePathMTUDiscovery = 14;
+  int64 MaxIncomingStreams = 15;
 }

@@ -2,9 +2,12 @@ package hysteria2
 
 import (
 	"context"
+	"errors"
+	"io"
+	"math/rand"
+	"strconv"
 
-	hyProtocol "github.com/v2fly/hysteria/core/v2/international/protocol"
-
+	"github.com/apernet/quic-go"
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/buf"
@@ -19,7 +22,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/proxy"
 	"github.com/v2fly/v2ray-core/v5/transport"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
-	hyTransport "github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
 )
 
@@ -60,6 +63,10 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	destination := outbound.Target
 	network := destination.Network
 
+	if network == net.Network_UDP {
+		ctx = hysteria2.ContextWithDatagram(ctx)
+	}
+
 	var server *protocol.ServerSpec
 	var conn internet.Connection
 
@@ -82,13 +89,10 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 
 	iConn := conn
 	if statConn, ok := conn.(*internet.StatCouterConnection); ok {
-		iConn = statConn.Connection // will not count the UDP traffic.
+		iConn = statConn.Connection
 	}
-	hyConn, IsHy2Transport := iConn.(*hyTransport.HyConn)
-
-	if !IsHy2Transport && network == net.Network_UDP {
-		// hysteria2 need to use udp extension to proxy UDP.
-		return newError(hyTransport.CanNotUseUDPExtension)
+	if _, ok := iConn.(*hysteria2.InterConn); !ok && network == net.Network_UDP {
+		return newError("udp require hysteria2 transport")
 	}
 
 	user := server.PickUser()
@@ -104,37 +108,13 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		postRequest := func() error {
 			defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
 
-			var buffer [2048]byte
-			n, addr, err := packetConn.ReadFrom(buffer[:])
-			if err != nil {
-				return newError("failed to read a packet").Base(err)
-			}
-			dest := net.DestinationFromAddr(addr)
-
-			bufferWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
-			connWriter := &ConnWriter{Writer: bufferWriter, Target: dest}
-			packetWriter := &PacketWriter{Writer: connWriter, Target: dest, HyConn: hyConn}
-
-			// write some request payload to buffer
-			if _, err := packetWriter.WriteTo(buffer[:n], addr); err != nil {
-				return newError("failed to write a request payload").Base(err)
-			}
-
-			// Flush; bufferWriter.WriteMultiBuffer now is bufferWriter.writer.WriteMultiBuffer
-			if err = bufferWriter.SetBuffered(false); err != nil {
-				return newError("failed to flush payload").Base(err).AtWarning()
-			}
-
-			return udp.CopyPacketConn(packetWriter, packetConn, udp.UpdateActivity(timer))
+			return udp.CopyPacketConn(&UDPWriter{writer: conn}, packetConn, udp.UpdateActivity(timer))
 		}
 
 		getResponse := func() error {
 			defer timer.SetTimeout(sessionPolicy.Timeouts.UplinkOnly)
 
-			packetReader := &PacketReader{Reader: conn, HyConn: hyConn}
-			packetConnectionReader := &PacketConnectionReader{reader: packetReader}
-
-			return udp.CopyPacketConn(packetConn, packetConnectionReader, udp.UpdateActivity(timer))
+			return udp.CopyPacketConn(packetConn, &UDPReader{reader: conn, df: &Defragger{}}, udp.UpdateActivity(timer))
 		}
 
 		responseDoneAndCloseWriter := task.OnSuccess(getResponse, task.Close(link.Writer))
@@ -145,51 +125,40 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 		return nil
 	}
 
-	postRequest := func() error {
+	requestDone := func() error {
 		defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
 
 		var bodyWriter buf.Writer
-		bufferWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
-		connWriter := &ConnWriter{Writer: bufferWriter, Target: destination}
-		bodyWriter = connWriter
 
 		if network == net.Network_UDP {
-			bodyWriter = &PacketWriter{Writer: connWriter, Target: destination, HyConn: hyConn}
+			bodyWriter = &UDPWriter{writer: conn, addr: destination.NetAddr()}
 		} else {
-			// write some request payload to buffer
-			err = buf.CopyOnceTimeout(link.Reader, bodyWriter, proxy.FirstPayloadTimeout)
-			switch err {
-			case buf.ErrNotTimeoutReader, buf.ErrReadTimeout:
-				if err := connWriter.WriteTCPHeader(); err != nil {
-					return newError("failed to write request header").Base(err).AtWarning()
-				}
-			case nil:
-			default:
-				return newError("failed to write a request payload").Base(err).AtWarning()
+			bufferedWriter := buf.NewBufferedWriter(buf.NewWriter(conn))
+			bodyWriter = bufferedWriter
+			err := WriteTCPRequest(bufferedWriter, destination.NetAddr())
+			if err != nil {
+				return newError("failed to write request").Base(err).AtWarning()
 			}
-			// Flush; bufferWriter.WriteMultiBuffer now is bufferWriter.writer.WriteMultiBuffer
-			if err = bufferWriter.SetBuffered(false); err != nil {
+			if err = buf.CopyOnceTimeout(link.Reader, bufferedWriter, proxy.FirstPayloadTimeout); err != nil && err != buf.ErrNotTimeoutReader && err != buf.ErrReadTimeout {
+				return newError("failed to write request payload").Base(err).AtWarning()
+			}
+			if err = bufferedWriter.SetBuffered(false); err != nil {
 				return newError("failed to flush payload").Base(err).AtWarning()
 			}
 		}
 
-		if err = buf.Copy(link.Reader, bodyWriter, buf.UpdateActivity(timer)); err != nil {
-			return newError("failed to transfer request payload").Base(err).AtInfo()
-		}
-
-		return nil
+		return buf.Copy(link.Reader, bodyWriter, buf.UpdateActivity(timer))
 	}
 
-	getResponse := func() error {
+	responseDone := func() error {
 		defer timer.SetTimeout(sessionPolicy.Timeouts.UplinkOnly)
 
 		var reader buf.Reader
+
 		if network == net.Network_UDP {
-			reader = &PacketReader{
-				Reader: conn, HyConn: hyConn,
-			}
+			reader = &UDPReader{reader: conn, df: &Defragger{}}
 		} else {
-			ok, msg, err := hyProtocol.ReadTCPResponse(conn)
+			ok, msg, err := ReadTCPResponse(conn)
 			if err != nil {
 				return err
 			}
@@ -198,11 +167,12 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 			}
 			reader = buf.NewReader(conn)
 		}
+
 		return buf.Copy(reader, link.Writer, buf.UpdateActivity(timer))
 	}
 
-	responseDoneAndCloseWriter := task.OnSuccess(getResponse, task.Close(link.Writer))
-	if err := task.Run(ctx, postRequest, responseDoneAndCloseWriter); err != nil {
+	responseDoneAndCloseWriter := task.OnSuccess(responseDone, task.Close(link.Writer))
+	if err := task.Run(ctx, requestDone, responseDoneAndCloseWriter); err != nil {
 		return newError("connection ends").Base(err)
 	}
 
@@ -213,4 +183,113 @@ func init() {
 	common.Must(common.RegisterConfig((*ClientConfig)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return NewClient(ctx, config.(*ClientConfig))
 	}))
+}
+
+type UDPWriter struct {
+	writer io.Writer
+	addr   string
+	buf    [buf.Size]byte
+}
+
+func (w *UDPWriter) Network() string {
+	return "udp"
+}
+
+func (w *UDPWriter) String() string {
+	return w.addr
+}
+
+func (w *UDPWriter) SendMessage(msg *UDPMessage) error {
+	msgN := msg.Serialize(w.buf[:])
+	if msgN < 0 {
+		return nil
+	}
+	_, err := w.writer.Write(w.buf[:msgN])
+	return err
+}
+
+func (w *UDPWriter) WriteTo(p []byte, addr net.Addr) (n int, err error) {
+	msg := &UDPMessage{
+		SessionID: 0,
+		PacketID:  0,
+		FragID:    0,
+		FragCount: 1,
+		Addr:      addr.String(),
+		Data:      p,
+	}
+	err = w.SendMessage(msg)
+	var errTooLarge *quic.DatagramTooLargeError
+	if errors.As(err, &errTooLarge) {
+		msg.PacketID = uint16(rand.Intn(0xFFFF)) + 1
+		fMsgs := FragUDPMessage(msg, int(errTooLarge.MaxDatagramPayloadSize))
+		for _, fMsg := range fMsgs {
+			err = w.SendMessage(&fMsg)
+			if err != nil {
+				return 0, err
+			}
+		}
+	}
+	return len(p), err
+}
+
+func (w *UDPWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
+	for i, b := range mb {
+		_, err := w.WriteTo(b.Bytes(), w)
+		if err != nil {
+			buf.ReleaseMulti(mb[i:])
+			return err
+		}
+		b.Release()
+	}
+	return nil
+}
+
+type UDPReader struct {
+	reader io.Reader
+	df     *Defragger
+	buf    [buf.Size]byte
+}
+
+func (r *UDPReader) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
+	for {
+		n, err := r.reader.Read(r.buf[:])
+		if err != nil {
+			return 0, nil, err
+		}
+
+		msg, err := ParseUDPMessage(r.buf[:n])
+		if err != nil {
+			continue
+		}
+
+		dfMsg := r.df.Feed(msg)
+		if dfMsg == nil {
+			continue
+		}
+
+		if len(p) < len(dfMsg.Data) {
+			continue
+		}
+
+		host, port, _ := net.SplitHostPort(dfMsg.Addr)
+		ip := net.ParseIP(host)
+		if ip == nil {
+			continue
+		}
+		portint, _ := strconv.Atoi(port)
+
+		return copy(p, dfMsg.Data), &net.UDPAddr{IP: ip, Port: portint}, nil
+	}
+}
+
+func (r *UDPReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
+	buffer := buf.New()
+	b := buffer.Extend(buf.Size)
+	n, _, err := r.ReadFrom(b)
+	if err != nil {
+		buffer.Release()
+		return nil, err
+	}
+	buffer.Resize(0, int32(n))
+	return buf.MultiBuffer{buffer}, nil
 }
