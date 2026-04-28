@@ -12,10 +12,6 @@ import (
 //go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 const (
-	CanNotUseUDPExtension = "Only hysteria2 proxy protocol can use udpExtension."
-)
-
-const (
 	closeErrCodeOK            = 0x100 // HTTP3 ErrCodeNoError
 	closeErrCodeProtocolError = 0x101 // HTTP3 ErrCodeGeneralProtocolError
 	FrameTypeTCPRequest       = 0x401
