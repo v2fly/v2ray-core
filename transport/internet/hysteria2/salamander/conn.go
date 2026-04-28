@@ -2,7 +2,6 @@ package salamander
 
 import (
 	"errors"
-	"io"
 	"net"
 	"sync"
 	"syscall"
@@ -41,6 +40,9 @@ func (c *obfsPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
 	if n < smSaltLen {
 		return 0, addr, nil
 	}
+	if len(p) < n-smSaltLen {
+		return 0, addr, nil // ErrShortBuffer
+	}
 
 	c.Obfs.Deobfuscate(c.readBuf[:n], p)
 
@@ -52,7 +54,7 @@ func (c *obfsPacketConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
 	defer c.writeMutex.Unlock()
 
 	if len(p)+smSaltLen > udpBufferSize {
-		return 0, io.ErrShortWrite
+		return 0, nil // ErrShortWrite
 	}
 
 	c.Obfs.Obfuscate(p, c.writeBuf)
