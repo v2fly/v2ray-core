@@ -76,10 +76,7 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 			udpDispatcherConstructor = packetAddrDispatcherFactory.NewPacketAddrDispatcher
 		}
 
-		var readBuf [buf.Size]byte
 		var writeBuf [buf.Size]byte
-		var df = &Defragger{}
-
 		udpServer := udpDispatcherConstructor(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
 			msg := &UDPMessage{
 				SessionID: 0,
@@ -96,14 +93,20 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 				msg.PacketID = uint16(rand.Intn(0xFFFF)) + 1
 				fMsgs := FragUDPMessage(msg, int(errTooLarge.MaxDatagramPayloadSize))
 				for _, fMsg := range fMsgs {
-					msgN := fMsg.Serialize(writeBuf[:])
-					_, _ = conn.Write(writeBuf[:msgN])
+					msgN = fMsg.Serialize(writeBuf[:])
+					_, err = conn.Write(writeBuf[:msgN])
+					if err != nil {
+						break
+					}
 				}
 			}
 			packet.Payload.Release()
 		})
 
+		var df = &Defragger{}
 		for {
+			var readBuf [hysteria2.MaxDatagramFrameSize]byte
+
 			n, err := conn.Read(readBuf[:])
 			if err != nil {
 				return err

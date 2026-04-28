@@ -247,17 +247,18 @@ func (w *UDPWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
 type UDPReader struct {
 	reader io.Reader
 	df     *Defragger
-	buf    [buf.Size]byte
 }
 
 func (r *UDPReader) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
 	for {
-		n, err := r.reader.Read(r.buf[:])
+		var buf [hysteria2.MaxDatagramFrameSize]byte
+
+		n, err := r.reader.Read(buf[:])
 		if err != nil {
 			return 0, nil, err
 		}
 
-		msg, err := ParseUDPMessage(r.buf[:n])
+		msg, err := ParseUDPMessage(buf[:n])
 		if err != nil {
 			continue
 		}
@@ -283,13 +284,13 @@ func (r *UDPReader) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
 }
 
 func (r *UDPReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
-	buffer := buf.New()
-	b := buffer.Extend(buf.Size)
-	n, _, err := r.ReadFrom(b)
+	b := buf.New()
+	b.Resize(0, buf.Size)
+	n, _, err := r.ReadFrom(b.Bytes())
 	if err != nil {
-		buffer.Release()
+		b.Release()
 		return nil, err
 	}
-	buffer.Resize(0, int32(n))
-	return buf.MultiBuffer{buffer}, nil
+	b.Resize(0, int32(n))
+	return buf.MultiBuffer{b}, nil
 }
