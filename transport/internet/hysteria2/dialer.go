@@ -267,8 +267,8 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 				tlsConfig:    tlsConfig,
 				socketConfig: socketConfig,
 			}
+			manager.m[dialerConf{dest, streamSettings}] = c
 		}
-		manager.m[dialerConf{dest, streamSettings}] = c
 		manager.Unlock()
 	}
 
