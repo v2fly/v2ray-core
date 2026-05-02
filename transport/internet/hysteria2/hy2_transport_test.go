@@ -90,7 +90,7 @@ func TestTCP(t *testing.T) {
 func TestUDP(t *testing.T) {
 	port := udp.PickPort()
 
-	listener, err := hysteria2.Listen(hysteria2.ContextWithDatagram(context.Background()), net.LocalHostIP, port, &internet.MemoryStreamConfig{
+	listener, err := hysteria2.Listen(hysteria2.ContextWithDatagram(context.Background(), true), net.LocalHostIP, port, &internet.MemoryStreamConfig{
 		ProtocolName:     "hysteria2",
 		ProtocolSettings: &hysteria2.Config{Auth: "123"},
 		SecurityType:     "tls",
@@ -132,7 +132,7 @@ func TestUDP(t *testing.T) {
 	common.Must(err)
 	dctx := session.ContextWithOutbound(context.Background(), &session.Outbound{Target: address})
 
-	conn, err := hysteria2.Dial(hysteria2.ContextWithDatagram(dctx), net.TCPDestination(net.LocalHostIP, port), &internet.MemoryStreamConfig{
+	conn, err := hysteria2.Dial(hysteria2.ContextWithDatagram(dctx, true), net.TCPDestination(net.LocalHostIP, port), &internet.MemoryStreamConfig{
 		ProtocolName:     "hysteria2",
 		ProtocolSettings: &hysteria2.Config{Auth: "123"},
 		SecurityType:     "tls",

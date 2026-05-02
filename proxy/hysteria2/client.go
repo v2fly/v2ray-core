@@ -63,16 +63,12 @@ func (c *Client) Process(ctx context.Context, link *transport.Link, dialer inter
 	destination := outbound.Target
 	network := destination.Network
 
-	if network == net.Network_UDP {
-		ctx = hysteria2.ContextWithDatagram(ctx)
-	}
-
 	var server *protocol.ServerSpec
 	var conn internet.Connection
 
 	err := retry.ExponentialBackoff(5, 100).On(func() error {
 		server = c.serverPicker.PickServer()
-		rawConn, err := dialer.Dial(ctx, server.Destination())
+		rawConn, err := dialer.Dial(hysteria2.ContextWithDatagram(ctx, network == net.Network_UDP), server.Destination())
 		if err != nil {
 			return err
 		}
@@ -228,8 +224,10 @@ func (w *UDPWriter) WriteTo(p []byte, addr net.Addr) (n int, err error) {
 				return 0, err
 			}
 		}
+	} else if err != nil {
+		return 0, err
 	}
-	return len(p), err
+	return len(p), nil
 }
 
 func (w *UDPWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {

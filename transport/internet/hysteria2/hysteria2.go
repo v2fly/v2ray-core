@@ -14,11 +14,6 @@ import (
 const (
 	closeErrCodeOK            = 0x100 // HTTP3 ErrCodeNoError
 	closeErrCodeProtocolError = 0x101 // HTTP3 ErrCodeGeneralProtocolError
-	FrameTypeTCPRequest       = 0x401
-	udpMessageChanSize        = 1024
-	idleCleanupInterval       = 1 * time.Second
-	UDPIdleTimeout            = 60 * time.Second
-	MaxDatagramFrameSize      = 1200
 	URLHost                   = "hysteria"
 	URLPath                   = "/auth"
 	RequestHeaderAuth         = "Hysteria-Auth"
@@ -26,6 +21,11 @@ const (
 	CommonHeaderCCRX          = "Hysteria-CC-RX"
 	CommonHeaderPadding       = "Hysteria-Padding"
 	StatusAuthOK              = 233
+	FrameTypeTCPRequest       = 0x401
+	MaxDatagramFrameSize      = 1200
+	udpMessageChanSize        = 1024
+	idleCleanupInterval       = 1 * time.Second
+	UDPIdleTimeout            = 60 * time.Second
 )
 
 const (
@@ -55,13 +55,13 @@ var (
 
 type datagramKey struct{}
 
-func ContextWithDatagram(ctx context.Context) context.Context {
-	return context.WithValue(ctx, datagramKey{}, struct{}{})
+func ContextWithDatagram(ctx context.Context, v bool) context.Context {
+	return context.WithValue(ctx, datagramKey{}, v)
 }
 
 func DatagramFromContext(ctx context.Context) bool {
-	_, ok := ctx.Value(datagramKey{}).(struct{})
-	return ok
+	v, _ := ctx.Value(datagramKey{}).(bool)
+	return v
 }
 
 type status int

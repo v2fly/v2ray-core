@@ -20,7 +20,7 @@ type udpHopPacketConn struct {
 	Addrs          []net.Addr
 	HopIntervalMin time.Duration
 	HopIntervalMax time.Duration
-	ListenUDPFunc  func() (net.PacketConn, error)
+	ListenUDPFunc  func(addr *net.UDPAddr) (net.PacketConn, error)
 
 	connMutex   sync.RWMutex
 	prevConn    net.PacketConn
@@ -45,7 +45,7 @@ type udpPacket struct {
 	Err  error
 }
 
-func NewUDPHopPacketConn(addrs []net.Addr, hopIntervalMin time.Duration, hopIntervalMax time.Duration, listenUDPFunc func() (net.PacketConn, error)) (net.PacketConn, error) {
+func NewUDPHopPacketConn(addrs []net.Addr, hopIntervalMin time.Duration, hopIntervalMax time.Duration, listenUDPFunc func(addr *net.UDPAddr) (net.PacketConn, error)) (net.PacketConn, error) {
 	if len(addrs) == 0 {
 		panic("len(addrs) == 0")
 	}
@@ -67,17 +67,13 @@ func NewUDPHopPacketConn(addrs []net.Addr, hopIntervalMin time.Duration, hopInte
 	if listenUDPFunc == nil {
 		panic("listenUDPFunc is nil")
 	}
-	curConn, err := listenUDPFunc()
-	if err != nil {
-		return nil, err
-	}
 	hConn := &udpHopPacketConn{
 		Addrs:          addrs,
 		HopIntervalMin: hopIntervalMin,
 		HopIntervalMax: hopIntervalMax,
 		ListenUDPFunc:  listenUDPFunc,
 		prevConn:       nil,
-		currentConn:    curConn,
+		currentConn:    nil,
 		addrIndex:      rand.Intn(len(addrs)),
 		recvQueue:      make(chan *udpPacket, packetQueueSize),
 		closeChan:      make(chan struct{}),
@@ -87,7 +83,12 @@ func NewUDPHopPacketConn(addrs []net.Addr, hopIntervalMin time.Duration, hopInte
 			},
 		},
 	}
-	go hConn.recvLoop(curConn)
+	var err error
+	hConn.currentConn, err = listenUDPFunc(hConn.Addrs[hConn.addrIndex].(*net.UDPAddr))
+	if err != nil {
+		return nil, err
+	}
+	go hConn.recvLoop(hConn.currentConn)
 	go hConn.hopLoop()
 	return hConn, nil
 }
@@ -140,7 +141,8 @@ func (u *udpHopPacketConn) hop() {
 	if u.closed {
 		return
 	}
-	newConn, err := u.ListenUDPFunc()
+	u.addrIndex = rand.Intn(len(u.Addrs))
+	newConn, err := u.ListenUDPFunc(u.Addrs[u.addrIndex].(*net.UDPAddr))
 	if err != nil {
 		return
 	}
@@ -159,7 +161,6 @@ func (u *udpHopPacketConn) hop() {
 		_ = u.currentConn.SetWriteDeadline(u.writeDeadline)
 	}
 	go u.recvLoop(newConn)
-	u.addrIndex = rand.Intn(len(u.Addrs))
 }
 
 func (u *udpHopPacketConn) ReadFrom(b []byte) (n int, addr net.Addr, err error) {

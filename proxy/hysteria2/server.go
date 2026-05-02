@@ -79,7 +79,15 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 		udpServer := udpDispatcherConstructor(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {
 			b := buf.New()
 			b.Resize(0, buf.Size)
-			writeBuf := b.Bytes()
+
+			SendMessage := func(msg *UDPMessage) error {
+				msgN := msg.Serialize(b.Bytes())
+				if msgN < 0 {
+					return nil
+				}
+				_, err := conn.Write(b.Bytes()[:msgN])
+				return err
+			}
 
 			msg := &UDPMessage{
 				SessionID: 0,
@@ -89,15 +97,14 @@ func (s *Server) Process(ctx context.Context, network net.Network, conn internet
 				Addr:      packet.Source.NetAddr(),
 				Data:      packet.Payload.Bytes(),
 			}
-			msgN := msg.Serialize(writeBuf)
-			_, err := conn.Write(writeBuf[:msgN])
+
+			err := SendMessage(msg)
 			var errTooLarge *quic.DatagramTooLargeError
 			if errors.As(err, &errTooLarge) {
 				msg.PacketID = uint16(rand.Intn(0xFFFF)) + 1
 				fMsgs := FragUDPMessage(msg, int(errTooLarge.MaxDatagramPayloadSize))
 				for _, fMsg := range fMsgs {
-					msgN = fMsg.Serialize(writeBuf)
-					_, err = conn.Write(writeBuf[:msgN])
+					err := SendMessage(&fMsg)
 					if err != nil {
 						break
 					}

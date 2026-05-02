@@ -19,7 +19,9 @@ import (
 	"github.com/v2fly/v2ray-core/v5/features/routing"
 	"github.com/v2fly/v2ray-core/v5/features/stats"
 	"github.com/v2fly/v2ray-core/v5/proxy"
+	hysteria2_proxy "github.com/v2fly/v2ray-core/v5/proxy/hysteria2"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tcp"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/udp"
 	"github.com/v2fly/v2ray-core/v5/transport/pipe"
@@ -120,6 +122,9 @@ func (w *tcpWorker) Start() error {
 		return newError("unable to narrow environment to transport").Base(err)
 	}
 	ctx = envctx.ContextWithEnvironment(ctx, transportEnvironment)
+	if _, ok := w.proxy.(*hysteria2_proxy.Server); ok {
+		ctx = hysteria2.ContextWithDatagram(ctx, true)
+	}
 	hub, err := internet.ListenTCP(ctx, w.address, w.port, w.stream, func(conn internet.Connection) {
 		go w.callback(conn)
 	})

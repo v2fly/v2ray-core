@@ -50,31 +50,33 @@ func (c *client) status() status {
 }
 
 func (c *client) close() {
-	if c.status() == StatusInactive {
-		c.conn.CloseWithError(closeErrCodeOK, "")
-		c.tr.Close()
-		c.pktConn.Close()
-		c.conn = nil
-		c.tr = nil
-		c.pktConn = nil
-		c.udpSM = nil
-	}
+	c.conn.CloseWithError(closeErrCodeOK, "")
+	c.tr.Close()
+	c.pktConn.Close()
+	c.conn = nil
+	c.tr = nil
+	c.pktConn = nil
+	c.udpSM = nil
 }
 
 func (c *client) dial() error {
-	c.close()
-	if c.status() == StatusActive {
+	status := c.status()
+	if status == StatusActive {
 		return nil
 	}
-
-	addr, err := net.ResolveUDPAddr("udp", c.dest.NetAddr())
-	if err != nil {
-		return err
+	if status == StatusInactive {
+		c.close()
 	}
 
 	var pktConn net.PacketConn
+	var udpAddr *net.UDPAddr
+	var err error
+	udpAddr, err = net.ResolveUDPAddr("udp", c.dest.NetAddr())
+	if err != nil {
+		return err
+	}
 	if c.config.UdpHop != nil {
-		pktConn, err = udphop.NewUDPHopPacketConn(udphop.ToAddrs(addr.IP, c.config.UdpHop.Ports), time.Duration(c.config.UdpHop.IntervalMin)*time.Second, time.Duration(c.config.UdpHop.IntervalMax)*time.Second, func() (net.PacketConn, error) {
+		pktConn, err = udphop.NewUDPHopPacketConn(udphop.ToAddrs(udpAddr.IP, c.config.UdpHop.Ports), time.Duration(c.config.UdpHop.IntervalMin)*time.Second, time.Duration(c.config.UdpHop.IntervalMax)*time.Second, func(addr *net.UDPAddr) (net.PacketConn, error) {
 			return internet.ListenSystemPacket(context.Background(), &net.UDPAddr{Port: 0}, c.socketConfig)
 		})
 	} else {
@@ -83,9 +85,11 @@ func (c *client) dial() error {
 	if err != nil {
 		return err
 	}
+
 	if c.config.Salamander != nil {
 		obfs, err := salamander.NewSalamanderObfuscator([]byte(*c.config.Salamander))
 		if err != nil {
+			pktConn.Close()
 			return err
 		}
 		pktConn = salamander.WrapPacketConn(pktConn, obfs)
@@ -110,7 +114,7 @@ func (c *client) dial() error {
 			DisablePathManager:             true,
 		},
 		Dial: func(ctx context.Context, _ string, tlsCfg *gotls.Config, cfg *quic.Config) (*quic.Conn, error) {
-			qc, err := tr.DialEarly(ctx, addr, tlsCfg, cfg)
+			qc, err := tr.DialEarly(ctx, udpAddr, tlsCfg, cfg)
 			if err != nil {
 				return nil, err
 			}
@@ -146,19 +150,20 @@ func (c *client) dial() error {
 		_ = pktConn.Close()
 		return newError("auth failed code ", resp.StatusCode)
 	}
+	_ = resp.Body.Close()
+
 	// udp, _ := strconv.ParseBool(resp.Header.Get(ResponseHeaderUDPEnabled))
 	rx, _ := strconv.ParseUint(resp.Header.Get(CommonHeaderCCRX), 10, 64)
-	_ = resp.Body.Close()
 
 	switch c.config.Congestion {
 	case "reno":
 	case "bbr":
 		congestion.UseBBR(conn, bbr.Profile(c.config.BbrProfile))
 	case "", "brutal":
-		if c.config.BrutalTxMbps > 0 && rx > 0 {
-			congestion.UseBrutal(conn, min(c.config.BrutalTxMbps*1000*1000/8, rx))
-		} else {
+		if c.config.BrutalTxMbps == 0 || rx == 0 {
 			congestion.UseBBR(conn, bbr.Profile(c.config.BbrProfile))
+		} else {
+			congestion.UseBrutal(conn, min(c.config.BrutalTxMbps*1000*1000/8, rx))
 		}
 	case "force-brutal":
 		congestion.UseBrutal(conn, c.config.BrutalTxMbps*1000*1000/8)
@@ -216,7 +221,9 @@ func (c *client) udp() (net.Conn, error) {
 
 func (c *client) clean() {
 	c.Lock()
-	c.close()
+	if c.status() == StatusInactive {
+		c.close()
+	}
 	c.Unlock()
 }
 
@@ -244,14 +251,12 @@ func (m *clientManager) clean() {
 var manager *clientManager
 
 func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.MemoryStreamConfig) (internet.Connection, error) {
-	if tls.ConfigFromStreamSettings(streamSettings) == nil {
-		return nil, newError("tls is nil")
+	tlsConfig := tls.ConfigFromStreamSettings(streamSettings)
+	if tlsConfig == nil {
+		return nil, newError("tls config is nil")
 	}
 
 	datagram := DatagramFromContext(ctx)
-	config := streamSettings.ProtocolSettings.(*Config)
-	tlsConfig := tls.ConfigFromStreamSettings(streamSettings).GetTLSConfig()
-	socketConfig := streamSettings.SocketSettings
 
 	manager.RLock()
 	c := manager.m[dialerConf{dest, streamSettings}]
@@ -263,9 +268,9 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 		if c == nil {
 			c = &client{
 				dest:         dest,
-				config:       config,
-				tlsConfig:    tlsConfig,
-				socketConfig: socketConfig,
+				config:       streamSettings.ProtocolSettings.(*Config),
+				tlsConfig:    tlsConfig.GetTLSConfig(),
+				socketConfig: streamSettings.SocketSettings,
 			}
 			manager.m[dialerConf{dest, streamSettings}] = c
 		}

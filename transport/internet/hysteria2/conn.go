@@ -28,9 +28,12 @@ func (c *interConn) Read(b []byte) (int, error) {
 func (c *interConn) Write(b []byte) (int, error) {
 	if c.client {
 		c.client = false
-		_, err := c.stream.Write(append(quicvarint.Append(nil, FrameTypeTCPRequest), b...))
-		return len(b), err
+		if _, err := c.stream.Write(append(quicvarint.Append(nil, FrameTypeTCPRequest), b...)); err != nil {
+			return 0, err
+		}
+		return len(b), nil
 	}
+
 	return c.stream.Write(b)
 }
 
@@ -63,19 +66,21 @@ type InterConn struct {
 	local  net.Addr
 	remote net.Addr
 
+	id     uint32
+	ch     chan []byte
+	time   time.Time
+	mutex  sync.Mutex
+	closed bool
+
 	write func(p []byte) error
 	close func()
-
-	id    uint32
-	ch    chan []byte
-	time  time.Time
-	mutex sync.Mutex
 }
 
 func (c *InterConn) Time() time.Time {
 	c.mutex.Lock()
-	defer c.mutex.Unlock()
-	return c.time
+	v := c.time
+	c.mutex.Unlock()
+	return v
 }
 
 func (c *InterConn) Update() {
@@ -84,23 +89,28 @@ func (c *InterConn) Update() {
 	c.mutex.Unlock()
 }
 
-func (c *InterConn) Read(b []byte) (int, error) {
-	p, ok := <-c.ch
+func (c *InterConn) Read(p []byte) (int, error) {
+	b, ok := <-c.ch
 	if !ok {
 		return 0, io.EOF
 	}
-	n := copy(b, p)
-	if n != len(p) {
+	if len(p) < len(b) {
 		return 0, io.ErrShortBuffer
 	}
 	c.Update()
-	return n, nil
+	return copy(p, b), nil
 }
 
-func (c *InterConn) Write(b []byte) (int, error) {
+func (c *InterConn) Write(p []byte) (int, error) {
+	if c.closed {
+		return 0, io.ErrClosedPipe
+	}
 	c.Update()
-	binary.BigEndian.PutUint32(b, c.id)
-	return len(b), c.write(b)
+	binary.BigEndian.PutUint32(p, c.id)
+	if err := c.write(p); err != nil {
+		return 0, err
+	}
+	return len(p), nil
 }
 
 func (c *InterConn) Close() error {
@@ -135,7 +145,16 @@ type udpSessionManager struct {
 	closed bool
 	mutex  sync.RWMutex
 
-	addConn internet.ConnHandler
+	addConn        internet.ConnHandler
+	udpIdleTimeout time.Duration
+}
+
+func (m *udpSessionManager) close(udpConn *InterConn) {
+	if !udpConn.closed {
+		udpConn.closed = true
+		close(udpConn.ch)
+		delete(m.m, udpConn.id)
+	}
 }
 
 func (m *udpSessionManager) clean() {
@@ -151,7 +170,7 @@ func (m *udpSessionManager) clean() {
 		now := time.Now()
 		timeoutConn := make([]*InterConn, 0, len(m.m))
 		for _, udpConn := range m.m {
-			if now.Sub(udpConn.Time()) > UDPIdleTimeout {
+			if now.Sub(udpConn.Time()) > m.udpIdleTimeout {
 				timeoutConn = append(timeoutConn, udpConn)
 			}
 		}
@@ -159,10 +178,7 @@ func (m *udpSessionManager) clean() {
 
 		for _, udpConn := range timeoutConn {
 			m.mutex.Lock()
-			if _, found := m.m[udpConn.id]; found {
-				close(udpConn.ch)
-				delete(m.m, udpConn.id)
-			}
+			m.close(udpConn)
 			m.mutex.Unlock()
 		}
 	}
@@ -189,12 +205,11 @@ func (m *udpSessionManager) run() {
 	m.closed = true
 
 	for _, udpConn := range m.m {
-		close(udpConn.ch)
-		delete(m.m, udpConn.id)
+		m.close(udpConn)
 	}
 }
 
-func (m *udpSessionManager) udp() (net.Conn, error) {
+func (m *udpSessionManager) udp() (*InterConn, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -202,26 +217,20 @@ func (m *udpSessionManager) udp() (net.Conn, error) {
 		return nil, newError("closed")
 	}
 
-	id := m.next
-	ch := make(chan []byte, udpMessageChanSize)
 	udpConn := &InterConn{
 		local:  m.conn.LocalAddr(),
 		remote: m.conn.RemoteAddr(),
 
-		write: m.conn.SendDatagram,
-		close: func() {
-			m.mutex.Lock()
-			if _, found := m.m[id]; found {
-				close(ch)
-				delete(m.m, id)
-			}
-			m.mutex.Unlock()
-		},
-
-		id: id,
-		ch: ch,
+		id: m.next,
+		ch: make(chan []byte, udpMessageChanSize),
 	}
-	m.m[id] = udpConn
+	udpConn.write = m.conn.SendDatagram
+	udpConn.close = func() {
+		m.mutex.Lock()
+		m.close(udpConn)
+		m.mutex.Unlock()
+	}
+	m.m[m.next] = udpConn
 	m.next++
 
 	return udpConn, nil
@@ -249,24 +258,19 @@ func (m *udpSessionManager) feed(id uint32, d []byte) {
 
 	udpConn, ok = m.m[id]
 	if !ok {
-		ch := make(chan []byte, udpMessageChanSize)
 		udpConn = &InterConn{
 			local:  m.conn.LocalAddr(),
 			remote: m.conn.RemoteAddr(),
 
-			write: m.conn.SendDatagram,
-			close: func() {
-				m.mutex.Lock()
-				if _, found := m.m[id]; found {
-					close(ch)
-					delete(m.m, id)
-				}
-				m.mutex.Unlock()
-			},
-
 			id:   id,
-			ch:   ch,
+			ch:   make(chan []byte, udpMessageChanSize),
 			time: time.Now(),
+		}
+		udpConn.write = m.conn.SendDatagram
+		udpConn.close = func() {
+			m.mutex.Lock()
+			m.close(udpConn)
+			m.mutex.Unlock()
 		}
 		m.m[id] = udpConn
 		m.addConn(udpConn)

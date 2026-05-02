@@ -37,9 +37,11 @@ func (c *obfsPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
 	if err != nil {
 		return n, addr, err
 	}
+
 	if n < smSaltLen {
 		return 0, addr, nil
 	}
+
 	if len(p) < n-smSaltLen {
 		return 0, addr, nil // ErrShortBuffer
 	}
