@@ -25,6 +25,8 @@ on:
 
 jobs:
   build:
+    # Run on push/PR and on prereleased; skip on released to avoid overwriting prerelease zips.
+    if: github.event_name != 'release' || github.event.release.prerelease == true
     strategy:
       matrix:
         # Include amd64 on all platforms.
@@ -211,6 +213,8 @@ jobs:
           overwrite: true
 
   signature:
+    # Same as `build`: only on push/PR and prereleased, skip on released.
+    if: github.event_name != 'release' || github.event.release.prerelease == true
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -296,7 +300,9 @@ jobs:
           overwrite: true
 
   buildContainer:
-    if: github.event_name == 'release'
+    # Run on both prereleased and released (released adds `latest`/major-version tags).
+    # The extra clauses keep it running even though `signature` is skipped on released.
+    if: ${{ !cancelled() && github.event_name == 'release' && needs.signature.result != 'failure' }}
     needs: signature
     name: Build And Push image
     runs-on: ubuntu-latest
