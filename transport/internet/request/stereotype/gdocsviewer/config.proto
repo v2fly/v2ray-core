@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package v2ray.core.transport.internet.request.stereotype.gdocsviewer;
+option csharp_namespace = "V2Ray.Core.Transport.Internet.Request.Stereotype.Gdocsviewer";
+option go_package = "github.com/v2fly/v2ray-core/v5/transport/internet/request/stereotype/gdocsviewer";
+option java_package = "com.v2ray.core.transport.internet.request.stereotype.gdocsviewer";
+option java_multiple_files = true;
+
+import "common/protoext/extensions.proto";
+
+message Config {
+  option (v2ray.core.common.protoext.message_opt).type = "transport";
+  option (v2ray.core.common.protoext.message_opt).short_name = "gdocsviewer";
+  option (v2ray.core.common.protoext.message_opt).allow_restricted_mode_load = true;
+
+  string viewer_url = 1;
+  string text_url = 2;
+  string origin_url = 3;
+  string viewer_host_header = 4;
+  string user_agent = 5;
+  bool allow_http = 6;
+  int32 h2_pool_size = 7;
+  int32 max_viewer_body_bytes = 8;
+  int32 min_request_interval_ms = 9;
+  bytes shared_key = 10;
+  string path_prefix = 11;
+  int32 max_request_bytes = 12;
+  int32 max_response_bytes = 13;
+  repeated OriginUrlReplacementRule origin_url_replacement_rules = 14;
+}
+
+message OriginUrlReplacementRule {
+  string name = 1;
+  string pattern = 2;
+}
