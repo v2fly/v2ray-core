@@ -29,6 +29,7 @@ type ClientConfig struct {
 	MinRequestIntervalMs      int32                       `protobuf:"varint,9,opt,name=min_request_interval_ms,json=minRequestIntervalMs,proto3" json:"min_request_interval_ms,omitempty"`
 	SharedKey                 []byte                      `protobuf:"bytes,10,opt,name=shared_key,json=sharedKey,proto3" json:"shared_key,omitempty"`
 	OriginUrlReplacementRules []*OriginUrlReplacementRule `protobuf:"bytes,11,rep,name=origin_url_replacement_rules,json=originUrlReplacementRules,proto3" json:"origin_url_replacement_rules,omitempty"`
+	RequestHeaders            map[string]string           `protobuf:"bytes,12,rep,name=request_headers,json=requestHeaders,proto3" json:"request_headers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields             protoimpl.UnknownFields
 	sizeCache                 protoimpl.SizeCache
 }
@@ -136,6 +137,13 @@ func (x *ClientConfig) GetSharedKey() []byte {
 func (x *ClientConfig) GetOriginUrlReplacementRules() []*OriginUrlReplacementRule {
 	if x != nil {
 		return x.OriginUrlReplacementRules
+	}
+	return nil
+}
+
+func (x *ClientConfig) GetRequestHeaders() map[string]string {
+	if x != nil {
+		return x.RequestHeaders
 	}
 	return nil
 }
@@ -264,7 +272,7 @@ var File_transport_internet_request_roundtripper_gdocsviewer_config_proto protor
 
 const file_transport_internet_request_roundtripper_gdocsviewer_config_proto_rawDesc = "" +
 	"\n" +
-	"@transport/internet/request/roundtripper/gdocsviewer/config.proto\x12>v2ray.core.transport.internet.request.roundtripper.gdocsviewer\x1a common/protoext/extensions.proto\"\xd4\x04\n" +
+	"@transport/internet/request/roundtripper/gdocsviewer/config.proto\x12>v2ray.core.transport.internet.request.roundtripper.gdocsviewer\x1a common/protoext/extensions.proto\"\xa3\x06\n" +
 	"\fClientConfig\x12\x1d\n" +
 	"\n" +
 	"viewer_url\x18\x01 \x01(\tR\tviewerUrl\x12\x19\n" +
@@ -283,7 +291,11 @@ const file_transport_internet_request_roundtripper_gdocsviewer_config_proto_rawD
 	"\n" +
 	"shared_key\x18\n" +
 	" \x01(\fR\tsharedKey\x12\x99\x01\n" +
-	"\x1corigin_url_replacement_rules\x18\v \x03(\v2X.v2ray.core.transport.internet.request.roundtripper.gdocsviewer.OriginUrlReplacementRuleR\x19originUrlReplacementRules:8\x82\xb5\x184\n" +
+	"\x1corigin_url_replacement_rules\x18\v \x03(\v2X.v2ray.core.transport.internet.request.roundtripper.gdocsviewer.OriginUrlReplacementRuleR\x19originUrlReplacementRules\x12\x89\x01\n" +
+	"\x0frequest_headers\x18\f \x03(\v2`.v2ray.core.transport.internet.request.roundtripper.gdocsviewer.ClientConfig.RequestHeadersEntryR\x0erequestHeaders\x1aA\n" +
+	"\x13RequestHeadersEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01:8\x82\xb5\x184\n" +
 	"%transport.request.roundtripper.client\x12\vgdocsviewer\"\xe2\x01\n" +
 	"\fServerConfig\x12\x1f\n" +
 	"\vpath_prefix\x18\x01 \x01(\tR\n" +
@@ -310,19 +322,21 @@ func file_transport_internet_request_roundtripper_gdocsviewer_config_proto_rawDe
 	return file_transport_internet_request_roundtripper_gdocsviewer_config_proto_rawDescData
 }
 
-var file_transport_internet_request_roundtripper_gdocsviewer_config_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_transport_internet_request_roundtripper_gdocsviewer_config_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_transport_internet_request_roundtripper_gdocsviewer_config_proto_goTypes = []any{
 	(*ClientConfig)(nil),             // 0: v2ray.core.transport.internet.request.roundtripper.gdocsviewer.ClientConfig
 	(*ServerConfig)(nil),             // 1: v2ray.core.transport.internet.request.roundtripper.gdocsviewer.ServerConfig
 	(*OriginUrlReplacementRule)(nil), // 2: v2ray.core.transport.internet.request.roundtripper.gdocsviewer.OriginUrlReplacementRule
+	nil,                              // 3: v2ray.core.transport.internet.request.roundtripper.gdocsviewer.ClientConfig.RequestHeadersEntry
 }
 var file_transport_internet_request_roundtripper_gdocsviewer_config_proto_depIdxs = []int32{
 	2, // 0: v2ray.core.transport.internet.request.roundtripper.gdocsviewer.ClientConfig.origin_url_replacement_rules:type_name -> v2ray.core.transport.internet.request.roundtripper.gdocsviewer.OriginUrlReplacementRule
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	3, // 1: v2ray.core.transport.internet.request.roundtripper.gdocsviewer.ClientConfig.request_headers:type_name -> v2ray.core.transport.internet.request.roundtripper.gdocsviewer.ClientConfig.RequestHeadersEntry
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_transport_internet_request_roundtripper_gdocsviewer_config_proto_init() }
@@ -336,7 +350,7 @@ func file_transport_internet_request_roundtripper_gdocsviewer_config_proto_init(
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_transport_internet_request_roundtripper_gdocsviewer_config_proto_rawDesc), len(file_transport_internet_request_roundtripper_gdocsviewer_config_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -243,11 +243,17 @@ func TestRoundTripPlaintextViewerFlowAndHeaders(t *testing.T) {
 		}
 	}
 	c := &client{httpRTT: rt, config: &ClientConfig{
-		ViewerUrl:            "https://viewer.test/viewer",
-		TextUrl:              "https://viewer.test/viewerng/text",
-		OriginUrl:            "https://origin.test/gdocsviewer",
-		ViewerHostHeader:     "docs.example",
-		UserAgent:            "gdocsviewer-test",
+		ViewerUrl:        "https://viewer.test/viewer",
+		TextUrl:          "https://viewer.test/viewerng/text",
+		OriginUrl:        "https://origin.test/gdocsviewer",
+		ViewerHostHeader: "docs.example",
+		UserAgent:        "gdocsviewer-test",
+		RequestHeaders: map[string]string{
+			"Accept-Language": "en-US,en;q=0.9",
+			"Host":            "docs.custom",
+			"User-Agent":      "gdocsviewer-custom-agent",
+			"X-Gdocs-Test":    "1",
+		},
 		MinRequestIntervalMs: 1,
 	}}
 
@@ -265,8 +271,11 @@ func TestRoundTripPlaintextViewerFlowAndHeaders(t *testing.T) {
 		t.Fatalf("unexpected request count %d", len(rt.requests))
 	}
 	for _, req := range rt.requests {
-		if req.Host != "docs.example" || req.Header.Get("User-Agent") != "gdocsviewer-test" {
+		if req.Host != "docs.custom" || req.Header.Get("User-Agent") != "gdocsviewer-custom-agent" {
 			t.Fatalf("headers not applied: host=%q ua=%q", req.Host, req.Header.Get("User-Agent"))
+		}
+		if req.Header.Get("Accept-Language") != "en-US,en;q=0.9" || req.Header.Get("X-Gdocs-Test") != "1" {
+			t.Fatalf("custom headers not applied: accept-language=%q x-gdocs-test=%q", req.Header.Get("Accept-Language"), req.Header.Get("X-Gdocs-Test"))
 		}
 	}
 }
