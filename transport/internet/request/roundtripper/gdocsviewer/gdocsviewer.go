@@ -14,6 +14,7 @@ import (
 	gonet "net"
 	"net/http"
 	neturl "net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -32,6 +33,7 @@ const (
 	defaultMinRequestIntervalMs = 100
 	defaultMaxRequestBytes      = 1100
 	defaultMaxResponseBytes     = 64 * 1024
+	debugBodyPreviewBytes       = 2048
 	encryptedRequestVersion     = byte(1)
 	responseFrameSuccess        = byte(0)
 	responseFrameError          = byte(1)
@@ -92,13 +94,20 @@ func (c *client) RoundTrip(ctx context.Context, req request.Request, opts ...req
 	if err != nil {
 		return request.Response{}, err
 	}
-	viewerBody, err := readLimitedHTTPBody(viewerResp, int64(clientMaxViewerBodyBytes(c.config)), "viewer")
+	viewerBody, err := readLimitedHTTPBody(viewerResp, int64(clientMaxViewerBodyBytes(c.config)), "viewer", viewerReq.URL.String())
 	if err != nil {
 		return request.Response{}, err
 	}
 
 	docID, err := extractDocumentID(viewerBody)
 	if err != nil {
+		newError("unable to extract Google Docs Viewer text document id",
+			" viewer_url=", viewerURL,
+			" origin_url=", originRequestURL,
+			" response_headers=", viewerResp.Header,
+			" response_body_len=", len(viewerBody),
+			" response_body_preview=", debugBodyPreview(viewerBody),
+		).AtDebug().WriteToLog()
 		return request.Response{}, err
 	}
 
@@ -116,17 +125,30 @@ func (c *client) RoundTrip(ctx context.Context, req request.Request, opts ...req
 	if err != nil {
 		return request.Response{}, err
 	}
-	textBody, err := readLimitedHTTPBody(textResp, int64(clientMaxViewerBodyBytes(c.config)), "viewer text")
+	textBody, err := readLimitedHTTPBody(textResp, int64(clientMaxViewerBodyBytes(c.config)), "viewer text", textReq.URL.String())
 	if err != nil {
 		return request.Response{}, err
 	}
 
 	originBase64, err := decodeViewerTextData(textBody)
 	if err != nil {
+		newError("unable to decode Google Docs Viewer text data",
+			" text_url=", textURL,
+			" document_id=", docID,
+			" response_headers=", textResp.Header,
+			" response_body_len=", len(textBody),
+			" response_body_preview=", debugBodyPreview(textBody),
+		).AtDebug().WriteToLog()
 		return request.Response{}, err
 	}
 	serverBody, err := decodeBase64Text(originBase64)
 	if err != nil {
+		newError("unable to decode base64 origin response body",
+			" text_url=", textURL,
+			" document_id=", docID,
+			" origin_body_len=", len(originBase64),
+			" origin_body_preview=", debugBodyPreview(originBase64),
+		).AtDebug().WriteToLog()
 		return request.Response{}, newError("unable to decode origin response body").Base(err)
 	}
 	result, err := c.decodeServerBody(serverBody)
@@ -169,6 +191,13 @@ func (c *client) applyViewerHeaders(req *http.Request) {
 	}
 	if c.config.ViewerHostHeader != "" {
 		req.Host = c.config.ViewerHostHeader
+	}
+	for name, value := range c.config.RequestHeaders {
+		if strings.EqualFold(name, "Host") {
+			req.Host = value
+			continue
+		}
+		req.Header.Set(name, value)
 	}
 }
 
@@ -304,17 +333,69 @@ func buildTextURL(textURL string, docID string) (string, error) {
 	return parsed.String(), nil
 }
 
-func readLimitedHTTPBody(resp *http.Response, maxBytes int64, label string) ([]byte, error) {
+func readLimitedHTTPBody(resp *http.Response, maxBytes int64, label string, requestURL string) ([]byte, error) {
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		_, _ = io.Copy(io.Discard, resp.Body)
+		preview, truncated, err := readAndDrainBodyPreview(resp.Body, debugBodyPreviewBytes)
+		if err != nil {
+			newError(label, " returned non-200 response",
+				" url=", requestURL,
+				" status=", resp.Status,
+				" headers=", resp.Header,
+				" body_read_error=", err,
+				" body_preview=", debugBodyPreviewWithTruncation(preview, truncated),
+			).AtDebug().WriteToLog()
+		} else {
+			newError(label, " returned non-200 response",
+				" url=", requestURL,
+				" status=", resp.Status,
+				" headers=", resp.Header,
+				" body_preview=", debugBodyPreviewWithTruncation(preview, truncated),
+			).AtDebug().WriteToLog()
+		}
 		return nil, newError(label, " returned non-200 response: ", resp.Status)
 	}
 	body, err := readLimited(resp.Body, maxBytes)
 	if err != nil {
+		newError("unable to read ", label, " body",
+			" url=", requestURL,
+			" status=", resp.Status,
+			" headers=", resp.Header,
+		).Base(err).AtDebug().WriteToLog()
 		return nil, newError("unable to read ", label, " body").Base(err)
 	}
 	return body, nil
+}
+
+func readAndDrainBodyPreview(reader io.Reader, previewBytes int64) ([]byte, bool, error) {
+	preview, err := io.ReadAll(io.LimitReader(reader, previewBytes+1))
+	if err != nil {
+		return preview, false, err
+	}
+	truncated := int64(len(preview)) > previewBytes
+	if truncated {
+		preview = preview[:previewBytes]
+	}
+	if _, err := io.Copy(io.Discard, reader); err != nil {
+		return preview, truncated, err
+	}
+	return preview, truncated, nil
+}
+
+func debugBodyPreview(body []byte) string {
+	truncated := len(body) > debugBodyPreviewBytes
+	if truncated {
+		body = body[:debugBodyPreviewBytes]
+	}
+	return debugBodyPreviewWithTruncation(body, truncated)
+}
+
+func debugBodyPreviewWithTruncation(body []byte, truncated bool) string {
+	preview := strconv.QuoteToASCII(string(body))
+	if truncated {
+		return preview + " ... [truncated]"
+	}
+	return preview
 }
 
 func readLimited(reader io.Reader, maxBytes int64) ([]byte, error) {

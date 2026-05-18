@@ -34,7 +34,11 @@ func TestBuildClientRequestConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 	simpleConfig := assembler.(*simple.ClientConfig)
-	if simpleConfig.MaxWriteSize != 777 || simpleConfig.InitialPollingIntervalMs != 5 {
+	if simpleConfig.MaxWriteSize != 777 ||
+		simpleConfig.InitialPollingIntervalMs != 5 ||
+		simpleConfig.MinPollingIntervalMs != 5 ||
+		simpleConfig.MaxPollingIntervalMs != defaultMaxPollingIntervalMs ||
+		simpleConfig.FailedRetryIntervalMs != defaultFailedRetryIntervalMs {
 		t.Fatalf("unexpected simple client config %+v", simpleConfig)
 	}
 
@@ -72,7 +76,7 @@ func TestBuildServerRequestConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 	simpleConfig := assembler.(*simple.ServerConfig)
-	if simpleConfig.MaxWriteSize != 888 {
+	if simpleConfig.MaxWriteSize != 888 || simpleConfig.PollingResponseWaitMs != defaultPollingResponseWaitMs {
 		t.Fatalf("unexpected simple server config %+v", simpleConfig)
 	}
 

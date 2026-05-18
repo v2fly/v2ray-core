@@ -16,6 +16,12 @@ import (
 
 const protocolName = "gdocsviewer"
 
+const (
+	defaultPollingResponseWaitMs = 10000
+	defaultMaxPollingIntervalMs  = 10000
+	defaultFailedRetryIntervalMs = 10000
+)
+
 func init() {
 	common.Must(common.RegisterConfig((*Config)(nil), func(ctx context.Context, config interface{}) (interface{}, error) {
 		return nil, newError("gdocsviewer is a transport")
@@ -60,10 +66,10 @@ func buildClientRequestConfig(setting *Config) *assembly.Config {
 			MaxWriteSize:             int32(maxRequestBytes(setting)),
 			WaitSubsequentWriteMs:    10,
 			InitialPollingIntervalMs: minRequestIntervalMs(setting),
-			MaxPollingIntervalMs:     1000,
+			MaxPollingIntervalMs:     maxPollingIntervalMs(setting),
 			MinPollingIntervalMs:     minRequestIntervalMs(setting),
 			BackoffFactor:            1.5,
-			FailedRetryIntervalMs:    1000,
+			FailedRetryIntervalMs:    defaultFailedRetryIntervalMs,
 		}),
 		Roundtripper: serial.ToTypedMessage(&roundtripper.ClientConfig{
 			ViewerUrl:                 setting.ViewerUrl,
@@ -106,7 +112,8 @@ func buildServerRequestConfig(setting *Config) *assembly.Config {
 	}
 	requestConfig := &assembly.Config{
 		Assembler: serial.ToTypedMessage(&simple.ServerConfig{
-			MaxWriteSize: int32(maxResponseBytes(setting)),
+			MaxWriteSize:          int32(maxResponseBytes(setting)),
+			PollingResponseWaitMs: defaultPollingResponseWaitMs,
 		}),
 		Roundtripper: serial.ToTypedMessage(&roundtripper.ServerConfig{
 			PathPrefix:       setting.PathPrefix,
@@ -116,6 +123,14 @@ func buildServerRequestConfig(setting *Config) *assembly.Config {
 		}),
 	}
 	return requestConfig
+}
+
+func maxPollingIntervalMs(config *Config) int32 {
+	minInterval := minRequestIntervalMs(config)
+	if minInterval > defaultMaxPollingIntervalMs {
+		return minInterval
+	}
+	return defaultMaxPollingIntervalMs
 }
 
 func maxRequestBytes(config *Config) int {

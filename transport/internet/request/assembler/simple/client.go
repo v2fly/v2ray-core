@@ -54,7 +54,7 @@ type simpleAssemblerClientSession struct {
 }
 
 func (s *simpleAssemblerClientSession) keepRunning() {
-	s.currentWriteWait = int(s.assembler.config.InitialPollingIntervalMs)
+	s.currentWriteWait = clientInitialPollingIntervalMs(s.assembler.config)
 	for s.ctx.Err() == nil {
 		s.runOnce()
 	}
@@ -65,6 +65,7 @@ func (s *simpleAssemblerClientSession) runOnce() {
 	if s.currentWriteWait != 0 {
 		waitTimer := time.NewTimer(time.Millisecond * time.Duration(s.currentWriteWait))
 		waitForFirstWrite := true
+		maxWriteSize := clientMaxWriteSize(s.assembler.config)
 	copyFromWriterLoop:
 		for {
 			select {
@@ -72,12 +73,12 @@ func (s *simpleAssemblerClientSession) runOnce() {
 				return
 			case data := <-s.writerChan:
 				sendBuffer.Write(data)
-				if sendBuffer.Len() >= int(s.assembler.config.MaxWriteSize) {
+				if sendBuffer.Len() >= maxWriteSize {
 					break copyFromWriterLoop
 				}
 				if waitForFirstWrite {
 					waitForFirstWrite = false
-					waitTimer.Reset(time.Millisecond * time.Duration(s.assembler.config.WaitSubsequentWriteMs))
+					waitTimer.Reset(time.Millisecond * time.Duration(clientWaitSubsequentWriteMs(s.assembler.config)))
 				}
 			case <-waitTimer.C:
 				break copyFromWriterLoop
@@ -91,8 +92,9 @@ func (s *simpleAssemblerClientSession) runOnce() {
 	for sendBuffer.Len() != 0 || firstRound {
 		firstRound = false
 		sendAmount := sendBuffer.Len()
-		if sendAmount > int(s.assembler.config.MaxWriteSize) {
-			sendAmount = int(s.assembler.config.MaxWriteSize)
+		maxWriteSize := clientMaxWriteSize(s.assembler.config)
+		if sendAmount > maxWriteSize {
+			sendAmount = maxWriteSize
 		}
 		data := sendBuffer.Next(sendAmount)
 		if len(data) != 0 {
@@ -105,7 +107,7 @@ func (s *simpleAssemblerClientSession) runOnce() {
 				if s.ctx.Err() != nil {
 					return
 				}
-				time.Sleep(time.Millisecond * time.Duration(s.assembler.config.FailedRetryIntervalMs))
+				time.Sleep(time.Millisecond * time.Duration(clientFailedRetryIntervalMs(s.assembler.config)))
 				continue
 			}
 			if len(resp.Data) != 0 {
@@ -118,16 +120,65 @@ func (s *simpleAssemblerClientSession) runOnce() {
 		}
 	}
 	if pollConnection {
-		s.currentWriteWait = int(s.assembler.config.BackoffFactor * float32(s.currentWriteWait))
-		if s.currentWriteWait > int(s.assembler.config.MaxPollingIntervalMs) {
-			s.currentWriteWait = int(s.assembler.config.MaxPollingIntervalMs)
+		s.currentWriteWait = int(clientBackoffFactor(s.assembler.config) * float32(s.currentWriteWait))
+		if s.currentWriteWait > clientMaxPollingIntervalMs(s.assembler.config) {
+			s.currentWriteWait = clientMaxPollingIntervalMs(s.assembler.config)
 		}
-		if s.currentWriteWait < int(s.assembler.config.MinPollingIntervalMs) {
-			s.currentWriteWait = int(s.assembler.config.MinPollingIntervalMs)
+		if s.currentWriteWait < clientMinPollingIntervalMs(s.assembler.config) {
+			s.currentWriteWait = clientMinPollingIntervalMs(s.assembler.config)
 		}
 	} else {
 		s.currentWriteWait = int(0)
 	}
+}
+
+func clientMaxWriteSize(config *ClientConfig) int {
+	if config != nil && config.MaxWriteSize > 0 {
+		return int(config.MaxWriteSize)
+	}
+	return 4096
+}
+
+func clientWaitSubsequentWriteMs(config *ClientConfig) int {
+	if config != nil && config.WaitSubsequentWriteMs > 0 {
+		return int(config.WaitSubsequentWriteMs)
+	}
+	return 10
+}
+
+func clientInitialPollingIntervalMs(config *ClientConfig) int {
+	if config != nil && config.InitialPollingIntervalMs > 0 {
+		return int(config.InitialPollingIntervalMs)
+	}
+	return 100
+}
+
+func clientMaxPollingIntervalMs(config *ClientConfig) int {
+	if config != nil && config.MaxPollingIntervalMs > 0 {
+		return int(config.MaxPollingIntervalMs)
+	}
+	return 1000
+}
+
+func clientMinPollingIntervalMs(config *ClientConfig) int {
+	if config != nil && config.MinPollingIntervalMs > 0 {
+		return int(config.MinPollingIntervalMs)
+	}
+	return 10
+}
+
+func clientBackoffFactor(config *ClientConfig) float32 {
+	if config != nil && config.BackoffFactor > 1 {
+		return config.BackoffFactor
+	}
+	return 1.5
+}
+
+func clientFailedRetryIntervalMs(config *ClientConfig) int {
+	if config != nil && config.FailedRetryIntervalMs > 0 {
+		return int(config.FailedRetryIntervalMs)
+	}
+	return 1000
 }
 
 func (s *simpleAssemblerClientSession) Read(p []byte) (n int, err error) {

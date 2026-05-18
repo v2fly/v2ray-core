@@ -109,10 +109,11 @@ func (x *ClientConfig) GetFailedRetryIntervalMs() int32 {
 }
 
 type ServerConfig struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	MaxWriteSize  int32                  `protobuf:"varint,1,opt,name=max_write_size,json=maxWriteSize,proto3" json:"max_write_size,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	MaxWriteSize          int32                  `protobuf:"varint,1,opt,name=max_write_size,json=maxWriteSize,proto3" json:"max_write_size,omitempty"`
+	PollingResponseWaitMs int32                  `protobuf:"varint,2,opt,name=polling_response_wait_ms,json=pollingResponseWaitMs,proto3" json:"polling_response_wait_ms,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *ServerConfig) Reset() {
@@ -152,6 +153,13 @@ func (x *ServerConfig) GetMaxWriteSize() int32 {
 	return 0
 }
 
+func (x *ServerConfig) GetPollingResponseWaitMs() int32 {
+	if x != nil {
+		return x.PollingResponseWaitMs
+	}
+	return 0
+}
+
 var File_transport_internet_request_assembler_simple_config_proto protoreflect.FileDescriptor
 
 const file_transport_internet_request_assembler_simple_config_proto_rawDesc = "" +
@@ -165,9 +173,10 @@ const file_transport_internet_request_assembler_simple_config_proto_rawDesc = ""
 	"\x17min_polling_interval_ms\x18\x05 \x01(\x05R\x14minPollingIntervalMs\x12%\n" +
 	"\x0ebackoff_factor\x18\x06 \x01(\x02R\rbackoffFactor\x127\n" +
 	"\x18failed_retry_interval_ms\x18\a \x01(\x05R\x15failedRetryIntervalMs:0\x82\xb5\x18,\n" +
-	"\"transport.request.assembler.client\x12\x06simple\"f\n" +
+	"\"transport.request.assembler.client\x12\x06simple\"\x9f\x01\n" +
 	"\fServerConfig\x12$\n" +
-	"\x0emax_write_size\x18\x01 \x01(\x05R\fmaxWriteSize:0\x82\xb5\x18,\n" +
+	"\x0emax_write_size\x18\x01 \x01(\x05R\fmaxWriteSize\x127\n" +
+	"\x18polling_response_wait_ms\x18\x02 \x01(\x05R\x15pollingResponseWaitMs:0\x82\xb5\x18,\n" +
 	"\"transport.request.assembler.server\x12\x06simpleB\xc3\x01\n" +
 	":com.v2ray.core.transport.internet.request.assembler.simpleP\x01ZJgithub.com/v2fly/v2ray-core/v5/transport/internet/request/assembler/simple\xaa\x026V2Ray.Core.Transport.Internet.Request.Assembler.Simpleb\x06proto3"
 

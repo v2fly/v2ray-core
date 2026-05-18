@@ -23,6 +23,7 @@ message ClientConfig {
   int32 min_request_interval_ms = 9;
   bytes shared_key = 10;
   repeated OriginUrlReplacementRule origin_url_replacement_rules = 11;
+  map<string, string> request_headers = 12;
 }
 
 message ServerConfig {
