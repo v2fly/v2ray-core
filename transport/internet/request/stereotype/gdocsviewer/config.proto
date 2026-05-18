@@ -27,6 +27,7 @@ message Config {
   int32 max_request_bytes = 12;
   int32 max_response_bytes = 13;
   repeated OriginUrlReplacementRule origin_url_replacement_rules = 14;
+  map<string, string> request_headers = 15;
 }
 
 message OriginUrlReplacementRule {
