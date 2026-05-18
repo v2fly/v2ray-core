@@ -231,12 +231,12 @@ func TestRoundTripPlaintextViewerFlowAndHeaders(t *testing.T) {
 			if len(parts) != 3 || parts[0] != "c2Vzc2lvbg" || parts[1] != "cmVxdWVzdA" || !strings.HasSuffix(parts[2], ".txt") {
 				t.Fatalf("unexpected origin request URL %q", origin)
 			}
-			return textHTTPResponse(http.StatusOK, `... "/viewerng/text?id=doc-1&authuser=0" ...`), nil
+			return textHTTPResponse(`... "/viewerng/text?id=doc-1&authuser=0" ...`), nil
 		case 2:
 			if req.URL.Path != "/viewerng/text" || req.URL.Query().Get("id") != "doc-1" || req.URL.Query().Get("page") != "0" {
 				t.Fatalf("unexpected text request URL %s", req.URL.String())
 			}
-			return textHTTPResponse(http.StatusOK, viewerTextBodyForServerBody([]byte("response"))), nil
+			return textHTTPResponse(viewerTextBodyForServerBody([]byte("response"))), nil
 		default:
 			t.Fatalf("unexpected request count %d", len(rt.requests))
 			return nil, nil
@@ -327,9 +327,9 @@ func TestRoundTripEncryptedErrorFrame(t *testing.T) {
 	rt := &recordingRoundTripper{}
 	rt.fn = func(req *http.Request) (*http.Response, error) {
 		if len(rt.requests) == 1 {
-			return textHTTPResponse(http.StatusOK, `viewerng/text?id=doc-error`), nil
+			return textHTTPResponse(`viewerng/text?id=doc-error`), nil
 		}
-		return textHTTPResponse(http.StatusOK, viewerTextBodyForOriginBody(base64.StdEncoding.EncodeToString(encryptedError))), nil
+		return textHTTPResponse(viewerTextBodyForOriginBody(base64.StdEncoding.EncodeToString(encryptedError))), nil
 	}
 	c := &client{httpRTT: rt, config: &ClientConfig{
 		ViewerUrl:            "https://viewer.test/viewer",
@@ -349,9 +349,9 @@ func TestRoundTripRejectsMalformedViewerData(t *testing.T) {
 	rt := &recordingRoundTripper{}
 	rt.fn = func(req *http.Request) (*http.Response, error) {
 		if len(rt.requests) == 1 {
-			return textHTTPResponse(http.StatusOK, `viewerng/text?id=doc-bad`), nil
+			return textHTTPResponse(`viewerng/text?id=doc-bad`), nil
 		}
-		return textHTTPResponse(http.StatusOK, `)]}'`+"\n"+`{"mimetype":"text/plain","data":`), nil
+		return textHTTPResponse(`)]}'` + "\n" + `{"mimetype":"text/plain","data":`), nil
 	}
 	c := &client{httpRTT: rt, config: &ClientConfig{
 		ViewerUrl:            "https://viewer.test/viewer",
@@ -370,9 +370,9 @@ func TestRoundTripRejectsInvalidOriginBase64Body(t *testing.T) {
 	rt := &recordingRoundTripper{}
 	rt.fn = func(req *http.Request) (*http.Response, error) {
 		if len(rt.requests) == 1 {
-			return textHTTPResponse(http.StatusOK, `viewerng/text?id=doc-invalid`), nil
+			return textHTTPResponse(`viewerng/text?id=doc-invalid`), nil
 		}
-		return textHTTPResponse(http.StatusOK, viewerTextBodyForOriginBody("not base64")), nil
+		return textHTTPResponse(viewerTextBodyForOriginBody("not base64")), nil
 	}
 	c := &client{httpRTT: rt, config: &ClientConfig{
 		ViewerUrl:            "https://viewer.test/viewer",
@@ -493,7 +493,7 @@ func TestServerEncryptedSuccessErrorAndLimits(t *testing.T) {
 	}
 
 	rec := httptest.NewRecorder()
-	s.ServeHTTP(rec, encryptedServerRequest(t, key, "/g", []byte("session"), []byte("ping")))
+	s.ServeHTTP(rec, encryptedServerRequest(t, key, []byte("session"), []byte("ping")))
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status=%d body=%q", rec.Code, rec.Body.String())
 	}
@@ -506,7 +506,7 @@ func TestServerEncryptedSuccessErrorAndLimits(t *testing.T) {
 	}
 
 	rec = httptest.NewRecorder()
-	s.ServeHTTP(rec, encryptedServerRequest(t, key, "/g", []byte("session"), []byte("too large payload")))
+	s.ServeHTTP(rec, encryptedServerRequest(t, key, []byte("session"), []byte("too large payload")))
 	frame = decryptServerHTTPBody(t, key, rec.Body.String())
 	if rec.Code != http.StatusOK || frame[0] != responseFrameError || !strings.Contains(string(frame[1:]), "max_request_bytes") {
 		t.Fatalf("unexpected encrypted size error status=%d frame=%q", rec.Code, frame)
@@ -516,7 +516,7 @@ func TestServerEncryptedSuccessErrorAndLimits(t *testing.T) {
 		return request.Response{}, errors.New("backend failed")
 	}
 	rec = httptest.NewRecorder()
-	s.ServeHTTP(rec, encryptedServerRequest(t, key, "/g", []byte("session"), []byte("ping")))
+	s.ServeHTTP(rec, encryptedServerRequest(t, key, []byte("session"), []byte("ping")))
 	frame = decryptServerHTTPBody(t, key, rec.Body.String())
 	if rec.Code != http.StatusOK || frame[0] != responseFrameError || !strings.Contains(string(frame[1:]), "backend failed") {
 		t.Fatalf("unexpected encrypted backend error status=%d frame=%q", rec.Code, frame)
@@ -526,7 +526,7 @@ func TestServerEncryptedSuccessErrorAndLimits(t *testing.T) {
 		return request.Response{Data: []byte("this response is too large")}, nil
 	}
 	rec = httptest.NewRecorder()
-	s.ServeHTTP(rec, encryptedServerRequest(t, key, "/g", []byte("session"), []byte("ping")))
+	s.ServeHTTP(rec, encryptedServerRequest(t, key, []byte("session"), []byte("ping")))
 	frame = decryptServerHTTPBody(t, key, rec.Body.String())
 	if rec.Code != http.StatusOK || frame[0] != responseFrameError || !strings.Contains(string(frame[1:]), "max_response_bytes") {
 		t.Fatalf("unexpected encrypted response-size error status=%d frame=%q", rec.Code, frame)
@@ -542,7 +542,7 @@ func TestServerEncryptedAEADMismatchSignalsEncryptedError(t *testing.T) {
 	}
 
 	rec := httptest.NewRecorder()
-	s.ServeHTTP(rec, encryptedServerRequest(t, clientKey, "/g", []byte("session"), []byte("ping")))
+	s.ServeHTTP(rec, encryptedServerRequest(t, clientKey, []byte("session"), []byte("ping")))
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status=%d body=%q", rec.Code, rec.Body.String())
 	}
@@ -565,10 +565,10 @@ func (r *recordingRoundTripper) RoundTrip(req *http.Request) (*http.Response, er
 	return r.fn(req)
 }
 
-func textHTTPResponse(status int, body string) *http.Response {
+func textHTTPResponse(body string) *http.Response {
 	return &http.Response{
-		StatusCode: status,
-		Status:     fmt.Sprintf("%d %s", status, http.StatusText(status)),
+		StatusCode: http.StatusOK,
+		Status:     fmt.Sprintf("%d %s", http.StatusOK, http.StatusText(http.StatusOK)),
 		Header:     make(http.Header),
 		Body:       io.NopCloser(strings.NewReader(body)),
 	}
@@ -620,13 +620,13 @@ func (f *fakeTripperReceiver) OnRoundTrip(ctx context.Context, req request.Reque
 	return request.Response{}, nil
 }
 
-func encryptedServerRequest(t *testing.T, key []byte, prefix string, session []byte, payload []byte) *http.Request {
+func encryptedServerRequest(t *testing.T, key []byte, session []byte, payload []byte) *http.Request {
 	t.Helper()
 	combined, err := encryptClientRequest(key, session, payload)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return httptest.NewRequest(http.MethodGet, prefix+"/t/"+base64.RawURLEncoding.EncodeToString(combined)+".log", nil)
+	return httptest.NewRequest(http.MethodGet, "/g/t/"+base64.RawURLEncoding.EncodeToString(combined)+".log", nil)
 }
 
 func decryptServerHTTPBody(t *testing.T, key []byte, body string) []byte {
