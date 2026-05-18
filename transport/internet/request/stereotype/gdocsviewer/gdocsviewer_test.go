@@ -27,6 +27,9 @@ func TestBuildClientRequestConfig(t *testing.T) {
 			Name:    "abc",
 			Pattern: "[a-z0-9]{14}",
 		}},
+		RequestHeaders: map[string]string{
+			"Accept-Language": "en-US,en;q=0.9",
+		},
 	})
 
 	assembler, err := serial.GetInstanceOf(config.Assembler)
@@ -57,7 +60,8 @@ func TestBuildClientRequestConfig(t *testing.T) {
 		!bytes.Equal(rtConfig.SharedKey, key) ||
 		len(rtConfig.OriginUrlReplacementRules) != 1 ||
 		rtConfig.OriginUrlReplacementRules[0].Name != "abc" ||
-		rtConfig.OriginUrlReplacementRules[0].Pattern != "[a-z0-9]{14}" {
+		rtConfig.OriginUrlReplacementRules[0].Pattern != "[a-z0-9]{14}" ||
+		rtConfig.RequestHeaders["Accept-Language"] != "en-US,en;q=0.9" {
 		t.Fatalf("unexpected gdocsviewer client config %+v", rtConfig)
 	}
 }

@@ -32,6 +32,7 @@ type Config struct {
 	MaxRequestBytes           int32                       `protobuf:"varint,12,opt,name=max_request_bytes,json=maxRequestBytes,proto3" json:"max_request_bytes,omitempty"`
 	MaxResponseBytes          int32                       `protobuf:"varint,13,opt,name=max_response_bytes,json=maxResponseBytes,proto3" json:"max_response_bytes,omitempty"`
 	OriginUrlReplacementRules []*OriginUrlReplacementRule `protobuf:"bytes,14,rep,name=origin_url_replacement_rules,json=originUrlReplacementRules,proto3" json:"origin_url_replacement_rules,omitempty"`
+	RequestHeaders            map[string]string           `protobuf:"bytes,15,rep,name=request_headers,json=requestHeaders,proto3" json:"request_headers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields             protoimpl.UnknownFields
 	sizeCache                 protoimpl.SizeCache
 }
@@ -164,6 +165,13 @@ func (x *Config) GetOriginUrlReplacementRules() []*OriginUrlReplacementRule {
 	return nil
 }
 
+func (x *Config) GetRequestHeaders() map[string]string {
+	if x != nil {
+		return x.RequestHeaders
+	}
+	return nil
+}
+
 type OriginUrlReplacementRule struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -220,7 +228,7 @@ var File_transport_internet_request_stereotype_gdocsviewer_config_proto protoref
 
 const file_transport_internet_request_stereotype_gdocsviewer_config_proto_rawDesc = "" +
 	"\n" +
-	">transport/internet/request/stereotype/gdocsviewer/config.proto\x12<v2ray.core.transport.internet.request.stereotype.gdocsviewer\x1a common/protoext/extensions.proto\"\xaf\x05\n" +
+	">transport/internet/request/stereotype/gdocsviewer/config.proto\x12<v2ray.core.transport.internet.request.stereotype.gdocsviewer\x1a common/protoext/extensions.proto\"\xf6\x06\n" +
 	"\x06Config\x12\x1d\n" +
 	"\n" +
 	"viewer_url\x18\x01 \x01(\tR\tviewerUrl\x12\x19\n" +
@@ -243,7 +251,11 @@ const file_transport_internet_request_stereotype_gdocsviewer_config_proto_rawDes
 	"pathPrefix\x12*\n" +
 	"\x11max_request_bytes\x18\f \x01(\x05R\x0fmaxRequestBytes\x12,\n" +
 	"\x12max_response_bytes\x18\r \x01(\x05R\x10maxResponseBytes\x12\x97\x01\n" +
-	"\x1corigin_url_replacement_rules\x18\x0e \x03(\v2V.v2ray.core.transport.internet.request.stereotype.gdocsviewer.OriginUrlReplacementRuleR\x19originUrlReplacementRules: \x82\xb5\x18\x1c\n" +
+	"\x1corigin_url_replacement_rules\x18\x0e \x03(\v2V.v2ray.core.transport.internet.request.stereotype.gdocsviewer.OriginUrlReplacementRuleR\x19originUrlReplacementRules\x12\x81\x01\n" +
+	"\x0frequest_headers\x18\x0f \x03(\v2X.v2ray.core.transport.internet.request.stereotype.gdocsviewer.Config.RequestHeadersEntryR\x0erequestHeaders\x1aA\n" +
+	"\x13RequestHeadersEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01: \x82\xb5\x18\x1c\n" +
 	"\ttransport\x12\vgdocsviewer\x90\xff)\x01\"H\n" +
 	"\x18OriginUrlReplacementRule\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
@@ -262,18 +274,20 @@ func file_transport_internet_request_stereotype_gdocsviewer_config_proto_rawDesc
 	return file_transport_internet_request_stereotype_gdocsviewer_config_proto_rawDescData
 }
 
-var file_transport_internet_request_stereotype_gdocsviewer_config_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_transport_internet_request_stereotype_gdocsviewer_config_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_transport_internet_request_stereotype_gdocsviewer_config_proto_goTypes = []any{
 	(*Config)(nil),                   // 0: v2ray.core.transport.internet.request.stereotype.gdocsviewer.Config
 	(*OriginUrlReplacementRule)(nil), // 1: v2ray.core.transport.internet.request.stereotype.gdocsviewer.OriginUrlReplacementRule
+	nil,                              // 2: v2ray.core.transport.internet.request.stereotype.gdocsviewer.Config.RequestHeadersEntry
 }
 var file_transport_internet_request_stereotype_gdocsviewer_config_proto_depIdxs = []int32{
 	1, // 0: v2ray.core.transport.internet.request.stereotype.gdocsviewer.Config.origin_url_replacement_rules:type_name -> v2ray.core.transport.internet.request.stereotype.gdocsviewer.OriginUrlReplacementRule
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 1: v2ray.core.transport.internet.request.stereotype.gdocsviewer.Config.request_headers:type_name -> v2ray.core.transport.internet.request.stereotype.gdocsviewer.Config.RequestHeadersEntry
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_transport_internet_request_stereotype_gdocsviewer_config_proto_init() }
@@ -287,7 +301,7 @@ func file_transport_internet_request_stereotype_gdocsviewer_config_proto_init() 
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_transport_internet_request_stereotype_gdocsviewer_config_proto_rawDesc), len(file_transport_internet_request_stereotype_gdocsviewer_config_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

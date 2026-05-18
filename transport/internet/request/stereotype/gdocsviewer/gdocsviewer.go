@@ -83,6 +83,7 @@ func buildClientRequestConfig(setting *Config) *assembly.Config {
 			MinRequestIntervalMs:      setting.MinRequestIntervalMs,
 			SharedKey:                 setting.SharedKey,
 			OriginUrlReplacementRules: convertOriginURLReplacementRules(setting.OriginUrlReplacementRules),
+			RequestHeaders:            setting.RequestHeaders,
 		}),
 	}
 	return requestConfig
