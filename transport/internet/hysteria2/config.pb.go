@@ -82,30 +82,115 @@ func (x *UdpHop) GetIntervalMax() uint32 {
 	return 0
 }
 
+type Realm struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Scheme        string                 `protobuf:"bytes,1,opt,name=scheme,proto3" json:"scheme,omitempty"`
+	Host          string                 `protobuf:"bytes,2,opt,name=host,proto3" json:"host,omitempty"`
+	Port          string                 `protobuf:"bytes,3,opt,name=port,proto3" json:"port,omitempty"`
+	Token         string                 `protobuf:"bytes,4,opt,name=token,proto3" json:"token,omitempty"`
+	ID            string                 `protobuf:"bytes,5,opt,name=ID,proto3" json:"ID,omitempty"`
+	StunServers   []string               `protobuf:"bytes,6,rep,name=stun_servers,json=stunServers,proto3" json:"stun_servers,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Realm) Reset() {
+	*x = Realm{}
+	mi := &file_transport_internet_hysteria2_config_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Realm) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Realm) ProtoMessage() {}
+
+func (x *Realm) ProtoReflect() protoreflect.Message {
+	mi := &file_transport_internet_hysteria2_config_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Realm.ProtoReflect.Descriptor instead.
+func (*Realm) Descriptor() ([]byte, []int) {
+	return file_transport_internet_hysteria2_config_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Realm) GetScheme() string {
+	if x != nil {
+		return x.Scheme
+	}
+	return ""
+}
+
+func (x *Realm) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
+}
+
+func (x *Realm) GetPort() string {
+	if x != nil {
+		return x.Port
+	}
+	return ""
+}
+
+func (x *Realm) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *Realm) GetID() string {
+	if x != nil {
+		return x.ID
+	}
+	return ""
+}
+
+func (x *Realm) GetStunServers() []string {
+	if x != nil {
+		return x.StunServers
+	}
+	return nil
+}
+
 type Config struct {
 	state                          protoimpl.MessageState `protogen:"open.v1"`
-	Auth                           string                 `protobuf:"bytes,1,opt,name=auth,proto3" json:"auth,omitempty"`
-	UdpHop                         *UdpHop                `protobuf:"bytes,2,opt,name=udp_hop,json=udpHop,proto3" json:"udp_hop,omitempty"`
-	Salamander                     *string                `protobuf:"bytes,3,opt,name=salamander,proto3,oneof" json:"salamander,omitempty"`
-	Congestion                     string                 `protobuf:"bytes,4,opt,name=congestion,proto3" json:"congestion,omitempty"`
-	BbrProfile                     string                 `protobuf:"bytes,5,opt,name=bbr_profile,json=bbrProfile,proto3" json:"bbr_profile,omitempty"`
-	BrutalTxMbps                   uint64                 `protobuf:"varint,6,opt,name=brutal_tx_mbps,json=brutalTxMbps,proto3" json:"brutal_tx_mbps,omitempty"`
-	BrutalRxMbps                   uint64                 `protobuf:"varint,7,opt,name=brutal_rx_mbps,json=brutalRxMbps,proto3" json:"brutal_rx_mbps,omitempty"`
-	InitialStreamReceiveWindow     uint64                 `protobuf:"varint,8,opt,name=InitialStreamReceiveWindow,proto3" json:"InitialStreamReceiveWindow,omitempty"`
-	MaxStreamReceiveWindow         uint64                 `protobuf:"varint,9,opt,name=MaxStreamReceiveWindow,proto3" json:"MaxStreamReceiveWindow,omitempty"`
-	InitialConnectionReceiveWindow uint64                 `protobuf:"varint,10,opt,name=InitialConnectionReceiveWindow,proto3" json:"InitialConnectionReceiveWindow,omitempty"`
-	MaxConnectionReceiveWindow     uint64                 `protobuf:"varint,11,opt,name=MaxConnectionReceiveWindow,proto3" json:"MaxConnectionReceiveWindow,omitempty"`
-	MaxIdleTimeout                 int64                  `protobuf:"varint,12,opt,name=MaxIdleTimeout,proto3" json:"MaxIdleTimeout,omitempty"`
-	KeepAlivePeriod                int64                  `protobuf:"varint,13,opt,name=KeepAlivePeriod,proto3" json:"KeepAlivePeriod,omitempty"`
-	DisablePathMTUDiscovery        bool                   `protobuf:"varint,14,opt,name=DisablePathMTUDiscovery,proto3" json:"DisablePathMTUDiscovery,omitempty"`
-	MaxIncomingStreams             int64                  `protobuf:"varint,15,opt,name=MaxIncomingStreams,proto3" json:"MaxIncomingStreams,omitempty"`
+	UdpHop                         *UdpHop                `protobuf:"bytes,1,opt,name=udp_hop,json=udpHop,proto3" json:"udp_hop,omitempty"`
+	Realm                          *Realm                 `protobuf:"bytes,2,opt,name=realm,proto3" json:"realm,omitempty"`
+	Salamander                     string                 `protobuf:"bytes,3,opt,name=salamander,proto3" json:"salamander,omitempty"`
+	Auth                           string                 `protobuf:"bytes,4,opt,name=auth,proto3" json:"auth,omitempty"`
+	Congestion                     string                 `protobuf:"bytes,5,opt,name=congestion,proto3" json:"congestion,omitempty"`
+	BbrProfile                     string                 `protobuf:"bytes,6,opt,name=bbr_profile,json=bbrProfile,proto3" json:"bbr_profile,omitempty"`
+	BrutalTxMbps                   uint64                 `protobuf:"varint,7,opt,name=brutal_tx_mbps,json=brutalTxMbps,proto3" json:"brutal_tx_mbps,omitempty"`
+	BrutalRxMbps                   uint64                 `protobuf:"varint,8,opt,name=brutal_rx_mbps,json=brutalRxMbps,proto3" json:"brutal_rx_mbps,omitempty"`
+	InitialStreamReceiveWindow     uint64                 `protobuf:"varint,9,opt,name=InitialStreamReceiveWindow,proto3" json:"InitialStreamReceiveWindow,omitempty"`
+	MaxStreamReceiveWindow         uint64                 `protobuf:"varint,10,opt,name=MaxStreamReceiveWindow,proto3" json:"MaxStreamReceiveWindow,omitempty"`
+	InitialConnectionReceiveWindow uint64                 `protobuf:"varint,11,opt,name=InitialConnectionReceiveWindow,proto3" json:"InitialConnectionReceiveWindow,omitempty"`
+	MaxConnectionReceiveWindow     uint64                 `protobuf:"varint,12,opt,name=MaxConnectionReceiveWindow,proto3" json:"MaxConnectionReceiveWindow,omitempty"`
+	MaxIdleTimeout                 int64                  `protobuf:"varint,13,opt,name=MaxIdleTimeout,proto3" json:"MaxIdleTimeout,omitempty"`
+	KeepAlivePeriod                int64                  `protobuf:"varint,14,opt,name=KeepAlivePeriod,proto3" json:"KeepAlivePeriod,omitempty"`
+	DisablePathMTUDiscovery        bool                   `protobuf:"varint,15,opt,name=DisablePathMTUDiscovery,proto3" json:"DisablePathMTUDiscovery,omitempty"`
+	MaxIncomingStreams             int64                  `protobuf:"varint,16,opt,name=MaxIncomingStreams,proto3" json:"MaxIncomingStreams,omitempty"`
 	unknownFields                  protoimpl.UnknownFields
 	sizeCache                      protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	mi := &file_transport_internet_hysteria2_config_proto_msgTypes[1]
+	mi := &file_transport_internet_hysteria2_config_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -117,7 +202,7 @@ func (x *Config) String() string {
 func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
-	mi := &file_transport_internet_hysteria2_config_proto_msgTypes[1]
+	mi := &file_transport_internet_hysteria2_config_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -130,14 +215,7 @@ func (x *Config) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Config.ProtoReflect.Descriptor instead.
 func (*Config) Descriptor() ([]byte, []int) {
-	return file_transport_internet_hysteria2_config_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *Config) GetAuth() string {
-	if x != nil {
-		return x.Auth
-	}
-	return ""
+	return file_transport_internet_hysteria2_config_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Config) GetUdpHop() *UdpHop {
@@ -147,9 +225,23 @@ func (x *Config) GetUdpHop() *UdpHop {
 	return nil
 }
 
+func (x *Config) GetRealm() *Realm {
+	if x != nil {
+		return x.Realm
+	}
+	return nil
+}
+
 func (x *Config) GetSalamander() string {
-	if x != nil && x.Salamander != nil {
-		return *x.Salamander
+	if x != nil {
+		return x.Salamander
+	}
+	return ""
+}
+
+func (x *Config) GetAuth() string {
+	if x != nil {
+		return x.Auth
 	}
 	return ""
 }
@@ -246,31 +338,38 @@ const file_transport_internet_hysteria2_config_proto_rawDesc = "" +
 	"\x06UdpHop\x12\x14\n" +
 	"\x05ports\x18\x01 \x03(\rR\x05ports\x12!\n" +
 	"\finterval_min\x18\x02 \x01(\rR\vintervalMin\x12!\n" +
-	"\finterval_max\x18\x03 \x01(\rR\vintervalMax\"\xff\x05\n" +
-	"\x06Config\x12\x12\n" +
-	"\x04auth\x18\x01 \x01(\tR\x04auth\x12H\n" +
-	"\audp_hop\x18\x02 \x01(\v2/.v2ray.core.transport.internet.hysteria2.UdpHopR\x06udpHop\x12#\n" +
+	"\finterval_max\x18\x03 \x01(\rR\vintervalMax\"\x90\x01\n" +
+	"\x05Realm\x12\x16\n" +
+	"\x06scheme\x18\x01 \x01(\tR\x06scheme\x12\x12\n" +
+	"\x04host\x18\x02 \x01(\tR\x04host\x12\x12\n" +
+	"\x04port\x18\x03 \x01(\tR\x04port\x12\x14\n" +
+	"\x05token\x18\x04 \x01(\tR\x05token\x12\x0e\n" +
+	"\x02ID\x18\x05 \x01(\tR\x02ID\x12!\n" +
+	"\fstun_servers\x18\x06 \x03(\tR\vstunServers\"\xb1\x06\n" +
+	"\x06Config\x12H\n" +
+	"\audp_hop\x18\x01 \x01(\v2/.v2ray.core.transport.internet.hysteria2.UdpHopR\x06udpHop\x12D\n" +
+	"\x05realm\x18\x02 \x01(\v2..v2ray.core.transport.internet.hysteria2.RealmR\x05realm\x12\x1e\n" +
 	"\n" +
-	"salamander\x18\x03 \x01(\tH\x00R\n" +
-	"salamander\x88\x01\x01\x12\x1e\n" +
+	"salamander\x18\x03 \x01(\tR\n" +
+	"salamander\x12\x12\n" +
+	"\x04auth\x18\x04 \x01(\tR\x04auth\x12\x1e\n" +
 	"\n" +
-	"congestion\x18\x04 \x01(\tR\n" +
+	"congestion\x18\x05 \x01(\tR\n" +
 	"congestion\x12\x1f\n" +
-	"\vbbr_profile\x18\x05 \x01(\tR\n" +
+	"\vbbr_profile\x18\x06 \x01(\tR\n" +
 	"bbrProfile\x12$\n" +
-	"\x0ebrutal_tx_mbps\x18\x06 \x01(\x04R\fbrutalTxMbps\x12$\n" +
-	"\x0ebrutal_rx_mbps\x18\a \x01(\x04R\fbrutalRxMbps\x12>\n" +
-	"\x1aInitialStreamReceiveWindow\x18\b \x01(\x04R\x1aInitialStreamReceiveWindow\x126\n" +
-	"\x16MaxStreamReceiveWindow\x18\t \x01(\x04R\x16MaxStreamReceiveWindow\x12F\n" +
-	"\x1eInitialConnectionReceiveWindow\x18\n" +
-	" \x01(\x04R\x1eInitialConnectionReceiveWindow\x12>\n" +
-	"\x1aMaxConnectionReceiveWindow\x18\v \x01(\x04R\x1aMaxConnectionReceiveWindow\x12&\n" +
-	"\x0eMaxIdleTimeout\x18\f \x01(\x03R\x0eMaxIdleTimeout\x12(\n" +
-	"\x0fKeepAlivePeriod\x18\r \x01(\x03R\x0fKeepAlivePeriod\x128\n" +
-	"\x17DisablePathMTUDiscovery\x18\x0e \x01(\bR\x17DisablePathMTUDiscovery\x12.\n" +
-	"\x12MaxIncomingStreams\x18\x0f \x01(\x03R\x12MaxIncomingStreams:\x1a\x82\xb5\x18\x16\n" +
-	"\ttransport\x12\thysteria2B\r\n" +
-	"\v_salamanderB\x96\x01\n" +
+	"\x0ebrutal_tx_mbps\x18\a \x01(\x04R\fbrutalTxMbps\x12$\n" +
+	"\x0ebrutal_rx_mbps\x18\b \x01(\x04R\fbrutalRxMbps\x12>\n" +
+	"\x1aInitialStreamReceiveWindow\x18\t \x01(\x04R\x1aInitialStreamReceiveWindow\x126\n" +
+	"\x16MaxStreamReceiveWindow\x18\n" +
+	" \x01(\x04R\x16MaxStreamReceiveWindow\x12F\n" +
+	"\x1eInitialConnectionReceiveWindow\x18\v \x01(\x04R\x1eInitialConnectionReceiveWindow\x12>\n" +
+	"\x1aMaxConnectionReceiveWindow\x18\f \x01(\x04R\x1aMaxConnectionReceiveWindow\x12&\n" +
+	"\x0eMaxIdleTimeout\x18\r \x01(\x03R\x0eMaxIdleTimeout\x12(\n" +
+	"\x0fKeepAlivePeriod\x18\x0e \x01(\x03R\x0fKeepAlivePeriod\x128\n" +
+	"\x17DisablePathMTUDiscovery\x18\x0f \x01(\bR\x17DisablePathMTUDiscovery\x12.\n" +
+	"\x12MaxIncomingStreams\x18\x10 \x01(\x03R\x12MaxIncomingStreams:\x1a\x82\xb5\x18\x16\n" +
+	"\ttransport\x12\thysteria2B\x96\x01\n" +
 	"+com.v2ray.core.transport.internet.hysteria2P\x01Z;github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2\xaa\x02'V2Ray.Core.Transport.Internet.Hysteria2b\x06proto3"
 
 var (
@@ -285,18 +384,20 @@ func file_transport_internet_hysteria2_config_proto_rawDescGZIP() []byte {
 	return file_transport_internet_hysteria2_config_proto_rawDescData
 }
 
-var file_transport_internet_hysteria2_config_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_transport_internet_hysteria2_config_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_transport_internet_hysteria2_config_proto_goTypes = []any{
 	(*UdpHop)(nil), // 0: v2ray.core.transport.internet.hysteria2.UdpHop
-	(*Config)(nil), // 1: v2ray.core.transport.internet.hysteria2.Config
+	(*Realm)(nil),  // 1: v2ray.core.transport.internet.hysteria2.Realm
+	(*Config)(nil), // 2: v2ray.core.transport.internet.hysteria2.Config
 }
 var file_transport_internet_hysteria2_config_proto_depIdxs = []int32{
 	0, // 0: v2ray.core.transport.internet.hysteria2.Config.udp_hop:type_name -> v2ray.core.transport.internet.hysteria2.UdpHop
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	1, // 1: v2ray.core.transport.internet.hysteria2.Config.realm:type_name -> v2ray.core.transport.internet.hysteria2.Realm
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_transport_internet_hysteria2_config_proto_init() }
@@ -304,14 +405,13 @@ func file_transport_internet_hysteria2_config_proto_init() {
 	if File_transport_internet_hysteria2_config_proto != nil {
 		return
 	}
-	file_transport_internet_hysteria2_config_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_transport_internet_hysteria2_config_proto_rawDesc), len(file_transport_internet_hysteria2_config_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

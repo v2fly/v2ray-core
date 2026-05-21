@@ -146,15 +146,22 @@ type Hy2ConfigUdpHop struct {
 	IntervalMax uint32              `json:"intervalMax"`
 }
 
+type Hy2ConfigRealm struct {
+	Url         string   `json:"url"`
+	StunServers []string `json:"stunServers"`
+}
+
 type Hy2Config struct {
-	Auth         string           `json:"auth"`
-	UdpHop       *Hy2ConfigUdpHop `json:"udpHop"`
-	Salamander   *string          `json:"salamander"`
-	Congestion   string           `json:"congestion"`
-	Debug        bool             `json:"debug"`
-	BbrProfile   string           `json:"bbrProfile"`
-	BrutalTxMbps uint64           `json:"brutalTxMbps"`
-	BrutalRxMbps uint64           `json:"brutalRxMbps"`
+	UdpHop     *Hy2ConfigUdpHop `json:"udpHop"`
+	Realm      *Hy2ConfigRealm  `json:"realm"`
+	Salamander string           `json:"salamander"`
+
+	Auth         string `json:"auth"`
+	Congestion   string `json:"congestion"`
+	Debug        bool   `json:"debug"`
+	BbrProfile   string `json:"bbrProfile"`
+	BrutalTxMbps uint64 `json:"brutalTxMbps"`
+	BrutalRxMbps uint64 `json:"brutalRxMbps"`
 
 	InitialStreamReceiveWindow     uint64 `json:"InitialStreamReceiveWindow"`
 	MaxStreamReceiveWindow         uint64 `json:"MaxStreamReceiveWindow"`
@@ -168,17 +175,7 @@ type Hy2Config struct {
 
 // Build implements Buildable.
 func (c *Hy2Config) Build() (proto.Message, error) {
-	switch c.Congestion {
-	case "", "reno", "bbr", "brutal", "force-brutal":
-	default:
-		return nil, newError("invalid congestion")
-	}
-	switch c.BbrProfile {
-	case "", "conservative", "standard", "aggressive":
-	default:
-		return nil, newError("invalid bbrProfile")
-	}
-	var udphop *hysteria2.UdpHop
+	var udpHop *hysteria2.UdpHop
 	if c.UdpHop != nil {
 		if c.UdpHop.Ports == nil {
 			return nil, newError("empty ports")
@@ -198,20 +195,39 @@ func (c *Hy2Config) Build() (proto.Message, error) {
 				ports = append(ports, i)
 			}
 		}
-		udphop = &hysteria2.UdpHop{
+		udpHop = &hysteria2.UdpHop{
 			Ports:       ports,
 			IntervalMin: c.UdpHop.IntervalMin,
 			IntervalMax: c.UdpHop.IntervalMax,
 		}
 	}
+
+	var realm *hysteria2.Realm
+	if c.Realm != nil {
+
+	}
+
+	switch c.Congestion {
+	case "", "reno", "bbr", "brutal", "force-brutal":
+	default:
+		return nil, newError("invalid congestion")
+	}
+	switch c.BbrProfile {
+	case "", "conservative", "standard", "aggressive":
+	default:
+		return nil, newError("invalid bbrProfile")
+	}
 	if c.Debug {
 		os.Setenv("HYSTERIA_BBR_DEBUG", strconv.FormatBool(true))
 		os.Setenv("HYSTERIA_BRUTAL_DEBUG", strconv.FormatBool(true))
 	}
+
 	return &hysteria2.Config{
+		UdpHop:     udpHop,
+		Realm:      realm,
+		Salamander: c.Salamander,
+
 		Auth:         c.Auth,
-		UdpHop:       udphop,
-		Salamander:   c.Salamander,
 		Congestion:   c.Congestion,
 		BbrProfile:   c.BbrProfile,
 		BrutalTxMbps: c.BrutalTxMbps,

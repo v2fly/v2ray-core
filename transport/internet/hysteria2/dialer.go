@@ -18,6 +18,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2/congestion"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2/congestion/bbr"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2/realm"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2/salamander"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2/udphop"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
@@ -79,15 +80,25 @@ func (c *client) dial(ctx context.Context) error {
 		pktConn, err = udphop.NewUDPHopPacketConn(udphop.ToAddrs(udpAddr.IP, c.config.UdpHop.Ports), time.Duration(c.config.UdpHop.IntervalMin)*time.Second, time.Duration(c.config.UdpHop.IntervalMax)*time.Second, func(addr *net.UDPAddr) (net.PacketConn, error) {
 			return internet.ListenSystemPacket(ctx, &net.UDPAddr{Port: 0}, c.socketConfig)
 		})
+		if err != nil {
+			return err
+		}
 	} else {
 		pktConn, err = internet.ListenSystemPacket(ctx, &net.UDPAddr{Port: 0}, c.socketConfig)
-	}
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+		if c.config.Realm != nil {
+			udpAddr, err = realm.NewRealmPeer(c.config.Realm.Scheme, c.config.Realm.Host, c.config.Realm.Port, c.config.Realm.Token, c.config.Realm.ID, c.config.Realm.StunServers, pktConn)
+			if err != nil {
+				pktConn.Close()
+				return err
+			}
+		}
 	}
 
-	if c.config.Salamander != nil {
-		obfs, err := salamander.NewSalamanderObfuscator([]byte(*c.config.Salamander))
+	if c.config.Salamander != "" {
+		obfs, err := salamander.NewSalamanderObfuscator([]byte(c.config.Salamander))
 		if err != nil {
 			pktConn.Close()
 			return err
