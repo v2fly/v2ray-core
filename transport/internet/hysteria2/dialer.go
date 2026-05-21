@@ -59,7 +59,7 @@ func (c *client) close() {
 	c.udpSM = nil
 }
 
-func (c *client) dial() error {
+func (c *client) dial(ctx context.Context) error {
 	status := c.status()
 	if status == StatusActive {
 		return nil
@@ -77,10 +77,10 @@ func (c *client) dial() error {
 	}
 	if c.config.UdpHop != nil {
 		pktConn, err = udphop.NewUDPHopPacketConn(udphop.ToAddrs(udpAddr.IP, c.config.UdpHop.Ports), time.Duration(c.config.UdpHop.IntervalMin)*time.Second, time.Duration(c.config.UdpHop.IntervalMax)*time.Second, func(addr *net.UDPAddr) (net.PacketConn, error) {
-			return internet.ListenSystemPacket(context.Background(), &net.UDPAddr{Port: 0}, c.socketConfig)
+			return internet.ListenSystemPacket(ctx, &net.UDPAddr{Port: 0}, c.socketConfig)
 		})
 	} else {
-		pktConn, err = internet.ListenSystemPacket(context.Background(), &net.UDPAddr{Port: 0}, c.socketConfig)
+		pktConn, err = internet.ListenSystemPacket(ctx, &net.UDPAddr{Port: 0}, c.socketConfig)
 	}
 	if err != nil {
 		return err
@@ -184,11 +184,11 @@ func (c *client) dial() error {
 	return nil
 }
 
-func (c *client) tcp() (net.Conn, error) {
+func (c *client) tcp(ctx context.Context) (net.Conn, error) {
 	c.Lock()
 	defer c.Unlock()
 
-	err := c.dial()
+	err := c.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -207,11 +207,11 @@ func (c *client) tcp() (net.Conn, error) {
 	}, nil
 }
 
-func (c *client) udp() (net.Conn, error) {
+func (c *client) udp(ctx context.Context) (net.Conn, error) {
 	c.Lock()
 	defer c.Unlock()
 
-	err := c.dial()
+	err := c.dial(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -278,9 +278,9 @@ func Dial(ctx context.Context, dest net.Destination, streamSettings *internet.Me
 	}
 
 	if datagram {
-		return c.udp()
+		return c.udp(ctx)
 	}
-	return c.tcp()
+	return c.tcp(ctx)
 }
 
 func init() {
