@@ -2,6 +2,8 @@ package v4
 
 import (
 	"encoding/json"
+	"net"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -204,7 +206,60 @@ func (c *Hy2Config) Build() (proto.Message, error) {
 
 	var realm *hysteria2.Realm
 	if c.Realm != nil {
+		var scheme, host, port, token, id string
+		var stunServers []string
 
+		u, err := url.Parse(c.Realm.Url)
+		if err != nil {
+			return nil, newError("realm invalid url").Base(err)
+		}
+		switch u.Scheme {
+		case "realm":
+			scheme = "https"
+		case "realm+http":
+			scheme = "http"
+		default:
+			return nil, newError("realm invalid scheme", u.Scheme)
+		}
+		host = u.Hostname()
+		port = u.Port()
+		if port == "" {
+			port = "443"
+			if scheme == "http" {
+				port = "80"
+			}
+		}
+		token, err = url.PathUnescape(u.User.String())
+		if err != nil {
+			return nil, err
+		}
+		id, err = url.PathUnescape(strings.TrimPrefix(u.EscapedPath(), "/"))
+		if err != nil {
+			return nil, err
+		}
+		if token == "" || id == "" {
+			return nil, newError("realm empty token or id")
+		}
+
+		if len(c.Realm.StunServers) == 0 {
+			return nil, newError("empty stunServers")
+		}
+		for _, s := range c.Realm.StunServers {
+			_, _, err = net.SplitHostPort(s)
+			if err != nil {
+				return nil, newError("realm invalid stun server ", s).Base(err)
+			}
+		}
+		stunServers = c.Realm.StunServers
+
+		realm = &hysteria2.Realm{
+			Scheme:      scheme,
+			Host:        host,
+			Port:        port,
+			Token:       token,
+			ID:          id,
+			StunServers: stunServers,
+		}
 	}
 
 	switch c.Congestion {
