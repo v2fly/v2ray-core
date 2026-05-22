@@ -28,7 +28,7 @@ require (
 	github.com/pion/stun/v3 v3.1.2
 	github.com/pion/transport/v2 v2.2.10
 	github.com/pion/transport/v4 v4.0.1
-	github.com/pion/webrtc/v4 v4.2.12
+	github.com/pion/webrtc/v4 v4.2.13
 	github.com/pires/go-proxyproto v0.12.0
 	github.com/quic-go/quic-go v0.59.1
 	github.com/refraction-networking/utls v1.8.2
@@ -83,15 +83,15 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pion/datachannel v1.6.0 // indirect
 	github.com/pion/dtls/v2 v2.2.12 // indirect
-	github.com/pion/interceptor v0.1.44 // indirect
+	github.com/pion/interceptor v0.1.45 // indirect
 	github.com/pion/mdns/v2 v2.1.0 // indirect
 	github.com/pion/randutil v0.1.0 // indirect
 	github.com/pion/rtcp v1.2.16 // indirect
-	github.com/pion/rtp v1.10.1 // indirect
-	github.com/pion/sctp v1.9.5 // indirect
+	github.com/pion/rtp v1.10.2 // indirect
+	github.com/pion/sctp v1.10.0 // indirect
 	github.com/pion/sdp/v3 v3.0.18 // indirect
 	github.com/pion/srtp/v3 v3.0.10 // indirect
-	github.com/pion/turn/v5 v5.0.3 // indirect
+	github.com/pion/turn/v5 v5.0.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
