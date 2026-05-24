@@ -363,6 +363,7 @@ func (c *PunchPacketConn) getlocals(force bool) []netip.AddrPort {
 			newError("[realm] get stun locals ", locals, " with ", time.Since(start)).AtDebug().WriteToLog()
 			if len(locals) > 0 {
 				c.locals = locals
+				c.localsLast = time.Now()
 			}
 		}
 	}
