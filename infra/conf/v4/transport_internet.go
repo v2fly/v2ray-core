@@ -172,6 +172,7 @@ type WebSocketConfig struct {
 	MaxEarlyData         int32             `json:"maxEarlyData"`
 	UseBrowserForwarding bool              `json:"useBrowserForwarding"`
 	EarlyDataHeaderName  string            `json:"earlyDataHeaderName"`
+	ParseXForwardedFor   bool              `json:"parseXForwardedFor"`
 }
 
 // Build implements Buildable.
@@ -190,6 +191,7 @@ func (c *WebSocketConfig) Build() (proto.Message, error) {
 		MaxEarlyData:         c.MaxEarlyData,
 		UseBrowserForwarding: c.UseBrowserForwarding,
 		EarlyDataHeaderName:  c.EarlyDataHeaderName,
+		ParseXForwardedFor:   c.ParseXForwardedFor,
 	}
 	if c.AcceptProxyProtocol {
 		config.AcceptProxyProtocol = c.AcceptProxyProtocol
@@ -198,16 +200,18 @@ func (c *WebSocketConfig) Build() (proto.Message, error) {
 }
 
 type HTTPConfig struct {
-	Host    *cfgcommon.StringList            `json:"host"`
-	Path    string                           `json:"path"`
-	Method  string                           `json:"method"`
-	Headers map[string]*cfgcommon.StringList `json:"headers"`
+	Host               *cfgcommon.StringList            `json:"host"`
+	Path               string                           `json:"path"`
+	Method             string                           `json:"method"`
+	Headers            map[string]*cfgcommon.StringList `json:"headers"`
+	ParseXForwardedFor bool                             `json:"parseXForwardedFor"`
 }
 
 // Build implements Buildable.
 func (c *HTTPConfig) Build() (proto.Message, error) {
 	config := &http.Config{
-		Path: c.Path,
+		Path:               c.Path,
+		ParseXForwardedFor: c.ParseXForwardedFor,
 	}
 	if c.Host != nil {
 		config.Host = []string(*c.Host)
