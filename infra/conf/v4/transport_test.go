@@ -16,6 +16,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet/headers/http"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/headers/noop"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/headers/tls"
+	internethttp "github.com/v2fly/v2ray-core/v5/transport/internet/http"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/kcp"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/quic"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tcp"
@@ -92,7 +93,12 @@ func TestTransportConfig(t *testing.T) {
 					}
 				},
 				"wsSettings": {
-					"path": "/t"
+					"path": "/t",
+					"parseXForwardedFor": true
+				},
+				"httpSettings": {
+					"path": "/h2",
+					"parseXForwardedFor": true
 				},
 				"quicSettings": {
 					"key": "abcd",
@@ -156,7 +162,15 @@ func TestTransportConfig(t *testing.T) {
 					{
 						ProtocolName: "websocket",
 						Settings: serial.ToTypedMessage(&websocket.Config{
-							Path: "/t",
+							Path:               "/t",
+							ParseXForwardedFor: true,
+						}),
+					},
+					{
+						ProtocolName: "http",
+						Settings: serial.ToTypedMessage(&internethttp.Config{
+							Path:               "/h2",
+							ParseXForwardedFor: true,
 						}),
 					},
 					{
