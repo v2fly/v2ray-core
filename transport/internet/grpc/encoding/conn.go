@@ -8,8 +8,11 @@ import (
 	"context"
 	"io"
 	"net"
+	"strings"
 	"time"
 
+	v2net "github.com/v2fly/v2ray-core/v5/common/net"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 )
 
@@ -89,7 +92,7 @@ func (*GunConn) SetWriteDeadline(time.Time) error {
 }
 
 // NewGunConn creates GunConn which handles gun tunnel
-func NewGunConn(service GunService, over context.CancelFunc) *GunConn {
+func NewGunConn(service GunService, over context.CancelFunc, parseXForwardedFor bool) *GunConn {
 	conn := &GunConn{
 		service: service,
 		reader:  nil,
@@ -109,6 +112,30 @@ func NewGunConn(service GunService, over context.CancelFunc) *GunConn {
 			Port: 0,
 		}
 	}
+	if parseXForwardedFor {
+		if remoteAddr := remoteAddrFromXForwardedFor(service.Context()); remoteAddr != nil {
+			conn.remote = remoteAddr
+		}
+	}
 
 	return conn
+}
+
+func remoteAddrFromXForwardedFor(ctx context.Context) net.Addr {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil
+	}
+	for _, value := range md.Get("x-forwarded-for") {
+		for _, proxy := range strings.Split(value, ",") {
+			addr := v2net.ParseAddress(strings.TrimSpace(proxy))
+			if addr.Family().IsIP() {
+				return &net.TCPAddr{
+					IP:   addr.IP(),
+					Port: 0,
+				}
+			}
+		}
+	}
+	return nil
 }
