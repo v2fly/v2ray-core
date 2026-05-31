@@ -78,6 +78,12 @@ func (err *Error) Inner() error {
 	return err.inner
 }
 
+// Unwrap implements the standard library's errors.Unwrap contract, allowing
+// errors.Is and errors.As to traverse to the underlying error.
+func (err *Error) Unwrap() error {
+	return err.inner
+}
+
 func (err *Error) Base(e error) *Error {
 	err.inner = e
 	return err
