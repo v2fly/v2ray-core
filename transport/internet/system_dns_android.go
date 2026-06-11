@@ -1,5 +1,5 @@
-//go:build android
-// +build android
+//go:build android && !cgo
+// +build android,!cgo
 
 package internet
 
