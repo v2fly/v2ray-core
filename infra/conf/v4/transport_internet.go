@@ -2,8 +2,6 @@ package v4
 
 import (
 	"encoding/json"
-	"net"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -154,10 +152,6 @@ type Hy2ConfigRealm struct {
 }
 
 type Hy2Config struct {
-	UdpHop     *Hy2ConfigUdpHop `json:"udpHop"`
-	Realm      *Hy2ConfigRealm  `json:"realm"`
-	Salamander string           `json:"salamander"`
-
 	Auth         string `json:"auth"`
 	Congestion   string `json:"congestion"`
 	Debug        bool   `json:"debug"`
@@ -177,91 +171,6 @@ type Hy2Config struct {
 
 // Build implements Buildable.
 func (c *Hy2Config) Build() (proto.Message, error) {
-	var udpHop *hysteria2.UdpHop
-	if c.UdpHop != nil {
-		if c.UdpHop.Ports == nil {
-			return nil, newError("empty ports")
-		}
-		if c.UdpHop.IntervalMin != 0 && c.UdpHop.IntervalMin < 5 {
-			return nil, newError("invalid intervalMin")
-		}
-		if c.UdpHop.IntervalMax != 0 && c.UdpHop.IntervalMax < 5 {
-			return nil, newError("invalid intervalMax")
-		}
-		if c.UdpHop.IntervalMin > c.UdpHop.IntervalMax {
-			return nil, newError("intervalMin > intervalMax")
-		}
-		var ports []uint32
-		for _, r := range c.UdpHop.Ports.Range {
-			for i := uint32(r.From); i <= uint32(r.To); i++ {
-				ports = append(ports, i)
-			}
-		}
-		udpHop = &hysteria2.UdpHop{
-			Ports:       ports,
-			IntervalMin: c.UdpHop.IntervalMin,
-			IntervalMax: c.UdpHop.IntervalMax,
-		}
-	}
-
-	var realm *hysteria2.Realm
-	if c.Realm != nil {
-		var scheme, host, port, token, id string
-		var stunServers []string
-
-		u, err := url.Parse(c.Realm.Url)
-		if err != nil {
-			return nil, newError("realm invalid url").Base(err)
-		}
-		switch u.Scheme {
-		case "realm":
-			scheme = "https"
-		case "realm+http":
-			scheme = "http"
-		default:
-			return nil, newError("realm invalid scheme", u.Scheme)
-		}
-		host = u.Hostname()
-		port = u.Port()
-		if port == "" {
-			port = "443"
-			if scheme == "http" {
-				port = "80"
-			}
-		}
-		token, err = url.PathUnescape(u.User.String())
-		if err != nil {
-			return nil, err
-		}
-		id, err = url.PathUnescape(strings.TrimPrefix(u.EscapedPath(), "/"))
-		if err != nil {
-			return nil, err
-		}
-		if token == "" || id == "" {
-			return nil, newError("realm empty token or id")
-		}
-
-		if len(c.Realm.StunServers) == 0 {
-			return nil, newError("empty stunServers")
-		}
-		for _, s := range c.Realm.StunServers {
-			_, _, err = net.SplitHostPort(s)
-			if err != nil {
-				return nil, newError("realm invalid stun server ", s).Base(err)
-			}
-		}
-		stunServers = c.Realm.StunServers
-
-		realm = &hysteria2.Realm{
-			Scheme:      scheme,
-			Host:        host,
-			Port:        port,
-			Token:       token,
-			ID:          id,
-			StunServers: stunServers,
-		}
-	}
-
 	switch c.Congestion {
 	case "", "reno", "bbr", "brutal", "force-brutal":
 	default:
@@ -278,10 +187,6 @@ func (c *Hy2Config) Build() (proto.Message, error) {
 	}
 
 	return &hysteria2.Config{
-		UdpHop:     udpHop,
-		Realm:      realm,
-		Salamander: c.Salamander,
-
 		Auth:         c.Auth,
 		Congestion:   c.Congestion,
 		BbrProfile:   c.BbrProfile,

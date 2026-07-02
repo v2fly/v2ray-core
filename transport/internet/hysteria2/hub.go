@@ -18,8 +18,6 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2/congestion"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2/congestion/bbr"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2/realm"
-	"github.com/v2fly/v2ray-core/v5/transport/internet/hysteria2/salamander"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/tls"
 )
 
@@ -179,24 +177,6 @@ func Listen(ctx context.Context, address net.Address, port net.Port, streamSetti
 	pktConn, err := internet.ListenSystemPacket(context.Background(), &net.UDPAddr{IP: address.IP(), Port: int(port)}, streamSettings.SocketSettings)
 	if err != nil {
 		return nil, err
-	}
-
-	if config.Realm != nil {
-		newConn, err := realm.NewPunchPacketConn(config.Realm.Scheme, config.Realm.Host, config.Realm.Port, config.Realm.Token, config.Realm.ID, config.Realm.StunServers, pktConn)
-		if err != nil {
-			pktConn.Close()
-			return nil, err
-		}
-		pktConn = newConn
-	}
-
-	if config.Salamander != "" {
-		obfs, err := salamander.NewSalamanderObfuscator([]byte(config.Salamander))
-		if err != nil {
-			pktConn.Close()
-			return nil, err
-		}
-		pktConn = salamander.WrapPacketConn(pktConn, obfs)
 	}
 
 	tr := &quic.Transport{Conn: pktConn}
