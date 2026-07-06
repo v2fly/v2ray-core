@@ -22,6 +22,8 @@ on:
 jobs:
   test:
     runs-on: ${{ matrix.os }}
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -50,9 +52,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
-        if: runner.os == 'Linux'
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        if: runner.os == 'Linux' && env.CODECOV_TOKEN != ''
         with:
           slug: ${{ github.repository }}
           verbose: true
