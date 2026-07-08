@@ -78,6 +78,9 @@ func (s *Server) handlerUDPPayload(ctx context.Context, conn internet.Connection
 	case packetaddr.PacketAddrType_Packet:
 		packetAddrDispatcherFactory := udp.NewPacketAddrDispatcherCreator(ctx)
 		udpDispatcherConstructor = packetAddrDispatcherFactory.NewPacketAddrDispatcher
+	case packetaddr.PacketAddrType_Stream:
+		packetAddrDispatcherFactory := udp.NewStreamPacketAddrDispatcherCreator(ctx)
+		udpDispatcherConstructor = packetAddrDispatcherFactory.NewPacketAddrDispatcher
 	}
 
 	udpServer := udpDispatcherConstructor(dispatcher, func(ctx context.Context, packet *udp_proto.Packet) {

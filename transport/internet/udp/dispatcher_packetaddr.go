@@ -49,17 +49,22 @@ func (p PacketAddrDispatcher) readWorker() {
 }
 
 type PacketAddrDispatcherCreator struct {
-	ctx context.Context
+	ctx      context.Context
+	isStream bool
 }
 
 func NewPacketAddrDispatcherCreator(ctx context.Context) PacketAddrDispatcherCreator {
 	return PacketAddrDispatcherCreator{ctx: ctx}
 }
 
+func NewStreamPacketAddrDispatcherCreator(ctx context.Context) PacketAddrDispatcherCreator {
+	return PacketAddrDispatcherCreator{ctx: ctx, isStream: true}
+}
+
 func (pdc *PacketAddrDispatcherCreator) NewPacketAddrDispatcher(
 	dispatcher routing.Dispatcher, callback ResponseCallback,
 ) DispatcherI {
-	packetConn, _ := packetaddr.CreatePacketAddrConn(pdc.ctx, dispatcher, false)
+	packetConn, _ := packetaddr.CreatePacketAddrConn(pdc.ctx, dispatcher, pdc.isStream)
 	pd := &PacketAddrDispatcher{conn: packetConn, callback: callback, ctx: pdc.ctx}
 	go pd.readWorker()
 	return pd

@@ -47,6 +47,8 @@ func (v *ShadowsocksServerConfig) Build() (proto.Message, error) {
 	switch v.PacketEncoding {
 	case "Packet":
 		config.PacketEncoding = packetaddr.PacketAddrType_Packet
+	case "Stream":
+		config.PacketEncoding = packetaddr.PacketAddrType_Stream
 	case "", "None":
 		config.PacketEncoding = packetaddr.PacketAddrType_None
 	}

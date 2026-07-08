@@ -20,6 +20,7 @@ type PacketAddrType int32
 const (
 	PacketAddrType_None   PacketAddrType = 0
 	PacketAddrType_Packet PacketAddrType = 1
+	PacketAddrType_Stream PacketAddrType = 2
 )
 
 // Enum value maps for PacketAddrType.
@@ -27,10 +28,12 @@ var (
 	PacketAddrType_name = map[int32]string{
 		0: "None",
 		1: "Packet",
+		2: "Stream",
 	}
 	PacketAddrType_value = map[string]int32{
 		"None":   0,
 		"Packet": 1,
+		"Stream": 2,
 	}
 )
 
@@ -65,11 +68,13 @@ var File_common_net_packetaddr_config_proto protoreflect.FileDescriptor
 
 const file_common_net_packetaddr_config_proto_rawDesc = "" +
 	"\n" +
-	"\"common/net/packetaddr/config.proto\x12\x19v2ray.core.net.packetaddr*&\n" +
+	"\"common/net/packetaddr/config.proto\x12\x19v2ray.core.net.packetaddr*2\n" +
 	"\x0ePacketAddrType\x12\b\n" +
 	"\x04None\x10\x00\x12\n" +
 	"\n" +
-	"\x06Packet\x10\x01B\x81\x01\n" +
+	"\x06Packet\x10\x01\x12\n" +
+	"\n" +
+	"\x06Stream\x10\x02B\x81\x01\n" +
 	"$com.v2ray.core.common.net.packetaddrP\x01Z4github.com/v2fly/v2ray-core/v5/common/net/packetaddr\xaa\x02 V2Ray.Core.Common.Net.Packetaddrb\x06proto3"
 
 var (
