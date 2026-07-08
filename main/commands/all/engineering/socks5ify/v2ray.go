@@ -7,6 +7,9 @@ import (
 	"fmt"
 	stdnet "net"
 
+	"golang.org/x/sys/unix"
+	"google.golang.org/protobuf/types/known/anypb"
+
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/app/dispatcher"
 	applog "github.com/v2fly/v2ray-core/v5/app/log"
@@ -19,8 +22,6 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/protocol"
 	"github.com/v2fly/v2ray-core/v5/common/serial"
 	"github.com/v2fly/v2ray-core/v5/proxy/socks"
-	"golang.org/x/sys/unix"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func startV2RayWithTun(opts parentOptions, child childConfig, tunFD int) (*core.Instance, error) {
