@@ -38,7 +38,7 @@ The STUN server must support RFC 5780 (OTHER-ADDRESS and CHANGE-REQUEST)
 for full test coverage.
 
 Usage:
-	{{.Exec}} engineering stun-test -server <host:port> [-server2 <host:port>] [-timeout <ms>] [-attempts <n>] [-socks5udp <host:port>]
+	{{.Exec}} engineering stun-nat-type-discovery -server <host:port> [-server2 <host:port>] [-timeout <ms>] [-attempts <n>] [-socks5udp <host:port>]
 
 Options:
 	-server <host:port>
