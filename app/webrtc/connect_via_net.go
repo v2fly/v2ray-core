@@ -38,8 +38,8 @@ func newConnectViaNet(
 	connectVia string,
 	packetEncoding packetaddr.PacketAddrType,
 ) (*connectViaNet, error) {
-	if packetEncoding != packetaddr.PacketAddrType_Packet {
-		return nil, newError("active listener connect_via currently requires packet_encoding=Packet")
+	if packetEncoding != packetaddr.PacketAddrType_Packet && packetEncoding != packetaddr.PacketAddrType_Stream {
+		return nil, newError("active listener connect_via currently requires packet_encoding=Packet or Stream")
 	}
 
 	base, err := stdnet.NewNet()
@@ -205,7 +205,7 @@ func (n *connectViaNet) newPacketConn(network string) (v2net.PacketConn, *net.UD
 	ctx := n.ctx
 	ctx = session.SetForcedOutboundTagToContext(ctx, n.connectVia)
 
-	conn, err := packetaddr.CreatePacketAddrConn(ctx, n.dispatcher, false)
+	conn, err := packetaddr.CreatePacketAddrConn(ctx, n.dispatcher, n.packetEncoding == packetaddr.PacketAddrType_Stream)
 	if err != nil {
 		return nil, nil, newError("failed to create packetaddr connection for active listener").Base(err)
 	}

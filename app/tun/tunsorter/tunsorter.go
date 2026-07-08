@@ -56,6 +56,10 @@ func (t *TunSorter) onNewConnection(connection *trackedUDPConnection) {
 		ctx := context.WithValue(t.ctx, udp.DispatcherConnectionTerminationSignalReceiverMark, connection) // nolint:staticcheck
 		packetAddrDispatcherFactory := udp.NewPacketAddrDispatcherCreator(ctx)
 		udpDispatcherConstructor = packetAddrDispatcherFactory.NewPacketAddrDispatcher
+	case packetaddr.PacketAddrType_Stream:
+		ctx := context.WithValue(t.ctx, udp.DispatcherConnectionTerminationSignalReceiverMark, connection) // nolint:staticcheck
+		packetAddrDispatcherFactory := udp.NewStreamPacketAddrDispatcherCreator(ctx)
+		udpDispatcherConstructor = packetAddrDispatcherFactory.NewPacketAddrDispatcher
 	}
 	udpDispatcher := udpDispatcherConstructor(t.dispatcher, func(ctx context.Context, packet *vudp.Packet) {
 		connection.onWritePacket(packet.Source, packet.Payload.Bytes())
