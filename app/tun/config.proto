@@ -27,4 +27,5 @@ message Config {
   bool enable_spoofing = 9;
   v2ray.core.transport.internet.SocketConfig socket_settings = 10;
   v2ray.core.app.proxyman.SniffingConfig sniffing_settings = 11;
+  optional int32 preopened_fd = 12;
 }

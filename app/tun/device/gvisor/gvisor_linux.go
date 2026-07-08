@@ -6,6 +6,7 @@ package gvisor
 
 import (
 	"fmt"
+	"sync"
 	"unsafe"
 
 	"golang.org/x/sys/unix"
@@ -27,30 +28,59 @@ type GvisorTUN struct {
 
 	options device.Options
 
-	fd  int
-	mtu uint32 // real MTU
+	closeAccess sync.Mutex
+	fd          int
+	mtu         uint32 // real MTU
 }
 
 func New(options device.Options) (device.Device, error) {
-	t := &GvisorTUN{options: options}
+	t := &GvisorTUN{options: options, fd: -1}
+
+	fd := -1
+	preopened := options.PreopenedFDSet
+	if preopened {
+		if options.PreopenedFD < 0 {
+			return nil, newError("invalid preopened tun file descriptor").AtError()
+		}
+		fd = options.PreopenedFD
+	}
 
 	if len(options.Name) > unix.IFNAMSIZ {
+		if preopened {
+			_ = unix.Close(fd)
+		}
 		return nil, newError("name too long").AtError()
 	}
 
-	fd, err := tun.Open(options.Name)
-	if err != nil {
-		return nil, newError("failed to open tun device").Base(err).AtError()
+	if preopened {
+		if err := unix.SetNonblock(fd, true); err != nil {
+			_ = unix.Close(fd)
+			return nil, newError("failed to set tun device non-blocking").Base(err).AtError()
+		}
+	} else {
+		var err error
+		fd, err = tun.Open(options.Name)
+		if err != nil {
+			return nil, newError("failed to open tun device").Base(err).AtError()
+		}
+
+		if options.MTU > 0 {
+			_ = setMTU(options.Name, int(options.MTU))
+		}
 	}
 	t.fd = fd
 
-	if options.MTU > 0 {
-		_ = setMTU(options.Name, int(options.MTU))
+	mtu := options.MTU
+	if !preopened {
+		var err error
+		mtu, err = rawfile.GetMTU(options.Name)
+		if err != nil {
+			_ = unix.Close(fd)
+			return nil, newError("failed to get mtu").Base(err).AtError()
+		}
 	}
-
-	mtu, err := rawfile.GetMTU(options.Name)
-	if err != nil {
-		return nil, newError("failed to get mtu").Base(err).AtError()
+	if mtu == 0 {
+		mtu = 1500
 	}
 	t.mtu = mtu
 
@@ -66,6 +96,7 @@ func New(options device.Options) (device.Device, error) {
 		MaxSyscallHeaderBytes: 0x00,
 	})
 	if err != nil {
+		_ = unix.Close(fd)
 		return nil, newError("failed to create link endpoint").Base(err).AtError()
 	}
 	t.LinkEndpoint = linkEndpoint
@@ -74,7 +105,12 @@ func New(options device.Options) (device.Device, error) {
 }
 
 func (t *GvisorTUN) Close() {
-	_ = unix.Close(t.fd)
+	t.closeAccess.Lock()
+	defer t.closeAccess.Unlock()
+	if t.fd >= 0 {
+		_ = unix.Close(t.fd)
+		t.fd = -1
+	}
 }
 
 // Modified from golang.zx2c4.com/wireguard/tun/tun_linux.go

@@ -1,6 +1,8 @@
 package tun
 
 import (
+	"sync"
+
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 
@@ -19,6 +21,7 @@ type packetAddrDevice struct {
 	device.Device
 	sorter *tunsorter.TunSorter
 
+	dispatcherAccess    sync.RWMutex
 	secondaryDispatcher stack.NetworkDispatcher
 }
 
@@ -26,16 +29,31 @@ func (p *packetAddrDevice) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNu
 	buf := pkt.ToBuffer()
 	_, err := p.sorter.OnPacketReceived(buf.Flatten())
 	if err != nil {
-		p.secondaryDispatcher.DeliverNetworkPacket(protocol, pkt)
+		p.dispatcherAccess.RLock()
+		dispatcher := p.secondaryDispatcher
+		p.dispatcherAccess.RUnlock()
+		if dispatcher != nil {
+			dispatcher.DeliverNetworkPacket(protocol, pkt)
+		}
 	}
 }
 
 func (p *packetAddrDevice) DeliverLinkPacket(protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
-	// TODO implement me
-	panic("implement me")
+	p.dispatcherAccess.RLock()
+	dispatcher := p.secondaryDispatcher
+	p.dispatcherAccess.RUnlock()
+	if dispatcher != nil {
+		dispatcher.DeliverLinkPacket(protocol, pkt)
+	}
 }
 
 func (p *packetAddrDevice) Attach(dispatcher stack.NetworkDispatcher) {
+	p.dispatcherAccess.Lock()
 	p.secondaryDispatcher = dispatcher
+	p.dispatcherAccess.Unlock()
+	if dispatcher == nil {
+		p.Device.Attach(nil)
+		return
+	}
 	p.Device.Attach(p)
 }

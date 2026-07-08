@@ -9,8 +9,10 @@ type Device interface {
 }
 
 type Options struct {
-	Name string
-	MTU  uint32
+	Name           string
+	MTU            uint32
+	PreopenedFD    int
+	PreopenedFDSet bool
 }
 
 type DeviceConstructor func(Options) (Device, error)
