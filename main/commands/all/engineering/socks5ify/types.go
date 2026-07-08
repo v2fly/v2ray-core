@@ -33,6 +33,9 @@ type tunProtocolConfig struct {
 type childConfig struct {
 	TunName    string            `json:"tun_name"`
 	MTU        int               `json:"mtu"`
+	KeepUID    bool              `json:"keep_uid"`
+	CallerUID  int               `json:"caller_uid"`
+	CallerGID  int               `json:"caller_gid"`
 	IPv4       tunProtocolConfig `json:"ipv4"`
 	IPv6       bool              `json:"ipv6"`
 	IPv6Config tunProtocolConfig `json:"ipv6_config"`

@@ -25,6 +25,7 @@ var (
 	socksUserFlag  *string
 	socksPassFlag  *string
 	quietFlag      *bool
+	keepUIDFlag    *bool
 	tunNameFlag    *string
 	mtuFlag        *int
 	ipv4HostFlag   *string
@@ -57,6 +58,10 @@ Arguments:
 
 	-quiet
 		Suppress non-error messages from the embedded V2Ray instance.
+
+	-keep-uid
+		Run the command as the original non-root caller UID and primary GID
+		after namespace setup is complete.
 
 	-tun-name <name>
 		TUN interface name inside the network namespace. Default socks5ify0.
@@ -105,6 +110,7 @@ Examples:
 		socksUserFlag = fs.String("socks-user", "", "")
 		socksPassFlag = fs.String("socks-pass", "", "")
 		quietFlag = fs.Bool("quiet", false, "")
+		keepUIDFlag = fs.Bool("keep-uid", false, "")
 		tunNameFlag = fs.String("tun-name", defaultTunName, "")
 		mtuFlag = fs.Int("mtu", defaultMTU, "")
 		ipv4HostFlag = fs.String("tun-ipv4-host", defaultTunIPv4Host, "")
@@ -183,6 +189,9 @@ func buildOptions(command []string) (parentOptions, childConfig, error) {
 	child := childConfig{
 		TunName:    *tunNameFlag,
 		MTU:        *mtuFlag,
+		KeepUID:    *keepUIDFlag && os.Getuid() != 0,
+		CallerUID:  os.Getuid(),
+		CallerGID:  os.Getgid(),
 		IPv4:       ipv4,
 		IPv6:       *ipv6Flag,
 		IPv6Config: ipv6,

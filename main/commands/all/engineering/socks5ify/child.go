@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"strconv"
 	"strings"
 	"syscall"
@@ -64,7 +65,87 @@ func runChildFromEnv() error {
 		}
 		argv0 = resolved
 	}
+	if cfg.KeepUID {
+		return runCommandWithCallerIdentity(cfg, argv0, command, env)
+	}
 	return syscall.Exec(argv0, command, env)
+}
+
+func runCommandWithCallerIdentity(cfg childConfig, argv0 string, command []string, env []string) error {
+	if cfg.CallerUID <= 0 {
+		return fmt.Errorf("-keep-uid requires a non-root caller UID, got %d", cfg.CallerUID)
+	}
+	if cfg.CallerGID < 0 {
+		return fmt.Errorf("-keep-uid requires a valid caller GID, got %d", cfg.CallerGID)
+	}
+
+	childCmd := exec.Command(argv0, command[1:]...)
+	childCmd.Args[0] = command[0]
+	childCmd.Stdin = os.Stdin
+	childCmd.Stdout = os.Stdout
+	childCmd.Stderr = os.Stderr
+	childCmd.Env = env
+	childCmd.SysProcAttr = &syscall.SysProcAttr{
+		Cloneflags: unix.CLONE_NEWUSER,
+		UidMappings: []syscall.SysProcIDMap{
+			{ContainerID: cfg.CallerUID, HostID: 0, Size: 1},
+		},
+		GidMappings: []syscall.SysProcIDMap{
+			{ContainerID: cfg.CallerGID, HostID: 0, Size: 1},
+		},
+		GidMappingsEnableSetgroups: false,
+		Credential: &syscall.Credential{
+			Uid:         uint32(cfg.CallerUID),
+			Gid:         uint32(cfg.CallerGID),
+			NoSetGroups: true,
+		},
+	}
+	if err := childCmd.Start(); err != nil {
+		return fmt.Errorf("start command with caller UID/GID: %w", err)
+	}
+	waitForNestedCommand(childCmd)
+	return nil
+}
+
+func waitForNestedCommand(childCmd *exec.Cmd) {
+	waitDone := make(chan error, 1)
+	go func() {
+		waitDone <- childCmd.Wait()
+	}()
+
+	signals := make(chan os.Signal, 4)
+	signal.Notify(signals, os.Interrupt, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM)
+	defer signal.Stop(signals)
+
+	for {
+		select {
+		case err := <-waitDone:
+			exitWithCommandStatus(err)
+		case sig := <-signals:
+			if sig == os.Interrupt {
+				continue
+			}
+			_ = childCmd.Process.Signal(sig)
+		}
+	}
+}
+
+func exitWithCommandStatus(err error) {
+	if err == nil {
+		os.Exit(0)
+	}
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+			if status.Exited() {
+				os.Exit(status.ExitStatus())
+			}
+			if status.Signaled() {
+				os.Exit(128 + int(status.Signal()))
+			}
+		}
+	}
+	fmt.Fprintln(os.Stderr, err)
+	os.Exit(1)
 }
 
 func setupChildNamespace(cfg childConfig) (int, error) {
