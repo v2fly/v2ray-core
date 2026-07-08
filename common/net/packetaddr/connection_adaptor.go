@@ -185,7 +185,7 @@ type FusedConnection interface {
 func (pc *packetConnWrapper) Read(p []byte) (n int, err error) {
 	recbuf := buf.StackNew()
 	recbuf.Extend(2048)
-	n, addr, err := pc.PacketConn.ReadFrom(recbuf.Bytes())
+	n, addr, err := pc.ReadFrom(recbuf.Bytes())
 	if err != nil {
 		return 0, err
 	}
@@ -204,7 +204,7 @@ func (pc *packetConnWrapper) Write(p []byte) (n int, err error) {
 	if err != nil {
 		return 0, err
 	}
-	_, err = pc.PacketConn.WriteTo(data.Bytes(), addr)
+	_, err = pc.WriteTo(data.Bytes(), addr)
 	if err != nil {
 		return 0, err
 	}
