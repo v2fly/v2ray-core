@@ -9,9 +9,11 @@ import (
 
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/app/dispatcher"
+	applog "github.com/v2fly/v2ray-core/v5/app/log"
 	"github.com/v2fly/v2ray-core/v5/app/proxyman"
 	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
 	tunapp "github.com/v2fly/v2ray-core/v5/app/tun"
+	clog "github.com/v2fly/v2ray-core/v5/common/log"
 	v2net "github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
 	"github.com/v2fly/v2ray-core/v5/common/protocol"
@@ -50,15 +52,24 @@ func buildCoreConfig(opts parentOptions, child childConfig, tunFD int32) *core.C
 		EnablePromiscuousMode: true,
 		EnableSpoofing:        true,
 		Ips: []*routercommon.CIDR{
-			cidr(tunIPv4Host, tunIPv4Prefix),
+			cidr(child.IPv4.Host, child.IPv4.Prefix),
 		},
 		Routes: []*routercommon.CIDR{
 			cidr("0.0.0.0", 0),
 		},
 	}
 	if child.IPv6 {
-		tunConfig.Ips = append(tunConfig.Ips, cidr(tunIPv6Host, tunIPv6Prefix))
+		tunConfig.Ips = append(tunConfig.Ips, cidr(child.IPv6Config.Host, child.IPv6Config.Prefix))
 		tunConfig.Routes = append(tunConfig.Routes, cidr("::", 0))
+	}
+	apps := []*anypb.Any{
+		serial.ToTypedMessage(&dispatcher.Config{}),
+		serial.ToTypedMessage(&proxyman.InboundConfig{}),
+		serial.ToTypedMessage(&proxyman.OutboundConfig{}),
+		serial.ToTypedMessage(tunConfig),
+	}
+	if opts.Quiet {
+		apps = append([]*anypb.Any{serial.ToTypedMessage(quietLogConfig())}, apps...)
 	}
 
 	socksConfig := &socks.ClientConfig{
@@ -73,17 +84,24 @@ func buildCoreConfig(opts parentOptions, child childConfig, tunFD int32) *core.C
 	}
 
 	return &core.Config{
-		App: []*anypb.Any{
-			serial.ToTypedMessage(&dispatcher.Config{}),
-			serial.ToTypedMessage(&proxyman.InboundConfig{}),
-			serial.ToTypedMessage(&proxyman.OutboundConfig{}),
-			serial.ToTypedMessage(tunConfig),
-		},
+		App: apps,
 		Outbound: []*core.OutboundHandlerConfig{
 			{
 				Tag:           "socks5ify-socks",
 				ProxySettings: serial.ToTypedMessage(socksConfig),
 			},
+		},
+	}
+}
+
+func quietLogConfig() *applog.Config {
+	return &applog.Config{
+		Error: &applog.LogSpecification{
+			Type:  applog.LogType_Console,
+			Level: clog.Severity_Error,
+		},
+		Access: &applog.LogSpecification{
+			Type: applog.LogType_None,
 		},
 	}
 }

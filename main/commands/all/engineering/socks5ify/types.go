@@ -10,13 +10,13 @@ const (
 	defaultTunName = "socks5ify0"
 	defaultMTU     = 1500
 
-	tunIPv4Host   = "198.18.0.1"
-	tunIPv4Guest  = "198.18.0.2"
-	tunIPv4Prefix = 30
+	defaultTunIPv4Host   = "198.18.0.1"
+	defaultTunIPv4Guest  = "198.18.0.2"
+	defaultTunIPv4Prefix = 30
 
-	tunIPv6Host   = "fd00:736f:636b:35::1"
-	tunIPv6Guest  = "fd00:736f:636b:35::2"
-	tunIPv6Prefix = 126
+	defaultTunIPv6Host   = "fd00:736f:636b:35::1"
+	defaultTunIPv6Guest  = "fd00:736f:636b:35::2"
+	defaultTunIPv6Prefix = 126
 )
 
 type bindFile struct {
@@ -24,18 +24,27 @@ type bindFile struct {
 	Target string `json:"target"`
 }
 
+type tunProtocolConfig struct {
+	Host   string `json:"host"`
+	Guest  string `json:"guest"`
+	Prefix int    `json:"prefix"`
+}
+
 type childConfig struct {
-	TunName    string     `json:"tun_name"`
-	MTU        int        `json:"mtu"`
-	IPv6       bool       `json:"ipv6"`
-	DNS        []string   `json:"dns"`
-	ResolvConf string     `json:"resolv_conf"`
-	BindFiles  []bindFile `json:"bind_files"`
-	Command    []string   `json:"command"`
+	TunName    string            `json:"tun_name"`
+	MTU        int               `json:"mtu"`
+	IPv4       tunProtocolConfig `json:"ipv4"`
+	IPv6       bool              `json:"ipv6"`
+	IPv6Config tunProtocolConfig `json:"ipv6_config"`
+	DNS        []string          `json:"dns"`
+	ResolvConf string            `json:"resolv_conf"`
+	BindFiles  []bindFile        `json:"bind_files"`
+	Command    []string          `json:"command"`
 }
 
 type parentOptions struct {
 	SOCKS socksServer
+	Quiet bool
 }
 
 type socksServer struct {

@@ -24,9 +24,16 @@ var (
 	socksFlag      *string
 	socksUserFlag  *string
 	socksPassFlag  *string
+	quietFlag      *bool
 	tunNameFlag    *string
 	mtuFlag        *int
+	ipv4HostFlag   *string
+	ipv4GuestFlag  *string
+	ipv4PrefixFlag *int
 	ipv6Flag       *bool
+	ipv6HostFlag   *string
+	ipv6GuestFlag  *string
+	ipv6PrefixFlag *int
 	dnsFlag        *string
 	resolvConfFlag *string
 	bindFilesFlag  bindFileFlags
@@ -48,6 +55,9 @@ Arguments:
 	-socks-user, -socks-pass
 		Optional SOCKS5 username and password. These override URL credentials.
 
+	-quiet
+		Suppress non-error messages from the embedded V2Ray instance.
+
 	-tun-name <name>
 		TUN interface name inside the network namespace. Default socks5ify0.
 
@@ -56,6 +66,24 @@ Arguments:
 
 	-ipv6
 		Also configure IPv6 address and default route.
+
+	-tun-ipv4-host <ip>
+		V2Ray-side IPv4 address. Default 198.18.0.1.
+
+	-tun-ipv4-guest <ip>
+		Namespace-side IPv4 address. Default 198.18.0.2.
+
+	-tun-ipv4-prefix, -tun-ipv4-mask <bits>
+		IPv4 address prefix length. Default 30.
+
+	-tun-ipv6-host <ip>
+		V2Ray-side IPv6 address. Default fd00:736f:636b:35::1.
+
+	-tun-ipv6-guest <ip>
+		Namespace-side IPv6 address. Default fd00:736f:636b:35::2.
+
+	-tun-ipv6-prefix, -tun-ipv6-mask <bits>
+		IPv6 address prefix length. Default 126.
 
 	-dns <ip[,ip...]>
 		Opt-in generated /etc/resolv.conf override inside the mount namespace.
@@ -76,9 +104,18 @@ Examples:
 		socksFlag = fs.String("socks", "", "")
 		socksUserFlag = fs.String("socks-user", "", "")
 		socksPassFlag = fs.String("socks-pass", "", "")
+		quietFlag = fs.Bool("quiet", false, "")
 		tunNameFlag = fs.String("tun-name", defaultTunName, "")
 		mtuFlag = fs.Int("mtu", defaultMTU, "")
+		ipv4HostFlag = fs.String("tun-ipv4-host", defaultTunIPv4Host, "")
+		ipv4GuestFlag = fs.String("tun-ipv4-guest", defaultTunIPv4Guest, "")
+		ipv4PrefixFlag = fs.Int("tun-ipv4-prefix", defaultTunIPv4Prefix, "")
+		fs.IntVar(ipv4PrefixFlag, "tun-ipv4-mask", defaultTunIPv4Prefix, "")
 		ipv6Flag = fs.Bool("ipv6", false, "")
+		ipv6HostFlag = fs.String("tun-ipv6-host", defaultTunIPv6Host, "")
+		ipv6GuestFlag = fs.String("tun-ipv6-guest", defaultTunIPv6Guest, "")
+		ipv6PrefixFlag = fs.Int("tun-ipv6-prefix", defaultTunIPv6Prefix, "")
+		fs.IntVar(ipv6PrefixFlag, "tun-ipv6-mask", defaultTunIPv6Prefix, "")
 		dnsFlag = fs.String("dns", "", "")
 		resolvConfFlag = fs.String("resolv-conf", "", "")
 		fs.Var(&bindFilesFlag, "bind-file", "")
@@ -126,8 +163,19 @@ func buildOptions(command []string) (parentOptions, childConfig, error) {
 	if *dnsFlag != "" && *resolvConfFlag != "" {
 		return parentOptions{}, childConfig{}, fmt.Errorf("-dns and -resolv-conf are mutually exclusive")
 	}
+	if !*ipv6Flag && ipv6AddressOptionsChanged() {
+		return parentOptions{}, childConfig{}, fmt.Errorf("IPv6 TUN address options require -ipv6")
+	}
 
 	socksServer, err := parseSocksServer(*socksFlag, *socksUserFlag, *socksPassFlag)
+	if err != nil {
+		return parentOptions{}, childConfig{}, err
+	}
+	ipv4, err := parseTunProtocolConfig("tun-ipv4", *ipv4HostFlag, *ipv4GuestFlag, *ipv4PrefixFlag, false)
+	if err != nil {
+		return parentOptions{}, childConfig{}, err
+	}
+	ipv6, err := parseTunProtocolConfig("tun-ipv6", *ipv6HostFlag, *ipv6GuestFlag, *ipv6PrefixFlag, true)
 	if err != nil {
 		return parentOptions{}, childConfig{}, err
 	}
@@ -135,13 +183,21 @@ func buildOptions(command []string) (parentOptions, childConfig, error) {
 	child := childConfig{
 		TunName:    *tunNameFlag,
 		MTU:        *mtuFlag,
+		IPv4:       ipv4,
 		IPv6:       *ipv6Flag,
+		IPv6Config: ipv6,
 		DNS:        splitCommaList(*dnsFlag),
 		ResolvConf: *resolvConfFlag,
 		BindFiles:  append([]bindFile(nil), bindFilesFlag...),
 		Command:    append([]string(nil), command...),
 	}
-	return parentOptions{SOCKS: socksServer}, child, nil
+	return parentOptions{SOCKS: socksServer, Quiet: *quietFlag}, child, nil
+}
+
+func ipv6AddressOptionsChanged() bool {
+	return *ipv6HostFlag != defaultTunIPv6Host ||
+		*ipv6GuestFlag != defaultTunIPv6Guest ||
+		*ipv6PrefixFlag != defaultTunIPv6Prefix
 }
 
 func splitCommaList(raw string) []string {

@@ -79,7 +79,7 @@ func setupChildNamespace(cfg childConfig) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	if err := configureInterface(cfg.TunName, cfg.MTU, cfg.IPv6); err != nil {
+	if err := configureInterface(cfg.TunName, cfg.MTU, cfg.IPv4, cfg.IPv6, cfg.IPv6Config); err != nil {
 		_ = unix.Close(tunFD)
 		return -1, err
 	}
@@ -182,7 +182,7 @@ func createTun(name string) (int, error) {
 	return fd, nil
 }
 
-func configureInterface(name string, mtu int, enableIPv6 bool) error {
+func configureInterface(name string, mtu int, ipv4 tunProtocolConfig, enableIPv6 bool, ipv6 tunProtocolConfig) error {
 	if err := setLinkMTU(name, mtu); err != nil {
 		return err
 	}
@@ -196,14 +196,14 @@ func configureInterface(name string, mtu int, enableIPv6 bool) error {
 	if err != nil {
 		return err
 	}
-	if err := addAddress(iface, tunIPv4Guest, tunIPv4Prefix); err != nil {
+	if err := addAddress(iface, ipv4.Guest, ipv4.Prefix); err != nil {
 		return err
 	}
 	if err := addDefaultRoute(iface, false); err != nil {
 		return err
 	}
 	if enableIPv6 {
-		if err := addAddress(iface, tunIPv6Guest, tunIPv6Prefix); err != nil {
+		if err := addAddress(iface, ipv6.Guest, ipv6.Prefix); err != nil {
 			return err
 		}
 		if err := addDefaultRoute(iface, true); err != nil {
