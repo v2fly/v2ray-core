@@ -1,0 +1,6 @@
+//go:build linux && !confonly
+// +build linux,!confonly
+
+package all
+
+import _ "github.com/v2fly/v2ray-core/v5/main/commands/all/engineering/socks5ify"

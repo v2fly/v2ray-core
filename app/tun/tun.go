@@ -26,7 +26,10 @@ type TUN struct {
 	policyManager policy.Manager
 	config        *Config
 
-	stack *stack.Stack
+	stack          *stack.Stack
+	device         device.Device
+	preopenedFD    int
+	preopenedFDSet bool
 }
 
 func (t *TUN) Type() interface{} {
@@ -35,13 +38,22 @@ func (t *TUN) Type() interface{} {
 
 func (t *TUN) Start() error {
 	DeviceConstructor := gvisor.New
-	tunDevice, err := DeviceConstructor(device.Options{
+	deviceOptions := device.Options{
 		Name: t.config.Name,
 		MTU:  t.config.Mtu,
-	})
+	}
+	if t.preopenedFDSet {
+		deviceOptions.PreopenedFD = t.preopenedFD
+		deviceOptions.PreopenedFDSet = true
+		t.preopenedFD = -1
+		t.preopenedFDSet = false
+	}
+
+	tunDevice, err := DeviceConstructor(deviceOptions)
 	if err != nil {
 		return newError("failed to create device").Base(err).AtError()
 	}
+	t.device = tunDevice
 
 	if t.config.PacketEncoding != packetaddr.PacketAddrType_None {
 		writer := device.NewLinkWriterToWriter(tunDevice)
@@ -52,6 +64,10 @@ func (t *TUN) Start() error {
 
 	stack, err := t.CreateStack(tunDevice)
 	if err != nil {
+		if closer, ok := t.device.(interface{ Close() }); ok {
+			closer.Close()
+		}
+		t.device = nil
 		return newError("failed to create stack").Base(err).AtError()
 	}
 	t.stack = stack
@@ -63,6 +79,17 @@ func (t *TUN) Close() error {
 	if t.stack != nil {
 		t.stack.Close()
 		t.stack.Wait()
+		t.stack = nil
+	} else if t.device != nil {
+		if closer, ok := t.device.(interface{ Close() }); ok {
+			closer.Close()
+		}
+	}
+	t.device = nil
+	if t.preopenedFDSet {
+		_ = device.ClosePreopenedFD(t.preopenedFD)
+		t.preopenedFD = -1
+		t.preopenedFDSet = false
 	}
 	return nil
 }
@@ -72,6 +99,14 @@ func (t *TUN) Init(ctx context.Context, config *Config, dispatcher routing.Dispa
 	t.config = config
 	t.dispatcher = dispatcher
 	t.policyManager = policyManager
+	t.preopenedFD = -1
+	if config.PreopenedFd != nil {
+		if *config.PreopenedFd < 0 {
+			return newError("invalid preopened_fd: ", *config.PreopenedFd).AtError()
+		}
+		t.preopenedFD = int(*config.PreopenedFd)
+		t.preopenedFDSet = true
+	}
 
 	return nil
 }
