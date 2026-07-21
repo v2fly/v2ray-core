@@ -41,7 +41,7 @@ require (
 	github.com/v2fly/struc v0.0.0-20241227015403-8e8fa1badfd6
 	github.com/vincent-petithory/dataurl v1.0.0
 	github.com/xiaokangwang/VLite v0.0.0-20220418190619-cff95160a432
-	github.com/xssnick/raptorq v1.4.0
+	github.com/xssnick/raptorq v1.5.0
 	github.com/xtaci/smux v1.5.24
 	go.starlark.net v0.0.0-20230612165344-9532f5667272
 	go4.org/netipx v0.0.0-20230303233057-f1b76eb4bb35
