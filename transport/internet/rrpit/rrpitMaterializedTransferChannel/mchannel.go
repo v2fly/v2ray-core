@@ -59,6 +59,10 @@ type ChannelTx struct {
 	io.WriteCloser
 }
 
+type ownedPacketWriter interface {
+	WriteOwned([]byte) (int, error)
+}
+
 func NewChannelTx(channelID uint64, writer io.WriteCloser, maxRewindableTimestampNum int, maxRewindableControlMessageNum int) (*ChannelTx, error) {
 	if writer == nil {
 		return nil, newError("nil writer")
@@ -79,7 +83,13 @@ func (tx *ChannelTx) SendDataMessage(data []byte) error {
 	binary.BigEndian.PutUint64(wireMessage[:channelSequenceFieldLength], tx.NextSeq)
 	copy(wireMessage[channelSequenceFieldLength:], payload)
 
-	written, err := tx.Write(wireMessage)
+	var written int
+	var err error
+	if writer, ok := tx.WriteCloser.(ownedPacketWriter); ok {
+		written, err = writer.WriteOwned(wireMessage)
+	} else {
+		written, err = tx.Write(wireMessage)
+	}
 	if err != nil {
 		return err
 	}

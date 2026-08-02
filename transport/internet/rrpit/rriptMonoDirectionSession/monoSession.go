@@ -54,8 +54,9 @@ type ChannelStatus struct {
 }
 
 type ChannelConfig struct {
-	Weight          int
-	MaxSendingSpeed int
+	Weight            int
+	MaxSendingSpeed   int
+	SendQueueCapacity int
 }
 
 type ChannelRateControlStatus struct {
@@ -88,6 +89,10 @@ type SessionTxReconstructionConfig struct {
 	StaleLaneProgressStallThresholdTicks          int
 	SecondaryRepairMinBurst                       int
 	AlwaysRestrictSourceDataWhenOldestLaneStalled bool
+	// OpportunisticRepairIntervalTicks limits feedback-driven lane-weight
+	// repairs to one burst per interval. Zero and one preserve every-tick
+	// behavior. Initial and scheduled secondary repairs are unaffected.
+	OpportunisticRepairIntervalTicks int
 }
 
 type SessionRxConfig struct {
@@ -122,20 +127,21 @@ type txLane struct {
 
 	TransferLane *rrpitTransferLane.TransferLaneTx
 
-	DataShards                     uint32
-	TotalDataShards                uint32
-	Finalized                      bool
-	PeerSeenChunks                 uint16
-	PeerSeenChunksKnown            bool
-	RepairPackets                  uint32
-	InitialRepairPacketsPending    uint32
-	SecondaryRepairPacketsPending  uint32
-	SecondaryRepairPacketsPerBurst uint32
-	NextSecondaryRepairTimestamp   uint64
-	PeerReconstructed              bool
-	CreatedAtTimestamp             uint64
-	FinalizedAtTimestamp           uint64
-	LastProgressTimestamp          uint64
+	DataShards                       uint32
+	TotalDataShards                  uint32
+	Finalized                        bool
+	PeerSeenChunks                   uint16
+	PeerSeenChunksKnown              bool
+	RepairPackets                    uint32
+	InitialRepairPacketsPending      uint32
+	SecondaryRepairPacketsPending    uint32
+	SecondaryRepairPacketsPerBurst   uint32
+	NextSecondaryRepairTimestamp     uint64
+	PeerReconstructed                bool
+	CreatedAtTimestamp               uint64
+	FinalizedAtTimestamp             uint64
+	LastProgressTimestamp            uint64
+	LastOpportunisticRepairTimestamp uint64
 }
 
 type txChannels struct {
@@ -435,7 +441,7 @@ func (r *SessionRx) ensureDefaults() error {
 	if r.maxBufferedLanes < 0 {
 		return newError("invalid max buffered lanes")
 	}
-	if _, err := rrpitTransferLane.NewTransferLaneRx(r.laneShardSize, r.remoteMaxDataShardsPerLane); err != nil {
+	if err := rrpitTransferLane.ValidateTransferLaneRxConfig(r.laneShardSize, r.remoteMaxDataShardsPerLane); err != nil {
 		return err
 	}
 	return nil
@@ -491,15 +497,18 @@ func (t *SessionTx) ensureDefaults() error {
 	if t.Reconstruction.SecondaryRepairMinBurst < 0 {
 		return newError("invalid secondary repair minimum burst")
 	}
+	if t.Reconstruction.OpportunisticRepairIntervalTicks < 0 {
+		return newError("invalid opportunistic repair interval")
+	}
 	for _, weight := range t.Reconstruction.LaneRepairWeight {
 		if weight < 0 {
 			return newError("invalid lane repair weight")
 		}
 	}
-	if _, err := rrpitTransferLane.NewTransferLaneTx(t.laneShardSize, t.maxDataShardsPerLane); err != nil {
+	if err := rrpitTransferLane.ValidateTransferLaneTxConfig(t.laneShardSize, t.maxDataShardsPerLane); err != nil {
 		return err
 	}
-	if _, err := rrpitTransferChannel.NewChannelTx(0, t.maxRewindableTimestampNum, t.maxRewindableControlMessageNum); err != nil {
+	if err := rrpitTransferChannel.ValidateChannelTxConfig(t.maxRewindableTimestampNum, t.maxRewindableControlMessageNum); err != nil {
 		return err
 	}
 	return nil
@@ -543,6 +552,7 @@ func (t *SessionTx) onNewTimestamp(timestamp uint64) (TickStats, error) {
 				}
 			case repairSendOpportunistic:
 				opportunisticBudget[index] -= 1
+				lane.LastOpportunisticRepairTimestamp = timestamp
 			}
 		}
 	}
@@ -774,7 +784,7 @@ func (t *SessionTx) sendMessage(data []byte) error {
 		if t.hasCustomReconstructionConfig() && t.shouldFinalizeLaneAfterData(lane) {
 			t.finalizeLane(lane)
 		}
-		if err := t.sendTransferPacket(lane.LaneID, *transfer, false); err != nil {
+		if err := t.sendTransferPacket(lane.LaneID, *transfer, true); err != nil {
 			return err
 		}
 		return t.flushInitialRepairPackets(lane)
@@ -797,7 +807,7 @@ func (t *SessionTx) sendMessage(data []byte) error {
 	if t.hasCustomReconstructionConfig() && t.shouldFinalizeLaneAfterData(lane) {
 		t.finalizeLane(lane)
 	}
-	if err := t.sendTransferPacket(lane.LaneID, *transfer, false); err != nil {
+	if err := t.sendTransferPacket(lane.LaneID, *transfer, true); err != nil {
 		return err
 	}
 	return t.flushInitialRepairPackets(lane)
@@ -1279,6 +1289,10 @@ func (t *SessionTx) buildOpportunisticRepairBudget() []uint32 {
 		}
 		weight := t.laneRepairWeightForLane(i)
 		if weight <= 0 {
+			continue
+		}
+		interval := t.Reconstruction.OpportunisticRepairIntervalTicks
+		if interval > 1 && lane.LastOpportunisticRepairTimestamp != 0 && timestampAge(t.lifecycleTimestamp(), lane.LastOpportunisticRepairTimestamp) < uint64(interval) {
 			continue
 		}
 		budget[i] = repairPacketQuota(weight, missing)

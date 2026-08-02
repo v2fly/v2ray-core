@@ -2,6 +2,7 @@ package dtls
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"io"
 	gonet "net"
@@ -54,10 +55,13 @@ func newDTLSServerConn(src net.Destination, parent *Listener) *dTLSConn {
 }
 
 type dTLSConnWrapped struct {
-	unencryptedConn *dTLSConn
-	dTLSConn        *dtls.Conn
-	closeOnce       sync.Once
-	closeErr        error
+	unencryptedConn        *dTLSConn
+	dTLSConn               *dtls.Conn
+	handshakeDone          bool
+	clientHelloFingerprint [sha256.Size]byte
+	hasClientHello         bool
+	closeOnce              sync.Once
+	closeErr               error
 }
 
 func (c *dTLSConnWrapped) Read(b []byte) (int, error) {
@@ -167,7 +171,7 @@ func (l *dTLSConn) Write(b []byte) (n int, err error) {
 
 func (l *dTLSConn) Close() error {
 	l.finish()
-	l.parent.Remove(l.src)
+	l.parent.remove(l.src, l)
 	return nil
 }
 
@@ -239,7 +243,7 @@ func newDTLSConnWrapped(unencryptedConnection *dTLSConn, transportConfiguration 
 			return transportConfiguration.Psk, nil
 		}
 		config.PSKIdentityHint = []byte("")
-		config.CipherSuites = []dtls.CipherSuiteID{dtls.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256}
+		config.CipherSuites = configuredCipherSuites(transportConfiguration)
 	default:
 		newError("unknown dtls mode").WriteToLog()
 	}
@@ -259,39 +263,107 @@ func (l *Listener) OnReceive(payload *buf.Buffer, src net.Destination) {
 		Remote: src.Address,
 		Port:   src.Port,
 	}
+	var replaced *dTLSConnWrapped
+	startHandshake := false
+
 	l.Lock()
-	defer l.Unlock()
+	packet := payload.Bytes()
+	clientHelloFingerprint, isClientHello := dtlsClientHelloFingerprint(packet)
 	conn, found := l.sessions[id]
+	if found && !conn.handshakeDone && isClientHello {
+		// Keep the latest cookie-bearing ClientHello fingerprint so a delayed
+		// retransmission after handshake completion is not mistaken for a new
+		// connection.
+		conn.clientHelloFingerprint = clientHelloFingerprint
+		conn.hasClientHello = true
+	}
+	if found && conn.handshakeDone && isClientHello &&
+		(!conn.hasClientHello || conn.clientHelloFingerprint != clientHelloFingerprint) {
+		// UDP relays and NATs may reuse the same server-side tuple for a new
+		// client socket. A fresh ClientHello cannot be processed by the old
+		// established DTLS state, so replace it immediately instead of making
+		// the client wait for an application-level idle timeout.
+		replaced = conn
+		found = false
+	}
 	if !found {
-		var err error
 		unEncryptedConn := newDTLSServerConn(src, l)
-		conn = &dTLSConnWrapped{unencryptedConn: unEncryptedConn}
+		conn = &dTLSConnWrapped{
+			unencryptedConn:        unEncryptedConn,
+			clientHelloFingerprint: clientHelloFingerprint,
+			hasClientHello:         isClientHello,
+		}
 		l.sessions[id] = conn
-		go func() {
-			conn.dTLSConn, err = newDTLSConnWrapped(unEncryptedConn, l.config)
-			if err != nil {
-				newError("unable to accept new dtls connection").Base(err).WriteToLog()
-				return
-			}
-			if err := conn.dTLSConn.Handshake(); err != nil {
-				newError("unable to complete dtls handshake").Base(err).WriteToLog()
-				_ = conn.Close()
-				return
-			}
-			l.addConn(internet.Connection(conn))
-		}()
+		startHandshake = true
 	}
 	conn.unencryptedConn.OnReceive(payload)
+	l.Unlock()
+
+	if replaced != nil {
+		newError("replacing established DTLS connection after fresh ClientHello from ", src).AtWarning().WriteToLog()
+		// Abort without sending a close-notify on the tuple now owned by the
+		// replacement handshake.
+		_ = replaced.unencryptedConn.Close()
+	}
+	if startHandshake {
+		go l.handshake(conn)
+	}
 }
 
-func (l *Listener) Remove(src net.Destination) {
+func (l *Listener) handshake(conn *dTLSConnWrapped) {
+	dtlsConn, err := newDTLSConnWrapped(conn.unencryptedConn, l.config)
+	if err != nil {
+		newError("unable to accept new dtls connection").Base(err).WriteToLog()
+		_ = conn.Close()
+		return
+	}
+	conn.dTLSConn = dtlsConn
+	if err := dtlsConn.Handshake(); err != nil {
+		newError("unable to complete dtls handshake").Base(err).WriteToLog()
+		_ = conn.Close()
+		return
+	}
+
+	l.Lock()
+	id := ConnectionID{Remote: conn.unencryptedConn.src.Address, Port: conn.unencryptedConn.src.Port}
+	if l.sessions[id] != conn {
+		l.Unlock()
+		_ = conn.Close()
+		return
+	}
+	conn.handshakeDone = true
+	l.Unlock()
+
+	l.addConn(internet.Connection(conn))
+}
+
+func (l *Listener) remove(src net.Destination, unencryptedConn *dTLSConn) {
 	l.Lock()
 	defer l.Unlock()
 	id := ConnectionID{
 		Remote: src.Address,
 		Port:   src.Port,
 	}
-	delete(l.sessions, id)
+	if current := l.sessions[id]; current != nil && current.unencryptedConn == unencryptedConn {
+		delete(l.sessions, id)
+	}
+}
+
+func dtlsClientHelloFingerprint(packet []byte) ([sha256.Size]byte, bool) {
+	const (
+		dtlsRecordHeaderLength   = 13
+		dtlsHandshakeContentType = 22
+		clientHelloType          = 1
+	)
+	if len(packet) <= dtlsRecordHeaderLength {
+		return [sha256.Size]byte{}, false
+	}
+	if !(packet[0] == dtlsHandshakeContentType && // nolint: staticcheck
+		packet[3] == 0 && packet[4] == 0 &&
+		packet[dtlsRecordHeaderLength] == clientHelloType) {
+		return [sha256.Size]byte{}, false
+	}
+	return sha256.Sum256(packet[dtlsRecordHeaderLength:]), true
 }
 
 func ListenDTLS(ctx context.Context, address net.Address, port net.Port, streamSettings *internet.MemoryStreamConfig, addConn internet.ConnHandler) (internet.Listener, error) {

@@ -27,7 +27,10 @@ const (
 type Config struct {
 	ChannelManager                                      *rrpitChannelManager.ChannelManager
 	BaseSessionConfig                                   rrpitBidirectionalSession.Config
+	InteractiveSessionConfig                            *rrpitBidirectionalSession.Config
+	BackgroundSessionConfig                             *rrpitBidirectionalSession.Config
 	TimestampInterval                                   time.Duration
+	OnAutoTickError                                     func(error)
 	InteractivePrimaryCancellationCounterLimit          int
 	DynamicRestrictSourceDataWhenOldestLaneStalled      bool
 	DynamicRestrictSourceDataWhenOldestLaneStalledTicks int
@@ -51,6 +54,7 @@ type Manager struct {
 	dynamicRestrictSourceDataWhenOldestLaneStalledTicks int
 	backgroundDynamicRestrictTicksRemaining             int
 	timestampInterval                                   time.Duration
+	onAutoTickError                                     func(error)
 	nextTimestamp                                       uint64
 	autoTickStop                                        chan struct{}
 	autoTickDone                                        chan struct{}
@@ -67,12 +71,18 @@ func New(config Config) (*Manager, error) {
 		sessions:                            make(map[SessionName]*rrpitBidirectionalSession.BidirectionalSession),
 		state:                               interactiveStreamPrimary,
 		timestampInterval:                   config.TimestampInterval,
+		onAutoTickError:                     config.OnAutoTickError,
 		interactivePrimaryCancellationLimit: config.InteractivePrimaryCancellationCounterLimit,
 		dynamicRestrictSourceDataWhenOldestLaneStalled:      config.DynamicRestrictSourceDataWhenOldestLaneStalled,
 		dynamicRestrictSourceDataWhenOldestLaneStalledTicks: config.DynamicRestrictSourceDataWhenOldestLaneStalledTicks,
 	}
 
 	interactiveConfig := config.BaseSessionConfig
+	if config.InteractiveSessionConfig != nil {
+		interactiveConfig = *config.InteractiveSessionConfig
+	}
+	interactiveConfig.LocalSessionInstanceID = config.BaseSessionConfig.LocalSessionInstanceID
+	interactiveConfig.ValidateRemoteControl = config.BaseSessionConfig.ValidateRemoteControl
 	interactiveConfig.TimestampInterval = 0
 	interactiveConfig.Rx.DataPacketKind = rriptMonoDirectionSession.PacketKind_InteractiveStreamData
 	interactiveConfig.Rx.ControlPacketKind = rriptMonoDirectionSession.PacketKind_InteractiveStreamControl
@@ -87,6 +97,11 @@ func New(config Config) (*Manager, error) {
 	}
 
 	backgroundConfig := config.BaseSessionConfig
+	if config.BackgroundSessionConfig != nil {
+		backgroundConfig = *config.BackgroundSessionConfig
+	}
+	backgroundConfig.LocalSessionInstanceID = config.BaseSessionConfig.LocalSessionInstanceID
+	backgroundConfig.ValidateRemoteControl = config.BaseSessionConfig.ValidateRemoteControl
 	backgroundConfig.TimestampInterval = 0
 	backgroundConfig.Rx.DataPacketKind = rriptMonoDirectionSession.PacketKind_BackgroundStreamData
 	backgroundConfig.Rx.ControlPacketKind = rriptMonoDirectionSession.PacketKind_BackgroundStreamControl
@@ -248,6 +263,8 @@ func (m *Manager) startAutoTick() {
 	m.autoTickDone = make(chan struct{})
 	go func() {
 		ticker := time.NewTicker(m.timestampInterval)
+		var lastErrorReport time.Time
+		hadError := false
 		defer func() {
 			ticker.Stop()
 			close(m.autoTickDone)
@@ -260,8 +277,15 @@ func (m *Manager) startAutoTick() {
 				timestamp := m.nextTimestamp
 				m.mu.Unlock()
 				if _, err := m.OnNewTimestamp(timestamp); err != nil {
-					return
+					now := time.Now()
+					if m.onAutoTickError != nil && (!hadError || now.Sub(lastErrorReport) >= 5*time.Second) {
+						m.onAutoTickError(err)
+						lastErrorReport = now
+					}
+					hadError = true
+					continue
 				}
+				hadError = false
 			case <-m.autoTickStop:
 				return
 			}

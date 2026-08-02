@@ -9,6 +9,7 @@ option java_multiple_files = true;
 import "google/protobuf/any.proto";
 
 import "common/protoext/extensions.proto";
+import "transport/internet/dtls/config.proto";
 
 message DTLSUDPChannel {
   bytes ip = 1;
@@ -16,6 +17,13 @@ message DTLSUDPChannel {
   string password = 3;
   // If positive, consider this DTLS channel dead when no inbound rrpit message bytes arrive for this duration.
   int64 no_incoming_message_timeout = 4;
+  v2ray.core.transport.internet.dtls.DTLSCipherSuite cipher_suite = 5;
+
+  // Number of DTLS records retained by the anti-replay bitmap. Zero uses the
+  // transport default. This must cover packet reordering caused by path jitter
+  // at the configured packet rate, otherwise valid records are discarded
+  // before RRIPT's FEC/reordering layer can see them.
+  uint32 replay_protection_window = 6;
 
   string ip_addr = 68000 [(v2ray.core.common.protoext.field_opt).convert_time_parse_ip = "ip"];
 }
@@ -35,6 +43,12 @@ message ChannelSetting {
 
   // Maximum packets this channel may send in a single rrpit timestamp window.
   int32 max_sending_speed = 3;
+
+  // Number of packets that may wait for this channel's dedicated DTLS writer.
+  // A positive value moves encryption and the UDP write to a per-channel
+  // worker, allowing multiple physical channels to send concurrently. Zero
+  // keeps synchronous writes.
+  uint32 send_queue_capacity = 4;
 }
 
 message LaneSetting {
@@ -75,6 +89,11 @@ message SessionReconstructionSetting {
   int32 secondary_repair_min_burst = 7;
 
   bool always_restrict_source_data_when_oldest_lane_stalled = 8;
+
+  // Minimum ticks between opportunistic lane-weight repairs. Initial and
+  // explicitly scheduled feedback repairs are never delayed. Zero or one
+  // preserves the legacy every-tick behavior.
+  int32 opportunistic_repair_interval_ticks = 9;
 }
 
 message SessionManagerSetting {
@@ -101,6 +120,15 @@ message SessionSetting {
   int32 max_rewindable_control_message_num = 3;
 
   SessionReconstructionSetting reconstruction = 5;
+}
+
+// Per-traffic-class overrides. Shard size remains shared because every class
+// uses the same materialized channels and PMTU.
+message SessionClassSetting {
+  int32 max_data_shards_per_lane = 1;
+  int32 max_buffered_lanes = 2;
+  int32 remote_max_data_shards_per_lane = 3;
+  SessionReconstructionSetting reconstruction = 4;
 }
 
 message EngineeringSetting {
@@ -135,6 +163,17 @@ message AdaptorSetting {
 
   // Maximum per-stream smux receive buffer in bytes. Zero means the smux default.
   int32 max_stream_buffer = 7;
+
+  // Maximum consecutive interactive-session SMUX frames in one RRIPT message.
+  // Zero or one disables aggregation.
+  int32 aggregation_max_frames = 8;
+
+  // Queue depth required before frames are aggregated. Below the threshold,
+  // frames are flushed individually after aggregation_flush_delay.
+  int32 aggregation_min_queue_frames = 9;
+
+  // Maximum aggregation hold time, encoded as an int64 time.Duration.
+  int64 aggregation_flush_delay = 10;
 }
 
 message ConnectionPersistenceSetting {
@@ -166,4 +205,6 @@ message Config {
   AdaptorSetting adaptor = 5;
   SessionManagerSetting session_mgr = 6;
   ConnectionPersistenceSetting persistence = 7;
+  SessionClassSetting interactive_session = 8;
+  SessionClassSetting background_session = 9;
 }

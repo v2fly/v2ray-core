@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rriptMonoDirectionSession"
+	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitChannelManager"
 	"github.com/v2fly/v2ray-core/v5/transport/internet/rrpit/rrpitMaterializedTransferChannel"
 )
 
@@ -113,7 +114,8 @@ func (s *BidirectionalSession) SendMessage(data []byte) error {
 			s.sourcePacketActivity += 1
 			return nil
 		}
-		if !errors.Is(err, rriptMonoDirectionSession.ErrTxLaneBufferFull) {
+		if !errors.Is(err, rriptMonoDirectionSession.ErrTxLaneBufferFull) &&
+			!errors.Is(err, rrpitChannelManager.ErrSharedSendQuotaReached) {
 			return err
 		}
 		if s.cond == nil {
@@ -137,7 +139,13 @@ func (s *BidirectionalSession) OnNewTimestampWithStats(timestamp uint64) (rriptM
 	if timestamp > s.nextTimestamp {
 		s.nextTimestamp = timestamp
 	}
-	return s.onNewTimestampLocked(timestamp)
+	stats, err := s.onNewTimestampLocked(timestamp)
+	if s.cond != nil {
+		// Source writes blocked on the shared physical quota may retry only
+		// after the channel manager has opened a new timestamp window.
+		s.cond.Broadcast()
+	}
+	return stats, err
 }
 
 func (s *BidirectionalSession) Close() error {

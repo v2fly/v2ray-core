@@ -39,11 +39,8 @@ type TransferLaneRx struct {
 }
 
 func NewTransferLaneRx(shardSize int, remoteMaxDataShards int) (*TransferLaneRx, error) {
-	if err := validateTransferLaneConfig(shardSize); err != nil {
+	if err := ValidateTransferLaneRxConfig(shardSize, remoteMaxDataShards); err != nil {
 		return nil, err
-	}
-	if remoteMaxDataShards < 0 {
-		return nil, newError("invalid remote max data shards")
 	}
 	return &TransferLaneRx{
 		ShardSize:           shardSize,
@@ -172,11 +169,8 @@ type TransferLaneTx struct {
 }
 
 func NewTransferLaneTx(shardSize int, maxDataShards int) (*TransferLaneTx, error) {
-	if err := validateTransferLaneConfig(shardSize); err != nil {
+	if err := ValidateTransferLaneTxConfig(shardSize, maxDataShards); err != nil {
 		return nil, err
-	}
-	if maxDataShards < 0 {
-		return nil, newError("invalid max data shards")
 	}
 
 	lane := &TransferLaneTx{
@@ -348,6 +342,30 @@ func validateTransferLaneConfig(shardSize int) error {
 	}
 	if shardSize > int(^uint16(0)) {
 		return newError("shard size exceeds transfer packet capacity")
+	}
+	return nil
+}
+
+// ValidateTransferLaneRxConfig validates receiver lane settings without
+// allocating the per-lane reconstruction state created by NewTransferLaneRx.
+func ValidateTransferLaneRxConfig(shardSize int, remoteMaxDataShards int) error {
+	if err := validateTransferLaneConfig(shardSize); err != nil {
+		return err
+	}
+	if remoteMaxDataShards < 0 {
+		return newError("invalid remote max data shards")
+	}
+	return nil
+}
+
+// ValidateTransferLaneTxConfig validates transmitter lane settings without
+// allocating the shard history created by NewTransferLaneTx.
+func ValidateTransferLaneTxConfig(shardSize int, maxDataShards int) error {
+	if err := validateTransferLaneConfig(shardSize); err != nil {
+		return err
+	}
+	if maxDataShards < 0 {
+		return newError("invalid max data shards")
 	}
 	return nil
 }

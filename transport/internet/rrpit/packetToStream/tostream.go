@@ -15,21 +15,36 @@ import (
 )
 
 const (
-	adaptorFrameIDFieldSize        = 8
-	adaptorStreamIDFieldSize       = 4
 	adaptorStreamFrameSeqFieldSize = 8
-	adaptorSmuxCmdFieldSize        = 1
-	adaptorSmuxVersionFieldSize    = 1
-	adaptorHeaderSize              = adaptorFrameIDFieldSize + adaptorStreamIDFieldSize + adaptorStreamFrameSeqFieldSize + adaptorSmuxCmdFieldSize + adaptorSmuxVersionFieldSize
+	// SMUX already carries version, command, stream id, and payload length.
+	// RRIPT only needs a per-stream sequence for independent reordering.
+	adaptorHeaderSize = adaptorStreamFrameSeqFieldSize
 
 	smuxVersionFieldOffset  = 0
 	smuxCmdFieldOffset      = 1
 	smuxLengthFieldOffset   = 2
 	smuxStreamIDFieldOffset = 4
 	smuxFrameHeaderSize     = 8
+
+	adaptorBatchMarkerSize        = 8
+	adaptorBatchCountSize         = 1
+	adaptorBatchFrameLengthSize   = 2
+	adaptorBatchMaximumFrameCount = 255
 )
 
+const adaptorBatchMarker = ^uint64(0)
+
 var sessionPacketConnCloseDrainTimeout = 2 * time.Second
+
+// Options configures same-session aggregation. Both endpoints receive the
+// same values from the RRIPT transport configuration; no wire negotiation is
+// performed.
+type Options struct {
+	AggregationMaxFrames      int
+	AggregationMinQueueFrames int
+	AggregationFlushDelay     time.Duration
+	OnError                   func(error)
+}
 
 func MaxSmuxFrameSizeForMessage(maxMessageSize int) int {
 	maxFrameSize := maxMessageSize - adaptorHeaderSize - smuxFrameHeaderSize
@@ -56,7 +71,8 @@ type adaptorFrame struct {
 }
 
 type sessionPacketConn struct {
-	session *rrpitBidirectionalSession.BidirectionalSession
+	session     *rrpitBidirectionalSession.BidirectionalSession
+	sendMessage func([]byte) error
 
 	mu sync.Mutex
 	// cond protects all mutable fields below.
@@ -74,6 +90,14 @@ type sessionPacketConn struct {
 	remoteSynEstablished    map[uint32]bool
 	roundRobinIndex         int
 	maxSerializedFrameBytes int
+	maxMessageBytes         int
+
+	aggregationMaxFrames      int
+	aggregationMinQueueFrames int
+	aggregationFlushDelay     time.Duration
+	outgoingFrames            []*adaptorFrame
+	sendDone                  chan struct{}
+	onError                   func(error)
 
 	closeOnce  sync.Once
 	closing    bool
@@ -83,7 +107,7 @@ type sessionPacketConn struct {
 	remoteAddr net.Addr
 }
 
-func New(session *rrpitBidirectionalSession.BidirectionalSession, client bool, config *smux.Config) (*Adaptor, error) {
+func New(session *rrpitBidirectionalSession.BidirectionalSession, client bool, config *smux.Config, options ...Options) (*Adaptor, error) {
 	if session == nil {
 		return nil, fmt.Errorf("nil bidirectional session")
 	}
@@ -98,7 +122,14 @@ func New(session *rrpitBidirectionalSession.BidirectionalSession, client bool, c
 		return nil, err
 	}
 
-	packetConn := newSessionPacketConn(session, maxSerializedFrameBytes)
+	var adaptorOptions Options
+	if len(options) > 0 {
+		adaptorOptions = options[0]
+	}
+	packetConn, err := newSessionPacketConnWithOptions(session, maxSerializedFrameBytes, adaptorOptions)
+	if err != nil {
+		return nil, err
+	}
 	session.Rx().OnMessage = packetConn.OnMessage
 
 	var smuxSession *smux.Session
@@ -119,12 +150,12 @@ func New(session *rrpitBidirectionalSession.BidirectionalSession, client bool, c
 	}, nil
 }
 
-func NewClient(session *rrpitBidirectionalSession.BidirectionalSession, config *smux.Config) (*Adaptor, error) {
-	return New(session, true, config)
+func NewClient(session *rrpitBidirectionalSession.BidirectionalSession, config *smux.Config, options ...Options) (*Adaptor, error) {
+	return New(session, true, config, options...)
 }
 
-func NewServer(session *rrpitBidirectionalSession.BidirectionalSession, config *smux.Config) (*Adaptor, error) {
-	return New(session, false, config)
+func NewServer(session *rrpitBidirectionalSession.BidirectionalSession, config *smux.Config, options ...Options) (*Adaptor, error) {
+	return New(session, false, config, options...)
 }
 
 func (a *Adaptor) Session() *smux.Session {
@@ -173,24 +204,53 @@ func (a *Adaptor) Close() error {
 }
 
 func newSessionPacketConn(session *rrpitBidirectionalSession.BidirectionalSession, maxSerializedFrameBytes int) *sessionPacketConn {
-	conn := &sessionPacketConn{
-		session:                 session,
-		nextSendStreamFrameSeq:  make(map[uint32]uint64),
-		nextExpectedStreamSeq:   make(map[uint32]uint64),
-		readyFramesByStream:     make(map[uint32]map[uint64]*adaptorFrame),
-		activeStreamSet:         make(map[uint32]bool),
-		locallyKnownStreams:     make(map[uint32]bool),
-		remoteSynEstablished:    make(map[uint32]bool),
-		maxSerializedFrameBytes: maxSerializedFrameBytes,
-		localAddr:               adaptorAddr("rrpit-local"),
-		remoteAddr:              adaptorAddr("rrpit-remote"),
-	}
-	conn.cond = sync.NewCond(&conn.mu)
+	conn, _ := newSessionPacketConnWithOptions(session, maxSerializedFrameBytes, Options{})
 	return conn
 }
 
+func newSessionPacketConnWithOptions(session *rrpitBidirectionalSession.BidirectionalSession, maxSerializedFrameBytes int, options Options) (*sessionPacketConn, error) {
+	if options.AggregationMaxFrames < 0 || options.AggregationMaxFrames > adaptorBatchMaximumFrameCount {
+		return nil, fmt.Errorf("rrpit adaptor aggregation max frames must be between 0 and %d", adaptorBatchMaximumFrameCount)
+	}
+	if options.AggregationMinQueueFrames < 0 {
+		return nil, fmt.Errorf("rrpit adaptor aggregation minimum queue frames must not be negative")
+	}
+	if options.AggregationFlushDelay < 0 {
+		return nil, fmt.Errorf("rrpit adaptor aggregation flush delay must not be negative")
+	}
+	if options.AggregationMaxFrames > 1 && options.AggregationMinQueueFrames < 2 {
+		return nil, fmt.Errorf("rrpit adaptor aggregation minimum queue frames must be at least 2 when aggregation is enabled")
+	}
+	conn := &sessionPacketConn{
+		session:                   session,
+		nextSendStreamFrameSeq:    make(map[uint32]uint64),
+		nextExpectedStreamSeq:     make(map[uint32]uint64),
+		readyFramesByStream:       make(map[uint32]map[uint64]*adaptorFrame),
+		activeStreamSet:           make(map[uint32]bool),
+		locallyKnownStreams:       make(map[uint32]bool),
+		remoteSynEstablished:      make(map[uint32]bool),
+		maxSerializedFrameBytes:   maxSerializedFrameBytes,
+		maxMessageBytes:           maxSerializedFrameBytes + adaptorHeaderSize,
+		aggregationMaxFrames:      options.AggregationMaxFrames,
+		aggregationMinQueueFrames: options.AggregationMinQueueFrames,
+		aggregationFlushDelay:     options.AggregationFlushDelay,
+		onError:                   options.OnError,
+		localAddr:                 adaptorAddr("rrpit-local"),
+		remoteAddr:                adaptorAddr("rrpit-remote"),
+	}
+	conn.cond = sync.NewCond(&conn.mu)
+	if session != nil {
+		conn.sendMessage = session.SendMessage
+	}
+	if conn.aggregationEnabled() {
+		conn.sendDone = make(chan struct{})
+		go conn.runSender()
+	}
+	return conn, nil
+}
+
 func (c *sessionPacketConn) OnMessage(data []byte) error {
-	frame, err := decodeAdaptorFrame(data)
+	frames, err := decodeAdaptorMessage(data)
 	if err != nil {
 		return err
 	}
@@ -201,19 +261,21 @@ func (c *sessionPacketConn) OnMessage(data []byte) error {
 	if c.closed {
 		return nil
 	}
-	if frame.streamFrameSeq < c.nextExpectedStreamSeq[frame.streamID] {
-		return nil
+	for _, frame := range frames {
+		if frame.streamFrameSeq < c.nextExpectedStreamSeq[frame.streamID] {
+			continue
+		}
+		streamFrames := c.readyFramesByStream[frame.streamID]
+		if streamFrames == nil {
+			streamFrames = make(map[uint64]*adaptorFrame)
+			c.readyFramesByStream[frame.streamID] = streamFrames
+		}
+		if _, found := streamFrames[frame.streamFrameSeq]; found {
+			continue
+		}
+		streamFrames[frame.streamFrameSeq] = frame
+		c.activateStreamLocked(frame.streamID)
 	}
-	streamFrames := c.readyFramesByStream[frame.streamID]
-	if streamFrames == nil {
-		streamFrames = make(map[uint64]*adaptorFrame)
-		c.readyFramesByStream[frame.streamID] = streamFrames
-	}
-	if _, found := streamFrames[frame.streamFrameSeq]; found {
-		return nil
-	}
-	streamFrames[frame.streamFrameSeq] = frame
-	c.activateStreamLocked(frame.streamID)
 	c.deliverReadyFramesLocked()
 	c.cond.Broadcast()
 	return nil
@@ -259,7 +321,7 @@ func (c *sessionPacketConn) Write(p []byte) (int, error) {
 		c.fail(err)
 		return 0, err
 	}
-	if c.session == nil {
+	if c.sendMessage == nil {
 		return 0, io.ErrClosedPipe
 	}
 
@@ -273,21 +335,35 @@ func (c *sessionPacketConn) Write(p []byte) (int, error) {
 	frameID := c.nextSendFrameID
 	c.nextSendFrameID++
 	streamFrameSeq := c.nextSendStreamFrameSeq[smuxFrame.streamID]
+	if streamFrameSeq == adaptorBatchMarker {
+		c.mu.Unlock()
+		err := fmt.Errorf("rrpit adaptor stream sequence exhausted")
+		c.fail(err)
+		return 0, err
+	}
 	c.nextSendStreamFrameSeq[smuxFrame.streamID] = streamFrameSeq + 1
 	if smuxFrame.streamID != 0 {
 		c.locallyKnownStreams[smuxFrame.streamID] = true
 	}
 	c.mu.Unlock()
 
-	wire := encodeAdaptorFrame(&adaptorFrame{
+	frame := &adaptorFrame{
 		frameID:        frameID,
 		streamID:       smuxFrame.streamID,
 		streamFrameSeq: streamFrameSeq,
 		smuxCmd:        smuxFrame.cmd,
 		smuxVersion:    smuxFrame.version,
 		payload:        append([]byte(nil), p...),
-	})
-	if err := c.session.SendMessage(wire); err != nil {
+	}
+	if c.aggregationEnabled() {
+		if err := c.enqueueFrame(frame); err != nil {
+			return 0, err
+		}
+		return len(p), nil
+	}
+
+	wire := encodeAdaptorFrame(frame)
+	if err := c.sendMessage(wire); err != nil {
 		c.fail(err)
 		return 0, err
 	}
@@ -296,6 +372,7 @@ func (c *sessionPacketConn) Write(p []byte) (int, error) {
 
 func (c *sessionPacketConn) Close() error {
 	c.waitForBufferedPayloadBeforeClose()
+	c.waitForSendDrain()
 	c.closeWithError(nil)
 	return nil
 }
@@ -324,7 +401,130 @@ func (c *sessionPacketConn) fail(err error) {
 	if err == nil {
 		err = io.ErrClosedPipe
 	}
+	if c.onError != nil {
+		c.onError(err)
+	}
 	c.closeWithError(err)
+}
+
+func (c *sessionPacketConn) aggregationEnabled() bool {
+	return c != nil && c.aggregationMaxFrames > 1
+}
+
+func (c *sessionPacketConn) enqueueFrame(frame *adaptorFrame) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.closed || c.closing {
+		if c.closeErr != nil {
+			return c.closeErr
+		}
+		return io.ErrClosedPipe
+	}
+	c.outgoingFrames = append(c.outgoingFrames, frame)
+	c.cond.Broadcast()
+	return nil
+}
+
+func (c *sessionPacketConn) runSender() {
+	defer close(c.sendDone)
+	for {
+		wire, ok := c.nextOutgoingMessage()
+		if !ok {
+			return
+		}
+		if c.sendMessage == nil {
+			c.fail(io.ErrClosedPipe)
+			return
+		}
+		if err := c.sendMessage(wire); err != nil {
+			c.fail(err)
+			return
+		}
+	}
+}
+
+func (c *sessionPacketConn) nextOutgoingMessage() ([]byte, bool) {
+	c.mu.Lock()
+	for len(c.outgoingFrames) == 0 && !c.closed && !c.closing {
+		c.cond.Wait()
+	}
+	if c.closed || len(c.outgoingFrames) == 0 && c.closing {
+		c.mu.Unlock()
+		return nil, false
+	}
+	shouldWaitForBurst := len(c.outgoingFrames) < c.aggregationMinQueueFrames && !c.closing && c.aggregationFlushDelay > 0
+	delay := c.aggregationFlushDelay
+	c.mu.Unlock()
+
+	if shouldWaitForBurst {
+		timer := time.NewTimer(delay)
+		<-timer.C
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.closed || len(c.outgoingFrames) == 0 {
+		return nil, false
+	}
+
+	count := 1
+	if len(c.outgoingFrames) >= c.aggregationMinQueueFrames {
+		count = c.batchableFrameCountLocked()
+	}
+	frames := append([]*adaptorFrame(nil), c.outgoingFrames[:count]...)
+	c.outgoingFrames = c.outgoingFrames[count:]
+	if len(c.outgoingFrames) == 0 {
+		c.outgoingFrames = nil
+	}
+	if count == 1 {
+		return encodeAdaptorFrame(frames[0]), true
+	}
+	wire, err := encodeAdaptorBatch(frames)
+	if err != nil {
+		go c.fail(err)
+		return nil, false
+	}
+	return wire, true
+}
+
+func (c *sessionPacketConn) batchableFrameCountLocked() int {
+	limit := min(c.aggregationMaxFrames, len(c.outgoingFrames))
+	messageBytes := adaptorBatchMarkerSize + adaptorBatchCountSize
+	count := 0
+	for count < limit {
+		frameBytes := adaptorHeaderSize + len(c.outgoingFrames[count].payload)
+		if frameBytes > int(^uint16(0)) || messageBytes+adaptorBatchFrameLengthSize+frameBytes > c.maxMessageBytes {
+			break
+		}
+		messageBytes += adaptorBatchFrameLengthSize + frameBytes
+		count++
+	}
+	if count < 2 {
+		return 1
+	}
+	return count
+}
+
+func (c *sessionPacketConn) waitForSendDrain() {
+	if c == nil || c.sendDone == nil {
+		return
+	}
+	c.mu.Lock()
+	c.closing = true
+	c.cond.Broadcast()
+	c.mu.Unlock()
+
+	if sessionPacketConnCloseDrainTimeout <= 0 {
+		<-c.sendDone
+		return
+	}
+	timer := time.NewTimer(sessionPacketConnCloseDrainTimeout)
+	defer timer.Stop()
+	select {
+	case <-c.sendDone:
+	case <-timer.C:
+		c.fail(io.ErrClosedPipe)
+	}
 }
 
 func (c *sessionPacketConn) closeWithError(err error) {
@@ -482,13 +682,74 @@ func validateSmuxFrameSize(session *rrpitBidirectionalSession.BidirectionalSessi
 
 func encodeAdaptorFrame(frame *adaptorFrame) []byte {
 	wire := make([]byte, adaptorHeaderSize+len(frame.payload))
-	binary.BigEndian.PutUint64(wire[:adaptorFrameIDFieldSize], frame.frameID)
-	binary.BigEndian.PutUint32(wire[adaptorFrameIDFieldSize:adaptorFrameIDFieldSize+adaptorStreamIDFieldSize], frame.streamID)
-	binary.BigEndian.PutUint64(wire[adaptorFrameIDFieldSize+adaptorStreamIDFieldSize:adaptorFrameIDFieldSize+adaptorStreamIDFieldSize+adaptorStreamFrameSeqFieldSize], frame.streamFrameSeq)
-	wire[adaptorFrameIDFieldSize+adaptorStreamIDFieldSize+adaptorStreamFrameSeqFieldSize] = frame.smuxCmd
-	wire[adaptorFrameIDFieldSize+adaptorStreamIDFieldSize+adaptorStreamFrameSeqFieldSize+adaptorSmuxCmdFieldSize] = frame.smuxVersion
+	binary.BigEndian.PutUint64(wire[:adaptorStreamFrameSeqFieldSize], frame.streamFrameSeq)
 	copy(wire[adaptorHeaderSize:], frame.payload)
 	return wire
+}
+
+func encodeAdaptorBatch(frames []*adaptorFrame) ([]byte, error) {
+	if len(frames) < 2 || len(frames) > adaptorBatchMaximumFrameCount {
+		return nil, fmt.Errorf("rrpit adaptor batch frame count %d is outside 2..%d", len(frames), adaptorBatchMaximumFrameCount)
+	}
+	total := adaptorBatchMarkerSize + adaptorBatchCountSize
+	encoded := make([][]byte, len(frames))
+	for index, frame := range frames {
+		encoded[index] = encodeAdaptorFrame(frame)
+		if len(encoded[index]) > int(^uint16(0)) {
+			return nil, fmt.Errorf("rrpit adaptor batch child %d is too large: %d", index, len(encoded[index]))
+		}
+		total += adaptorBatchFrameLengthSize + len(encoded[index])
+	}
+	wire := make([]byte, total)
+	binary.BigEndian.PutUint64(wire[:adaptorBatchMarkerSize], adaptorBatchMarker)
+	wire[adaptorBatchMarkerSize] = byte(len(frames))
+	offset := adaptorBatchMarkerSize + adaptorBatchCountSize
+	for _, child := range encoded {
+		binary.BigEndian.PutUint16(wire[offset:offset+adaptorBatchFrameLengthSize], uint16(len(child)))
+		offset += adaptorBatchFrameLengthSize
+		copy(wire[offset:], child)
+		offset += len(child)
+	}
+	return wire, nil
+}
+
+func decodeAdaptorMessage(data []byte) ([]*adaptorFrame, error) {
+	if len(data) < adaptorBatchMarkerSize || binary.BigEndian.Uint64(data[:adaptorBatchMarkerSize]) != adaptorBatchMarker {
+		frame, err := decodeAdaptorFrame(data)
+		if err != nil {
+			return nil, err
+		}
+		return []*adaptorFrame{frame}, nil
+	}
+	if len(data) < adaptorBatchMarkerSize+adaptorBatchCountSize {
+		return nil, fmt.Errorf("rrpit adaptor batch header too short: %d", len(data))
+	}
+	count := int(data[adaptorBatchMarkerSize])
+	if count < 2 {
+		return nil, fmt.Errorf("rrpit adaptor batch frame count must be at least 2: %d", count)
+	}
+	frames := make([]*adaptorFrame, 0, count)
+	offset := adaptorBatchMarkerSize + adaptorBatchCountSize
+	for index := 0; index < count; index++ {
+		if len(data)-offset < adaptorBatchFrameLengthSize {
+			return nil, fmt.Errorf("rrpit adaptor batch child %d length is truncated", index)
+		}
+		length := int(binary.BigEndian.Uint16(data[offset : offset+adaptorBatchFrameLengthSize]))
+		offset += adaptorBatchFrameLengthSize
+		if length == 0 || len(data)-offset < length {
+			return nil, fmt.Errorf("rrpit adaptor batch child %d length %d exceeds remaining %d", index, length, len(data)-offset)
+		}
+		frame, err := decodeAdaptorFrame(data[offset : offset+length])
+		if err != nil {
+			return nil, fmt.Errorf("rrpit adaptor batch child %d: %w", index, err)
+		}
+		frames = append(frames, frame)
+		offset += length
+	}
+	if offset != len(data) {
+		return nil, fmt.Errorf("rrpit adaptor batch has %d trailing bytes", len(data)-offset)
+	}
+	return frames, nil
 }
 
 func decodeAdaptorFrame(data []byte) (*adaptorFrame, error) {
@@ -496,20 +757,16 @@ func decodeAdaptorFrame(data []byte) (*adaptorFrame, error) {
 		return nil, fmt.Errorf("rrpit adaptor frame too short: %d", len(data))
 	}
 	frame := &adaptorFrame{
-		frameID:        binary.BigEndian.Uint64(data[:adaptorFrameIDFieldSize]),
-		streamID:       binary.BigEndian.Uint32(data[adaptorFrameIDFieldSize : adaptorFrameIDFieldSize+adaptorStreamIDFieldSize]),
-		streamFrameSeq: binary.BigEndian.Uint64(data[adaptorFrameIDFieldSize+adaptorStreamIDFieldSize : adaptorFrameIDFieldSize+adaptorStreamIDFieldSize+adaptorStreamFrameSeqFieldSize]),
-		smuxCmd:        data[adaptorFrameIDFieldSize+adaptorStreamIDFieldSize+adaptorStreamFrameSeqFieldSize],
-		smuxVersion:    data[adaptorFrameIDFieldSize+adaptorStreamIDFieldSize+adaptorStreamFrameSeqFieldSize+adaptorSmuxCmdFieldSize],
+		streamFrameSeq: binary.BigEndian.Uint64(data[:adaptorStreamFrameSeqFieldSize]),
 		payload:        append([]byte(nil), data[adaptorHeaderSize:]...),
 	}
 	smuxFrame, err := parseSmuxFrame(frame.payload)
 	if err != nil {
 		return nil, err
 	}
-	if smuxFrame.streamID != frame.streamID || smuxFrame.cmd != frame.smuxCmd || smuxFrame.version != frame.smuxVersion {
-		return nil, fmt.Errorf("rrpit adaptor metadata does not match smux frame header")
-	}
+	frame.streamID = smuxFrame.streamID
+	frame.smuxCmd = smuxFrame.cmd
+	frame.smuxVersion = smuxFrame.version
 	return frame, nil
 }
 

@@ -131,6 +131,9 @@ func newTransportSession(
 
 	sessionManagerConfig := buildBidirectionalSessionManagerConfig(config, channelManager)
 	sessionManagerConfig.BaseSessionConfig.LocalSessionInstanceID = localSessionInstanceID
+	sessionManagerConfig.OnAutoTickError = func(err error) {
+		newError("rrpit ", role, " auto-tick failed; retrying on the next timestamp").Base(err).AtWarning().WriteToLog()
+	}
 	if onRemoteSessionInstance != nil {
 		sessionManagerConfig.BaseSessionConfig.ValidateRemoteControl = func(ctrl rriptMonoDirectionSession.ControlMessage) error {
 			return onRemoteSessionInstance(ctrl.Session.InstanceID)
@@ -166,7 +169,15 @@ func newTransportSession(
 		return nil, err
 	}
 
-	adaptor, err := packetToStream.New(session, client, smuxConfig)
+	adaptorSetting := config.GetAdaptor()
+	adaptor, err := packetToStream.New(session, client, smuxConfig, packetToStream.Options{
+		AggregationMaxFrames:      int(adaptorSetting.GetAggregationMaxFrames()),
+		AggregationMinQueueFrames: int(adaptorSetting.GetAggregationMinQueueFrames()),
+		AggregationFlushDelay:     time.Duration(adaptorSetting.GetAggregationFlushDelay()),
+		OnError: func(err error) {
+			newError("rrpit interactive adaptor failed").Base(err).AtWarning().WriteToLog()
+		},
+	})
 	if err != nil {
 		if recorder != nil {
 			_ = recorder.Close()
@@ -207,6 +218,9 @@ func (s *transportSession) attachChannel(conn gonet.Conn, channelSlot int, confi
 	writer := io.WriteCloser(conn)
 	if s.recorder != nil {
 		writer = s.recorder.WrapWriter(s.role, channelSlot, writer)
+	}
+	if config.SendQueueCapacity > 0 {
+		writer = newAsyncPacketWriter(writer, config.SendQueueCapacity)
 	}
 
 	managerChannelIndex, err := s.sessionManager.ChannelManager().AttachChannelWithConfig(writer, config)
@@ -594,10 +608,41 @@ func buildBidirectionalSessionConfig(config *Config) rrpitBidirectionalSession.C
 				StaleLaneProgressStallThresholdTicks:          int(reconstruction.GetStaleLaneProgressStallThresholdTicks()),
 				SecondaryRepairMinBurst:                       int(reconstruction.GetSecondaryRepairMinBurst()),
 				AlwaysRestrictSourceDataWhenOldestLaneStalled: reconstruction.GetAlwaysRestrictSourceDataWhenOldestLaneStalled(),
+				OpportunisticRepairIntervalTicks:              int(reconstruction.GetOpportunisticRepairIntervalTicks()),
 			},
 		},
 		TimestampInterval: 0,
 	}
+}
+
+func applySessionClassSetting(base rrpitBidirectionalSession.Config, class *SessionClassSetting) rrpitBidirectionalSession.Config {
+	if class == nil {
+		return base
+	}
+	if value := class.GetMaxDataShardsPerLane(); value != 0 {
+		base.Tx.MaxDataShardsPerLane = int(value)
+	}
+	if value := class.GetMaxBufferedLanes(); value != 0 {
+		base.Tx.MaxBufferedLanes = int(value)
+		base.Rx.MaxBufferedLanes = int(value)
+	}
+	if value := class.GetRemoteMaxDataShardsPerLane(); value != 0 {
+		base.Rx.RemoteMaxDataShardsPerLane = int(value)
+	}
+	if reconstruction := class.GetReconstruction(); reconstruction != nil {
+		base.Tx.Reconstruction = rriptMonoDirectionSession.SessionTxReconstructionConfig{
+			InitialRepairShardRatio:                       float64(reconstruction.GetInitialRepairShardRatio()),
+			LaneRepairWeight:                              float32SliceToFloat64Slice(reconstruction.GetLaneRepairWeight()),
+			SecondaryRepairShardRatio:                     float64(reconstruction.GetSecondaryRepairShardRatio()),
+			TimeResendSecondaryRepairShard:                int(reconstruction.GetTimeResendSecondaryRepairShard()),
+			StaleLaneFinalizedAgeThresholdTicks:           int(reconstruction.GetStaleLaneFinalizedAgeThresholdTicks()),
+			StaleLaneProgressStallThresholdTicks:          int(reconstruction.GetStaleLaneProgressStallThresholdTicks()),
+			SecondaryRepairMinBurst:                       int(reconstruction.GetSecondaryRepairMinBurst()),
+			AlwaysRestrictSourceDataWhenOldestLaneStalled: reconstruction.GetAlwaysRestrictSourceDataWhenOldestLaneStalled(),
+			OpportunisticRepairIntervalTicks:              int(reconstruction.GetOpportunisticRepairIntervalTicks()),
+		}
+	}
+	return base
 }
 
 func buildChannelManagerConfig(config *Config) rrpitChannelManager.Config {
@@ -622,10 +667,14 @@ func buildBidirectionalSessionManagerConfig(
 	}
 	baseSessionConfig := buildBidirectionalSessionConfig(config)
 	baseSessionConfig.ManagerHostedControlKeepaliveIntervalTicks = int(sessionMgr.GetManagerHostedControlKeepaliveIntervalTicks())
+	interactiveConfig := applySessionClassSetting(baseSessionConfig, config.GetInteractiveSession())
+	backgroundConfig := applySessionClassSetting(baseSessionConfig, config.GetBackgroundSession())
 	return rrpitBidirectionalSessionManager.Config{
-		ChannelManager:    channelManager,
-		BaseSessionConfig: baseSessionConfig,
-		TimestampInterval: time.Duration(sessionMgr.GetTimestampInterval()),
+		ChannelManager:                                      channelManager,
+		BaseSessionConfig:                                   baseSessionConfig,
+		InteractiveSessionConfig:                            &interactiveConfig,
+		BackgroundSessionConfig:                             &backgroundConfig,
+		TimestampInterval:                                   time.Duration(sessionMgr.GetTimestampInterval()),
 		InteractivePrimaryCancellationCounterLimit:          int(sessionMgr.GetInteractivePrimaryCancellationCounterLimit()),
 		DynamicRestrictSourceDataWhenOldestLaneStalled:      sessionMgr.GetDynamicRestrictSourceDataWhenOldestLaneStalled(),
 		DynamicRestrictSourceDataWhenOldestLaneStalledTicks: int(sessionMgr.GetDynamicRestrictSourceDataWhenOldestLaneStalledTicks()),
@@ -793,8 +842,9 @@ func rrpitChannelConfig(config *ChannelSetting) rriptMonoDirectionSession.Channe
 		config = &ChannelSetting{}
 	}
 	return rriptMonoDirectionSession.ChannelConfig{
-		Weight:          int(config.GetWeight()),
-		MaxSendingSpeed: int(config.GetMaxSendingSpeed()),
+		Weight:            int(config.GetWeight()),
+		MaxSendingSpeed:   int(config.GetMaxSendingSpeed()),
+		SendQueueCapacity: int(config.GetSendQueueCapacity()),
 	}
 }
 
@@ -855,7 +905,8 @@ func makeTransportDTLSConfig(config resolvedChannel) *transportdtls.Config {
 		Mode:                   transportdtls.DTLSMode_PSK,
 		Psk:                    []byte(config.dtls.GetPassword()),
 		Mtu:                    mtu,
-		ReplayProtectionWindow: defaultDTLSReplayWindow,
+		ReplayProtectionWindow: dtlsReplayProtectionWindow(config),
+		CipherSuite:            config.dtls.GetCipherSuite(),
 	}
 }
 
@@ -866,12 +917,30 @@ func makePionDTLSConfig(config resolvedChannel, sessionID transportSessionID) *p
 	}
 	return &piondtls.Config{
 		MTU:                    int(mtu),
-		ReplayProtectionWindow: defaultDTLSReplayWindow,
+		ReplayProtectionWindow: int(dtlsReplayProtectionWindow(config)),
 		PSK: func([]byte) ([]byte, error) {
 			return []byte(config.dtls.GetPassword()), nil
 		},
 		PSKIdentityHint: encodeTransportSessionIdentity(sessionID),
-		CipherSuites:    []piondtls.CipherSuiteID{piondtls.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256},
+		CipherSuites:    rrpitCipherSuites(config.dtls.GetCipherSuite()),
+	}
+}
+
+func dtlsReplayProtectionWindow(config resolvedChannel) uint32 {
+	if config.dtls != nil && config.dtls.GetReplayProtectionWindow() != 0 {
+		return config.dtls.GetReplayProtectionWindow()
+	}
+	return defaultDTLSReplayWindow
+}
+
+func rrpitCipherSuites(suite transportdtls.DTLSCipherSuite) []piondtls.CipherSuiteID {
+	switch suite {
+	case transportdtls.DTLSCipherSuite_PSK_AES_128_GCM_SHA256:
+		return []piondtls.CipherSuiteID{piondtls.TLS_PSK_WITH_AES_128_GCM_SHA256}
+	case transportdtls.DTLSCipherSuite_PSK_CHACHA20_POLY1305_SHA256:
+		return []piondtls.CipherSuiteID{piondtls.TLS_PSK_WITH_CHACHA20_POLY1305_SHA256}
+	default:
+		return []piondtls.CipherSuiteID{piondtls.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256}
 	}
 }
 

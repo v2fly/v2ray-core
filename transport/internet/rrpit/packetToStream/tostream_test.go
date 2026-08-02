@@ -423,16 +423,9 @@ func TestSessionPacketConnOnMessageIgnoresFramesAfterClose(t *testing.T) {
 	}
 }
 
-func TestSessionPacketConnOnMessageRejectsMetadataMismatch(t *testing.T) {
-	conn := newSessionPacketConn(nil, 1024)
-	defer func() {
-		if err := conn.Close(); err != nil {
-			t.Fatal(err)
-		}
-	}()
-
+func TestCompactAdaptorUsesSMUXMetadata(t *testing.T) {
 	smuxFrame := mustMarshalSmuxFrameForTest(t, smuxCmdPSH, 1, []byte("payload"))
-	badWire := encodeAdaptorFrame(&adaptorFrame{
+	wire := encodeAdaptorFrame(&adaptorFrame{
 		frameID:        0,
 		streamID:       2,
 		streamFrameSeq: 0,
@@ -440,8 +433,12 @@ func TestSessionPacketConnOnMessageRejectsMetadataMismatch(t *testing.T) {
 		smuxVersion:    2,
 		payload:        smuxFrame,
 	})
-	if err := conn.OnMessage(badWire); err == nil {
-		t.Fatal("expected metadata mismatch to be rejected")
+	decoded, err := decodeAdaptorFrame(wire)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if decoded.streamID != 1 || decoded.smuxCmd != smuxCmdPSH || decoded.smuxVersion != 2 {
+		t.Fatalf("compact adaptor did not derive SMUX metadata: %+v", decoded)
 	}
 }
 

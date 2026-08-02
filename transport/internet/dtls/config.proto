@@ -13,6 +13,12 @@ enum DTLSMode {
   PSK = 1;
 }
 
+enum DTLSCipherSuite {
+  ECDHE_PSK_AES_128_CBC_SHA256 = 0;
+  PSK_AES_128_GCM_SHA256 = 1;
+  PSK_CHACHA20_POLY1305_SHA256 = 2;
+}
+
 message Config {
   option (v2ray.core.common.protoext.message_opt).type = "transport";
   option (v2ray.core.common.protoext.message_opt).short_name = "dtls";
@@ -22,4 +28,5 @@ message Config {
 
   uint32 mtu = 3;
   uint32 replay_protection_window = 4;
+  DTLSCipherSuite cipher_suite = 5;
 }

@@ -38,10 +38,24 @@ const (
 var errRemoteSessionRestarted = errors.New("rrpit remote session restarted")
 
 type transportConnectionState struct {
-	scopedSessionMap    map[string]*persistentClientSession
-	scopedSessionAccess sync.Mutex
-	closed              bool
+	scopedSessionMap       map[string]*persistentClientSession
+	scopedSessionCreations map[string]*clientSessionCreation
+	scopedSessionAccess    sync.Mutex
+	closed                 bool
 }
+
+type clientSessionCreation struct {
+	done    chan struct{}
+	session *persistentClientSession
+	err     error
+}
+
+type persistentClientSessionFactory func(
+	context.Context,
+	v2net.Destination,
+	*internet.MemoryStreamConfig,
+	func(*persistentClientSession),
+) (*persistentClientSession, error)
 
 func (*transportConnectionState) IsTransientStorageLifecycleReceiver() {}
 
@@ -53,6 +67,7 @@ func (s *transportConnectionState) Close() error {
 		sessions = append(sessions, session)
 	}
 	s.scopedSessionMap = nil
+	s.scopedSessionCreations = nil
 	s.scopedSessionAccess.Unlock()
 
 	var firstErr error
@@ -69,6 +84,21 @@ func (s *transportConnectionState) getOrCreateSession(
 	dest v2net.Destination,
 	streamSettings *internet.MemoryStreamConfig,
 ) (*persistentClientSession, error) {
+	return s.getOrCreateSessionWithFactory(ctx, dest, streamSettings, newPersistentClientSession)
+}
+
+func (s *transportConnectionState) getOrCreateSessionWithFactory(
+	ctx context.Context,
+	dest v2net.Destination,
+	streamSettings *internet.MemoryStreamConfig,
+	factory persistentClientSessionFactory,
+) (*persistentClientSession, error) {
+	if s == nil || factory == nil {
+		return nil, io.ErrClosedPipe
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	key := rrpitTransportSessionKey(dest)
 
 	s.scopedSessionAccess.Lock()
@@ -80,33 +110,60 @@ func (s *transportConnectionState) getOrCreateSession(
 		s.scopedSessionAccess.Unlock()
 		return existing, nil
 	}
+	if creation := s.scopedSessionCreations[key]; creation != nil {
+		done := creation.done
+		s.scopedSessionAccess.Unlock()
+		select {
+		case <-done:
+			return creation.session, creation.err
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+	if s.scopedSessionCreations == nil {
+		s.scopedSessionCreations = make(map[string]*clientSessionCreation)
+	}
+	creation := &clientSessionCreation{done: make(chan struct{})}
+	s.scopedSessionCreations[key] = creation
 	s.scopedSessionAccess.Unlock()
 
-	var session *persistentClientSession
-	created, err := newPersistentClientSession(ctx, dest, streamSettings, func() {
-		s.removeSession(key, session)
+	created, err := factory(ctx, dest, streamSettings, func(closed *persistentClientSession) {
+		s.removeSession(key, closed)
 	})
-	if err != nil {
-		return nil, err
-	}
-	session = created
 
 	s.scopedSessionAccess.Lock()
-	defer s.scopedSessionAccess.Unlock()
+	delete(s.scopedSessionCreations, key)
 
-	if s.closed {
-		_ = session.Close()
-		return nil, io.ErrClosedPipe
+	var discard *persistentClientSession
+	switch {
+	case err != nil:
+	case created == nil:
+		err = io.ErrClosedPipe
+	case s.closed:
+		discard = created
+		err = io.ErrClosedPipe
+	case created.IsClosed():
+		err = io.ErrClosedPipe
+	case s.scopedSessionMap[key] != nil && !s.scopedSessionMap[key].IsClosed():
+		creation.session = s.scopedSessionMap[key]
+		discard = created
+	default:
+		if s.scopedSessionMap == nil {
+			s.scopedSessionMap = make(map[string]*persistentClientSession)
+		}
+		s.scopedSessionMap[key] = created
+		creation.session = created
 	}
-	if s.scopedSessionMap == nil {
-		s.scopedSessionMap = make(map[string]*persistentClientSession)
+	creation.err = err
+	close(creation.done)
+	s.scopedSessionAccess.Unlock()
+
+	// Closing a discarded session calls back into removeSession, so it must not
+	// happen while scopedSessionAccess is held.
+	if discard != nil {
+		_ = discard.Close()
 	}
-	if existing := s.scopedSessionMap[key]; existing != nil && !existing.IsClosed() {
-		_ = session.Close()
-		return existing, nil
-	}
-	s.scopedSessionMap[key] = session
-	return session, nil
+	return creation.session, creation.err
 }
 
 func (s *transportConnectionState) removeSession(key string, session *persistentClientSession) {
@@ -144,6 +201,7 @@ type persistentClientSession struct {
 	idleTimer                       *time.Timer
 	remoteControlTimer              *time.Timer
 	remoteControlTimerSeq           uint64
+	remoteControlLivenessReady      bool
 	closed                          bool
 	expectedRemoteSessionInstanceID rriptMonoDirectionSession.SessionInstanceID
 	remoteSessionInstanceSet        bool
@@ -315,7 +373,7 @@ func newPersistentClientSession(
 	ctx context.Context,
 	dest v2net.Destination,
 	streamSettings *internet.MemoryStreamConfig,
-	onClose func(),
+	onClose func(*persistentClientSession),
 ) (*persistentClientSession, error) {
 	config, ok := streamSettings.ProtocolSettings.(*Config)
 	if !ok {
@@ -357,7 +415,7 @@ func newPersistentClientSession(
 		session.mu.Unlock()
 		session.stopReconnectLoop()
 		if onClose != nil {
-			onClose()
+			onClose(session)
 		}
 	}, func(remoteSessionInstanceID rriptMonoDirectionSession.SessionInstanceID) error {
 		if session == nil {
@@ -369,19 +427,20 @@ func newPersistentClientSession(
 		return nil, err
 	}
 	session.owner = owner
-	session.mu.Lock()
-	session.armRemoteControlTimerLocked()
-	session.mu.Unlock()
+	session.openStream = owner.OpenStreamByClass
+	session.closeSession = owner.Close
 
 	for index := range channels {
-		if err := session.connectChannelSlot(ctx, index); err != nil {
+		attemptCtx, cancel := context.WithTimeout(baseCtx, rrpitReconnectAttemptTimeout)
+		err := session.connectChannelSlot(attemptCtx, index)
+		cancel()
+		if err != nil {
 			_ = owner.Close()
 			return nil, err
 		}
 	}
 
-	session.openStream = owner.OpenStreamByClass
-	session.closeSession = owner.Close
+	session.startRemoteControlLiveness()
 	session.startReconnectLoop(id)
 	return session, nil
 }
@@ -403,6 +462,7 @@ func (s *persistentClientSession) startReconnectLoop(sessionID transportSessionI
 
 	go func() {
 		ticker := time.NewTicker(s.reconnectRetryInterval)
+		failures := make(map[int]int)
 		defer func() {
 			ticker.Stop()
 			close(done)
@@ -419,8 +479,26 @@ func (s *persistentClientSession) startReconnectLoop(sessionID transportSessionI
 						return
 					}
 					attemptCtx, cancel := context.WithTimeout(s.baseCtx, rrpitReconnectAttemptTimeout)
-					_ = s.connectChannelSlotWithID(attemptCtx, slotIndex, sessionID)
+					err := s.connectChannelSlotWithID(attemptCtx, slotIndex, sessionID)
 					cancel()
+					if err != nil {
+						failures[slotIndex]++
+						attempts := failures[slotIndex]
+						if attempts == 1 || attempts%10 == 0 {
+							newError(
+								"rrpit client failed to reconnect channel ", slotIndex,
+								" (attempt ", attempts, ")",
+							).Base(err).AtWarning().WriteToLog()
+						}
+						continue
+					}
+					if attempts := failures[slotIndex]; attempts > 0 {
+						newError(
+							"rrpit client restored channel ", slotIndex,
+							" after ", attempts, " failed reconnect attempt(s)",
+						).AtWarning().WriteToLog()
+						delete(failures, slotIndex)
+					}
 				}
 			case <-stop:
 				return
@@ -440,23 +518,17 @@ func (s *persistentClientSession) connectChannelSlotWithID(ctx context.Context, 
 	if s == nil || s.owner == nil || slotIndex < 0 || slotIndex >= len(s.resolvedChannels) {
 		return io.ErrClosedPipe
 	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	channel := s.resolvedChannels[slotIndex]
 	rawConn, err := internet.DialSystem(ctx, v2net.UDPDestination(channel.address, channel.port), s.streamSettings.SocketSettings)
 	if err != nil {
 		return err
 	}
 
-	dtlsConn, err := piondtls.Client(
-		piondtlsnet.PacketConnFromConn(rawConn),
-		rawConn.RemoteAddr(),
-		makePionDTLSConfig(channel, sessionID),
-	)
+	dtlsConn, err := handshakeClientDTLS(ctx, rawConn, channel, sessionID)
 	if err != nil {
-		_ = rawConn.Close()
-		return err
-	}
-	if err := dtlsConn.Handshake(); err != nil {
-		_ = dtlsConn.Close()
 		return err
 	}
 
@@ -465,6 +537,29 @@ func (s *persistentClientSession) connectChannelSlotWithID(ctx context.Context, 
 		return err
 	}
 	return nil
+}
+
+func handshakeClientDTLS(ctx context.Context, rawConn gonet.Conn, channel resolvedChannel, sessionID transportSessionID) (*piondtls.Conn, error) {
+	if rawConn == nil {
+		return nil, io.ErrClosedPipe
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	dtlsConn, err := piondtls.Client(
+		piondtlsnet.PacketConnFromConn(rawConn),
+		rawConn.RemoteAddr(),
+		makePionDTLSConfig(channel, sessionID),
+	)
+	if err != nil {
+		_ = rawConn.Close()
+		return nil, err
+	}
+	if err := dtlsConn.HandshakeContext(ctx); err != nil {
+		_ = dtlsConn.Close()
+		return nil, err
+	}
+	return dtlsConn, nil
 }
 
 func sessionClassFromContext(ctx context.Context) rrpitBidirectionalSessionManager.SessionName {
@@ -496,7 +591,9 @@ func (s *persistentClientSession) handleRemoteSessionInstance(remoteSessionInsta
 		s.mu.Unlock()
 		return io.ErrClosedPipe
 	}
-	s.armRemoteControlTimerLocked()
+	if s.remoteControlLivenessReady {
+		s.armRemoteControlTimerLocked()
+	}
 	if !s.remoteSessionInstanceSet {
 		s.expectedRemoteSessionInstanceID = remoteSessionInstanceID
 		s.remoteSessionInstanceSet = true
@@ -521,6 +618,19 @@ func (s *persistentClientSession) handleRemoteSessionInstance(remoteSessionInsta
 
 	go s.invalidateRemoteSession(expected, remoteSessionInstanceID)
 	return errRemoteSessionRestarted
+}
+
+func (s *persistentClientSession) startRemoteControlLiveness() {
+	if s == nil {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.closed {
+		return
+	}
+	s.remoteControlLivenessReady = true
+	s.armRemoteControlTimerLocked()
 }
 
 func (s *persistentClientSession) armRemoteControlTimerLocked() {

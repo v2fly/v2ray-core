@@ -118,11 +118,8 @@ type ChannelTx struct {
 }
 
 func NewChannelTx(channelID uint64, maxRewindableTimestampNum int, maxRewindableControlMessageNum int) (*ChannelTx, error) {
-	if maxRewindableTimestampNum < 0 {
-		return nil, newError("invalid max rewindable timestamp number")
-	}
-	if maxRewindableControlMessageNum < 0 {
-		return nil, newError("invalid max rewindable control message number")
+	if err := ValidateChannelTxConfig(maxRewindableTimestampNum, maxRewindableControlMessageNum); err != nil {
+		return nil, err
 	}
 
 	tx := &ChannelTx{
@@ -133,6 +130,18 @@ func NewChannelTx(channelID uint64, maxRewindableTimestampNum int, maxRewindable
 	tx.sentPacketHistory = newRingBuffer[sentPacketSnapshot](maxRewindableTimestampNum)
 	tx.controlHistory = newRingBuffer[ChannelControlMessage](maxRewindableControlMessageNum)
 	return tx, nil
+}
+
+// ValidateChannelTxConfig validates channel history sizes without allocating
+// the history rings created by NewChannelTx.
+func ValidateChannelTxConfig(maxRewindableTimestampNum int, maxRewindableControlMessageNum int) error {
+	if maxRewindableTimestampNum < 0 {
+		return newError("invalid max rewindable timestamp number")
+	}
+	if maxRewindableControlMessageNum < 0 {
+		return newError("invalid max rewindable control message number")
+	}
+	return nil
 }
 
 func (ct *ChannelTx) CreateDataMessage(data []byte, timestamp uint64) (*ChannelDataMessage, error) {

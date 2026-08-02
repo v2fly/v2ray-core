@@ -81,17 +81,20 @@ func (l *Listener) handleAcceptedChannel(conn gonet.Conn, channelIndex int) {
 func (l *Listener) serveAcceptedChannel(conn gonet.Conn, channelIndex int) {
 	sessionID, err := readTransportSessionID(conn)
 	if err != nil {
+		newError("rrpit server rejected channel ", channelIndex, " before session lookup").Base(err).AtWarning().WriteToLog()
 		_ = conn.Close()
 		return
 	}
 
 	owner, err := l.getOrCreateSession(sessionID)
 	if err != nil {
+		newError("rrpit server failed to get session for channel ", channelIndex).Base(err).AtWarning().WriteToLog()
 		_ = conn.Close()
 		return
 	}
 
 	if err := owner.attachChannel(conn, channelIndex, rrpitChannelConfig(l.channels[channelIndex].transport), channelReadIdleTimeout(l.channels[channelIndex])); err != nil {
+		newError("rrpit server failed to attach channel ", channelIndex).Base(err).AtWarning().WriteToLog()
 		_ = owner.Close()
 	}
 }

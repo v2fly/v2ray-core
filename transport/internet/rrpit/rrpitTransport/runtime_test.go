@@ -119,7 +119,7 @@ func TestBuildSmuxConfigClampsDefaultFrameSizeToMessageBudget(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := config.MaxFrameSize, 1168; got != want {
+	if got, want := config.MaxFrameSize, 1182; got != want {
 		t.Fatalf("unexpected default smux max frame size: got %d want %d", got, want)
 	}
 
