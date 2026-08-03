@@ -2,8 +2,10 @@ package scenarios
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
@@ -12,6 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	core "github.com/v2fly/v2ray-core/v5"
+	v2dns "github.com/v2fly/v2ray-core/v5/app/dns"
 	"github.com/v2fly/v2ray-core/v5/app/dispatcher"
 	"github.com/v2fly/v2ray-core/v5/app/log"
 	"github.com/v2fly/v2ray-core/v5/app/proxyman"
@@ -553,6 +556,18 @@ func TestUDPConnection(t *testing.T) {
 }
 
 func TestDomainSniffing(t *testing.T) {
+	const domain = "sniffing.test"
+
+	targetServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer targetServer.Close()
+
+	targetURL, err := url.Parse(targetServer.URL)
+	common.Must(err)
+	targetPort, err := net.PortFromString(targetURL.Port())
+	common.Must(err)
+
 	sniffingPort := tcp.PickPort()
 	httpPort := tcp.PickPort()
 	serverConfig := &core.Config{
@@ -568,7 +583,7 @@ func TestDomainSniffing(t *testing.T) {
 				}),
 				ProxySettings: serial.ToTypedMessage(&dokodemo.Config{
 					Address: net.NewIPOrDomain(net.LocalHostIP),
-					Port:    443,
+					Port:    uint32(targetPort),
 					NetworkList: &net.NetworkList{
 						Network: []net.Network{net.Network_TCP},
 					},
@@ -601,6 +616,15 @@ func TestDomainSniffing(t *testing.T) {
 			},
 		},
 		App: []*anypb.Any{
+			serial.ToTypedMessage(&v2dns.Config{
+				StaticHosts: []*v2dns.HostMapping{
+					{
+						Type:   v2dns.DomainMatchingType_Full,
+						Domain: domain,
+						Ip:     [][]byte{{127, 0, 0, 1}},
+					},
+				},
+			}),
 			serial.ToTypedMessage(&router.Config{
 				Rule: []*router.RoutingRule{
 					{
@@ -631,13 +655,17 @@ func TestDomainSniffing(t *testing.T) {
 			Proxy: func(req *http.Request) (*url.URL, error) {
 				return url.Parse("http://127.0.0.1:" + httpPort.String())
 			},
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+				ServerName:         domain,
+			},
 		}
 
 		client := &http.Client{
 			Transport: transport,
 		}
 
-		resp, err := client.Get("https://www.github.com/")
+		resp, err := client.Get("https://" + domain + ":" + targetPort.String() + "/")
 		common.Must(err)
 		defer resp.Body.Close()
 		if resp.StatusCode != 200 {
