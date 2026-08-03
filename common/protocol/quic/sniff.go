@@ -235,7 +235,7 @@ func SniffQUIC(b []byte) (*SniffHeader, error) {
 				}
 				if cryptoLen < int(offset+length) {
 					cryptoLen = int(offset + length)
-					if cryptoDataBuf.Cap() < int32(cryptoLen) {
+					if cryptoLen > int(cryptoDataBuf.Cap()) {
 						return nil, io.ErrShortBuffer
 					}
 					if cryptoDataBuf.Len() != int32(cryptoLen) {

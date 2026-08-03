@@ -257,3 +257,16 @@ func TestSniffFakeQUICPacketWithTooShortData(t *testing.T) {
 		t.Error("failed")
 	}
 }
+
+// A CRYPTO frame offset is a 62-bit varint. It used to be truncated to int32
+// before being bounds checked against the crypto buffer, so a packet whose
+// second CRYPTO frame declares offset 2^32+50 shrank the recorded crypto
+// length and extended the buffer by a negative amount, panicking the sniffer.
+func TestSniffFakeQUICPacketWithOverflowingCryptoOffset(t *testing.T) {
+	pkt, err := hex.DecodeString("c90000000108010203040506070800001ffb3fb57eab02b69aeb6155bbfe08bb9f6a0df9a020dfbdb8e8af3a2a29aa02")
+	common.Must(err)
+	_, err = quic.SniffQUIC(pkt)
+	if err == nil {
+		t.Error("failed")
+	}
+}
