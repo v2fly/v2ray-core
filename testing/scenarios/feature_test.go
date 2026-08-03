@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	core "github.com/v2fly/v2ray-core/v5"
+	v2dns "github.com/v2fly/v2ray-core/v5/app/dns"
 	"github.com/v2fly/v2ray-core/v5/app/dispatcher"
 	"github.com/v2fly/v2ray-core/v5/app/log"
 	"github.com/v2fly/v2ray-core/v5/app/proxyman"
@@ -555,7 +556,7 @@ func TestUDPConnection(t *testing.T) {
 }
 
 func TestDomainSniffing(t *testing.T) {
-	const domain = "localhost"
+	const domain = "sniffing.test"
 
 	targetServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -611,10 +612,19 @@ func TestDomainSniffing(t *testing.T) {
 			},
 			{
 				Tag:           "direct",
-				ProxySettings: serial.ToTypedMessage(&freedom.Config{}),
+				ProxySettings: serial.ToTypedMessage(&freedom.Config{DomainStrategy: freedom.Config_USE_IP}),
 			},
 		},
 		App: []*anypb.Any{
+			serial.ToTypedMessage(&v2dns.Config{
+				StaticHosts: []*v2dns.HostMapping{
+					{
+						Type:   v2dns.DomainMatchingType_Full,
+						Domain: domain,
+						Ip:     [][]byte{{127, 0, 0, 1}},
+					},
+				},
+			}),
 			serial.ToTypedMessage(&router.Config{
 				Rule: []*router.RoutingRule{
 					{
