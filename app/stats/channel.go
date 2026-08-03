@@ -98,7 +98,7 @@ func (c *Channel) Start() error {
 	defer c.access.Unlock()
 	if !c.Running() {
 		c.closed = make(chan struct{}) // Reset close signal
-		closed := c.closed            // Capture for this goroutine to detect restarts
+		closed := c.closed             // Capture for this goroutine to detect restarts
 		go func() {
 			for {
 				select {
