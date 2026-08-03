@@ -3,8 +3,6 @@ package stats
 import (
 	"context"
 	"sync"
-
-	"github.com/v2fly/v2ray-core/v5/common"
 )
 
 // Channel is an implementation of stats.Channel.
@@ -100,6 +98,7 @@ func (c *Channel) Start() error {
 	defer c.access.Unlock()
 	if !c.Running() {
 		c.closed = make(chan struct{}) // Reset close signal
+		closed := c.closed            // Capture for this goroutine to detect restarts
 		go func() {
 			for {
 				select {
@@ -111,11 +110,18 @@ func (c *Channel) Start() error {
 							pub.broadcastNonBlocking(sub)
 						}
 					}
-				case <-c.closed: // Channel closed
-					for _, sub := range c.Subscribers() { // Remove all subscribers
-						common.Must(c.Unsubscribe(sub))
-						close(sub)
+				case <-closed: // This goroutine's own closed signal
+					// Hold the lock to prevent new subscribers from being added
+					// between checking the generation and closing subscribers.
+					c.access.Lock()
+					if c.closed == closed {
+						// Channel has not been restarted; close all remaining subscribers.
+						for _, sub := range c.subscribers {
+							close(sub)
+						}
+						c.subscribers = nil
 					}
+					c.access.Unlock()
 					return
 				}
 			}

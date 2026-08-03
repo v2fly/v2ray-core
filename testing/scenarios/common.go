@@ -236,7 +236,11 @@ func testTCPConn2(conn net.Conn, payloadSize int, timeout time.Duration) func() 
 		payload := make([]byte, payloadSize)
 		common.Must2(rand.Read(payload))
 
+		if err := conn.SetWriteDeadline(time.Now().Add(timeout)); err != nil {
+			return err
+		}
 		nBytes, err := conn.Write(payload)
+		conn.SetWriteDeadline(time.Time{}) //nolint: errcheck
 		if err != nil {
 			return err
 		}
