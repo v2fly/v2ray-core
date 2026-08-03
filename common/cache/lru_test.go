@@ -67,3 +67,17 @@ func TestGetKeyFromValue(t *testing.T) {
 		t.Error("should get 2", v)
 	}
 }
+
+func TestGetKeyFromReplacedValue(t *testing.T) {
+	lru := NewLru(2)
+	lru.Put(1, 5)
+	lru.Put(1, 2)
+	v, ok := lru.GetKeyFromValue(2)
+	if !ok || v != 1 {
+		t.Error("should get 1 for the new value", v, ok)
+	}
+	v, ok = lru.GetKeyFromValue(5)
+	if ok {
+		t.Error("should get nil for the replaced value", v)
+	}
+}

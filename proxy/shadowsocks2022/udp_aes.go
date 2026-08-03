@@ -134,6 +134,9 @@ func (p *AESUDPClientPacketProcessor) DecodeUDPResp(input []byte, resp *UDPRespo
 	separateHeaderBuffer := buf.New()
 	defer separateHeaderBuffer.Release()
 	{
+		if len(input) < 16 {
+			return newError("packet too short to contain a separate header")
+		}
 		encryptedDest := separateHeaderBuffer.Extend(16)
 		p.responseSeparateHeaderBlockCipher.Decrypt(encryptedDest, input)
 	}
@@ -160,8 +163,12 @@ func (p *AESUDPClientPacketProcessor) DecodeUDPResp(input []byte, resp *UDPRespo
 		}
 
 		mainPacketAEADMaterialized := cachedState.sessionRecvAEAD
+		decryptedDestSize := int32(len(input)) - 16 - int32(mainPacketAEADMaterialized.Overhead())
+		if decryptedDestSize < 0 {
+			return newError("packet too short to contain a main packet")
+		}
 		decryptedDestBuffer := buf.New()
-		decryptedDest := decryptedDestBuffer.Extend(int32(len(input)) - 16 - int32(mainPacketAEADMaterialized.Overhead()))
+		decryptedDest := decryptedDestBuffer.Extend(decryptedDestSize)
 		_, err := mainPacketAEADMaterialized.Open(decryptedDest[:0], separateHeaderBuffer.Bytes()[4:16], input[16:], nil)
 		if err != nil {
 			return newError("failed to open main packet").Base(err)

@@ -339,7 +339,7 @@ func readResponseAndHandle100Continue(r *bufio.Reader, req *http.Request, writer
 					return nil, newError("failed to read http 1xx response").Base(err).AtError()
 				}
 				ResponseHeader1xx = append(ResponseHeader1xx, data...)
-				if bytes.Equal(ResponseHeader1xx[len(ResponseHeader1xx)-4:], []byte{'\r', '\n', '\r', '\n'}) {
+				if len(ResponseHeader1xx) >= 4 && bytes.Equal(ResponseHeader1xx[len(ResponseHeader1xx)-4:], []byte{'\r', '\n', '\r', '\n'}) {
 					break
 				}
 				if len(ResponseHeader1xx) > 1024 {
