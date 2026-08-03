@@ -14,8 +14,8 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	core "github.com/v2fly/v2ray-core/v5"
-	v2dns "github.com/v2fly/v2ray-core/v5/app/dns"
 	"github.com/v2fly/v2ray-core/v5/app/dispatcher"
+	v2dns "github.com/v2fly/v2ray-core/v5/app/dns"
 	"github.com/v2fly/v2ray-core/v5/app/log"
 	"github.com/v2fly/v2ray-core/v5/app/proxyman"
 	_ "github.com/v2fly/v2ray-core/v5/app/proxyman/inbound"
