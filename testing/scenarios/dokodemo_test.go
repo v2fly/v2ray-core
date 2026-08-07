@@ -65,8 +65,8 @@ func TestDokodemoTCP(t *testing.T) {
 		},
 	}
 
-	clientPort := uint32(tcp.PickPort())
 	clientPortRange := uint32(5)
+	clientPort := uint32(tcp.PickPortRange(int(clientPortRange) + 1))
 	clientConfig := &core.Config{
 		App: []*anypb.Any{
 			serial.ToTypedMessage(&log.Config{
@@ -155,8 +155,8 @@ func TestDokodemoUDP(t *testing.T) {
 		},
 	}
 
-	clientPort := uint32(udp.PickPort())
 	clientPortRange := uint32(5)
+	clientPort := uint32(udp.PickPortRange(int(clientPortRange) + 1))
 	clientConfig := &core.Config{
 		Inbound: []*core.InboundHandlerConfig{
 			{
