@@ -194,7 +194,7 @@ func TestReverseProxy(t *testing.T) {
 	// The reverse proxy multiplexes all these connections over a single tunnel and
 	// testTCPConn buffers the whole payload plus the whole echo in memory, so the
 	// payload is kept small enough to avoid starving the CI runner of memory.
-	for i := 0; i < 32; i++ {
+	for range 32 {
 		errg.Go(testTCPConn(externalPort, 1024*1024, time.Second*40))
 	}
 
