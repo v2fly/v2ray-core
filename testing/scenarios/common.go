@@ -1,7 +1,6 @@
 package scenarios
 
 import (
-	"bytes"
 	"crypto/rand"
 	"fmt"
 	"io"
@@ -46,17 +45,6 @@ func readFrom(conn net.Conn, timeout time.Duration, length int) []byte {
 		fmt.Println("Unexpected error from readFrom:", err)
 	}
 	return b[:n]
-}
-
-func readFrom2(conn net.Conn, timeout time.Duration, length int) ([]byte, error) {
-	b := make([]byte, length)
-	deadline := time.Now().Add(timeout)
-	conn.SetReadDeadline(deadline)
-	n, err := io.ReadFull(conn, b[:length])
-	if err != nil {
-		return nil, err
-	}
-	return b[:n], nil
 }
 
 func InitializeServerConfigs(configs ...*core.Config) ([]*exec.Cmd, error) {
@@ -205,6 +193,23 @@ func testTCPConn(port net.Port, payloadSize int, timeout time.Duration) func() e
 	}
 }
 
+func waitForTCPPort(port net.Port, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	for {
+		conn, err := net.DialTCP("tcp", nil, &net.TCPAddr{
+			IP:   []byte{127, 0, 0, 1},
+			Port: int(port),
+		})
+		if err == nil {
+			return conn.Close()
+		}
+		if time.Now().After(deadline) {
+			return errors.New("timed out waiting for TCP port ", port).Base(err)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
 func testUDPConn(port net.Port, payloadSize int, timeout time.Duration) func() error { // nolint: unparam
 	return func() error {
 		conn, err := net.DialUDP("udp", nil, &net.UDPAddr{
@@ -217,6 +222,22 @@ func testUDPConn(port net.Port, payloadSize int, timeout time.Duration) func() e
 		defer conn.Close()
 
 		return testTCPConn2(conn, payloadSize, timeout)()
+	}
+}
+
+// testUDPConnWithRetry behaves like testUDPConn, but retries a few times before giving
+// up. UDP does not guarantee delivery, and V2Ray deliberately drops datagrams when the
+// buffer of an inbound UDP connection is full, so a single lost datagram must not be
+// reported as a failure.
+func testUDPConnWithRetry(port net.Port, payloadSize int, timeout time.Duration) func() error { // nolint: unparam
+	return func() error {
+		var err error
+		for i := 0; i < 3; i++ {
+			if err = testUDPConn(port, payloadSize, timeout)(); err == nil {
+				return nil
+			}
+		}
+		return err
 	}
 }
 
@@ -233,29 +254,45 @@ func testTCPConn2(conn net.Conn, payloadSize int, timeout time.Duration) func() 
 				"\tSys =", units.ByteSize(m.Sys).String(),
 				"\tNumGC =", m.NumGC)
 		}()
-		payload := make([]byte, payloadSize)
-		common.Must2(rand.Read(payload))
 
-		if err := conn.SetWriteDeadline(time.Now().Add(timeout)); err != nil {
-			return err
-		}
-		nBytes, err := conn.Write(payload)
-		conn.SetWriteDeadline(time.Time{}) //nolint: errcheck
-		if err != nil {
-			return err
-		}
-		if nBytes != len(payload) {
-			return errors.New("expect ", len(payload), " written, but actually ", nBytes)
-		}
+		// Bound each request/echo exchange so full-duplex transports keep making
+		// progress without retaining the entire stress-test payload in memory.
+		const chunkSize = 32 * 1024
+		payload := make([]byte, min(payloadSize, chunkSize))
+		response := make([]byte, len(payload))
+		for offset := 0; offset < payloadSize; {
+			size := min(len(payload), payloadSize-offset)
+			payloadChunk := payload[:size]
+			responseChunk := response[:size]
+			common.Must2(rand.Read(payloadChunk))
 
-		response, err := readFrom2(conn, timeout, payloadSize)
-		if err != nil {
-			return err
-		}
-		_ = response
+			if err := conn.SetWriteDeadline(time.Now().Add(timeout)); err != nil {
+				return err
+			}
+			nBytes, err := conn.Write(payloadChunk)
+			conn.SetWriteDeadline(time.Time{}) //nolint: errcheck
+			if err != nil {
+				return err
+			}
+			if nBytes != len(payloadChunk) {
+				return errors.New("expect ", len(payloadChunk), " written, but actually ", nBytes)
+			}
 
-		if r := bytes.Compare(response, xor(payload)); r != 0 {
-			return errors.New(r)
+			if err := conn.SetReadDeadline(time.Now().Add(timeout)); err != nil {
+				return err
+			}
+			if _, err := io.ReadFull(conn, responseChunk); err != nil {
+				return err
+			}
+			conn.SetReadDeadline(time.Time{}) //nolint: errcheck
+
+			for i, actual := range responseChunk {
+				expected := payloadChunk[i] ^ 'c'
+				if actual != expected {
+					return errors.New("unexpected response at byte ", offset+i, ": got ", actual, ", want ", expected)
+				}
+			}
+			offset += size
 		}
 
 		return nil

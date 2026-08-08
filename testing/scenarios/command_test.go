@@ -268,6 +268,7 @@ func TestCommanderAddRemoveUser(t *testing.T) {
 	common.Must(err)
 	defer CloseAllServers(servers)
 
+	common.Must(waitForTCPPort(clientPort, time.Second*5))
 	if err := testTCPConn(clientPort, 1024, time.Second*5)(); err != io.EOF &&
 		/*We might wish to drain the connection*/
 		(err != nil && !strings.HasSuffix(err.Error(), "i/o timeout")) {

@@ -1196,7 +1196,7 @@ func TestVMessGCMMuxUDP(t *testing.T) {
 		var errg errgroup.Group
 		for i := 0; i < 16; i++ {
 			errg.Go(testTCPConn(clientPort, 10240, time.Second*20))
-			errg.Go(testUDPConn(clientUDPPort, 1024, time.Second*10))
+			errg.Go(testUDPConnWithRetry(clientUDPPort, 1024, time.Second*10))
 		}
 		if err := errg.Wait(); err != nil {
 			t.Error(err)
