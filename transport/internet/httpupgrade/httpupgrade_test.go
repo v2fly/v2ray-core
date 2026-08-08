@@ -127,6 +127,50 @@ func TestWithoutEarlyData(t *testing.T) {
 	testEarlyDataRoundTrip(t, 0, 4096)
 }
 
+// TestNegativeMaxEarlyData makes sure a nonsensical MaxEarlyData does not take down
+// the whole instance: the payload is simply sent without using the early data header.
+func TestNegativeMaxEarlyData(t *testing.T) {
+	testEarlyDataRoundTrip(t, -1, 4096)
+}
+
+// readerEndingWithEOF returns the last chunk of its payload together with io.EOF,
+// which io.Reader implementations (io.MultiReader among them) are allowed to do.
+type readerEndingWithEOF struct {
+	payload []byte
+}
+
+func (r *readerEndingWithEOF) Read(p []byte) (int, error) {
+	n := copy(p, r.payload)
+	r.payload = r.payload[n:]
+	if len(r.payload) == 0 {
+		return n, io.EOF
+	}
+	return n, nil
+}
+
+// TestPendingReadEndingWithEOF makes sure the pending read is not dropped when the
+// reader reports io.EOF alongside the last bytes it returns.
+func TestPendingReadEndingWithEOF(t *testing.T) {
+	clientConn, serverConn := gonet.Pipe()
+	defer clientConn.Close()
+
+	go func() {
+		clientConn.Write([]byte("world")) // nolint: errcheck
+	}()
+
+	conn := newConnectionWithPendingRead(serverConn, serverConn.RemoteAddr(), &readerEndingWithEOF{payload: []byte("hello")})
+	defer conn.Close()
+	common.Must(conn.SetReadDeadline(time.Now().Add(time.Second * 10)))
+
+	received := make([]byte, len("helloworld"))
+	if _, err := io.ReadFull(conn, received); err != nil {
+		t.Fatal("failed to read the whole payload: ", err)
+	}
+	if string(received) != "helloworld" {
+		t.Error("unexpected payload: ", string(received))
+	}
+}
+
 // TestEarlyDataArrivingWithRequest covers the case where the part of the early data
 // that did not fit into the header reaches the server together with the upgrade
 // request, and is therefore consumed by the buffered reader parsing that request.

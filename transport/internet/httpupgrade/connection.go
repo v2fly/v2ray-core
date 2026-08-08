@@ -54,6 +54,12 @@ func (c *connection) Read(b []byte) (int, error) {
 		n, err := c.reader.Read(b)
 		if err == io.EOF {
 			c.reader = nil
+			// A reader is allowed to return the last bytes together with io.EOF,
+			// so they have to be delivered instead of being overwritten by the
+			// next read from the underlying connection.
+			if n > 0 {
+				return n, nil
+			}
 			return c.conn.Read(b)
 		}
 		return n, err
@@ -66,11 +72,14 @@ func (c *connection) Write(b []byte) (int, error) {
 	if c.shouldWait {
 		var err error
 		var earlyReply io.Reader
+		// Every other method of this connection blocks until the delayed dial is
+		// finished, so it has to be signalled even if the dial does not return
+		// normally, and only once every field it publishes has been assigned.
+		defer c.finishedDial()
 		c.conn, earlyReply, err = c.dialer(b)
 		if earlyReply != nil {
 			c.reader = earlyReply
 		}
-		c.finishedDial()
 		if err != nil {
 			return 0, newError("Unable to proceed with delayed write").Base(err)
 		}
