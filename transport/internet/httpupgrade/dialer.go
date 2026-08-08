@@ -38,12 +38,13 @@ func dialhttpUpgrade(ctx context.Context, dest net.Destination, streamSettings *
 			}
 		}
 
-		earlyDataSize := len(earlyData)
-		if maxEarlyData := int(transportConfiguration.MaxEarlyData); earlyDataSize > maxEarlyData {
-			earlyDataSize = maxEarlyData
+		maxEarlyData := int(transportConfiguration.MaxEarlyData)
+		if maxEarlyData < 0 {
+			maxEarlyData = 0
 		}
-		if earlyDataSize < 0 {
-			earlyDataSize = 0
+		earlyDataSize := len(earlyData)
+		if earlyDataSize > maxEarlyData {
+			earlyDataSize = maxEarlyData
 		}
 
 		if earlyDataSize > 0 {
