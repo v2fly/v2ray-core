@@ -43,11 +43,11 @@ func dialhttpUpgrade(ctx context.Context, dest net.Destination, streamSettings *
 			earlyDataSize = int(transportConfiguration.MaxEarlyData)
 		}
 
-		if len(earlyData) > 0 {
+		if earlyDataSize > 0 {
 			if transportConfiguration.EarlyDataHeaderName == "" {
 				return nil, nil, newError("EarlyDataHeaderName is not set")
 			}
-			req.Header.Set(transportConfiguration.EarlyDataHeaderName, base64.URLEncoding.EncodeToString(earlyData))
+			req.Header.Set(transportConfiguration.EarlyDataHeaderName, base64.URLEncoding.EncodeToString(earlyData[:earlyDataSize]))
 		}
 
 		err = req.Write(conn)
@@ -55,7 +55,7 @@ func dialhttpUpgrade(ctx context.Context, dest net.Destination, streamSettings *
 			return nil, nil, err
 		}
 
-		if earlyData != nil && len(earlyData[earlyDataSize:]) > 0 {
+		if len(earlyData[earlyDataSize:]) > 0 {
 			_, err = conn.Write(earlyData[earlyDataSize:])
 			if err != nil {
 				return nil, nil, newError("failed to finish write early data").Base(err)
