@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"io"
 	"net/http"
 	"strings"
 
@@ -76,6 +77,10 @@ func (s *server) upgrade(conn net.Conn) (internet.Connection, error) {
 			Port: int(0),
 		}
 	}
+	// http.ReadRequest may have buffered bytes that the client sent right after the
+	// request (e.g. the part of the early data that did not fit into the header).
+	// Those bytes must be replayed before reading from the underlying connection.
+	pendingRead := io.LimitReader(connReader, int64(connReader.Buffered()))
 	if s.config.MaxEarlyData != 0 {
 		if s.config.EarlyDataHeaderName == "" {
 			return nil, newError("EarlyDataHeaderName is not set")
@@ -86,10 +91,14 @@ func (s *server) upgrade(conn net.Conn) (internet.Connection, error) {
 			if err != nil {
 				return nil, err
 			}
-			return newConnectionWithPendingRead(conn, remoteAddr, bytes.NewReader(earlyDataBytes)), nil
+			if len(earlyDataBytes) > int(s.config.MaxEarlyData) {
+				return nil, newError("early data is longer than MaxEarlyData")
+			}
+			return newConnectionWithPendingRead(conn, remoteAddr,
+				io.MultiReader(bytes.NewReader(earlyDataBytes), pendingRead)), nil
 		}
 	}
-	return newConnectionWithRemoteAddr(conn, remoteAddr), nil
+	return newConnectionWithPendingRead(conn, remoteAddr, pendingRead), nil
 }
 
 func (s *server) keepAccepting() {
