@@ -80,7 +80,10 @@ func (s *server) upgrade(conn net.Conn) (internet.Connection, error) {
 	// http.ReadRequest may have buffered bytes that the client sent right after the
 	// request (e.g. the part of the early data that did not fit into the header).
 	// Those bytes must be replayed before reading from the underlying connection.
-	pendingRead := io.LimitReader(connReader, int64(connReader.Buffered()))
+	var pendingRead io.Reader
+	if buffered := connReader.Buffered(); buffered > 0 {
+		pendingRead = io.LimitReader(connReader, int64(buffered))
+	}
 	if s.config.MaxEarlyData != 0 {
 		if s.config.EarlyDataHeaderName == "" {
 			return nil, newError("EarlyDataHeaderName is not set")
@@ -91,11 +94,11 @@ func (s *server) upgrade(conn net.Conn) (internet.Connection, error) {
 			if err != nil {
 				return nil, err
 			}
-			if len(earlyDataBytes) > int(s.config.MaxEarlyData) {
-				return nil, newError("early data is longer than MaxEarlyData")
+			earlyReader := io.Reader(bytes.NewReader(earlyDataBytes))
+			if pendingRead != nil {
+				earlyReader = io.MultiReader(earlyReader, pendingRead)
 			}
-			return newConnectionWithPendingRead(conn, remoteAddr,
-				io.MultiReader(bytes.NewReader(earlyDataBytes), pendingRead)), nil
+			return newConnectionWithPendingRead(conn, remoteAddr, earlyReader), nil
 		}
 	}
 	return newConnectionWithPendingRead(conn, remoteAddr, pendingRead), nil
