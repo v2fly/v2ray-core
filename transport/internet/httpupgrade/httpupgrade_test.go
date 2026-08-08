@@ -23,31 +23,29 @@ import (
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
 )
 
-func newTransportEnvironment(t *testing.T, ctx context.Context) environment.TransportEnvironment {
+func newTransportContext(t *testing.T) context.Context {
 	t.Helper()
 
+	ctx := context.Background()
 	defaultNetworkImpl := systemnetworkimpl.NewSystemNetworkDefault()
-	defaultFilesystemImpl := filesystemimpl.NewDefaultFileSystemDefaultImpl()
-	deferredPersistentStorageImpl := deferredpersistentstorage.NewDeferredPersistentStorage(ctx)
 	rootEnv := environment.NewRootEnvImpl(
 		ctx,
 		transientstorageimpl.NewScopedTransientStorageImpl(),
 		defaultNetworkImpl.Dialer(),
 		defaultNetworkImpl.Listener(),
-		defaultFilesystemImpl,
-		deferredPersistentStorageImpl,
+		filesystemimpl.NewDefaultFileSystemDefaultImpl(),
+		deferredpersistentstorage.NewDeferredPersistentStorage(ctx),
 	)
-	proxyEnvironment := rootEnv.ProxyEnvironment(protocolName)
-	transportEnvironment, err := proxyEnvironment.NarrowScopeToTransport(protocolName)
+	transportEnvironment, err := rootEnv.ProxyEnvironment(protocolName).NarrowScopeToTransport(protocolName)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return transportEnvironment
+	return envctx.ContextWithEnvironment(ctx, transportEnvironment)
 }
 
-// testEarlyDataRoundTrip verifies that everything written by the client is delivered
-// to the server exactly once, no matter how the payload is split between the early
-// data header and the connection itself.
+// testEarlyDataRoundTrip checks that everything written by the client reaches the
+// server exactly once, no matter how the payload is split between the early data
+// header and the connection itself.
 func testEarlyDataRoundTrip(t *testing.T, maxEarlyData int32, payloadSize int) {
 	t.Helper()
 
@@ -56,52 +54,60 @@ func testEarlyDataRoundTrip(t *testing.T, maxEarlyData int32, payloadSize int) {
 		MaxEarlyData:        maxEarlyData,
 		EarlyDataHeaderName: "Sec-WebSocket-Key",
 	}
+	streamSettings := &internet.MemoryStreamConfig{
+		ProtocolName:     protocolName,
+		ProtocolSettings: config,
+	}
 
 	payload := make([]byte, payloadSize)
 	common.Must2(rand.Read(payload))
 
-	ctx := envctx.ContextWithEnvironment(context.Background(), newTransportEnvironment(t, context.Background()))
+	ctx := newTransportContext(t)
 
-	received := make(chan []byte, 1)
+	type result struct {
+		payload []byte
+		err     error
+	}
+	received := make(chan result, 1)
+
 	port := tcp.PickPort()
-	listener, err := listenHTTPUpgrade(ctx, net.LocalHostIP, port, &internet.MemoryStreamConfig{
-		ProtocolName:     protocolName,
-		ProtocolSettings: config,
-	}, func(conn internet.Connection) {
+	listener, err := listenHTTPUpgrade(ctx, net.LocalHostIP, port, streamSettings, func(conn internet.Connection) {
 		go func(c internet.Connection) {
 			defer c.Close()
 
 			b := make([]byte, payloadSize)
 			if _, err := io.ReadFull(c, b); err != nil {
-				received <- nil
+				received <- result{err: newError("failed to read the whole payload").Base(err)}
 				return
 			}
-			// Nothing else is supposed to be on the wire.
-			common.Must(c.SetReadDeadline(time.Now().Add(time.Second)))
+			// The client wrote the payload once, so nothing else may follow it.
+			if err := c.SetReadDeadline(time.Now().Add(time.Second)); err != nil {
+				received <- result{err: err}
+				return
+			}
 			var extra [1]byte
 			if n, _ := c.Read(extra[:]); n > 0 {
-				received <- nil
+				received <- result{err: newError("received more data than the client has written")}
 				return
 			}
-			received <- b
+			received <- result{payload: b}
 		}(conn)
 	})
 	common.Must(err)
 	defer listener.Close()
 
-	conn, err := dialhttpUpgrade(ctx, net.TCPDestination(net.LocalHostIP, port), &internet.MemoryStreamConfig{
-		ProtocolName:     protocolName,
-		ProtocolSettings: config,
-	})
+	conn, err := dialhttpUpgrade(ctx, net.TCPDestination(net.LocalHostIP, port), streamSettings)
 	common.Must(err)
 	defer conn.Close()
 
-	_, err = conn.Write(payload)
-	common.Must(err)
+	common.Must2(conn.Write(payload))
 
 	select {
-	case b := <-received:
-		if !bytes.Equal(b, payload) {
+	case r := <-received:
+		if r.err != nil {
+			t.Fatal(r.err)
+		}
+		if !bytes.Equal(r.payload, payload) {
 			t.Error("payload received by the server does not match the payload sent by the client")
 		}
 	case <-time.After(time.Second * 10):
@@ -121,9 +127,9 @@ func TestWithoutEarlyData(t *testing.T) {
 	testEarlyDataRoundTrip(t, 0, 4096)
 }
 
-// TestEarlyDataArrivingWithRequest covers the case where the remainder of the early
-// data reaches the server in the same read as the upgrade request itself, and would
-// therefore be swallowed by the buffered reader used to parse the request.
+// TestEarlyDataArrivingWithRequest covers the case where the part of the early data
+// that did not fit into the header reaches the server together with the upgrade
+// request, and is therefore consumed by the buffered reader parsing that request.
 func TestEarlyDataArrivingWithRequest(t *testing.T) {
 	config := &Config{
 		Path:                "/httpupgrade",
@@ -144,11 +150,11 @@ func TestEarlyDataArrivingWithRequest(t *testing.T) {
 	common.Must(req.Write(&request))
 	common.Must2(request.Write(payload[config.MaxEarlyData:]))
 
+	// net.Pipe hands the whole buffer to the server in a single read.
 	clientConn, serverConn := gonet.Pipe()
 	defer clientConn.Close()
 
 	go func() {
-		defer clientConn.Close()
 		if _, err := clientConn.Write(request.Bytes()); err != nil {
 			return
 		}

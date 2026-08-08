@@ -224,7 +224,7 @@ func testUDPConn(port net.Port, payloadSize int, timeout time.Duration) func() e
 // up. UDP does not guarantee delivery, and V2Ray deliberately drops datagrams when the
 // buffer of an inbound UDP connection is full, so a single lost datagram must not be
 // reported as a failure.
-func testUDPConnWithRetry(port net.Port, payloadSize int, timeout time.Duration) func() error {
+func testUDPConnWithRetry(port net.Port, payloadSize int, timeout time.Duration) func() error { // nolint: unparam
 	return func() error {
 		var err error
 		for i := 0; i < 3; i++ {
