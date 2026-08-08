@@ -201,7 +201,8 @@ func waitForTCPPort(port net.Port, timeout time.Duration) error {
 			Port: int(port),
 		})
 		if err == nil {
-			return conn.Close()
+			conn.Close() //nolint: errcheck
+			return nil
 		}
 		if time.Now().After(deadline) {
 			return errors.New("timed out waiting for TCP port ", port).Base(err)
