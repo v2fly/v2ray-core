@@ -84,7 +84,7 @@ func (s *server) upgrade(conn net.Conn) (internet.Connection, error) {
 	if buffered := connReader.Buffered(); buffered > 0 {
 		pendingRead = io.LimitReader(connReader, int64(buffered))
 	}
-	if s.config.MaxEarlyData != 0 {
+	if s.config.MaxEarlyData > 0 {
 		if s.config.EarlyDataHeaderName == "" {
 			return nil, newError("EarlyDataHeaderName is not set")
 		}

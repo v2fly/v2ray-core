@@ -50,9 +50,11 @@ func testEarlyDataRoundTrip(t *testing.T, maxEarlyData int32, payloadSize int) {
 	t.Helper()
 
 	config := &Config{
-		Path:                "/httpupgrade",
-		MaxEarlyData:        maxEarlyData,
-		EarlyDataHeaderName: "Sec-WebSocket-Key",
+		Path:         "/httpupgrade",
+		MaxEarlyData: maxEarlyData,
+	}
+	if maxEarlyData > 0 {
+		config.EarlyDataHeaderName = "Sec-WebSocket-Key"
 	}
 	streamSettings := &internet.MemoryStreamConfig{
 		ProtocolName:     protocolName,

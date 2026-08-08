@@ -17,6 +17,10 @@ import (
 
 func dialhttpUpgrade(ctx context.Context, dest net.Destination, streamSettings *internet.MemoryStreamConfig) (net.Conn, error) {
 	transportConfiguration := streamSettings.ProtocolSettings.(*Config)
+	maxEarlyData := int(transportConfiguration.MaxEarlyData)
+	if maxEarlyData < 0 {
+		maxEarlyData = 0
+	}
 
 	dialer := func(earlyData []byte) (net.Conn, io.Reader, error) {
 		conn, err := transportcommon.DialWithSecuritySettings(ctx, dest, streamSettings)
@@ -38,10 +42,6 @@ func dialhttpUpgrade(ctx context.Context, dest net.Destination, streamSettings *
 			}
 		}
 
-		maxEarlyData := int(transportConfiguration.MaxEarlyData)
-		if maxEarlyData < 0 {
-			maxEarlyData = 0
-		}
 		earlyDataSize := len(earlyData)
 		if earlyDataSize > maxEarlyData {
 			earlyDataSize = maxEarlyData
@@ -82,7 +82,7 @@ func dialhttpUpgrade(ctx context.Context, dest net.Destination, streamSettings *
 		return nil, nil, newError("unrecognized reply")
 	}
 
-	if transportConfiguration.MaxEarlyData == 0 {
+	if maxEarlyData == 0 {
 		conn, earlyReplyReader, err := dialer(nil)
 		if err != nil {
 			return nil, err
