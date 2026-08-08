@@ -94,7 +94,7 @@ func (s *server) upgrade(conn net.Conn) (internet.Connection, error) {
 			if err != nil {
 				return nil, err
 			}
-			earlyReader := io.Reader(bytes.NewReader(earlyDataBytes))
+			var earlyReader io.Reader = bytes.NewReader(earlyDataBytes)
 			if pendingRead != nil {
 				earlyReader = io.MultiReader(earlyReader, pendingRead)
 			}
