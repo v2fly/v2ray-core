@@ -16,28 +16,46 @@ import (
 
 //go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
-func NewTunSorter(tunWriter io.Writer, dispatcher routing.Dispatcher, packetAddrType packetaddr.PacketAddrType, ctx context.Context) *TunSorter {
+func NewTunSorter(
+	tunWriter io.Writer,
+	dispatcher routing.Dispatcher,
+	packetAddrType packetaddr.PacketAddrType,
+	ctx context.Context,
+	packetEncodingBypassPorts []net.Port,
+) *TunSorter {
+	bypassPorts := make(map[net.Port]struct{}, len(packetEncodingBypassPorts))
+	for _, port := range packetEncodingBypassPorts {
+		bypassPorts[port] = struct{}{}
+	}
 	return &TunSorter{
-		tunWriter:      tunWriter,
-		dispatcher:     dispatcher,
-		packetAddrType: packetAddrType,
-		ctx:            ctx,
+		tunWriter:                 tunWriter,
+		dispatcher:                dispatcher,
+		packetAddrType:            packetAddrType,
+		packetEncodingBypassPorts: bypassPorts,
+		ctx:                       ctx,
 	}
 }
 
 type TunSorter struct {
-	tunWriter      io.Writer
-	dispatcher     routing.Dispatcher
-	packetAddrType packetaddr.PacketAddrType
+	tunWriter                 io.Writer
+	dispatcher                routing.Dispatcher
+	packetAddrType            packetaddr.PacketAddrType
+	packetEncodingBypassPorts map[net.Port]struct{}
 
 	trackedConnections sync.Map
 	ctx                context.Context
 }
 
-func (t *TunSorter) OnPacketReceived(b []byte) (n int, err error) {
+// OnPacketReceived handles UDP packets that should use packetaddr encoding.
+// It returns handled=false when the packet is not UDP or its destination port
+// is configured to use the regular TUN UDP path.
+func (t *TunSorter) OnPacketReceived(b []byte) (handled bool, err error) {
 	src, dst, data, err := packetparse.TryParseAsUDPPacket(b)
 	if err != nil {
-		return 0, err
+		return false, err
+	}
+	if _, bypass := t.packetEncodingBypassPorts[dst.Port]; bypass {
+		return false, nil
 	}
 	conn := newTrackedUDPConnection(src, t)
 	trackedConnection, loaded := t.trackedConnections.LoadOrStore(src.String(), conn)
@@ -46,7 +64,7 @@ func (t *TunSorter) OnPacketReceived(b []byte) (n int, err error) {
 		t.onNewConnection(conn)
 	}
 	conn.onNewPacket(dst, data)
-	return len(b), nil
+	return true, nil
 }
 
 func (t *TunSorter) onNewConnection(connection *trackedUDPConnection) {

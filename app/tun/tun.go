@@ -14,6 +14,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/app/tun/device/udpbridge"
 	"github.com/v2fly/v2ray-core/v5/app/tun/tunsorter"
 	"github.com/v2fly/v2ray-core/v5/common"
+	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
 	"github.com/v2fly/v2ray-core/v5/common/session"
 	"github.com/v2fly/v2ray-core/v5/features/policy"
@@ -28,10 +29,11 @@ type TUN struct {
 	policyManager policy.Manager
 	config        *Config
 
-	stack          *stack.Stack
-	device         device.Device
-	preopenedFD    int
-	preopenedFDSet bool
+	stack                     *stack.Stack
+	device                    device.Device
+	preopenedFD               int
+	preopenedFDSet            bool
+	packetEncodingBypassPorts []net.Port
 }
 
 func (t *TUN) Type() interface{} {
@@ -70,7 +72,13 @@ func (t *TUN) Start() error {
 
 	if t.config.PacketEncoding != packetaddr.PacketAddrType_None {
 		writer := device.NewLinkWriterToWriter(tunDevice)
-		sorter := tunsorter.NewTunSorter(writer, t.dispatcher, t.config.PacketEncoding, t.packetEncodingContext())
+		sorter := tunsorter.NewTunSorter(
+			writer,
+			t.dispatcher,
+			t.config.PacketEncoding,
+			t.packetEncodingContext(),
+			t.packetEncodingBypassPorts,
+		)
 		tunDeviceLayered := NewDeviceWithSorter(tunDevice, sorter)
 		tunDevice = tunDeviceLayered
 	}
@@ -117,6 +125,13 @@ func (t *TUN) Init(ctx context.Context, config *Config, dispatcher routing.Dispa
 	t.dispatcher = dispatcher
 	t.policyManager = policyManager
 	t.preopenedFD = -1
+	t.packetEncodingBypassPorts = make([]net.Port, 0, len(config.PacketEncodingBypassPorts))
+	for _, port := range config.PacketEncodingBypassPorts {
+		if port == 0 || port > 65535 {
+			return newError("invalid packet_encoding_bypass_ports value: ", port).AtError()
+		}
+		t.packetEncodingBypassPorts = append(t.packetEncodingBypassPorts, net.Port(port))
+	}
 	if config.PreopenedFd != nil {
 		if config.UdpBridge != nil {
 			return newError("preopened_fd and udp_bridge cannot be used together").AtError()

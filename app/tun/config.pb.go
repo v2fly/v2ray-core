@@ -103,22 +103,23 @@ func (x *UDPBridgeConfig) GetQueueSize() uint32 {
 }
 
 type Config struct {
-	state                 protoimpl.MessageState    `protogen:"open.v1"`
-	Name                  string                    `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Mtu                   uint32                    `protobuf:"varint,2,opt,name=mtu,proto3" json:"mtu,omitempty"`
-	UserLevel             uint32                    `protobuf:"varint,3,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitempty"`
-	PacketEncoding        packetaddr.PacketAddrType `protobuf:"varint,4,opt,name=packet_encoding,json=packetEncoding,proto3,enum=v2ray.core.net.packetaddr.PacketAddrType" json:"packet_encoding,omitempty"`
-	Tag                   string                    `protobuf:"bytes,5,opt,name=tag,proto3" json:"tag,omitempty"`
-	Ips                   []*routercommon.CIDR      `protobuf:"bytes,6,rep,name=ips,proto3" json:"ips,omitempty"`
-	Routes                []*routercommon.CIDR      `protobuf:"bytes,7,rep,name=routes,proto3" json:"routes,omitempty"`
-	EnablePromiscuousMode bool                      `protobuf:"varint,8,opt,name=enable_promiscuous_mode,json=enablePromiscuousMode,proto3" json:"enable_promiscuous_mode,omitempty"`
-	EnableSpoofing        bool                      `protobuf:"varint,9,opt,name=enable_spoofing,json=enableSpoofing,proto3" json:"enable_spoofing,omitempty"`
-	SocketSettings        *internet.SocketConfig    `protobuf:"bytes,10,opt,name=socket_settings,json=socketSettings,proto3" json:"socket_settings,omitempty"`
-	SniffingSettings      *proxyman.SniffingConfig  `protobuf:"bytes,11,opt,name=sniffing_settings,json=sniffingSettings,proto3" json:"sniffing_settings,omitempty"`
-	PreopenedFd           *int32                    `protobuf:"varint,12,opt,name=preopened_fd,json=preopenedFd,proto3,oneof" json:"preopened_fd,omitempty"`
-	UdpBridge             *UDPBridgeConfig          `protobuf:"bytes,13,opt,name=udp_bridge,json=udpBridge,proto3" json:"udp_bridge,omitempty"`
-	unknownFields         protoimpl.UnknownFields
-	sizeCache             protoimpl.SizeCache
+	state                     protoimpl.MessageState    `protogen:"open.v1"`
+	Name                      string                    `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Mtu                       uint32                    `protobuf:"varint,2,opt,name=mtu,proto3" json:"mtu,omitempty"`
+	UserLevel                 uint32                    `protobuf:"varint,3,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitempty"`
+	PacketEncoding            packetaddr.PacketAddrType `protobuf:"varint,4,opt,name=packet_encoding,json=packetEncoding,proto3,enum=v2ray.core.net.packetaddr.PacketAddrType" json:"packet_encoding,omitempty"`
+	Tag                       string                    `protobuf:"bytes,5,opt,name=tag,proto3" json:"tag,omitempty"`
+	Ips                       []*routercommon.CIDR      `protobuf:"bytes,6,rep,name=ips,proto3" json:"ips,omitempty"`
+	Routes                    []*routercommon.CIDR      `protobuf:"bytes,7,rep,name=routes,proto3" json:"routes,omitempty"`
+	EnablePromiscuousMode     bool                      `protobuf:"varint,8,opt,name=enable_promiscuous_mode,json=enablePromiscuousMode,proto3" json:"enable_promiscuous_mode,omitempty"`
+	EnableSpoofing            bool                      `protobuf:"varint,9,opt,name=enable_spoofing,json=enableSpoofing,proto3" json:"enable_spoofing,omitempty"`
+	SocketSettings            *internet.SocketConfig    `protobuf:"bytes,10,opt,name=socket_settings,json=socketSettings,proto3" json:"socket_settings,omitempty"`
+	SniffingSettings          *proxyman.SniffingConfig  `protobuf:"bytes,11,opt,name=sniffing_settings,json=sniffingSettings,proto3" json:"sniffing_settings,omitempty"`
+	PreopenedFd               *int32                    `protobuf:"varint,12,opt,name=preopened_fd,json=preopenedFd,proto3,oneof" json:"preopened_fd,omitempty"`
+	UdpBridge                 *UDPBridgeConfig          `protobuf:"bytes,13,opt,name=udp_bridge,json=udpBridge,proto3" json:"udp_bridge,omitempty"`
+	PacketEncodingBypassPorts []uint32                  `protobuf:"varint,14,rep,packed,name=packet_encoding_bypass_ports,json=packetEncodingBypassPorts,proto3" json:"packet_encoding_bypass_ports,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
@@ -242,6 +243,13 @@ func (x *Config) GetUdpBridge() *UDPBridgeConfig {
 	return nil
 }
 
+func (x *Config) GetPacketEncodingBypassPorts() []uint32 {
+	if x != nil {
+		return x.PacketEncodingBypassPorts
+	}
+	return nil
+}
+
 var File_app_tun_config_proto protoreflect.FileDescriptor
 
 const file_app_tun_config_proto_rawDesc = "" +
@@ -254,7 +262,7 @@ const file_app_tun_config_proto_rawDesc = "" +
 	"\fpeer_address\x18\x03 \x01(\tR\vpeerAddress\x12\x1b\n" +
 	"\tpeer_port\x18\x04 \x01(\rR\bpeerPort\x12\x1d\n" +
 	"\n" +
-	"queue_size\x18\x05 \x01(\rR\tqueueSize\"\xcf\x05\n" +
+	"queue_size\x18\x05 \x01(\rR\tqueueSize\"\x90\x06\n" +
 	"\x06Config\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x10\n" +
 	"\x03mtu\x18\x02 \x01(\rR\x03mtu\x12\x1d\n" +
@@ -271,7 +279,8 @@ const file_app_tun_config_proto_rawDesc = "" +
 	"\x11sniffing_settings\x18\v \x01(\v2'.v2ray.core.app.proxyman.SniffingConfigR\x10sniffingSettings\x12&\n" +
 	"\fpreopened_fd\x18\f \x01(\x05H\x00R\vpreopenedFd\x88\x01\x01\x12B\n" +
 	"\n" +
-	"udp_bridge\x18\r \x01(\v2#.v2ray.core.app.tun.UDPBridgeConfigR\tudpBridge:\x12\x82\xb5\x18\x0e\n" +
+	"udp_bridge\x18\r \x01(\v2#.v2ray.core.app.tun.UDPBridgeConfigR\tudpBridge\x12?\n" +
+	"\x1cpacket_encoding_bypass_ports\x18\x0e \x03(\rR\x19packetEncodingBypassPorts:\x12\x82\xb5\x18\x0e\n" +
 	"\aservice\x12\x03tunB\x0f\n" +
 	"\r_preopened_fdBW\n" +
 	"\x16com.v2ray.core.app.tunP\x01Z&github.com/v2fly/v2ray-core/v5/app/tun\xaa\x02\x12V2Ray.Core.App.Tunb\x06proto3"

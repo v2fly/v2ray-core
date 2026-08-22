@@ -27,8 +27,8 @@ type packetAddrDevice struct {
 
 func (p *packetAddrDevice) DeliverNetworkPacket(protocol tcpip.NetworkProtocolNumber, pkt *stack.PacketBuffer) {
 	buf := pkt.ToBuffer()
-	_, err := p.sorter.OnPacketReceived(buf.Flatten())
-	if err != nil {
+	handled, err := p.sorter.OnPacketReceived(buf.Flatten())
+	if err != nil || !handled {
 		p.dispatcherAccess.RLock()
 		dispatcher := p.secondaryDispatcher
 		p.dispatcherAccess.RUnlock()

@@ -37,4 +37,5 @@ message Config {
   v2ray.core.app.proxyman.SniffingConfig sniffing_settings = 11;
   optional int32 preopened_fd = 12;
   UDPBridgeConfig udp_bridge = 13;
+  repeated uint32 packet_encoding_bypass_ports = 14;
 }
