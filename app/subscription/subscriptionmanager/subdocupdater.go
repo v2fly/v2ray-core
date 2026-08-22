@@ -25,11 +25,16 @@ func (s *SubscriptionManagerImpl) updateSubscription(subscriptionName string) er
 	if err != nil {
 		return newError("failed to get fetcher: ", err)
 	}
-	if strings.HasPrefix(importSource.Url, "data:") {
+	isDataURL := strings.HasPrefix(importSource.Url, "data:")
+	if isDataURL {
 		docFetcher, err = documentfetcher.GetFetcher("dataurl")
 		if err != nil {
 			return newError("failed to get fetcher: ", err)
 		}
+	}
+	containerParser := ""
+	if isDataURL {
+		containerParser = "DataURLSingle"
 	}
 
 	downloadedDocument, err := docFetcher.DownloadDocument(s.ctx, importSource)
@@ -39,7 +44,7 @@ func (s *SubscriptionManagerImpl) updateSubscription(subscriptionName string) er
 
 	trackedSub.originalDocument = downloadedDocument
 
-	container, err := containers.TryAllParsers(trackedSub.originalDocument, "")
+	container, err := containers.TryAllParsers(trackedSub.originalDocument, containerParser)
 	if err != nil {
 		return newError("failed to parse document: ", err)
 	}

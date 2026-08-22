@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/vincent-petithory/dataurl"
+
 	"github.com/v2fly/v2ray-core/v5/app/subscription/containers"
 	"github.com/v2fly/v2ray-core/v5/common"
 )
@@ -15,6 +17,25 @@ func newURLLineParser() containers.SubscriptionContainerDocumentParser {
 }
 
 type parser struct{}
+
+func parseDataURLLine(content string) ([]byte, bool, error) {
+	if !strings.HasPrefix(content, "data:") {
+		return nil, false, nil
+	}
+
+	dataURL, err := dataurl.DecodeString(content)
+	if err != nil {
+		return nil, true, newError("unable to decode dataURL").Base(err)
+	}
+	if dataURL.MediaType.Type != "application" {
+		return nil, true, newError("unsupported media type: ", dataURL.MediaType.Type)
+	}
+	if !strings.HasPrefix(dataURL.MediaType.Subtype, "vnd.v2ray.subscription-singular") {
+		return nil, true, newError("unsupported media subtype: ", dataURL.MediaType.Subtype)
+	}
+
+	return dataURL.Data, true, nil
+}
 
 func (p parser) ParseSubscriptionContainerDocument(rawConfig []byte) (*containers.Container, error) {
 	result := &containers.Container{}
@@ -33,10 +54,24 @@ func (p parser) ParseSubscriptionContainerDocument(rawConfig []byte) (*container
 	for scanner.Scan() {
 		content := scanner.Text()
 		content = strings.TrimSpace(content)
+		if content == "" {
+			continue
+		}
 		if strings.HasPrefix(content, "#") {
 			continue
 		}
 		if strings.HasPrefix(content, "//") {
+			continue
+		}
+		if dataURLData, ok, err := parseDataURLLine(content); err != nil {
+			failedLine++
+			continue
+		} else if ok {
+			parsedLine++
+			result.ServerSpecs = append(result.ServerSpecs, containers.UnparsedServerConf{
+				KindHint: "",
+				Content:  dataURLData,
+			})
 			continue
 		}
 		_, err := url.Parse(content)
@@ -48,7 +83,7 @@ func (p parser) ParseSubscriptionContainerDocument(rawConfig []byte) (*container
 		}
 		result.ServerSpecs = append(result.ServerSpecs, containers.UnparsedServerConf{
 			KindHint: "URL",
-			Content:  scanner.Bytes(),
+			Content:  []byte(content),
 		})
 	}
 
