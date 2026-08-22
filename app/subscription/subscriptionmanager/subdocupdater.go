@@ -7,7 +7,9 @@ import (
 	"unicode"
 
 	"golang.org/x/crypto/sha3"
+	"google.golang.org/protobuf/proto"
 
+	"github.com/v2fly/v2ray-core/v5/app/subscription"
 	"github.com/v2fly/v2ray-core/v5/app/subscription/containers"
 	"github.com/v2fly/v2ray-core/v5/app/subscription/documentfetcher"
 	"github.com/v2fly/v2ray-core/v5/app/subscription/specs"
@@ -37,7 +39,10 @@ func (s *SubscriptionManagerImpl) updateSubscription(subscriptionName string) er
 		containerParser = "DataURLSingle"
 	}
 
-	downloadedDocument, err := docFetcher.DownloadDocument(s.ctx, importSource)
+	downloadedDocument, err := docFetcher.DownloadDocument(
+		s.ctx,
+		importSourceWithDefaultDialer(importSource, s.config.DefaultDialerTag),
+	)
 	if err != nil {
 		return newError("failed to download document: ", err)
 	}
@@ -75,6 +80,14 @@ func (s *SubscriptionManagerImpl) updateSubscription(subscriptionName string) er
 	trackedSub.currentDocument = parsedDocument
 	trackedSub.currentDocumentExpireTime = time.Now().Add(time.Second * time.Duration(importSource.DefaultExpireSeconds))
 	return nil
+}
+
+func importSourceWithDefaultDialer(importSource *subscription.ImportSource, defaultDialerTag string) *subscription.ImportSource {
+	effectiveImportSource := proto.Clone(importSource).(*subscription.ImportSource)
+	if effectiveImportSource.ImportUsingTag == "" {
+		effectiveImportSource.ImportUsingTag = defaultDialerTag
+	}
+	return effectiveImportSource
 }
 
 func (s *SubscriptionManagerImpl) polyfillServerConfig(document *specs.SubscriptionServerConfig, hash string) {

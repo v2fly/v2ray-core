@@ -12,6 +12,14 @@ import "common/protoext/extensions.proto";
 import "common/net/packetaddr/config.proto";
 import "transport/internet/config.proto";
 
+message UDPBridgeConfig {
+  string listen_address = 1;
+  uint32 listen_port = 2;
+  string peer_address = 3;
+  uint32 peer_port = 4;
+  uint32 queue_size = 5;
+}
+
 message Config {
   option (v2ray.core.common.protoext.message_opt).type = "service";
   option (v2ray.core.common.protoext.message_opt).short_name = "tun";
@@ -28,4 +36,5 @@ message Config {
   v2ray.core.transport.internet.SocketConfig socket_settings = 10;
   v2ray.core.app.proxyman.SniffingConfig sniffing_settings = 11;
   optional int32 preopened_fd = 12;
+  UDPBridgeConfig udp_bridge = 13;
 }

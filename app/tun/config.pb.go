@@ -26,6 +26,82 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type UDPBridgeConfig struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ListenAddress string                 `protobuf:"bytes,1,opt,name=listen_address,json=listenAddress,proto3" json:"listen_address,omitempty"`
+	ListenPort    uint32                 `protobuf:"varint,2,opt,name=listen_port,json=listenPort,proto3" json:"listen_port,omitempty"`
+	PeerAddress   string                 `protobuf:"bytes,3,opt,name=peer_address,json=peerAddress,proto3" json:"peer_address,omitempty"`
+	PeerPort      uint32                 `protobuf:"varint,4,opt,name=peer_port,json=peerPort,proto3" json:"peer_port,omitempty"`
+	QueueSize     uint32                 `protobuf:"varint,5,opt,name=queue_size,json=queueSize,proto3" json:"queue_size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UDPBridgeConfig) Reset() {
+	*x = UDPBridgeConfig{}
+	mi := &file_app_tun_config_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UDPBridgeConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UDPBridgeConfig) ProtoMessage() {}
+
+func (x *UDPBridgeConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_app_tun_config_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UDPBridgeConfig.ProtoReflect.Descriptor instead.
+func (*UDPBridgeConfig) Descriptor() ([]byte, []int) {
+	return file_app_tun_config_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *UDPBridgeConfig) GetListenAddress() string {
+	if x != nil {
+		return x.ListenAddress
+	}
+	return ""
+}
+
+func (x *UDPBridgeConfig) GetListenPort() uint32 {
+	if x != nil {
+		return x.ListenPort
+	}
+	return 0
+}
+
+func (x *UDPBridgeConfig) GetPeerAddress() string {
+	if x != nil {
+		return x.PeerAddress
+	}
+	return ""
+}
+
+func (x *UDPBridgeConfig) GetPeerPort() uint32 {
+	if x != nil {
+		return x.PeerPort
+	}
+	return 0
+}
+
+func (x *UDPBridgeConfig) GetQueueSize() uint32 {
+	if x != nil {
+		return x.QueueSize
+	}
+	return 0
+}
+
 type Config struct {
 	state                 protoimpl.MessageState    `protogen:"open.v1"`
 	Name                  string                    `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -40,13 +116,14 @@ type Config struct {
 	SocketSettings        *internet.SocketConfig    `protobuf:"bytes,10,opt,name=socket_settings,json=socketSettings,proto3" json:"socket_settings,omitempty"`
 	SniffingSettings      *proxyman.SniffingConfig  `protobuf:"bytes,11,opt,name=sniffing_settings,json=sniffingSettings,proto3" json:"sniffing_settings,omitempty"`
 	PreopenedFd           *int32                    `protobuf:"varint,12,opt,name=preopened_fd,json=preopenedFd,proto3,oneof" json:"preopened_fd,omitempty"`
+	UdpBridge             *UDPBridgeConfig          `protobuf:"bytes,13,opt,name=udp_bridge,json=udpBridge,proto3" json:"udp_bridge,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
 	*x = Config{}
-	mi := &file_app_tun_config_proto_msgTypes[0]
+	mi := &file_app_tun_config_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -58,7 +135,7 @@ func (x *Config) String() string {
 func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
-	mi := &file_app_tun_config_proto_msgTypes[0]
+	mi := &file_app_tun_config_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -71,7 +148,7 @@ func (x *Config) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Config.ProtoReflect.Descriptor instead.
 func (*Config) Descriptor() ([]byte, []int) {
-	return file_app_tun_config_proto_rawDescGZIP(), []int{0}
+	return file_app_tun_config_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Config) GetName() string {
@@ -158,11 +235,26 @@ func (x *Config) GetPreopenedFd() int32 {
 	return 0
 }
 
+func (x *Config) GetUdpBridge() *UDPBridgeConfig {
+	if x != nil {
+		return x.UdpBridge
+	}
+	return nil
+}
+
 var File_app_tun_config_proto protoreflect.FileDescriptor
 
 const file_app_tun_config_proto_rawDesc = "" +
 	"\n" +
-	"\x14app/tun/config.proto\x12\x12v2ray.core.app.tun\x1a\x19app/proxyman/config.proto\x1a$app/router/routercommon/common.proto\x1a common/protoext/extensions.proto\x1a\"common/net/packetaddr/config.proto\x1a\x1ftransport/internet/config.proto\"\x8b\x05\n" +
+	"\x14app/tun/config.proto\x12\x12v2ray.core.app.tun\x1a\x19app/proxyman/config.proto\x1a$app/router/routercommon/common.proto\x1a common/protoext/extensions.proto\x1a\"common/net/packetaddr/config.proto\x1a\x1ftransport/internet/config.proto\"\xb8\x01\n" +
+	"\x0fUDPBridgeConfig\x12%\n" +
+	"\x0elisten_address\x18\x01 \x01(\tR\rlistenAddress\x12\x1f\n" +
+	"\vlisten_port\x18\x02 \x01(\rR\n" +
+	"listenPort\x12!\n" +
+	"\fpeer_address\x18\x03 \x01(\tR\vpeerAddress\x12\x1b\n" +
+	"\tpeer_port\x18\x04 \x01(\rR\bpeerPort\x12\x1d\n" +
+	"\n" +
+	"queue_size\x18\x05 \x01(\rR\tqueueSize\"\xcf\x05\n" +
 	"\x06Config\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x10\n" +
 	"\x03mtu\x18\x02 \x01(\rR\x03mtu\x12\x1d\n" +
@@ -177,7 +269,9 @@ const file_app_tun_config_proto_rawDesc = "" +
 	"\x0fsocket_settings\x18\n" +
 	" \x01(\v2+.v2ray.core.transport.internet.SocketConfigR\x0esocketSettings\x12T\n" +
 	"\x11sniffing_settings\x18\v \x01(\v2'.v2ray.core.app.proxyman.SniffingConfigR\x10sniffingSettings\x12&\n" +
-	"\fpreopened_fd\x18\f \x01(\x05H\x00R\vpreopenedFd\x88\x01\x01:\x12\x82\xb5\x18\x0e\n" +
+	"\fpreopened_fd\x18\f \x01(\x05H\x00R\vpreopenedFd\x88\x01\x01\x12B\n" +
+	"\n" +
+	"udp_bridge\x18\r \x01(\v2#.v2ray.core.app.tun.UDPBridgeConfigR\tudpBridge:\x12\x82\xb5\x18\x0e\n" +
 	"\aservice\x12\x03tunB\x0f\n" +
 	"\r_preopened_fdBW\n" +
 	"\x16com.v2ray.core.app.tunP\x01Z&github.com/v2fly/v2ray-core/v5/app/tun\xaa\x02\x12V2Ray.Core.App.Tunb\x06proto3"
@@ -194,25 +288,27 @@ func file_app_tun_config_proto_rawDescGZIP() []byte {
 	return file_app_tun_config_proto_rawDescData
 }
 
-var file_app_tun_config_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_app_tun_config_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_app_tun_config_proto_goTypes = []any{
-	(*Config)(nil),                  // 0: v2ray.core.app.tun.Config
-	(packetaddr.PacketAddrType)(0),  // 1: v2ray.core.net.packetaddr.PacketAddrType
-	(*routercommon.CIDR)(nil),       // 2: v2ray.core.app.router.routercommon.CIDR
-	(*internet.SocketConfig)(nil),   // 3: v2ray.core.transport.internet.SocketConfig
-	(*proxyman.SniffingConfig)(nil), // 4: v2ray.core.app.proxyman.SniffingConfig
+	(*UDPBridgeConfig)(nil),         // 0: v2ray.core.app.tun.UDPBridgeConfig
+	(*Config)(nil),                  // 1: v2ray.core.app.tun.Config
+	(packetaddr.PacketAddrType)(0),  // 2: v2ray.core.net.packetaddr.PacketAddrType
+	(*routercommon.CIDR)(nil),       // 3: v2ray.core.app.router.routercommon.CIDR
+	(*internet.SocketConfig)(nil),   // 4: v2ray.core.transport.internet.SocketConfig
+	(*proxyman.SniffingConfig)(nil), // 5: v2ray.core.app.proxyman.SniffingConfig
 }
 var file_app_tun_config_proto_depIdxs = []int32{
-	1, // 0: v2ray.core.app.tun.Config.packet_encoding:type_name -> v2ray.core.net.packetaddr.PacketAddrType
-	2, // 1: v2ray.core.app.tun.Config.ips:type_name -> v2ray.core.app.router.routercommon.CIDR
-	2, // 2: v2ray.core.app.tun.Config.routes:type_name -> v2ray.core.app.router.routercommon.CIDR
-	3, // 3: v2ray.core.app.tun.Config.socket_settings:type_name -> v2ray.core.transport.internet.SocketConfig
-	4, // 4: v2ray.core.app.tun.Config.sniffing_settings:type_name -> v2ray.core.app.proxyman.SniffingConfig
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	2, // 0: v2ray.core.app.tun.Config.packet_encoding:type_name -> v2ray.core.net.packetaddr.PacketAddrType
+	3, // 1: v2ray.core.app.tun.Config.ips:type_name -> v2ray.core.app.router.routercommon.CIDR
+	3, // 2: v2ray.core.app.tun.Config.routes:type_name -> v2ray.core.app.router.routercommon.CIDR
+	4, // 3: v2ray.core.app.tun.Config.socket_settings:type_name -> v2ray.core.transport.internet.SocketConfig
+	5, // 4: v2ray.core.app.tun.Config.sniffing_settings:type_name -> v2ray.core.app.proxyman.SniffingConfig
+	0, // 5: v2ray.core.app.tun.Config.udp_bridge:type_name -> v2ray.core.app.tun.UDPBridgeConfig
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_app_tun_config_proto_init() }
@@ -220,14 +316,14 @@ func file_app_tun_config_proto_init() {
 	if File_app_tun_config_proto != nil {
 		return
 	}
-	file_app_tun_config_proto_msgTypes[0].OneofWrappers = []any{}
+	file_app_tun_config_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_tun_config_proto_rawDesc), len(file_app_tun_config_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

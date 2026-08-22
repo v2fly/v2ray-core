@@ -32,6 +32,13 @@ func (s *SubscriptionManagerImpl) materialize(subscriptionName, tagName string, 
 			serverSpec.Configuration.SecuritySettings)
 	}
 
+	if s.config.DefaultDialerTag != "" {
+		senderSettings.ProxySettings = &internet.ProxyConfig{
+			Tag:                 s.config.DefaultDialerTag,
+			TransportLayerProxy: true,
+		}
+	}
+
 	outboundConf.SenderSettings = serial.ToTypedMessage(senderSettings)
 
 	outboundConf.ProxySettings = serverSpec.Configuration.ProtocolSettings

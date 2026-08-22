@@ -11,6 +11,7 @@ import (
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/app/tun/device"
 	"github.com/v2fly/v2ray-core/v5/app/tun/device/gvisor"
+	"github.com/v2fly/v2ray-core/v5/app/tun/device/udpbridge"
 	"github.com/v2fly/v2ray-core/v5/app/tun/tunsorter"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
@@ -37,7 +38,6 @@ func (t *TUN) Type() interface{} {
 }
 
 func (t *TUN) Start() error {
-	DeviceConstructor := gvisor.New
 	deviceOptions := device.Options{
 		Name: t.config.Name,
 		MTU:  t.config.Mtu,
@@ -49,7 +49,19 @@ func (t *TUN) Start() error {
 		t.preopenedFDSet = false
 	}
 
-	tunDevice, err := DeviceConstructor(deviceOptions)
+	var tunDevice device.Device
+	var err error
+	if bridge := t.config.UdpBridge; bridge != nil {
+		tunDevice, err = udpbridge.New(deviceOptions, udpbridge.Options{
+			ListenAddress: bridge.ListenAddress,
+			ListenPort:    bridge.ListenPort,
+			PeerAddress:   bridge.PeerAddress,
+			PeerPort:      bridge.PeerPort,
+			QueueSize:     bridge.QueueSize,
+		})
+	} else {
+		tunDevice, err = gvisor.New(deviceOptions)
+	}
 	if err != nil {
 		return newError("failed to create device").Base(err).AtError()
 	}
@@ -101,6 +113,9 @@ func (t *TUN) Init(ctx context.Context, config *Config, dispatcher routing.Dispa
 	t.policyManager = policyManager
 	t.preopenedFD = -1
 	if config.PreopenedFd != nil {
+		if config.UdpBridge != nil {
+			return newError("preopened_fd and udp_bridge cannot be used together").AtError()
+		}
 		if *config.PreopenedFd < 0 {
 			return newError("invalid preopened_fd: ", *config.PreopenedFd).AtError()
 		}
