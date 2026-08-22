@@ -163,7 +163,7 @@ func (s *SubscriptionManagerImpl) loadAllFromPersistentStorage() error {
 		if err != nil {
 			return newError("failed to get import source: ", err)
 		}
-		if err := s.addTrackedSubscriptionFromImportSource(&importSource, false); err != nil {
+		if err := s.addTrackedSubscriptionFromImportSource(&importSource, true); err != nil {
 			return newError("failed to add tracked subscription: ", err)
 		}
 	}
