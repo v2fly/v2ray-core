@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/v2fly/v2ray-core/v5/common/session"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -40,5 +41,20 @@ func TestUDPBridgeRejectsPreopenedFD(t *testing.T) {
 	}, nil, nil)
 	if err == nil {
 		t.Fatal("expected preopened_fd/udp_bridge conflict")
+	}
+}
+
+func TestPacketEncodingContextCarriesTUNInboundTag(t *testing.T) {
+	tun := &TUN{
+		ctx:    context.Background(),
+		config: &Config{Tag: "packet-bridge-in"},
+	}
+
+	inbound := session.InboundFromContext(tun.packetEncodingContext())
+	if inbound == nil {
+		t.Fatal("packet encoding context has no inbound session")
+	}
+	if inbound.Tag != tun.config.Tag {
+		t.Fatalf("packet encoding context inbound tag = %q, want %q", inbound.Tag, tun.config.Tag)
 	}
 }

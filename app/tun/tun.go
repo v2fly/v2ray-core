@@ -15,6 +15,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/app/tun/tunsorter"
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/net/packetaddr"
+	"github.com/v2fly/v2ray-core/v5/common/session"
 	"github.com/v2fly/v2ray-core/v5/features/policy"
 	"github.com/v2fly/v2ray-core/v5/features/routing"
 )
@@ -69,7 +70,7 @@ func (t *TUN) Start() error {
 
 	if t.config.PacketEncoding != packetaddr.PacketAddrType_None {
 		writer := device.NewLinkWriterToWriter(tunDevice)
-		sorter := tunsorter.NewTunSorter(writer, t.dispatcher, t.config.PacketEncoding, t.ctx)
+		sorter := tunsorter.NewTunSorter(writer, t.dispatcher, t.config.PacketEncoding, t.packetEncodingContext())
 		tunDeviceLayered := NewDeviceWithSorter(tunDevice, sorter)
 		tunDevice = tunDeviceLayered
 	}
@@ -85,6 +86,10 @@ func (t *TUN) Start() error {
 	t.stack = stack
 
 	return nil
+}
+
+func (t *TUN) packetEncodingContext() context.Context {
+	return session.ContextWithInbound(t.ctx, &session.Inbound{Tag: t.config.Tag})
 }
 
 func (t *TUN) Close() error {
