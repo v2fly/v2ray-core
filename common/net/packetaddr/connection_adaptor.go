@@ -140,10 +140,11 @@ func (c *packetConnectionAdaptor) WriteTo(p []byte, addr gonet.Addr) (n int, err
 }
 
 func (c *packetConnectionAdaptor) Close() error {
+	err := common.Interrupt(c.link)
 	c.readerAccess.Lock()
-	defer c.readerAccess.Unlock()
 	c.readerBuffer = buf.ReleaseMulti(c.readerBuffer)
-	return common.Interrupt(c.link)
+	c.readerAccess.Unlock()
+	return err
 }
 
 func (c packetConnectionAdaptor) LocalAddr() gonet.Addr {
