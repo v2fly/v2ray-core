@@ -165,7 +165,7 @@ func (b *UDPBridge) readLoop() {
 		packet := stack.NewPacketBuffer(stack.PacketBufferOptions{
 			Payload: buffer.MakeWithData(datagram[:n]),
 		})
-		b.Endpoint.InjectInbound(protocol, packet)
+		b.InjectInbound(protocol, packet)
 		packet.DecRef()
 	}
 }
@@ -174,7 +174,7 @@ func (b *UDPBridge) writeLoop() {
 	defer b.wg.Done()
 
 	for {
-		packet := b.Endpoint.ReadContext(b.ctx)
+		packet := b.ReadContext(b.ctx)
 		if packet == nil {
 			return
 		}

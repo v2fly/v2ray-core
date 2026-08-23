@@ -27,11 +27,11 @@ func parseDataURLLine(content string) ([]byte, bool, error) {
 	if err != nil {
 		return nil, true, newError("unable to decode dataURL").Base(err)
 	}
-	if dataURL.MediaType.Type != "application" {
-		return nil, true, newError("unsupported media type: ", dataURL.MediaType.Type)
+	if dataURL.Type != "application" {
+		return nil, true, newError("unsupported media type: ", dataURL.Type)
 	}
-	if !strings.HasPrefix(dataURL.MediaType.Subtype, "vnd.v2ray.subscription-singular") {
-		return nil, true, newError("unsupported media subtype: ", dataURL.MediaType.Subtype)
+	if !strings.HasPrefix(dataURL.Subtype, "vnd.v2ray.subscription-singular") {
+		return nil, true, newError("unsupported media subtype: ", dataURL.Subtype)
 	}
 
 	return dataURL.Data, true, nil

@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/v2fly/v2ray-core/v5/common/session"
 	"google.golang.org/protobuf/encoding/protojson"
+
+	"github.com/v2fly/v2ray-core/v5/common/session"
 )
 
 func TestUDPBridgeConfigJSON(t *testing.T) {
