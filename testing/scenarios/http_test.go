@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -92,9 +91,7 @@ func TestHttpError(t *testing.T) {
 	common.Must(err)
 	defer tcpServer.Close()
 
-	time.AfterFunc(time.Second*2, func() {
-		tcpServer.SetShouldClose(true)
-	})
+	tcpServer.SetShouldClose(true)
 
 	serverPort := tcp.PickPort()
 	serverConfig := &core.Config{

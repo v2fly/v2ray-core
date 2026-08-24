@@ -37,11 +37,27 @@ func xor(b []byte) []byte {
 	return r
 }
 
+// idleReader refreshes the read deadline before every read, so that the
+// timeout bounds the time the peer may stay silent rather than the duration of
+// the whole transfer. A busy CI machine can make a large but perfectly healthy
+// transfer exceed a whole-transfer deadline, while a genuinely stalled proxy
+// still trips the idle deadline.
+type idleReader struct {
+	conn    net.Conn
+	timeout time.Duration
+}
+
+func (r *idleReader) Read(b []byte) (int, error) {
+	if err := r.conn.SetReadDeadline(time.Now().Add(r.timeout)); err != nil {
+		return 0, err
+	}
+	return r.conn.Read(b)
+}
+
 func readFrom(conn net.Conn, timeout time.Duration, length int) []byte {
 	b := make([]byte, length)
-	deadline := time.Now().Add(timeout)
-	conn.SetReadDeadline(deadline)
-	n, err := io.ReadFull(conn, b[:length])
+	n, err := io.ReadFull(&idleReader{conn: conn, timeout: timeout}, b[:length])
+	conn.SetReadDeadline(time.Time{}) //nolint: errcheck
 	if err != nil {
 		fmt.Println("Unexpected error from readFrom:", err)
 	}
@@ -50,13 +66,39 @@ func readFrom(conn net.Conn, timeout time.Duration, length int) []byte {
 
 func readFrom2(conn net.Conn, timeout time.Duration, length int) ([]byte, error) {
 	b := make([]byte, length)
-	deadline := time.Now().Add(timeout)
-	conn.SetReadDeadline(deadline)
-	n, err := io.ReadFull(conn, b[:length])
+	n, err := io.ReadFull(&idleReader{conn: conn, timeout: timeout}, b[:length])
+	conn.SetReadDeadline(time.Time{}) //nolint: errcheck
 	if err != nil {
 		return nil, err
 	}
 	return b[:n], nil
+}
+
+// writeChunkSize bounds how much is handed to a single Write so that the write
+// deadline can be refreshed as the transfer progresses. It is larger than any
+// datagram used by the UDP tests, so those payloads are still sent as one
+// datagram by a single Write.
+const writeChunkSize = 64 * 1024
+
+// writeWithIdleTimeout writes payload to conn, allowing timeout for every
+// chunk rather than for the payload as a whole. See idleReader for why.
+func writeWithIdleTimeout(conn net.Conn, payload []byte, timeout time.Duration) (int, error) {
+	written := 0
+	for written < len(payload) {
+		end := written + writeChunkSize
+		if end > len(payload) {
+			end = len(payload)
+		}
+		if err := conn.SetWriteDeadline(time.Now().Add(timeout)); err != nil {
+			return written, err
+		}
+		n, err := conn.Write(payload[written:end])
+		written += n
+		if err != nil {
+			return written, err
+		}
+	}
+	return written, nil
 }
 
 func InitializeServerConfigs(configs ...*core.Config) ([]*exec.Cmd, error) {
@@ -239,10 +281,7 @@ func testTCPConn2(conn net.Conn, payloadSize int, timeout time.Duration) func() 
 		payload := make([]byte, payloadSize)
 		common.Must2(rand.Read(payload))
 
-		if err := conn.SetWriteDeadline(time.Now().Add(timeout)); err != nil {
-			return err
-		}
-		nBytes, err := conn.Write(payload)
+		nBytes, err := writeWithIdleTimeout(conn, payload, timeout)
 		conn.SetWriteDeadline(time.Time{}) //nolint: errcheck
 		if err != nil {
 			return err
@@ -255,10 +294,9 @@ func testTCPConn2(conn net.Conn, payloadSize int, timeout time.Duration) func() 
 		if err != nil {
 			return err
 		}
-		_ = response
 
-		if r := bytes.Compare(response, xor(payload)); r != 0 {
-			return errors.New(r)
+		if !bytes.Equal(response, xor(payload)) {
+			return errors.New("unexpected response of ", len(response), " bytes, expected the ", payloadSize, " bytes sent to be echoed back")
 		}
 
 		return nil
