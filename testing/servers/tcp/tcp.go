@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sync"
 
 	"github.com/v2fly/v2ray-core/v5/common/buf"
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -15,10 +16,26 @@ import (
 type Server struct {
 	Port         net.Port
 	MsgProcessor func(msg []byte) []byte
-	ShouldClose  bool
 	SendFirst    []byte
 	Listen       net.Address
-	listener     net.Listener
+
+	access      sync.Mutex
+	listener    net.Listener
+	shouldClose bool
+}
+
+// SetShouldClose makes the server drop incoming connections instead of serving
+// them. It may be called while the server is running.
+func (server *Server) SetShouldClose(shouldClose bool) {
+	server.access.Lock()
+	defer server.access.Unlock()
+	server.shouldClose = shouldClose
+}
+
+func (server *Server) shouldCloseConnections() bool {
+	server.access.Lock()
+	defer server.access.Unlock()
+	return server.shouldClose
 }
 
 func (server *Server) Start() (net.Destination, error) {
@@ -40,7 +57,11 @@ func (server *Server) StartContext(ctx context.Context, sockopt *internet.Socket
 
 	localAddr := listener.Addr().(*net.TCPAddr)
 	server.Port = net.Port(localAddr.Port)
+
+	server.access.Lock()
 	server.listener = listener
+	server.access.Unlock()
+
 	go server.acceptConnections(listener.(*net.TCPListener))
 
 	return net.TCPDestination(net.IPAddress(localAddr.IP), net.Port(localAddr.Port)), nil
@@ -59,6 +80,11 @@ func (server *Server) acceptConnections(listener *net.TCPListener) {
 }
 
 func (server *Server) handleConnection(conn net.Conn) {
+	if server.shouldCloseConnections() {
+		conn.Close()
+		return
+	}
+
 	if len(server.SendFirst) > 0 {
 		conn.Write(server.SendFirst)
 	}
@@ -105,5 +131,13 @@ func (server *Server) handleConnection(conn net.Conn) {
 }
 
 func (server *Server) Close() error {
-	return server.listener.Close()
+	server.access.Lock()
+	defer server.access.Unlock()
+
+	if server.listener == nil {
+		return nil
+	}
+	listener := server.listener
+	server.listener = nil
+	return listener.Close()
 }

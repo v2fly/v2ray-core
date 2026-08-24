@@ -40,7 +40,11 @@ func TestVMessDynamicPort(t *testing.T) {
 	userID := protocol.NewID(uuid.New())
 
 	retry := 1
-	serverPort := tcp.PickPort()
+	// The inbound handlers use serverPort, serverPort+1 to serverPort+99 for
+	// the detour allocation and serverPort+100, so the whole block has to be
+	// reserved.
+	const dynamicPortRange = 101
+	serverPort := tcp.PickPortRange(dynamicPortRange)
 	for {
 		serverConfig := &core.Config{
 			App: []*anypb.Any{
@@ -117,7 +121,7 @@ func TestVMessDynamicPort(t *testing.T) {
 		if retry > 5 {
 			t.Fatal("All attempts failed to start server")
 		}
-		serverPort = tcp.PickPort()
+		serverPort = tcp.PickPortRange(dynamicPortRange)
 	}
 
 	clientPort := tcp.PickPort()

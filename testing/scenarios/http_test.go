@@ -93,7 +93,7 @@ func TestHttpError(t *testing.T) {
 	defer tcpServer.Close()
 
 	time.AfterFunc(time.Second*2, func() {
-		tcpServer.ShouldClose = true
+		tcpServer.SetShouldClose(true)
 	})
 
 	serverPort := tcp.PickPort()

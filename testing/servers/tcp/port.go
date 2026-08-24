@@ -1,20 +1,19 @@
 package tcp
 
-import "github.com/v2fly/v2ray-core/v5/common/net"
+import (
+	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/testing/servers/port"
+)
 
-// PickPort returns an unused TCP port of the system.
+// PickPort returns an unused TCP port of the system. The port stays reserved
+// for the lifetime of the test binary, so it is never handed out twice.
 func PickPort() net.Port {
-	listener := pickPort()
-	defer listener.Close()
-
-	addr := listener.Addr().(*net.TCPAddr)
-	return net.Port(addr.Port)
+	return port.Pick()
 }
 
-func pickPort() net.Listener {
-	listener, err := net.Listen("tcp4", "127.0.0.1:0")
-	if err != nil {
-		listener = pickPort()
-	}
-	return listener
+// PickPortRange returns the first port of a block of count consecutive unused
+// TCP ports. The whole block stays reserved for the lifetime of the test
+// binary.
+func PickPortRange(count uint32) net.Port {
+	return port.PickRange(count)
 }

@@ -82,6 +82,7 @@ func TestPassiveConnection(t *testing.T) {
 		Port: int(serverPort),
 	})
 	common.Must(err)
+	defer conn.Close()
 
 	{
 		response := make([]byte, 1024)
@@ -754,6 +755,7 @@ func TestDialV2Ray(t *testing.T) {
 
 	client, err := core.New(clientConfig)
 	common.Must(err)
+	defer client.Close()
 
 	conn, err := core.Dial(context.Background(), client, dest)
 	common.Must(err)

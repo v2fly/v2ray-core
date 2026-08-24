@@ -138,7 +138,10 @@ func CloseAllServers(servers []*exec.Cmd) {
 		}
 	}
 	for _, server := range servers {
-		server.Process.Wait()
+		// Cmd.Wait, unlike Process.Wait, also releases the pipe that feeds the
+		// configuration into the process and waits for the goroutine copying
+		// it, so repeated test runs do not leak file descriptors.
+		server.Wait()
 	}
 	log.Record(&log.GeneralMessage{
 		Severity: log.Severity_Info,
@@ -156,7 +159,7 @@ func CloseServer(server *exec.Cmd) {
 	} else {
 		server.Process.Signal(syscall.SIGTERM)
 	}
-	server.Process.Wait()
+	server.Wait()
 	log.Record(&log.GeneralMessage{
 		Severity: log.Severity_Info,
 		Content:  "Server closed.",
