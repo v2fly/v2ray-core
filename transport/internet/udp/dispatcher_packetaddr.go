@@ -24,12 +24,20 @@ func (p *PacketAddrDispatcher) Close() error {
 		if receiver := p.ctx.Value(DispatcherConnectionTerminationSignalReceiverMark); receiver != nil {
 			_ = receiver.(DispatcherConnectionTerminationSignalReceiver).Close()
 		}
-		p.closeErr = p.conn.Close()
+		if p.conn != nil {
+			p.closeErr = p.conn.Close()
+		}
 	})
 	return p.closeErr
 }
 
 func (p *PacketAddrDispatcher) Dispatch(ctx context.Context, destination net.Destination, payload *buf.Buffer) {
+	defer payload.Release()
+
+	if p.conn == nil {
+		return
+	}
+
 	if destination.Network != net.Network_UDP {
 		return
 	}
@@ -72,7 +80,13 @@ func NewStreamPacketAddrDispatcherCreator(ctx context.Context) PacketAddrDispatc
 func (pdc *PacketAddrDispatcherCreator) NewPacketAddrDispatcher(
 	dispatcher routing.Dispatcher, callback ResponseCallback,
 ) DispatcherI {
-	packetConn, _ := packetaddr.CreatePacketAddrConn(pdc.ctx, dispatcher, pdc.isStream)
+	packetConn, err := packetaddr.CreatePacketAddrConn(pdc.ctx, dispatcher, pdc.isStream)
+	if err != nil {
+		newError("failed to create packet addr connection").Base(err).WriteToLog()
+		pd := &PacketAddrDispatcher{callback: callback, ctx: pdc.ctx}
+		pd.Close()
+		return pd
+	}
 	pd := &PacketAddrDispatcher{conn: packetConn, callback: callback, ctx: pdc.ctx}
 	go pd.readWorker()
 	return pd

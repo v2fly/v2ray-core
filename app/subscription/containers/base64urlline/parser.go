@@ -35,7 +35,7 @@ func (p parser) ParseSubscriptionContainerDocument(rawConfig []byte) (*container
 	for scanner.Scan() {
 		result.ServerSpecs = append(result.ServerSpecs, containers.UnparsedServerConf{
 			KindHint: "URL",
-			Content:  scanner.Bytes(),
+			Content:  []byte(scanner.Text()),
 		})
 	}
 	return result, nil

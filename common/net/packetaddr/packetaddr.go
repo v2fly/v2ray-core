@@ -101,9 +101,11 @@ func ExtractAddressFromPacket(data *buf.Buffer) (*buf.Buffer, gonet.Addr, error)
 	packetBuf := buf.StackNew()
 	address, port, err := addrParser.ReadAddressPort(&packetBuf, bytes.NewReader(data.Bytes()))
 	if err != nil {
+		packetBuf.Release()
 		return nil, nil, err
 	}
 	if address.Family().IsDomain() {
+		packetBuf.Release()
 		return nil, nil, errors.New("invalid address type")
 	}
 	addr := &gonet.UDPAddr{

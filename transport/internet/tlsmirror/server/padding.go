@@ -61,11 +61,11 @@ func Unpack(wrappedData_OWNERSHIP_RELINQUISHED []byte) ([]byte, int) {
 		return nil, dataLength
 	}
 
-	dataLen := int(binary.BigEndian.Uint32(wrappedData_OWNERSHIP_RELINQUISHED[dataLength-4:]))
-	if dataLen > len(wrappedData_OWNERSHIP_RELINQUISHED)-4 {
+	dataLen := int64(binary.BigEndian.Uint32(wrappedData_OWNERSHIP_RELINQUISHED[dataLength-4:]))
+	if dataLen > int64(dataLength-4) {
 		return nil, 0
 	}
-	paddingLength := dataLength - dataLen - 4
+	paddingLength := dataLength - int(dataLen) - 4
 	if paddingLength < 0 {
 		return nil, paddingLength
 	}

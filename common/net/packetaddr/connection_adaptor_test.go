@@ -114,3 +114,57 @@ func TestPacketConnectionAdaptorCloseInterruptsBlockedRead(t *testing.T) {
 		t.Fatal("ReadFrom did not return after Close interrupted the link reader")
 	}
 }
+
+type singlePacketReader struct {
+	payload []byte
+	read    bool
+}
+
+func (r *singlePacketReader) ReadMultiBuffer() (buf.MultiBuffer, error) {
+	if r.read {
+		return nil, io.EOF
+	}
+	r.read = true
+	b := buf.New()
+	if _, err := b.Write(r.payload); err != nil {
+		b.Release()
+		return nil, err
+	}
+	return buf.MultiBuffer{b}, nil
+}
+
+func (r *singlePacketReader) Interrupt() {}
+
+type discardingInterruptibleWriter struct{}
+
+func (discardingInterruptibleWriter) WriteMultiBuffer(mb buf.MultiBuffer) error {
+	buf.ReleaseMulti(mb)
+	return nil
+}
+
+func (discardingInterruptibleWriter) Interrupt() {}
+
+func TestPacketConnectionAdaptorReadFromRejectsMalformedPacket(t *testing.T) {
+	// 0xff is not a known packetaddr address type, so address extraction fails.
+	conn, err := ToPacketAddrConn(&transport.Link{
+		Reader: &singlePacketReader{payload: []byte{0xff, 0x01, 0x02}},
+		Writer: discardingInterruptibleWriter{},
+	}, net.Destination{
+		Network: net.Network_UDP,
+		Address: net.DomainAddress(seqPacketMagicAddress),
+	})
+	if err != nil {
+		t.Fatalf("failed to create packet connection adaptor: %v", err)
+	}
+
+	n, addr, err := conn.ReadFrom(make([]byte, buf.Size))
+	if err == nil {
+		t.Fatal("ReadFrom accepted a malformed packetaddr packet")
+	}
+	if n != 0 {
+		t.Fatalf("ReadFrom reported %v bytes for a malformed packetaddr packet", n)
+	}
+	if addr != nil {
+		t.Fatalf("ReadFrom reported address %v for a malformed packetaddr packet", addr)
+	}
+}

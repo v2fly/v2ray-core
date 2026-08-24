@@ -106,6 +106,9 @@ func (c *packetConnectionAdaptor) ReadFrom(p []byte) (n int, addr gonet.Addr, er
 	c.readerBuffer, n = buf.SplitFirstBytes(c.readerBuffer, p)
 	var w *buf.Buffer
 	w, addr, err = ExtractAddressFromPacket(buf.FromBytes(p[:n]))
+	if err != nil {
+		return 0, nil, err
+	}
 	n = copy(p, w.Bytes())
 	w.Release()
 	return
