@@ -91,6 +91,9 @@ func TestHttpError(t *testing.T) {
 	common.Must(err)
 	defer tcpServer.Close()
 
+	// The destination drops every connection, so the proxy has to answer the
+	// single request of this test with 503. Setting the switch up front rather
+	// than from a timer keeps that outcome deterministic.
 	tcpServer.SetShouldClose(true)
 
 	serverPort := tcp.PickPort()

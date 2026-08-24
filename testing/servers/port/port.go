@@ -54,7 +54,9 @@ func PickRange(count uint32) net.Port {
 	access.Lock()
 	defer access.Unlock()
 
-	// Every candidate block is tried at most once before giving up.
+	// Every start position of the window is tried once before giving up. Each
+	// attempt moves the cursor by exactly one, because the additional advance
+	// past an accepted block is followed by an immediate return.
 	for attempt := uint32(0); attempt < rangeEnd-rangeStart; attempt++ {
 		first := cursor
 		advance(1)
