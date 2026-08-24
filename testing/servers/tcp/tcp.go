@@ -2,6 +2,7 @@ package tcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
@@ -70,7 +71,8 @@ func (server *Server) handleConnection(conn net.Conn) {
 		for {
 			b := buf.New()
 			if _, err := b.ReadFrom(conn); err != nil {
-				if err == io.EOF {
+				b.Release()
+				if errors.Is(err, io.EOF) {
 					return nil
 				}
 				return err
@@ -87,7 +89,7 @@ func (server *Server) handleConnection(conn net.Conn) {
 		for {
 			mb, err := pReader.ReadMultiBuffer()
 			if err != nil {
-				if err == io.EOF {
+				if errors.Is(err, io.EOF) {
 					return nil
 				}
 				return err
@@ -105,5 +107,8 @@ func (server *Server) handleConnection(conn net.Conn) {
 }
 
 func (server *Server) Close() error {
+	if server.listener == nil {
+		return nil
+	}
 	return server.listener.Close()
 }

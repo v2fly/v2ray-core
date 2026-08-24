@@ -10,6 +10,7 @@ type Server struct {
 	Port        net.Port
 	PathHandler map[string]http.HandlerFunc
 	server      *http.Server
+	listener    net.Listener
 }
 
 func (s *Server) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
@@ -27,14 +28,22 @@ func (s *Server) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) Start() (net.Destination, error) {
+	listener, err := net.Listen("tcp", "127.0.0.1:"+s.Port.String())
+	if err != nil {
+		return net.Destination{}, err
+	}
+	s.Port = net.Port(listener.Addr().(*net.TCPAddr).Port)
+	s.listener = listener
 	s.server = &http.Server{
-		Addr:    "127.0.0.1:" + s.Port.String(),
 		Handler: s,
 	}
-	go s.server.ListenAndServe()
+	go s.server.Serve(listener)
 	return net.TCPDestination(net.LocalHostIP, s.Port), nil
 }
 
 func (s *Server) Close() error {
+	if s.server == nil {
+		return nil
+	}
 	return s.server.Close()
 }
