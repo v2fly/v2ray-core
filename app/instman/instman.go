@@ -2,6 +2,7 @@ package instman
 
 import (
 	"context"
+	"sync"
 
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/common"
@@ -12,6 +13,7 @@ import (
 
 type InstanceMgr struct {
 	config    *Config // nolint: structcheck
+	access    *sync.Mutex
 	instances map[string]*core.Instance
 }
 
@@ -28,6 +30,9 @@ func (i InstanceMgr) Close() error {
 }
 
 func (i InstanceMgr) ListInstance(ctx context.Context) ([]string, error) {
+	i.access.Lock()
+	defer i.access.Unlock()
+
 	var instanceNames []string
 	for k := range i.instances {
 		instanceNames = append(instanceNames, k)
@@ -44,33 +49,55 @@ func (i InstanceMgr) AddInstance(ctx context.Context, name string, config []byte
 	if err != nil {
 		return newError("unable to create instance").Base(err)
 	}
+	i.access.Lock()
+	defer i.access.Unlock()
 	i.instances[name] = instance
 	return nil
 }
 
+func (i InstanceMgr) getInstance(name string) (*core.Instance, error) {
+	i.access.Lock()
+	defer i.access.Unlock()
+
+	instance, found := i.instances[name]
+	if !found {
+		return nil, newError("instance not found: ", name)
+	}
+	return instance, nil
+}
+
 func (i InstanceMgr) StartInstance(ctx context.Context, name string) error {
-	err := i.instances[name].Start()
+	instance, err := i.getInstance(name)
 	if err != nil {
+		return err
+	}
+	if err := instance.Start(); err != nil {
 		return newError("failed to start instance").Base(err)
 	}
 	return nil
 }
 
 func (i InstanceMgr) StopInstance(ctx context.Context, name string) error {
-	err := i.instances[name].Close()
+	instance, err := i.getInstance(name)
 	if err != nil {
+		return err
+	}
+	if err := instance.Close(); err != nil {
 		return newError("failed to stop instance").Base(err)
 	}
 	return nil
 }
 
 func (i InstanceMgr) UntrackInstance(ctx context.Context, name string) error {
+	i.access.Lock()
+	defer i.access.Unlock()
+
 	delete(i.instances, name)
 	return nil
 }
 
 func NewInstanceMgr(ctx context.Context, config *Config) (extension.InstanceManagement, error) {
-	return InstanceMgr{instances: map[string]*core.Instance{}}, nil
+	return InstanceMgr{access: &sync.Mutex{}, instances: map[string]*core.Instance{}}, nil
 }
 
 func init() {
