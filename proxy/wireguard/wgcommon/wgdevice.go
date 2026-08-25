@@ -2,7 +2,9 @@ package wgcommon
 
 import (
 	"context"
+	"sync"
 
+	"golang.zx2c4.com/wireguard/conn"
 	"golang.zx2c4.com/wireguard/device"
 
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -21,8 +23,10 @@ type WrappedWireguardDevice struct {
 	ctx    context.Context
 	device *device.Device
 
-	tunnel packetswitch.NetworkLayerDevice
-	conn   net.PacketConn
+	tunnel    packetswitch.NetworkLayerDevice
+	conn      net.PacketConn
+	bind      conn.Bind
+	closeOnce sync.Once
 }
 
 func (w *WrappedWireguardDevice) Up() error {
@@ -40,27 +44,37 @@ func (w *WrappedWireguardDevice) SetTunnel(t packetswitch.NetworkLayerDevice) {
 // SetConn sets the underlying packet connection used by the wrapped WireGuard device.
 func (w *WrappedWireguardDevice) SetConn(c net.PacketConn) {
 	w.conn = c
+	w.bind = nil
+}
+
+// SetBind sets an explicit WireGuard bind. It is useful for binds that manage
+// multiple PacketConn generations over the device lifetime.
+func (w *WrappedWireguardDevice) SetBind(bind conn.Bind) {
+	w.bind = bind
+	w.conn = nil
 }
 
 func (w *WrappedWireguardDevice) Close() error {
 	if w == nil {
 		return nil
 	}
-	// Bring device down if initialized
-	if w.device != nil {
-		_ = w.device.Down()
-		w.device = nil
-	}
-	// Close tunnel if present
-	if w.tunnel != nil {
-		_ = w.tunnel.Close()
-		w.tunnel = nil
-	}
-	// Close underlying packet conn if present
-	if w.conn != nil {
-		_ = w.conn.Close()
-		w.conn = nil
-	}
+	w.closeOnce.Do(func() {
+		// Close the device rather than only bringing it down. Down stops peers
+		// and the bind, while Close also terminates WireGuard's long-lived worker
+		// pools and closes the TUN adaptor.
+		if w.device != nil {
+			w.device.Close()
+		}
+		if w.tunnel != nil {
+			_ = w.tunnel.Close()
+		}
+		if w.conn != nil {
+			_ = w.conn.Close()
+		}
+		if w.bind != nil {
+			_ = w.bind.Close()
+		}
+	})
 	return nil
 }
 

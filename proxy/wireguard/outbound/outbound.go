@@ -20,6 +20,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/signal"
 	"github.com/v2fly/v2ray-core/v5/common/task"
 	"github.com/v2fly/v2ray-core/v5/features/dns"
+	"github.com/v2fly/v2ray-core/v5/features/routing"
 	"github.com/v2fly/v2ray-core/v5/proxy/wireguard/wgcommon"
 	"github.com/v2fly/v2ray-core/v5/transport"
 	"github.com/v2fly/v2ray-core/v5/transport/internet"
@@ -29,11 +30,14 @@ import (
 //go:generate go run github.com/v2fly/v2ray-core/v5/common/errors/errorgen
 
 func NewWireguardOutbound(ctx context.Context, config *Config) (*WireguardOutbound, error) {
+	if err := validateWireguardConfig(config); err != nil {
+		return nil, err
+	}
 	w := &WireguardOutbound{
 		ctx:    ctx,
 		config: config,
 	}
-	// Acquire dns client feature if available
+	// Acquire the DNS client feature.
 	if err := core.RequireFeatures(ctx, func(d dns.Client) error {
 		w.dnsClient = d
 		return nil
@@ -52,6 +56,16 @@ func NewWireguardOutbound(ctx context.Context, config *Config) (*WireguardOutbou
 	return w, nil
 }
 
+func validateWireguardConfig(config *Config) error {
+	if config == nil {
+		return newError("nil config")
+	}
+	if config.GetRestricted() && config.GetListenOnSystemNetwork() {
+		return newError("restricted WireGuard outbound cannot listen on the system network")
+	}
+	return nil
+}
+
 type WireguardOutbound struct {
 	ctx    context.Context
 	config *Config
@@ -60,8 +74,9 @@ type WireguardOutbound struct {
 }
 
 type WireguardOutboundSession struct {
-	ctx    context.Context
-	config *Config
+	ctx       context.Context
+	config    *Config
+	closeOnce sync.Once
 
 	stack           *gvisorstack.WrappedStack
 	wireguardDevice *wgcommon.WrappedWireguardDevice
@@ -111,72 +126,260 @@ func (s *WireguardOutboundSession) initFromConfig(ctx context.Context, config *C
 const ConnectionState = "ConnectionState"
 
 type ClientConnState struct {
-	session  *WireguardOutboundSession
-	initOnce *sync.Once
-	mu       sync.Mutex
+	mu            sync.Mutex
+	ready         *sync.Cond
+	creating      bool
+	active        int
+	closed        bool
+	session       *WireguardOutboundSession
+	sessionCancel context.CancelFunc
 }
 
 func (c *ClientConnState) GetOrCreateSession(create func() (*WireguardOutboundSession, error)) (*WireguardOutboundSession, error) {
-	var errOuter error
-	c.initOnce.Do(func() {
-		sess, err := create()
-		if err != nil {
-			errOuter = err
-			return
-		}
-		c.mu.Lock()
-		c.session = sess
-		c.mu.Unlock()
+	return c.GetOrCreateSessionWithContext(context.Background(), func(context.Context) (*WireguardOutboundSession, error) {
+		return create()
 	})
-	if errOuter != nil {
-		return nil, newError("failed to initialize UDP State").Base(errOuter)
+}
+
+func (c *ClientConnState) GetOrCreateSessionWithContext(
+	ctx context.Context,
+	create func(context.Context) (*WireguardOutboundSession, error),
+) (*WireguardOutboundSession, error) {
+	sess, _, err := c.getOrCreateSessionWithContext(ctx, create, false)
+	return sess, err
+}
+
+func (c *ClientConnState) AcquireOrCreateSessionWithContext(
+	ctx context.Context,
+	create func(context.Context) (*WireguardOutboundSession, error),
+) (*WireguardOutboundSession, func(), error) {
+	return c.getOrCreateSessionWithContext(ctx, create, true)
+}
+
+func (c *ClientConnState) getOrCreateSessionWithContext(
+	ctx context.Context,
+	create func(context.Context) (*WireguardOutboundSession, error),
+	acquire bool,
+) (*WireguardOutboundSession, func(), error) {
+	if ctx == nil {
+		ctx = context.Background()
 	}
-	return c.session, nil
+	c.mu.Lock()
+	for c.creating {
+		c.ready.Wait()
+	}
+	if c.closed {
+		c.mu.Unlock()
+		return nil, nil, newError("UDP connection state is closed")
+	}
+	if c.session != nil {
+		sess := c.session
+		release := c.acquireLocked(acquire)
+		c.mu.Unlock()
+		return sess, release, nil
+	}
+	sessionCtx, sessionCancel := context.WithCancel(ctx)
+	c.creating = true
+	c.sessionCancel = sessionCancel
+	c.mu.Unlock()
+
+	sess, err := create(sessionCtx)
+	if err != nil {
+		sessionCancel()
+		c.mu.Lock()
+		c.sessionCancel = nil
+		c.creating = false
+		c.ready.Broadcast()
+		c.mu.Unlock()
+		return nil, nil, newError("failed to initialize UDP State").Base(err)
+	}
+	if sess == nil {
+		sessionCancel()
+		c.mu.Lock()
+		c.sessionCancel = nil
+		c.creating = false
+		c.ready.Broadcast()
+		c.mu.Unlock()
+		return nil, nil, newError("failed to initialize UDP State: nil session")
+	}
+
+	c.mu.Lock()
+	if c.closed {
+		c.mu.Unlock()
+		sessionCancel()
+		_ = sess.Close()
+		c.mu.Lock()
+		c.sessionCancel = nil
+		c.creating = false
+		c.ready.Broadcast()
+		c.mu.Unlock()
+		return nil, nil, newError("UDP connection state is closed")
+	}
+	c.session = sess
+	release := c.acquireLocked(acquire)
+	c.creating = false
+	c.ready.Broadcast()
+	c.mu.Unlock()
+	return sess, release, nil
+}
+
+func (c *ClientConnState) acquireLocked(acquire bool) func() {
+	if !acquire {
+		return nil
+	}
+	c.active++
+	var once sync.Once
+	return func() {
+		once.Do(func() {
+			c.mu.Lock()
+			c.active--
+			c.ready.Broadcast()
+			c.mu.Unlock()
+		})
+	}
 }
 
 func (c *ClientConnState) IsTransientStorageLifecycleReceiver() {}
 
 func (c *ClientConnState) Close() error {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.session == nil {
-		return nil
+	c.closed = true
+	cancel := c.sessionCancel
+	c.mu.Unlock()
+	if cancel != nil {
+		cancel()
+	}
+
+	c.mu.Lock()
+	for c.creating || c.active != 0 {
+		c.ready.Wait()
 	}
 	sess := c.session
 	c.session = nil
-
-	// close interconnect devices first to stop any further packet injections
-	if sess.interconnect != nil {
-		_ = sess.interconnect.GetLSideDevice().Close()
-		_ = sess.interconnect.GetRSideDevice().Close()
-		sess.interconnect = nil
+	c.sessionCancel = nil
+	c.mu.Unlock()
+	if sess == nil {
+		return nil
 	}
+	return sess.Close()
+}
 
-	// close system packet conn
-	if sess.systemPacketConn != nil {
-		_ = sess.systemPacketConn.Close()
-		sess.systemPacketConn = nil
+func (s *WireguardOutboundSession) Close() error {
+	if s == nil {
+		return nil
 	}
+	s.closeOnce.Do(func() {
+		// Close interconnect devices first to stop any further packet injections.
+		if s.interconnect != nil {
+			_ = s.interconnect.GetLSideDevice().Close()
+			_ = s.interconnect.GetRSideDevice().Close()
+		}
 
-	// close wireguard device
-	if sess.wireguardDevice != nil {
-		_ = sess.wireguardDevice.Close()
-		sess.wireguardDevice = nil
-	}
+		if s.systemPacketConn != nil {
+			_ = s.systemPacketConn.Close()
+		}
 
-	// Close stack last to quiesce any gVisor internal goroutines that may
-	// hold references to PacketBuffers (prevents dec-ref races).
-	if sess.stack != nil {
-		_ = sess.stack.Close()
-		sess.stack = nil
-	}
+		if s.wireguardDevice != nil {
+			_ = s.wireguardDevice.Close()
+		}
+
+		// Close stack last to quiesce any gVisor internal goroutines that may
+		// hold references to PacketBuffers (prevents dec-ref races). Keep the
+		// session pointers stable so concurrent shutdown paths cannot race on
+		// nil assignments.
+		if s.stack != nil {
+			_ = s.stack.Close()
+		}
+	})
 
 	return nil
 }
 
+const defaultOutboundNoReceiveTimeout = time.Minute
+
+func outboundNoReceiveTimeout(config *Config) time.Duration {
+	if config == nil || config.OutboundNoReceiveTimeoutSec == nil {
+		return defaultOutboundNoReceiveTimeout
+	}
+	return time.Duration(config.GetOutboundNoReceiveTimeoutSec()) * time.Second
+}
+
+func createLogicalPacketConn(
+	ctx context.Context,
+	dispatcher routing.Dispatcher,
+	encoding packetaddr.PacketAddrType,
+) (cnet.PacketConn, error) {
+	switch encoding {
+	case packetaddr.PacketAddrType_None:
+		return newWireguardPlainPacketConn(ctx, dispatcher)
+	case packetaddr.PacketAddrType_Packet:
+		return packetaddr.CreatePacketAddrConn(ctx, dispatcher, false)
+	case packetaddr.PacketAddrType_Stream:
+		return packetaddr.CreatePacketAddrConn(ctx, dispatcher, true)
+	default:
+		return nil, newError("unsupported outbound packet encoding: ", encoding)
+	}
+}
+
+func (w *WireguardOutbound) createSession(ctx context.Context, dialer internet.Dialer) (*WireguardOutboundSession, error) {
+	s := &WireguardOutboundSession{
+		ctx:       ctx,
+		config:    w.config,
+		dnsClient: w.dnsClient,
+	}
+	fail := func(err error) (*WireguardOutboundSession, error) {
+		_ = s.Close()
+		return nil, err
+	}
+
+	if err := s.initFromConfig(ctx, w.config); err != nil {
+		return fail(err)
+	}
+
+	if w.config.GetListenOnSystemNetwork() {
+		packetConn, err := internet.ListenSystemPacket(ctx, &gonet.UDPAddr{IP: cnet.AnyIP.IP(), Port: 0}, nil)
+		if err != nil {
+			return fail(newError("failed to listen on system network").Base(err))
+		}
+		s.systemPacketConn = packetConn
+		s.wireguardDevice.SetConn(packetConn)
+	} else {
+		encoding := w.config.GetOutboundPacketEncoding()
+		switch encoding {
+		case packetaddr.PacketAddrType_None, packetaddr.PacketAddrType_Packet, packetaddr.PacketAddrType_Stream:
+		default:
+			return fail(newError("unsupported outbound packet encoding: ", encoding))
+		}
+		dispatcher, err := newDialerDispatcher(w, dialer)
+		if err != nil {
+			return fail(err)
+		}
+		factory := func(ctx context.Context) (cnet.PacketConn, error) {
+			return createLogicalPacketConn(ctx, dispatcher, encoding)
+		}
+		bind := wgcommon.NewReconnectingNetPacketConnToWg(ctx, factory, outboundNoReceiveTimeout(w.config))
+		s.wireguardDevice.SetBind(bind)
+	}
+
+	if err := s.wireguardDevice.InitDevice(); err != nil {
+		return fail(newError("failed to init wireguard device").Base(err))
+	}
+	if err := s.wireguardDevice.SetupDeviceWithoutPeers(); err != nil {
+		return fail(newError("failed to setup wireguard device").Base(err))
+	}
+	if err := s.wireguardDevice.AddOrReplacePeers(s.config.GetWgDevice().GetPeers()); err != nil {
+		return fail(newError("failed to add peers").Base(err))
+	}
+	if err := s.wireguardDevice.Up(); err != nil {
+		return fail(newError("failed to bring up wireguard device").Base(err))
+	}
+	return s, nil
+}
+
 func (w *WireguardOutbound) Process(ctx context.Context, link *transport.Link, dialer internet.Dialer) error {
-	// keep dialer for address family preference when resolving domain
-	_ = dialer
+	if isWireguardUnderlayFor(ctx, w) {
+		return newError("wireguard outbound cannot use itself as its underlay")
+	}
 	storage := envctx.EnvironmentFromContext(w.ctx).(environment.ProxyEnvironment).TransientStorage()
 	stateIfc, err := storage.Get(ctx, ConnectionState)
 	if err != nil {
@@ -188,44 +391,31 @@ func (w *WireguardOutbound) Process(ctx context.Context, link *transport.Link, d
 	}
 
 	// create session if needed
-	sess, err := clientState.GetOrCreateSession(func() (*WireguardOutboundSession, error) {
-		s := &WireguardOutboundSession{ctx: ctx, config: w.config}
-		s.dnsClient = w.dnsClient
-		if err := s.initFromConfig(ctx, w.config); err != nil {
-			return nil, err
-		}
-
-		if !w.config.ListenOnSystemNetwork {
-			// SORRRRRY, I tried but it was v2ray's udp support was too difficult to work with
-			return nil, newError("unimplemented: listenOnSystemNetwork=false is not implemented yet")
-		}
-
-		packetConn, err := internet.ListenSystemPacket(w.ctx, &gonet.UDPAddr{IP: cnet.AnyIP.IP(), Port: 0}, nil)
-		if err != nil {
-			return nil, newError("failed to listen on system network").Base(err)
-		}
-
-		s.systemPacketConn = packetConn
-		s.wireguardDevice.SetConn(packetConn)
-
-		// initialize wireguard device now that conn present
-		if err := s.wireguardDevice.InitDevice(); err != nil {
-			return nil, newError("failed to init wireguard device").Base(err)
-		}
-		if err := s.wireguardDevice.SetupDeviceWithoutPeers(); err != nil {
-			return nil, newError("failed to setup wireguard device").Base(err)
-		}
-		if err := s.wireguardDevice.AddOrReplacePeers(s.config.WgDevice.GetPeers()); err != nil {
-			return nil, newError("failed to add peers").Base(err)
-		}
-		if err := s.wireguardDevice.Up(); err != nil {
-			return nil, newError("failed to bring up wireguard device").Base(err)
-		}
-		return s, nil
-	})
+	createSession := func(ctx context.Context) (*WireguardOutboundSession, error) {
+		return w.createSession(ctx, dialer)
+	}
+	sessionBaseCtx := preserveWireguardUnderlayMarkers(w.ctx, ctx)
+	sess, releaseSession, err := clientState.AcquireOrCreateSessionWithContext(sessionBaseCtx, createSession)
 	if err != nil {
 		return newError("failed to create or fetch session").Base(err)
 	}
+	defer releaseSession()
+
+	// Tie every user of the shared session to its lifetime. ClientConnState
+	// cancels this context and waits for leases before closing the gVisor stack,
+	// avoiding concurrent wrapper teardown and use.
+	sessionCtx := sess.ctx
+	if sessionCtx == nil {
+		sessionCtx = context.Background()
+	}
+	processCtx, cancelProcess := context.WithCancel(ctx)
+	stopSessionCancel := context.AfterFunc(sessionCtx, cancelProcess)
+	if sessionCtx.Err() != nil {
+		cancelProcess()
+	}
+	defer stopSessionCancel()
+	defer cancelProcess()
+	ctx = processCtx
 
 	{
 		debugData, err := sess.wireguardDevice.Debug()
@@ -377,15 +567,16 @@ func (w *WireguardOutbound) Close() error {
 		return nil
 	}
 	clientState, ok := stateIfc.(*ClientConnState)
-	if !ok || clientState.session == nil {
+	if !ok {
 		return nil
 	}
-	_ = clientState.Close()
-	return nil
+	return clientState.Close()
 }
 
 func NewClientConnState() (*ClientConnState, error) {
-	return &ClientConnState{initOnce: &sync.Once{}}, nil
+	state := &ClientConnState{}
+	state.ready = sync.NewCond(&state.mu)
+	return state, nil
 }
 
 func init() {

@@ -25,6 +25,10 @@ message MessageOpt{
   // allow_restricted_mode_load allow this config to be loaded in restricted mode
   // this is typically used when a an attacker can control the content
   bool allow_restricted_mode_load = 86002;
+
+  // allow_restricted_mode_load_if_set names a singular bool field on this
+  // message. Restricted loading is allowed when that field is true.
+  string allow_restricted_mode_load_if_set = 86003;
 }
 
 message FieldOpt{

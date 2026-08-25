@@ -75,9 +75,8 @@ func (w *networkLayerWriter) Write(packet []byte) (int, error) {
 	p := make([]byte, len(packet))
 	copy(p, packet)
 	w.parent.mu.RLock()
-	closed := w.parent.closed
-	w.parent.mu.RUnlock()
-	if closed {
+	defer w.parent.mu.RUnlock()
+	if w.parent.closed {
 		return 0, errors.New("device closed")
 	}
 	select {
@@ -141,10 +140,18 @@ func (n *NetworkLayerDeviceToWireguardTunDeviceAdaptor) Read(bufs [][]byte, size
 }
 
 func (n *NetworkLayerDeviceToWireguardTunDeviceAdaptor) Write(bufs [][]byte, offset int) (int, error) {
-	written := 0
-	if n.networkLayerSwitch == nil {
+	n.mu.RLock()
+	closed := n.closed
+	device := n.networkLayerSwitch
+	n.mu.RUnlock()
+	if closed {
+		return 0, os.ErrClosed
+	}
+	if device == nil {
 		return 0, errors.New("no network layer writer attached")
 	}
+
+	written := 0
 	for i := 0; i < len(bufs); i++ {
 		b := bufs[i]
 		if b == nil || len(b) <= offset {
@@ -156,7 +163,7 @@ func (n *NetworkLayerDeviceToWireguardTunDeviceAdaptor) Write(bufs [][]byte, off
 		payload := b[offset:]
 		cp := make([]byte, len(payload))
 		copy(cp, payload)
-		_, err := n.networkLayerSwitch.Write(cp)
+		_, err := device.Write(cp)
 		if err != nil {
 			return written, err
 		}
@@ -189,7 +196,6 @@ func (n *NetworkLayerDeviceToWireguardTunDeviceAdaptor) Close() error {
 	// Close events channel to signal no more events.
 	close(n.events)
 	dev := n.networkLayerSwitch
-	n.networkLayerSwitch = nil
 	n.mu.Unlock()
 	if dev != nil {
 		_ = dev.Close()

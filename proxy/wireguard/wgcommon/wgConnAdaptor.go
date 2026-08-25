@@ -85,23 +85,40 @@ func (n *netPacketConnToWg) Open(port uint16) (fns []conn.ReceiveFunc, actualPor
 	}
 	n.mu.Lock()
 	n.closed = false
-	n.mu.Unlock()
-
-	// Clear the read deadline that Close() may have set so reads can proceed.
-	_ = n.conn.SetReadDeadline(time.Time{})
-
+	packetConn := n.conn
 	// determine actualPort from LocalAddr if possible
-	if la := n.conn.LocalAddr(); la != nil {
+	if la := packetConn.LocalAddr(); la != nil {
 		if ua, ok := la.(*gonet.UDPAddr); ok {
 			n.actualPort = uint16(ua.Port)
 		}
 	}
 	actualPort = n.actualPort
+	n.mu.Unlock()
+
+	// Clear the read deadline that Close() may have set so reads can proceed.
+	_ = packetConn.SetReadDeadline(time.Time{})
 
 	fn := func(packets [][]byte, sizes []int, eps []conn.Endpoint) (int, error) {
 		var i int
 		for i = 0; i < len(packets); i++ {
-			nRead, addr, err := n.conn.ReadFrom(packets[i])
+			n.mu.Lock()
+			closed := n.closed
+			n.mu.Unlock()
+			if closed {
+				return 0, gonet.ErrClosed
+			}
+
+			nRead, addr, err := packetConn.ReadFrom(packets[i])
+
+			n.mu.Lock()
+			closed = n.closed
+			n.mu.Unlock()
+			if closed {
+				// Close uses a deadline to wake a blocked system-socket read. Map
+				// that implementation-specific error to the error required by
+				// conn.Bind so WireGuard stops its receive routine immediately.
+				return 0, gonet.ErrClosed
+			}
 			if err != nil {
 				if i == 0 {
 					return 0, err
@@ -131,16 +148,17 @@ func (n *netPacketConnToWg) Open(port uint16) (fns []conn.ReceiveFunc, actualPor
 
 func (n *netPacketConnToWg) Close() error {
 	n.mu.Lock()
-	defer n.mu.Unlock()
 	n.closed = true
+	packetConn := n.conn
+	n.mu.Unlock()
 	// Do NOT close the underlying conn here. WireGuard calls Close()+Open()
 	// internally during BindUpdate(). The actual PacketConn lifecycle is
 	// managed externally by the session that created it.
 	//
 	// Set a past read deadline to unblock any pending ReadFrom calls in
 	// receive goroutines so that WireGuard's stopping.Wait() can complete.
-	if n.conn != nil {
-		_ = n.conn.SetReadDeadline(time.Unix(1, 0))
+	if packetConn != nil {
+		_ = packetConn.SetReadDeadline(time.Unix(1, 0))
 	}
 	return nil
 }

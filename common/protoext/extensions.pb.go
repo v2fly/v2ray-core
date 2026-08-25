@@ -24,8 +24,11 @@ type MessageOpt struct {
 	// allow_restricted_mode_load allow this config to be loaded in restricted mode
 	// this is typically used when a an attacker can control the content
 	AllowRestrictedModeLoad bool `protobuf:"varint,86002,opt,name=allow_restricted_mode_load,json=allowRestrictedModeLoad,proto3" json:"allow_restricted_mode_load,omitempty"`
-	unknownFields           protoimpl.UnknownFields
-	sizeCache               protoimpl.SizeCache
+	// allow_restricted_mode_load_if_set names a singular bool field on this
+	// message. Restricted loading is allowed when that field is true.
+	AllowRestrictedModeLoadIfSet string `protobuf:"bytes,86003,opt,name=allow_restricted_mode_load_if_set,json=allowRestrictedModeLoadIfSet,proto3" json:"allow_restricted_mode_load_if_set,omitempty"`
+	unknownFields                protoimpl.UnknownFields
+	sizeCache                    protoimpl.SizeCache
 }
 
 func (x *MessageOpt) Reset() {
@@ -84,6 +87,13 @@ func (x *MessageOpt) GetAllowRestrictedModeLoad() bool {
 		return x.AllowRestrictedModeLoad
 	}
 	return false
+}
+
+func (x *MessageOpt) GetAllowRestrictedModeLoadIfSet() string {
+	if x != nil {
+		return x.AllowRestrictedModeLoadIfSet
+	}
+	return ""
 }
 
 type FieldOpt struct {
@@ -217,14 +227,15 @@ var File_common_protoext_extensions_proto protoreflect.FileDescriptor
 
 const file_common_protoext_extensions_proto_rawDesc = "" +
 	"\n" +
-	" common/protoext/extensions.proto\x12\x1av2ray.core.common.protoext\x1a google/protobuf/descriptor.proto\"\xb8\x01\n" +
+	" common/protoext/extensions.proto\x12\x1av2ray.core.common.protoext\x1a google/protobuf/descriptor.proto\"\x83\x02\n" +
 	"\n" +
 	"MessageOpt\x12\x12\n" +
 	"\x04type\x18\x01 \x03(\tR\x04type\x12\x1d\n" +
 	"\n" +
 	"short_name\x18\x02 \x03(\tR\tshortName\x128\n" +
 	"\x17transport_original_name\x18\xf1\x9f\x05 \x01(\tR\x15transportOriginalName\x12=\n" +
-	"\x1aallow_restricted_mode_load\x18\xf2\x9f\x05 \x01(\bR\x17allowRestrictedModeLoad\"\xd0\x02\n" +
+	"\x1aallow_restricted_mode_load\x18\xf2\x9f\x05 \x01(\bR\x17allowRestrictedModeLoad\x12I\n" +
+	"!allow_restricted_mode_load_if_set\x18\xf3\x9f\x05 \x01(\tR\x1callowRestrictedModeLoadIfSet\"\xd0\x02\n" +
 	"\bFieldOpt\x12\x1b\n" +
 	"\tany_wants\x18\x01 \x03(\tR\banyWants\x12%\n" +
 	"\x0eallowed_values\x18\x02 \x03(\tR\rallowedValues\x12.\n" +

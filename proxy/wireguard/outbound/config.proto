@@ -14,11 +14,13 @@ import "common/protoext/extensions.proto";
 message Config{
   option (v2ray.core.common.protoext.message_opt).type = "outbound";
   option (v2ray.core.common.protoext.message_opt).short_name = "wireguard";
+  option (v2ray.core.common.protoext.message_opt).allow_restricted_mode_load_if_set = "restricted";
 
   v2ray.core.proxy.wireguard.wgcommon.DeviceConfig wg_device = 1;
   v2ray.core.common.packetswitch.gvisorstack.Config stack = 2;
 
-  //v2ray.core.net.packetaddr.PacketAddrType outbound_packet_encoding = 3;
+  v2ray.core.net.packetaddr.PacketAddrType outbound_packet_encoding = 3;
+  // listen_on_system_network must be false when restricted is true.
   bool listen_on_system_network = 4;
 
   enum DomainStrategy {
@@ -28,4 +30,13 @@ message Config{
     USE_IP6 = 3;
   }
   DomainStrategy domain_strategy = 5;
+
+  // Number of seconds without a successful receive before the logical outbound
+  // connection is replaced. When omitted, the default is 60 seconds. An
+  // explicit value of 0 disables no-receive-based replacement.
+  optional uint32 outbound_no_receive_timeout_sec = 6;
+
+  // restricted opts this config into restricted-mode loading. Restricted
+  // WireGuard outbounds must use a logical-network transport.
+  bool restricted = 7;
 }

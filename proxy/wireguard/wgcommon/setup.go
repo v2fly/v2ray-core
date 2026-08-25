@@ -23,8 +23,12 @@ func (w *WrappedWireguardDevice) InitDevice() error {
 		return err
 	}
 
-	// Create wireguard bind adapter from provided PacketConn
-	bind := NewNetPacketConnToWg(w.conn)
+	// Use an explicit bind when provided, otherwise preserve the static
+	// PacketConn adapter used by existing callers.
+	bind := w.bind
+	if bind == nil {
+		bind = NewNetPacketConnToWg(w.conn)
+	}
 
 	// Create the wireguard device with our logger adapter.
 	dev := device.NewDevice(tunDev, bind, NewDeviceLoggerAdapter())
