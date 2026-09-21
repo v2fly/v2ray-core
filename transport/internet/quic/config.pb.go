@@ -19,12 +19,13 @@ const (
 )
 
 type Config struct {
-	state         protoimpl.MessageState   `protogen:"open.v1"`
-	Key           string                   `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Security      *protocol.SecurityConfig `protobuf:"bytes,2,opt,name=security,proto3" json:"security,omitempty"`
-	Header        *anypb.Any               `protobuf:"bytes,3,opt,name=header,proto3" json:"header,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state              protoimpl.MessageState   `protogen:"open.v1"`
+	Key                string                   `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Security           *protocol.SecurityConfig `protobuf:"bytes,2,opt,name=security,proto3" json:"security,omitempty"`
+	Header             *anypb.Any               `protobuf:"bytes,3,opt,name=header,proto3" json:"header,omitempty"`
+	ConnectionIdLength *uint32                  `protobuf:"varint,4,opt,name=connection_id_length,json=connectionIdLength,proto3,oneof" json:"connection_id_length,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
@@ -78,16 +79,25 @@ func (x *Config) GetHeader() *anypb.Any {
 	return nil
 }
 
+func (x *Config) GetConnectionIdLength() uint32 {
+	if x != nil && x.ConnectionIdLength != nil {
+		return *x.ConnectionIdLength
+	}
+	return 0
+}
+
 var File_transport_internet_quic_config_proto protoreflect.FileDescriptor
 
 const file_transport_internet_quic_config_proto_rawDesc = "" +
 	"\n" +
-	"$transport/internet/quic/config.proto\x12\"v2ray.core.transport.internet.quic\x1a\x19google/protobuf/any.proto\x1a\x1dcommon/protocol/headers.proto\x1a common/protoext/extensions.proto\"\xa7\x01\n" +
+	"$transport/internet/quic/config.proto\x12\"v2ray.core.transport.internet.quic\x1a\x19google/protobuf/any.proto\x1a\x1dcommon/protocol/headers.proto\x1a common/protoext/extensions.proto\"\xf7\x01\n" +
 	"\x06Config\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12F\n" +
 	"\bsecurity\x18\x02 \x01(\v2*.v2ray.core.common.protocol.SecurityConfigR\bsecurity\x12,\n" +
-	"\x06header\x18\x03 \x01(\v2\x14.google.protobuf.AnyR\x06header:\x15\x82\xb5\x18\x11\n" +
-	"\ttransport\x12\x04quicB\x87\x01\n" +
+	"\x06header\x18\x03 \x01(\v2\x14.google.protobuf.AnyR\x06header\x125\n" +
+	"\x14connection_id_length\x18\x04 \x01(\rH\x00R\x12connectionIdLength\x88\x01\x01:\x15\x82\xb5\x18\x11\n" +
+	"\ttransport\x12\x04quicB\x17\n" +
+	"\x15_connection_id_lengthB\x87\x01\n" +
 	"&com.v2ray.core.transport.internet.quicP\x01Z6github.com/v2fly/v2ray-core/v5/transport/internet/quic\xaa\x02\"V2Ray.Core.Transport.Internet.Quicb\x06proto3"
 
 var (
@@ -123,6 +133,7 @@ func file_transport_internet_quic_config_proto_init() {
 	if File_transport_internet_quic_config_proto != nil {
 		return
 	}
+	file_transport_internet_quic_config_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
