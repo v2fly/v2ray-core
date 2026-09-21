@@ -161,12 +161,19 @@ func (s *clientConnections) openConnection(destAddr net.Addr, config *Config, tl
 		return nil, err
 	}
 
-	tr := quic.Transport{
-		Conn:               sysConn,
-		ConnectionIDLength: 12,
+	connectionIDLength := 4
+
+	if config.ConnectionIdLength != nil {
+		connectionIDLength = int(*config.ConnectionIdLength)
 	}
 
-	conn, err := tr.Dial(context.Background(), destAddr, tlsConfig.GetTLSConfig(tls.WithDestination(dest)), quicConfig)
+	tr := quic.Transport{
+		Conn:               sysConn,
+		ConnectionIDLength: connectionIDLength,
+	}
+
+	conn, err := tr.Dial(context.Background(), destAddr,
+		tlsConfig.GetTLSConfig(tls.WithDestination(dest), tls.WithNextProto("h3")), quicConfig)
 	if err != nil {
 		sysConn.Close()
 		return nil, err

@@ -18,4 +18,5 @@ message Config {
   string key = 1;
   v2ray.core.common.protocol.SecurityConfig security = 2;
   google.protobuf.Any header = 3;
+  optional uint32 connection_id_length = 4;
 }
