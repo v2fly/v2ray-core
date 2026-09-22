@@ -126,7 +126,7 @@ func Listen(ctx context.Context, address net.Address, port net.Port, streamSetti
 		ConnectionIDLength: connectionIDLength,
 	}
 
-	qListener, err := tr.Listen(tlsConfig.GetTLSConfig(tls.WithNextProto("h3")), quicConfig)
+	qListener, err := tr.Listen(setupTLSConfigForALPNMismatch(tlsConfig.GetTLSConfig(tls.WithNextProto("h3"))), quicConfig)
 	if err != nil {
 		conn.Close()
 		return nil, err
