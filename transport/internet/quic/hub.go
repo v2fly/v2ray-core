@@ -2,9 +2,13 @@ package quic
 
 import (
 	"context"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/quic-go/quic-go"
+	core "github.com/v2fly/v2ray-core/v5"
 
 	"github.com/v2fly/v2ray-core/v5/common"
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -126,7 +130,33 @@ func Listen(ctx context.Context, address net.Address, port net.Port, streamSetti
 		ConnectionIDLength: connectionIDLength,
 	}
 
-	qListener, err := tr.Listen(tlsConfig.GetTLSConfig(tls.WithNextProto("h3")), quicConfig)
+	defaultNextProtos := []string{"h3"}
+
+	{
+		// Until v5.61.0, server will have a default alpn of h3,h2,http/1.1 then h3 only
+		extractXY := func(s string) (x, y string, err error) {
+			parts := strings.SplitN(s, ".", 3)
+			if len(parts) < 2 || parts[0] == "" || parts[1] == "" {
+				return "", "", fmt.Errorf("invalid format: %q", s)
+			}
+			return parts[0], parts[1], nil
+		}
+		func() {
+			if major, middle, err := extractXY(core.Version()); err != nil {
+				return
+			} else {
+				if major != "5" {
+					return
+				}
+				if middleInt, err := strconv.ParseInt(middle, 10, 64); err != nil || middleInt > 60 {
+					return
+				}
+			}
+			defaultNextProtos = []string{"h3", "h2", "http/1.1"}
+		}()
+	}
+
+	qListener, err := tr.Listen(tlsConfig.GetTLSConfig(tls.WithNextProto(defaultNextProtos...)), quicConfig)
 	if err != nil {
 		conn.Close()
 		return nil, err
