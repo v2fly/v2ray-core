@@ -115,12 +115,18 @@ func Listen(ctx context.Context, address net.Address, port net.Port, streamSetti
 		return nil, err
 	}
 
-	tr := quic.Transport{
-		Conn:               conn,
-		ConnectionIDLength: 12,
+	connectionIDLength := 4
+
+	if config.ConnectionIdLength != nil {
+		connectionIDLength = int(*config.ConnectionIdLength)
 	}
 
-	qListener, err := tr.Listen(tlsConfig.GetTLSConfig(), quicConfig)
+	tr := quic.Transport{
+		Conn:               conn,
+		ConnectionIDLength: connectionIDLength,
+	}
+
+	qListener, err := tr.Listen(tlsConfig.GetTLSConfig(tls.WithNextProto("h3")), quicConfig)
 	if err != nil {
 		conn.Close()
 		return nil, err
