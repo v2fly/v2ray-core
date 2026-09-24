@@ -251,7 +251,16 @@ func (h *Handler) handleIPQuery(id uint16, qType dnsmessage.Type, domain string,
 
 	var ttl uint32 = 600
 	if h.config.OverrideResponseTtl {
-		ttl = h.config.ResponseTtl
+		// RFC 1035: TTL 32-Bit unsigned Integer, 0 .. 4294967295
+		const maxTTL uint32 = 4294967295
+		const minTTL uint32 = 0
+		if h.config.ResponseTtl > maxTTL {
+			ttl = maxTTL
+		} else if h.config.ResponseTtl < minTTL {
+			ttl = minTTL
+		} else {
+			ttl = h.config.ResponseTtl
+		}
 	}
 
 	switch qType {
