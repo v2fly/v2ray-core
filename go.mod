@@ -17,7 +17,7 @@ require (
 	github.com/google/gopacket v1.1.19
 	github.com/gorilla/websocket v1.5.3
 	github.com/improbable-eng/grpc-web v0.15.0
-	github.com/jhump/protoreflect v1.18.0
+	github.com/jhump/protoreflect v1.18.1
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/miekg/dns v1.1.73
 	github.com/mustafaturan/bus v1.0.2
