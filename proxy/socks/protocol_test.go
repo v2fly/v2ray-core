@@ -2,6 +2,7 @@ package socks_test
 
 import (
 	"bytes"
+	"encoding/hex"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -12,6 +13,75 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/protocol"
 	. "github.com/v2fly/v2ray-core/v5/proxy/socks"
 )
+
+func TestClientHandshakeRequestAddress(t *testing.T) {
+	testCases := []struct {
+		name    string
+		address net.Address
+		encoded string
+	}{
+		{
+			name:    "IPv4",
+			address: net.ParseAddress("198.51.100.9"),
+			encoded: "01c633640901bb",
+		},
+		{
+			name:    "IPv6",
+			address: net.ParseAddress("2001:db8::9"),
+			encoded: "0420010db800000000000000000000000901bb",
+		},
+		{
+			name:    "domain",
+			address: net.DomainAddress("example.com"),
+			encoded: "030b6578616d706c652e636f6d01bb",
+		},
+	}
+
+	for _, command := range []protocol.RequestCommand{protocol.RequestCommandTCP, protocol.RequestCommandUDP} {
+		name := "TCP"
+		if command == protocol.RequestCommandUDP {
+			name = "UDP"
+		}
+		for _, testCase := range testCases {
+			t.Run(name+"/"+testCase.name, func(t *testing.T) {
+				request := &protocol.RequestHeader{
+					Version: 0x05,
+					Command: command,
+					Address: testCase.address,
+					Port:    443,
+				}
+				// The server selects no authentication and reports bound endpoint 192.0.2.1:1235.
+				reader := bytes.NewReader([]byte{0x05, 0x00, 0x05, 0x00, 0x00, 0x01, 192, 0, 2, 1, 0x04, 0xd3})
+				var writer bytes.Buffer
+				relay, err := ClientHandshake(request, reader, &writer, false)
+				if err != nil {
+					t.Fatal(err)
+				}
+				encoded, err := hex.DecodeString(testCase.encoded)
+				if err != nil {
+					t.Fatal(err)
+				}
+				want := append([]byte{0x05, 0x01, 0x00, 0x05, 0x01, 0x00}, encoded...)
+				if command == protocol.RequestCommandUDP {
+					// RFC 1928: an unknown UDP client endpoint must be all zeros.
+					want = []byte{0x05, 0x01, 0x00, 0x05, 0x03, 0x00, 0x01, 0, 0, 0, 0, 0, 0}
+					if relay == nil || relay.Command != protocol.RequestCommandUDP ||
+						!relay.Address.IP().Equal(net.ParseAddress("192.0.2.1").IP()) || relay.Port != 1235 {
+						t.Fatalf("unexpected UDP relay: %v", relay)
+					}
+				} else if relay != nil {
+					t.Fatalf("TCP handshake returned a UDP relay: %v", relay)
+				}
+				if !bytes.Equal(writer.Bytes(), want) {
+					t.Errorf("handshake bytes = %x, want %x", writer.Bytes(), want)
+				}
+				if request.Address != testCase.address || request.Port != 443 || request.Command != command {
+					t.Fatal("handshake modified the request destination")
+				}
+			})
+		}
+	}
+}
 
 func TestUDPEncoding(t *testing.T) {
 	b := buf.New()
