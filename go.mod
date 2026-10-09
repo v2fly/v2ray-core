@@ -48,7 +48,7 @@ require (
 	golang.org/x/crypto v0.57.0
 	golang.org/x/net v0.59.0
 	golang.org/x/sync v0.23.0
-	golang.org/x/sys v0.48.0
+	golang.org/x/sys v0.49.0
 	golang.zx2c4.com/wireguard v0.0.0-20250521234502-f333402bd9cb
 	google.golang.org/grpc v1.83.2
 	google.golang.org/protobuf v1.36.12
