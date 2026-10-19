@@ -101,6 +101,13 @@ func (w *ServerWorker) Closed() bool {
 	return w.sessionManager.Closed()
 }
 
+// Close terminates the worker, its sessions and its underlying link.
+func (w *ServerWorker) Close() error {
+	common.Interrupt(w.link.Reader)
+	common.Interrupt(w.link.Writer)
+	return w.sessionManager.Close()
+}
+
 func (w *ServerWorker) handleStatusKeepAlive(meta *FrameMetadata, reader *buf.BufferedReader) error {
 	if meta.Option.Has(OptionData) {
 		return buf.Copy(NewStreamReader(reader), buf.Discard)

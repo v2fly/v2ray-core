@@ -3,6 +3,7 @@ package reverse
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"google.golang.org/protobuf/proto"
@@ -157,7 +158,7 @@ func (p *StaticMuxPicker) PickAvailable() (*mux.ClientWorker, error) {
 	minIdx := -1
 	var minConn uint32 = 9999
 	for i, w := range p.workers {
-		if w.draining {
+		if w.state.Load() != portalWorkerActive {
 			continue
 		}
 		if w.client.Closed() {
@@ -171,7 +172,7 @@ func (p *StaticMuxPicker) PickAvailable() (*mux.ClientWorker, error) {
 
 	if minIdx == -1 {
 		for i, w := range p.workers {
-			if w.IsFull() {
+			if w.state.Load() == portalWorkerFailed || w.IsFull() {
 				continue
 			}
 			if w.client.ActiveConnections() < minConn {
@@ -195,12 +196,31 @@ func (p *StaticMuxPicker) AddWorker(worker *PortalWorker) {
 	p.workers = append(p.workers, worker)
 }
 
+const (
+	controlHeartbeatInterval = 2 * time.Second
+	controlSilenceTimeout    = 10 * time.Second
+)
+
+const (
+	portalWorkerActive   int32 = iota
+	portalWorkerDraining       // Graceful rollover: still usable until a replacement arrives.
+	portalWorkerFailed         // Health timeout: never select again.
+)
+
+type heartbeatState struct {
+	probeID     atomic.Uint64
+	mu          sync.Mutex // Guards ACK data and the expiration decision.
+	lastAckID   uint64
+	lastAckTime time.Time
+}
+
 type PortalWorker struct {
-	client   *mux.ClientWorker
-	control  *task.Periodic
-	writer   buf.Writer
-	reader   buf.Reader
-	draining bool
+	client    *mux.ClientWorker
+	control   *task.Periodic
+	writer    buf.Writer
+	reader    buf.Reader
+	state     atomic.Int32
+	heartbeat heartbeatState
 }
 
 func NewPortalWorker(ctx context.Context, client *mux.ClientWorker) (*PortalWorker, error) {
@@ -224,33 +244,36 @@ func NewPortalWorker(ctx context.Context, client *mux.ClientWorker) (*PortalWork
 		writer: uplinkWriter,
 	}
 	w.control = &task.Periodic{
-		Execute:  w.heartbeat,
-		Interval: time.Second * 2,
+		Execute:  w.sendHeartbeat,
+		Interval: controlHeartbeatInterval,
 	}
+	go w.receiveAcks()
 	w.control.Start()
+	go w.watchAcks()
 	return w, nil
 }
 
-func (w *PortalWorker) heartbeat() error {
+func (w *PortalWorker) sendHeartbeat() error {
 	if w.client.Closed() {
 		return newError("client worker stopped")
 	}
 
-	if w.draining || w.writer == nil {
+	if w.state.Load() != portalWorkerActive {
 		return newError("already disposed")
 	}
 
-	msg := &Control{}
+	msg := &Control{HeartbeatId: w.heartbeat.probeID.Add(1)}
 	msg.FillInRandom()
 
 	if w.client.TotalConnections() > 256 {
-		w.draining = true
+		if !w.state.CompareAndSwap(portalWorkerActive, portalWorkerDraining) {
+			return newError("already disposed")
+		}
 		msg.State = Control_DRAIN
 
 		defer func() {
 			common.Close(w.writer)
 			common.Interrupt(w.reader)
-			w.writer = nil
 		}()
 	}
 
@@ -258,6 +281,66 @@ func (w *PortalWorker) heartbeat() error {
 	common.Must(err)
 	mb := buf.MergeBytes(nil, b)
 	return w.writer.WriteMultiBuffer(mb)
+}
+
+func (w *PortalWorker) receiveAcks() {
+	for {
+		mb, err := w.reader.ReadMultiBuffer()
+		for _, b := range mb {
+			var ack Control
+			if proto.Unmarshal(b.Bytes(), &ack) == nil {
+				w.recordAck(ack.HeartbeatId, time.Now())
+			}
+		}
+		buf.ReleaseMulti(mb)
+		if err != nil {
+			return
+		}
+	}
+}
+
+func (w *PortalWorker) recordAck(id uint64, now time.Time) {
+	if id == 0 || id > w.heartbeat.probeID.Load() || w.state.Load() != portalWorkerActive {
+		return
+	}
+	w.heartbeat.mu.Lock()
+	if id > w.heartbeat.lastAckID {
+		w.heartbeat.lastAckID = id
+		w.heartbeat.lastAckTime = now
+	}
+	w.heartbeat.mu.Unlock()
+}
+
+func (w *PortalWorker) watchAcks() {
+	ticker := time.NewTicker(controlHeartbeatInterval)
+	defer ticker.Stop()
+	for range ticker.C {
+		if w.client.Closed() || w.state.Load() != portalWorkerActive || w.expireIfUnhealthy(time.Now()) {
+			return
+		}
+	}
+}
+
+func (w *PortalWorker) expireIfUnhealthy(now time.Time) bool {
+	if w.client.Closed() {
+		return false
+	}
+	w.heartbeat.mu.Lock()
+	lastAck := w.heartbeat.lastAckTime
+	// Missing the first reply may mean an older bridge, so only confirmed
+	// workers are subject to the acknowledgement deadline.
+	if lastAck.IsZero() || now.Sub(lastAck) < controlSilenceTimeout || !w.state.CompareAndSwap(portalWorkerActive, portalWorkerFailed) {
+		w.heartbeat.mu.Unlock()
+		return false
+	}
+	w.heartbeat.mu.Unlock()
+
+	common.Must(w.client.Close()) // Closed() must change before the next picker call.
+	newError("portal worker control acknowledgement timed out").AtWarning().WriteToLog()
+	common.Must(w.control.Close())
+	common.Interrupt(w.writer)
+	common.Interrupt(w.reader)
+	return true
 }
 
 func (w *PortalWorker) IsFull() bool {

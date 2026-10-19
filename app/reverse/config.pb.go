@@ -65,6 +65,7 @@ func (Control_State) EnumDescriptor() ([]byte, []int) {
 type Control struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	State         Control_State          `protobuf:"varint,1,opt,name=state,proto3,enum=v2ray.core.app.reverse.Control_State" json:"state,omitempty"`
+	HeartbeatId   uint64                 `protobuf:"varint,2,opt,name=heartbeat_id,json=heartbeatId,proto3" json:"heartbeat_id,omitempty"`
 	Random        []byte                 `protobuf:"bytes,99,opt,name=random,proto3" json:"random,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -105,6 +106,13 @@ func (x *Control) GetState() Control_State {
 		return x.State
 	}
 	return Control_ACTIVE
+}
+
+func (x *Control) GetHeartbeatId() uint64 {
+	if x != nil {
+		return x.HeartbeatId
+	}
+	return 0
 }
 
 func (x *Control) GetRandom() []byte {
@@ -274,9 +282,10 @@ var File_app_reverse_config_proto protoreflect.FileDescriptor
 
 const file_app_reverse_config_proto_rawDesc = "" +
 	"\n" +
-	"\x18app/reverse/config.proto\x12\x16v2ray.core.app.reverse\x1a common/protoext/extensions.proto\"~\n" +
+	"\x18app/reverse/config.proto\x12\x16v2ray.core.app.reverse\x1a common/protoext/extensions.proto\"\xa1\x01\n" +
 	"\aControl\x12;\n" +
-	"\x05state\x18\x01 \x01(\x0e2%.v2ray.core.app.reverse.Control.StateR\x05state\x12\x16\n" +
+	"\x05state\x18\x01 \x01(\x0e2%.v2ray.core.app.reverse.Control.StateR\x05state\x12!\n" +
+	"\fheartbeat_id\x18\x02 \x01(\x04R\vheartbeatId\x12\x16\n" +
 	"\x06random\x18c \x01(\fR\x06random\"\x1e\n" +
 	"\x05State\x12\n" +
 	"\n" +
