@@ -151,8 +151,8 @@ func randomMappingRequestICEAttributeSetters() ([]stun.Setter, error) {
 
 	return []stun.Setter{
 		stun.NewUsername(localUfrag + ":" + remoteUfrag),
-		pionice.AttrControlled(controlled),
-		pionice.PriorityAttr(priority),
+		iceAttribute{pionice.AttrControlled(controlled)},
+		iceAttribute{pionice.PriorityAttr(priority)},
 		stun.NewShortTermIntegrity(password),
 		stun.Fingerprint,
 	}, nil
