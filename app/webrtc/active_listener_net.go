@@ -4,8 +4,8 @@ import (
 	"net"
 	"sync"
 
-	piontransport "github.com/pion/transport/v4"
-	"github.com/pion/transport/v4/stdnet"
+	piontransport "github.com/pion/transport/v5"
+	"github.com/pion/transport/v5/stdnet"
 
 	v2net "github.com/v2fly/v2ray-core/v5/common/net"
 )
