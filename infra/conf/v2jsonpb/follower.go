@@ -183,9 +183,17 @@ type V2JsonProtobufFollowerFields struct {
 }
 
 func (v *V2JsonProtobufFollowerFields) ByJSONName(s string) protoreflect.FieldDescriptor {
-	return V2JsonProtobufFollowerFieldDescriptor{v.FieldDescriptors.ByJSONName(s)}
+	fd := v.FieldDescriptors.ByJSONName(s)
+	if fd == nil {
+		return nil
+	}
+	return V2JsonProtobufFollowerFieldDescriptor{fd}
 }
 
 func (v *V2JsonProtobufFollowerFields) ByTextName(s string) protoreflect.FieldDescriptor {
-	return V2JsonProtobufFollowerFieldDescriptor{v.FieldDescriptors.ByTextName(s)}
+	fd := v.FieldDescriptors.ByTextName(s)
+	if fd == nil {
+		return nil
+	}
+	return V2JsonProtobufFollowerFieldDescriptor{fd}
 }
