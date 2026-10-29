@@ -394,8 +394,8 @@ github.com/pion/transport/v3 v3.1.1 h1:Tr684+fnnKlhPceU+ICdrw6KKkTms+5qHMgw6bIkY
 github.com/pion/transport/v3 v3.1.1/go.mod h1:+c2eewC5WJQHiAA46fkMMzoYZSuGzA/7E2FPrOYHctQ=
 github.com/pion/transport/v4 v4.1.0 h1:8S+nF2reM2cJuqC6g78OVy2BBgmbdns+acx3jA97BvQ=
 github.com/pion/transport/v4 v4.1.0/go.mod h1:06hFI+jCFcok2X2MekVufNZ/uzNZXivGBPfviSVcjgM=
-github.com/pion/transport/v5 v5.1.1 h1:Sauq8YJqRopgRfIgnpfKpdpKG14g0N4jWlRgpWsEfN8=
-github.com/pion/transport/v5 v5.1.1/go.mod h1:Qxw6fCEjFWQkRDZOhS4Vf+neJBcihauvA3uyEa1J1F0=
+github.com/pion/transport/v5 v5.1.3 h1:RHrLw8/AOSXTmQFp7yoIAF/gM7+y9BTO3tUJ2Yfp7Q4=
+github.com/pion/transport/v5 v5.1.3/go.mod h1:Qxw6fCEjFWQkRDZOhS4Vf+neJBcihauvA3uyEa1J1F0=
 github.com/pion/turn/v5 v5.1.2 h1:acEOO+D5txJ52vKfcilmSMItfP23Q9K6pJ1LM5P2VV0=
 github.com/pion/turn/v5 v5.1.2/go.mod h1:57Oadc8fHnac15VFyCd6nEaBTVZBxQe2POUMD4lsHRA=
 github.com/pion/webrtc/v4 v4.2.24 h1:Ove9nRpDAfK39+QSw3/Ru17VDiECjbiLaM73mRG4Yms=
