@@ -75,14 +75,8 @@ func (dl *DefaultListener) Listen(ctx context.Context, addr net.Addr, sockopt *S
 		network = addr.Network()
 		address = addr.String()
 		lc.Control = getControlFunc(ctx, sockopt, dl.controllers)
+		applyMPTCPConfig(&lc, sockopt)
 		if sockopt != nil {
-			switch sockopt.Mptcp {
-			case MPTCPState_Enable:
-				lc.SetMultipathTCP(true)
-			case MPTCPState_Disable:
-				lc.SetMultipathTCP(false)
-			}
-
 			if sockopt.TcpKeepAliveInterval != 0 || sockopt.TcpKeepAliveIdle != 0 {
 				lc.KeepAlive = time.Duration(-1)
 			}
