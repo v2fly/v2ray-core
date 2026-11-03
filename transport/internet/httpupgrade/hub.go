@@ -18,12 +18,12 @@ import (
 type server struct {
 	config *Config
 
-	addConn        internet.ConnHandler
-	innnerListener net.Listener
+	addConn       internet.ConnHandler
+	innerListener net.Listener
 }
 
 func (s *server) Close() error {
-	return s.innnerListener.Close()
+	return s.innerListener.Close()
 }
 
 func (s *server) Addr() net.Addr {
@@ -94,7 +94,7 @@ func (s *server) upgrade(conn net.Conn) (internet.Connection, error) {
 
 func (s *server) keepAccepting() {
 	for {
-		conn, err := s.innnerListener.Accept()
+		conn, err := s.innerListener.Accept()
 		if err != nil {
 			return
 		}
@@ -110,7 +110,7 @@ func listenHTTPUpgrade(ctx context.Context, address net.Address, port net.Port, 
 	if err != nil {
 		return nil, newError("failed to listen on ", address, ":", port).Base(err)
 	}
-	serverInstance.innnerListener = listener
+	serverInstance.innerListener = listener
 	go serverInstance.keepAccepting()
 	return serverInstance, nil
 }

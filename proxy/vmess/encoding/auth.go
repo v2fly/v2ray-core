@@ -46,7 +46,7 @@ func (*FnvAuthenticator) NonceSize() int {
 	return 0
 }
 
-// Overhead impelements AEAD.Overhead().
+// Overhead implements AEAD.Overhead().
 func (*FnvAuthenticator) Overhead() int {
 	return 4
 }

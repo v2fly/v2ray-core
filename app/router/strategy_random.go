@@ -68,7 +68,7 @@ func (s *RandomStrategy) PickOutbound(candidates []string) string {
 								aliveTags = append(aliveTags, candidate)
 							}
 						} else {
-							// unfound candidate is considered alive
+							// a candidate that is not found is considered alive
 							aliveTags = append(aliveTags, candidate)
 						}
 					}

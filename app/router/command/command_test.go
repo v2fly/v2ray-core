@@ -208,7 +208,7 @@ func TestServiceSubscribeRoutingStats(t *testing.T) {
 	}
 }
 
-func TestSerivceTestRoute(t *testing.T) {
+func TestServiceTestRoute(t *testing.T) {
 	c := stats.NewChannel(&stats.ChannelConfig{
 		SubscriberLimit: 1,
 		BufferSize:      16,

@@ -44,7 +44,7 @@ type MatcherGroup interface {
 	MatchAny(input string) bool
 }
 
-// IndexMatcher is a general type of matcher thats accepts all kinds of basic matchers.
+// IndexMatcher is a general type of matcher that accepts all kinds of basic matchers.
 // It should:
 //   - Accept all Matcher types with no exception.
 //   - Optimize string matching with a combination of MatcherGroups.

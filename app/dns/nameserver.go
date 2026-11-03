@@ -155,7 +155,7 @@ func NewClient(ctx context.Context, ns *NameServer, dns *Config) (*Client, error
 		}
 	}
 
-	// Priotize local domains with specific TLDs or without any dot to local DNS
+	// Prioritize local domains with specific TLDs or without any dot to local DNS
 	if strings.EqualFold(ns.Address.Address.GetDomain(), "localhost") {
 		ns.PrioritizedDomain = append(ns.PrioritizedDomain, localTLDsAndDotlessDomains...)
 		ns.OriginalRules = append(ns.OriginalRules, localTLDsAndDotlessDomainsRule)

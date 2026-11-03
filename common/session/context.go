@@ -11,7 +11,7 @@ const (
 	inboundSessionKey
 	outboundSessionKey
 	contentSessionKey
-	muxPreferedSessionKey
+	muxPreferredSessionKey
 	sockoptSessionKey
 	trackedConnectionErrorKey
 	handlerSessionKey // nolint: varcheck
@@ -65,12 +65,12 @@ func ContentFromContext(ctx context.Context) *Content {
 
 // ContextWithMuxPrefered returns a new context with the given bool
 func ContextWithMuxPrefered(ctx context.Context, forced bool) context.Context {
-	return context.WithValue(ctx, muxPreferedSessionKey, forced)
+	return context.WithValue(ctx, muxPreferredSessionKey, forced)
 }
 
 // MuxPreferedFromContext returns value in this context, or false if not contained.
 func MuxPreferedFromContext(ctx context.Context) bool {
-	if val, ok := ctx.Value(muxPreferedSessionKey).(bool); ok {
+	if val, ok := ctx.Value(muxPreferredSessionKey).(bool); ok {
 		return val
 	}
 	return false

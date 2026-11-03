@@ -183,8 +183,8 @@ func (p *AESUDPClientPacketProcessor) DecodeUDPResp(input []byte, resp *UDPRespo
 			return newError("failed to read address port").Base(err)
 		}
 		resp.Port = int(port)
-		readedLength := decryptedDestReader.Size() - int64(decryptedDestReader.Len())
-		decryptedDestBuffer.Advance(int32(readedLength))
+		readLength := decryptedDestReader.Size() - int64(decryptedDestReader.Len())
+		decryptedDestBuffer.Advance(int32(readLength))
 		resp.Payload = decryptedDestBuffer
 		resp.ClientSessionID = headerStruct.ClientSessionID
 		return nil

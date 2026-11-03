@@ -12,7 +12,7 @@ import (
 // Use of this source code is governed by a BSD-style
 // copied from "github.com/golang/go/main.go"
 
-// Execute excute the commands
+// Execute executes the commands
 func Execute() {
 	flag.Usage = func() {
 		PrintUsage(os.Stderr, RootCommand)

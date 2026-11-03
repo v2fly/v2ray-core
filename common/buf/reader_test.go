@@ -73,7 +73,7 @@ func TestReadByte(t *testing.T) {
 	nBytes, err := reader.WriteTo(DiscardBytes)
 	common.Must(err)
 	if nBytes != 3 {
-		t.Error("unexpect bytes written: ", nBytes)
+		t.Error("unexpected bytes written: ", nBytes)
 	}
 }
 
@@ -105,7 +105,7 @@ func TestReadAtMost(t *testing.T) {
 	nBytes, err := reader.WriteTo(DiscardBytes)
 	common.Must(err)
 	if nBytes != 1 {
-		t.Error("unexpect bytes written: ", nBytes)
+		t.Error("unexpected bytes written: ", nBytes)
 	}
 }
 

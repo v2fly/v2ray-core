@@ -38,7 +38,7 @@ func dialDTLS(ctx context.Context, dest net.Destination, streamSettings *interne
 		config.PSKIdentityHint = []byte("")
 		config.CipherSuites = configuredCipherSuites(transportConfiguration)
 	default:
-		return nil, newError("unknow dtls mode")
+		return nil, newError("unknown dtls mode")
 	}
 	conn, err := dtls.Client(dtlsnet.PacketConnFromConn(rawConn), rawConn.RemoteAddr(), config)
 	if err != nil {

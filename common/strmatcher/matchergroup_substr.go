@@ -6,7 +6,7 @@ import (
 )
 
 // SubstrMatcherGroup is implementation of MatcherGroup,
-// It is simply implmeneted to comply with the priority specification of Substr matchers.
+// It is simply implemented to comply with the priority specification of Substr matchers.
 type SubstrMatcherGroup struct {
 	patterns []string
 	values   []uint32
