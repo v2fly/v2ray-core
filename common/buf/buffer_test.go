@@ -95,7 +95,7 @@ func TestBufferResize(t *testing.T) {
 	}
 
 	if s := buffer.String(); s != "Str" {
-		t.Error("unexpect buffer ", s)
+		t.Error("unexpected buffer ", s)
 	}
 
 	buffer.Resize(int32(len(payload)), 200)

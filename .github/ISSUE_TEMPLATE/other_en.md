@@ -7,6 +7,6 @@ about: "其它问题请使用 https://github.com/v2fly/v2ray-core/discussions �
 
 此 Issue 会被立即关闭。
 
-If you are not sure if your question is truely a bug in V2Ray, please discuss it [here](https://github.com/v2fly/v2ray-core/discussions) first.
+If you are not sure if your question is truly a bug in V2Ray, please discuss it [here](https://github.com/v2fly/v2ray-core/discussions) first.
 
 This issue will be closed immediately.

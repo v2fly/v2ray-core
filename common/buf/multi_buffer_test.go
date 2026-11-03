@@ -158,7 +158,7 @@ func TestSplitFirstBytes(t *testing.T) {
 		t.Error("unexpected cnt from SplitFirstBytes ", cnt)
 	}
 	if d := cmp.Diff(string(o), "ab"); d != "" {
-		t.Error("unexpected splited result from SplitFirstBytes ", d)
+		t.Error("unexpected split result from SplitFirstBytes ", d)
 	}
 }
 

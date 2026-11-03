@@ -39,7 +39,7 @@ func (i *implementationRegistry) registerSingleImplementation(interfaceType, nam
 func (i *implementationRegistry) findImplementationByAlias(interfaceType, alias string) (string, CustomLoader, error) {
 	implSet, found := i.implSet[interfaceType]
 	if !found {
-		return "", nil, newError("cannot find implemention unknown interface type")
+		return "", nil, newError("cannot find implementation unknown interface type")
 	}
 	return implSet.findImplementationByAlias(alias)
 }

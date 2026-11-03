@@ -80,7 +80,7 @@ func (c *ServerInverseRole) worker(ctx context.Context) {
 			newError("error polling remote for enrollment").Base(err).AtWarning().WriteToLog()
 		}
 	}
-	newError("inverse role server quitted").AtWarning().WriteToLog()
+	newError("inverse role server quit").AtWarning().WriteToLog()
 }
 
 func (c *ServerInverseRole) Dial(ctx context.Context) (net.Conn, error) {

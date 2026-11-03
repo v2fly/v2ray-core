@@ -10,7 +10,7 @@ import (
 )
 
 func TestAddressProperty(t *testing.T) {
-	type addrProprty struct {
+	type addrProperty struct {
 		IP     []byte
 		Domain string
 		Family AddressFamily
@@ -19,11 +19,11 @@ func TestAddressProperty(t *testing.T) {
 
 	testCases := []struct {
 		Input  Address
-		Output addrProprty
+		Output addrProperty
 	}{
 		{
 			Input: IPAddress([]byte{byte(1), byte(2), byte(3), byte(4)}),
-			Output: addrProprty{
+			Output: addrProperty{
 				IP:     []byte{byte(1), byte(2), byte(3), byte(4)},
 				Family: AddressFamilyIPv4,
 				String: "1.2.3.4",
@@ -36,7 +36,7 @@ func TestAddressProperty(t *testing.T) {
 				byte(1), byte(2), byte(3), byte(4),
 				byte(1), byte(2), byte(3), byte(4),
 			}),
-			Output: addrProprty{
+			Output: addrProperty{
 				IP: []byte{
 					byte(1), byte(2), byte(3), byte(4),
 					byte(1), byte(2), byte(3), byte(4),
@@ -54,7 +54,7 @@ func TestAddressProperty(t *testing.T) {
 				byte(0), byte(0), byte(255), byte(255),
 				byte(1), byte(2), byte(3), byte(4),
 			}),
-			Output: addrProprty{
+			Output: addrProperty{
 				IP:     []byte{byte(1), byte(2), byte(3), byte(4)},
 				Family: AddressFamilyIPv4,
 				String: "1.2.3.4",
@@ -62,7 +62,7 @@ func TestAddressProperty(t *testing.T) {
 		},
 		{
 			Input: DomainAddress("v2fly.org"),
-			Output: addrProprty{
+			Output: addrProperty{
 				Domain: "v2fly.org",
 				Family: AddressFamilyDomain,
 				String: "v2fly.org",
@@ -70,7 +70,7 @@ func TestAddressProperty(t *testing.T) {
 		},
 		{
 			Input: IPAddress(net.IPv4(1, 2, 3, 4)),
-			Output: addrProprty{
+			Output: addrProperty{
 				IP:     []byte{byte(1), byte(2), byte(3), byte(4)},
 				Family: AddressFamilyIPv4,
 				String: "1.2.3.4",
@@ -78,7 +78,7 @@ func TestAddressProperty(t *testing.T) {
 		},
 		{
 			Input: ParseAddress("[2001:4860:0:2001::68]"),
-			Output: addrProprty{
+			Output: addrProperty{
 				IP:     []byte{0x20, 0x01, 0x48, 0x60, 0x00, 0x00, 0x20, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x68},
 				Family: AddressFamilyIPv6,
 				String: "[2001:4860:0:2001::68]",
@@ -86,7 +86,7 @@ func TestAddressProperty(t *testing.T) {
 		},
 		{
 			Input: ParseAddress("::0"),
-			Output: addrProprty{
+			Output: addrProperty{
 				IP:     AnyIPv6.IP(),
 				Family: AddressFamilyIPv6,
 				String: "[::]",
@@ -94,7 +94,7 @@ func TestAddressProperty(t *testing.T) {
 		},
 		{
 			Input: ParseAddress("[::ffff:123.151.71.143]"),
-			Output: addrProprty{
+			Output: addrProperty{
 				IP:     []byte{123, 151, 71, 143},
 				Family: AddressFamilyIPv4,
 				String: "123.151.71.143",
@@ -102,7 +102,7 @@ func TestAddressProperty(t *testing.T) {
 		},
 		{
 			Input: NewIPOrDomain(ParseAddress("v2fly.org")).AsAddress(),
-			Output: addrProprty{
+			Output: addrProperty{
 				Domain: "v2fly.org",
 				Family: AddressFamilyDomain,
 				String: "v2fly.org",
@@ -110,7 +110,7 @@ func TestAddressProperty(t *testing.T) {
 		},
 		{
 			Input: NewIPOrDomain(ParseAddress("8.8.8.8")).AsAddress(),
-			Output: addrProprty{
+			Output: addrProperty{
 				IP:     []byte{8, 8, 8, 8},
 				Family: AddressFamilyIPv4,
 				String: "8.8.8.8",
@@ -118,7 +118,7 @@ func TestAddressProperty(t *testing.T) {
 		},
 		{
 			Input: NewIPOrDomain(ParseAddress("[2001:4860:0:2001::68]")).AsAddress(),
-			Output: addrProprty{
+			Output: addrProperty{
 				IP:     []byte{0x20, 0x01, 0x48, 0x60, 0x00, 0x00, 0x20, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x68},
 				Family: AddressFamilyIPv6,
 				String: "[2001:4860:0:2001::68]",
@@ -127,7 +127,7 @@ func TestAddressProperty(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		actual := addrProprty{
+		actual := addrProperty{
 			Family: testCase.Input.Family(),
 			String: testCase.Input.String(),
 		}
@@ -143,7 +143,7 @@ func TestAddressProperty(t *testing.T) {
 	}
 }
 
-func TestInvalidAddressConvertion(t *testing.T) {
+func TestInvalidAddressConversion(t *testing.T) {
 	panics := func(f func()) (ret bool) {
 		defer func() {
 			if r := recover(); r != nil {

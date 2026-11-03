@@ -268,7 +268,7 @@ func (w *AuthenticationWriter) seal(b []byte) (*buf.Buffer, error) {
 		return nil, err
 	}
 	if paddingSize > 0 {
-		// These paddings will send in clear text.
+		// These paddings will be sent in clear text.
 		// To avoid leakage of PRNG internal state, a cryptographically secure PRNG should be used.
 		paddingBytes := eb.Extend(paddingSize)
 		common.Must2(rand.Read(paddingBytes))

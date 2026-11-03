@@ -36,7 +36,7 @@
     // Enable sniffing on TCP connection.
     "sniffing": {
       "enabled": true,
-      // Target domain will be overriden to the one carried by the connection, if the connection is HTTP or HTTPS.
+      // Target domain will be overridden to the one carried by the connection, if the connection is HTTP or HTTPS.
       "destOverride": ["http", "tls"]
     }
   }],
@@ -110,7 +110,7 @@
   // Policy controls some internal behavior of how V2Ray handles connections.
   // It may be on connection level by user levels in 'levels', or global settings in 'system.'
   "policy": {
-    // Connection policys by user levels
+    // Connection policies by user levels
     "levels": {
       "0": {
         "uplinkOnly": 0,

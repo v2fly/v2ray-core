@@ -104,7 +104,7 @@ func (c *Channel) Start() error {
 			for {
 				select {
 				case pub := <-c.channel: // Published message received
-					for _, sub := range c.Subscribers() { // Concurrency-safe subscribers retrievement
+					for _, sub := range c.Subscribers() { // Concurrency-safe subscribers retrieval
 						if c.blocking {
 							pub.broadcast(sub)
 						} else {

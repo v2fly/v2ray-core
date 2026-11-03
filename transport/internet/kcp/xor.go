@@ -10,7 +10,7 @@ func xorfwd(x []byte) {
 	}
 }
 
-// xorbkd performs XOR backwords in words, x[i] ^= x[i-4], i from len to 0
+// xorbkd performs XOR backwards in words, x[i] ^= x[i-4], i from len to 0
 func xorbkd(x []byte) {
 	for i := len(x) - 1; i >= 4; i-- {
 		x[i] ^= x[i-4]

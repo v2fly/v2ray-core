@@ -235,8 +235,8 @@ type Config struct {
 	Ech_DOHserver string `protobuf:"bytes,17,opt,name=ech_DOHserver,json=echDOHserver,proto3" json:"ech_DOHserver,omitempty"`
 	// domain to query for https record
 	EchQueryDomain string `protobuf:"bytes,18,opt,name=ech_query_domain,json=echQueryDomain,proto3" json:"ech_query_domain,omitempty"`
-	// cipher suites to to be offered or accepted.
-	// This is an developer option.
+	// cipher suites to be offered or accepted.
+	// This is a developer option.
 	Ciphersuites  []uint32 `protobuf:"varint,19,rep,packed,name=ciphersuites,proto3" json:"ciphersuites,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

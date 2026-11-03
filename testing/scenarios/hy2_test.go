@@ -186,13 +186,13 @@ func testVMessHysteria2(t *testing.T, congestionType string) {
 	}
 }
 
-func TestHysteria2Offical(t *testing.T) {
+func TestHysteria2Official(t *testing.T) {
 	for _, v := range []bool{true, false} {
-		testHysteria2Offical(t, v)
+		testHysteria2Official(t, v)
 	}
 }
 
-func testHysteria2Offical(t *testing.T, isUDP bool) {
+func testHysteria2Official(t *testing.T, isUDP bool) {
 	var dest net.Destination
 	var err error
 	if isUDP {
