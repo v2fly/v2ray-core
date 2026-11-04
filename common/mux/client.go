@@ -218,6 +218,13 @@ func (m *ClientWorker) Closed() bool {
 	return m.done.Done()
 }
 
+// Close interrupts the link so the outbound transport does not wait for a graceful EOF.
+func (m *ClientWorker) Close() error {
+	common.Interrupt(m.link.Writer)
+	common.Interrupt(m.link.Reader)
+	return m.done.Close()
+}
+
 func (m *ClientWorker) monitor() {
 	timer := time.NewTicker(time.Second * 16)
 	defer timer.Stop()

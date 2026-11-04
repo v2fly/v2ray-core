@@ -2,6 +2,7 @@ package mux_test
 
 import (
 	"context"
+	"io"
 	"testing"
 	"time"
 
@@ -46,6 +47,25 @@ func TestClientWorkerEOF(t *testing.T) {
 	f := worker.Dispatch(context.Background(), nil)
 	if f {
 		t.Error("expected failed dispatching, but actually not")
+	}
+}
+
+func TestClientWorkerExplicitCloseInterruptsLink(t *testing.T) {
+	downstream, _ := pipe.New(pipe.WithoutSizeLimit())
+	uplink, uplinkWriter := pipe.New(pipe.WithoutSizeLimit())
+	worker, err := mux.NewClientWorker(transport.Link{Reader: downstream, Writer: uplinkWriter}, mux.ClientStrategy{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := worker.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if !worker.Closed() {
+		t.Fatal("closed worker is still selectable")
+	}
+	// A graceful EOF would leave a proxy waiting on its outbound read task.
+	if _, err := uplink.ReadMultiBufferTimeout(3 * time.Second); err != io.ErrClosedPipe {
+		t.Fatalf("worker did not interrupt the outbound link: %v", err)
 	}
 }
 

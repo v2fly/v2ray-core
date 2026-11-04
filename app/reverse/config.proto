@@ -15,6 +15,7 @@ message Control {
   }
 
   State state = 1;
+  uint64 heartbeat_id = 2;
   bytes random = 99;
 }
 
