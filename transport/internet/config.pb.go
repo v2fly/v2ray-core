@@ -81,9 +81,9 @@ type MPTCPState int32
 const (
 	// AsIs is to leave the current MPTCP state as is, unmodified.
 	MPTCPState_AsIs MPTCPState = 0
-	// Enable is for enabling MPTCP explictly.
+	// Enable is for enabling MPTCP explicitly.
 	MPTCPState_Enable MPTCPState = 1
-	// Disable is for disabling MPTCP explictly.
+	// Disable is for disabling MPTCP explicitly.
 	MPTCPState_Disable MPTCPState = 2
 )
 
@@ -133,9 +133,9 @@ type SocketConfig_TCPFastOpenState int32
 const (
 	// AsIs is to leave the current TFO state as is, unmodified.
 	SocketConfig_AsIs SocketConfig_TCPFastOpenState = 0
-	// Enable is for enabling TFO explictly.
+	// Enable is for enabling TFO explicitly.
 	SocketConfig_Enable SocketConfig_TCPFastOpenState = 1
-	// Disable is for disabling TFO explictly.
+	// Disable is for disabling TFO explicitly.
 	SocketConfig_Disable SocketConfig_TCPFastOpenState = 2
 )
 

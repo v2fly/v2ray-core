@@ -59,13 +59,13 @@ func (r *BufferedReader) ReadByte() (byte, error) {
 
 // Read implements io.Reader. It reads from internal buffer first (if available) and then reads from the underlying reader.
 func (r *BufferedReader) Read(b []byte) (int, error) {
-	spliter := r.Spliter
-	if spliter == nil {
-		spliter = SplitBytes
+	splitter := r.Spliter
+	if splitter == nil {
+		splitter = SplitBytes
 	}
 
 	if !r.Buffer.IsEmpty() {
-		buffer, nBytes := spliter(r.Buffer, b)
+		buffer, nBytes := splitter(r.Buffer, b)
 		r.Buffer = buffer
 		if r.Buffer.IsEmpty() {
 			r.Buffer = nil
@@ -78,7 +78,7 @@ func (r *BufferedReader) Read(b []byte) (int, error) {
 		return 0, err
 	}
 
-	mb, nBytes := spliter(mb, b)
+	mb, nBytes := splitter(mb, b)
 	if !mb.IsEmpty() {
 		r.Buffer = mb
 	}

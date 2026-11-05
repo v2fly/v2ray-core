@@ -292,7 +292,7 @@ func TestFakeDNSMultiAddPool(t *testing.T) {
 			})
 			common.Must(err)
 			if len(pools.holders) != 2 {
-				t.Error("HolderMulti.AddPoolMutli not returning holderMulti that has the same length as passed PoolMulti config")
+				t.Error("HolderMulti.AddPoolMulti not returning holderMulti that has the same length as passed PoolMulti config")
 			}
 			if pools.holders[0] != fakeMulti.holders[2] {
 				t.Error("HolderMulti.AddPoolMulti not returning same holder for existing IPv4 pool 192.168.168.0/16")

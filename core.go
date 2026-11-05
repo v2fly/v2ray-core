@@ -15,10 +15,11 @@ import (
 	"runtime"
 
 	"github.com/v2fly/v2ray-core/v5/common/serial"
+	"github.com/v2fly/v2ray-core/v5/internal/transportdefaults"
 )
 
 var (
-	version  = "5.55.0"
+	version  = "5.56.0"
 	build    = "Custom"
 	codename = "V2Fly, a community-driven edition of V2Ray."
 	intro    = "A unified platform for anti-censorship."
@@ -28,6 +29,10 @@ var (
 // ".z" part may be omitted in regular releases.
 func Version() string {
 	return version
+}
+
+func init() {
+	transportdefaults.SetVersion(Version())
 }
 
 // VersionStatement returns a list of strings representing the full version info.

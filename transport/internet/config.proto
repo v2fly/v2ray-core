@@ -58,9 +58,9 @@ message ProxyConfig {
 enum MPTCPState {
   // AsIs is to leave the current MPTCP state as is, unmodified.
   AsIs = 0;
-  // Enable is for enabling MPTCP explictly.
+  // Enable is for enabling MPTCP explicitly.
   Enable = 1;
-  // Disable is for disabling MPTCP explictly.
+  // Disable is for disabling MPTCP explicitly.
   Disable = 2;
 }
 
@@ -72,9 +72,9 @@ message SocketConfig {
   enum TCPFastOpenState {
     // AsIs is to leave the current TFO state as is, unmodified.
     AsIs = 0;
-    // Enable is for enabling TFO explictly.
+    // Enable is for enabling TFO explicitly.
     Enable = 1;
-    // Disable is for disabling TFO explictly.
+    // Disable is for disabling TFO explicitly.
     Disable = 2;
   }
 

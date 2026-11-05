@@ -129,7 +129,7 @@ func OpenVMessAEADHeader(key [16]byte, authid [16]byte, data io.Reader) ([]byte,
 
 	var decryptedAEADHeaderPayloadR []byte
 
-	var payloadHeaderAEADEncryptedReadedBytesCounts int
+	var payloadHeaderAEADEncryptedReadBytesCounts int
 
 	{
 		payloadHeaderAEADKey := KDF16(key[:], KDFSaltConstVMessHeaderPayloadAEADKey, string(authid[:]), string(nonce[:]))
@@ -139,8 +139,8 @@ func OpenVMessAEADHeader(key [16]byte, authid [16]byte, data io.Reader) ([]byte,
 		// 16 == AEAD Tag size
 		payloadHeaderAEADEncrypted := make([]byte, length+16)
 
-		payloadHeaderAEADEncryptedReadedBytesCounts, err = io.ReadFull(data, payloadHeaderAEADEncrypted)
-		bytesRead += payloadHeaderAEADEncryptedReadedBytesCounts
+		payloadHeaderAEADEncryptedReadBytesCounts, err = io.ReadFull(data, payloadHeaderAEADEncrypted)
+		bytesRead += payloadHeaderAEADEncryptedReadBytesCounts
 		if err != nil {
 			return nil, false, bytesRead, err
 		}

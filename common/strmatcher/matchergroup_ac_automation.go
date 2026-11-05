@@ -104,7 +104,7 @@ func (ac *ACAutomatonMatcherGroup) Build() error {
 		queue.Remove(front)
 		nodeIdx := front.Value.(uint32)
 		node := &ac.nodes[nodeIdx]           // Current node
-		failNode := &ac.nodes[fail[nodeIdx]] // Fail node of currrent node
+		failNode := &ac.nodes[fail[nodeIdx]] // Fail node of current node
 		for edgeIdx := 0; edgeIdx < acValidCharCount; edgeIdx++ {
 			nodeIdx := node.next[edgeIdx]     // Next node through trie edge
 			failIdx := failNode.next[edgeIdx] // Next node through fail edge

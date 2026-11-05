@@ -219,7 +219,7 @@ func (s *TCPNameServer) sendQuery(ctx context.Context, domain string, clientIP n
 
 			conn, err := s.dial(dnsCtx)
 			if err != nil {
-				newError("failed to dial namesever").Base(err).AtError().WriteToLog()
+				newError("failed to dial nameserver").Base(err).AtError().WriteToLog()
 				return
 			}
 			defer conn.Close()

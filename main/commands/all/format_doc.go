@@ -13,7 +13,7 @@ config formats:
 
 	* auto
 	  The default loader, supports all formats listed below, with 
-	  format detecting, and mixed fomats support.
+	  format detecting, and mixed formats support.
 
 	* json (.json, .jsonc)
 	  The json loader, multiple files support, mergeable.

@@ -16,7 +16,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// User is a generic user for all procotols.
+// User is a generic user for all protocols.
 type User struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Level uint32                 `protobuf:"varint,1,opt,name=level,proto3" json:"level,omitempty"`
