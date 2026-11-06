@@ -31,7 +31,7 @@ require (
 	github.com/pion/transport/v5 v5.1.4
 	github.com/pion/webrtc/v4 v4.2.26
 	github.com/pires/go-proxyproto v0.16.0
-	github.com/quic-go/quic-go v0.64.1
+	github.com/quic-go/quic-go v0.65.0
 	github.com/refraction-networking/utls v1.8.2
 	github.com/seiflotfy/cuckoofilter v0.0.0-20240715131351-a2f2c23f1771
 	github.com/stretchr/testify v1.12.1
