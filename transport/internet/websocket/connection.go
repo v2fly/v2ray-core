@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -20,6 +21,7 @@ type connection struct {
 	conn       *websocket.Conn
 	reader     io.Reader
 	remoteAddr net.Addr
+	writeMu    sync.Mutex
 
 	shouldWait        bool
 	delayedDialFinish context.Context
@@ -111,6 +113,9 @@ func (c *connection) getReader() (io.Reader, error) {
 
 // Write implements io.Writer.
 func (c *connection) Write(b []byte) (int, error) {
+	c.writeMu.Lock()
+	defer c.writeMu.Unlock()
+
 	if c.shouldWait {
 		var err error
 		c.conn, err = c.dialer.Dial(b)
@@ -192,12 +197,18 @@ func (c *connection) SetReadDeadline(t time.Time) error {
 }
 
 func (c *connection) SetWriteDeadline(t time.Time) error {
-	if c.shouldWait {
+	// Do not hold writeMu while waiting for the first write to materialize a
+	// delayed connection. The first write needs that mutex to perform the dial.
+	if c.delayedDialFinish != nil {
 		<-c.delayedDialFinish.Done()
-		if c.conn == nil {
-			newError("websocket transport is not materialized when SetWriteDeadline() is called").AtWarning().WriteToLog()
-			return nil
-		}
+	}
+
+	c.writeMu.Lock()
+	defer c.writeMu.Unlock()
+
+	if c.conn == nil {
+		newError("websocket transport is not materialized when SetWriteDeadline() is called").AtWarning().WriteToLog()
+		return nil
 	}
 	return c.conn.SetWriteDeadline(t)
 }
