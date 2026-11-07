@@ -4,13 +4,35 @@ Documentation=https://www.v2fly.org/
 After=network.target nss-lookup.target
 
 [Service]
-User=nobody
+DynamicUser=yes
 CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 NoNewPrivileges=true
 ExecStart=/usr/bin/v2ray -config /etc/v2ray/%i.json
 Restart=on-failure
 RestartPreventExitStatus=23
+
+# v2ray does not need hardware devices, hence hide all of them
+PrivateDevices=yes
+
+# Isolate v2ray's own view of /tmp directory
+PrivateTmp=yes
+
+# Prevent changes to the entire system by v2ray.
+# This is recommended for long running services (man systemd.exec).
+# Note that we should log to journald now, or we need make the
+# logging directory writable with ReadWritePaths=.
+ProtectSystem=strict
+
+# Hide home directories from v2ray, i.e.,
+# makes /home/, /root, and /run/user inaccessible (man systemd.exec)
+ProtectHome=yes
+
+# Prevent access to the kernel log buffer
+ProtectKernelLogs=yes
+
+# Do not allow v2ray to explicitly load kernel modules
+ProtectKernelModules=yes
 
 [Install]
 WantedBy=multi-user.target
