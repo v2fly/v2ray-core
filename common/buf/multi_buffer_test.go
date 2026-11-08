@@ -176,6 +176,25 @@ func TestCompact(t *testing.T) {
 	}
 }
 
+func TestCompactBufferWithoutRoom(t *testing.T) {
+	a := New()
+	common.Must2(a.Write(bytes.Repeat([]byte{'a'}, 1500)))
+	a.Advance(1000)
+	b := New()
+	common.Must2(b.Write(bytes.Repeat([]byte{'b'}, 1000)))
+
+	c := FromBytes([]byte("cd"))
+	d := New()
+	common.Must2(d.WriteString("ef"))
+
+	for _, mb := range []MultiBuffer{{a, b}, {c, d}} {
+		want := mb.String()
+		if got := Compact(mb).String(); got != want {
+			t.Error("unexpected Compact result length ", len(got), ", want ", len(want))
+		}
+	}
+}
+
 func BenchmarkSplitBytes(b *testing.B) {
 	var mb MultiBuffer
 	raw := make([]byte, Size)
