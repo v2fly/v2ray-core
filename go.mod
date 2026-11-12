@@ -23,7 +23,7 @@ require (
 	github.com/mustafaturan/bus v1.0.2
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pion/dtls/v3 v3.1.15
-	github.com/pion/ice/v4 v4.4.8
+	github.com/pion/ice/v4 v4.4.9
 	github.com/pion/logging v0.2.4
 	github.com/pion/stun/v3 v3.1.7
 	github.com/pion/stun/v4 v4.0.1
