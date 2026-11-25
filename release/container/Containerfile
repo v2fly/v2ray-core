@@ -1,5 +1,5 @@
-# golang:1.27.3 linux/amd64
-FROM docker.io/library/golang@sha256:5bbe76a31abbe0f1449d7820e550131c020b097c24d3bcfc5ad1231779982c1c AS builder
+# golang:1.27.4 linux/amd64
+FROM docker.io/library/golang@sha256:e65b9442d27a8cbb2fde9128832d75154664528d8ab6b5b6e951800d613cc12a AS builder
 FROM scratch
 
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
