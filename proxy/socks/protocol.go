@@ -541,11 +541,14 @@ func ClientHandshake(request *protocol.RequestHeader, reader io.Reader, writer i
 	b.Clear()
 
 	command := byte(cmdTCPConnect)
+	address, port := request.Address, request.Port
 	if request.Command == protocol.RequestCommandUDP {
 		command = byte(cmdUDPAssociate)
+		// RFC 1928: use all zeros when the client's UDP endpoint is not yet known.
+		address, port = net.AnyIP, 0
 	}
 	common.Must2(b.Write([]byte{socks5Version, command, 0x00 /* reserved */}))
-	if err := addrParser.WriteAddressPort(b, request.Address, request.Port); err != nil {
+	if err := addrParser.WriteAddressPort(b, address, port); err != nil {
 		return nil, err
 	}
 
