@@ -204,6 +204,21 @@ func TestOverRangeStringPort(t *testing.T) {
 	}
 }
 
+func TestInvalidPortList(t *testing.T) {
+	for _, raw := range []string{`70000`, `"70000"`, `"100-50"`, `"80,100-50"`, `"1-70000"`} {
+		var pl cfgcommon.PortList
+		if err := json.Unmarshal([]byte(raw), &pl); err == nil {
+			t.Error("expected error for port list ", raw, ", but got ", pl.Range)
+		}
+	}
+
+	var pl cfgcommon.PortList
+	common.Must(json.Unmarshal([]byte(`"80,100-200"`), &pl))
+	if r := pl.Range; len(r) != 2 || r[0] != (cfgcommon.PortRange{From: 80, To: 80}) || r[1] != (cfgcommon.PortRange{From: 100, To: 200}) {
+		t.Error("unexpected port list: ", r)
+	}
+}
+
 func TestUserParsing(t *testing.T) {
 	user := new(cfgcommon.User)
 	common.Must(json.Unmarshal([]byte(`{
